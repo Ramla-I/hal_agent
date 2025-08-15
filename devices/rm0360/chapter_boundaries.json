@@ -1,0 +1,144 @@
+{
+  "chapters": [
+    {
+      "title": "1 Documentation conventions",
+      "start_page": 33,
+      "end_page": 34
+    },
+    {
+      "title": "2 System and memory overview",
+      "start_page": 35,
+      "end_page": 45
+    },
+    {
+      "title": "3 Embedded flash memory",
+      "start_page": 46,
+      "end_page": 65
+    },
+    {
+      "title": "4 Option bytes",
+      "start_page": 66,
+      "end_page": 69
+    },
+    {
+      "title": "5 Cyclic redundancy check calculation unit (CRC)",
+      "start_page": 70,
+      "end_page": 75
+    },
+    {
+      "title": "6 Power control (PWR)",
+      "start_page": 76,
+      "end_page": 87
+    },
+    {
+      "title": "7 Reset and clock control (RCC)",
+      "start_page": 88,
+      "end_page": 124
+    },
+    {
+      "title": "8 General-purpose I/Os (GPIO)",
+      "start_page": 125,
+      "end_page": 141
+    },
+    {
+      "title": "9 System configuration controller (SYSCFG)",
+      "start_page": 142,
+      "end_page": 148
+    },
+    {
+      "title": "10 Direct memory access controller (DMA)",
+      "start_page": 149,
+      "end_page": 170
+    },
+    {
+      "title": "11 Interrupts and events",
+      "start_page": 171,
+      "end_page": 181
+    },
+    {
+      "title": "12 Analog-to-digital converter (ADC)",
+      "start_page": 182,
+      "end_page": 224
+    },
+    {
+      "title": "13 Advanced-control timers (TIM1)",
+      "start_page": 225,
+      "end_page": 300
+    },
+    {
+      "title": "14 General-purpose timers (TIM3)",
+      "start_page": 301,
+      "end_page": 366
+    },
+    {
+      "title": "15 Basic timer (TIM6/TIM7)",
+      "start_page": 367,
+      "end_page": 379
+    },
+    {
+      "title": "16 General-purpose timer (TIM14)",
+      "start_page": 380,
+      "end_page": 400
+    },
+    {
+      "title": "17 General-purpose timers (TIM15/16/17)",
+      "start_page": 401,
+      "end_page": 467
+    },
+    {
+      "title": "18 Infrared interface (IRTIM)",
+      "start_page": 468,
+      "end_page": 468
+    },
+    {
+      "title": "19 Independent watchdog (IWDG)",
+      "start_page": 469,
+      "end_page": 477
+    },
+    {
+      "title": "20 System window watchdog (WWDG)",
+      "start_page": 478,
+      "end_page": 483
+    },
+    {
+      "title": "21 Real-time clock (RTC)",
+      "start_page": 484,
+      "end_page": 523
+    },
+    {
+      "title": "22 Inter-integrated circuit (I2C) interface",
+      "start_page": 524,
+      "end_page": 589
+    },
+    {
+      "title": "23 Universal synchronous/asynchronous receiver transmitter (USART/UART)",
+      "start_page": 590,
+      "end_page": 636
+    },
+    {
+      "title": "24 Serial peripheral interface (SPI)",
+      "start_page": 637,
+      "end_page": 671
+    },
+    {
+      "title": "25 Universal serial bus full-speed device interface (USB)",
+      "start_page": 672,
+      "end_page": 704
+    },
+    {
+      "title": "26 Debug support (DBG)",
+      "start_page": 705,
+      "end_page": 719
+    },
+    {
+      "title": "27 Device electronic signature",
+      "start_page": 720,
+      "end_page": 720
+    },
+    {
+      "title": "Appendix A Code examples",
+      "start_page": 721,
+      "end_page": 765
+    }
+  ]
+}

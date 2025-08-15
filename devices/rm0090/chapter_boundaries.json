@@ -1,0 +1,209 @@
+{
+  "chapters": [
+    {
+      "title": "1 Documentation conventions",
+      "start_page": 57,
+      "end_page": 58
+    },
+    {
+      "title": "2 Memory and bus architecture",
+      "start_page": 59,
+      "end_page": 72
+    },
+    {
+      "title": "3 Embedded flash memory interface",
+      "start_page": 73,
+      "end_page": 113
+    },
+    {
+      "title": "4 CRC calculation unit",
+      "start_page": 114,
+      "end_page": 116
+    },
+    {
+      "title": "5 Power controller (PWR)",
+      "start_page": 117,
+      "end_page": 151
+    },
+    {
+      "title": "6 Reset and clock control for STM32F42xxx and STM32F43xxx (RCC)",
+      "start_page": 152,
+      "end_page": 214
+    },
+    {
+      "title": "7 Reset and clock control for STM32F405xx/07xx and STM32F415xx/17xx (RCC)",
+      "start_page": 215,
+      "end_page": 269
+    },
+    {
+      "title": "8 General-purpose I/Os (GPIO)",
+      "start_page": 270,
+      "end_page": 291
+    },
+    {
+      "title": "9 System configuration controller (SYSCFG)",
+      "start_page": 292,
+      "end_page": 304
+    },
+    {
+      "title": "10 DMA controller (DMA)",
+      "start_page": 305,
+      "end_page": 341
+    },
+    {
+      "title": "11 Chrom-Art Accelerator\u2122 controller (DMA2D)",
+      "start_page": 342,
+      "end_page": 373
+    },
+    {
+      "title": "12 Interrupts and events",
+      "start_page": 374,
+      "end_page": 390
+    },
+    {
+      "title": "13 Analog-to-digital converter (ADC)",
+      "start_page": 391,
+      "end_page": 435
+    },
+    {
+      "title": "14 Digital-to-analog converter (DAC)",
+      "start_page": 436,
+      "end_page": 457
+    },
+    {
+      "title": "15 Digital camera interface (DCMI)",
+      "start_page": 458,
+      "end_page": 482
+    },
+    {
+      "title": "16 LCD-TFT controller (LTDC)",
+      "start_page": 483,
+      "end_page": 517
+    },
+    {
+      "title": "17 Advanced-control timers (TIM1 and TIM8)",
+      "start_page": 518,
+      "end_page": 591
+    },
+    {
+      "title": "18 General-purpose timers (TIM2 to TIM5)",
+      "start_page": 592,
+      "end_page": 652
+    },
+    {
+      "title": "19 General-purpose timers (TIM9 to TIM14)",
+      "start_page": 653,
+      "end_page": 698
+    },
+    {
+      "title": "20 Basic timers (TIM6 and TIM7)",
+      "start_page": 699,
+      "end_page": 710
+    },
+    {
+      "title": "21 Independent watchdog (IWDG)",
+      "start_page": 711,
+      "end_page": 715
+    },
+    {
+      "title": "22 Window watchdog (WWDG)",
+      "start_page": 716,
+      "end_page": 722
+    },
+    {
+      "title": "23 Cryptographic processor (CRYP)",
+      "start_page": 723,
+      "end_page": 769
+    },
+    {
+      "title": "24 Random number generator (RNG)",
+      "start_page": 770,
+      "end_page": 774
+    },
+    {
+      "title": "25 Hash processor (HASH)",
+      "start_page": 775,
+      "end_page": 800
+    },
+    {
+      "title": "26 Real-time clock (RTC)",
+      "start_page": 801,
+      "end_page": 841
+    },
+    {
+      "title": "27 Inter-integrated circuit (I2C) interface",
+      "start_page": 842,
+      "end_page": 875
+    },
+    {
+      "title": "28 Serial peripheral interface (SPI)",
+      "start_page": 876,
+      "end_page": 928
+    },
+    {
+      "title": "29 Serial audio interface (SAI)",
+      "start_page": 929,
+      "end_page": 967
+    },
+    {
+      "title": "30 Universal synchronous asynchronous receiver transmitter (USART)",
+      "start_page": 968,
+      "end_page": 1021
+    },
+    {
+      "title": "31 Secure digital input/output interface (SDIO)",
+      "start_page": 1022,
+      "end_page": 1078
+    },
+    {
+      "title": "32 Controller area network (bxCAN)",
+      "start_page": 1079,
+      "end_page": 1124
+    },
+    {
+      "title": "33 Ethernet (ETH): media access control (MAC) with DMA controller",
+      "start_page": 1125,
+      "end_page": 1242
+    },
+    {
+      "title": "34 USB on-the-go full-speed (OTG_FS)",
+      "start_page": 1243,
+      "end_page": 1383
+    },
+    {
+      "title": "35 USB on-the-go high-speed (OTG_HS)",
+      "start_page": 1384,
+      "end_page": 1546
+    },
+    {
+      "title": "36 Flexible static memory controller (FSMC)",
+      "start_page": 1547,
+      "end_page": 1604
+    },
+    {
+      "title": "37 Flexible memory controller (FMC)",
+      "start_page": 1605,
+      "end_page": 1685
+    },
+    {
+      "title": "38 Debug support (DBG)",
+      "start_page": 1686,
+      "end_page": 1716
+    },
+    {
+      "title": "39 Device electronic signature",
+      "start_page": 1717,
+      "end_page": 1718
+    },
+    {
+      "title": "40 Important security notice",
+      "start_page": 1719,
+      "end_page": 1719
+    },
+    {
+      "title": "41 Revision history",
+      "start_page": 1720,
+      "end_page": 1757
+    }
+  ]
+}

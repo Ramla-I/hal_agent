@@ -1,0 +1,144 @@
+{
+  "chapters": [
+    {
+      "title": "1 Documentation conventions",
+      "start_page": 32,
+      "end_page": 33
+    },
+    {
+      "title": "2 Memory and bus architecture",
+      "start_page": 34,
+      "end_page": 46
+    },
+    {
+      "title": "3 CRC calculation unit",
+      "start_page": 47,
+      "end_page": 49
+    },
+    {
+      "title": "4 Power control (PWR)",
+      "start_page": 50,
+      "end_page": 63
+    },
+    {
+      "title": "5 Backup registers (BKP)",
+      "start_page": 64,
+      "end_page": 70
+    },
+    {
+      "title": "6 Reset and clock control (RCC)",
+      "start_page": 71,
+      "end_page": 101
+    },
+    {
+      "title": "7 General-purpose and alternate-function I/Os (GPIOs and AFIOs)",
+      "start_page": 102,
+      "end_page": 131
+    },
+    {
+      "title": "8 Interrupts and events",
+      "start_page": 132,
+      "end_page": 143
+    },
+    {
+      "title": "9 Direct memory access controller (DMA)",
+      "start_page": 144,
+      "end_page": 161
+    },
+    {
+      "title": "10 Analog-to-digital converter (ADC)",
+      "start_page": 162,
+      "end_page": 189
+    },
+    {
+      "title": "11 Digital-to-analog converter (DAC)",
+      "start_page": 190,
+      "end_page": 211
+    },
+    {
+      "title": "12 Advanced-control timer (TIM1)",
+      "start_page": 212,
+      "end_page": 283
+    },
+    {
+      "title": "13 General-purpose timers (TIM2 to TIM5)",
+      "start_page": 284,
+      "end_page": 341
+    },
+    {
+      "title": "14 General-purpose timers (TIM12/13/14)",
+      "start_page": 342,
+      "end_page": 387
+    },
+    {
+      "title": "15 General-purpose timers (TIM15/16/17)",
+      "start_page": 388,
+      "end_page": 455
+    },
+    {
+      "title": "16 Basic timers (TIM6 and TIM7)",
+      "start_page": 456,
+      "end_page": 468
+    },
+    {
+      "title": "17 Real-time clock (RTC)",
+      "start_page": 469,
+      "end_page": 480
+    },
+    {
+      "title": "18 Independent watchdog (IWDG)",
+      "start_page": 481,
+      "end_page": 486
+    },
+    {
+      "title": "19 Window watchdog (WWDG)",
+      "start_page": 487,
+      "end_page": 493
+    },
+    {
+      "title": "20 Flexible static memory controller (FSMC)",
+      "start_page": 494,
+      "end_page": 535
+    },
+    {
+      "title": "21 Serial peripheral interface (SPI)",
+      "start_page": 536,
+      "end_page": 565
+    },
+    {
+      "title": "22 Inter-integrated circuit (I2C) interface",
+      "start_page": 566,
+      "end_page": 598
+    },
+    {
+      "title": "23 Universal synchronous asynchronous receiver transmitter (USART)",
+      "start_page": 599,
+      "end_page": 646
+    },
+    {
+      "title": "24 High-definition multimedia interface-consumer electronics control controller (HDMI\u2122-CEC)",
+      "start_page": 647,
+      "end_page": 668
+    },
+    {
+      "title": "25 Debug support (DBG)",
+      "start_page": 669,
+      "end_page": 698
+    },
+    {
+      "title": "26 Device electronic signature",
+      "start_page": 699,
+      "end_page": 701
+    },
+    {
+      "title": "27 Important security notice",
+      "start_page": 702,
+      "end_page": 702
+    },
+    {
+      "title": "28 Revision history",
+      "start_page": 703,
+      "end_page": 709
+    }
+  ]
+}

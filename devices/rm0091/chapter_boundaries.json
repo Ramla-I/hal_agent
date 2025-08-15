@@ -1,0 +1,174 @@
+{
+  "chapters": [
+    {
+      "title": "1 Documentation conventions",
+      "start_page": 42,
+      "end_page": 43
+    },
+    {
+      "title": "2 System and memory overview",
+      "start_page": 44,
+      "end_page": 55
+    },
+    {
+      "title": "3 Embedded flash memory",
+      "start_page": 56,
+      "end_page": 75
+    },
+    {
+      "title": "4 Option bytes",
+      "start_page": 76,
+      "end_page": 80
+    },
+    {
+      "title": "5 Power control (PWR)",
+      "start_page": 81,
+      "end_page": 94
+    },
+    {
+      "title": "6 Reset and clock control (RCC)",
+      "start_page": 95,
+      "end_page": 137
+    },
+    {
+      "title": "7 Clock recovery system (CRS)",
+      "start_page": 138,
+      "end_page": 148
+    },
+    {
+      "title": "8 General-purpose I/Os (GPIO)",
+      "start_page": 149,
+      "end_page": 165
+    },
+    {
+      "title": "9 System configuration controller (SYSCFG)",
+      "start_page": 166,
+      "end_page": 187
+    },
+    {
+      "title": "10 Direct memory access controller (DMA)",
+      "start_page": 188,
+      "end_page": 214
+    },
+    {
+      "title": "11 Interrupts and events",
+      "start_page": 215,
+      "end_page": 225
+    },
+    {
+      "title": "12 Cyclic redundancy check calculation unit (CRC)",
+      "start_page": 226,
+      "end_page": 232
+    },
+    {
+      "title": "13 Analog-to-digital converter (ADC)",
+      "start_page": 233,
+      "end_page": 275
+    },
+    {
+      "title": "14 Digital-to-analog converter (DAC)",
+      "start_page": 276,
+      "end_page": 300
+    },
+    {
+      "title": "15 Comparator (COMP)",
+      "start_page": 301,
+      "end_page": 308
+    },
+    {
+      "title": "16 Touch sensing controller (TSC)",
+      "start_page": 309,
+      "end_page": 327
+    },
+    {
+      "title": "17 Advanced-control timers (TIM1)",
+      "start_page": 328,
+      "end_page": 403
+    },
+    {
+      "title": "18 General-purpose timers (TIM2 and TIM3)",
+      "start_page": 404,
+      "end_page": 470
+    },
+    {
+      "title": "19 General-purpose timer (TIM14)",
+      "start_page": 471,
+      "end_page": 491
+    },
+    {
+      "title": "20 General-purpose timers (TIM15/16/17)",
+      "start_page": 492,
+      "end_page": 559
+    },
+    {
+      "title": "21 Basic timer (TIM6/TIM7)",
+      "start_page": 560,
+      "end_page": 572
+    },
+    {
+      "title": "22 Infrared interface (IRTIM)",
+      "start_page": 573,
+      "end_page": 573
+    },
+    {
+      "title": "23 Independent watchdog (IWDG)",
+      "start_page": 574,
+      "end_page": 582
+    },
+    {
+      "title": "24 System window watchdog (WWDG)",
+      "start_page": 583,
+      "end_page": 588
+    },
+    {
+      "title": "25 Real-time clock (RTC)",
+      "start_page": 589,
+      "end_page": 630
+    },
+    {
+      "title": "26 Inter-integrated circuit (I2C) interface",
+      "start_page": 631,
+      "end_page": 699
+    },
+    {
+      "title": "27 Universal synchronous/asynchronous receiver transmitter (USART/UART)",
+      "start_page": 700,
+      "end_page": 766
+    },
+    {
+      "title": "28 Serial peripheral interface / integrated interchip sound (SPI/I2S)",
+      "start_page": 767,
+      "end_page": 824
+    },
+    {
+      "title": "29 Controller area network (bxCAN)",
+      "start_page": 825,
+      "end_page": 867
+    },
+    {
+      "title": "30 Universal serial bus full-speed device interface (USB)",
+      "start_page": 868,
+      "end_page": 901
+    },
+    {
+      "title": "31 HDMI-CEC controller (CEC)",
+      "start_page": 902,
+      "end_page": 919
+    },
+    {
+      "title": "32 Debug support (DBG)",
+      "start_page": 920,
+      "end_page": 935
+    },
+    {
+      "title": "33 Device electronic signature",
+      "start_page": 936,
+      "end_page": 937
+    },
+    {
+      "title": "Appendix A Code examples",
+      "start_page": 938,
+      "end_page": 992
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "chapters": [
+    {
+      "title": "Documentation conventions",
+      "start_page": 43,
+      "end_page": 44
+    },
+    {
+      "title": "System and memory overview",
+      "start_page": 45,
+      "end_page": 53
+    },
+    {
+      "title": "Embedded Flash memory",
+      "start_page": 54,
+      "end_page": 72
+    },
+    {
+      "title": "Option byte description",
+      "start_page": 73,
+      "end_page": 75
+    },
+    {
+      "title": "Cyclic redundancy check calculation unit (CRC)",
+      "start_page": 76,
+      "end_page": 81
+    },
+    {
+      "title": "Power control (PWR)",
+      "start_page": 82,
+      "end_page": 95
+    },
+    {
+      "title": "Peripheral interconnect matrix",
+      "start_page": 96,
+      "end_page": 103
+    },
+    {
+      "title": "Reset and clock control (RCC)",
+      "start_page": 104,
+      "end_page": 138
+    },
+    {
+      "title": "General-purpose I/Os (GPIO)",
+      "start_page": 139,
+      "end_page": 156
+    },
+    {
+      "title": "System configuration controller (SYSCFG)",
+      "start_page": 157,
+      "end_page": 169
+    },
+    {
+      "title": "Direct memory access controller (DMA)",
+      "start_page": 170,
+      "end_page": 192
+    },
+    {
+      "title": "Interrupts and events",
+      "start_page": 193,
+      "end_page": 210
+    },
+    {
+      "title": "Analog-to-digital converters (ADC)",
+      "start_page": 211,
+      "end_page": 316
+    },
+    {
+      "title": "Digital-to-analog converter (DAC1 and DAC2)",
+      "start_page": 317,
+      "end_page": 342
+    },
+    {
+      "title": "Comparator (COMP)",
+      "start_page": 343,
+      "end_page": 352
+    },
+    {
+      "title": "Operational amplifier (OPAMP)",
+      "start_page": 353,
+      "end_page": 363
+    },
+    {
+      "title": "Touch sensing controller (TSC)",
+      "start_page": 364,
+      "end_page": 382
+    },
+    {
+      "title": "Advanced-control timer (TIM1)",
+      "start_page": 383,
+      "end_page": 477
+    },
+    {
+      "title": "General-purpose timers (TIM2/TIM3)",
+      "start_page": 478,
+      "end_page": 547
+    },
+    {
+      "title": "General-purpose timers (TIM15/TIM16/TIM17)",
+      "start_page": 548,
+      "end_page": 626
+    },
+    {
+      "title": "High-Resolution Timer (HRTIM)",
+      "start_page": 627,
+      "end_page": 804
+    },
+    {
+      "title": "Infrared interface (IRTIM)",
+      "start_page": 805,
+      "end_page": 805
+    },
+    {
+      "title": "Basic timers (TIM6/TIM7)",
+      "start_page": 806,
+      "end_page": 818
+    },
+    {
+      "title": "Independent watchdog (IWDG)",
+      "start_page": 819,
+      "end_page": 827
+    },
+    {
+      "title": "System window watchdog (WWDG)",
+      "start_page": 828,
+      "end_page": 833
+    },
+    {
+      "title": "Real-time clock (RTC)",
+      "start_page": 834,
+      "end_page": 877
+    },
+    {
+      "title": "Inter-integrated circuit (I2C) interface",
+      "start_page": 878,
+      "end_page": 947
+    },
+    {
+      "title": "Universal synchronous/asynchronous receiver transmitter (USART/UART)",
+      "start_page": 948,
+      "end_page": 1014
+    },
+    {
+      "title": "Serial peripheral interface (SPI)",
+      "start_page": 1015,
+      "end_page": 1049
+    },
+    {
+      "title": "Controller area network (bxCAN)",
+      "start_page": 1050,
+      "end_page": 1093
+    },
+    {
+      "title": "Debug support (DBG)",
+      "start_page": 1094,
+      "end_page": 1116
+    },
+    {
+      "title": "Device electronic signature",
+      "start_page": 1117,
+      "end_page": 1118
+    },
+    {
+      "title": "Revision history",
+      "start_page": 1119,
+      "end_page": 1119
+    }
+  ]
+}

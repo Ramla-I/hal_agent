@@ -1,0 +1,254 @@
+#!/usr/bin/env python3
+"""
+Script to extract specific peripheral sections from STM32F100xx reference manual markdown file.
+Usage: python extract_peripheral.py <peripheral_name> [--tables-only]
+"""
+
+import re
+import sys
+import argparse
+from pathlib import Path
+
+
+def find_peripheral_section(content, peripheral_name):
+    """
+    Find the section boundaries for a given peripheral.
+    
+    Args:
+        content (str): The full markdown content
+        peripheral_name (str): Name of the peripheral to find (e.g., 'TIM12', 'GPIO', 'ADC')
+    
+    Returns:
+        tuple: (start_line, end_line) or (None, None) if not found
+    """
+    lines = content.split('\n')
+    
+    # First, try to find the main peripheral section
+    # Look for patterns like "7 General-purpose I/O (GPIO)" or "14 General-purpose timers (TIM12/13/14)"
+    main_section_pattern = re.compile(rf'^# \d+\s+.*?{re.escape(peripheral_name)}', re.IGNORECASE)
+    
+    # Also try to match the exact format like "7 General-purpose and alternate-function I/Os (GPIOs and AFIOs)"
+    main_section_pattern2 = re.compile(rf'^# \d+\s+.*?{re.escape(peripheral_name)}s?', re.IGNORECASE)
+    
+    start_line = None
+    end_line = None
+    
+    # Find the start of the peripheral section
+    for i, line in enumerate(lines):
+        if main_section_pattern.search(line) or main_section_pattern2.search(line):
+            start_line = i
+            break
+    
+    # If not found, try the subsection pattern
+    if start_line is None:
+        subsection_pattern = re.compile(rf'^# \d+\.\d+.*{re.escape(peripheral_name)}', re.IGNORECASE)
+        for i, line in enumerate(lines):
+            if subsection_pattern.search(line):
+                start_line = i
+                break
+    
+    if start_line is None:
+        return None, None
+    
+
+    
+    # Find the end of the section by looking for the next major section
+    # Major sections start with "# X." where X is a number
+    major_section_pattern = re.compile(r'^# \d+\.\s')
+    
+    for i in range(start_line + 1, len(lines)):
+        line = lines[i].strip()
+        if line.startswith('# ') and major_section_pattern.search(line):
+            # Check if this is a different major section (not a subsection)
+            current_section = re.match(r'^# (\d+)\.', lines[start_line])
+            next_section = re.match(r'^# (\d+)\.', line)
+            
+            if current_section and next_section:
+                current_num = int(current_section.group(1))
+                next_num = int(next_section.group(1))
+                
+                if next_num > current_num:
+                    end_line = i
+                    break
+    
+    # If we didn't find an end, go to the end of the file
+    if end_line is None:
+        end_line = len(lines)
+    
+    return start_line, end_line
+
+
+def extract_tables_from_section(content, start_line, end_line):
+    """
+    Extract all tables from a given section.
+    
+    Args:
+        content (str): The full markdown content
+        start_line (int): Start line of the section
+        end_line (int): End line of the section
+    
+    Returns:
+        list: List of table strings
+    """
+    lines = content.split('\n')
+    section_lines = lines[start_line:end_line]
+    section_content = '\n'.join(section_lines)
+    
+    # Find all tables in the section
+    # Tables start with a line containing | and end with a blank line or another header
+    tables = []
+    
+    # Split by lines that start with # (headers) to separate content blocks
+    blocks = re.split(r'^# ', section_content, flags=re.MULTILINE)
+    
+    for block in blocks:
+        if not block.strip():
+            continue
+            
+        # Look for table patterns in each block
+        lines_in_block = block.split('\n')
+        current_table = []
+        in_table = False
+        
+        for line in lines_in_block:
+            if '|' in line and line.strip():
+                # This looks like a table line
+                if not in_table:
+                    in_table = True
+                current_table.append(line)
+            elif in_table:
+                # End of table
+                if current_table:
+                    table_text = '\n'.join(current_table)
+                    if table_text.strip():
+                        tables.append(table_text)
+                current_table = []
+                in_table = False
+        
+        # Don't forget the last table if we're still in one
+        if in_table and current_table:
+            table_text = '\n'.join(current_table)
+            if table_text.strip():
+                tables.append(table_text)
+    
+    return tables
+
+
+def extract_peripheral_section(file_path, peripheral_name, tables_only=False):
+    """
+    Extract a peripheral section from the markdown file.
+    
+    Args:
+        file_path (str): Path to the markdown file
+        peripheral_name (str): Name of the peripheral to extract
+        tables_only (bool): If True, only extract tables from the section
+    
+    Returns:
+        str: The extracted content
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except FileNotFoundError:
+        return f"Error: File {file_path} not found."
+    except Exception as e:
+        return f"Error reading file: {e}"
+    
+    # Find the peripheral section
+    start_line, end_line = find_peripheral_section(content, peripheral_name)
+    
+    if start_line is None:
+        return f"Error: Peripheral '{peripheral_name}' not found in the document."
+    
+    if tables_only:
+        # Extract only tables from the section
+        tables = extract_tables_from_section(content, start_line, end_line)
+        if not tables:
+            return f"No tables found for peripheral '{peripheral_name}'."
+        
+        result = f"# Tables for {peripheral_name}\n\n"
+        for i, table in enumerate(tables, 1):
+            result += f"## Table {i}\n\n{table}\n\n"
+        
+        return result
+    else:
+        # Extract the entire section
+        lines = content.split('\n')
+        section_lines = lines[start_line:end_line]
+        return '\n'.join(section_lines)
+
+
+def list_available_peripherals(file_path):
+    """
+    List all available peripherals in the document.
+    
+    Args:
+        file_path (str): Path to the markdown file
+    
+    Returns:
+        str: List of available peripherals
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except FileNotFoundError:
+        return f"Error: File {file_path} not found."
+    except Exception as e:
+        return f"Error reading file: {e}"
+    
+    lines = content.split('\n')
+    peripherals = set()
+    
+    # Pattern to match section headers that likely contain peripheral names
+    pattern = re.compile(r'^# \d+\.\d+.*?(TIM\d+|GPIO|ADC|DAC|SPI|I2C|USART|DMA|CRC|RTC|IWDG|WWDG|FSMC|EXTI|NVIC|RCC|PWR|BKP)', re.IGNORECASE)
+    
+    for line in lines:
+        match = pattern.search(line)
+        if match:
+            peripheral = match.group(1)
+            peripherals.add(peripheral.upper())
+    
+    if not peripherals:
+        return "No peripherals found in the document."
+    
+    result = "Available peripherals:\n"
+    for peripheral in sorted(peripherals):
+        result += f"  - {peripheral}\n"
+    
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Extract peripheral sections from STM32F100xx reference manual markdown file',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python extract_peripheral.py TIM12                    # Extract entire TIM12 section
+  python extract_peripheral.py GPIO --tables-only       # Extract only tables from GPIO section
+  python extract_peripheral.py --list                   # List all available peripherals
+        """
+    )
+    
+    parser.add_argument('peripheral', nargs='?', help='Name of the peripheral to extract (e.g., TIM12, GPIO, ADC)')
+    parser.add_argument('--tables-only', action='store_true', help='Extract only tables from the peripheral section')
+    parser.add_argument('--list', action='store_true', help='List all available peripherals')
+    parser.add_argument('--file', default='devices/rm0041/rm0041.md', help='Path to the markdown file (default: devices/rm0041/rm0041.md)')
+    
+    args = parser.parse_args()
+    
+    if args.list:
+        print(list_available_peripherals(args.file))
+        return
+    
+    if not args.peripheral:
+        parser.error("Please specify a peripheral name or use --list to see available peripherals")
+        return
+    
+    # Extract the peripheral section
+    result = extract_peripheral_section(args.file, args.peripheral, args.tables_only)
+    print(result)
+
+
+if __name__ == '__main__':
+    main() 

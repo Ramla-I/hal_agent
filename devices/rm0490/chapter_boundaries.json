@@ -1,0 +1,169 @@
+{
+  "chapters": [
+    {
+      "title": "1 Documentation conventions",
+      "start_page": 41,
+      "end_page": 42
+    },
+    {
+      "title": "2 Memory and bus architecture",
+      "start_page": 43,
+      "end_page": 52
+    },
+    {
+      "title": "3 Boot modes",
+      "start_page": 53,
+      "end_page": 55
+    },
+    {
+      "title": "4 Embedded flash memory (FLASH)",
+      "start_page": 56,
+      "end_page": 91
+    },
+    {
+      "title": "5 Power control (PWR)",
+      "start_page": 92,
+      "end_page": 117
+    },
+    {
+      "title": "6 Reset and clock control (RCC)",
+      "start_page": 118,
+      "end_page": 165
+    },
+    {
+      "title": "7 Clock recovery system (CRS)",
+      "start_page": 166,
+      "end_page": 176
+    },
+    {
+      "title": "8 General-purpose I/Os (GPIO)",
+      "start_page": 177,
+      "end_page": 194
+    },
+    {
+      "title": "9 System configuration controller (SYSCFG)",
+      "start_page": 195,
+      "end_page": 216
+    },
+    {
+      "title": "10 Interconnect matrix",
+      "start_page": 217,
+      "end_page": 221
+    },
+    {
+      "title": "11 Direct memory access controller (DMA)",
+      "start_page": 222,
+      "end_page": 241
+    },
+    {
+      "title": "12 DMA request multiplexer (DMAMUX)",
+      "start_page": 242,
+      "end_page": 256
+    },
+    {
+      "title": "13 Nested vectored interrupt controller (NVIC)",
+      "start_page": 257,
+      "end_page": 259
+    },
+    {
+      "title": "14 Extended interrupt and event controller (EXTI)",
+      "start_page": 260,
+      "end_page": 277
+    },
+    {
+      "title": "15 Cyclic redundancy check calculation unit (CRC)",
+      "start_page": 278,
+      "end_page": 284
+    },
+    {
+      "title": "16 Analog-to-digital converter (ADC)",
+      "start_page": 285,
+      "end_page": 343
+    },
+    {
+      "title": "17 Advanced-control timer (TIM1)",
+      "start_page": 344,
+      "end_page": 442
+    },
+    {
+      "title": "18 General-purpose timers (TIM2/TIM3)",
+      "start_page": 443,
+      "end_page": 516
+    },
+    {
+      "title": "19 General-purpose timers (TIM14)",
+      "start_page": 517,
+      "end_page": 542
+    },
+    {
+      "title": "20 General-purpose timers (TIM15/TIM16/TIM17)",
+      "start_page": 543,
+      "end_page": 629
+    },
+    {
+      "title": "21 Infrared interface (IRTIM)",
+      "start_page": 630,
+      "end_page": 630
+    },
+    {
+      "title": "22 Independent watchdog (IWDG)",
+      "start_page": 631,
+      "end_page": 639
+    },
+    {
+      "title": "23 System window watchdog (WWDG)",
+      "start_page": 640,
+      "end_page": 645
+    },
+    {
+      "title": "24 Real-time clock (RTC)",
+      "start_page": 646,
+      "end_page": 676
+    },
+    {
+      "title": "25 Inter-integrated circuit interface (I2C)",
+      "start_page": 677,
+      "end_page": 741
+    },
+    {
+      "title": "26 Universal synchronous receiver transmitter (USART)",
+      "start_page": 742,
+      "end_page": 828
+    },
+    {
+      "title": "27 Serial peripheral interface / integrated interchip sound (SPI/I2S)",
+      "start_page": 829,
+      "end_page": 886
+    },
+    {
+      "title": "28 FD controller area network (FDCAN)",
+      "start_page": 887,
+      "end_page": 952
+    },
+    {
+      "title": "29 Universal serial bus full-speed host/device interface (USB)",
+      "start_page": 953,
+      "end_page": 1000
+    },
+    {
+      "title": "30 Debug support (DBG)",
+      "start_page": 1001,
+      "end_page": 1014
+    },
+    {
+      "title": "31 Device electronic signature",
+      "start_page": 1015,
+      "end_page": 1017
+    },
+    {
+      "title": "32 Important security notice",
+      "start_page": 1018,
+      "end_page": 1018
+    },
+    {
+      "title": "33 Revision history",
+      "start_page": 1019,
+      "end_page": 1019
+    }
+  ]
+}
