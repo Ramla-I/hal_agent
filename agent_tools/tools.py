@@ -1,7 +1,16 @@
 from agents import function_tool, RunContextWrapper
-from typing_extensions import Any
+import os
+import sys
+from pathlib import Path
+import fitz
+
+# Add the parent directory to sys.path
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+
+import agent_tools
 from defs import UserContext, Manufacturer
-import tools
+from agent_tools.pdf_ops import extract_markdown_from_pdf, extract_part_of_pdf
 
 @function_tool 
 def read_file(path) -> str:
@@ -38,9 +47,9 @@ def get_driver(wrapper: RunContextWrapper[UserContext]) -> str:
 def get_datasheet_section(wrapper: RunContextWrapper[UserContext], tables_only: bool = False) -> str:
     # print(f"get_datasheet_section {wrapper.context.peripheral_name}")
     if wrapper.context.manufacturer == Manufacturer.INTEL:
-        return tools.extract_section_regex(wrapper.context.datasheet_path, wrapper.context.peripheral_name, tables_only)
+        return agent_tools.extract_section_regex(wrapper.context.datasheet_path, wrapper.context.peripheral_name, tables_only)
     elif wrapper.context.manufacturer == Manufacturer.STM:
-        return tools.extract_section_file(wrapper.context.datasheet_sections_directory, wrapper.context.peripheral_name, tables_only)
+        return agent_tools.extract_section_file(wrapper.context.datasheet_sections_directory, wrapper.context.peripheral_name, tables_only)
     else:
         raise ValueError(f"Manufacturer {wrapper.context.manufacturer} not supported")
     
@@ -70,6 +79,117 @@ def split_datasheet_get_section(wrapper: RunContextWrapper[UserContext], n: int,
     section_lines = lines[start:end]
     return "".join(section_lines)
 
+
+FUNCTION_CALL_COUNT = 0
+
+@function_tool(name_override="get_table_of_contents")
+def get_table_of_contents(wrapper: RunContextWrapper[UserContext]) -> str:
+    """
+    Returns the table of contents of the datasheet.
+    """
+    print(f"get_table_of_contents {wrapper.context.datasheet_path}")
+    global FUNCTION_CALL_COUNT
+    FUNCTION_CALL_COUNT += 1
+    if FUNCTION_CALL_COUNT > 1:
+        return "You have already called this function and have access to the table of contents."
+    
+    pages_to_search = 50
+
+    # Get the datasheet path and replace .md with .pdf
+    md_path = Path(wrapper.context.datasheet_path)
+    pdf_path = md_path.with_suffix('.pdf')
+
+    # Check if the PDF exists
+    if not pdf_path.exists():
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+
+    try:
+        doc = fitz.open(pdf_path)
+    except Exception as e:
+        print(f"Error opening PDF {pdf_path}: {e}")
+        return None
+
+    toc_text = ""
+    # Heuristic: extract text from first 30 pages for ToC.
+    # This might need to be adjusted for different documents.
+    for page_num in range(min(pages_to_search, doc.page_count)):
+        page = doc.load_page(page_num)
+        toc_text += page.get_text()
+
+    if not toc_text.strip():
+        print("Could not extract any text from the first pages of the PDF. Is it an image-based PDF?")
+        doc.close()
+        return None
+
+    return toc_text
+
+@function_tool
+def get_table_of_contents_md(wrapper: RunContextWrapper[UserContext]) -> str:
+    """
+    Returns the table of contents of the datasheet.
+    """
+    print(f"get_table_of_contents_md {wrapper.context.datasheet_path}")
+    global FUNCTION_CALL_COUNT
+    FUNCTION_CALL_COUNT += 1
+    if FUNCTION_CALL_COUNT > 1:
+        return "You have already called this function and have access to the table of contents."
+    
+    pages_to_search = 50
+
+    # Get the datasheet path and replace .md with .pdf
+    md_path = Path(wrapper.context.datasheet_path)
+    pdf_path = md_path.with_suffix('.pdf')
+
+    # Check if the PDF exists
+    if not pdf_path.exists():
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+
+    extracted_pdf_path = extract_part_of_pdf(pdf_path, 0, pages_to_search)
+    toc_text = extract_markdown_from_pdf(extracted_pdf_path)
+
+    return toc_text
+
+def get_datasheet_pages(wrapper: RunContextWrapper[UserContext], pages: list[int]) -> str:
+    """
+    Returns the relevant datasheet pages in md format.
+    """
+def get_datasheet_pages(wrapper: RunContextWrapper[UserContext], pages: list[int]) -> str:
+    """
+    Returns the relevant datasheet pages in markdown format.
+
+    Args:
+        wrapper: RunContextWrapper containing UserContext with datasheet_path
+        pages: List of 0-based page numbers to extract
+
+    Returns:
+        str: Extracted text from the specified pages, concatenated as markdown.
+    """
+    from pathlib import Path
+
+    # Get the datasheet PDF path
+    md_path = Path(wrapper.context.datasheet_path)
+    pdf_path = md_path.with_suffix('.pdf')
+
+    # Check if the PDF exists
+    if not pdf_path.exists():
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        raise ImportError("PyMuPDF (fitz) is required to extract pages from PDF.")
+
+    doc = fitz.open(pdf_path)
+    extracted_text = ""
+    for page_num in pages:
+        if 0 <= page_num < doc.page_count:
+            page = doc.load_page(page_num)
+            extracted_text += f"\n\n--- Page {page_num + 1} ---\n\n"
+            extracted_text += page.get_text()
+        else:
+            extracted_text += f"\n\n--- Page {page_num + 1} (out of range) ---\n\n"
+    doc.close()
+    return extracted_text
 
 # @function_tool(name_override="search_datasheet")
 # def search_datasheet(wrapper: RunContextWrapper[UserContext], search_string: str) -> dict:

@@ -1,11 +1,12 @@
 from defs import UserContext, Manufacturer
 
-DEVICE_NAME = "rm0091"
+DEVICE_NAME = "rm0041"
+CURRENT_VS_ID = "vs_6892501067b08191ac63cc6de06ee629"
 
 user_contexts = [
     UserContext(device_name='82579', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82579/e1000_ebb2314.rs', datasheet_path='devices/82579/82579.md', datasheet_sections_directory='', svd_path=[], run=0, file_id='file-Y42TiuVyte2z2TcbsXt9sv', vs_id='vs_68924fa6726481918501140c8ac86afe'),
     UserContext(device_name='82599', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82599/ixgbe_4a124f4.rs', datasheet_path='devices/82599/82599.md', datasheet_sections_directory='', svd_path=[], run=0, file_id='file-RdWHHvaJvfkRZ59zXGjVVS', vs_id='vs_68924fdcb9cc8191809cacd7be13a9ea'),
-    UserContext(device_name='rm0041', peripheral_name='STK', manufacturer=Manufacturer.STM, driver_path='', datasheet_path='devices/rm0041/rm0041.md', datasheet_sections_directory='devices/rm0041/sections', svd_path=['devices/rm0041/stm32f100.svd'], run='1', file_id='file-MHtC1XNEQDa2X8jNEjfk1b', vs_id='vs_6892501067b08191ac63cc6de06ee629'),
+    UserContext(device_name='rm0041', peripheral_name='STK', manufacturer=Manufacturer.STM, driver_path='', datasheet_path='devices/rm0041/rm0041.md', datasheet_sections_directory='devices/rm0041/sections', svd_path=['devices/rm0041/stm32f100.svd'], run='2', file_id='file-MHtC1XNEQDa2X8jNEjfk1b', vs_id='vs_6892501067b08191ac63cc6de06ee629'),
     UserContext(device_name='rm0090', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', datasheet_path='devices/rm0090/rm0090.md', datasheet_sections_directory='devices/rm0090/sections', svd_path=[
         'devices/rm0090/stm32f405.svd',
         'devices/rm0090/stm32f407.svd',

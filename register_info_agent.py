@@ -2,14 +2,13 @@ from agents import Agent, Runner, GuardrailFunctionOutput, InputGuardrail, Funct
 from agents.exceptions import InputGuardrailTripwireTriggered
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
 import asyncio
-from typing_extensions import Any
 import os
 from defs import UserContext, RegisterList, Manufacturer, RegisterNameList
-from tools import get_datasheet, get_datasheet_section
+from agent_tools.tools import get_datasheet, get_datasheet_section
 import config
-import xml.etree.ElementTree as ET
-
-CURRENT_VS_ID = "vs_6892501067b08191ac63cc6de06ee629"
+from agent_tools.svd_parsing import get_peripheral_names, get_register_names_for_peripheral
+# from agent_tools.tools import get_datasheet_pages
+from agent_tools.pdf_ops import extract_pages_from_pdf
 
 name_translation_agent = Agent(
     name = "Register Name Translator",
@@ -54,63 +53,31 @@ def dynamic_instructions(
     Bits 15:0 are read-write.
     For each bit from 15:0, they can be written with one of two enumerated values:
         Name = OutputPushPull, Value = 0 
-        Name = OutputOpenDrain, Value = 1
-
-    You have access to a datasheet and the ability to retrive it a section at a time.  
-    For the peripheral {context.peripheral_name}, return the information requested.
-    You should first try to access the register table through the get_datasheet_section tool.
-    If the register table is not found, then you need to search the vector store.
+        Name = OutputOpenDrain, Value = 
+    You have been given relevant pages of the datasheet.
     """
+    # You have access to a datasheet and the ability to retrive it a section at a time.  
+    # For the peripheral {context.peripheral_name}, return the information requested.
+    # You should first try to access the register table through the get_datasheet_section tool.
+    # If the register table is not found, then you need to search the vector store.
+ 
 
-def vector_store_id(context: RunContextWrapper[UserContext]) -> str:
-    return context.vs_id
 
 info_extraction_agent = Agent[UserContext](
     name = "Register Information Extractor",
     model="gpt-4o",
     # instructions=f"""{RECOMMENDED_PROMPT_PREFIX}
     instructions=dynamic_instructions,
-    tools=[
-        get_datasheet_section, 
-        FileSearchTool(
-            max_num_results=1,
-            vector_store_ids=[CURRENT_VS_ID],
-            include_search_results=True,
-        )
-        ],
+    # tools=[
+    #     get_datasheet_section, 
+    #     FileSearchTool(
+    #         max_num_results=1,
+    #         vector_store_ids=[CURRENT_VS_ID],
+    #         include_search_results=True,
+    #     )
+    #     ],
     output_type=RegisterList,
 )
-
-def get_peripheral_names(svd_file_paths):
-    """
-    Given a list of SVD file paths, extract all unique peripheral names across all files.
-
-    Args:
-        svd_file_paths (list[str]): List of SVD file paths.
-
-    Returns:
-        list[str]: List of unique peripheral names.
-    """
-    if not svd_file_paths or not isinstance(svd_file_paths, list):
-        raise ValueError("svd_file_paths must be a non-empty list of file paths")
-
-    peripheral_names_set = set()
-    for svd_file_path in svd_file_paths:
-        if not os.path.exists(svd_file_path):
-            raise FileNotFoundError(f"SVD file not found: {svd_file_path}")
-
-        tree = ET.parse(svd_file_path)
-        root = tree.getroot()
-        peripherals = root.find("peripherals")
-        if peripherals is None:
-            raise ValueError(f"No <peripherals> section found in SVD file: {svd_file_path}")
-
-        for periph in peripherals.findall("peripheral"):
-            name_elem = periph.find("name")
-            if name_elem is not None and name_elem.text:
-                peripheral_names_set.add(name_elem.text)
-
-    return list(peripheral_names_set)
 
 
 async def main():
@@ -152,26 +119,60 @@ async def main():
 
     for peripheral_name in peripheral_names:
         user_context.peripheral_name = peripheral_name
-        result = await Runner.run(
-            info_extraction_agent,
-            f"""
-            For each register in the peripheral {peripheral_name}. Find the
-                address_offset,
-                reset_value,
-                size,
-                readonly_bits,
-                write_only_bits,
-                read_write_bits,
-                subfields and their enumerated values (if they exist).
-            You can access the datasheet through the provided tools.
-            All the information you provide must be in the datasheet and accurate. If you cannot find a piece of information for a register, leave that field empty.
-            """,
-            context=user_context,
-        )
+        register_names = get_register_names_for_peripheral(user_context.svd_path, peripheral_name)
+        for register_name in register_names:
+            user_context.register_name = register_name
+            # INSERT_YOUR_CODE
+            # Search keyword_infos.json for an entry with keyword == f"{peripheral_name}_{register_name}" and non-empty pages
+            import json
 
-        output_path = os.path.join(output_dir, peripheral_name)
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(str(result.final_output))
+            keyword_info_path = os.path.join("devices", device_name, "keyword_infos.json")
+            keyword_entry = None
+            if os.path.exists(keyword_info_path):
+                with open(keyword_info_path, "r", encoding="utf-8") as kf:
+                    try:
+                        keyword_infos = json.load(kf)
+                        search_key = f"{peripheral_name}_{register_name}"
+                        for entry in keyword_infos:
+                            if (
+                                entry.get("keyword") == search_key
+                                and isinstance(entry.get("pages"), list)
+                                and len(entry["pages"]) > 0
+                            ):
+                                keyword_entry = entry
+                                break
+                    except Exception as e:
+                        print(f"Error reading {keyword_info_path}: {e}")
+            if keyword_entry:
+                pages = keyword_entry.get("pages", [])
+                pdf_path = user_context.datasheet_path
+                if pdf_path.endswith(".md"):
+                    pdf_path = pdf_path[:-3] + ".pdf"
+                datasheet_pages = extract_pages_from_pdf(pdf_path, pages)
+                # print(f"keyword_entry: {keyword_entry}")
+                # print(f"Datasheet pages: {datasheet_pages}")
+                # exit()
+                result = await Runner.run(
+                    info_extraction_agent,
+                    f"""
+                    For the register {register_name} in the peripheral {peripheral_name}. Find the
+                        address_offset,
+                        reset_value,
+                        size,
+                        readonly_bits,
+                        write_only_bits,
+                        read_write_bits,
+                        subfields and their enumerated values (if they exist).
+                    These are relevant pages of the datasheet:
+                    {datasheet_pages}
+                    All the information you provide must be in the datasheet and accurate. If you cannot find a piece of information for a register, leave that field empty.
+                    """,
+                    context=user_context,
+                )
+
+                output_path = os.path.join(output_dir, f"{peripheral_name}_{register_name}")
+                with open(output_path, "w", encoding="utf-8") as f:
+                    f.write(str(result.final_output))
    
 
 

@@ -53,3 +53,10 @@ class RegisterName(BaseModel):
 
 class RegisterNameList(BaseModel):
     registers: list[RegisterName]
+
+class SectionInfo(BaseModel):
+    section_exists: bool
+    peripheral_name: str
+    section_name: str
+    start_page: int
+    end_page: int

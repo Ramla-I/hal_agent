@@ -1,0 +1,450 @@
+Comparison of ADC1 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/ADC1
+Summary:
+Registers in SVD but missing in output: ['CR1', 'CR2', 'HTR', 'JDR1', 'JDR2', 'JDR3', 'JDR4', 'JOFR1', 'JOFR2', 'JOFR3', 'JOFR4', 'JSQR', 'LTR', 'SMPR1', 'SMPR2', 'SQR1', 'SQR2', 'SQR3', 'SR']
+Registers in output but missing in SVD: ['JDRx']
+Registers present in both SVD and output: ['DR']
+
+Comparison of AFIO registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/AFIO
+Summary:
+Registers in SVD but missing in output: ['EXTICR1', 'EXTICR2', 'EXTICR3', 'EXTICR4', 'MAPR', 'MAPR2']
+Registers present in both SVD and output: ['EVCR']
+Register EVCR differs: Field EVOE enumerated values differ.
+
+Comparison of BKP registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/BKP
+Summary:
+Registers in SVD but missing in output: ['DR1', 'DR10', 'DR11', 'DR12', 'DR13', 'DR14', 'DR15', 'DR16', 'DR17', 'DR18', 'DR19', 'DR2', 'DR20', 'DR21', 'DR22', 'DR23', 'DR24', 'DR25', 'DR26', 'DR27', 'DR28', 'DR29', 'DR3', 'DR30', 'DR31', 'DR32', 'DR33', 'DR34', 'DR35', 'DR36', 'DR37', 'DR38', 'DR39', 'DR4', 'DR40', 'DR41', 'DR42', 'DR5', 'DR6', 'DR7', 'DR8', 'DR9']
+Registers in output but missing in SVD: ['DRx']
+Registers present in both SVD and output: ['CR', 'CSR', 'RTCCR']
+Register RTCCR differs: address_offset: SVD=40 output=44; size: SVD=32 output=16; Field ASOS enumerated values differ.
+Register CSR differs: address_offset: SVD=48 output=52; size: SVD=32 output=16
+Register CR differs: address_offset: SVD=44 output=48; size: SVD=32 output=16
+
+Comparison of CEC registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/CEC
+Summary:
+Registers present in both SVD and output: ['CFGR', 'CSR', 'ESR', 'OAR', 'PRES', 'RXD', 'TXD']
+Register CFGR differs: Field IE enumerated values differ.; Field PE enumerated values differ.; Field BPEM enumerated values differ.; Field BTEM enumerated values differ.
+Register CSR differs: Fields in SVD but missing in output: ['RBTF', 'REOM', 'RERR', 'RSOM', 'TBTRF', 'TEOM', 'TERR', 'TSOM']
+Register ESR differs: Fields in SVD but missing in output: ['ACKE', 'BPE', 'BTE', 'LINE', 'RBTFE', 'SBE', 'TBTFE']
+
+Comparison of CRC registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/CRC
+Summary:
+Registers present in both SVD and output: ['CR', 'DR', 'IDR']
+Register IDR differs: Fields in SVD but missing in output: ['IDR']
+Register CR differs: Field RESET enumerated values differ.
+
+Comparison of DAC registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/DAC
+Summary:
+Registers in SVD but missing in output: ['CR', 'DHR12L1', 'DHR12LD', 'DHR12R1', 'DHR12RD', 'DHR8R1', 'DHR8RD', 'DOR1', 'DOR2', 'SR', 'SWTRIGR']
+Registers present in both SVD and output: ['DHR12L2', 'DHR12R2', 'DHR8R2']
+
+Comparison of DBG registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/DBG
+Summary:
+Registers present in both SVD and output: ['CR', 'IDCODE']
+Register IDCODE differs: address_offset: SVD=0 output=3758366720; reset_value: SVD=0 output=268461120
+Register CR differs: address_offset: SVD=4 output=3758366724; Fields in SVD but missing in output: ['DBG_I2C1_SMBUS_TIMEOUT', 'DBG_I2C2_SMBUS_TIMEOUT', 'DBG_IWDG_STOP', 'DBG_TIM12_STOP', 'DBG_TIM13_STOP', 'DBG_TIM14_STOP', 'DBG_TIM15_STOP', 'DBG_TIM16_STOP', 'DBG_TIM17_STOP', 'DBG_TIM1_STOP', 'DBG_TIM2_STOP', 'DBG_TIM3_STOP', 'DBG_TIM4_STOP', 'DBG_TIM5_STOP', 'DBG_TIM6_STOP', 'DBG_TIM7_STOP', 'DBG_WWDG_STOP', 'TRACE_MODE']; Field DBG_STOP enumerated values differ.; Field TRACE_IOEN enumerated values differ.; Field DBG_SLEEP enumerated values differ.; Field DBG_STANDBY enumerated values differ.
+
+Comparison of DMA1 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/DMA1
+Summary:
+Registers in SVD but missing in output: ['CCR1', 'CCR2', 'CCR3', 'CCR4', 'CCR5', 'CCR6', 'CCR7', 'CMAR1', 'CMAR2', 'CMAR3', 'CMAR4', 'CMAR5', 'CMAR6', 'CMAR7', 'CNDTR1', 'CNDTR2', 'CNDTR3', 'CNDTR4', 'CNDTR5', 'CNDTR6', 'CNDTR7', 'CPAR1', 'CPAR2', 'CPAR3', 'CPAR4', 'CPAR5', 'CPAR6', 'CPAR7', 'IFCR', 'ISR']
+Registers in output but missing in SVD: ['CMARx', 'CPARx']
+Registers present in both SVD and output: []
+
+Comparison of DMA2 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/DMA2
+Summary:
+Registers in output but missing in SVD: ['CMARx', 'CPARx']
+Registers present in both SVD and output: []
+
+Comparison of EXTI registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/EXTI
+Summary:
+Registers in SVD but missing in output: ['PR', 'SWIER']
+Registers present in both SVD and output: ['EMR', 'FTSR', 'IMR', 'RTSR']
+Register RTSR differs: Fields in SVD but missing in output: ['TR0', 'TR1', 'TR10', 'TR11', 'TR12', 'TR13', 'TR14', 'TR15', 'TR16', 'TR17', 'TR2', 'TR3', 'TR4', 'TR5', 'TR6', 'TR7', 'TR8', 'TR9']
+Register EMR differs: Fields in SVD but missing in output: ['MR0', 'MR1', 'MR10', 'MR11', 'MR12', 'MR13', 'MR14', 'MR15', 'MR16', 'MR17', 'MR2', 'MR3', 'MR4', 'MR5', 'MR6', 'MR7', 'MR8', 'MR9']; Fields in output but missing in SVD: ['MRx']
+Register FTSR differs: Fields in SVD but missing in output: ['TR0', 'TR1', 'TR10', 'TR11', 'TR12', 'TR13', 'TR14', 'TR15', 'TR16', 'TR17', 'TR2', 'TR3', 'TR4', 'TR5', 'TR6', 'TR7', 'TR8', 'TR9']
+Register IMR differs: Fields in SVD but missing in output: ['MR0', 'MR1', 'MR10', 'MR11', 'MR12', 'MR13', 'MR14', 'MR15', 'MR16', 'MR17', 'MR2', 'MR3', 'MR4', 'MR5', 'MR6', 'MR7', 'MR8', 'MR9']; Fields in output but missing in SVD: ['MRx']
+
+Comparison of FLASH registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/FLASH
+Summary:
+Registers present in both SVD and output: ['ACR', 'AR', 'CR', 'KEYR', 'OBR', 'OPTKEYR', 'SR', 'WRPR']
+Register OBR differs: reset_value: SVD=67108860 output=; Fields in SVD but missing in output: ['Data0', 'Data1', 'OPTERR', 'RDPRT', 'WDG_SW', 'nRST_STDBY', 'nRST_STOP']
+Register KEYR differs: reset_value: SVD=0 output=; Fields in SVD but missing in output: ['KEY']
+Register ACR differs: reset_value: SVD=0 output=; Fields in SVD but missing in output: ['HLFCYA']
+Register AR differs: reset_value: SVD=0 output=; Fields in SVD but missing in output: ['FAR']
+Register SR differs: reset_value: SVD=0 output=; Fields in SVD but missing in output: ['BSY', 'EOP', 'PGERR', 'WRPRTERR']
+Register OPTKEYR differs: reset_value: SVD=0 output=; Fields in SVD but missing in output: ['OPTKEY']
+Register CR differs: reset_value: SVD=128 output=; Fields in SVD but missing in output: ['EOPIE', 'ERRIE', 'LOCK', 'MER', 'OPTER', 'OPTPG', 'OPTWRE', 'PER', 'PG', 'STRT']
+Register WRPR differs: reset_value: SVD=4294967295 output=; Fields in SVD but missing in output: ['WRP']
+
+Comparison of FSMC registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/FSMC
+Summary:
+Registers in SVD but missing in output: ['BTR2', 'BTR3', 'BTR4', 'BWTR1', 'BWTR2', 'BWTR3', 'BWTR4']
+Registers present in both SVD and output: ['BCR1', 'BCR2', 'BCR3', 'BCR4', 'BTR1']
+Register BTR1 differs: reset_value: SVD=4294967295 output=
+Register BCR4 differs: reset_value: SVD=12496 output=12498; Fields in SVD but missing in output: ['ASYNCWAIT', 'BURSTEN', 'EXTMOD', 'FACCEN', 'MBKEN', 'MTYP', 'MUXEN', 'MWID', 'WAITCFG', 'WAITEN', 'WAITPOL', 'WRAPMOD', 'WREN']; Fields in output but missing in SVD: ['CPSIZE']; Field CBURSTRW enumerated values differ.
+Register BCR2 differs: reset_value: SVD=12496 output=12498; Fields in SVD but missing in output: ['ASYNCWAIT', 'BURSTEN', 'EXTMOD', 'FACCEN', 'MBKEN', 'MTYP', 'MUXEN', 'MWID', 'WAITCFG', 'WAITEN', 'WAITPOL', 'WRAPMOD', 'WREN']; Fields in output but missing in SVD: ['CPSIZE']; Field CBURSTRW enumerated values differ.
+Register BCR1 differs: reset_value: SVD=12496 output=12507; Fields in SVD but missing in output: ['BURSTEN', 'EXTMOD', 'FACCEN', 'MBKEN', 'MTYP', 'MUXEN', 'MWID', 'WAITCFG', 'WAITEN', 'WAITPOL', 'WREN']; Fields in output but missing in SVD: ['CPSIZE']; Field CBURSTRW enumerated values differ.; Field ASYNCWAIT enumerated values differ.
+Register BCR3 differs: reset_value: SVD=12496 output=12498; Fields in SVD but missing in output: ['ASYNCWAIT', 'BURSTEN', 'EXTMOD', 'FACCEN', 'MBKEN', 'MTYP', 'MUXEN', 'MWID', 'WAITCFG', 'WAITEN', 'WAITPOL', 'WRAPMOD', 'WREN']; Fields in output but missing in SVD: ['CPSIZE']; Field CBURSTRW enumerated values differ.
+
+Comparison of GPIOA registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/GPIOA
+Summary:
+Registers in SVD but missing in output: ['CRH', 'CRL', 'IDR', 'LCKR']
+Registers present in both SVD and output: ['BRR', 'BSRR', 'ODR']
+Register BSRR differs: Fields in SVD but missing in output: ['BR0', 'BR1', 'BR10', 'BR11', 'BR12', 'BR13', 'BR14', 'BR15', 'BR2', 'BR3', 'BR4', 'BR5', 'BR6', 'BR7', 'BR8', 'BR9', 'BS0', 'BS1', 'BS10', 'BS11', 'BS12', 'BS13', 'BS14', 'BS15', 'BS2', 'BS3', 'BS4', 'BS5', 'BS6', 'BS7', 'BS8', 'BS9']; Fields in output but missing in SVD: ['BR', 'BS']
+Register ODR differs: Fields in SVD but missing in output: ['ODR0', 'ODR1', 'ODR10', 'ODR11', 'ODR12', 'ODR13', 'ODR14', 'ODR15', 'ODR2', 'ODR3', 'ODR4', 'ODR5', 'ODR6', 'ODR7', 'ODR8', 'ODR9']; Fields in output but missing in SVD: ['ODR']
+Register BRR differs: Fields in SVD but missing in output: ['BR0', 'BR1', 'BR10', 'BR11', 'BR12', 'BR13', 'BR14', 'BR15', 'BR2', 'BR3', 'BR4', 'BR5', 'BR6', 'BR7', 'BR8', 'BR9']
+
+Comparison of GPIOB registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/GPIOB
+Summary:
+Registers in output but missing in SVD: ['BSRR', 'ODR']
+Registers present in both SVD and output: []
+
+Comparison of GPIOC registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/GPIOC
+Summary:
+Registers in output but missing in SVD: ['BSRR', 'ODR']
+Registers present in both SVD and output: []
+
+Comparison of GPIOD registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/GPIOD
+Summary:
+Registers in output but missing in SVD: ['ODR']
+Registers present in both SVD and output: []
+
+Comparison of GPIOE registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/GPIOE
+Summary:
+Registers in output but missing in SVD: ['ODR']
+Registers present in both SVD and output: []
+
+Comparison of GPIOF registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/GPIOF
+Summary:
+Registers in output but missing in SVD: ['ODR (x=A..G)']
+Registers present in both SVD and output: []
+
+Comparison of GPIOG registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/GPIOG
+Summary:
+Registers in output but missing in SVD: ['ODR']
+Registers present in both SVD and output: []
+
+Comparison of I2C1 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/I2C1
+Summary:
+Registers in SVD but missing in output: ['CCR', 'CR1', 'CR2', 'DR', 'OAR2', 'SR1', 'SR2', 'TRISE']
+Registers present in both SVD and output: ['OAR1']
+Register OAR1 differs: size: SVD=32 output=16; Fields in SVD but missing in output: ['ADD10', 'ADD7']; Fields in output but missing in SVD: ['ADD7_1', 'ADD9_8']; Field ADDMODE enumerated values differ.
+
+Comparison of I2C2 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/I2C2
+Summary:
+Registers in output but missing in SVD: ['OAR1', 'OAR2']
+Registers present in both SVD and output: []
+
+Comparison of IWDG registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/IWDG
+Summary:
+Registers present in both SVD and output: ['KR', 'PR', 'RLR', 'SR']
+Register PR differs: Field PR enumerated values differ.
+Register KR differs: Field KEY enumerated values differ.
+
+Comparison of MPU registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/MPU
+Summary:
+Registers in SVD but missing in output: ['MPU_CTRL', 'MPU_RASR', 'MPU_RBAR', 'MPU_RNR', 'MPU_TYPER']
+Registers present in both SVD and output: []
+
+Comparison of NVIC registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/NVIC
+Summary:
+Registers in SVD but missing in output: ['IABR0', 'IABR1', 'ICER0', 'ICER1', 'ICPR0', 'ICPR1', 'IPR0', 'IPR1', 'IPR10', 'IPR11', 'IPR12', 'IPR13', 'IPR14', 'IPR2', 'IPR3', 'IPR4', 'IPR5', 'IPR6', 'IPR7', 'IPR8', 'IPR9', 'ISER0', 'ISER1', 'ISPR0', 'ISPR1']
+Registers in output but missing in SVD: ['ICER', 'ISER']
+Registers present in both SVD and output: []
+
+Comparison of NVIC_STIR registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/NVIC_STIR
+Summary:
+Registers present in both SVD and output: ['STIR']
+Register STIR differs: address_offset: SVD=0 output=Not found; reset_value: SVD=0 output=Not found; size: SVD=32 output=0; Fields in SVD but missing in output: ['INTID']
+
+Comparison of PWR registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/PWR
+Summary:
+Registers in SVD but missing in output: ['CSR']
+Registers present in both SVD and output: ['CR']
+Register CR differs: Field PDDS enumerated values differ.; Field DBP enumerated values differ.; Field PVDE bit range: SVD=(4,1) output=(10,1); Field PVDE enumerated values differ.; Field PLS bit range: SVD=(5,3) output=(9,3)
+
+Comparison of RCC registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/RCC
+Summary:
+Registers in SVD but missing in output: ['AHBENR', 'APB1ENR', 'APB1RSTR', 'APB2ENR', 'APB2RSTR', 'BDCR', 'CFGR2', 'CSR']
+Registers present in both SVD and output: ['CFGR', 'CIR', 'CR']
+Register CIR differs: Fields in SVD but missing in output: ['CSSF', 'HSERDYC', 'HSERDYF', 'HSERDYIE', 'HSIRDYC', 'HSIRDYF', 'HSIRDYIE', 'LSERDYC', 'LSERDYF', 'LSERDYIE', 'LSIRDYC', 'LSIRDYF', 'LSIRDYIE', 'PLLRDYC', 'PLLRDYF', 'PLLRDYIE']; Field CSSC enumerated values differ.
+Register CFGR differs: reset_value: SVD=0 output=; Fields in SVD but missing in output: ['ADCPRE', 'HPRE', 'MCO', 'PLLMUL', 'PLLSRC', 'PLLXTPRE', 'PPRE1', 'PPRE2', 'SWS']; Field SW enumerated values differ.
+Register CR differs: reset_value: SVD=131 output=; Fields in SVD but missing in output: ['HSEBYP', 'HSEON', 'HSERDY', 'HSICAL', 'HSION', 'HSIRDY', 'HSITRIM', 'PLLRDY']; Field PLLON enumerated values differ.; Field CSSON enumerated values differ.
+
+Comparison of RTC registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/RTC
+Summary:
+Registers in SVD but missing in output: ['ALRH', 'ALRL', 'CNTH', 'CNTL', 'CRH', 'CRL', 'DIVH', 'DIVL', 'PRLH', 'PRLL']
+Registers in output but missing in SVD: ['CNT']
+Registers present in both SVD and output: []
+
+Comparison of SCB registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/SCB
+Summary:
+Registers in SVD but missing in output: ['BFAR', 'CCR', 'CFSR_UFSR_BFSR_MMFSR', 'CPUID', 'HFSR', 'MMFAR', 'SCR', 'SHCRS', 'SHPR1', 'SHPR2', 'SHPR3', 'VTOR']
+Registers present in both SVD and output: ['AIRCR', 'ICSR']
+Register AIRCR differs: reset_value: SVD=0 output=4194631680; Fields in SVD but missing in output: ['ENDIANESS', 'VECTKEYSTAT']; Fields in output but missing in SVD: ['ENDIANNESS', 'VECTKEY']; Field VECTCLRACTIVE enumerated values differ.; Field SYSRESETREQ enumerated values differ.; Field VECTRESET enumerated values differ.
+Register ICSR differs: Fields in SVD but missing in output: ['RETTOBASE']; Fields in output but missing in SVD: ['ISRPREEMPT']; Field PENDSVSET enumerated values differ.; Field PENDSVCLR enumerated values differ.; Field ISRPENDING enumerated values differ.; Field VECTPENDING bit range: SVD=(12,7) output=(12,4); Field NMIPENDSET enumerated values differ.; Field PENDSTSET enumerated values differ.; Field PENDSTCLR enumerated values differ.
+
+Comparison of SCB_ACTRL registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/SCB_ACTRL
+Summary:
+Registers present in both SVD and output: ['ACTRL']
+Register ACTRL differs: address_offset: SVD=0 output=; reset_value: SVD=0 output=; Fields in SVD but missing in output: ['DISFOLD', 'DISITMATBFLUSH', 'DISRAMODE', 'FPEXCODIS']
+
+Comparison of SPI1 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/SPI1
+Summary:
+Registers in SVD but missing in output: ['CR1', 'CRCPR', 'RXCRCR', 'SR', 'TXCRCR']
+Registers present in both SVD and output: ['CR2', 'DR']
+Register CR2 differs: address_offset: SVD=4 output=Not found; reset_value: SVD=0 output=2; size: SVD=32 output=16; Field SSOE enumerated values differ.; Field RXNEIE enumerated values differ.; Field TXEIE enumerated values differ.; Field TXDMAEN enumerated values differ.; Field ERRIE enumerated values differ.; Field RXDMAEN enumerated values differ.
+Register DR differs: size: SVD=32 output=16
+
+Comparison of SPI2 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/SPI2
+Summary:
+Registers in output but missing in SVD: ['CR2', 'DR']
+Registers present in both SVD and output: []
+
+Comparison of SPI3 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/SPI3
+Summary:
+Registers in output but missing in SVD: ['CRCPR', 'RXCRCR', 'TXCRCR']
+Registers present in both SVD and output: []
+
+Comparison of STK registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/STK
+Summary:
+Registers in SVD but missing in output: ['CALIB', 'CTRL', 'LOAD_', 'VAL']
+Registers in output but missing in SVD: ['CNT)', 'PSC)']
+Registers present in both SVD and output: []
+
+Comparison of TIM1 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM1
+Summary:
+Registers in SVD but missing in output: ['ARR', 'BDTR', 'CCER', 'CCMR1_Input', 'CCMR1_Output', 'CCMR2_Input', 'CCMR2_Output', 'CCR4', 'CNT', 'CR1', 'CR2', 'DCR', 'DIER', 'DMAR', 'EGR', 'PSC', 'SMCR', 'SR']
+Registers present in both SVD and output: ['CCR1', 'CCR2', 'CCR3', 'RCR']
+Register CCR2 differs: size: SVD=32 output=16
+Register RCR differs: size: SVD=32 output=16
+Register CCR1 differs: size: SVD=32 output=16
+Register CCR3 differs: size: SVD=32 output=16
+
+Comparison of TIM12 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM12
+Summary:
+Registers in SVD but missing in output: ['CCER', 'CCMR1_Input', 'CCMR1_Output', 'CR1', 'CR2', 'DIER', 'SMCR', 'SR']
+Registers present in both SVD and output: ['ARR', 'CCR1', 'CCR2', 'CNT', 'EGR', 'PSC']
+Register PSC differs: size: SVD=32 output=16; Fields in SVD but missing in output: ['PSC']
+Register EGR differs: reset_value: SVD=0 output=; size: SVD=32 output=0; Field CC2G bit range: SVD=(2,1) output=(5,1); Field CC1G bit range: SVD=(1,1) output=(4,1)
+Register ARR differs: reset_value: SVD=0 output=65535; size: SVD=32 output=16; Fields in SVD but missing in output: ['ARR']
+Register CNT differs: size: SVD=32 output=16; Fields in SVD but missing in output: ['CNT']
+Register CCR1 differs: size: SVD=32 output=16; Fields in SVD but missing in output: ['CCR1']
+Register CCR2 differs: size: SVD=32 output=16; Fields in SVD but missing in output: ['CCR2']
+
+Comparison of TIM13 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM13
+Summary:
+Registers in SVD but missing in output: ['CCER', 'CCMR1_Input', 'CCMR1_Output', 'CCR1', 'CR1', 'DIER', 'EGR', 'SR']
+Registers present in both SVD and output: ['ARR', 'CNT', 'PSC']
+Register PSC differs: size: SVD=32 output=16
+Register ARR differs: reset_value: SVD=0 output=65535; size: SVD=32 output=16
+Register CNT differs: size: SVD=32 output=16
+
+Comparison of TIM14 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM14
+Summary:
+Registers in output but missing in SVD: ['CCR1']
+Registers present in both SVD and output: []
+
+Comparison of TIM15 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM15
+Summary:
+Registers in SVD but missing in output: ['BDTR', 'CCER', 'CCMR1_Input', 'CCMR1_Output', 'CCR1', 'CCR2', 'CR1', 'CR2', 'DCR', 'DIER', 'DMAR', 'EGR', 'RCR', 'SMCR', 'SR']
+Registers present in both SVD and output: ['ARR', 'CNT', 'PSC']
+Register PSC differs: size: SVD=32 output=16; Fields in SVD but missing in output: ['PSC']
+Register ARR differs: size: SVD=32 output=16; Fields in SVD but missing in output: ['ARR']
+Register CNT differs: size: SVD=32 output=16; Fields in SVD but missing in output: ['CNT']
+
+Comparison of TIM16 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM16
+Summary:
+Registers in SVD but missing in output: ['BDTR', 'CCER', 'CCMR1_Input', 'CCMR1_Output', 'CCR1', 'CR1', 'CR2', 'DCR', 'DIER', 'DMAR', 'EGR', 'SR']
+Registers present in both SVD and output: ['ARR', 'CNT', 'PSC', 'RCR']
+Register PSC differs: size: SVD=32 output=16
+Register ARR differs: size: SVD=32 output=16
+Register RCR differs: size: SVD=32 output=8
+Register CNT differs: size: SVD=32 output=16
+
+Comparison of TIM17 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM17
+Summary:
+Registers in output but missing in SVD: ['CR1', 'CR2']
+Registers present in both SVD and output: []
+
+Comparison of TIM2 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM2
+Summary:
+Registers in SVD but missing in output: ['CCER', 'CCMR1_Input', 'CCMR1_Output', 'CCMR2_Input', 'CCMR2_Output', 'CNT', 'CR1', 'CR2', 'DCR', 'DIER', 'DMAR', 'EGR', 'PSC', 'SMCR', 'SR']
+Registers present in both SVD and output: ['ARR', 'CCR1', 'CCR2', 'CCR3', 'CCR4']
+Register CCR4 differs: size: SVD=32 output=16
+Register CCR3 differs: size: SVD=32 output=16
+Register ARR differs: reset_value: SVD=0 output=65535; size: SVD=32 output=16
+Register CCR1 differs: size: SVD=32 output=16
+Register CCR2 differs: size: SVD=32 output=16
+
+Comparison of TIM3 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM3
+Summary:
+Registers in output but missing in SVD: ['ARR']
+Registers present in both SVD and output: []
+
+Comparison of TIM4 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM4
+Summary:
+Registers in output but missing in SVD: ['ARR', 'CCR1', 'CCR2', 'CCR3', 'CCR4']
+Registers present in both SVD and output: []
+
+Comparison of TIM5 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM5
+Summary:
+Registers in output but missing in SVD: ['CCER']
+Registers present in both SVD and output: []
+
+Comparison of TIM6 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM6
+Summary:
+Registers present in both SVD and output: ['ARR', 'CNT', 'CR1', 'CR2', 'DIER', 'EGR', 'PSC', 'SR']
+Register PSC differs: size: SVD=32 output=16
+Register CR2 differs: size: SVD=32 output=16; Field MMS enumerated values differ.
+Register EGR differs: size: SVD=32 output=16; Field UG enumerated values differ.
+Register DIER differs: size: SVD=32 output=16; Field UIE enumerated values differ.; Field UDE enumerated values differ.
+Register CR1 differs: size: SVD=32 output=16; Field OPM enumerated values differ.; Field ARPE enumerated values differ.; Field UDIS enumerated values differ.; Field URS enumerated values differ.; Field CEN enumerated values differ.
+Register ARR differs: reset_value: SVD=0 output=65535; size: SVD=32 output=16
+Register SR differs: size: SVD=32 output=16; Field UIF enumerated values differ.
+Register CNT differs: size: SVD=32 output=16
+
+Comparison of TIM7 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/TIM7
+Summary:
+Registers in output but missing in SVD: ['ARR', 'EGR', 'PSC']
+Registers present in both SVD and output: []
+
+Comparison of UART4 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/UART4
+Summary:
+Registers in SVD but missing in output: ['BRR', 'CR1', 'CR2', 'DR', 'SR']
+Registers present in both SVD and output: ['CR3']
+Register CR3 differs: Fields in SVD but missing in output: ['DMAR', 'DMAT', 'EIE', 'HDSEL', 'IREN', 'IRLP']; Fields in output but missing in SVD: ['ADD', 'LBCL', 'LBDIE', 'LBDL']
+
+Comparison of UART5 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/UART5
+Summary:
+Registers in SVD but missing in output: ['BRR', 'CR1', 'CR2', 'DR', 'SR']
+Registers present in both SVD and output: ['CR3']
+Register CR3 differs: Fields in output but missing in SVD: ['DMAR', 'NACK', 'ONEBIT', 'SCEN']; Field HDSEL enumerated values differ.; Field DMAT enumerated values differ.; Field EIE enumerated values differ.; Field IRLP enumerated values differ.; Field IREN enumerated values differ.
+
+Comparison of USART1 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/USART1
+Summary:
+Registers in SVD but missing in output: ['CR1', 'CR2', 'CR3', 'GTPR', 'SR']
+Registers present in both SVD and output: ['BRR', 'DR']
+Register DR differs: reset_value: SVD=0 output=0xXXXX XXXX; Fields in SVD but missing in output: ['DR']; Fields in output but missing in SVD: ['Data value']
+
+Comparison of USART2 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/USART2
+Summary:
+Registers in output but missing in SVD: ['BRR', 'CR1', 'DR']
+Registers present in both SVD and output: []
+
+Comparison of USART3 registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/USART3
+Summary:
+Registers in output but missing in SVD: ['CR3']
+Registers present in both SVD and output: []
+
+Comparison of WWDG registers
+SVD file: devices/rm0041/stm32f100.svd
+Output file: output/rm0041/1/WWDG
+Summary:
+Registers present in both SVD and output: ['CFR', 'CR', 'SR']
+Register SR differs: Fields in SVD but missing in output: ['EWI']; Fields in output but missing in SVD: ['EWIF']
+Register CR differs: Field WDGA enumerated values differ.
+

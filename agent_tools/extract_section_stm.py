@@ -1,7 +1,7 @@
 import os
 import pymupdf4llm
-import tools
-import tools.extract_section_intel
+import agent_tools
+import agent_tools.extract_section_intel
 
 def extract_section_file(folder_path, section_name, tables_only=False):
     """
@@ -38,7 +38,7 @@ def extract_section_file(folder_path, section_name, tables_only=False):
         section_content = content
         
     if tables_only:
-        section_content = tools.extract_section_intel.extract_tables_from_section(content)
+        section_content = agent_tools.extract_section_intel.extract_tables_from_section(content)
         
         
     return section_content
