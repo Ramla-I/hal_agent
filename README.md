@@ -1,6 +1,7 @@
 # hal_agent
+hal_agent is an AI-powered tool designed to extract, interpret, and summarize hardware register information from device datasheets, with a focus on embedded systems (e.g., STM32 microcontrollers). It leverages OpenAI's agents SDK to automate the process of parsing datasheets, identifying register details, and mapping them to driver code, streamlining hardware abstraction layer (HAL) development and documentation. 
 
-##Prerequsites
+## Prerequisites
 1. Install OpenAI agents-SDK (https://openai.github.io/openai-agents-python/quickstart/)
 2. Set an OpenAI API key (https://platform.openai.com/docs/quickstart#create-and-export-an-api-key)
 
