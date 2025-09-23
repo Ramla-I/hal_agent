@@ -4,13 +4,14 @@
 1. Install OpenAI agents-SDK (https://openai.github.io/openai-agents-python/quickstart/)
 2. Set an OpenAI API key (https://platform.openai.com/docs/quickstart#create-and-export-an-api-key)
 
+## Parameters
+1. Preprocessing - In config.py, you can change the way the agent retrieves context from the datasheet by setting the CURRENT_PREPROCESSING_METHOD parameter.
 
 ## Testing with an Existing Device
 1. register_info_agent.py contains the most recent version of the agent
-2. 
+2. Set the device name in config.py for the device you want to run the agent for. (Currently only STM devices)
+3. Run `python3 register_info_agent.py`
 
-## Parameters
-1. Preprocessing - In config.py, you can change the way the agent retrieves context from the datasheet by setting the CURRENT_PREPROCESSING_METHOD parameter.
 
 ## Adding a New Device
 1. Add the reference manual and svd files to the devices folder, right now the copy_files script in stm32-rs project does that

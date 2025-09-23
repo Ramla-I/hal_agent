@@ -26,13 +26,10 @@ def update_user_contexts(user_contexts: list[UserContext], device_name: str):
         run_str = repr(ctx.run)
         # Compose the UserContext line
         lines.append(
-            f"    UserContext(device_name={repr(ctx.device_name)}, "
+            f"UserContext(device_name={repr(ctx.device_name)}, "
             f"peripheral_name={repr(ctx.peripheral_name)}, "
             f"manufacturer={manufacturer_str}, "
             f"driver_path={repr(ctx.driver_path)}, "
-            f"datasheet_path={repr(ctx.datasheet_path)}, "
-            f"datasheet_sections_directory={repr(ctx.datasheet_sections_directory)}, "
-            f"svd_path={svd_path_str}, "
             f"run={run_str}, "
             f"file_id={repr(ctx.file_id)}, "
             f"vs_id={repr(ctx.vs_id)}),\n"

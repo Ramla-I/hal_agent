@@ -3,7 +3,7 @@ import re
 import sys
 import argparse
 from pathlib import Path
-import md_ops
+import agent_tools.md_ops as md_ops
 
 MANUFACTURER = 'Intel'
 HEADER_PATTERN_INTEL = rf'^#\s*\d+(?:\.\d+)*\s+.*' # Works for Intel

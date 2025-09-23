@@ -3,14 +3,15 @@ import os
 import sys
 from pathlib import Path
 import fitz
-from pdf_ops import extract_markdown_from_pdf, create_pdf_from_pages, extract_text_from_pdf
-from extract_section_regex import extract_section_regex
-from get_pages_with_keyword import get_pages_with_keyword
 
 # Add the parent directory to sys.path
+from agent_tools.pdf_ops import extract_markdown_from_pdf, create_pdf_from_pages, extract_text_from_pdf
+from agent_tools.extract_section_regex import extract_section_regex
+from agent_tools.get_pages_with_keyword import get_pages_with_keyword
+
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
-from defs import UserContext, Manufacturer, PreprocessingMethod
+from defs import UserContext, Manufacturer, PreprocessingMethod, DEVICE_DIRECTORY
 from config import CURRENT_PREPROCESSING_METHOD
 
 @function_tool 
@@ -27,13 +28,13 @@ def save_and_run_python_script(script: str) -> str:
         return result.stdout + result.stderr
 
 def datasheet_path_md(device_name: str) -> str:
-    return os.path.join(defs.DEVICE_DIRECTORY, device_name, f"{device_name}.md")
+    return os.path.join(DEVICE_DIRECTORY, device_name, f"{device_name}.md")
 
 def datasheet_path_pdf(device_name: str) -> str:
-    return os.path.join(defs.DEVICE_DIRECTORY, device_name, f"{device_name}.pdf")
+    return os.path.join(DEVICE_DIRECTORY, device_name, f"{device_name}.pdf")
 
 def all_svd_file_paths(device_name: str) -> list[str]:
-    device_dir = os.path.join(defs.DEVICE_DIRECTORY, device_name)
+    device_dir = os.path.join(DEVICE_DIRECTORY, device_name)
     svd_files = []
     if os.path.isdir(device_dir):
         for fname in os.listdir(device_dir):

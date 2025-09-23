@@ -1,4 +1,4 @@
-from svd_parsing import get_peripheral_names, get_register_names_for_peripheral
+from agent_tools.svd_parsing import get_peripheral_names, get_register_names_for_peripheral # to run main, remove agent_tools. at the beginning
 from pydantic import BaseModel, Field
 import json
 import os
