@@ -2,9 +2,17 @@ from dataclasses import dataclass
 from enum import Enum
 from pydantic import BaseModel
 
+DEVICE_DIRECTORY = "devices"
+
 class Manufacturer(Enum):
     INTEL = "Intel"
     STM = "STM"
+
+class PreprocessingMethod(Enum):
+    KEYWORD_SEARCH = "keyword_search"
+    VECTOR_STORE = "vector_store"
+    REGEX = "regex"
+    DDM = "ddm"
 
 @dataclass
 class UserContext:
@@ -12,9 +20,6 @@ class UserContext:
     peripheral_name: str
     manufacturer: Manufacturer
     driver_path: str
-    datasheet_path: str
-    datasheet_sections_directory: str
-    svd_path: list[str]
     run: int
     file_id: str
     vs_id: str

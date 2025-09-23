@@ -76,3 +76,5 @@ def get_register_names_for_peripheral(svd_file_paths, peripheral_name):
         raise ValueError(f"Peripheral '{peripheral_name}' not found in any SVD file: {svd_file_paths}")
 
     return list(register_names_set)
+
+

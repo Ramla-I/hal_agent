@@ -7,7 +7,6 @@ from defs import UserContext, RegisterList, Manufacturer, RegisterNameList
 from agent_tools.tools import get_datasheet, get_datasheet_section
 import config
 from agent_tools.svd_parsing import get_peripheral_names, get_register_names_for_peripheral
-# from agent_tools.tools import get_datasheet_pages
 from agent_tools.pdf_ops import extract_pages_from_pdf
 
 name_translation_agent = Agent(

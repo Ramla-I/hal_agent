@@ -1,0 +1,1 @@
+registers=[RegisterInfo(datasheet_register_abbreviation='TCTL', offset_in_hex='0x00400', readonly_bits=[BitField(start_bit=2, end_bit=2)], write_only_bits=[], read_write_bits=[BitField(start_bit=0, end_bit=0), BitField(start_bit=1, end_bit=1)])]

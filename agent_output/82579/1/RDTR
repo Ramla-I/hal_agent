@@ -1,0 +1,1 @@
+registers=[RegisterInfo(datasheet_register_abbreviation='RDTR', offset_in_hex='0x02820 + n*0x100[n=0..1]', readonly_bits=[BitField(start_bit=16, end_bit=30)], write_only_bits=[BitField(start_bit=31, end_bit=31)], read_write_bits=[BitField(start_bit=0, end_bit=15)])]

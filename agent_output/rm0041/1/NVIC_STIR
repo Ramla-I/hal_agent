@@ -1,0 +1,1 @@
+registers=[RegisterInfo(datasheet_register_abbreviation='NVIC_STIR', address_offset='Not found', reset_value='Not found', size=0, readonly_bits=[], write_only_bits=[], read_write_bits=[], subfields=[])]

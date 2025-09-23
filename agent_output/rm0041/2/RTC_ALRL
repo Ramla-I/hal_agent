@@ -1,0 +1,1 @@
+registers=[RegisterInfo(datasheet_register_abbreviation='RTC_ALRL', address_offset='0x24', reset_value='0xFFFF', size=16, readonly_bits=[], write_only_bits=[BitNumber(start_bit=0, end_bit=15)], read_write_bits=[], subfields=[BitField(name='RTC_ALR', description='RTC alarm low', bit_number=BitNumber(start_bit=0, end_bit=15), enumerated_values=[])])]

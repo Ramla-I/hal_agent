@@ -1,0 +1,1 @@
+registers=[RegisterInfo(datasheet_register_abbreviation='FLASH_KEYR', address_offset='0x04', reset_value='', size=32, readonly_bits=[], write_only_bits=[BitNumber(start_bit=0, end_bit=31)], read_write_bits=[], subfields=[BitField(name='KEY', description='Flash key register bits', bit_number=BitNumber(start_bit=0, end_bit=31), enumerated_values=[])])]

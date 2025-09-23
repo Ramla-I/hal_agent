@@ -1,0 +1,1 @@
+registers=[RegisterInfo(datasheet_register_abbreviation='RADV', offset_in_hex='0x0282C', readonly_bits=[], write_only_bits=[], read_write_bits=[BitField(start_bit=0, end_bit=15)])]

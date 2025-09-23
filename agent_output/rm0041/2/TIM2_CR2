@@ -1,0 +1,1 @@
+registers=[RegisterInfo(datasheet_register_abbreviation='TIM2_CR2', address_offset='', reset_value='', size=0, readonly_bits=[], write_only_bits=[], read_write_bits=[], subfields=[])]

@@ -2,16 +2,24 @@ from PyPDF2 import PdfWriter,PdfReader
 import pymupdf4llm
 import os
 
-# This calculation doesn't matter, the file assistant api takes care of this
-# The datasheet has about 320,000 words
-# Each file in the file assistant should be less than 12k tokens by default 
-# Default file embedding parameters = 20 chunks, each chunk has 800 tokens with 400 tokens overlapping 
-# so total unique tokens = (400 unrepeated tokens * 20) + (400 tokens repeated 2x * 20) / 2 = 12000 tokens
-# so lets try to make sure each pdf only has 8k words as 1 token = 0.75 words
-# 320,000 / 8000 = 40 files
-
 def split_pdf(pdf_path, num_split_pdfs=40, output_path="../datasheet/82599/82599_datasheet_split"):
-    # input_pdf = PdfReader(open("datasheet/82599_datasheet.pdf", "rb"))
+    """
+    Splits a PDF file into a specified number of smaller PDF files, each containing approximately
+    an equal number of pages. The split PDFs are saved to disk with filenames based on the output_path.
+
+    Args:
+        pdf_path (str): Path to the input PDF file.
+        num_split_pdfs (int, optional): Number of parts to split the PDF into. Defaults to 40.
+        output_path (str, optional): Base path for the output split PDF files. Each split will be
+            saved as output_path_<index>.pdf. Defaults to "../datasheet/82599/82599_datasheet_split".
+
+    Raises:
+        FileNotFoundError: If the input PDF file does not exist.
+
+    Example:
+        split_pdf("myfile.pdf", num_split_pdfs=10, output_path="output/split")
+        # This will create files: output/split_0.pdf, output/split_1.pdf, ..., output/split_9.pdf
+    """
     pdf_path = pdf_path.strip('\'"')
     pdf_path = os.path.normpath(pdf_path)
 
@@ -52,8 +60,21 @@ def split_pdf(pdf_path, num_split_pdfs=40, output_path="../datasheet/82599/82599
 
 
 
-# extract specific portion of the pdf and save it as another pdf
-def extract_part_of_pdf(pdf_path, page_start=None, page_end=None):
+def create_pdf_from_pages(pdf_path, page_start=None, page_end=None):
+    """
+    Extracts a specific range of pages from a PDF file and saves them as a new PDF.
+
+    Args:
+        pdf_path (str): Path to the input PDF file.
+        page_start (int, optional): The starting page number (1-based). If None, starts from the first page.
+        page_end (int, optional): The ending page number (1-based, exclusive). If None or greater than total pages, extracts to the last page.
+
+    Returns:
+        str: The path to the newly created PDF file containing the extracted pages.
+
+    Raises:
+        FileNotFoundError: If the input PDF file does not exist.
+    """
     pdf_path = pdf_path.strip('\'"')
     pdf_path = os.path.normpath(pdf_path)
 
@@ -82,17 +103,18 @@ def extract_part_of_pdf(pdf_path, page_start=None, page_end=None):
 
         return new_pdf_path
 
-# INSERT_YOUR_CODE
+
+
 def extract_pages_from_pdf(pdf_path, pages):
     """
-    Extracts the specified pages from a PDF and returns a new PdfWriter object containing those pages.
+    Extracts the specified pages from a PDF file, converts them to markdown using pymupdf4llm, and returns the resulting markdown string.
 
     Args:
         pdf_path (str): Path to the PDF file.
-        pages (list[int]): List of page numbers to extract (1-based).
+        pages (list[int]): List of page numbers to extract (0-based).
 
     Returns:
-        PdfWriter: A PdfWriter object containing the extracted pages.
+        str: Markdown content of the extracted pages.
     """
     pdf_path = pdf_path.strip('\'"')
     pdf_path = os.path.normpath(pdf_path)
@@ -126,8 +148,18 @@ def extract_pages_from_pdf(pdf_path, pages):
 
 
 
-# extract specific portion of the pdf and convert to a str
 def extract_text_from_pdf(pdf_path, page_start=None, page_end=None):
+    """
+    Extracts the specified pages from a PDF file and returns the extracted text as a string.
+
+    Args:
+        pdf_path (str): Path to the PDF file.
+        page_start (int, optional): The starting page number (1-based). If None, starts from the first page.
+        page_end (int, optional): The ending page number (1-based, exclusive). If None or greater than total pages, extracts to the last page.
+
+    Returns:
+        str: Extracted text from the specified pages.
+    """
     pdf_path = pdf_path.strip('\'"')
     pdf_path = os.path.normpath(pdf_path)
 
@@ -153,6 +185,3 @@ def extract_text_from_pdf(pdf_path, page_start=None, page_end=None):
 def extract_markdown_from_pdf(pdf_path):
     md_text = pymupdf4llm.to_markdown(pdf_path)
     return md_text
-
-if __name__ == "__main__":
-    extract_part_of_pdf("../datasheet/82579/82579_datasheet.pdf", 200, 200)
