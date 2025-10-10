@@ -49,3 +49,29 @@ def extract_tables_from_section(section_content):
                 tables.append(table_text)
     
     return tables
+
+
+def find_pages_with_tables(pdf_path, pages):
+    """
+    Given a PDF path and a list of page numbers, convert each page to markdown,
+    check if it contains a markdown table, and return a list of pages that contain tables.
+
+    Args:
+        pdf_path (str): Path to the PDF file.
+        pages (list of int): List of page numbers (1-based).
+
+    Returns:
+        list of int: List of page numbers that contain tables.
+    """
+    from agent_tools.pdf_ops import pdf_page_to_markdown  # Assume this exists
+    pages_with_tables = []
+    for page_num in pages:
+        try:
+            md_content = pdf_page_to_markdown(pdf_path, page_num)
+            tables = extract_tables_from_section(md_content)
+            if tables and len(tables) > 0:
+                pages_with_tables.append(page_num)
+        except Exception as e:
+            # Optionally log or print error
+            continue
+    return pages_with_tables

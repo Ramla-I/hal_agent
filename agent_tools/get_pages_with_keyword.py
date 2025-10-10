@@ -10,6 +10,15 @@ class KeywordPage(BaseModel):
     keyword_found: str = Field(description="The keyword that was found on the pages")
     pages: list[int] = Field(description="The list of page numbers where the keyword was found")
 
+def all_svd_file_paths(svd_folder_path: str) -> list[str]:
+    device_dir = svd_folder_path
+    svd_files = []
+    if os.path.isdir(device_dir):
+        for fname in os.listdir(device_dir):
+            if fname.lower().endswith('.svd'):
+                svd_files.append(os.path.join(device_dir, fname))
+    return svd_files
+
 def find_keyword_page_numbers(pdf_path, keyword):
     """
     Returns a list of page numbers (0-based) where the keyword appears in the PDF.
@@ -48,24 +57,21 @@ def get_pages_with_keyword(pdf_path, keyword):
     os.remove(temp_pdf_path)
     return md_text
 
-def main_svd():
-    import sys
-    if len(sys.argv) != 3:
-        print("Usage: python test.py <pdf_path> <svd_path>")
+def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, output_directory):
+    if not os.path.isfile(pdf_path):
+        print(f"File not found: {pdf_path}")
         return
-    pdf_path = sys.argv[1]
-    svd_path = sys.argv[2]
+    if not os.path.isdir(svd_folder_path):
+        print(f"Directory not found: {svd_folder_path}")
+        return
 
     keyword_infos = []
-    peripheral_names = get_peripheral_names([svd_path])
+    svd_file_paths = all_svd_file_paths(svd_folder_path)
+    peripheral_names = get_peripheral_names(svd_file_paths)
+    print(f"generating keyword pages for {len(peripheral_names)} peripheral names in SVD files")
     for peripheral_name in peripheral_names:
-        # If peripheral_name ends with a number, extract the part without the number
-        # import re
-        # match_periph = re.match(r"^(.*?)(\d+)$", peripheral_name)
-        # if match_periph:
-        #     peripheral_name_no_number = match_periph.group(1)
-
-        register_names = get_register_names_for_peripheral([svd_path], peripheral_name)
+        register_names = get_register_names_for_peripheral(svd_file_paths, peripheral_name)
+        print(f"generating keyword pages for {len(register_names)} register names in SVD files")
         for register_name in register_names:
             # If register_name already includes peripheral_name, just use register_name as the keyword
             if peripheral_name in register_name:
@@ -81,7 +87,7 @@ def main_svd():
                 joint_name_no_number = match.group(1)
                 # Optionally, you could use joint_name_no_number for further processing or searching
 
-            pages = find_keyword_pages(pdf_path, joint_name)
+            pages = find_keyword_page_numbers(pdf_path, joint_name)
             keyword_info = None
             if pages:
                 keyword_info = KeywordPage(
@@ -111,9 +117,10 @@ def main_svd():
                 )
             
             keyword_infos.append(keyword_info.model_dump())
-            print(keyword_info)
+    print(f"generated keyword entries for peripheral {peripheral_name} in SVD files")
     
-    with open("keyword_infos.json", "w") as f:
+    keyword_info_path = os.path.join(output_directory, "keyword_infos.json")
+    with open(keyword_info_path, "w") as f:
         json.dump(keyword_infos, f, indent=2, ensure_ascii=False)
 
 
@@ -142,4 +149,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # main_svd()

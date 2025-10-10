@@ -1,6 +1,6 @@
 import os
 import pymupdf4llm
-import md_ops
+import agent_tools.md_ops as md_ops
 
 def find_chapter_with_name(folder_path, section_name, tables_only=False):
     """

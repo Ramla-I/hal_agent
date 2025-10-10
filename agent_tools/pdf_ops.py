@@ -80,24 +80,27 @@ def create_pdf_from_pages(pdf_path, page_start=None, page_end=None):
 
     if not os.path.isfile(pdf_path):
         raise FileNotFoundError(f"The file at {pdf_path} does not exist.")
-    
     with open(pdf_path, 'rb') as file:
         input_pdf = PdfReader(file)
-        
+
+        if input_pdf.is_encrypted:
+            input_pdf.decrypt("")
+
         total_pages = len(input_pdf.pages)
         if page_start is None:
             page_start = 0
         if page_end is None or page_end > total_pages:
             page_end = total_pages
-
+        print("total_pages: ", total_pages)
         pdf = PdfWriter()
         if page_start != 0:
             page_start = page_start - 1
         for page_num in range(page_start, page_end):
+            print(f"Adding page {page_num}")
+            print(f"Page {page_num} is {input_pdf.pages[page_num]}")
             pdf.add_page(input_pdf.pages[page_num])
         # Save the new PDF path to a variable for later use
         new_pdf_path = pdf_path + "_" + str(page_start) + "_" + str(page_end) + ".pdf"
-
         with open(new_pdf_path, "wb") as f:
             pdf.write(f)    
 
@@ -144,6 +147,9 @@ def extract_pages_from_pdf(pdf_path, pages):
 
         md_text = pymupdf4llm.to_markdown(temp_pdf_path)
         os.remove(temp_pdf_path)
+        # INSERT_YOUR_CODE
+        with open("output.md", "w", encoding="utf-8") as out_md:
+            out_md.write(md_text)
         return md_text
 
 
@@ -185,3 +191,33 @@ def extract_text_from_pdf(pdf_path, page_start=None, page_end=None):
 def extract_markdown_from_pdf(pdf_path):
     md_text = pymupdf4llm.to_markdown(pdf_path)
     return md_text
+
+def pdf_page_to_markdown(pdf_path, page_num):
+    pdf_path = pdf_path.strip('\'"')
+    pdf_path = os.path.normpath(pdf_path)
+
+    if not os.path.isfile(pdf_path):
+        raise FileNotFoundError(f"The file at {pdf_path} does not exist.")
+
+    with open(pdf_path, 'rb') as file:
+        input_pdf = PdfReader(file)
+        total_pages = len(input_pdf.pages)
+        writer = PdfWriter()
+        
+        idx = page_num
+        if idx < 0 or idx >= total_pages:
+            raise ValueError(f"Page number {page_num} is out of range for file with {total_pages} pages.")
+        writer.add_page(input_pdf.pages[idx])
+        # Create a new PDF file with the extracted pages
+        # Convert the extracted pages to markdown and return the markdown string
+        import tempfile
+        import pymupdf4llm
+
+        base, ext = os.path.splitext(pdf_path)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+            writer.write(temp_pdf)
+            temp_pdf_path = temp_pdf.name
+
+        md_text = pymupdf4llm.to_markdown(temp_pdf_path)
+        os.remove(temp_pdf_path)
+        return md_text

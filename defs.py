@@ -13,6 +13,8 @@ class PreprocessingMethod(Enum):
     VECTOR_STORE = "vector_store"
     REGEX = "regex"
     DDM = "ddm"
+    CHAPTER_SEARCH = "chapter_search"
+    KEYWORD_SEARCH_PLUS = "keyword_search_plus"
 
 @dataclass
 class UserContext:
