@@ -3,12 +3,45 @@ from pydantic import BaseModel, Field
 import json
 import os
 import tempfile
-from PyPDF2 import PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter
+from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
 
 class KeywordPage(BaseModel):
     keyword: str = Field(description="The keyword that was initially searched for")
     keyword_found: str = Field(description="The keyword that was found on the pages")
     pages: list[int] = Field(description="The list of page numbers where the keyword was found")
+
+
+def extract_page_text(page, page_num):
+    """Extract text from a single page - used for parallel processing"""
+    try:
+        text = page.extract_text()
+        return page_num, text.lower() if text else ""
+    except Exception:
+        return page_num, ""
+
+def get_all_pdf_text(pdf_path):
+    with open(pdf_path, 'rb') as f:
+        reader = PdfReader(f)
+        total_pages = len(reader.pages)
+        # Use parallel processing for text extraction
+        with ThreadPoolExecutor(max_workers=min(4, total_pages)) as executor:
+            future_to_page = {
+                executor.submit(extract_page_text, page, i): i 
+                for i, page in enumerate(reader.pages)
+            }
+            
+            page_texts = {}
+            for future in as_completed(future_to_page):
+                page_num, text = future.result()
+                page_texts[page_num] = text
+        
+        # Sort by page number and create list
+        all_text = [page_texts[i] for i in range(total_pages)]
+
+    return all_text
 
 def all_svd_file_paths(svd_folder_path: str) -> list[str]:
     device_dir = svd_folder_path
@@ -19,25 +52,27 @@ def all_svd_file_paths(svd_folder_path: str) -> list[str]:
                 svd_files.append(os.path.join(device_dir, fname))
     return svd_files
 
-def find_keyword_page_numbers(pdf_path, keyword):
+def find_keyword_page_numbers(pdf_path, keyword, all_text):
     """
     Returns a list of page numbers (0-based) where the keyword appears in the PDF.
+    Optimized version with caching and parallel processing.
     """
     keyword = keyword.lower()
     pages_with_keyword = []
-    with open(pdf_path, 'rb') as f:
-        reader = PdfReader(f)
-        for i, page in enumerate(reader.pages):
-            text = page.extract_text()
-            if text and keyword in text.lower():
-                pages_with_keyword.append(i)
+    
+    # Search through cached text content
+    for i, text in enumerate(all_text):
+        if text and keyword in text:
+            pages_with_keyword.append(i)
+    
     return pages_with_keyword
 
 def get_pages_with_keyword(pdf_path, keyword):
     """
     Returns the markdown content of the pages where the keyword appears in the PDF.
     """
-    pages = find_keyword_page_numbers(pdf_path, keyword)
+    all_text = get_all_pdf_text(pdf_path)
+    pages = find_keyword_page_numbers(pdf_path, keyword, all_text)
     if not pages:
         return ""
 
@@ -65,13 +100,13 @@ def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, output_directory)
         print(f"Directory not found: {svd_folder_path}")
         return
 
+    # Get all text content (cached and parallel processed)
+    all_text = get_all_pdf_text(pdf_path)
     keyword_infos = []
     svd_file_paths = all_svd_file_paths(svd_folder_path)
     peripheral_names = get_peripheral_names(svd_file_paths)
-    print(f"generating keyword pages for {len(peripheral_names)} peripheral names in SVD files")
     for peripheral_name in peripheral_names:
         register_names = get_register_names_for_peripheral(svd_file_paths, peripheral_name)
-        print(f"generating keyword pages for {len(register_names)} register names in SVD files")
         for register_name in register_names:
             # If register_name already includes peripheral_name, just use register_name as the keyword
             if peripheral_name in register_name:
@@ -85,9 +120,21 @@ def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, output_directory)
             match = re.match(r"^(.*?)(\d+)$", joint_name)
             if match:
                 joint_name_no_number = match.group(1)
-                # Optionally, you could use joint_name_no_number for further processing or searching
 
-            pages = find_keyword_page_numbers(pdf_path, joint_name)
+            # If the peripheral name ends with a number, replace the number with 'x'
+            joint_name_peripheral_x = None
+            match = re.match(r"^(.*?)(\d+)_", joint_name)
+            if match:
+                joint_name_peripheral_x = f"{match.group(1)}x_{joint_name[len(match.group(0)):]}"
+            
+            joint_name_peripheral_x_no_number = None
+            if joint_name_no_number is not None:
+                match = re.match(r"^(.*?)(\d+)_", joint_name_no_number)
+                if match:
+                    joint_name_peripheral_x_no_number = f"{match.group(1)}x_{joint_name_no_number[len(match.group(0)):]}"
+
+            # print(f"{joint_name} -> {joint_name_no_number} -> {joint_name_peripheral_x}")
+            pages = find_keyword_page_numbers(pdf_path, joint_name, all_text)
             keyword_info = None
             if pages:
                 keyword_info = KeywordPage(
@@ -95,21 +142,35 @@ def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, output_directory)
                     keyword_found=joint_name,
                     pages=pages
                 )
-            elif joint_name_no_number:
-                pages = find_keyword_page_numbers(pdf_path, joint_name_no_number)
+
+            if joint_name_no_number and keyword_info is None:
+                pages = find_keyword_page_numbers(pdf_path, joint_name_no_number, all_text)
                 if pages:
                     keyword_info = KeywordPage(
                         keyword=joint_name,
                         keyword_found=joint_name_no_number,
                         pages=pages
                     )
-                else:
+
+            if joint_name_peripheral_x and keyword_info is None:
+                pages = find_keyword_page_numbers(pdf_path, joint_name_peripheral_x, all_text)
+                if pages:
                     keyword_info = KeywordPage(
                         keyword=joint_name,
-                        keyword_found="",
-                        pages=[]
+                        keyword_found=joint_name_peripheral_x,
+                        pages=pages
                     )
-            else:
+
+            if joint_name_peripheral_x_no_number and keyword_info is None:
+                pages = find_keyword_page_numbers(pdf_path, joint_name_peripheral_x_no_number, all_text)
+                if pages:
+                    keyword_info = KeywordPage(
+                        keyword=joint_name,
+                        keyword_found=joint_name_peripheral_x_no_number,
+                        pages=pages
+                    )
+            
+            if keyword_info is None:
                 keyword_info = KeywordPage(
                     keyword=joint_name,
                     keyword_found="",
@@ -117,7 +178,6 @@ def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, output_directory)
                 )
             
             keyword_infos.append(keyword_info.model_dump())
-    print(f"generated keyword entries for peripheral {peripheral_name} in SVD files")
     
     keyword_info_path = os.path.join(output_directory, "keyword_infos.json")
     with open(keyword_info_path, "w") as f:
