@@ -48,8 +48,7 @@ def dynamic_instructions(
     Bits 15:0 are read-write.
     For each bit from 15:0, they can be written with one of two enumerated values:
         Name = OutputPushPull, Value = 0 
-        Name = OutputOpenDrain, Value = 
-    You can retrieve the datasheet through the get_datasheet_section tool.
+        Name = OutputOpenDrain, Value = 1
     """
     # You have access to a datasheet and the ability to retrive it a section at a time.  
     # For the peripheral {context.peripheral_name}, return the information requested.
@@ -60,17 +59,17 @@ def dynamic_instructions(
 
 info_extraction_agent = Agent[UserContext](
     name = "Register Information Extractor",
-    model="gpt-4o",
+    model = config.MODEL_NAME,
     # instructions=f"""{RECOMMENDED_PROMPT_PREFIX}
     instructions=dynamic_instructions,
-    tools=[
+    # tools=[
         # get_datasheet_section, 
         # FileSearchTool(
         #     max_num_results=1,
         #     vector_store_ids=[CURRENT_VS_ID],
         #     include_search_results=True,
         # )
-    ],
+    # ],
     output_type=RegisterInfo,
 )
 
@@ -87,8 +86,6 @@ async def main():
     if user_context is None:
         raise ValueError(f"Device {device_name} not found in config.py user_contexts")
 
-    global CURRENT_VS_ID
-    CURRENT_VS_ID = user_context.vs_id
     run_number = str(user_context.run)
     
     output_dir = os.path.join("agent_output", device_name, run_number)
@@ -101,12 +98,16 @@ async def main():
         summary_file.write(f"CURRENT_PREPROCESSING_METHOD: {PreprocessingMethod.KEYWORD_SEARCH_PLUS}\n")
     print(f"Wrote summary to {summary_path}")
 
+    # Create a usage csv file in the output directory with the headers: "peripheral_name", "register_name", "model_name", "input_tokens", "output_tokens", "total_tokens"
+    usage_path = os.path.join(output_dir, "usage.csv")
+    with open(usage_path, "w", encoding="utf-8") as usage_file:
+        usage_file.write("peripheral_name,register_name,model_name,input_tokens,cached_tokens,output_tokens,reasoning_tokens,total_tokens\n")
+
     # Get all SVD file paths for the device, and find the set of unique peripheral names
     svd_file_paths = all_svd_file_paths(device_name)
     peripheral_names = get_peripheral_names(svd_file_paths)
     print(f"Found {len(peripheral_names)} peripheral names in SVD files")
 
-    # INSERT_YOUR_CODE
     # Check if keyword_infos.json exists, if not, call get_pages_with_keywords
     keyword_info_path = os.path.join("devices", device_name, "keyword_infos.json")
     if not os.path.exists(keyword_info_path):
@@ -116,15 +117,14 @@ async def main():
         print(f"Gathering keyword page information for SVD files in {svd_folder_path}")
         get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, output_directory)
         
-    # peripheral_names = ["RCC"]
+    peripheral_names = ["RCC"]
     for peripheral_name in peripheral_names:
         user_context.peripheral_name = peripheral_name
         register_names = get_register_names_for_peripheral(svd_file_paths, peripheral_name)
-        # register_names = ["APB1ENR"]
+        register_names = ["APB1ENR"]
         print(f"Found {len(register_names)} registers for peripheral {peripheral_name} in SVD files")
         for register_name in register_names:
             user_context.register_name = register_name
-            # INSERT_YOUR_CODE
             # Search keyword_infos.json for an entry with keyword == f"{peripheral_name}_{register_name}" and non-empty pages
             keyword_info_path = os.path.join("devices", device_name, "keyword_infos.json")
             keyword_entry = None
@@ -154,12 +154,8 @@ async def main():
                     extended_pages.add(num + 2)
                 extended_pages = sorted(extended_pages)
 
-                # print(f"pages: {pages}, pages with tables: {pages_with_tables}, Extended pages: {extended_pages}")
-                # extended_pages = [93]
                 datasheet_pages = extract_pages_from_pdf(pdf_path, extended_pages)
-                # print(f"keyword_entry: {keyword_entry}")
-                # print(f"Datasheet pages: {datasheet_pages}")
-                # exit()
+
                 result = await Runner.run(
                     info_extraction_agent,
                     f"""
@@ -178,7 +174,11 @@ async def main():
                     context=user_context,
                 )
 
-
+                usage = result.context_wrapper.usage
+                # print(f"Usage: {usage}")
+                with open(usage_path, "a", encoding="utf-8") as usage_file:
+                    usage_file.write(f"{peripheral_name},{register_name},{config.MODEL_NAME},{usage.input_tokens},{usage.input_tokens_details.cached_tokens},{usage.output_tokens},{usage.output_tokens_details.reasoning_tokens},{usage.total_tokens}\n")
+                
                 output_path = os.path.join(output_dir, f"{peripheral_name}_{register_name}")
                 with open(output_path, "w", encoding="utf-8") as f:
                     f.write(result.final_output.model_dump_json(indent=2))

@@ -148,8 +148,8 @@ def extract_pages_from_pdf(pdf_path, pages):
         md_text = pymupdf4llm.to_markdown(temp_pdf_path)
         os.remove(temp_pdf_path)
         # INSERT_YOUR_CODE
-        with open("output.md", "w", encoding="utf-8") as out_md:
-            out_md.write(md_text)
+        # with open("output.md", "w", encoding="utf-8") as out_md:
+        #     out_md.write(md_text)
         return md_text
 
 

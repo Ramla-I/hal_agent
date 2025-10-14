@@ -3,6 +3,7 @@ from defs import UserContext, Manufacturer, PreprocessingMethod
 DEVICE_NAME = "rm0090"
 CURRENT_VS_ID = "vs_6892501067b08191ac63cc6de06ee629"
 CURRENT_PREPROCESSING_METHOD = PreprocessingMethod.KEYWORD_SEARCH
+MODEL_NAME = "gpt-4o"
 
 user_contexts = [
     UserContext(device_name='82579', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82579/e1000_ebb2314.rs', run=0, file_id='file-Y42TiuVyte2z2TcbsXt9sv', vs_id='vs_68924fa6726481918501140c8ac86afe'),
