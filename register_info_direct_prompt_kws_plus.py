@@ -117,13 +117,18 @@ async def main():
         print(f"Gathering keyword page information for SVD files in {svd_folder_path}")
         get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, output_directory)
         
-    peripheral_names = ["RCC"]
+    # peripheral_names = ["RCC"]
     for peripheral_name in peripheral_names:
         user_context.peripheral_name = peripheral_name
         register_names = get_register_names_for_peripheral(svd_file_paths, peripheral_name)
-        register_names = ["APB1ENR"]
+        # register_names = ["APB1ENR"]
         print(f"Found {len(register_names)} registers for peripheral {peripheral_name} in SVD files")
         for register_name in register_names:
+
+            output_path = os.path.join(output_dir, f"{peripheral_name}_{register_name}")
+            if os.path.exists(output_path):
+                continue
+
             user_context.register_name = register_name
             # Search keyword_infos.json for an entry with keyword == f"{peripheral_name}_{register_name}" and non-empty pages
             keyword_info_path = os.path.join("devices", device_name, "keyword_infos.json")
