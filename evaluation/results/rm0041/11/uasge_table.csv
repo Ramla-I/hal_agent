@@ -1,0 +1,5 @@
+iteration,input_tokens_sum,output_tokens_sum,total_tokens_sum,total_cost
+finder1,3347928,61500,3409428,8.98
+judge,2624408,14039,2638447,6.70
+finder2,2212549,44381,2256930,5.98
+TOTAL,8184885,119920,8304805,21.66

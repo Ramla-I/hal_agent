@@ -6,6 +6,7 @@ from pathlib import Path
 import argparse
 import re
 import json
+import csv
 
 # Add the parent directory to sys.path
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -62,7 +63,7 @@ def parse_svd_registers(svd_path):
                 if fields_elem is not None:
                     for field in fields_elem.findall(f'{ns}field'):
                         field_name = field.find(f'{ns}name').text.strip().lower()
-                        description = field.find(f'{ns}description').text.strip() if field.find(f'{ns}description') is not None else ''
+                        # description = field.find(f'{ns}description').text.strip() if field.find(f'{ns}description') is not None else ''
                         bit_offset = int(field.find(f'{ns}bitOffset').text.strip())
                         bit_width = int(field.find(f'{ns}bitWidth').text.strip())
                         # Enumerated values (optional)
@@ -75,7 +76,7 @@ def parse_svd_registers(svd_path):
                                 enumerated_values.append({'name': name, 'value': value})
                         fields.append({
                             'name': field_name,
-                            'description': description,
+                            # 'description': description,
                             'bit_offset': bit_offset,
                             'bit_width': bit_width,
                             'enumerated_values': enumerated_values
@@ -292,11 +293,10 @@ def main():
 
     
     svd_regs = parse_svd_registers(args.svd_path)
+    print(f"Parsed {len(svd_regs)} peripherals from SVD file")
     out_regs = parse_output_registers_from_json(args.agent_output_folder)
+    print(f"Parsed {len(out_regs)} peripherals from agent output folder")
     peripheral_summary, register_summary, register_diff, field_diff = compare_registers_from_json(svd_regs, out_regs)
-    
-    import csv
-    import os
 
     # Prepare CSV output path
     results_dir = args.results_directory

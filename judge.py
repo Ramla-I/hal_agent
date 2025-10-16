@@ -118,7 +118,7 @@ async def main():
     
     reg_info_output_dir = os.path.join("agent_output", device_name, run_number)
 
-    output_dir = os.path.join("agent_output", device_name, "judge_iteration", run_number)
+    output_dir = os.path.join("agent_output", device_name, run_number, "judge_iteration")
     os.makedirs(output_dir, exist_ok=True)
     print(f"Created output directory: {output_dir}")
 
@@ -214,9 +214,11 @@ async def main():
                 {result.final_output}
                 These are the relevant pages of the datasheet:
                 {datasheet_pages}
+                Assess the feedback and if you agree with the feedback, incorporate it into the information you previously extracted.
                 If any information should be corrected, provide the corrected information.
                 If any information should be added, provide the added information.
                 Return only the corrected or added information filled in, do not fill out any other field if it was originally correct.
+                You do not have to fill out any information that was originally correct.
                 """,
                 context=user_context,
             )
@@ -225,7 +227,7 @@ async def main():
             with open(usage_info_path, "a", encoding="utf-8") as usage_file:
                 usage_file.write(f"{peripheral_name},{register_name},{config.MODEL_NAME},{usage.input_tokens},{usage.input_tokens_details.cached_tokens},{usage.output_tokens},{usage.output_tokens_details.reasoning_tokens},{usage.total_tokens}\n")
 
-            output_path = os.path.join(output_dir, f"{peripheral_name}_{register_name}_info_feedback")
+            output_path = os.path.join(output_dir, f"{peripheral_name}_{register_name}")
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(result.final_output.model_dump_json(indent=2))
 
