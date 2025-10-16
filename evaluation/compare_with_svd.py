@@ -150,7 +150,6 @@ def parse_output_registers_from_json(output_directory):
     return peripherals
 
 def compare_registers_from_json(svd_peripherals, out_peripherals):
-    peripheral_summary = {}
     register_summary = {}
     register_diff = {}
     field_diff = {}
@@ -160,9 +159,11 @@ def compare_registers_from_json(svd_peripherals, out_peripherals):
     peripherals_missing_in_output = len(svd_keys - out_keys)
     peripherals_present_in_both = len(svd_keys & out_keys)
 
-    peripheral_summary['total'] = len(svd_keys)
-    peripheral_summary['just svd'] = peripherals_missing_in_output
-    peripheral_summary['both'] = peripherals_present_in_both
+    peripheral_summary = {
+        'total': len(svd_keys),
+        'just svd': peripherals_missing_in_output,
+        'both': peripherals_present_in_both
+    }
 
     for peripheral in svd_keys & out_keys:
         svd_registers = svd_peripherals[peripheral]
@@ -231,7 +232,7 @@ def compare_registers_from_json(svd_peripherals, out_peripherals):
                 register_diff[peripheral][register]['fields'] = {
                     'svd': len(missing_fields),
                     'output': len(extra_fields),
-                    'both': len(common_fields)
+                    'both': len(common_fields),
                 }
 
             for field_name in common_fields:
@@ -282,30 +283,64 @@ def compare_registers_from_json(svd_peripherals, out_peripherals):
 
     return peripheral_summary, register_summary, register_diff, field_diff
 
-def main_json():
+def main():
     parser = argparse.ArgumentParser(description="Compare SVD peripherals with output peripheral info in out folder.")
     parser.add_argument('svd_path', help='Path to SVD file')
-    parser.add_argument('out_folder', help='Path to output folder containing registerfiles')
-    parser.add_argument('results_path', help='Output summary file')
+    parser.add_argument('agent_output_folder', help='Path to agent output folder containing registerfiles')
+    parser.add_argument('results_directory', help='Folder to save the results')
     args = parser.parse_args()
 
     
     svd_regs = parse_svd_registers(args.svd_path)
-    out_regs = parse_output_registers_from_json(args.out_folder)
+    out_regs = parse_output_registers_from_json(args.agent_output_folder)
     peripheral_summary, register_summary, register_diff, field_diff = compare_registers_from_json(svd_regs, out_regs)
-    # summary = []
-    # summary.append(json.dumps(peripheral_summary, indent=4))
-    # summary.append(json.dumps(register_summary, indent=4))
-    # summary.append(json.dumps(register_diff, indent=4))
-    # summary.append(json.dumps(field_diff, indent=4))
-    print(peripheral_summary)
-    print(register_summary)
-    print(register_diff)
-    print(field_diff)
-    # with open(args.results_path, "w") as f:
-    #     for line in summary:
-    #         f.write(line + "\n")
+    
+    import csv
+    import os
+
+    # Prepare CSV output path
+    results_dir = args.results_directory
+    peripheral_summary_path = os.path.join(results_dir, "peripheral_summary.csv")
+
+    # Ensure the directory exists before creating the CSV file
+    os.makedirs(results_dir, exist_ok=True)
+    with open(peripheral_summary_path, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["total", "just_svd", "both"])
+        writer.writerow([peripheral_summary['total'], peripheral_summary['just svd'], peripheral_summary['both']])
+    
+    register_summary_path = os.path.join(results_dir, "register_summary.csv")
+    with open(register_summary_path, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["peripheral", "just_svd", "both"])
+        for peripheral in register_summary.keys():
+            writer.writerow([peripheral, register_summary[peripheral]['just svd'], register_summary[peripheral]['both']])
+    
+    register_diff_path = os.path.join(results_dir, "register_diff.csv")
+    with open(register_diff_path, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["peripheral", "register", "key", "just_svd", "just_output", "both"])
+        for peripheral in register_diff.keys():
+            for register in register_diff[peripheral].keys():
+                for key in register_diff[peripheral][register].keys():
+                    if key == "fields":
+                        writer.writerow([peripheral, register, key, register_diff[peripheral][register][key]['svd'], register_diff[peripheral][register][key]['output'], register_diff[peripheral][register][key]['both']])
+                    else:
+                        writer.writerow([peripheral, register, key, register_diff[peripheral][register][key]['svd'], register_diff[peripheral][register][key]['output']])
+
+    field_diff_path = os.path.join(results_dir, "field_diff.csv")
+    with open(field_diff_path, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["peripheral", "register", "field_name", "key", "just_svd", "just_output", "both"])
+        for peripheral in field_diff.keys():
+            for register in field_diff[peripheral].keys():
+                for field_name in field_diff[peripheral][register].keys():
+                    for key in field_diff[peripheral][register][field_name].keys():
+                        if key == "enum_names":
+                            writer.writerow([peripheral, register, field_name, key, field_diff[peripheral][register][field_name][key]['svd'], field_diff[peripheral][register][field_name][key]['output'], field_diff[peripheral][register][field_name][key]['both']])
+                        else:
+                            writer.writerow([peripheral, register, field_name, key, field_diff[peripheral][register][field_name][key]['svd'], field_diff[peripheral][register][field_name][key]['output']])
 
 
 if __name__ == '__main__':
-    main_json()
+    main()
