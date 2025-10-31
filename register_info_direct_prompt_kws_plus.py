@@ -124,6 +124,10 @@ async def main():
         # register_names = ["APB1ENR"]
         print(f"Found {len(register_names)} registers for peripheral {peripheral_name} in SVD files")
         for register_name in register_names:
+            # If the register name is prefixed with the peripheral name and an underscore, use only the part after the underscore
+            prefix = f"{peripheral_name}_"
+            if register_name.startswith(prefix):
+                register_name = register_name[len(prefix):]
 
             output_path = os.path.join(output_dir, f"{peripheral_name}_{register_name}")
             if os.path.exists(output_path):

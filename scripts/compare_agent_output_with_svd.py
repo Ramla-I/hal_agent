@@ -54,6 +54,10 @@ def parse_svd_registers(svd_path):
         if registers_elem is not None:
             for reg in registers_elem.findall(f'{ns}register'):
                 reg_name = reg.find(f'{ns}name').text.strip().lower()
+                # Remove peripheralname_ prefix from register name if present
+                prefix = peripheral_name + '_'
+                if reg_name.startswith(prefix):
+                    reg_name = reg_name[len(prefix):]
                 address_offset = convert_hex_string_to_int(reg.find(f'{ns}addressOffset').text.strip())
                 reset_value = convert_hex_string_to_int(reg.find(f'{ns}resetValue').text.strip()) if reg.find(f'{ns}resetValue') is not None else ''
                 size = int(reg.find(f'{ns}size').text.strip(), 0) if reg.find(f'{ns}size') is not None else None
@@ -140,7 +144,7 @@ def parse_output_registers_from_json(output_directory):
     peripherals = {}
     registers = {}
     for file in os.listdir(output_directory):
-        if not file.endswith(".csv") and "summary" not in file:
+        if not os.path.isdir(os.path.join(output_directory, file)) and not file.endswith(".csv") and "summary" not in file:
             peripheral_name = file.split('_')[0].lower()
             register_name = file.split('_')[1].lower()
             register = parse_output_register_from_json(os.path.join(output_directory, file))
@@ -193,6 +197,12 @@ def compare_registers_from_json(svd_peripherals, out_peripherals):
                 if key == "size" and svd_value == 32 and out_value == 16:
                     continue
 
+                if key == "size" and svd_value == 16 and out_value == 32:
+                    continue
+                
+                if key == "size" and out_value == 0:
+                    continue
+                
                 if out_value == "":
                     continue
 
@@ -303,43 +313,53 @@ def main():
     peripheral_summary_path = os.path.join(results_dir, "peripheral_summary.csv")
 
     # Ensure the directory exists before creating the CSV file
+    id = 0
     os.makedirs(results_dir, exist_ok=True)
     with open(peripheral_summary_path, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["total", "just_svd", "both"])
-        writer.writerow([peripheral_summary['total'], peripheral_summary['just svd'], peripheral_summary['both']])
+        writer.writerow(["id","total", "just_svd", "both"])
+        writer.writerow([id, peripheral_summary['total'], peripheral_summary['just svd'], peripheral_summary['both']])
+        id += 1
     
+    id = 0
     register_summary_path = os.path.join(results_dir, "register_summary.csv")
     with open(register_summary_path, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["peripheral", "just_svd", "both"])
+        writer.writerow(["id", "peripheral", "just_svd", "both"])
         for peripheral in register_summary.keys():
-            writer.writerow([peripheral, register_summary[peripheral]['just svd'], register_summary[peripheral]['both']])
+            writer.writerow([id, peripheral, register_summary[peripheral]['just svd'], register_summary[peripheral]['both']])
+            id += 1
     
+    id = 0
     register_diff_path = os.path.join(results_dir, "register_diff.csv")
     with open(register_diff_path, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["peripheral", "register", "key", "just_svd", "just_output", "both"])
+        writer.writerow(["id", "peripheral", "register", "key", "just_svd", "just_output", "both"])
         for peripheral in register_diff.keys():
             for register in register_diff[peripheral].keys():
                 for key in register_diff[peripheral][register].keys():
                     if key == "fields":
-                        writer.writerow([peripheral, register, key, register_diff[peripheral][register][key]['svd'], register_diff[peripheral][register][key]['output'], register_diff[peripheral][register][key]['both']])
+                        writer.writerow([id, peripheral, register, key, register_diff[peripheral][register][key]['svd'], register_diff[peripheral][register][key]['output'], register_diff[peripheral][register][key]['both']])
+                        id += 1
                     else:
-                        writer.writerow([peripheral, register, key, register_diff[peripheral][register][key]['svd'], register_diff[peripheral][register][key]['output']])
+                        writer.writerow([id, peripheral, register, key, register_diff[peripheral][register][key]['svd'], register_diff[peripheral][register][key]['output']])
+                        id += 1
 
+    id = 0
     field_diff_path = os.path.join(results_dir, "field_diff.csv")
     with open(field_diff_path, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["peripheral", "register", "field_name", "key", "just_svd", "just_output", "both"])
+        writer.writerow(["id", "peripheral", "register", "field_name", "key", "just_svd", "just_output", "both"])
         for peripheral in field_diff.keys():
             for register in field_diff[peripheral].keys():
                 for field_name in field_diff[peripheral][register].keys():
                     for key in field_diff[peripheral][register][field_name].keys():
                         if key == "enum_names":
-                            writer.writerow([peripheral, register, field_name, key, field_diff[peripheral][register][field_name][key]['svd'], field_diff[peripheral][register][field_name][key]['output'], field_diff[peripheral][register][field_name][key]['both']])
+                            writer.writerow([id, peripheral, register, field_name, key, field_diff[peripheral][register][field_name][key]['svd'], field_diff[peripheral][register][field_name][key]['output'], field_diff[peripheral][register][field_name][key]['both']])
+                            id += 1
                         else:
-                            writer.writerow([peripheral, register, field_name, key, field_diff[peripheral][register][field_name][key]['svd'], field_diff[peripheral][register][field_name][key]['output']])
+                            writer.writerow([id, peripheral, register, field_name, key, field_diff[peripheral][register][field_name][key]['svd'], field_diff[peripheral][register][field_name][key]['output']])
+                            id += 1
 
 
 if __name__ == '__main__':

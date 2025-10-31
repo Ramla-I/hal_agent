@@ -1,6 +1,7 @@
 import json
 import sys
 import os
+import argparse
 
 def update_registerinfo_with_feedback(original_dict, feedback_dict):
     """
@@ -68,17 +69,20 @@ def update_registerinfo_with_feedback(original_dict, feedback_dict):
     return updated
 
 if __name__ == "__main__":
-    # Expect: python update_agent_output_with_feedback.py <original_json> <feedback_json> <output_json>
-    if len(sys.argv) < 4:
-        print("Usage: python update_agent_output_with_feedback.py <original_json_folder> <feedback_json_folder> <output_json_folder>")
-        sys.exit(1)
-    original_json_folder, feedback_json_folder, output_json_folder = sys.argv[1], sys.argv[2], sys.argv[3]
+    parser = argparse.ArgumentParser(description="Update agent output with feedback")
+    parser.add_argument("original_json_folder", help="Path to the original JSON folder")
+    parser.add_argument("output_json_folder", help="Path to the output JSON folder")
+    args = parser.parse_args()
+
+    original_json_folder = args.original_json_folder
+    output_json_folder = args.output_json_folder
+    feedback_json_folder = os.path.join(original_json_folder, "judge_iteration")
 
     if not os.path.exists(output_json_folder):
         os.makedirs(output_json_folder)
 
     for file in os.listdir(original_json_folder):
-        if not "summary" in file and not file.endswith(".csv"):
+        if not "summary" in file and not file.endswith(".csv") and not "judge_iteration" in file and not "analyzer_iteration" in file:
             original_json_path = os.path.join(original_json_folder, file)
             feedback_json_path = os.path.join(feedback_json_folder, file)
             output_json_path = os.path.join(output_json_folder, file)

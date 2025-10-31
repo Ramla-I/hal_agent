@@ -42,7 +42,7 @@ def main():
     files = sys.argv[1:]
     all_stats = []
     # If you want to hardcode labels, set them here; leave empty to derive from paths
-    x_labels = ["RM0041", "RM0090", "RM0091"]
+    x_labels = ["RM0041", "RM0090", "RM0091", "RM0360", "RM0490"]
     labels_from_files = []
 
     # Gather stats from all files
