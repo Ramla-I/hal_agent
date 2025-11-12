@@ -134,7 +134,11 @@ def extract_pages_from_pdf(pdf_path, pages):
             idx = page_num
             if idx < 0 or idx >= total_pages:
                 raise ValueError(f"Page number {page_num} is out of range for file with {total_pages} pages.")
-            writer.add_page(input_pdf.pages[idx])
+            try:
+                writer.add_page(input_pdf.pages[idx])
+            except Exception as e:
+                print(f"Error adding page {page_num}: {e}")
+                continue
         # Create a new PDF file with the extracted pages
         # Convert the extracted pages to markdown and return the markdown string
         import tempfile

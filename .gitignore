@@ -210,3 +210,8 @@ __marimo__/
 
 # Output
 agent_output/
+agent_output_updated/
+*.bak
+
+# Evaluation
+evaluation/

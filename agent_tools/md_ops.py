@@ -75,3 +75,62 @@ def find_pages_with_tables(pdf_path, pages):
             # Optionally log or print error
             continue
     return pages_with_tables
+
+
+
+def remove_markdown_tables(markdown_text: str) -> str:
+    """
+    Removes Markdown tables from the given text.
+    Handles both pipe-style and no-leading-pipe tables.
+    Skips tables inside fenced code blocks (```).
+    """
+
+    # Split into lines for easier processing
+    lines = markdown_text.splitlines()
+
+    # Regex patterns
+    code_fence_pattern = re.compile(r'^\s*```')  # detect start/end of code block
+    table_line_pattern = re.compile(
+        r'^\s*\|.*\|.*$'  # lines with pipes (common table pattern)
+    )
+    separator_line_pattern = re.compile(
+        r'^\s*\|?[\s:\-|\+]+\|?\s*$'  # header separator line like ---|---
+    )
+    loose_table_pattern = re.compile(
+        r'^[^`]*\|[^`]*$'  # lines with at least one pipe but not inside code
+    )
+
+    cleaned_lines = []
+    inside_code_block = False
+    inside_table = False
+
+    for line in lines:
+        if code_fence_pattern.match(line):
+            inside_code_block = not inside_code_block
+            cleaned_lines.append(line)
+            continue
+
+        if inside_code_block:
+            # keep everything inside code fences untouched
+            cleaned_lines.append(line)
+            continue
+
+        # Detect table-like lines
+        is_table_line = (
+            table_line_pattern.match(line)
+            or separator_line_pattern.match(line)
+            or loose_table_pattern.match(line)
+        )
+
+        if is_table_line:
+            inside_table = True
+            continue  # skip table line
+
+        # If we just exited a table block and hit a non-table line, reset
+        if inside_table and not is_table_line:
+            inside_table = False
+
+        # Keep normal lines
+        cleaned_lines.append(line)
+
+    return "\n".join(cleaned_lines)

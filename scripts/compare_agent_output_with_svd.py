@@ -107,10 +107,14 @@ def parse_output_register_from_json(output_path):
         # SVD expects:
         #   name, description, bit_offset, bit_width, enumerated_values (with 'name', 'value')
         bit_number = field.get('bit_number', {})
-        start = bit_number.get('start_bit', 0)
-        end = bit_number.get('end_bit', 0)
-        bit_offset = min(start, end)
-        bit_width = abs(end - start) + 1
+        if isinstance(bit_number, dict):
+            start = bit_number.get('start_bit', 0)
+            end = bit_number.get('end_bit', 0)
+            bit_offset = min(start, end)
+            bit_width = abs(end - start) + 1
+        else:
+            bit_offset = None
+            bit_width = None
         # Enumerated values:
         enum_list = field.get('enumerated_values', [])
         enumerated_values = []
@@ -144,7 +148,7 @@ def parse_output_registers_from_json(output_directory):
     peripherals = {}
     registers = {}
     for file in os.listdir(output_directory):
-        if not os.path.isdir(os.path.join(output_directory, file)) and not file.endswith(".csv") and "summary" not in file:
+        if not os.path.isdir(os.path.join(output_directory, file)):
             peripheral_name = file.split('_')[0].lower()
             register_name = file.split('_')[1].lower()
             register = parse_output_register_from_json(os.path.join(output_directory, file))
