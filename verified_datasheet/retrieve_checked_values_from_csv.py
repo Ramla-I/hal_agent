@@ -2,6 +2,7 @@ import csv
 import sys
 import argparse
 import os
+import shutil
 
 # Usage: python retrieve_checked_values_from_csv.py --input input.csv --output output.csv --mode register|field
 
@@ -12,11 +13,10 @@ def process_csv(input_csv_path, output_csv_path, mode):
     conflict_rows = []
 
     # Determine the field names
+    fieldnames = ['peripheral', 'register', 'field_name', 'key', 'correct_value']
     if mode == 'register':
-        fieldnames = ['peripheral', 'register', 'key', 'correct_value']
         match_fields = ['peripheral', 'register', 'key']
     else:
-        fieldnames = ['peripheral', 'register', 'field_name', 'key', 'correct_value']
         match_fields = ['peripheral', 'register', 'field_name', 'key']
 
     # If output file exists, read existing rows to avoid exact duplicates
@@ -93,13 +93,14 @@ def process_csv(input_csv_path, output_csv_path, mode):
             row.get('key', '')
         )
     existing_rows.sort(key=sort_key)
+
     # Write output
     with open(output_csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+        # at this point even in register mode, the output file will have field_name as a column
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         # Write preexisting (and possibly updated) rows
         for row in existing_rows:
-            print(row)
             writer.writerow(row)
         # Write only new rows
         # for row in out_rows:
@@ -111,6 +112,13 @@ def main():
     parser.add_argument('output', help='Output CSV file path')
     parser.add_argument('--mode', '-m', required=True, choices=['register', 'field'], help='Operation mode: register or field')
     args = parser.parse_args()
+
+    # Before processing, save a backup of the output file if it exists
+    if os.path.exists(args.output):
+        backup_path = args.output + ".bak"
+        print(f"Backing up output file to {backup_path}")
+        shutil.copy2(args.output, backup_path)
+
     process_csv(args.input, args.output, args.mode)
 
 if __name__ == '__main__':
