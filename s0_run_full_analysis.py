@@ -9,6 +9,7 @@ import json
 import csv
 
 from s1_generator import run_generator
+from scripts.s2_compare_agent_output_with_svd import compare_agent_output_with_svd
 from s3_analyzer import run_analyzer
 from scripts.s4_generate_diff_table import generate_diff_table
 from scripts.s5_compare_diff_with_verified_output import compare_diff_with_verified_datasheet
@@ -48,7 +49,6 @@ async def main() -> None:
     run_generator(device_name, run_number, device_directory, agent_output_folder, config.MODEL_NAME, config.CURRENT_PREPROCESSING_METHOD)
 
     # ---- (S2) Compare agent output with SVD for each SVD file ----
-    from scripts.s2_compare_agent_output_with_svd import compare_agent_output_with_svd
     svd_files = sorted([f for f in glob.glob(os.path.join(svd_dir, "*.svd"))])
     if not svd_files:
         raise RuntimeError(f"No svd files found in {svd_dir}")
@@ -85,7 +85,6 @@ async def main() -> None:
                         if row and (int(row[0]) in ids or row[3] == 'fields'):
                             writer.writerow(row)
 
-    exit(0)
     # ---- (S4) Generate the diff table ----
     for svd_path in svd_files:
         svd_file_base = os.path.splitext(os.path.basename(svd_path))[0]
