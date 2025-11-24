@@ -1,1 +1,0 @@
-registers=[RegisterInfo(datasheet_register_abbreviation='MDIC', offset_in_hex='0x00020', readonly_bits=[BitField(start_bit=31, end_bit=31)], write_only_bits=[], read_write_bits=[BitField(start_bit=0, end_bit=30)])]

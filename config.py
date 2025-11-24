@@ -1,15 +1,17 @@
 from defs import UserContext, Manufacturer, PreprocessingMethod
 
-DEVICE_NAME = "rm0041"
+DEVICE_NAME = "s32k1xx"
 SVD_FILE = "stm32f100"
 CURRENT_VS_ID = "vs_6892501067b08191ac63cc6de06ee629"
 CURRENT_PREPROCESSING_METHOD = PreprocessingMethod.KEYWORD_SEARCH
 # MODEL_NAME = "gpt-4o"
 MODEL_NAME = "gpt-oss-120b"
-OUTPUT_DIR = "agent_output"
-RESULTS_DIR = "evaluation/results"
 GENERATOR_ITER = 1 # Number of iterations for the generator agent
+RUN_ANALYZER = True
 
+OUTPUT_DIR = "agent_output"
+RESULTS_DIR = "evaluation"
+DEVICE_DIRECTORY = "devices"
 
 user_contexts = [
     UserContext(device_name='82579', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82579/e1000_ebb2314.rs', run=0, file_id='file-Y42TiuVyte2z2TcbsXt9sv', vs_id='vs_68924fa6726481918501140c8ac86afe'),
@@ -19,4 +21,7 @@ user_contexts = [
     UserContext(device_name='rm0091', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=2, file_id='file-T2XMpz886q7hQNqaDhN7Fn', vs_id='vs_689f52468484819182c9c3085572ce19'),
     UserContext(device_name='rm0360', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='file-JT7wee34qTEUtugwxW2VAP', vs_id='vs_689f52862f5881918366547ab0417608'),
     UserContext(device_name='rm0490', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='file-RygxVqtujcgLnFBQGrQ1in', vs_id='vs_689f52efc4bc8191afb9b4fb05c78f6c'),
+    UserContext(device_name='ke04', peripheral_name='', manufacturer=Manufacturer.NXP, driver_path='', run=1, file_id='', vs_id=''),
+    UserContext(device_name='s32k1xx', peripheral_name='', manufacturer=Manufacturer.NXP, driver_path='', run=1, file_id='', vs_id=''),
+
 ]

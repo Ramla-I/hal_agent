@@ -2,11 +2,11 @@ from dataclasses import dataclass
 from enum import Enum
 from pydantic import BaseModel
 
-DEVICE_DIRECTORY = "devices"
-
 class Manufacturer(Enum):
     INTEL = "Intel"
     STM = "STM"
+    NXP = "NXP"
+    TI = "TI"
 
 class PreprocessingMethod(Enum):
     KEYWORD_SEARCH = "keyword_search"

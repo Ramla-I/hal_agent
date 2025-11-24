@@ -11,8 +11,8 @@ from agent_tools.get_pages_with_keyword import get_pages_with_keyword
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
-from defs import UserContext, Manufacturer, PreprocessingMethod, DEVICE_DIRECTORY
-from config import CURRENT_PREPROCESSING_METHOD
+from defs import UserContext, Manufacturer, PreprocessingMethod
+from config import CURRENT_PREPROCESSING_METHOD, DEVICE_DIRECTORY
 
 @function_tool 
 def read_file(path) -> str:
@@ -33,11 +33,14 @@ def datasheet_path_md(device_name: str) -> str:
 def datasheet_path_pdf(device_name: str) -> str:
     return os.path.join(DEVICE_DIRECTORY, device_name, f"{device_name}.pdf")
 
-def all_svd_file_paths(device_name: str) -> list[str]:
-    device_dir = os.path.join(DEVICE_DIRECTORY, device_name)
+def all_svd_file_paths(device_directory: str) -> list[str]:
+    device_dir = os.path.join(device_directory, "svd")
+    print(f"Device directory: {device_dir}")
     svd_files = []
     if os.path.isdir(device_dir):
+        print(f"Found device directory: {device_dir}")
         for fname in os.listdir(device_dir):
+            print(f"Found SVD file: {fname}")
             if fname.lower().endswith('.svd'):
                 svd_files.append(os.path.join(device_dir, fname))
     return svd_files
@@ -159,3 +162,9 @@ def get_table_of_contents(wrapper: RunContextWrapper[UserContext], md: bool = Fa
     # for page_num in range(min(pages_to_search, doc.page_count)):
     #     page = doc.load_page(page_num)
     #     toc_text += page.get_text()
+
+@function_tool
+def calculate_address_offset(base_address_in_hex: str, start_register_number: int, register_number: int, register_size_in_bytes: int) -> str:
+    base_address = int(base_address_in_hex, 16)
+    decimal_offset = base_address + ((register_number - start_register_number) * register_size_in_bytes)
+    return f"0x{decimal_offset:X}"

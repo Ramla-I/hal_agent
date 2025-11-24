@@ -1,0 +1,45 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32f100,stm32-rs,rm0041,"FSMC_BCR1: reset value: svd = 0x30D0, agent = 0x30DB",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"FSMC_BCR2: reset value: svd = 0x30D0, agent = 0x30D2",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"FSMC_BCR3: reset value: svd = 0x30D0, agent = 0x30D2",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"FSMC_BCR4: reset value: svd = 0x30D0, agent = 0x30D2",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"FSMC_BTR1: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"FSMC_BTR2: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"FSMC_BTR3: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"FSMC_BTR4: reset value: svd = 0xFFFF_FFFF, RM= 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"TIM1_ARR: reset value: svd = 0x0, agent = 0xFFFF",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"TIM2_ARR: reset value: svd = 0x0, agent = 0xFFFF",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"TIM6_ARR: reset value: svd = 0x0, agent = 0xFFFF",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"TIM12_ARR: reset value: svd = 0x0, agent = 0xFFFF",https://github.com/stm32-rs/stm32-rs/pull/1264,Merged
+stm32f100,stm32-rs,rm0041,"TIM13_ARR: reset value: svd = 0x0, agent = 0xFFFF",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+stm32f100,stm32-rs,rm0041,"USART1_DR: reset value: svd = 0x0, agent = 0xXXXX_XXXX",https://github.com/stm32-rs/stm32-rs/pull/1269,Merged
+"stm32f405, stm32407, stm32415, stm32417",stm32-rs,rm0090,"TIM6_ARR: reset value: svd = 0x0, agent = 0xFFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f405, stm32407, stm32415, stm32417",stm32-rs,rm0090,"FSMC_BCR1: reset value: svd = 0x30D0, agent = 0x30DB",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f405, stm32407, stm32415, stm32417",stm32-rs,rm0090,"FSMC_BCR2: reset value: svd = 0x30D0, RM = 0x30D2",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f405, stm32407, stm32415, stm32417",stm32-rs,rm0090,"FSMC_BCR3: reset value: svd = 0x30D0, RM = 0x30D2",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f405, stm32407, stm32415, stm32417",stm32-rs,rm0090,"FSMC_BCR4: reset value: svd = 0x30D0, RM = 0x30D2",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f405, stm32407, stm32415, stm32417",stm32-rs,rm0090,"FSMC_BTR1: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f405, stm32407, stm32415, stm32417",stm32-rs,rm0090,"FSMC_BTR2: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f405, stm32407, stm32415, stm32417",stm32-rs,rm0090,"FSMC_BTR3: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f405, stm32407, stm32415, stm32417",stm32-rs,rm0090,"FSMC_BTR4: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"TIM6_ARR: reset value: svd = 0x0, agent = 0xFFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"FMC_BCR1: reset value: svd = 0x30D0, agent = 0x30DB",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"FMC_BCR2: reset value: svd = 0x30D0, RM = 0x30D2",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"FMC_BCR3: reset value: svd = 0x30D0, RM = 0x30D2",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"FMC_BCR4: reset value: svd = 0x30D0, RM = 0x30D2",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"FMC_BTR1: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"FMC_BTR2: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"FMC_BTR3: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"FMC_BTR4: reset value: svd = 0xFFFF_FFFF, RM = 0x0FFF_FFFF",https://github.com/stm32-rs/stm32-rs/pull/1276,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"adc_cfgr2: reset_value: svd = 0x8000, agent = 0x0, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"adc_tr: reset_value: svd = 0xFFF, agent = 0xFFF0000, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"flash_acr: reset_value: svd = 0x30, agent = 0x0, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"rcc_bdcr: reset_value: svd = 0x0, agent = 0x18, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"spi1_cr2: reset_value: svd = 0x0, agent = 0x700, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"spi1_i2spr: reset_value: svd = 0x10, agent = 0x2, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"tim1_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"tim2_arr: reset_value: svd = 0x0, agent = 0xFFFFFFFF, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"tim6_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"tim14_arr: reset_value: svd = 0x0, agent = 0xFFFFFFFF, RM = 0xFFFF",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"tim15_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"tim16_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged

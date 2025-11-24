@@ -1,1 +1,0 @@
-registers=[RegisterInfo(datasheet_register_abbreviation='BKP_DR32', address_offset='', reset_value='', size=32, readonly_bits=[], write_only_bits=[], read_write_bits=[], subfields=[])]

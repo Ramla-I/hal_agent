@@ -1,1 +1,0 @@
-registers=[RegisterInfo(datasheet_register_abbreviation='NVIC_STIR', offset_in_hex='0xE000EF00', readonly_bits=[], write_only_bits=[BitNumber(start_bit=0, end_bit=8)], read_write_bits=[], subfields=[BitField(name='INTID', description='Writes to this register control the interrupt trigger', bit_number=BitNumber(start_bit=0, end_bit=8))])]
