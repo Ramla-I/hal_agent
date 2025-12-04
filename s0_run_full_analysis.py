@@ -46,7 +46,7 @@ async def main() -> None:
     verified_datasheet_directory = os.path.join(repo_root, "verified_datasheet")
 
     # ---- (S1) Run generator agent ----
-    run_generator(device_name, run_number, device_directory, agent_output_folder, config.MODEL_NAME, config.CURRENT_PREPROCESSING_METHOD)
+    # run_generator(device_name, run_number, device_directory, agent_output_folder, config.MODEL_NAME, config.CURRENT_PREPROCESSING_METHOD)
 
     # ---- (S2) Compare agent output with SVD for each SVD file ----
     svd_files = sorted([f for f in glob.glob(os.path.join(svd_dir, "*.svd"))])
@@ -59,7 +59,7 @@ async def main() -> None:
         os.makedirs(custom_results_dir, exist_ok=True)
         print(f"Comparing agent output with SVD for: {svd_file_base}")
         compare_agent_output_with_svd(svd_path, agent_output_folder, custom_results_dir)
-
+    exit()
     # ---- (S3) Run the analyzer agent on the results ----
     if analyzer:
         for svd_path in svd_files:

@@ -1,6 +1,6 @@
 from defs import UserContext, Manufacturer, PreprocessingMethod
 
-DEVICE_NAME = "s32k1xx"
+DEVICE_NAME = "rm0091"
 SVD_FILE = "stm32f100"
 CURRENT_VS_ID = "vs_6892501067b08191ac63cc6de06ee629"
 CURRENT_PREPROCESSING_METHOD = PreprocessingMethod.KEYWORD_SEARCH

@@ -160,17 +160,19 @@ def parse_output_registers_from_json(output_directory):
 
 def compare_registers_from_json(svd_peripherals, out_peripherals):
     register_summary = {}
+    subfield_summary = {}
     register_diff = {}
     field_diff = {}
 
     svd_keys = set(svd_peripherals.keys())
     out_keys = set(out_peripherals.keys())
     peripherals_missing_in_output = len(svd_keys - out_keys)
+    peripherals_missing_in_svd = len(out_keys - svd_keys)
     peripherals_present_in_both = len(svd_keys & out_keys)
 
     peripheral_summary = {
-        'total': len(svd_keys),
         'just svd': peripherals_missing_in_output,
+        'just output': peripherals_missing_in_svd,
         'both': peripherals_present_in_both
     }
 
@@ -178,11 +180,14 @@ def compare_registers_from_json(svd_peripherals, out_peripherals):
         svd_registers = svd_peripherals[peripheral]
         out_registers = out_peripherals[peripheral]
         registers_missing_in_output = len(svd_registers.keys() - out_registers.keys())
+        registers_missing_in_svd = len(out_registers.keys() - svd_registers.keys())
         registers_present_in_both = len(svd_registers.keys() & out_registers.keys())
         register_summary[peripheral] = {
             'just svd': registers_missing_in_output,
+            'just output': registers_missing_in_svd,
             'both': registers_present_in_both,
         }
+        subfield_summary[peripheral] = {} # initialize subfield_summary for this peripheral
 
         for register in svd_registers.keys() & out_registers.keys():
             svd_register = svd_registers[register]
@@ -233,6 +238,16 @@ def compare_registers_from_json(svd_peripherals, out_peripherals):
             missing_fields = fields_svd_names - fields_out_names
             extra_fields = fields_out_names - fields_svd_names
             common_fields = fields_svd_names & fields_out_names
+
+            fields_missing_in_output = len(missing_fields)
+            fields_missing_in_svd = len(extra_fields)
+            fields_present_in_both = len(common_fields)
+
+            subfield_summary[peripheral][register] = {
+                'just svd': fields_missing_in_output,
+                'just output': fields_missing_in_svd,
+                'both': fields_present_in_both
+            }   
 
             if missing_fields or extra_fields:
                 if peripheral not in register_diff:
@@ -296,37 +311,74 @@ def compare_registers_from_json(svd_peripherals, out_peripherals):
                         'both': len(svd_enum_names & out_enum_names)
                     }
 
-    return peripheral_summary, register_summary, register_diff, field_diff
+    return peripheral_summary, register_summary, subfield_summary, register_diff, field_diff
 
 def compare_agent_output_with_svd(svd_path, agent_output_folder, results_directory):
     svd_regs = parse_svd_registers(svd_path)
     print(f"Parsed {len(svd_regs)} peripherals from SVD file")
     out_regs = parse_output_registers_from_json(agent_output_folder)
     print(f"Parsed {len(out_regs)} peripherals from agent output folder")
-    peripheral_summary, register_summary, register_diff, field_diff = compare_registers_from_json(svd_regs, out_regs)
+    peripheral_summary, register_summary, subfield_summary, register_diff, field_diff = compare_registers_from_json(svd_regs, out_regs)
 
     # Prepare CSV output path
     results_dir = results_directory
     peripheral_summary_path = os.path.join(results_dir, "peripheral_summary.csv")
+
+    # Stats
+    total_peripherals = 0
+    present_peripherals = 0
+
+    total_registers_in_present_peripherals = 0
+    present_registers = 0
+
+    total_fields_in_present_registers = 0
+    present_fields = 0
 
     # Ensure the directory exists before creating the CSV file
     id = 0
     os.makedirs(results_dir, exist_ok=True)
     with open(peripheral_summary_path, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["id","total", "just_svd", "both"])
-        writer.writerow([id, peripheral_summary['total'], peripheral_summary['just svd'], peripheral_summary['both']])
+        writer.writerow(["id", "just_svd", "just_output", "both"])
+        writer.writerow([id, peripheral_summary['just svd'], peripheral_summary['just output'], peripheral_summary['both']])
+        
+        total_peripherals += peripheral_summary['just svd'] + peripheral_summary['both']
+        present_peripherals += peripheral_summary['both']
+        
         id += 1
     
     id = 0
     register_summary_path = os.path.join(results_dir, "register_summary.csv")
     with open(register_summary_path, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["id", "peripheral", "just_svd", "both"])
+        writer.writerow(["id", "peripheral", "just_svd", "just_output", "both"])
         for peripheral in register_summary.keys():
-            writer.writerow([id, peripheral, register_summary[peripheral]['just svd'], register_summary[peripheral]['both']])
+            writer.writerow([id, peripheral, register_summary[peripheral]['just svd'], register_summary[peripheral]['just output'], register_summary[peripheral]['both']])
+            
+            total_registers_in_present_peripherals += register_summary[peripheral]['just svd'] + register_summary[peripheral]['both']
+            present_registers += register_summary[peripheral]['both']
+            
             id += 1
     
+    id = 0
+    subfield_summary_path = os.path.join(results_dir, "subfield_summary.csv")
+    with open(subfield_summary_path, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["id", "peripheral", "register", "just_svd", "just_output", "both"])
+        for peripheral in subfield_summary.keys():
+            for register in subfield_summary[peripheral].keys():
+                writer.writerow([id, peripheral, register, subfield_summary[peripheral][register]['just svd'], subfield_summary[peripheral][register]['just output'], subfield_summary[peripheral][register]['both']])
+                
+                total_fields_in_present_registers += subfield_summary[peripheral][register]['just svd'] + subfield_summary[peripheral][register]['both']
+                present_fields += subfield_summary[peripheral][register]['both']
+                
+                id += 1
+    
+    print(f"peripheral coverage: {present_peripherals / total_peripherals * 100}%")
+    print(f"register coverage: {present_registers / total_registers_in_present_peripherals * 100}%")
+    print(f"field coverage: {present_fields / total_fields_in_present_registers * 100}%")
+    print(f"\n\n")
+
     id = 0
     register_diff_path = os.path.join(results_dir, "register_diff.csv")
     with open(register_diff_path, "w", newline="") as csvfile:
