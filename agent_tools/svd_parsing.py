@@ -28,7 +28,7 @@ def get_peripheral_names(svd_file_paths):
         for periph in peripherals.findall("peripheral"):
             name_elem = periph.find("name")
             if name_elem is not None and name_elem.text:
-                peripheral_names_set.add(name_elem.text)
+                peripheral_names_set.add(name_elem.text.lower())
 
     return list(peripheral_names_set)
 
@@ -63,13 +63,17 @@ def get_register_names_for_peripheral(svd_file_paths, peripheral_name):
 
         for periph in peripherals.findall("peripheral"):
             name_elem = periph.find("name")
-            if name_elem is not None and name_elem.text == peripheral_name:
+            if name_elem is not None and name_elem.text.lower() == peripheral_name.lower():
                 found_peripheral = True
                 registers_elem = periph.find("registers")
                 if registers_elem is not None:
                     for reg in registers_elem.findall("register"):
                         reg_name_elem = reg.find("name")
                         if reg_name_elem is not None and reg_name_elem.text:
+                            # If the register name is prefixed with the peripheral name and an underscore, use only the part after the underscore
+                            prefix = f"{peripheral_name}_"
+                            if reg_name_elem.text.lower().startswith(prefix):
+                                reg_name_elem.text = reg_name_elem.text.lower()[len(prefix):]
                             register_names_set.add(reg_name_elem.text)
 
     if not found_peripheral:

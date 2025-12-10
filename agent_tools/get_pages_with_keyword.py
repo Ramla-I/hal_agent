@@ -92,7 +92,7 @@ def get_pages_with_keyword(pdf_path, keyword):
     os.remove(temp_pdf_path)
     return md_text
 
-def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, output_directory):
+def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, keyword_info_path):
     if not os.path.isfile(pdf_path):
         print(f"File not found: {pdf_path}")
         return
@@ -179,7 +179,6 @@ def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, output_directory)
             
             keyword_infos.append(keyword_info.model_dump())
     
-    keyword_info_path = os.path.join(output_directory, "keyword_infos.json")
     with open(keyword_info_path, "w") as f:
         json.dump(keyword_infos, f, indent=2, ensure_ascii=False)
 

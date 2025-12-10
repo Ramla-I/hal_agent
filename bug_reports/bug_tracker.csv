@@ -43,3 +43,23 @@ stm32f100,stm32-rs,rm0041,"USART1_DR: reset value: svd = 0x0, agent = 0xXXXX_XXX
 "stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"tim14_arr: reset_value: svd = 0x0, agent = 0xFFFFFFFF, RM = 0xFFFF",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
 "stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"tim15_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
 "stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"tim16_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM =",https://github.com/stm32-rs/stm32-rs/pull/1274,Merged
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"cec_cfgr_brestp: bit_offset: svd = 9, agent = 4",,Patched
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"cec_cfgr_rxtol: bit_offset: svd = 8, agent = 3",,Patched
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"cec_cfgr_lstn: bit_offset: svd = 4, agent = 31 ",,Patched
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"cec_cfgr_bregen: bit_offset: svd = 10, agent = 5",,Patched
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"cec_cfgr_lbpegen: bit_offset: svd = 11, agent = 6",,Patched
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"rcc_cr2_hsi48cal: bit_width: svd = 1, agent = 8",,Patched
+"stm32f0x1",stm32-rs,rm0091,"flash_obr_ram_parity_check: bit_width: svd = 0, agent = 1",,Patched
+"stm32f0x1, stm32f0x2, stm32f0x8",stm32-rs,rm0091,"crc_init: address_offset: svd = 0xC, agent = 0x10",,Patched
+"stm32f0x0",stm32-rs,rm0360,"adc_cfgr2: reset_value: svd = 0x8000, agent = 0x0, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"adc_tr: reset_value: svd = 0xFFF, agent = 0xFFF0000, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"flash_obr: reset_value: svd = 0x3FFFFF2, agent = 0xXXXXXX0X, RM = 0xXXXX XX0X",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"rcc_bdcr: reset_value: svd = 0x0, agent = 0x18, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"spi1_cr2: reset_value: svd = 0x0, agent = 0x700, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"tim1_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"tim3_arr: reset_value: svd = 0x0, agent = 0xFFFFFFFF, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"tim6_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"tim14_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"tim15_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"tim16_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
+"stm32f0x0",stm32-rs,rm0360,"crc_init: address_offset: svd = 0xC, agent = 0x10, RM = ",,Patched

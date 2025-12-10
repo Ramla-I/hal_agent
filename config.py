@@ -1,9 +1,16 @@
-from defs import UserContext, Manufacturer, PreprocessingMethod
+from defs import UserContext, Manufacturer, ContextRetrievalParameters, ContextRetrievalMethod
 
-DEVICE_NAME = "rm0091"
-SVD_FILE = "stm32f100"
-CURRENT_VS_ID = "vs_6892501067b08191ac63cc6de06ee629"
-CURRENT_PREPROCESSING_METHOD = PreprocessingMethod.KEYWORD_SEARCH
+DEVICE_NAME = "rm0008"
+CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
+    context_retrieval_method=ContextRetrievalMethod.KEYWORD_SEARCH, 
+    pages_after_keyword=2, 
+    remove_tables=True, 
+    number_embeddings=0, 
+    re_ranking=False,
+    vs_id="",
+    regex="", 
+    other=""
+)
 # MODEL_NAME = "gpt-4o"
 MODEL_NAME = "gpt-oss-120b"
 GENERATOR_ITER = 1 # Number of iterations for the generator agent
@@ -16,6 +23,7 @@ DEVICE_DIRECTORY = "devices"
 user_contexts = [
     UserContext(device_name='82579', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82579/e1000_ebb2314.rs', run=0, file_id='file-Y42TiuVyte2z2TcbsXt9sv', vs_id='vs_68924fa6726481918501140c8ac86afe'),
     UserContext(device_name='82599', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82599/ixgbe_4a124f4.rs', run=0, file_id='file-RdWHHvaJvfkRZ59zXGjVVS', vs_id='vs_68924fdcb9cc8191809cacd7be13a9ea'),
+    UserContext(device_name='rm0008', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='', vs_id=''),
     UserContext(device_name='rm0041', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=16, file_id='file-MHtC1XNEQDa2X8jNEjfk1b', vs_id='vs_6892501067b08191ac63cc6de06ee629'),
     UserContext(device_name='rm0090', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=3, file_id='file-CjEojSnvTNU3hpXQFG6DK5', vs_id='vs_689f5188906c81919cebc07c132a8f46'),
     UserContext(device_name='rm0091', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=2, file_id='file-T2XMpz886q7hQNqaDhN7Fn', vs_id='vs_689f52468484819182c9c3085572ce19'),

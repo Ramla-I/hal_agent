@@ -8,7 +8,7 @@ import asyncio
 import json
 import csv
 
-from s1_generator import run_generator
+from s1a_generator import run_generator
 from scripts.s2_compare_agent_output_with_svd import compare_agent_output_with_svd
 from s3_analyzer import run_analyzer
 from scripts.s4_generate_diff_table import generate_diff_table
@@ -24,9 +24,9 @@ async def main() -> None:
     sys.path.insert(0, repo_root)
 
     device_name = config.DEVICE_NAME
-    svd_file = config.SVD_FILE
     model_name = config.MODEL_NAME
     analyzer = config.RUN_ANALYZER
+    context_retrieval_parameters = config.CONTEXT_RETRIEVAL_PARAMETERS
     # Find run number for the current device in config.user_contexts
     run_number = None
     device_ctx = None
@@ -46,7 +46,8 @@ async def main() -> None:
     verified_datasheet_directory = os.path.join(repo_root, "verified_datasheet")
 
     # ---- (S1) Run generator agent ----
-    # run_generator(device_name, run_number, device_directory, agent_output_folder, config.MODEL_NAME, config.CURRENT_PREPROCESSING_METHOD)
+    run_generator(device_name, run_number, device_directory, agent_output_folder, model_name, context_retrieval_parameters)
+    exit()
 
     # ---- (S2) Compare agent output with SVD for each SVD file ----
     svd_files = sorted([f for f in glob.glob(os.path.join(svd_dir, "*.svd"))])

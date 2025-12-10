@@ -215,3 +215,8 @@ agent_output_updated/
 
 # Evaluation
 evaluation/
+
+# Devices
+*.pdf
+*.md
+*.svd

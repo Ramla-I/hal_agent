@@ -8,13 +8,22 @@ class Manufacturer(Enum):
     NXP = "NXP"
     TI = "TI"
 
-class PreprocessingMethod(Enum):
+class ContextRetrievalMethod(Enum):
     KEYWORD_SEARCH = "keyword_search"
     VECTOR_STORE = "vector_store"
     REGEX = "regex"
-    DDM = "ddm"
-    CHAPTER_SEARCH = "chapter_search"
-    KEYWORD_SEARCH_PLUS = "keyword_search_plus"
+
+@dataclass
+class ContextRetrievalParameters():
+    context_retrieval_method: ContextRetrievalMethod
+    pages_after_keyword: int
+    remove_tables: bool
+    number_embeddings: int
+    re_ranking: bool
+    vs_id: str
+    regex: str
+    other: str
+
 
 @dataclass
 class UserContext:

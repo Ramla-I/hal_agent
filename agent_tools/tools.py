@@ -11,8 +11,8 @@ from agent_tools.get_pages_with_keyword import get_pages_with_keyword
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
-from defs import UserContext, Manufacturer, PreprocessingMethod
-from config import CURRENT_PREPROCESSING_METHOD, DEVICE_DIRECTORY
+from defs import UserContext, Manufacturer
+from config import DEVICE_DIRECTORY
 
 @function_tool 
 def read_file(path) -> str:
@@ -81,25 +81,25 @@ def get_driver(wrapper: RunContextWrapper[UserContext]) -> str:
     with open(wrapper.context.driver_path, "r") as file:
         return file.read()
 
-@function_tool(name_override="fetch_datasheet_section") 
-def get_datasheet_section(wrapper: RunContextWrapper[UserContext], tables_only: bool = False) -> str:
-    if wrapper.context.manufacturer == Manufacturer.INTEL:
-        return extract_section_regex(datasheet_path_md(wrapper.context.device_name), wrapper.context.peripheral_name, tables_only, manufacturer="Intel")
-    elif wrapper.context.manufacturer == Manufacturer.STM:
-        if CURRENT_PREPROCESSING_METHOD == PreprocessingMethod.DDM:
-            print("Preprocessing method is DDM, not completely implemented yet")
-            return ""
-        elif CURRENT_PREPROCESSING_METHOD == PreprocessingMethod.REGEX:
-            return extract_section_regex(datasheet_path_md(wrapper.context.device_name), wrapper.context.peripheral_name, tables_only, manufacturer="STM")
-        elif CURRENT_PREPROCESSING_METHOD == PreprocessingMethod.VECTOR_STORE:
-            print("Preprocessing method is VECTOR_STORE, not implemented yet")
-            return ""
-        elif CURRENT_PREPROCESSING_METHOD == PreprocessingMethod.KEYWORD_SEARCH:
-            return get_pages_with_keyword(datasheet_path_pdf(wrapper.context.device_name), wrapper.context.peripheral_name)
-        else:
-            raise ValueError(f"Preprocessing method {CURRENT_PREPROCESSING_METHOD} not supported")
-    else:
-        raise ValueError(f"Manufacturer {wrapper.context.manufacturer} not supported")
+# @function_tool(name_override="fetch_datasheet_section") 
+# def get_datasheet_section(wrapper: RunContextWrapper[UserContext], tables_only: bool = False) -> str:
+#     if wrapper.context.manufacturer == Manufacturer.INTEL:
+#         return extract_section_regex(datasheet_path_md(wrapper.context.device_name), wrapper.context.peripheral_name, tables_only, manufacturer="Intel")
+#     elif wrapper.context.manufacturer == Manufacturer.STM:
+#         if CURRENT_PREPROCESSING_METHOD == PreprocessingMethod.DDM:
+#             print("Preprocessing method is DDM, not completely implemented yet")
+#             return ""
+#         elif CURRENT_PREPROCESSING_METHOD == PreprocessingMethod.REGEX:
+#             return extract_section_regex(datasheet_path_md(wrapper.context.device_name), wrapper.context.peripheral_name, tables_only, manufacturer="STM")
+#         elif CURRENT_PREPROCESSING_METHOD == PreprocessingMethod.VECTOR_STORE:
+#             print("Preprocessing method is VECTOR_STORE, not implemented yet")
+#             return ""
+#         elif CURRENT_PREPROCESSING_METHOD == PreprocessingMethod.KEYWORD_SEARCH:
+#             return get_pages_with_keyword(datasheet_path_pdf(wrapper.context.device_name), wrapper.context.peripheral_name)
+#         else:
+#             raise ValueError(f"Preprocessing method {CURRENT_PREPROCESSING_METHOD} not supported")
+#     else:
+#         raise ValueError(f"Manufacturer {wrapper.context.manufacturer} not supported")
     
 
 @function_tool(name_override="split_datasheet")

@@ -1,0 +1,4951 @@
+[
+  {
+    "keyword": "bkp_RTCCR",
+    "keyword_found": "bkp_RTCCR",
+    "pages": [
+      2,
+      81,
+      82,
+      85,
+      169,
+      1131
+    ]
+  },
+  {
+    "keyword": "bkp_dr%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "bkp_CSR",
+    "keyword_found": "bkp_CSR",
+    "pages": [
+      2,
+      81,
+      83,
+      85,
+      1131
+    ]
+  },
+  {
+    "keyword": "bkp_DR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "bkp_CR",
+    "keyword_found": "bkp_CR",
+    "pages": [
+      2,
+      81,
+      83,
+      84,
+      85,
+      169,
+      1131
+    ]
+  },
+  {
+    "keyword": "afio_MAPR",
+    "keyword_found": "afio_MAPR",
+    "pages": [
+      5,
+      174,
+      176,
+      177,
+      178,
+      179,
+      180,
+      182,
+      192,
+      194,
+      195,
+      197,
+      971,
+      978,
+      1008,
+      1009,
+      1122,
+      1131
+    ]
+  },
+  {
+    "keyword": "afio_EXTICR2",
+    "keyword_found": "afio_EXTICR2",
+    "pages": [
+      5,
+      190,
+      194,
+      197,
+      1131
+    ]
+  },
+  {
+    "keyword": "afio_EVCR",
+    "keyword_found": "afio_EVCR",
+    "pages": [
+      5,
+      182,
+      194,
+      197,
+      1131
+    ]
+  },
+  {
+    "keyword": "afio_EXTICR3",
+    "keyword_found": "afio_EXTICR3",
+    "pages": [
+      5,
+      191,
+      194,
+      197,
+      1131
+    ]
+  },
+  {
+    "keyword": "afio_EXTICR1",
+    "keyword_found": "afio_EXTICR1",
+    "pages": [
+      5,
+      190,
+      194,
+      197,
+      206,
+      1131
+    ]
+  },
+  {
+    "keyword": "afio_EXTICR4",
+    "keyword_found": "afio_EXTICR4",
+    "pages": [
+      5,
+      191,
+      194,
+      197,
+      206,
+      1131
+    ]
+  },
+  {
+    "keyword": "afio_MAPR2",
+    "keyword_found": "afio_MAPR2",
+    "pages": [
+      5,
+      178,
+      179,
+      192,
+      195,
+      1131
+    ]
+  },
+  {
+    "keyword": "iwdg_PR",
+    "keyword_found": "iwdg_PR",
+    "pages": [
+      14,
+      494,
+      495,
+      498,
+      1132
+    ]
+  },
+  {
+    "keyword": "iwdg_KR",
+    "keyword_found": "iwdg_KR",
+    "pages": [
+      14,
+      493,
+      494,
+      495,
+      496,
+      498,
+      1132
+    ]
+  },
+  {
+    "keyword": "iwdg_RLR",
+    "keyword_found": "iwdg_RLR",
+    "pages": [
+      14,
+      494,
+      495,
+      496,
+      498,
+      1132
+    ]
+  },
+  {
+    "keyword": "iwdg_SR",
+    "keyword_found": "iwdg_SR",
+    "pages": [
+      14,
+      494,
+      496,
+      498,
+      1132
+    ]
+  },
+  {
+    "keyword": "spi2_CR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi2_DR",
+    "keyword_found": "spix_DR",
+    "pages": [
+      725
+    ]
+  },
+  {
+    "keyword": "spi2_SR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi2_DR8",
+    "keyword_found": "spix_DR",
+    "pages": [
+      725
+    ]
+  },
+  {
+    "keyword": "spi2_TXCRCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi2_RXCRCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi2_CR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi2_CRCPR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "uart4_CR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "uart4_BRR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "uart4_DR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "uart4_SR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "uart4_CR3",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "uart4_GTPR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "uart4_CR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMACHTBAR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMAMFBOCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMAOMR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMAIER",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMARDLAR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMASR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMACHRBAR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMACHTDR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMARPDR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMATDLAR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMACHRDR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMATPDR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_dma_DMABMR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_ptp_PTPTSLUR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_ptp_PTPTSLR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_ptp_PTPTSHUR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_ptp_PTPSSIR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_ptp_PTPTSCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_ptp_PTPTSHR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_ptp_PTPTSAR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_ptp_PTPTTLR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_ptp_PTPTTHR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "dac_SR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "dac_DHR12LD",
+    "keyword_found": "dac_DHR12LD",
+    "pages": [
+      8,
+      258,
+      261,
+      262,
+      263,
+      264,
+      270,
+      272
+    ]
+  },
+  {
+    "keyword": "dac_DHR12R%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "dac_DHR12RD",
+    "keyword_found": "dac_DHR12RD",
+    "pages": [
+      8,
+      258,
+      261,
+      262,
+      263,
+      264,
+      270,
+      272
+    ]
+  },
+  {
+    "keyword": "dac_DHR8R%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "dac_SWTRIGR",
+    "keyword_found": "dac_SWTRIGR",
+    "pages": [
+      8,
+      267,
+      272
+    ]
+  },
+  {
+    "keyword": "dac_DHR8RD",
+    "keyword_found": "dac_DHR8RD",
+    "pages": [
+      8,
+      258,
+      261,
+      262,
+      263,
+      264,
+      271,
+      272
+    ]
+  },
+  {
+    "keyword": "dac_DHR12L%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "dac_DOR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "dac_CR",
+    "keyword_found": "dac_CR",
+    "pages": [
+      8,
+      255,
+      256,
+      258,
+      264,
+      272
+    ]
+  },
+  {
+    "keyword": "tim6_CR2",
+    "keyword_found": "timx_CR2",
+    "pages": [
+      11,
+      315,
+      338,
+      359,
+      360,
+      362,
+      405,
+      420,
+      422,
+      477,
+      480,
+      1122,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim6_SR",
+    "keyword_found": "timx_SR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      303,
+      313,
+      315,
+      331,
+      343,
+      345,
+      362,
+      382,
+      394,
+      395,
+      409,
+      411,
+      422,
+      425,
+      449,
+      450,
+      457,
+      460,
+      471,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim6_EGR",
+    "keyword_found": "timx_EGR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      302,
+      306,
+      307,
+      313,
+      316,
+      319,
+      339,
+      343,
+      355,
+      362,
+      386,
+      387,
+      389,
+      399,
+      405,
+      410,
+      411,
+      418,
+      422,
+      425,
+      434,
+      437,
+      438,
+      450,
+      455,
+      457,
+      461,
+      471,
+      474,
+      477,
+      478,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim6_PSC",
+    "keyword_found": "timx_PSC",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      294,
+      295,
+      296,
+      299,
+      303,
+      305,
+      355,
+      362,
+      367,
+      417,
+      423,
+      425,
+      427,
+      455,
+      457,
+      469,
+      470,
+      471,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim6_DIER",
+    "keyword_found": "timx_DIER",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      313,
+      315,
+      362,
+      382,
+      394,
+      408,
+      422,
+      435,
+      448,
+      457,
+      460,
+      477,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim6_ARR",
+    "keyword_found": "timx_ARR",
+    "pages": [
+      11,
+      12,
+      37,
+      294,
+      296,
+      298,
+      299,
+      302,
+      303,
+      304,
+      305,
+      316,
+      317,
+      318,
+      319,
+      343,
+      347,
+      355,
+      363,
+      367,
+      376,
+      386,
+      387,
+      388,
+      389,
+      390,
+      394,
+      411,
+      418,
+      423,
+      425,
+      427,
+      429,
+      437,
+      438,
+      440,
+      449,
+      455,
+      457,
+      459,
+      460,
+      469,
+      471,
+      473,
+      474,
+      475,
+      479,
+      480,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim6_CR1",
+    "keyword_found": "timx_CR1",
+    "pages": [
+      11,
+      12,
+      294,
+      296,
+      299,
+      302,
+      307,
+      308,
+      310,
+      316,
+      317,
+      318,
+      319,
+      329,
+      331,
+      343,
+      349,
+      360,
+      361,
+      362,
+      367,
+      378,
+      386,
+      387,
+      388,
+      389,
+      390,
+      392,
+      394,
+      395,
+      398,
+      410,
+      413,
+      420,
+      421,
+      422,
+      425,
+      427,
+      434,
+      437,
+      438,
+      440,
+      450,
+      452,
+      457,
+      459,
+      461,
+      462,
+      469,
+      471,
+      474,
+      475,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim6_CNT",
+    "keyword_found": "timx_CNT",
+    "pages": [
+      11,
+      12,
+      13,
+      294,
+      306,
+      317,
+      318,
+      319,
+      343,
+      349,
+      355,
+      356,
+      357,
+      358,
+      362,
+      367,
+      386,
+      387,
+      389,
+      401,
+      410,
+      413,
+      417,
+      418,
+      419,
+      420,
+      423,
+      427,
+      437,
+      438,
+      449,
+      452,
+      455,
+      456,
+      457,
+      460,
+      462,
+      466,
+      469,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_CR2",
+    "keyword_found": "timx_CR2",
+    "pages": [
+      11,
+      315,
+      338,
+      359,
+      360,
+      362,
+      405,
+      420,
+      422,
+      477,
+      480,
+      1122,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_SR",
+    "keyword_found": "timx_SR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      303,
+      313,
+      315,
+      331,
+      343,
+      345,
+      362,
+      382,
+      394,
+      395,
+      409,
+      411,
+      422,
+      425,
+      449,
+      450,
+      457,
+      460,
+      471,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_CCER",
+    "keyword_found": "timx_CCER",
+    "pages": [
+      10,
+      11,
+      12,
+      308,
+      313,
+      314,
+      315,
+      317,
+      329,
+      331,
+      348,
+      349,
+      350,
+      351,
+      352,
+      358,
+      359,
+      362,
+      378,
+      382,
+      386,
+      387,
+      390,
+      392,
+      394,
+      395,
+      412,
+      413,
+      414,
+      415,
+      416,
+      422,
+      433,
+      435,
+      437,
+      438,
+      451,
+      452,
+      453,
+      454,
+      457,
+      462,
+      463,
+      464,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_CCMR1_Input",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim8_ARR",
+    "keyword_found": "timx_ARR",
+    "pages": [
+      11,
+      12,
+      37,
+      294,
+      296,
+      298,
+      299,
+      302,
+      303,
+      304,
+      305,
+      316,
+      317,
+      318,
+      319,
+      343,
+      347,
+      355,
+      363,
+      367,
+      376,
+      386,
+      387,
+      388,
+      389,
+      390,
+      394,
+      411,
+      418,
+      423,
+      425,
+      427,
+      429,
+      437,
+      438,
+      440,
+      449,
+      455,
+      457,
+      459,
+      460,
+      469,
+      471,
+      473,
+      474,
+      475,
+      479,
+      480,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_DCR",
+    "keyword_found": "timx_DCR",
+    "pages": [
+      10,
+      11,
+      360,
+      361,
+      363,
+      420,
+      421,
+      423,
+      1123,
+      1124,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_DMAR",
+    "keyword_found": "timx_DMAR",
+    "pages": [
+      10,
+      360,
+      361,
+      363,
+      420,
+      423,
+      1124,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_EGR",
+    "keyword_found": "timx_EGR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      302,
+      306,
+      307,
+      313,
+      316,
+      319,
+      339,
+      343,
+      355,
+      362,
+      386,
+      387,
+      389,
+      399,
+      405,
+      410,
+      411,
+      418,
+      422,
+      425,
+      434,
+      437,
+      438,
+      450,
+      455,
+      457,
+      461,
+      471,
+      474,
+      477,
+      478,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_CR1",
+    "keyword_found": "timx_CR1",
+    "pages": [
+      11,
+      12,
+      294,
+      296,
+      299,
+      302,
+      307,
+      308,
+      310,
+      316,
+      317,
+      318,
+      319,
+      329,
+      331,
+      343,
+      349,
+      360,
+      361,
+      362,
+      367,
+      378,
+      386,
+      387,
+      388,
+      389,
+      390,
+      392,
+      394,
+      395,
+      398,
+      410,
+      413,
+      420,
+      421,
+      422,
+      425,
+      427,
+      434,
+      437,
+      438,
+      440,
+      450,
+      452,
+      457,
+      459,
+      461,
+      462,
+      469,
+      471,
+      474,
+      475,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_CCMR1_Output",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim8_CCMR2_Output",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim8_SMCR",
+    "keyword_found": "timx_SMCR",
+    "pages": [
+      10,
+      12,
+      307,
+      308,
+      310,
+      314,
+      325,
+      329,
+      331,
+      339,
+      341,
+      343,
+      348,
+      349,
+      350,
+      351,
+      352,
+      360,
+      362,
+      378,
+      390,
+      392,
+      394,
+      395,
+      405,
+      406,
+      412,
+      413,
+      414,
+      415,
+      416,
+      420,
+      422,
+      434,
+      451,
+      452,
+      453,
+      457,
+      462,
+      463,
+      477,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_RCR",
+    "keyword_found": "timx_RCR",
+    "pages": [
+      10,
+      294,
+      296,
+      299,
+      303,
+      305,
+      306,
+      356,
+      363,
+      1125,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_BDTR",
+    "keyword_found": "timx_BDTR",
+    "pages": [
+      10,
+      317,
+      339,
+      349,
+      353,
+      358,
+      359,
+      360,
+      363,
+      413,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_CCR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim8_PSC",
+    "keyword_found": "timx_PSC",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      294,
+      295,
+      296,
+      299,
+      303,
+      305,
+      355,
+      362,
+      367,
+      417,
+      423,
+      425,
+      427,
+      455,
+      457,
+      469,
+      470,
+      471,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_DIER",
+    "keyword_found": "timx_DIER",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      313,
+      315,
+      362,
+      382,
+      394,
+      408,
+      422,
+      435,
+      448,
+      457,
+      460,
+      477,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_CNT",
+    "keyword_found": "timx_CNT",
+    "pages": [
+      11,
+      12,
+      13,
+      294,
+      306,
+      317,
+      318,
+      319,
+      343,
+      349,
+      355,
+      356,
+      357,
+      358,
+      362,
+      367,
+      386,
+      387,
+      389,
+      401,
+      410,
+      413,
+      417,
+      418,
+      419,
+      420,
+      423,
+      427,
+      437,
+      438,
+      449,
+      452,
+      455,
+      456,
+      457,
+      460,
+      462,
+      466,
+      469,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim8_CCMR2_Input",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim9_CR2",
+    "keyword_found": "timx_CR2",
+    "pages": [
+      11,
+      315,
+      338,
+      359,
+      360,
+      362,
+      405,
+      420,
+      422,
+      477,
+      480,
+      1122,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim9_SMCR",
+    "keyword_found": "timx_SMCR",
+    "pages": [
+      10,
+      12,
+      307,
+      308,
+      310,
+      314,
+      325,
+      329,
+      331,
+      339,
+      341,
+      343,
+      348,
+      349,
+      350,
+      351,
+      352,
+      360,
+      362,
+      378,
+      390,
+      392,
+      394,
+      395,
+      405,
+      406,
+      412,
+      413,
+      414,
+      415,
+      416,
+      420,
+      422,
+      434,
+      451,
+      452,
+      453,
+      457,
+      462,
+      463,
+      477,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim9_SR",
+    "keyword_found": "timx_SR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      303,
+      313,
+      315,
+      331,
+      343,
+      345,
+      362,
+      382,
+      394,
+      395,
+      409,
+      411,
+      422,
+      425,
+      449,
+      450,
+      457,
+      460,
+      471,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim9_EGR",
+    "keyword_found": "timx_EGR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      302,
+      306,
+      307,
+      313,
+      316,
+      319,
+      339,
+      343,
+      355,
+      362,
+      386,
+      387,
+      389,
+      399,
+      405,
+      410,
+      411,
+      418,
+      422,
+      425,
+      434,
+      437,
+      438,
+      450,
+      455,
+      457,
+      461,
+      471,
+      474,
+      477,
+      478,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim9_CCR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim9_CCER",
+    "keyword_found": "timx_CCER",
+    "pages": [
+      10,
+      11,
+      12,
+      308,
+      313,
+      314,
+      315,
+      317,
+      329,
+      331,
+      348,
+      349,
+      350,
+      351,
+      352,
+      358,
+      359,
+      362,
+      378,
+      382,
+      386,
+      387,
+      390,
+      392,
+      394,
+      395,
+      412,
+      413,
+      414,
+      415,
+      416,
+      422,
+      433,
+      435,
+      437,
+      438,
+      451,
+      452,
+      453,
+      454,
+      457,
+      462,
+      463,
+      464,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim9_CCMR1_Output",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim9_DIER",
+    "keyword_found": "timx_DIER",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      313,
+      315,
+      362,
+      382,
+      394,
+      408,
+      422,
+      435,
+      448,
+      457,
+      460,
+      477,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim9_CCMR1_Input",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim9_PSC",
+    "keyword_found": "timx_PSC",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      294,
+      295,
+      296,
+      299,
+      303,
+      305,
+      355,
+      362,
+      367,
+      417,
+      423,
+      425,
+      427,
+      455,
+      457,
+      469,
+      470,
+      471,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim9_CR1",
+    "keyword_found": "timx_CR1",
+    "pages": [
+      11,
+      12,
+      294,
+      296,
+      299,
+      302,
+      307,
+      308,
+      310,
+      316,
+      317,
+      318,
+      319,
+      329,
+      331,
+      343,
+      349,
+      360,
+      361,
+      362,
+      367,
+      378,
+      386,
+      387,
+      388,
+      389,
+      390,
+      392,
+      394,
+      395,
+      398,
+      410,
+      413,
+      420,
+      421,
+      422,
+      425,
+      427,
+      434,
+      437,
+      438,
+      440,
+      450,
+      452,
+      457,
+      459,
+      461,
+      462,
+      469,
+      471,
+      474,
+      475,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim9_ARR",
+    "keyword_found": "timx_ARR",
+    "pages": [
+      11,
+      12,
+      37,
+      294,
+      296,
+      298,
+      299,
+      302,
+      303,
+      304,
+      305,
+      316,
+      317,
+      318,
+      319,
+      343,
+      347,
+      355,
+      363,
+      367,
+      376,
+      386,
+      387,
+      388,
+      389,
+      390,
+      394,
+      411,
+      418,
+      423,
+      425,
+      427,
+      429,
+      437,
+      438,
+      440,
+      449,
+      455,
+      457,
+      459,
+      460,
+      469,
+      471,
+      473,
+      474,
+      475,
+      479,
+      480,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim9_CNT",
+    "keyword_found": "timx_CNT",
+    "pages": [
+      11,
+      12,
+      13,
+      294,
+      306,
+      317,
+      318,
+      319,
+      343,
+      349,
+      355,
+      356,
+      357,
+      358,
+      362,
+      367,
+      386,
+      387,
+      389,
+      401,
+      410,
+      413,
+      417,
+      418,
+      419,
+      420,
+      423,
+      427,
+      437,
+      438,
+      449,
+      452,
+      455,
+      456,
+      457,
+      460,
+      462,
+      466,
+      469,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "otg_fs_pwrclk_PCGCCTL",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_CR2",
+    "keyword_found": "adc1_CR",
+    "pages": [
+      227
+    ]
+  },
+  {
+    "keyword": "adc1_SQR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_DR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_SMPR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_SR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_SQR3",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_SMPR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_HTR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_JDR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_LTR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_JSQR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_SQR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc1_CR1",
+    "keyword_found": "adc1_CR1",
+    "pages": [
+      227
+    ]
+  },
+  {
+    "keyword": "adc1_JOFR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_CPUID",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_CFSR_UFSR_BFSR_MMFSR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_SCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_AIRCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_SHPR3",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_MMFAR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_SHCRS",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_SHPR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_SHPR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_VTOR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_BFAR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_CCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_HFSR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "scb_ICSR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim2_CR2",
+    "keyword_found": "tim2_CR",
+    "pages": [
+      398,
+      399,
+      400
+    ]
+  },
+  {
+    "keyword": "tim2_CCMR2_Output",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim2_SMCR",
+    "keyword_found": "tim2_SMCR",
+    "pages": [
+      398,
+      399,
+      400,
+      401
+    ]
+  },
+  {
+    "keyword": "tim2_SR",
+    "keyword_found": "timx_SR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      303,
+      313,
+      315,
+      331,
+      343,
+      345,
+      362,
+      382,
+      394,
+      395,
+      409,
+      411,
+      422,
+      425,
+      449,
+      450,
+      457,
+      460,
+      471,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim2_DMAR",
+    "keyword_found": "timx_DMAR",
+    "pages": [
+      10,
+      360,
+      361,
+      363,
+      420,
+      423,
+      1124,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim2_EGR",
+    "keyword_found": "tim2_EGR",
+    "pages": [
+      399
+    ]
+  },
+  {
+    "keyword": "tim2_CCR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim2_CCER",
+    "keyword_found": "timx_CCER",
+    "pages": [
+      10,
+      11,
+      12,
+      308,
+      313,
+      314,
+      315,
+      317,
+      329,
+      331,
+      348,
+      349,
+      350,
+      351,
+      352,
+      358,
+      359,
+      362,
+      378,
+      382,
+      386,
+      387,
+      390,
+      392,
+      394,
+      395,
+      412,
+      413,
+      414,
+      415,
+      416,
+      422,
+      433,
+      435,
+      437,
+      438,
+      451,
+      452,
+      453,
+      454,
+      457,
+      462,
+      463,
+      464,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim2_CCMR1_Output",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim2_DIER",
+    "keyword_found": "timx_DIER",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      313,
+      315,
+      362,
+      382,
+      394,
+      408,
+      422,
+      435,
+      448,
+      457,
+      460,
+      477,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim2_CCMR1_Input",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim2_PSC",
+    "keyword_found": "timx_PSC",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      294,
+      295,
+      296,
+      299,
+      303,
+      305,
+      355,
+      362,
+      367,
+      417,
+      423,
+      425,
+      427,
+      455,
+      457,
+      469,
+      470,
+      471,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim2_CR1",
+    "keyword_found": "tim2_CR1",
+    "pages": [
+      398,
+      399,
+      400
+    ]
+  },
+  {
+    "keyword": "tim2_ARR",
+    "keyword_found": "timx_ARR",
+    "pages": [
+      11,
+      12,
+      37,
+      294,
+      296,
+      298,
+      299,
+      302,
+      303,
+      304,
+      305,
+      316,
+      317,
+      318,
+      319,
+      343,
+      347,
+      355,
+      363,
+      367,
+      376,
+      386,
+      387,
+      388,
+      389,
+      390,
+      394,
+      411,
+      418,
+      423,
+      425,
+      427,
+      429,
+      437,
+      438,
+      440,
+      449,
+      455,
+      457,
+      459,
+      460,
+      469,
+      471,
+      473,
+      474,
+      475,
+      479,
+      480,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim2_CNT",
+    "keyword_found": "tim2_CNT",
+    "pages": [
+      399
+    ]
+  },
+  {
+    "keyword": "tim2_CCMR2_Input",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim2_DCR",
+    "keyword_found": "timx_DCR",
+    "pages": [
+      10,
+      11,
+      360,
+      361,
+      363,
+      420,
+      421,
+      423,
+      1123,
+      1124,
+      1133
+    ]
+  },
+  {
+    "keyword": "dma1_IFCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "dma1_ISR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "wwdg_CFR",
+    "keyword_found": "wwdg_CFR",
+    "pages": [
+      14,
+      504,
+      505,
+      1134
+    ]
+  },
+  {
+    "keyword": "wwdg_CR",
+    "keyword_found": "wwdg_CR",
+    "pages": [
+      14,
+      503,
+      505,
+      1134
+    ]
+  },
+  {
+    "keyword": "wwdg_SR",
+    "keyword_found": "wwdg_SR",
+    "pages": [
+      14,
+      504,
+      505,
+      1134
+    ]
+  },
+  {
+    "keyword": "ethernet_mac_MACVLANTR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACSR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACA0LR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACA1HR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACHTHR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACA3HR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACA2LR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACMIIDR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACHTLR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACA3LR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACFFR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACPMTCSR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACRWUFFR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACFCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACA2HR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACA0HR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACA1LR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACIMR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mac_MACMIIAR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim10_CR2",
+    "keyword_found": "timx_CR2",
+    "pages": [
+      11,
+      315,
+      338,
+      359,
+      360,
+      362,
+      405,
+      420,
+      422,
+      477,
+      480,
+      1122,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim10_SR",
+    "keyword_found": "timx_SR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      303,
+      313,
+      315,
+      331,
+      343,
+      345,
+      362,
+      382,
+      394,
+      395,
+      409,
+      411,
+      422,
+      425,
+      449,
+      450,
+      457,
+      460,
+      471,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim10_EGR",
+    "keyword_found": "timx_EGR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      302,
+      306,
+      307,
+      313,
+      316,
+      319,
+      339,
+      343,
+      355,
+      362,
+      386,
+      387,
+      389,
+      399,
+      405,
+      410,
+      411,
+      418,
+      422,
+      425,
+      434,
+      437,
+      438,
+      450,
+      455,
+      457,
+      461,
+      471,
+      474,
+      477,
+      478,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim10_CCR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim10_CCER",
+    "keyword_found": "timx_CCER",
+    "pages": [
+      10,
+      11,
+      12,
+      308,
+      313,
+      314,
+      315,
+      317,
+      329,
+      331,
+      348,
+      349,
+      350,
+      351,
+      352,
+      358,
+      359,
+      362,
+      378,
+      382,
+      386,
+      387,
+      390,
+      392,
+      394,
+      395,
+      412,
+      413,
+      414,
+      415,
+      416,
+      422,
+      433,
+      435,
+      437,
+      438,
+      451,
+      452,
+      453,
+      454,
+      457,
+      462,
+      463,
+      464,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim10_CCMR1_Output",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim10_DIER",
+    "keyword_found": "timx_DIER",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      313,
+      315,
+      362,
+      382,
+      394,
+      408,
+      422,
+      435,
+      448,
+      457,
+      460,
+      477,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim10_CCMR1_Input",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim10_PSC",
+    "keyword_found": "timx_PSC",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      294,
+      295,
+      296,
+      299,
+      303,
+      305,
+      355,
+      362,
+      367,
+      417,
+      423,
+      425,
+      427,
+      455,
+      457,
+      469,
+      470,
+      471,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim10_CR1",
+    "keyword_found": "timx_CR1",
+    "pages": [
+      11,
+      12,
+      294,
+      296,
+      299,
+      302,
+      307,
+      308,
+      310,
+      316,
+      317,
+      318,
+      319,
+      329,
+      331,
+      343,
+      349,
+      360,
+      361,
+      362,
+      367,
+      378,
+      386,
+      387,
+      388,
+      389,
+      390,
+      392,
+      394,
+      395,
+      398,
+      410,
+      413,
+      420,
+      421,
+      422,
+      425,
+      427,
+      434,
+      437,
+      438,
+      440,
+      450,
+      452,
+      457,
+      459,
+      461,
+      462,
+      469,
+      471,
+      474,
+      475,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim10_ARR",
+    "keyword_found": "timx_ARR",
+    "pages": [
+      11,
+      12,
+      37,
+      294,
+      296,
+      298,
+      299,
+      302,
+      303,
+      304,
+      305,
+      316,
+      317,
+      318,
+      319,
+      343,
+      347,
+      355,
+      363,
+      367,
+      376,
+      386,
+      387,
+      388,
+      389,
+      390,
+      394,
+      411,
+      418,
+      423,
+      425,
+      427,
+      429,
+      437,
+      438,
+      440,
+      449,
+      455,
+      457,
+      459,
+      460,
+      469,
+      471,
+      473,
+      474,
+      475,
+      479,
+      480,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim10_CNT",
+    "keyword_found": "timx_CNT",
+    "pages": [
+      11,
+      12,
+      13,
+      294,
+      306,
+      317,
+      318,
+      319,
+      343,
+      349,
+      355,
+      356,
+      357,
+      358,
+      362,
+      367,
+      386,
+      387,
+      389,
+      401,
+      410,
+      413,
+      417,
+      418,
+      419,
+      420,
+      423,
+      427,
+      437,
+      438,
+      449,
+      452,
+      455,
+      456,
+      457,
+      460,
+      462,
+      466,
+      469,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "otg_fs_host_HAINT",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_host_HFIR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_host_HFNUM",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_host_HAINTMSK",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_host_HPRT",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_host_HPTXSTS",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_host_HCFG",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can_IER",
+    "keyword_found": "can_IER",
+    "pages": [
+      657,
+      661,
+      662,
+      675,
+      676,
+      679,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_BTR",
+    "keyword_found": "can_BTR",
+    "pages": [
+      657,
+      682,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_FFA1R",
+    "keyword_found": "can_FFA1R",
+    "pages": [
+      692,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_RF%sR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can_FA1R",
+    "keyword_found": "can_FA1R",
+    "pages": [
+      692,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_MCR",
+    "keyword_found": "can_MCR",
+    "pages": [
+      655,
+      657,
+      660,
+      661,
+      662,
+      674,
+      676,
+      685,
+      1117,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_MSR",
+    "keyword_found": "can_MSR",
+    "pages": [
+      655,
+      657,
+      674,
+      675,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_FM1R",
+    "keyword_found": "can_FM1R",
+    "pages": [
+      691,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_FS1R",
+    "keyword_found": "can_FS1R",
+    "pages": [
+      691,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_TSR",
+    "keyword_found": "can_TSR",
+    "pages": [
+      660,
+      667,
+      676,
+      683,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_FMR",
+    "keyword_found": "can_FMR",
+    "pages": [
+      690,
+      691,
+      692,
+      693,
+      1131
+    ]
+  },
+  {
+    "keyword": "can_ESR",
+    "keyword_found": "can_ESR",
+    "pages": [
+      676,
+      680,
+      681,
+      1123,
+      1131
+    ]
+  },
+  {
+    "keyword": "rcc_AHBENR",
+    "keyword_found": "rcc_AHBENR",
+    "pages": [
+      3,
+      110,
+      120,
+      144,
+      156,
+      1133
+    ]
+  },
+  {
+    "keyword": "rcc_CIR",
+    "keyword_found": "rcc_CIR",
+    "pages": [
+      3,
+      94,
+      95,
+      96,
+      103,
+      120,
+      126,
+      136,
+      155,
+      1133
+    ]
+  },
+  {
+    "keyword": "rcc_APB1ENR",
+    "keyword_found": "rcc_APB1ENR",
+    "pages": [
+      3,
+      80,
+      100,
+      114,
+      120,
+      134,
+      147,
+      156,
+      481,
+      1133
+    ]
+  },
+  {
+    "keyword": "rcc_AHBRSTR",
+    "keyword_found": "rcc_AHBRSTR",
+    "pages": [
+      152
+    ]
+  },
+  {
+    "keyword": "rcc_CFGR",
+    "keyword_found": "rcc_CFGR",
+    "pages": [
+      3,
+      97,
+      100,
+      120,
+      126,
+      134,
+      153,
+      155,
+      157,
+      731,
+      1119,
+      1133
+    ]
+  },
+  {
+    "keyword": "rcc_CSR",
+    "keyword_found": "rcc_CSR",
+    "pages": [
+      3,
+      74,
+      89,
+      95,
+      118,
+      121,
+      122,
+      151,
+      156,
+      1133
+    ]
+  },
+  {
+    "keyword": "rcc_APB1RSTR",
+    "keyword_found": "rcc_APB1RSTR",
+    "pages": [
+      3,
+      108,
+      120,
+      141,
+      156,
+      1133
+    ]
+  },
+  {
+    "keyword": "rcc_APB2RSTR",
+    "keyword_found": "rcc_APB2RSTR",
+    "pages": [
+      3,
+      105,
+      120,
+      140,
+      156,
+      1133
+    ]
+  },
+  {
+    "keyword": "rcc_CFGR2",
+    "keyword_found": "rcc_CFGR2",
+    "pages": [
+      126,
+      134,
+      153,
+      157,
+      731
+    ]
+  },
+  {
+    "keyword": "rcc_BDCR",
+    "keyword_found": "rcc_BDCR",
+    "pages": [
+      74,
+      76,
+      91,
+      95,
+      97,
+      117,
+      120,
+      124,
+      126,
+      149,
+      156,
+      481,
+      1133
+    ]
+  },
+  {
+    "keyword": "rcc_CR",
+    "keyword_found": "rcc_CR",
+    "pages": [
+      3,
+      94,
+      95,
+      96,
+      120,
+      126,
+      155,
+      1122,
+      1124,
+      1133
+    ]
+  },
+  {
+    "keyword": "rcc_APB2ENR",
+    "keyword_found": "rcc_APB2ENR",
+    "pages": [
+      3,
+      111,
+      120,
+      145,
+      156,
+      182,
+      206,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim1_CR2",
+    "keyword_found": "tim1_CR2",
+    "pages": [
+      312,
+      394,
+      398,
+      399,
+      400,
+      401
+    ]
+  },
+  {
+    "keyword": "tim1_SR",
+    "keyword_found": "timx_SR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      303,
+      313,
+      315,
+      331,
+      343,
+      345,
+      362,
+      382,
+      394,
+      395,
+      409,
+      411,
+      422,
+      425,
+      449,
+      450,
+      457,
+      460,
+      471,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim1_CCER",
+    "keyword_found": "tim1_CCER",
+    "pages": [
+      312
+    ]
+  },
+  {
+    "keyword": "tim1_CCMR1_Input",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim1_ARR",
+    "keyword_found": "tim1_ARR",
+    "pages": [
+      389,
+      400
+    ]
+  },
+  {
+    "keyword": "tim1_DCR",
+    "keyword_found": "timx_DCR",
+    "pages": [
+      10,
+      11,
+      360,
+      361,
+      363,
+      420,
+      421,
+      423,
+      1123,
+      1124,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim1_DMAR",
+    "keyword_found": "timx_DMAR",
+    "pages": [
+      10,
+      360,
+      361,
+      363,
+      420,
+      423,
+      1124,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim1_EGR",
+    "keyword_found": "tim1_EGR",
+    "pages": [
+      399
+    ]
+  },
+  {
+    "keyword": "tim1_CR1",
+    "keyword_found": "tim1_CR1",
+    "pages": [
+      398,
+      399,
+      400
+    ]
+  },
+  {
+    "keyword": "tim1_CCMR1_Output",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim1_CCMR2_Output",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim1_SMCR",
+    "keyword_found": "tim1_SMCR",
+    "pages": [
+      401
+    ]
+  },
+  {
+    "keyword": "tim1_RCR",
+    "keyword_found": "timx_RCR",
+    "pages": [
+      10,
+      294,
+      296,
+      299,
+      303,
+      305,
+      306,
+      356,
+      363,
+      1125,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim1_BDTR",
+    "keyword_found": "tim1_BDTR",
+    "pages": [
+      312
+    ]
+  },
+  {
+    "keyword": "tim1_CCR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim1_PSC",
+    "keyword_found": "timx_PSC",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      294,
+      295,
+      296,
+      299,
+      303,
+      305,
+      355,
+      362,
+      367,
+      417,
+      423,
+      425,
+      427,
+      455,
+      457,
+      469,
+      470,
+      471,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim1_DIER",
+    "keyword_found": "timx_DIER",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      313,
+      315,
+      362,
+      382,
+      394,
+      408,
+      422,
+      435,
+      448,
+      457,
+      460,
+      477,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim1_CNT",
+    "keyword_found": "tim1_CNT",
+    "pages": [
+      316,
+      437
+    ]
+  },
+  {
+    "keyword": "tim1_CCMR2_Input",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "stk_CTRL",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "stk_LOAD_",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "stk_VAL",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "stk_CALIB",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "usb_ISTR",
+    "keyword_found": "usb_ISTR",
+    "pages": [
+      628,
+      629,
+      634,
+      635,
+      651,
+      1134
+    ]
+  },
+  {
+    "keyword": "usb_DADDR",
+    "keyword_found": "usb_DADDR",
+    "pages": [
+      625,
+      642,
+      1134
+    ]
+  },
+  {
+    "keyword": "usb_FNR",
+    "keyword_found": "usb_FNR",
+    "pages": [
+      635,
+      641,
+      651,
+      1134
+    ]
+  },
+  {
+    "keyword": "usb_BTABLE",
+    "keyword_found": "usb_BTABLE",
+    "pages": [
+      626,
+      642,
+      644,
+      649,
+      1133
+    ]
+  },
+  {
+    "keyword": "usb_EP%sR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "usb_CNTR",
+    "keyword_found": "usb_CNTR",
+    "pages": [
+      634,
+      635,
+      651,
+      1133
+    ]
+  },
+  {
+    "keyword": "scb_actrl_ACTRL",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "gpioa_CRL",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "gpioa_BRR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "gpioa_LCKR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "gpioa_BSRR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "gpioa_IDR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "gpioa_ODR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "gpioa_CRH",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DOEPMSK",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DIEPMSK",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DIEPEMPMSK",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DVBUSPULSE",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DCTL",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DAINTMSK",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DVBUSDIS",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DCFG",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DAINT",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_device_DSTS",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "mpu_RBAR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "mpu_CTRL",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "mpu_RASR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "mpu_RNR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "mpu_TYPER",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_CR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_SQR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_DR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_SMPR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_SR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_SQR3",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_SMPR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_HTR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_JDR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_LTR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_JSQR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_SQR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_CR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc2_JOFR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "flash_ACR",
+    "keyword_found": "flash_ACR",
+    "pages": [
+      54,
+      55,
+      56,
+      58,
+      59,
+      1122
+    ]
+  },
+  {
+    "keyword": "flash_SR",
+    "keyword_found": "flash_SR",
+    "pages": [
+      54,
+      55,
+      56
+    ]
+  },
+  {
+    "keyword": "flash_OBR",
+    "keyword_found": "flash_OBR",
+    "pages": [
+      54,
+      55,
+      56
+    ]
+  },
+  {
+    "keyword": "flash_AR",
+    "keyword_found": "flash_AR",
+    "pages": [
+      54,
+      55,
+      56
+    ]
+  },
+  {
+    "keyword": "flash_KEYR",
+    "keyword_found": "flash_KEYR",
+    "pages": [
+      54,
+      55,
+      56
+    ]
+  },
+  {
+    "keyword": "flash_WRPR",
+    "keyword_found": "flash_WRPR",
+    "pages": [
+      54,
+      55,
+      56
+    ]
+  },
+  {
+    "keyword": "flash_OPTKEYR",
+    "keyword_found": "flash_OPTKEYR",
+    "pages": [
+      54,
+      55,
+      56
+    ]
+  },
+  {
+    "keyword": "flash_CR",
+    "keyword_found": "flash_CR",
+    "pages": [
+      54,
+      55,
+      56
+    ]
+  },
+  {
+    "keyword": "ethernet_mmc_MMCRFCECR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCRIR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCRIMR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCTGFSCCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCTIMR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCTIR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCTGFMSCCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCRFAECR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCRGUFCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "ethernet_mmc_MMCTGFCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_stir_STIR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "usart1_CR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "usart1_BRR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "usart1_DR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "usart1_SR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "usart1_CR3",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "usart1_GTPR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "usart1_CR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "fsmc_SR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "fsmc_PMEM%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "fsmc_BTR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "fsmc_PCR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "fsmc_PATT%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "fsmc_ECCR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "fsmc_PIO4",
+    "keyword_found": "fsmc_PIO4",
+    "pages": [
+      511,
+      560,
+      564,
+      1117
+    ]
+  },
+  {
+    "keyword": "fsmc_BCR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "fsmc_BCR1",
+    "keyword_found": "fsmc_BCR1",
+    "pages": [
+      563,
+      1132
+    ]
+  },
+  {
+    "keyword": "fsmc_BWTR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_IER",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_BTR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_FFA1R",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_RF%sR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_FA1R",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_MCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_MSR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_FM1R",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_FS1R",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_TSR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_FMR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "can1_ESR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "i2c1_CR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "i2c1_OAR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "i2c1_DR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "i2c1_SR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "i2c1_CCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "i2c1_SR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "i2c1_CR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "i2c1_TRISE",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "i2c1_OAR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "crc_IDR",
+    "keyword_found": "crc_IDR",
+    "pages": [
+      1,
+      63,
+      64,
+      65,
+      1131
+    ]
+  },
+  {
+    "keyword": "crc_DR",
+    "keyword_found": "crc_DR",
+    "pages": [
+      1,
+      63,
+      64,
+      1117,
+      1131
+    ]
+  },
+  {
+    "keyword": "crc_CR",
+    "keyword_found": "crc_CR",
+    "pages": [
+      1,
+      63,
+      64,
+      65
+    ]
+  },
+  {
+    "keyword": "sdio_ICR",
+    "keyword_found": "sdio_ICR",
+    "pages": [
+      17,
+      605,
+      614,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_MASK",
+    "keyword_found": "sdio_MASK",
+    "pages": [
+      17,
+      605,
+      616,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_DLEN",
+    "keyword_found": "sdio_DLEN",
+    "pages": [
+      16,
+      610,
+      612,
+      618,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_CLKCR",
+    "keyword_found": "sdio_CLKCR",
+    "pages": [
+      16,
+      605,
+      606,
+      607,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_DCOUNT",
+    "keyword_found": "sdio_DCOUNT",
+    "pages": [
+      16,
+      612,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_FIFOCNT",
+    "keyword_found": "sdio_FIFOCNT",
+    "pages": [
+      17,
+      618,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_DTIMER",
+    "keyword_found": "sdio_DTIMER",
+    "pages": [
+      16,
+      610,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_POWER",
+    "keyword_found": "sdio_POWER",
+    "pages": [
+      606,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_FIFO",
+    "keyword_found": "sdio_FIFO",
+    "pages": [
+      17,
+      580,
+      618,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_ARG",
+    "keyword_found": "sdio_ARG",
+    "pages": [
+      16,
+      607
+    ]
+  },
+  {
+    "keyword": "sdio_STA",
+    "keyword_found": "sdio_STA",
+    "pages": [
+      17,
+      580,
+      605,
+      614,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_CMD",
+    "keyword_found": "sdio_CMD",
+    "pages": [
+      16,
+      168,
+      566,
+      567,
+      568,
+      569,
+      571,
+      581,
+      605,
+      608
+    ]
+  },
+  {
+    "keyword": "sdio_RESP%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "sdio_DCTRL",
+    "keyword_found": "sdio_DCTRL",
+    "pages": [
+      16,
+      610,
+      611,
+      612,
+      618,
+      1133
+    ]
+  },
+  {
+    "keyword": "sdio_RESPCMD",
+    "keyword_found": "sdio_RESPCMD",
+    "pages": [
+      16,
+      609,
+      1133
+    ]
+  },
+  {
+    "keyword": "exti_RTSR",
+    "keyword_found": "exti_RTSR",
+    "pages": [
+      6,
+      211,
+      213,
+      1132
+    ]
+  },
+  {
+    "keyword": "exti_FTSR",
+    "keyword_found": "exti_FTSR",
+    "pages": [
+      211,
+      213,
+      1132
+    ]
+  },
+  {
+    "keyword": "exti_PR",
+    "keyword_found": "exti_PR",
+    "pages": [
+      6,
+      212,
+      213,
+      1112,
+      1126,
+      1132
+    ]
+  },
+  {
+    "keyword": "exti_EMR",
+    "keyword_found": "exti_EMR",
+    "pages": [
+      208,
+      210,
+      213,
+      1132
+    ]
+  },
+  {
+    "keyword": "exti_SWIER",
+    "keyword_found": "exti_SWIER",
+    "pages": [
+      208,
+      212,
+      213,
+      1126,
+      1132
+    ]
+  },
+  {
+    "keyword": "exti_IMR",
+    "keyword_found": "exti_IMR",
+    "pages": [
+      5,
+      208,
+      210,
+      212,
+      213,
+      1132
+    ]
+  },
+  {
+    "keyword": "pwr_CSR",
+    "keyword_found": "pwr_CSR",
+    "pages": [
+      2,
+      70,
+      74,
+      78,
+      79,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "pwr_CR",
+    "keyword_found": "pwr_CR",
+    "pages": [
+      2,
+      73,
+      74,
+      76,
+      78,
+      79,
+      80,
+      97,
+      117,
+      149,
+      481,
+      1130,
+      1133
+    ]
+  },
+  {
+    "keyword": "adc3_CR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_SQR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_DR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_SMPR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_SR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_SQR3",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_SMPR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_HTR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_JDR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_LTR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_JSQR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_SQR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_CR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "adc3_JOFR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "dbgmcu_IDCODE",
+    "keyword_found": "dbgmcu_IDCODE",
+    "pages": [
+      1086,
+      1125,
+      1131
+    ]
+  },
+  {
+    "keyword": "dbgmcu_CR",
+    "keyword_found": "dbgmcu_CR",
+    "pages": [
+      76,
+      1098,
+      1109,
+      1131
+    ]
+  },
+  {
+    "keyword": "spi1_CR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi1_DR",
+    "keyword_found": "spix_DR",
+    "pages": [
+      725
+    ]
+  },
+  {
+    "keyword": "spi1_SR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi1_DR8",
+    "keyword_found": "spix_DR",
+    "pages": [
+      725
+    ]
+  },
+  {
+    "keyword": "spi1_TXCRCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi1_I2SCFGR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi1_RXCRCR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi1_CR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi1_CRCPR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "spi1_I2SPR",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GAHBCFG",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GRXSTSR_Host",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_HPTXFSIZ",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GRXSTSP_Device",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GNPTXSTS",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GCCFG",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GINTSTS",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_DIEPTXF%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GRXSTSR_Device",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GRXFSIZ",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GOTGCTL",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_DIEPTXF0",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_HNPTXFSIZ",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_CID",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GOTGINT",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GRSTCTL",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GUSBCFG",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GRXSTSP_Host",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "otg_fs_global_GINTMSK",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR2",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_ICER1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR10",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IABR0",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR8",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_ICPR0",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR7",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR6",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR12",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR3",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR9",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR11",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR5",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR4",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_ISPR0",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR14",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_ICPR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR13",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_ICER0",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_ISPR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IABR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_ISER0",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_ISER1",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "nvic_IPR0",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim13_SR",
+    "keyword_found": "timx_SR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      303,
+      313,
+      315,
+      331,
+      343,
+      345,
+      362,
+      382,
+      394,
+      395,
+      409,
+      411,
+      422,
+      425,
+      449,
+      450,
+      457,
+      460,
+      471,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim13_EGR",
+    "keyword_found": "timx_EGR",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      296,
+      299,
+      302,
+      306,
+      307,
+      313,
+      316,
+      319,
+      339,
+      343,
+      355,
+      362,
+      386,
+      387,
+      389,
+      399,
+      405,
+      410,
+      411,
+      418,
+      422,
+      425,
+      434,
+      437,
+      438,
+      450,
+      455,
+      457,
+      461,
+      471,
+      474,
+      477,
+      478,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim13_CCR%s",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim13_CCER",
+    "keyword_found": "timx_CCER",
+    "pages": [
+      10,
+      11,
+      12,
+      308,
+      313,
+      314,
+      315,
+      317,
+      329,
+      331,
+      348,
+      349,
+      350,
+      351,
+      352,
+      358,
+      359,
+      362,
+      378,
+      382,
+      386,
+      387,
+      390,
+      392,
+      394,
+      395,
+      412,
+      413,
+      414,
+      415,
+      416,
+      422,
+      433,
+      435,
+      437,
+      438,
+      451,
+      452,
+      453,
+      454,
+      457,
+      462,
+      463,
+      464,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim13_CCMR1_Output",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim13_DIER",
+    "keyword_found": "timx_DIER",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      313,
+      315,
+      362,
+      382,
+      394,
+      408,
+      422,
+      435,
+      448,
+      457,
+      460,
+      477,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim13_CCMR1_Input",
+    "keyword_found": "",
+    "pages": []
+  },
+  {
+    "keyword": "tim13_PSC",
+    "keyword_found": "timx_PSC",
+    "pages": [
+      10,
+      11,
+      12,
+      13,
+      294,
+      295,
+      296,
+      299,
+      303,
+      305,
+      355,
+      362,
+      367,
+      417,
+      423,
+      425,
+      427,
+      455,
+      457,
+      469,
+      470,
+      471,
+      479,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim13_CR1",
+    "keyword_found": "timx_CR1",
+    "pages": [
+      11,
+      12,
+      294,
+      296,
+      299,
+      302,
+      307,
+      308,
+      310,
+      316,
+      317,
+      318,
+      319,
+      329,
+      331,
+      343,
+      349,
+      360,
+      361,
+      362,
+      367,
+      378,
+      386,
+      387,
+      388,
+      389,
+      390,
+      392,
+      394,
+      395,
+      398,
+      410,
+      413,
+      420,
+      421,
+      422,
+      425,
+      427,
+      434,
+      437,
+      438,
+      440,
+      450,
+      452,
+      457,
+      459,
+      461,
+      462,
+      469,
+      471,
+      474,
+      475,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim13_ARR",
+    "keyword_found": "timx_ARR",
+    "pages": [
+      11,
+      12,
+      37,
+      294,
+      296,
+      298,
+      299,
+      302,
+      303,
+      304,
+      305,
+      316,
+      317,
+      318,
+      319,
+      343,
+      347,
+      355,
+      363,
+      367,
+      376,
+      386,
+      387,
+      388,
+      389,
+      390,
+      394,
+      411,
+      418,
+      423,
+      425,
+      427,
+      429,
+      437,
+      438,
+      440,
+      449,
+      455,
+      457,
+      459,
+      460,
+      469,
+      471,
+      473,
+      474,
+      475,
+      479,
+      480,
+      1126,
+      1133
+    ]
+  },
+  {
+    "keyword": "tim13_CNT",
+    "keyword_found": "timx_CNT",
+    "pages": [
+      11,
+      12,
+      13,
+      294,
+      306,
+      317,
+      318,
+      319,
+      343,
+      349,
+      355,
+      356,
+      357,
+      358,
+      362,
+      367,
+      386,
+      387,
+      389,
+      401,
+      410,
+      413,
+      417,
+      418,
+      419,
+      420,
+      423,
+      427,
+      437,
+      438,
+      449,
+      452,
+      455,
+      456,
+      457,
+      460,
+      462,
+      466,
+      469,
+      478,
+      480,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_CRL",
+    "keyword_found": "rtc_CRL",
+    "pages": [
+      13,
+      484,
+      487,
+      492,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_DIVH",
+    "keyword_found": "rtc_DIVH",
+    "pages": [
+      13,
+      489,
+      492,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_ALRL",
+    "keyword_found": "rtc_ALRL",
+    "pages": [
+      14,
+      491,
+      492,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_ALRH",
+    "keyword_found": "rtc_ALRH",
+    "pages": [
+      14,
+      491,
+      492,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_PRLL",
+    "keyword_found": "rtc_PRLL",
+    "pages": [
+      13,
+      488,
+      489,
+      492,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_DIVL",
+    "keyword_found": "rtc_DIVL",
+    "pages": [
+      13,
+      489,
+      492,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_PRLH",
+    "keyword_found": "rtc_PRLH",
+    "pages": [
+      13,
+      488,
+      492,
+      1123,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_CNTL",
+    "keyword_found": "rtc_CNTL",
+    "pages": [
+      490,
+      492,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_CRH",
+    "keyword_found": "rtc_CRH",
+    "pages": [
+      13,
+      486,
+      487,
+      492,
+      1133
+    ]
+  },
+  {
+    "keyword": "rtc_CNTH",
+    "keyword_found": "rtc_CNTH",
+    "pages": [
+      14,
+      490,
+      492,
+      1133
+    ]
+  }
+]

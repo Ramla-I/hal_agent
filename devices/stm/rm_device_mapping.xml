@@ -1,0 +1,774 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<stm32_reference_manuals>
+  <!-- STM32 Reference Manual to Device Mapping -->
+  
+  <reference_manual rm="RM0008" title="STM32F101xx, STM32F102xx, STM32F103xx, STM32F105xx, and STM32F107xx">
+    <url>https://www.st.com/resource/en/reference_manual/cd00171190.pdf</url>
+    <svd>
+      <svd_file>stm32f101.svd</svd_file>
+      <svd_file>stm32f102.svd</svd_file>
+      <svd_file>stm32f103.svd</svd_file>
+      <svd_file>stm32f107.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F101</device>
+      <device>STM32F102</device>
+      <device>STM32F103</device>
+      <device>STM32F105</device>
+      <device>STM32F107</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0033" title="STM32F205xx, STM32F207xx, STM32F215xx and STM32F217xx">
+    <url>https://www.st.com/resource/en/reference_manual/cd00225773.pdf</url>
+    <svd>
+      <svd_file>stm32f215.svd</svd_file>
+      <svd_file>stm32f217.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F205</device>
+      <device>STM32F207</device>
+      <device>STM32F215</device>
+      <device>STM32F217</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0038" title="STM32L100xx, STM32L151xx, STM32L152xx and STM32L162xx">
+    <url>https://www.st.com/resource/en/reference_manual/cd00240193-stm32l100xx-stm32l151xx-stm32l152xx-and-stm32l162xx-advanced-arm-based-32-bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32l100.svd</svd_file>
+      <svd_file>stm32l151.svd</svd_file>
+      <svd_file>stm32l152.svd</svd_file>
+      <svd_file>stm32l162.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32L100</device>
+      <device>STM32L151</device>
+      <device>STM32L152</device>
+      <device>STM32L162</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0041" title="STM32F100xx">
+    <url>https://www.st.com/resource/en/reference_manual/cd00246267.pdf</url>
+    <svd>
+      <svd_file>stm32f100.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F100</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0090" title="STM32F405/415, STM32F407/417, STM32F427/437 and STM32F429/439">
+    <url>https://www.st.com/resource/en/reference_manual/dm00031020.pdf</url>
+    <svd>
+      <svd_file>stm32f405.svd</svd_file>
+      <svd_file>stm32f415.svd</svd_file>
+      <svd_file>stm32f407.svd</svd_file>
+      <svd_file>stm32f417.svd</svd_file>
+      <svd_file>stm32f427.svd</svd_file>
+      <svd_file>stm32f437.svd</svd_file>
+      <svd_file>stm32f429.svd</svd_file>
+      <svd_file>stm32f439.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F405</device>
+      <device>STM32F415</device>
+      <device>STM32F407</device>
+      <device>STM32F417</device>
+      <device>STM32F427</device>
+      <device>STM32F437</device>
+      <device>STM32F429</device>
+      <device>STM32F439</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0091" title="STM32F0x1/STM32F0x2/STM32F0x8">
+    <url>https://www.st.com/resource/en/reference_manual/dm00031936.pdf</url>
+    <svd>
+      <svd_file>stm32f0x1.svd</svd_file>
+      <svd_file>stm32f0x2.svd</svd_file>
+      <svd_file>stm32f0x8.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F031</device>
+      <device>STM32F042</device>
+      <device>STM32F051</device>
+      <device>STM32F072</device>
+      <device>STM32F071</device>
+      <device>STM32F091</device>
+      <device>STM32F038</device>
+      <device>STM32F048</device>
+      <device>STM32F058</device>
+      <device>STM32F078</device>
+      <device>STM32F098</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0313" title="STM32F37xxx">
+    <url>https://www.st.com/resource/en/reference_manual/dm00041563.pdf</url>
+    <svd>
+      <svd_file>stm32f373.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F373</device>
+      <device>STM32F378</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0316" title="STM32F303xB/C/D/E, STM32F303x6/8, STM32F328x8, STM32F358xC, STM32F398xE">
+    <url>https://www.st.com/resource/en/reference_manual/dm00043574.pdf</url>
+    <svd>
+      <svd_file>stm32f303.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F303</device>
+      <device>STM32F328</device>
+      <device>STM32F358</device>
+      <device>STM32F398</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0360" title="STM32F030x4/x6/x8/xC and STM32F070x6/xB">
+    <url>https://www.st.com/resource/en/reference_manual/dm00091010.pdf</url>
+    <svd>
+      <svd_file>stm32f0x0.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F030</device>
+      <device>STM32F070</device>
+    </devices>
+  </reference_manual>
+
+  <!-- <reference_manual rm="RM0364" title="STM32F334xx">
+    <url>https://www.st.com/resource/en/reference_manual/dm00093941.pdf</url>
+    <svd>
+      <svd_file>stm32f3x4.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F334</device>
+    </devices>
+  </reference_manual> -->
+
+  <reference_manual rm="RM0365" title="STM32F302xB/C/D/E and STM32F302x6/8">
+    <url>https://www.st.com/resource/en/reference_manual/dm00094349.pdf</url>
+    <svd>
+      <svd_file>stm32f302.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F302</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0366" title="STM32F301x6/8 and STM32F318x8">
+    <url>https://www.st.com/resource/en/reference_manual/dm00094350.pdf</url>
+    <svd>
+      <svd_file>stm32f301.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F301</device>
+      <device>STM32F318</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0367" title="STM32L0x3">
+    <url>https://www.st.com/resource/en/reference_manual/rm0367-ultralowpower-stm32l0x3-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32l053.svd</svd_file>
+      <svd_file>stm32l063.svd</svd_file>
+      <svd_file>stm32l0x3.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32L053</device>
+      <device>STM32L063</device>
+      <device>STM32L0x3</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0368" title="STM32F401xB/C and STM32F401xD/E">
+    <url>https://www.st.com/resource/en/reference_manual/rm0368-stm32f401xbc-and-stm32f401xde-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32f401.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F401</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0376" title="STM32L0x2">
+    <url>https://www.st.com/resource/en/reference_manual/rm0376-ultralowpower-stm32l0x2-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32l052.svd</svd_file>
+      <svd_file>stm32l062.svd</svd_file>
+      <svd_file>stm32l0x2.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32L052</device>
+      <device>STM32L062</device>
+      <device>STM32L0x2</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0377" title="STM32L0x1">
+    <url>https://www.st.com/resource/en/reference_manual/rm0377-ultralowpower-stm32l0x1-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32l0x1.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32L0x1</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0383" title="STM32F411xC/E">
+    <url>https://www.st.com/resource/en/reference_manual/dm00119316.pdf</url>
+    <svd>
+      <svd_file>stm32f411.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F411</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0385" title="STM32F75xxx and STM32F74xxx">
+    <url>https://www.st.com/resource/en/reference_manual/dm00124865.pdf</url>
+    <svd>
+      <svd_file>stm32f745.svd</svd_file>
+      <svd_file>stm32f746.svd</svd_file>
+      <svd_file>stm32f750.svd</svd_file>
+      <svd_file>stm32f756.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F745</device>
+      <device>STM32F746</device>
+      <device>STM32F750</device>
+      <device>STM32F756</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0386" title="STM32F469xx and STM32F479xx">
+    <url>https://www.st.com/resource/en/reference_manual/rm0386-stm32f469xx-and-stm32f479xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32f469.svd</svd_file>
+      <svd_file>stm32f479.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F469</device>
+      <device>STM32F479</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0390" title="STM32F446xx">
+    <url>https://www.st.com/resource/en/reference_manual/rm0390-stm32f446xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32f446.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F446</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0394" title="STM32L43xxx STM32L44xxx STM32L45xxx STM32L46xxx">
+    <url>https://www.st.com/resource/en/reference_manual/rm0394-stm32l41xxx42xxx43xxx44xxx45xxx46xxx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32l412.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32L412</device>
+      <device>STM32L422</device>
+      <device>STM32L431</device>
+      <device>STM32L432</device>
+      <device>STM32L433</device>
+      <device>STM32L442</device>
+      <device>STM32L443</device>
+      <device>STM32L451</device>
+      <device>STM32L452</device>
+      <device>STM32L462</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0399" title="STM32H745/755 and STM32H747/757">
+    <url>https://www.st.com/resource/en/reference_manual/rm0399-stm32h745755-and-stm32h747757-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32h745cm4.svd</svd_file>
+      <svd_file>stm32h745cm7.svd</svd_file>
+      <svd_file>stm32h747cm4.svd</svd_file>
+      <svd_file>stm32h747cm7.svd</svd_file>
+      <svd_file>stm32h755cm4.svd</svd_file>
+      <svd_file>stm32h755cm7.svd</svd_file>
+      <svd_file>stm32h757cm4.svd</svd_file>
+      <svd_file>stm32h757cm7.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32H745 (CM4)</device>
+      <device>STM32H745 (CM7)</device>
+      <device>STM32H747 (CM4)</device>
+      <device>STM32H747 (CM7)</device>
+      <device>STM32H755 (CM4)</device>
+      <device>STM32H755 (CM7)</device>
+      <device>STM32H757 (CM4)</device>
+      <device>STM32H757 (CM7)</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0401" title="STM32F410">
+    <url>https://www.st.com/resource/en/reference_manual/dm00180366.pdf</url>
+    <svd>
+      <svd_file>stm32f410.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F410</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0402" title="STM32F412">
+    <url>https://www.st.com/resource/en/reference_manual/rm0402-stm32f412-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32f412.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F412</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0410" title="STM32F76xxx and STM32F77xxx">
+    <url>https://www.st.com/resource/en/reference_manual/rm0410-stm32f76xxx-and-stm32f77xxx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32f765.svd</svd_file>
+      <svd_file>stm32f767.svd</svd_file>
+      <svd_file>stm32f768.svd</svd_file>
+      <svd_file>stm32f769.svd</svd_file>
+      <svd_file>stm32f777.svd</svd_file>
+      <svd_file>stm32f778.svd</svd_file>
+      <svd_file>stm32f779.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F765</device>
+      <device>STM32F767</device>
+      <device>STM32F769</device>
+      <device>STM32F777</device>
+      <device>STM32F778</device>
+      <device>STM32F779</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0430" title="STM32F413/423">
+    <url>https://www.st.com/resource/en/reference_manual/rm0430-stm32f413423-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32f413.svd</svd_file>
+      <svd_file>stm32f423.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F413</device>
+      <device>STM32F423</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0431" title="STM32F72xxx and STM32F73xxx">
+    <url>https://www.st.com/resource/en/reference_manual/rm0431-stm32f72xxx-and-stm32f73xxx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32f722.svd</svd_file>
+      <svd_file>stm32f723.svd</svd_file>
+      <svd_file>stm32f730.svd</svd_file>
+      <svd_file>stm32f732.svd</svd_file>
+      <svd_file>stm32f733.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32F722</device>
+      <device>STM32F723</device>
+      <device>STM32F730</device>
+      <device>STM32F732</device>
+      <device>STM32F733</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0432" title="STM32L4+ Series">
+    <url>https://www.st.com/resource/en/reference_manual/rm0432-stm32l4-series-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32l4p5.svd</svd_file>
+      <svd_file>stm32l4q5.svd</svd_file>
+      <svd_file>stm32l4r5.svd</svd_file>
+      <svd_file>stm32l4r7.svd</svd_file>
+      <svd_file>stm32l4r9.svd</svd_file>
+      <svd_file>stm32l4s5.svd</svd_file>
+      <svd_file>stm32l4s7.svd</svd_file>
+      <svd_file>stm32l4s9.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32L4R5</device>
+      <device>STM32L4R9</device>
+      <device>STM32L4S5</device>
+      <device>STM32L4S9</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0433" title="STM32H742, STM32H743/753 and STM32H750">
+    <url>https://www.st.com/resource/en/reference_manual/rm0433-stm32h742-stm32h743753-and-stm32h750-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32h742.svd</svd_file>
+      <svd_file>stm32h743.svd</svd_file>
+      <svd_file>stm32h743v.svd</svd_file>
+      <svd_file>stm32h750.svd</svd_file>
+      <svd_file>stm32h753.svd</svd_file>
+      <svd_file>stm32h753v.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32H742</device>
+      <device>STM32H743</device>
+      <device>STM32H743V</device>
+      <device>STM32H750</device>
+      <device>STM32H753</device>
+      <device>STM32H753V</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0434" title="STM32WBx5">
+    <url>https://www.st.com/resource/en/reference_manual/rm0434-stm32wb55-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32wb55.svd</svd_file>
+      <svd_file>stm32wb55_cm0p.svd</svd_file>
+      <svd_file>stm32wb35_cm4.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32WB55</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0436" title="STM32MP157">
+    <url>https://www.st.com/resource/en/reference_manual/rm0436-stm32mp157-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32mp157.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32MP157</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0438" title="STM32L552xx and STM32L562xx advanced Arm®-based 32-bit MCUs">
+    <url>https://www.st.com/resource/en/reference_manual/rm0438-stm32l552xx-and-stm32l562xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32l552.svd</svd_file>
+      <svd_file>stm32l562.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32L552</device>
+      <device>STM32L562</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0440" title="STM32G4x1xx, STM32G4x3xx, STM32G4x4xx">
+    <url>https://www.st.com/resource/en/reference_manual/dm00355726.pdf</url>
+    <svd>
+      <svd_file>stm32g431.svd</svd_file>
+      <svd_file>stm32g441.svd</svd_file>
+      <svd_file>stm32g471.svd</svd_file>
+      <svd_file>stm32g473.svd</svd_file>
+      <svd_file>stm32g474.svd</svd_file>
+      <svd_file>stm32g483.svd</svd_file>
+      <svd_file>stm32g484.svd</svd_file>
+      <svd_file>stm32g491.svd</svd_file>
+      <svd_file>stm32g4a1.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32G431</device>
+      <device>STM32G441</device>
+      <device>STM32G473</device>
+      <device>STM32G474</device>
+      <device>STM32G483</device>
+      <device>STM32G484</device>
+      <device>STM32G491</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0442" title="STM32MP153">
+    <url>https://www.st.com/resource/en/reference_manual/rm0442-stm32mp153-advanced-armbased-32bit-mpus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32mp153.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32MP153</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0444" title="STM32G0x1">
+    <url>https://www.st.com/resource/en/reference_manual/dm00371828.pdf</url>
+    <svd>
+      <svd_file>stm32g031.svd</svd_file>
+      <svd_file>stm32g041.svd</svd_file>
+      <svd_file>stm32g051.svd</svd_file>
+      <svd_file>stm32g061.svd</svd_file>
+      <svd_file>stm32g071.svd</svd_file>
+      <svd_file>stm32g081.svd</svd_file>
+      <svd_file>stm32g0b1.svd</svd_file>
+      <svd_file>stm32g0c1.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32G031</device>
+      <device>STM32G041</device>
+      <device>STM32G051</device>
+      <device>STM32G061</device>
+      <device>STM32G071</device>
+      <device>STM32G081</device>
+      <device>STM32G0b1</device>
+      <device>STM32G0c1</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0451" title="STM32L0x0">
+    <url>https://www.st.com/resource/en/reference_manual/rm0451-ultralowpower-stm32l0x0-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32l0x0.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32L010</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0453" title="STM32WL5x">
+    <url>https://www.st.com/resource/en/reference_manual/dm00451556.pdf</url>
+    <svd>
+      <svd_file>stm32wl5x_cm4.svd</svd_file>
+      <svd_file>stm32wl5x_cm0p.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32WL5X (CM4)</device>
+      <device>STM32WL5X (CM0+)</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0454" title="STM32G0x0">
+    <url>https://www.st.com/resource/en/reference_manual/dm00463896.pdf</url>
+    <svd>
+      <svd_file>stm32g030.svd</svd_file>
+      <svd_file>stm32g050.svd</svd_file>
+      <svd_file>stm32g070.svd</svd_file>
+      <svd_file>stm32g0b0.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32G030</device>
+      <device>STM32G050</device>
+      <device>STM32G070</device>
+      <device>STM32G0b0</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0455" title="STM32H7A3/B3 and STM32H7B0">
+    <url>https://www.st.com/resource/en/reference_manual/rm0455-stm32h7a3b3-and-stm32h7b0-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32h7a3.svd</svd_file>
+      <svd_file>stm32h7b0.svd</svd_file>
+      <svd_file>stm32h7b3.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32H7A3</device>
+      <device>STM32H7B0</device>
+      <device>STM32H7B3</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0456" title="STM32U5 Series">
+    <url>https://www.st.com/resource/en/reference_manual/rm0456-stm32u5-series-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32u535.svd</svd_file>
+      <svd_file>stm32u545.svd</svd_file>
+      <svd_file>stm32u575.svd</svd_file>
+      <svd_file>stm32u585.svd</svd_file>
+      <svd_file>stm32u595.svd</svd_file>
+      <svd_file>stm32u599.svd</svd_file>
+      <svd_file>stm32u5a5.svd</svd_file>
+      <svd_file>stm32u5a9.svd</svd_file>
+      <svd_file>stm32u5fx.svd</svd_file>
+      <svd_file>stm32u5gx.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32U535</device>
+      <device>STM32U545</device>
+      <device>STM32U575</device>
+      <device>STM32U585</device>
+      <device>STM32U595</device>
+      <device>STM32U5a5</device>
+      <device>STM32U599</device>
+      <device>STM32U5a9</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0461" title="STM32WLEx">
+    <url>https://www.st.com/resource/en/reference_manual/dm00530369-stm32wlex-advanced-armbased-32bit-mcus-with-subghz-radio-solution-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32wle5.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32WLE5</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0468" title="STM32H723/733, STM32H725/735 and STM32H730">
+    <url>https://www.st.com/resource/en/reference_manual/rm0468-stm32h723733-stm32h725735-and-stm32h730-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32h723.svd</svd_file>
+      <svd_file>stm32h725.svd</svd_file>
+      <svd_file>stm32h730.svd</svd_file>
+      <svd_file>stm32h733.svd</svd_file>
+      <svd_file>stm32h735.svd</svd_file>
+      <svd_file>stm32h73x.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32H723</device>
+      <device>STM32H725</device>
+      <device>STM32H730</device>
+      <device>STM32H733</device>
+      <device>STM32H735</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0477" title="STM32H7Rx/7Sx">
+    <url>https://www.st.com/resource/en/reference_manual/rm0477-stm32h7rx7sx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32h7r.svd</svd_file>
+      <svd_file>stm32h7s.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32H7R3</device>
+      <device>STM32H7R7</device>
+      <device>STM32H7S3</device>
+      <device>STM32H7S7</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0481" title="STM32H523/33xx, STM32H562/63xx, and STM32H573xx Arm®-based 32-bit MCUs">
+    <url>https://www.st.com/resource/en/reference_manual/rm0481-stm32h563h573-and-stm32h562-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32h523.svd</svd_file>
+      <svd_file>stm32h533.svd</svd_file>
+      <svd_file>stm32h562.svd</svd_file>
+      <svd_file>stm32h563.svd</svd_file>
+      <svd_file>stm32h573.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32H562</device>
+      <device>STM32H563</device>
+      <device>STM32H573</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0486" title="STM32N647/657xx Arm® -based 32-bit MCUs">
+    <url>https://www.st.com/resource/en/reference_manual/rm0486-stm32n647657xx-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32n647.svd</svd_file>
+      <svd_file>stm32n657.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32N647</device>
+      <device>STM32N657</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0490" title="STM32C0x1">
+    <url>https://www.st.com/resource/en/reference_manual/rm0490-stm32c0-series-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32c011.svd</svd_file>
+      <svd_file>stm32c031.svd</svd_file>
+      <svd_file>stm32c071.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32C011</device>
+      <device>STM32C031</device>
+      <device>STM32C071</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0492" title="STM32H503 line Arm®-based 32-bit MCUs">
+    <url>https://www.st.com/resource/en/reference_manual/rm0492-stm32h503-line-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32h503.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32H503</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0493" title="STM32WBA50, STM32WBA52, STM32WBA54-55">
+    <url>https://www.st.com/resource/en/reference_manual/rm0493-multiprotocol-wireless-bluetooth-le-and-ieee802154-stm32wba5xxx-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32wba50.svd</svd_file>
+      <svd_file>stm32wba52.svd</svd_file>
+      <svd_file>stm32wba54.svd</svd_file>
+      <svd_file>stm32wba55.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32WBA50</device>
+      <device>STM32WBA52</device>
+      <device>STM32WBA54</device>
+      <device>STM32WBA55</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0503" title="STM32U0">
+    <url>https://www.st.com/resource/en/reference_manual/rm0503-stm32u0-series-advanced-armbased-32bit-mcus-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32u031.svd</svd_file>
+      <svd_file>stm32u073.svd</svd_file>
+      <svd_file>stm32u083.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32U031</device>
+      <device>STM32U073</device>
+      <device>STM32U083</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0505" title="STM32WB09xE">
+    <url>https://www.st.com/resource/en/reference_manual/rm0505-ultralow-power-wireless-32bit-mcu-armbased-cortexm0-with-bluetooth-le-and-24-ghz-radio-solution-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32wb09.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32WB09</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0529" title="STM32WB05xZ">
+    <url>https://www.st.com/resource/en/reference_manual/rm0529-stm32wb05xz-ultralow-power-wireless-32bit-mcu-armbased-cortexm0-with-bluetooth-low-energy-and-24-ghz-radio-solution-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32wb05.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32WB05</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0530" title="STM32WB07xC and STM32WB06xC">
+    <url>https://www.st.com/resource/en/reference_manual/rm0530--stm32wb07xc-and-stm32wb06xc-ultralow-power-wireless-32bit-mcus-armbased-cortexm0-with-bluetooth-le-and-24-ghz-radio-solution-stmicroelectronics.pdf</url>
+    <svd>
+      <svd_file>stm32wb06.svd</svd_file>
+      <svd_file>stm32wb07.svd</svd_file>
+    </svd>
+    <devices>
+      <device>STM32WB06</device>
+      <device>STM32WB07</device>
+    </devices>
+  </reference_manual>
+
+  <reference_manual rm="RM0351" title="STM32L47xxx, STM32L48xxx, STM32L49xxx and STM32L4Axxx">
+    <url>https://community.st.com/ysqtg83639/attachments/ysqtg83639/stm32-mcu-products-forum/13720/1/RM0351_STM32L4_Series.pdf</url>
+    <svd>
+      <svd_file>stm32l476.svd</svd_file>
+      <svd_file>stm32l496.svd</svd_file>
+    </svd>
+  </reference_manual>
+
+  <reference_manual rm="RM0475" title="STM32MP13xx">
+    <url>https://www.st.com/resource/en/reference_manual/DM00670465.pdf</url>
+    <svd>
+      <svd_file>stm32mp13xx.svd</svd_file>
+    </svd>
+  </reference_manual>
+
+  <!-- Note: Some devices may not have RM information in the source data -->
+  <reference_manual rm="UNKNOWN" title="Devices without documented RM numbers">
+    <svd>
+      <svd_file>stm32gbk1cbt6.svd</svd_file>
+      <svd_file></svd_file>
+    </svd>
+  </reference_manual>
+
+</stm32_reference_manuals> 
