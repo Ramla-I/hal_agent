@@ -79,11 +79,14 @@ def parse_svd_registers(svd_path: str) -> Dict[str, Dict[str, Dict]]:
                         bit_offset = int(bit_offset_elem.text.strip()) if bit_offset_elem is not None else None
                         bit_width_elem = field.find(f'{ns}bitWidth')
                         bit_width = int(bit_width_elem.text.strip()) if bit_width_elem is not None else None
+                        access_elem = field.find(f'{ns}access')
+                        access = access_elem.text.strip() if access_elem is not None else None
                         
                         fields.append({
                             'name': field_name,
                             'bit_offset': bit_offset,
-                            'bit_width': bit_width
+                            'bit_width': bit_width,
+                            'access': access
                         })
                 
                 registers[reg_name] = {
@@ -125,7 +128,8 @@ def parse_agent_output_register(json_path: str) -> Optional[Dict]:
         return {
             'name': field.get('name', '').lower(),
             'bit_offset': bit_offset,
-            'bit_width': bit_width
+            'bit_width': bit_width,
+            'access': None
         }
     
     fields = []
@@ -238,16 +242,19 @@ def add_row_to_digital_datasheet(rows, peripheral_name, register_names, svd_regi
             agent_field = agent_fields[field_name]
             add_row_to_csv(rows, peripheral_name, register_name, field_name, 'bit_offset', '', format_value(svd_field.get('bit_offset')), format_value(agent_field.get('bit_offset')))
             add_row_to_csv(rows, peripheral_name, register_name, field_name, 'bit_width', '', format_value(svd_field.get('bit_width')), format_value(agent_field.get('bit_width')))
+            add_row_to_csv(rows, peripheral_name, register_name, field_name, 'access', '', format_value(svd_field.get('access')), format_value(agent_field.get('access')))
 
         for field_name in sorted(svd_fields_only):
             svd_field = svd_fields[field_name]
             add_row_to_csv(rows, peripheral_name, register_name, field_name, 'bit_offset', '', format_value(svd_field.get('bit_offset')), '')
             add_row_to_csv(rows, peripheral_name, register_name, field_name, 'bit_width', '', format_value(svd_field.get('bit_width')), '')
+            add_row_to_csv(rows, peripheral_name, register_name, field_name, 'access', '', format_value(svd_field.get('access')), '')
 
         for field_name in sorted(agent_fields_only):
             agent_field = agent_fields[field_name]
             add_row_to_csv(rows, peripheral_name, register_name, field_name, 'bit_offset', '', '', format_value(agent_field.get('bit_offset')))
             add_row_to_csv(rows, peripheral_name, register_name, field_name, 'bit_width', '', '', format_value(agent_field.get('bit_width')))
+            add_row_to_csv(rows, peripheral_name, register_name, field_name, 'access', '', '', format_value(agent_field.get('access')))
 
     return rows
 

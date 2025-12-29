@@ -27,3 +27,25 @@ calculate_address_offset_tool_description = f"""
         - For BKP_DR35, you would detect that there is no 35th register as the range is only from 1 to 20, 
         so you would make no function call and return no output for BKP_DR35 beyond a reasoning line stating that there is no 35th register.
 """
+
+get_keyword_seach_code_tool_description = f"""
+- get_keyword_seach_code: 
+    - Description: Get the code for the keyword search.
+    - Parameters:
+        - None
+    - Returns:
+        - keyword_search_code: The code for the keyword search.
+    - Example:
+        - You would call get_keyword_seach_code(). The result would be the code for the keyword search.
+"""
+
+get_semantic_search_code_tool_description = f"""
+- get_semantic_search_code: 
+    - Description: Get the code for the semantic search.
+    - Parameters:
+        - None
+    - Returns:
+        - semantic_search_code: The code for the semantic search.
+    - Example:
+        - You would call get_semantic_search_code(). The result would be the code for the semantic search.
+""" 

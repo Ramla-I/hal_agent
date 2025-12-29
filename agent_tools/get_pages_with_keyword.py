@@ -7,6 +7,7 @@ from pypdf import PdfReader, PdfWriter
 from functools import lru_cache
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
+from defs import Manufacturer
 
 class KeywordPage(BaseModel):
     keyword: str = Field(description="The keyword that was initially searched for")
@@ -92,7 +93,7 @@ def get_pages_with_keyword(pdf_path, keyword):
     os.remove(temp_pdf_path)
     return md_text
 
-def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, keyword_info_path):
+def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, keyword_info_path, manufacturer: Manufacturer):
     if not os.path.isfile(pdf_path):
         print(f"File not found: {pdf_path}")
         return
@@ -113,7 +114,9 @@ def get_keyword_pages_for_svd_files(pdf_path, svd_folder_path, keyword_info_path
                 joint_name = register_name
             else:
                 joint_name = f"{peripheral_name}_{register_name}"
-
+            
+            if manufacturer == Manufacturer.TI:
+                joint_name = register_name
             # If joint_name ends with a number, create a new variable joint_name_no_number without the trailing number
             import re
             joint_name_no_number = None

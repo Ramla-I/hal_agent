@@ -1,5 +1,11 @@
 from prompts.tools import calculate_address_offset_tool_description
 
+def create_validator_file_search_query(peripheral_name: str, register_name: str, field_name: str, key: str, value: str) -> str:
+    return f"""
+    Find information about the register {register_name} in the peripheral {peripheral_name} with the field {field_name} and the key {key}.
+    The given value of the key is {value}, but it could be different in the datasheet.
+    """
+
 def create_validator_system_prompt() -> str:
     return f"""
     You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets. 
@@ -9,27 +15,17 @@ def create_validator_system_prompt() -> str:
     You will be given the name of a register and the name of a peripheral it belongs to. 
     You will also be given one fact about the register that you need to validate.
     The fact will be given in a JSON object with the following fields:
+    - `peripheral_name`: The name of the peripheral. A string.
     - `register_name`: The name of the register. A string.
-    - `field`: The type of information about a register to validate. A string. The possible values are:
+    - `field_name`: The name of the field. A string. It could be empty.
+    - `key`: The key of the register or field. A string. The possible values are:
         - `address_offset`: The offset of the register.
         - `reset_value`: The reset value of the register.
         - `size`: The size of the register in bits.
-        - `readonly_bits`: A list of readonly bits.
-        - `write_only_bits`: A list of writeonly bits.
-        - `read_write_bits`: A list of readwrite bits.
-    - `value`: The value of the field that needs to be validated. The type of the value will depend on the field.
-        - `address_offset`: a hexadecimal string.
-        - `reset_value`: a hexadecimal string.
-        - `size`: an integer, this is the number of bits NOT bytes.
-        - `readonly_bits`: A list of objects with the following fields:
-            - `start_bit`: The start bit of the readonly bit range. An integer.
-            - `end_bit`: The end bit of the readonly bit range. An integer.
-        - `write_only_bits`: A list of objects with the following fields:
-            - `start_bit`: The start bit of the writeonly bit range. An integer.
-            - `end_bit`: The end bit of the writeonly bit range. An integer.
-        - `read_write_bits`: A list of objects with the following fields:
-            - `start_bit`: The start bit of the readwrite bit range. An integer.
-            - `end_bit`: The end bit of the readwrite bit range. An integer.
+        - `bit offset`: The bit offset of the field. An integer.
+        - `bit width`: The bit width of the field. An integer.
+    - `value`: The value of the given key to validate. The type of the value will depend on the field.
+    - `file_search_results`: The results of a file search that you can use to validate the fact. A string.
 
     # OUTPUT FORMAT
     You will start of by returning your reasoning for the output.
@@ -43,9 +39,6 @@ def create_validator_system_prompt() -> str:
     <json_block>
     ```
 
-    # TOOLS
-    You have access to a file search tool that you can use to search the datasheet for the information about the register.
-
     # HINTS
     * A number with a value like 0xXXXXXXX3 means that any number can occur where X is. For example, 0x3403 is valid as well 0x873, and many other possibilities. So you should consider these values as true.
     * Address offset means the offset of the register from the base address of the peripheral. It should not include the base address.
@@ -55,9 +48,12 @@ def create_validator_system_prompt() -> str:
     --- EXAMPLE 1 ---
     # INPUT
     {{
+        "peripheral_name": "GPIOA",
         "register_name": "GPIOA_OTYPER",
-        "field": "address_offset",
+        "field_name": "",
+        "key": "address_offset",
         "value": "0x04"
+        "file_search_results": "<sources>...</sources>"
     }}
     
     # OUTPUT
@@ -73,9 +69,12 @@ def create_validator_system_prompt() -> str:
     --- EXAMPLE 2 ---
     # INPUT
     {{
+        "peripheral_name": "BKP",
         "register_name": "BKP_DR23",
+        "field_name": "",
         "field": "address_offset",
         "value": "0x6C"
+        "file_search_results": "<sources>...</sources>"
     }}
     
     # OUTPUT
@@ -90,9 +89,12 @@ def create_validator_system_prompt() -> str:
     --- EXAMPLE 3 ---
     # INPUT
     {{
+        "peripheral_name": "CEC",
         "register_name": "CEC_CR",
-        "field": "reset_value",
+        "field_name": "",
+        "key": "reset_value",
         "value": "0x23"
+        "file_search_results": "<sources>...</sources>"
     }}
     
     # OUTPUT
@@ -106,9 +108,12 @@ def create_validator_system_prompt() -> str:
     --- EXAMPLE 4 ---
     # INPUT
     {{
+        "peripheral_name": "CEC",
         "register_name": "CEC_CR",
-        "field": "reset_value",
+        "field_name": "",
+        "key": "reset_value",
         "value": "0x443"
+        "file_search_results": "<sources>...</sources>"
     }}
     
     # OUTPUT
@@ -120,29 +125,16 @@ def create_validator_system_prompt() -> str:
     }}
     ```
 
-    --- EXAMPLE 5 ---
-    # INPUT
-    {{
-        "register_name": "CEC_CR",
-        "field": "read_write_bits",
-        "value": "[{{""start_bit"": 6,""end_bit"": 7}},{{""start_bit"": 0, ""end_bit"": 2 }}]"
-    }}
-    
-    # OUTPUT
-    The read write bits of the CRC_CR register are from 0 to 12. As bits 6-7 and 0-2 lie in this range, this is true.
-    ``` json
-    {{
-        "is_true": true,
-        "confidence_score": 1.0
-    }}
-    ```
-
     --- EXAMPLE 6 ---
     # INPUT
     {{
+        "peripheral_name": "CEC",
         "register_name": "CEC_CR",
+        "field_name": "",
+        "key": "size",
         "field": "size",
         "value": "4"
+        "file_search_results": "<sources>...</sources>"
     }}
     
     # OUTPUT
@@ -159,17 +151,19 @@ def create_validator_system_prompt() -> str:
     - Only return a confidence score of 1.0 if you are 100% confident in the fact being true.
     - If you cannot find a piece of information for a register, return a confidence score of 0.0.
     - your reasoning and confidence score should match. For example, if you return a confidence score of 0.0, your reasoning should be that you cannot find the information for the register.
-    - Only call the file search tool provided to you. Do not call any other tools.
     - You can give values between 0.0 and 1.0 for the confidence score, if you are not sure about the confidence score. Closer to 1.0 means you are more certain and closer to 0.0 means you are less certain.
     """
 
-def create_validator_user_prompt(register_name: str, peripheral_name: str, field: str, value: str) -> str:
+def create_validator_user_prompt(peripheral_name: str, register_name: str, field_name: str, key: str, value: str, file_search_results: str) -> str:
     return f"""
         # INPUT
         {{
-            "register_name": "{peripheral_name}_{register_name}",
-            "field": "{field}",
-            "value": "{value}"
+            "peripheral_name": "{peripheral_name}",
+            "register_name": "{register_name}",
+            "field_name": "{field_name}",
+            "key": "{key}",
+            "value": "{value}",
+            "file_search_results": "{file_search_results}"
         }}
         
         # OUTPUT

@@ -74,7 +74,7 @@ def get_register_names_for_peripheral(svd_file_paths, peripheral_name):
                             prefix = f"{peripheral_name}_"
                             if reg_name_elem.text.lower().startswith(prefix):
                                 reg_name_elem.text = reg_name_elem.text.lower()[len(prefix):]
-                            register_names_set.add(reg_name_elem.text)
+                            register_names_set.add(reg_name_elem.text.lower())
 
     if not found_peripheral:
         raise ValueError(f"Peripheral '{peripheral_name}' not found in any SVD file: {svd_file_paths}")

@@ -667,12 +667,18 @@
     <svd>
       <svd_file>stm32c011.svd</svd_file>
       <svd_file>stm32c031.svd</svd_file>
+      <svd_file>stm32c051.svd</svd_file>
       <svd_file>stm32c071.svd</svd_file>
+      <svd_file>stm32c091.svd</svd_file>
+      <svd_file>stm32c092.svd</svd_file>
     </svd>
     <devices>
       <device>STM32C011</device>
       <device>STM32C031</device>
+      <device>STM32C051</device>
       <device>STM32C071</device>
+      <device>STM32C091</device>
+      <device>STM32C092</device>
     </devices>
   </reference_manual>
 

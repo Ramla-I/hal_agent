@@ -1,16 +1,6 @@
 from prompts.tools import calculate_address_offset_tool_description
 from prompts.examples import stm_datasheet_example
 
-
-# For the register {register_name} in the peripheral {peripheral_name}. Find the
-#         address_offset,
-#         reset_value,
-#         size,
-#         readonly_bits,
-#         write_only_bits,
-#         read_write_bits,
-#         subfields and their enumerated values (if they exist).
-
 def create_register_info_stm_system_prompt(tools_description: str | None = calculate_address_offset_tool_description, examples: str | None = stm_datasheet_example) -> str:
     if tools_description is None:
         tools_description = "No tools provided"
@@ -31,9 +21,6 @@ def create_register_info_stm_system_prompt(tools_description: str | None = calcu
     - Register address offset
     - Register reset value
     - Register size
-    - Register readonly bits (Reserved fields can be considered as readonly bits)
-    - Register writeonly bits
-    - Register readwrite bits
     - Register subfields
 
     # OUTPUT FORMAT
@@ -43,18 +30,10 @@ def create_register_info_stm_system_prompt(tools_description: str | None = calcu
     - `address_offset`: The offset of the register, typically in hexadecimal. A string or None if not found.
     - `reset_value`: The reset value of the register, typically in hexadecimal. A string or None if not found.
     - `size`: The size of the register in bits. An integer or None if not found.
-    - `readonly_bits`: A list of readonly bits that could be empty if there are no readonly bits. Each object in the list has the following fields:
-        - `start_bit`: The start bit of the readonly bit range. An integer.
-        - `end_bit`: The end bit of the readonly bit range. An integer.
-    - `write_only_bits`: A list of writeonly bits that could be empty if there are no writeonly bits. Each object in the list has the following fields:
-        - `start_bit`: The start bit of the writeonly bit range. An integer.
-        - `end_bit`: The end bit of the writeonly bit range. An integer.
-    - `read_write_bits`: A list of readwrite bits that could be empty if there are no readwrite bits. Each object in the list has the following fields:
-        - `start_bit`: The start bit of the readwrite bit range. An integer.
-        - `end_bit`: The end bit of the readwrite bit range. An integer.
     - `subfields`: A list of subfields that could be empty if there are no subfields. Each object in the list has the following fields:
         - `name`: The name of the subfield. A string.
         - `description`: The description of the subfield. A string.
+        - `access`: The access of the subfield. A string that can be "read-only", "write-only", or "read-write". A reserved field can be considered as read-only.
         - `bit_number`: The bit number of the subfield. An object with the following fields:
             - `start_bit`: The start bit of the subfield. An integer.
             - `end_bit`: The end bit of the subfield. An integer.

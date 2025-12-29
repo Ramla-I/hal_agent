@@ -8,6 +8,7 @@ import re
 import json
 import csv
 
+# HACK, remove this once we have a proper package structure
 # Add the parent directory to sys.path
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
@@ -75,9 +76,10 @@ def parse_svd_registers(svd_path):
                         enum_elem = field.find(f'{ns}enumeratedValues')
                         if enum_elem is not None:
                             for enum in enum_elem.findall(f'{ns}enumeratedValue'):
-                                value = enum.find(f'{ns}value').text.strip()
-                                name = enum.find(f'{ns}name').text.strip().lower()
-                                enumerated_values.append({'name': name, 'value': value})
+                                if enum.find(f'{ns}value') is not None:
+                                    value = enum.find(f'{ns}value').text.strip()
+                                    name = enum.find(f'{ns}name').text.strip().lower()
+                                    enumerated_values.append({'name': name, 'value': value})
                         fields.append({
                             'name': field_name,
                             # 'description': description,
@@ -110,8 +112,12 @@ def parse_output_register_from_json(output_path):
         if isinstance(bit_number, dict):
             start = bit_number.get('start_bit', 0)
             end = bit_number.get('end_bit', 0)
-            bit_offset = min(start, end)
-            bit_width = abs(end - start) + 1
+            if start != None and end != None:
+                bit_offset = min(start, end)
+                bit_width = abs(end - start) + 1
+            else:
+                bit_offset = None
+                bit_width = None
         else:
             bit_offset = None
             bit_width = None

@@ -1,12 +1,13 @@
 from defs import UserContext, Manufacturer, ContextRetrievalParameters, ContextRetrievalMethod
 
-DEVICE_NAME = "rm0008"
+DEVICE_NAME = "ke04"
 CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
     context_retrieval_method=ContextRetrievalMethod.KEYWORD_SEARCH, 
     pages_after_keyword=2, 
     remove_tables=True, 
-    number_embeddings=0, 
-    re_ranking=False,
+    number_embeddings=16, 
+    re_ranking=True,
+    score_threshold=0.25,
     vs_id="",
     regex="", 
     other=""
@@ -15,6 +16,7 @@ CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
 MODEL_NAME = "gpt-oss-120b"
 GENERATOR_ITER = 1 # Number of iterations for the generator agent
 RUN_ANALYZER = True
+COVERAGE_IMPROVER_ITERATIONS = 10
 
 OUTPUT_DIR = "agent_output"
 RESULTS_DIR = "evaluation"
@@ -23,13 +25,14 @@ DEVICE_DIRECTORY = "devices"
 user_contexts = [
     UserContext(device_name='82579', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82579/e1000_ebb2314.rs', run=0, file_id='file-Y42TiuVyte2z2TcbsXt9sv', vs_id='vs_68924fa6726481918501140c8ac86afe'),
     UserContext(device_name='82599', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82599/ixgbe_4a124f4.rs', run=0, file_id='file-RdWHHvaJvfkRZ59zXGjVVS', vs_id='vs_68924fdcb9cc8191809cacd7be13a9ea'),
-    UserContext(device_name='rm0008', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='', vs_id=''),
+    UserContext(device_name='rm0008', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=2, file_id='file-D98Cj39QhHMHNdXLNxewq7', vs_id='vs_693a0971872881918852f40b15c29fa1'),
+    UserContext(device_name='rm0033', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='file-CmfGB6SWzkxDpHdXSGRWY7', vs_id='vs_693a093c1ce48191a0bb9e6630f090b5'),
     UserContext(device_name='rm0041', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=16, file_id='file-MHtC1XNEQDa2X8jNEjfk1b', vs_id='vs_6892501067b08191ac63cc6de06ee629'),
     UserContext(device_name='rm0090', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=3, file_id='file-CjEojSnvTNU3hpXQFG6DK5', vs_id='vs_689f5188906c81919cebc07c132a8f46'),
     UserContext(device_name='rm0091', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=2, file_id='file-T2XMpz886q7hQNqaDhN7Fn', vs_id='vs_689f52468484819182c9c3085572ce19'),
     UserContext(device_name='rm0360', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='file-JT7wee34qTEUtugwxW2VAP', vs_id='vs_689f52862f5881918366547ab0417608'),
     UserContext(device_name='rm0490', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='file-RygxVqtujcgLnFBQGrQ1in', vs_id='vs_689f52efc4bc8191afb9b4fb05c78f6c'),
-    UserContext(device_name='ke04', peripheral_name='', manufacturer=Manufacturer.NXP, driver_path='', run=1, file_id='', vs_id=''),
+    UserContext(device_name='ke04', peripheral_name='', manufacturer=Manufacturer.NXP, driver_path='', run=3, file_id='file-HXurUicV6dJUZqMjbKWRWk', vs_id='vs_693b01dc21608191914afb688556c220'),
     UserContext(device_name='s32k1xx', peripheral_name='', manufacturer=Manufacturer.NXP, driver_path='', run=1, file_id='', vs_id=''),
-
+    UserContext(device_name='msp430g2', peripheral_name='', manufacturer=Manufacturer.TI, driver_path='', run=2, file_id='file-XbEecafgtidnALoE4qarHz', vs_id='vs_693b0615f51481919e951ae03d5b471e'),
 ]

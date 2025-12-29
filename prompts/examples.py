@@ -34,7 +34,7 @@ stm_datasheet_example = """
     So this is the GPIOA_OTYPER register.
     I can see that the GPIOx_OTYPER has a size of 32 bits.
     It's offset it 0x04 and its reset value is 0x00000000.
-    Bits 31:2 are reserved so read-only.
+    Bits 31:2 are reserved and so do not have to be listed as a subfield.
     Bits 1:0 are read-write.
     There are no write-only fields.
     There are 2 subfields with the name OTy where y is 0 to 1.
@@ -48,23 +48,11 @@ stm_datasheet_example = """
         "address_offset": "0x04",
         "reset_value": "0x00000000",
         "size": 32,
-        "readonly_bits": [
-            {
-            "start_bit": 2,
-            "end_bit": 31
-            }
-        ],
-        "write_only_bits": [],
-        "read_write_bits": [
-            {
-            "start_bit": 0,
-            "end_bit": 1
-            }
-        ],
         "subfields": [
             {
                 "name": "OT0",
                 "description": "Port 0 configuration bits",
+                "access": "read-write",
                 "bit_number": {
                     "start_bit": 0,
                     "end_bit": 0
@@ -83,6 +71,7 @@ stm_datasheet_example = """
             { 
                 "name": "OT1",
                 "description": "Port 1 configuration bits",
+                "access": "read-write",
                 "bit_number": {
                     "start_bit": 1,
                     "end_bit": 1

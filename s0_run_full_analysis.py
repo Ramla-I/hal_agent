@@ -13,6 +13,11 @@ from scripts.s2_compare_agent_output_with_svd import compare_agent_output_with_s
 from s3_analyzer import run_analyzer
 from scripts.s4_generate_diff_table import generate_diff_table
 from scripts.s5_compare_diff_with_verified_output import compare_diff_with_verified_datasheet
+from scripts.update_config import update_user_context
+from preprocessing.create_vector_store_openai import create_vector_store
+from scripts.calculate_generator_coverage import calculate_generator_coverage
+from coverage_improver import run_coverage_improver
+from defs import CoverageImproverOutput
 
 def resolve_repo_root() -> str:
     """Return absolute path to the repository root."""
@@ -45,10 +50,45 @@ async def main() -> None:
     results_directory = os.path.join(repo_root, config.RESULTS_DIR, device_ctx.manufacturer.value.lower(), device_name, run_number)
     verified_datasheet_directory = os.path.join(repo_root, "verified_datasheet")
 
-    # ---- (S1) Run generator agent ----
-    run_generator(device_name, run_number, device_directory, agent_output_folder, model_name, context_retrieval_parameters)
-    exit()
+    # Update the context_retrieval_parameters with the vs_id from the device_ctx
+    if device_ctx.vs_id != "":
+        context_retrieval_parameters.vs_id = device_ctx.vs_id
+    else:
+        pdf_path = os.path.join(device_directory, f"{device_name}.pdf")
+        vs_id, file_id = create_vector_store(pdf_path, device_name)
+        device_ctx.vs_id = vs_id
+        device_ctx.file_id = file_id
+        update_user_context(device_ctx)
 
+    for i in range(config.COVERAGE_IMPROVER_ITERATIONS):
+        # ---- (S1) Run generator agent ----
+        run_generator(device_name, run_number, device_directory, agent_output_folder, model_name, context_retrieval_parameters, device_ctx.manufacturer)
+    
+        # ---- (S2) Feeedback Loop with Coverage Improver ----
+        # Get the coverage of the agent output
+        svd_files = sorted([f for f in glob.glob(os.path.join(svd_dir, "*.svd"))])
+        if not svd_files:
+            raise RuntimeError(f"No svd files found in {svd_dir}")
+        svd_path = svd_files[0]
+        coverage_info = calculate_generator_coverage(svd_path, agent_output_folder)
+       
+        # Call coverage improver with information about the coverage, context retrieval parameters, 
+        coverage_improver_output_dir = os.path.join(agent_output_folder, "coverage_improver")
+        os.makedirs(coverage_improver_output_dir, exist_ok=True)
+        await run_coverage_improver(coverage_info, context_retrieval_parameters, coverage_improver_output_dir, device_ctx.vs_id)
+       
+        # Output should be an updated context retrieval parameters and reasoning.
+        context_retrieval_parameters = CoverageImproverOutput.model_validate_json(open(os.path.join(coverage_improver_output_dir, "coverage_improver_output.json")).read()).context_retrieval_parameters
+        context_retrieval_parameters.vs_id = device_ctx.vs_id # just to make sure model didn't change it
+       
+        # upate the run number and corresponding directories
+        run_number = str(int(run_number) + 1)
+        device_ctx.run = run_number
+        update_user_context(device_ctx)
+        agent_output_folder = os.path.join(repo_root, config.OUTPUT_DIR, device_ctx.manufacturer.value.lower(), device_name, run_number)
+        results_directory = os.path.join(repo_root, config.RESULTS_DIR, device_ctx.manufacturer.value.lower(), device_name, run_number)
+
+    exit()
     # ---- (S2) Compare agent output with SVD for each SVD file ----
     svd_files = sorted([f for f in glob.glob(os.path.join(svd_dir, "*.svd"))])
     if not svd_files:
@@ -60,7 +100,7 @@ async def main() -> None:
         os.makedirs(custom_results_dir, exist_ok=True)
         print(f"Comparing agent output with SVD for: {svd_file_base}")
         compare_agent_output_with_svd(svd_path, agent_output_folder, custom_results_dir)
-    exit()
+
     # ---- (S3) Run the analyzer agent on the results ----
     if analyzer:
         for svd_path in svd_files:

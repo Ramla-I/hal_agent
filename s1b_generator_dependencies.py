@@ -7,7 +7,7 @@ from prompts.register_info_stm import create_register_info_stm_system_prompt, cr
 from parse_output import get_json_block_from_response
 from groq import Groq
 from openai import OpenAI
-from s1a_retrieve_context import retrieve_context
+from context_retrieval.retrieve_context import retrieve_context
 
 client_groq = Groq(
     api_key=os.environ.get("GROQ_API_KEY")
@@ -18,24 +18,6 @@ client = OpenAI(
     base_url="https://api.groq.com/openai/v1"
 )
 
-tools = [
-    {
-        "type": "function",
-        "name": "calculate_address_offset",
-        "description": "Calculate the address offset of a register",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "base_address_in_hex": {"type": "string"},
-                "start_register_number": {"type": "integer"},
-                "register_number": {"type": "integer"},
-                "register_size_in_bytes": {"type": "integer"}
-            },
-            "required": ["base_address_in_hex", "start_register_number", "register_number", "register_size_in_bytes"]
-        },
-        "strict": True,
-    }
-]
 
 def run_generator(
     device_name: str, 

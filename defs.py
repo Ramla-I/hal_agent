@@ -10,21 +10,41 @@ class Manufacturer(Enum):
 
 class ContextRetrievalMethod(Enum):
     KEYWORD_SEARCH = "keyword_search"
-    VECTOR_STORE = "vector_store"
+    SEMANTIC_SEARCH = "semantic_search"
     REGEX = "regex"
 
-@dataclass
-class ContextRetrievalParameters():
+class CoverageInfo(BaseModel):
+    peripheral_coverage: float
+    register_coverage: float
+    field_coverage: float
+    peripherals_only_in_svd: list[str]
+    peripherals_only_in_agent_output: list[str]
+    peripherals_present_in_both: list[str]
+    registers_only_in_svd: dict[str, list[str]]
+    registers_only_in_agent_output: dict[str, list[str]]
+    registers_present_in_both: dict[str, list[str]]
+    fields_only_in_svd: dict[str, dict[str, list[str]]]
+    fields_only_in_agent_output: dict[str, dict[str, list[str]]]
+    fields_present_in_both: dict[str, dict[str, list[str]]]
+
+
+class ContextRetrievalParameters(BaseModel):
     context_retrieval_method: ContextRetrievalMethod
     pages_after_keyword: int
     remove_tables: bool
     number_embeddings: int
     re_ranking: bool
+    score_threshold: float
     vs_id: str
     regex: str
     other: str
 
 
+class CoverageImproverOutput(BaseModel):
+    context_retrieval_parameters: ContextRetrievalParameters
+    reasoning: str
+    stop_improving: bool
+    
 @dataclass
 class UserContext:
     device_name: str
@@ -34,6 +54,14 @@ class UserContext:
     run: int
     file_id: str
     vs_id: str
+
+class RegisterDependency(BaseModel):
+    dependent_register_name: str
+    dependent_subfield_name: str
+    dependee_register_name: str
+    dependee_subfield_name: str
+    dependency_type: str # read-after, write-after, other
+    relevant_sentence: str
 
 class BitNumber(BaseModel):
     start_bit: int
@@ -46,6 +74,7 @@ class EnumValue(BaseModel):
 class BitField(BaseModel):
     name: str
     description: str
+    access: str
     bit_number: BitNumber
     enumerated_values: list[EnumValue]
 
@@ -54,10 +83,8 @@ class RegisterInfo(BaseModel):
     address_offset: str
     reset_value: str
     size: int
-    readonly_bits: list[BitNumber]
-    write_only_bits: list[BitNumber]
-    read_write_bits: list[BitNumber]
     subfields: list[BitField]
+    dependencies: list[RegisterDependency]
 
 class RegisterList(BaseModel):
     registers: list[RegisterInfo]

@@ -189,31 +189,53 @@ def main() -> None:
             import sys
             import platform
 
+            # === Why did this stop working with Preview? ===
+            # AppleScript automation of keystrokes in Preview to search was always a bit brittle:
+            # - If Preview isn't the frontmost app, or if the window state changed, the script may not target the correct window.
+            # - Newer versions of macOS restrict automation due to privacy/security (“Accessibility” permissions, TCC database).
+            # - The keystroke emulation is timing-sensitive; new Preview versions may have different UI or behaviors.
+            # - If the PDF was reloaded or window focus stolen, System Events may miss the intended target.
+            # Test: Does manually running an AppleScript to open 'Find' in Preview work? If not, permissions may need reset:
+            # - Open System Settings > Privacy & Security > Accessibility, and make sure Terminal (or python, or whichever process is running this) is checked.
+            # - Sometimes Preview needs to be readded to Automation permissions in System Settings > Privacy & Security > Automation.
+            # Alternative: Instead of keystrokes, use system-wide search tools, or direct PDF viewers' own APIs, or accept fallback to manual copy/paste/search.
+            # For context: Recent macOS versions (Monterey/Ventura/Sonoma) sometimes broke apps using System Events on sandboxed apps like Preview.
             if platform.system() == "Darwin" and identifier:
-                # The following AppleScript will bring Preview to front,
-                # open the "Find" bar, and paste/search for the identifier.
-                # We attempt to interact with the front Preview window.
                 from subprocess import run, DEVNULL
 
-                applescript = f"""
+                applescript = f'''
                 tell application "Preview"
                     activate
-                    delay 0.2
-                    tell application "System Events"
+                    reopen
+                    delay 0.4
+                end tell
+
+                tell application "System Events"
+                    tell process "Preview"
+                        set frontmost to true
+                        delay 0.2
+
                         keystroke "f" using command down
                         delay 0.15
                         keystroke "{identifier}"
                         delay 0.15
-                        key code 36 -- enter
+                        key code 36
                     end tell
                 end tell
-                """
+                '''
+
                 try:
-                    run(["osascript", "-e", applescript], check=False, stdout=DEVNULL, stderr=DEVNULL)
-                    print(f"(Preview: search for '{identifier}' issued automatically)")
+                    ret = run(["osascript", "-e", applescript], check=False,
+                            stdout=DEVNULL, stderr=DEVNULL)
+                    if ret.returncode == 0:
+                        print(f"(Preview: search for '{identifier}' issued automatically)")
+                    else:
+                        print("(Preview automation failed — check Accessibility permissions.)")
                 except Exception as exc:
                     print(f"(Could not auto-search in Preview: {exc})")
+
             ans = input("> ").strip().lower()
+
             if ans == "s":
                 print("Skipping PDF-guided context for this row.")
         else:

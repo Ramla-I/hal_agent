@@ -1,3 +1,0 @@
-peripheral,register,field_name,key,correct_value
-adc0,cfg1,,size,32
-mcm,lmpeir,,address_offset,0x484

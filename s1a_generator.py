@@ -1,13 +1,13 @@
 import os
 import json
-from defs import ContextRetrievalParameters
+from defs import ContextRetrievalParameters, Manufacturer
 from agent_tools.tools import all_svd_file_paths, calculate_address_offset
 from agent_tools.svd_parsing import get_peripheral_names, get_register_names_for_peripheral
 from prompts.register_info_stm import create_register_info_stm_system_prompt, create_register_info_stm_user_prompt
 from parse_output import get_json_block_from_response
 from groq import Groq
 from openai import OpenAI
-from s1a_1_retrieve_context import retrieve_context
+from context_retrieval.retrieve_context import retrieve_context
 
 client_groq = Groq(
     api_key=os.environ.get("GROQ_API_KEY")
@@ -43,7 +43,8 @@ def run_generator(
     device_dir: str, 
     agent_output_dir: str,
     model_name: str,
-    context_retrieval_parameters: ContextRetrievalParameters
+    context_retrieval_parameters: ContextRetrievalParameters,
+    manufacturer: Manufacturer
 ):
     """
     Runs the generator agent for a given device and run number.
@@ -109,7 +110,7 @@ def run_generator(
             if os.path.exists(output_path):
                 continue
 
-            datasheet_pages = retrieve_context(context_retrieval_parameters, device_name, device_dir, peripheral_name, register_name)
+            datasheet_pages = retrieve_context(context_retrieval_parameters, device_name, device_dir, peripheral_name, register_name, manufacturer)
             if datasheet_pages is None:
                 continue
             

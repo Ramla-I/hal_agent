@@ -1,0 +1,2410 @@
+The AFIO register map in the provided excerpt lists **AFIO_EVCR** (the register named “evcr”) with an address offset of **0x00**.  
+The fact to validate states that the address offset of the `evcr` register is `0x0`. This matches exactly the information from the datasheet excerpt.
+
+Therefore the statement is true, and because the source explicitly shows the offset, I am completely certain.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The table extracted from the RM0041 document shows the AFIO register map. For the entry at offset 0x00, the register is **AFIO_EVCR**. Directly beneath the field list it states:
+
+```
+Reset value 0 0 0 0 0 0 0
+```
+
+which indicates that every bit of the register resets to 0, i.e., the reset value is 0x00. The fact to validate claims a reset value of 0xC3 for AFIO_EVCR. Since the documented reset value is all zeros and no wildcard (“X”) notation is used, the claimed value does not match the specification.
+
+Thus, the statement is false, and I am completely certain based on the extracted datasheet excerpt.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The provided search results contain sections about flash memory, the independent watchdog, and the DMA controller, but they do not include any information about the AFIO peripheral or its EVCR register. Since there is no evidence about the size of the EVCR register, I cannot verify the claim that its size is 62 bits. Consequently, the statement is considered false, and I have no confidence in it.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.0
+}
+```
+
+
+The provided PDF excerpt describes the **AFIO_EVCR** (Event control register). In the register diagram it lists the fields and their positions:
+
+- “Bit 7 EVOE: Event output enable”  
+
+This directly states that the field **EVOE** is located at bit position 7 of the register. The fact we need to validate is that the **bit_offset** of the **evoe** field is **7**.
+
+Since the documentation explicitly confirms this bit position, the statement is true with full certainty.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The AFIO EVCR register description shows the EVOE bit (bit 7) as “Set and cleared by software” and the bit‑field table lists it with “rw” access. This directly indicates that the EVOE field is read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The AFIO_EVCR register description shows that the EVOE field occupies only bit 7:
+
+- “Bit 7 EVOE: Event output enable”  
+
+Thus the bit‑width of the EVOE field is 1 bit. The claim that its bit width is 40 bits contradicts the datasheet.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The AFIO_EVCR register description shows the field **PIN[3:0]** (the pin selection bits) occupying bits 3 down to 0. Therefore the bit offset of the “pin” field is 0. The provided fact claims the bit offset is 18, which does not match the documented layout. The datasheet excerpt is explicit, so I am highly confident that the statement is false.  
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The provided PDF excerpt describes the **AFIO_EVCR** (Event control register).  
+In the register bit‑field table it shows:
+
+- **EVOE** – rw  
+- **PIN[3:0]** – rw  
+
+Since the field **PIN** (the 4‑bit pin‑selection field) is explicitly marked “rw”, its access type is **read‑write**. Therefore the statement that the `pin` field of the `evcr` register in the `afio` peripheral has access = read‑write is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The provided PDF excerpt describes the AFIO event control register (AFIO_EVCR). It shows the field **PIN[3:0]**, meaning the PIN selection occupies bits 3 down to 0 – a total of 4 bits. This matches the claim that the `pin` field has a bit width of 4.
+
+Thus the statement is correct, and the source directly confirms it.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt describes the **AFIO_EVCR** register.  
+It shows the bit layout:
+
+- Bits 31‑8 : Reserved  
+- **Bit 7** : EVOE (Event output enable)  
+- Bits 3‑0 : PIN[3:0] (pin selection)  
+
+Since the remaining bits between bit 7 and bit 0 are bits 6‑4, those three bits are used for **PORT[2:0]** (the port selection field). Therefore the **PORT** field starts at bit 4, giving it a bit‑offset of 4.
+
+The requested fact is that the `port` field in `AFIO_EVCR` has a `bit_offset` of 4. The documentation’s bit‑field layout supports this, so the fact is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.92
+}
+```
+
+
+The search results contain the AFIO register map table.  
+In that table the entry for offset 0x00 shows the **AFIO_EVCR** register with the fields **PORT[2:0]** and **PIN[3:0]**.  
+For AFIO registers the bit‑fields are normally defined as read‑write unless otherwise noted, and the table does not mark these bits as read‑only or write‑only. Therefore the **port** field of the EVCR register is a normal read‑write field. No source contradicts this, so the statement that its access is “read‑write” is consistent with the datasheet.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.9
+}
+```
+
+
+The AFIO_EVCR register description shows a field named **PORT[2:0]**, which is a 3‑bit wide field used to select the port (A..E). The extracted table and accompanying text list the field as “PORT[2:0]” indicating three bits, confirming that the bit width of the port field is 3. Therefore the statement that the bit width of the port field is 3 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The search results from the STM32 reference manual (RM0041) include a section titled “External interrupt configuration register 1 (AFIO_EXTICR1)” that explicitly states:
+
+```
+Address offset: 0x08
+```
+
+This matches the provided value `0x8` (hexadecimal notation is case‑insensitive and leading zeros are optional). Therefore, the fact that the address offset of the `exticr1` register in the `afio` peripheral is `0x8` is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt from the RM0041 reference manual shows the description for **AFIO_EXTICR1**:
+
+- “Reset value: 0x0000”
+
+This indicates that the register resets to zero. Representing that zero value with a full 32‑bit width as **0x00000000** is equivalent to the documented reset value. Therefore the fact that the reset value of `exticr1` is `0x00000000` is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt lists the register layout for **AFIO_EXTICR1** with bit positions from 31 down to 0, showing fields (EXTI3[3:0] … EXTI0[3:0]) and reserved bits covering the full 32‑bit range. This confirms that the register is a 32‑bit wide (size = 32 bits) register. Therefore the statement that the size of the `exticr1` register is 32 bits is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt for **AFIO_EXTICR1** shows the bit layout:
+
+```
+15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+```
+
+This indicates that the field **EXTI0** occupies bits 3 down to 0 of the register, i.e. its least‑significant bit (the bit offset) is **0**. The requested value is `0`, which matches the documented offset.
+
+Therefore the fact is true, and the documentation clearly supports it.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The RM0041 excerpt for the AFIO peripheral shows the definition of the **AFIO_EXTICR1** register. In the bit‑field table for this register the fields **EXTI3[3:0]**, **EXTI2[3:0]**, **EXTI1[3:0]** and **EXTI0[3:0]** are all marked with **“rw”**, indicating read‑write access. Therefore the field **exti0** (the 4‑bit configuration for EXTI line 0) is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The extracted excerpt for **AFIO_EXTICR1** shows the register layout:
+
+```
+15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+```
+
+Each `EXTI x[3:0]` field occupies bits 3 down to 0, i.e., **4 bits** wide. The fact states that the field `exti0` in the `exticr1` register has a bit width of **4**, which matches the description.
+
+Therefore, the statement is true with high confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt for **AFIO_EXTICR1** shows the register layout:
+
+- Bits 31:16 are reserved.  
+- Bits 15‑0 contain four 4‑bit fields: **EXTI3[3:0]** (bits 15‑12), **EXTI2[3:0]** (bits 11‑8), **EXTI1[3:0]** (bits 7‑4), **EXTI0[3:0]** (bits 3‑0).
+
+Thus the field **EXTI1** occupies bits 7 down to 4, giving a bit‑offset of **4** (the position of its least‑significant bit). The fact claims a bit‑offset of **29**, which lies in the reserved region and does not correspond to the EXTI1 field. Therefore the statement is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt from the STM32 reference manual (RM0041) lists the bit fields of the AFIO_EXTICR1 register. It shows the four 4‑bit fields EXTI0[3:0], EXTI1[3:0], EXTI2[3:0] and EXTI3[3:0] with the access type marked as **rw** (read‑write) for each of them. Therefore the field exti1 in the exticr1 register is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt for **AFIO_EXTICR1** shows the register layout:
+
+```
+15 14 13 12 | 11 10 9 8 | 7 6 5 4 | 3 2 1 0
+EXTI3[3:0]   EXTI2[3:0]   EXTI1[3:0]   EXTI0[3:0]
+```
+
+Each `EXTIx[3:0]` field occupies four bits (bits 3 down to 0 of the field). Therefore the field **exti1** (i.e., `EXTI1[3:0]`) has a bit width of **4 bits**. The provided value matches this description, so the fact is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt for **AFIO_EXTICR1** shows the 32‑bit register layout:
+
+```
+Bits 15:0  EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+```
+
+Each EXTIx field occupies 4 bits.  
+- EXTI0 occupies bits 3..0 → offset 0  
+- EXTI1 occupies bits 7..4 → offset 4  
+- **EXTI2 occupies bits 11..8 → offset 8**  
+
+Therefore the bit offset for the field **exti2** is 8, matching the value given in the fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The document for the AFIO peripheral shows the layout of the **AFIO_EXTICR1** register.  
+It lists the four 4‑bit fields **EXTI3[3:0]**, **EXTI2[3:0]**, **EXTI1[3:0]**, **EXTI0[3:0]** and annotates the access type for each bit as **rw** (read‑write).  
+Since the field **exti2** corresponds to the **EXTI2[3:0]** bits, its access is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+
+The excerpt from the STM32 reference manual (RM0041) shows the layout of the AFIO_EXTICR1 register. It contains four fields: EXTI3[3:0], EXTI2[3:0], EXTI1[3:0], and EXTI0[3:0]. The notation “[3:0]” indicates that each field occupies bits 3 down to 0 of its respective 4‑bit slice, i.e., a bit width of 4 bits. Therefore the `exti2` field in the `exticr1` register is 4 bits wide, not 50 bits.  
+
+Thus the statement that the bit width is 50 is incorrect, and I am completely certain of this assessment.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The RM0041 excerpt for **AFIO_EXTICR1** shows the bit layout:
+
+```
+31 … 16  Reserved
+15 14 13 12   EXTI3[3:0]
+11 10 9 8    EXTI2[3:0]
+7 6 5 4      EXTI1[3:0]
+3 2 1 0      EXTI0[3:0]
+```
+
+Each EXTIx field occupies 4 bits. The field **EXTI3** therefore occupies bits **15 down to 12**, giving it a starting (least‑significant) bit offset of **12**.  
+
+The fact states that the bit offset of `exti3` in `exticr1` is 12, which matches the datasheet description.
+
+Hence the statement is true, and the supporting documentation is explicit.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The datasheet excerpt for the AFIO peripheral shows the layout of **AFIO_EXTICR1**.  
+In the bit‑field description it lists the four 4‑bit fields (EXTI0…EXTI3) and indicates their access type with “rw” for each field. Specifically, the line:
+
+```
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+rw rw rw rw ...
+```
+
+confirms that the **EXTI3** field is **read‑write**. Therefore the statement that the access for the field “exti3” is “read-write” is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt describes the layout of AFIO_EXTICR1. It shows the fields **EXTI3[3:0]**, **EXTI2[3:0]**, **EXTI1[3:0]**, **EXTI0[3:0]**. The notation [3:0] means the field occupies bits 3 down to 0, i.e., a width of 4 bits. Therefore the bit‑width of the **exti3** field is 4 bits, not the 26 bits claimed in the fact.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The search results contain a clear entry for **AFIO_EXTICR2** (the register “exticr2” of the AFIO peripheral). It states:
+
+```
+7.4.4 External interrupt configuration register 2 (AFIO_EXTICR2)
+
+Address offset: 0x0C
+```
+
+This matches the provided value `0xC` (hexadecimal 0x0C). The information is unambiguous and directly confirms the fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The RM0041 excerpt states that AFIO_EXTICR2 has “Reset value: 0x0000”. Since the register is 32 bits wide and the upper bits are reserved (and therefore also zero on reset), the full reset value is 0x00000000. This matches the fact being validated.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted sections describe **AFIO_EXTICR2** (named “exticr2”) with an address offset of 0x0C and a reset value of 0x0000. The register layout is shown with bits 31 down to 0, indicating a full 32‑bit field width. In the AFIO register map each register occupies 4 bytes (e.g., offsets 0x08, 0x0C, 0x10, 0x14), which is consistent with a 32‑bit register size. Therefore the claim that the size of the exticr2 register is 32 bits is supported by the datasheet excerpt.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+
+The excerpt for **AFIO_EXTICR2** shows the layout of the register bits:
+
+```
+31 ... 16  Reserved
+15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+EXTI7[3:0] EXTI6[3:0] EXTI5[3:0] EXTI4[3:0]
+```
+
+Thus the field **EXTI4** occupies bits 3 down to 0, giving it a bit‑offset of **0**. The fact states that the bit offset for `exti4` is 0, which matches the documentation.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results show the AFIO_EXTICR2 register layout. For each 4‑bit field (EXTI7, EXTI6, EXTI5, EXTI4) the access type is listed as “rw”, meaning the bits are read‑write. Therefore the field exti4 in the exticr2 register is not read‑only; it is readable and writable.  
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The PDF excerpt lists the **AFIO_EXTICR2** register layout.  
+In the register description it shows the four fields:
+
+- EXTI7[3:0]  
+- EXTI6[3:0]  
+- EXTI5[3:0]  
+- **EXTI4[3:0]**
+
+The notation “[3:0]” means that each field occupies bits 3 down to 0 of its 4‑bit sub‑field, i.e., a width of **4 bits**. Therefore the field *exti4* in the *exticr2* register has a bit width of 4, matching the value given in the fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted portion for **AFIO_EXTICR2** shows the layout of the 16‑bit register:
+
+```
+Bits 15:12  EXTI7[3:0]
+Bits 11:8   EXTI6[3:0]
+Bits 7:4    EXTI5[3:0]
+Bits 3:0    EXTI4[3:0]
+```
+
+Each EXTIx field occupies 4 bits. Therefore the field **EXTI5** starts at bit 4 (its least‑significant bit is bit 4) and spans bits 4‑7. The fact claims that the bit offset of `exti5` in `exticr2` is 4, which matches the description in the datasheet excerpt.
+
+Hence the statement is true, and the supporting text is explicit, giving a very high confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt for **AFIO_EXTICR2** lists the four 4‑bit fields **EXTI7**, **EXTI6**, **EXTI5**, and **EXTI4**.  
+Below the bit diagram it shows the access type for each field as:
+
+```
+rw rw rw rw rw rw rw rw rw rw rw rw rw rw rw rw
+```
+
+This indicates that every bit in the register, and thus each 4‑bit field (including **EXTI5**), is **read‑write**.  
+The fact states that the access type of the field **exti5** is “read‑write”, which matches the information from the datasheet.
+
+Hence the statement is true, and the evidence is unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted section for **AFIO_EXTICR2** shows the layout of the register:
+
+- Bits 15‑12: EXTI7[3:0]  
+- Bits 11‑8: EXTI6[3:0]  
+- Bits 7‑4: EXTI5[3:0]  
+- Bits 3‑0: EXTI4[3:0]
+
+Each `EXTI x` field is described as `[3:0]`, i.e., a 4‑bit field. Therefore the **bit width** of the `exti5` field is **4 bits**, not the 13 bits claimed in the fact.
+
+Hence the statement is false, and the evidence from the datasheet is clear.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt describes **AFIO_EXTICR2** (register `exticr2`).  
+It shows the 16‑bit field layout:
+
+```
+Bits 15:12  EXTI7[3:0]
+Bits 11:8   EXTI6[3:0]
+Bits 7:4    EXTI5[3:0]
+Bits 3:0    EXTI4[3:0]
+```
+
+Thus the field **EXTI6** occupies bits 11 down to 8, giving it a bit‑offset of **8**.  
+The fact states that the bit offset of the `exti6` field in `exticr2` is 8, which matches the information from the datasheet excerpt.
+
+Therefore the statement is true, and I am very confident in this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+
+The RM0041 excerpt for **AFIO_EXTICR2** lists the bit fields for EXTI7, EXTI6, EXTI5 and EXTI4. Directly beneath the field names it shows the access type for each bit as **“rw”**, meaning read‑write. Since the field **exti6** is one of those 4‑bit groups, its access is also read‑write. Therefore the statement that the `exti6` field of the `exticr2` register is “read‑write” is supported by the datasheet.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The document describes AFIO_EXTICR2 (address offset 0x0C) as containing four 4‑bit fields:
+
+```
+Bits 15‑12 : EXTI7[3:0]
+Bits 11‑8  : EXTI6[3:0]
+Bits 7‑4   : EXTI5[3:0]
+Bits 3‑0   : EXTI4[3:0]
+```
+
+Thus each EXTIx field, including **EXTI6**, occupies bits [3:0] of its position, i.e., a **bit width of 4**. The fact that the requested bit width is 4 matches this description, so the statement is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The AFIO_EXTICR2 register is described as containing four 4‑bit fields:
+
+- EXTI4 [3:0] → bits 3‑0  
+- EXTI5 [3:0] → bits 7‑4  
+- EXTI6 [3:0] → bits 11‑8  
+- EXTI7 [3:0] → bits 15‑12  
+
+Therefore the bit offset (the position of the least‑significant bit) of the **exti7** field is **12**, not 85. No information in the provided PDF indicates a bit offset of 85 for this field. Hence the statement that the bit offset is 85 is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The RM0041 excerpts list the AFIO_EXTICR2 register (offset 0x0C).  
+In the register description the bit‑field layout shows:
+
+```
+EXTI7[3:0] EXTI6[3:0] EXTI5[3:0] EXTI4[3:0]
+rw      rw      rw      rw
+```
+
+Thus the `EXTI7` field is documented as **read‑write (rw)**, not as a reserved field.  
+Only the upper bits (31:16) are marked “Reserved”. Therefore the statement that the `exti7` field’s access type is “reserved” is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted sections of the STM32 reference manual show the layout of the **AFIO_EXTICR2** register.  
+In that register the fields are listed as:
+
+- **EXTI7[3:0]**
+- **EXTI6[3:0]**
+- **EXTI5[3:0]**
+- **EXTI4[3:0]**
+
+The notation “[3:0]” indicates that each of these fields occupies bits 3 down to 0, i.e., **4 bits** in width. Therefore the field **exti7** has a bit width of 4 bits, matching the value given in the fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The search results contain the description of **AFIO_EXTICR3** (External interrupt configuration register 3). In that description it explicitly states:
+
+```
+7.4.5 External interrupt configuration register 3 (AFIO_EXTICR3)
+
+Address offset: 0x10
+```
+
+Thus the address offset for the register **exticr3** in the **afio** peripheral is indeed `0x10`. The information is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The RM0041 excerpts describe the **AFIO_EXTICR3** register. Both sections list:
+
+- “Address offset: 0x10”
+- “Reset value: 0x0000”
+
+The reset value is given as a 16‑bit zero, which is the same as a 32‑bit zero (`0x00000000`). Therefore the statement that the reset value of the `exticr3` register in the `afio` peripheral is `0x00000000` matches the datasheet information.
+
+**Conclusion:** the fact is true, and the supporting text is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt from the STM32 reference manual (RM0041) describes **AFIO_EXTICR3** with a full 32‑bit layout:
+
+- It lists bits 31 down to 0, showing “Bits 31:16 Reserved” and “Bits 15:0 EXTIx[3:0] …”.
+- Such a description implies the register occupies the entire 32‑bit word at the given offset (0x10).
+
+Therefore the register size is 32 bits, matching the provided value of “32”. The documentation explicitly confirms this, so I am highly confident.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The table for **AFIO_EXTICR3** shows that the register is 16 bits wide (bits 15‑0) and contains four 4‑bit fields:
+
+- EXTI8 [3:0] bits 3‑0  
+- EXTI9 [3:0] bits 7‑4  
+- EXTI10 [3:0] bits 11‑8  
+- EXTI11 [3:0] bits 15‑12  
+
+Thus the **bit offset** of the field **EXTI10** is 8 (the position of the least‑significant bit of that 4‑bit field). The fact claims the bit offset is **78**, which is far outside the register width and contradicts the documented layout. Therefore the statement is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.98
+}
+```
+
+
+The datasheet excerpt for **AFIO_EXTICR3** (register exticr3) lists the bit fields EXTI11[3:0], EXTI10[3:0], EXTI9[3:0] and EXTI8[3:0] with the access type shown as **rw** for each field. The “rw” notation means the field is **read‑write**. Since the fact claims that the field **exti10** has access “read‑write”, this matches the information in the file search results.
+
+Therefore the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt from the STM32 reference manual (RM0041) lists the layout of **AFIO_EXTICR3** (address offset 0x10).  
+In the register description the lower 16 bits are shown as:
+
+```
+15 14 13 12   11 10 9 8   7 6 5 4   3 2 1 0
+EXTI11[3:0]   EXTI10[3:0] EXTI9[3:0] EXTI8[3:0]
+```
+
+Each field is denoted with “[3:0]”, meaning it occupies bits 3 down to 0 of its 4‑bit slot – i.e., a **bit width of 4 bits** for EXTI10 (as for the other EXTIx fields).
+
+Therefore the claim that the `exti10` field in the `exticr3` register has a bit width of 4 is supported directly by the datasheet.
+
+**Conclusion:** the fact is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The PDF excerpt for the AFIO peripheral shows the bit‑field layout of **AFIO_EXTICR3**.  
+It lists the bits as:
+
+```
+15 14 13 12   11 10 9 8   7 6 5 4   3 2 1 0
+EXTI11[3:0]   EXTI10[3:0] EXTI9[3:0] EXTI8[3:0]
+```
+
+Thus the field **EXTI11** occupies bits 15 down to 12, meaning its least‑significant bit (the bit offset) is **12**. The fact states that the bit offset for `exti11` is 12, which matches the description.
+
+Hence the fact is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt from the STM32 reference manual (RM0041) shows the AFIO_EXTICR3 register layout. For the EXTI11[3:0] field it lists the access type as **rw** (read‑write) for each of the four bits. Therefore the field is not write‑only.  
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt from the STM32 reference manual (RM0041) shows the definition of the **AFIO_EXTICR3** register. It lists the fields:
+
+```
+EXTI11[3:0]  EXTI10[3:0]  EXTI9[3:0]  EXTI8[3:0]
+```
+
+The notation “[3:0]” means that each of these fields occupies bits 3 down to 0, i.e., **4 bits**. Therefore the field **exti11** within the **exticr3** register has a bit width of 4.
+
+This directly matches the fact we need to validate (`bit_width = 4`). The documentation provides a clear and unambiguous description, so I am very confident in this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt from the STM32 reference manual shows the layout of **AFIO_EXTICR3** (address offset 0x10).  
+In the register diagram the lower 4 bits (bits 3‑0) are labeled **EXTI8[3:0]**, followed by EXTI9, EXTI10 and EXTI11 in increasing bit positions. Therefore the field **exti8** starts at bit 0 of the register.
+
+The fact states that the bit offset of the **exti8** field is 0, which matches the description in the datasheet.
+
+Hence the statement is true, and the evidence is clear.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The sources show the definition of the AFIO_EXTICR3 register (named **exticr3**).  
+In the register description the bit‑fields for EXTI8, EXTI9, EXTI10 and EXTI11 are each marked **“rw”**, which stands for read‑write access.  
+Since the field **exti8** is one of those 4‑bit fields and is indicated as “rw”, the access type “read‑write” is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The RM0041 excerpts describe the AFIO_EXTICR3 register layout. It shows the four fields in the low 16 bits as  
+
+```
+EXTI11[3:0] EXTI10[3:0] EXTI9[3:0] EXTI8[3:0]
+```  
+
+Each “[3:0]” indicates a 4‑bit field (bits 3 down to 0). Therefore the **exti8** field occupies exactly 4 bits. The fact claims its bit width is 25, which contradicts the documented 4‑bit width. The documentation is clear and unambiguous, so I am highly confident that the statement is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt for **AFIO_EXTICR3** shows the 16‑bit field layout:
+
+```
+Bits 15:12 – EXTI11[3:0]
+Bits 11:8  – EXTI10[3:0]
+Bits 7:4   – EXTI9[3:0]
+Bits 3:0   – EXTI8[3:0]
+```
+
+Each EXTIx field occupies 4 bits. Therefore the field **EXTI9** starts at bit 4 (its least‑significant bit is bit 4) and spans bits 7‑4. The fact states that the bit offset of `exti9` is 4, which matches the description.
+
+Thus the statement is true, and the supporting documentation is explicit.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The extracted excerpts from the STM32 reference manual (RM0041) list the AFIO_EXTICR3 register layout. For each 4‑bit field (EXTI11[3:0], EXTI10[3:0], EXTI9[3:0], EXTI8[3:0]) the access column is shown as **rw**, meaning the bits are readable and writable. Therefore the field **exti9** within the **exticr3** register is read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The PDF excerpt for **AFIO_EXTICR3** shows the layout of the lower 16 bits of the register:
+
+```
+Bits 15‑12  EXTI11[3:0]
+Bits 11‑8   EXTI10[3:0]
+Bits 7‑4    EXTI9[3:0]
+Bits 3‑0    EXTI8[3:0]
+```
+
+Each field is denoted as **[3:0]**, which means it occupies 4 bits (bit‑width = 4). Therefore the field **exti9** within the **exticr3** register has a bit width of 4 bits, exactly as the fact claims.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The search results contain multiple excerpts from the STM32 reference manual (RM0041) that list the AFIO external interrupt configuration registers. In the sections for AFIO_EXTICR4 it explicitly states:
+
+- “External interrupt configuration register 4 (AFIO_EXTICR4) – Address offset: 0x14”.
+
+This matches the fact that the `exticr4` register of the `afio` peripheral has an address offset of `0x14`. Therefore the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The searched PDF excerpt contains the description for **AFIO_EXTICR4** (register name `exticr4`). It explicitly states:
+
+- “Address offset: 0x14”
+- “Reset value: 0x0000”
+
+The reset value is shown as `0x0000`, which corresponds to all bits cleared. Since the register is 32‑bit wide, the full 32‑bit reset value is `0x00000000`. Therefore the fact that the reset value of `exticr4` is `0x00000000` matches the information in the datasheet.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt describes the AFIO_EXTICR4 register with a full 32‑bit layout (bits 31 … 0 are shown, with the upper half marked “Reserved” and the lower half containing the EXTI fields). In the STM32 reference manuals all AFIO registers are 32‑bit wide, even though the size is not explicitly written as “32‑bit”. The presented bit diagram and the usual register width strongly indicate that the register size is 32 bits. Therefore the statement that the size of the exticr4 register is 32 bits is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.95
+}
+```
+
+
+The excerpt for **AFIO_EXTICR4** shows the bit layout:
+
+```
+Bits 15:12  EXTI15[3:0]
+Bits 11:8   EXTI14[3:0]
+Bits 7:4    EXTI13[3:0]
+Bits 3:0    EXTI12[3:0]
+```
+
+Thus the field **EXTI12** occupies bits 3 down to 0, giving it a bit offset of **0** within the register. The provided value matches this description, so the statement is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt for **AFIO_EXTICR4** shows the register layout:
+
+- Bits 31:16 are labeled **Reserved**.
+- Bits 15‑0 contain the four 4‑bit fields **EXTI15[3:0]**, **EXTI14[3:0]**, **EXTI13[3:0]**, **EXTI12[3:0]**.
+- The access column for these fields is shown as **rw** (read‑write) for each bit.
+
+Thus the field **exti12** (the 4‑bit field EXTI12[3:0]) is a read‑write field, not a reserved one. The statement that its access is “reserved” is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt for **AFIO_EXTICR4** shows the register fields as  
+
+```
+EXTI15[3:0] EXTI14[3:0] EXTI13[3:0] EXTI12[3:0]
+```
+
+Each `EXTI x[3:0]` occupies bits 3 down to 0 of its 4‑bit slot, which means the field width for `EXTI12` (and the other EXTI fields) is **4 bits**. The requested fact states that the bit‑width of `exti12` is 4, which matches the documentation.
+
+**Conclusion:** the statement is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt from the RM0041 reference manual lists the AFIO_EXTICR4 register (offset 0x14) with its four 4‑bit fields:
+
+```
+EXTI15[3:0]  EXTI14[3:0]  EXTI13[3:0]  EXTI12[3:0]
+```
+
+In the usual register layout the least‑significant field (EXTI12) occupies bits 3‑0, the next field (EXTI13) occupies bits 7‑4, then EXTI14 at bits 11‑8 and EXTI15 at bits 15‑12. Therefore the bit offset of the **EXTI13** field is 4.
+
+The fact states that the bit offset of `exti13` in `exticr4` is 4, which matches the documentation. Hence the statement is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt for **AFIO_EXTICR4** lists the four 4‑bit fields EX TI12, EX TI13, EX TI14 and EX TI15. Under the bit‑field diagram it shows “rw” for each of these fields, indicating they are **read‑write**. Therefore the access type for the field **exti13** is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt for **AFIO_EXTICR4** shows the field layout:
+
+```
+EXTI15[3:0] EXTI14[3:0] EXTI13[3:0] EXTI12[3:0]
+```
+
+Each `EXTIx[3:0]` indicates a 4‑bit field (bits 3 down to 0). Therefore the **exti13** field inside the **exticr4** register has a bit width of 4 bits, matching the claimed value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt shows the layout of **AFIO_EXTICR4**:
+
+```
+Bits 15:12 – EXTI15[3:0]
+Bits 11:8  – EXTI14[3:0]
+Bits 7:4   – EXTI13[3:0]
+Bits 3:0   – EXTI12[3:0]
+```
+
+Thus the field **exti14** occupies bits **11 down to 8**, giving it a **bit offset of 8** (the position of the least‑significant bit of the field).  
+The fact states a bit offset of **89**, which is far outside the 0‑31 range of a 32‑bit register and contradicts the documented mapping. Therefore the statement is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt for **AFIO_EXTICR4** shows the field layout:
+
+```
+EXTI15[3:0] EXTI14[3:0] EXTI13[3:0] EXTI12[3:0]
+rw rw rw rw rw rw rw rw rw rw rw rw rw rw rw rw
+```
+
+The “rw” annotation indicates that each 4‑bit field (including **EXTI14**) is **read‑write**, not read‑only. Therefore the statement that the **exti14** field has an access type of **read‑only** is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The AFIO_EXTICR4 register is described as containing four 4‑bit fields, one for each external interrupt line 12‑15.  
+In the register map the bits are shown as:
+
+```
+Bits 15:12  EXTI15[3:0]
+Bits 11:8   EXTI14[3:0]
+Bits 7:4    EXTI13[3:0]
+Bits 3:0    EXTI12[3:0]
+```
+
+Thus the field **EXTI14** occupies bits 11‑8, which is a width of **4 bits**.  
+The fact states that the bit width is 34, which contradicts the documented 4‑bit width. Therefore the statement is false, and the documentation leaves no ambiguity.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt for **AFIO_EXTICR4** shows that the register is 32 bits wide. Bits 31‑16 are reserved and bits 15‑0 are divided into four 4‑bit fields:
+
+- EXTI15[3:0] occupies bits 15‑12  
+- EXTI14[3:0] occupies bits 11‑8  
+- EXTI13[3:0] occupies bits 7‑4  
+- EXTI12[3:0] occupies bits 3‑0  
+
+Thus the **bit offset** (the position of the least‑significant bit) for the field **exti15** is **12**, not 60. The value “60” does not appear anywhere in the description of this register.
+
+Therefore the statement that the bit offset of `exti15` in `AFIO_EXTICR4` is 60 is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results show the description of the AFIO_EXTICR4 register. For each 4‑bit field (EXTI12, EXTI13, EXTI14, EXTI15) the register diagram lists “rw” under the fields, indicating read‑write access. Therefore the field **EXTI15** in the **AFIO_EXTICR4** register is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The extracted sections for **AFIO_EXTICR4** show the layout of the register:
+
+- The register contains the fields **EXTI15[3:0]**, **EXTI14[3:0]**, **EXTI13[3:0]**, and **EXTI12[3:0]**.
+- The notation **[3:0]** means bits 3 down to 0, i.e., a width of **4 bits** for each field.
+
+Therefore, the field **exti15** in the **exticr4** register indeed has a bit width of 4.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results include the description of the **AFIO_MAPR** register. In the excerpt it states:
+
+> “7.4.2 AF remap and debug I/O configuration register (AFIO_MAPR)  
+> **Address offset: 0x04**”
+
+The provided fact claims that the address offset of the **mapr** register in the **afio** peripheral is **0x4**. The value “0x04” from the datasheet is exactly the same as “0x4” (leading zeros do not change the value). Therefore the fact is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The datasheet excerpt for the AFIO_MAPR register (AF remap and debug I/O configuration register) clearly states:
+
+- **Address offset:** 0x04  
+- **Reset value:** 0x0000 0000  
+
+The fact we need to validate claims that the reset value of the AFIO MAPR register is 0x00000000. The source matches this exactly, so the statement is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The extracted AFIO register map shows each register (including AFIO_MAPR at offset 0x04) described with bits numbered 31 down to 0, which indicates a 32‑bit wide register. No indication is given that the MAPR register occupies more than a single 32‑bit word. Therefore a size of 96 bits is inconsistent with the datasheet information.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results contain the description of the AFIO_MAPR register (referred to as “mapr”). In that description it lists:
+
+```
+Bit 1 I2C1_REMAP: I2C1 remapping
+```
+
+This explicitly states that the **I2C1_REMAP** field is located at bit position 1 of the MAPR register. The fact we need to validate is that the bit offset of the `i2c1_remap` field is `1`, which matches the information from the datasheet excerpt.
+
+Thus the statement is true, and the source is unambiguous, giving full confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt from the AFIO_MAPR register description lists each bit as **rw** (read‑write).  
+Bit 1 is the **I2C1_REMAP** field, and the text says “This bit is set and cleared by software,” which is the definition of a read‑write bit. Therefore the access type for the *i2c1_remap* field is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The source excerpts describe the AFIO_MAPR register and list the **I2C1_REMAP** entry as:
+
+```
+Bit 1 I2C1_REMAP: I2C1 remapping
+...
+```
+
+Since it is defined as a single bit (Bit 1), the width of the `i2c1_remap` field is 1 bit. Therefore the statement that its `bit_width` equals 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The search results contain the description of the **AFIO_MAPR** register. In the register diagram and the accompanying text it states:
+
+- “Bit 15 PD01_REMAP: Port D0/Port D1 mapping on OSC_IN/OSC_OUT …”
+
+Both the diagram line (`… 15 14 13 12 …`) and the textual description identify **PD01_REMAP** as being located at **bit 15** of the AFIO_MAPR register.
+
+Therefore, the claimed bit offset of 15 for the field `pd01_remap` in the `mapr` register of the `afio` peripheral matches the information in the datasheet.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted sections from the RM0041 reference manual describe the **PD01_REMAP** bit (bit 15) of the **AFIO_MAPR** register.  
+The text says *“This bit is set and cleared by software,”* which means it can be both read and written.  
+Additionally, the register’s field‑access table lists **PD01_REMAP** with the access type **rw** (read‑write).  
+
+Therefore, the claim that the access for the pd01_remap field is “read‑write” is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The AFIO_MAPR register description shows that **PD01_REMAP** is defined as **Bit 15** – a single‑bit field. Therefore its bit width is 1, not 77 as claimed.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The provided PDF excerpt describes the AFIO_MAPR register bits. It lists **“Bit 0 SPI1_REMAP: SPI1 remapping”**, which directly indicates that the SPI1_REMAP field is located at bit offset 0 within the MAPR register. Therefore, the statement that the bit offset for the spi1_remap field is 0 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The AFIO_MAPR register description lists **Bit 0 SPI1_REMAP** and states: “This bit is set and cleared by software. It controls the mapping of SPI1 …”. A bit that can be set and cleared by software is a read‑write field. Therefore the access type for the **spi1_remap** field is indeed “read‑write”.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results show the AFIO_MAPR register description.  
+For the field **SPI1_REMAP** it is listed as “Bit 0 SPI1_REMAP: SPI1 remapping”, indicating that this field occupies a single bit. Therefore the bit width of the `spi1_remap` field is 1, which matches the value given in the fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The extracted description of the **AFIO_MAPR** register shows the field **SWJ_CFG[2:0]** occupying bits **26:24**. Therefore the least‑significant bit (the bit offset) of the **SWJ_CFG** field is **24**, not 69. Since a 32‑bit register cannot have a field starting at bit 69, the claimed bit offset of 69 is incorrect. I found no evidence in the provided sources supporting a bit offset of 69 for this field.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt from the RM0041 reference manual for the **AFIO_MAPR** register states:
+
+> “Bits 26:24 SWJ_CFG[2:0]: Serial wire JTAG configuration  
+> These bits are **write‑only** (when read, the value is undefined).”
+
+Since the field is described as write‑only, it is **not** read‑only. Therefore the claim that the `swj_cfg` field has an access type of “read‑only” is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The extracted excerpts describe the AFIO_MAPR register. They show the field **SWJ_CFG[2:0]** occupying bits **26:24** of the register:
+
+```
+Bits 26:24 SWJ_CFG[2:0]: Serial wire JTAG configuration
+```
+
+A field that spans bits 26 down to 24 has a width of 3 bits (bits 24, 25, 26). Therefore the stated bit width of 3 for the `swj_cfg` field is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt from the RM0041 document describes the AFIO_MAPR register. It states:
+
+> “Bits 7:6 TIM1_REMAP[1:0]: TIM1 remapping”
+
+When a field occupies bits 7 down to 6, the least‑significant bit of the field is bit 6. Therefore the bit offset for the **tim1_remap** field is 6, which matches the value given in the fact.
+
+Hence the statement is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt describes the **TIM1_REMAP[1:0]** bits (bits 7:6) as “These bits are set and cleared by software. They control the mapping …”.  
+The wording “set and cleared by software” means the bits can be both written and read; they are not write‑only.  
+Therefore the statement that the **tim1_remap** field has an access type of *write‑only* is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.98
+}
+```
+
+
+The extracted text from the STM32 reference manual (RM0041) shows the definition:
+
+- “Bits 7:6 TIM1_REMAP[1:0]: TIM1 remapping”
+
+This indicates that the field **TIM1_REMAP** occupies bits 7 and 6 of the AFIO_MAPR register, i.e., it is a 2‑bit wide field. The fact to validate claims that the bit width of the **tim1_remap** field is 2, which matches the description in the datasheet.
+
+Therefore the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt shows the bit‑field layout for the AFIO_MAPR register.  
+In the 16‑bit view (bits 15 … 0) the fields are listed in order:
+
+- Bit 15 PD01_REMAP  
+- Bits 14‑13 Reserved  
+- Bit 12 TIM4_REMAP  
+- Bits 11‑10 TIM3_REMAP[1:0]  
+- **Bits 9‑8 TIM2_REMAP[1:0]**  
+- Bits 7‑6 TIM1_REMAP[1:0]  
+- … (remaining fields)
+
+Thus the least‑significant bit of the TIM2_REMAP field is at bit position 8, i.e., its bit offset is 8. This matches the fact to be validated.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.96
+}
+```
+
+
+The excerpt describes the TIM2_REMAP bits as “Bits 9:8 TIM2_REMAP[1:0]: TIM2 remapping” and earlier states that the bits “are set and cleared by software.” This indicates the field is read‑write, not read‑only. No part of the provided text marks TIM2_REMAP as read‑only. Therefore the claim that its access is “read‑only” is inconsistent with the documentation.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.98
+}
+```
+
+
+The PDF excerpt for the AFIO_MAPR register shows a field named **TIM2_REMAP[1:0]** located at bits 9:8. A field that occupies bits 9 and 8 has a width of **2 bits**. The fact to validate states that the bit width of the `tim2_remap` field is **82**, which contradicts the documented width of 2 bits. Therefore the statement is false, and the documentation clearly supports this conclusion.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The extracted excerpt from the AFIO MAPR register description states:
+
+> “Bits 11:10 TIM3_REMAP[1:0]: TIM3 remapping”
+
+This means the TIM3_REMAP field occupies bits 11 down to 10, with the least‑significant bit of the field at position 10. Therefore the bit offset for the `tim3_remap` field is 10, which matches the value given in the fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted documentation for the AFIO_MAPR register shows that the TIM3_REMAP bits (bits 11:10) are “set and cleared by software”, which means they can be both read and written (read‑write). Therefore, the access type for the `tim3_remap` field is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The extracted text from the AFIO_MAPR register description contains the line:
+
+```
+Bits 11:10 TIM3_REMAP[1:0]: TIM3 remapping
+```
+
+This indicates that the `TIM3_REMAP` field occupies bits 11 down to 10, i.e., it spans **2 bits**.  
+The fact claims that the bit width of the `tim3_remap` field is 2, which matches the information from the datasheet excerpt.
+
+Therefore the statement is true, and I am very confident in this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The search results from the STM32 reference manual (RM0041) show the description of the AFIO MAPR register.  
+In the extracted text we see:
+
+- “Bit 12 TIM4_REMAP: TIM4 remapping …”  
+
+This directly indicates that the TIM4_REMAP field is located at bit position 12 of the MAPR register. The fact we are asked to validate states that the bit offset for the `tim4_remap` field is 12, which matches the information from the datasheet.
+
+Therefore, the statement is true and we are highly confident of this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt describes **Bit 12 TIM4_REMAP** in the AFIO_MAPR register:
+
+- “This bit is set and cleared by software.” → the bit can be written and also read back, which corresponds to a **read‑write** access type.
+- The surrounding table shows “rw rw rw …” for the bits, indicating they are read‑write.
+
+Thus the field **tim4_remap** of the **mapr** register in the **afio** peripheral has read‑write access.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The provided excerpts from the STM32 reference manual (RM0041) describe the AFIO_MAPR register.  
+In the description of bit 12 it states:
+
+- “Bit 12 TIM4_REMAP: TIM4 remapping … This bit is set and cleared by software …”
+
+Since it is explicitly called “Bit 12” and described as a single bit, the field **TIM4_REMAP** occupies exactly one bit, i.e., its bit width is 1.  
+The fact claims that the bit width of the `tim4_remap` field is 1, which matches the documentation.
+
+Therefore the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The AFIO_MAPR register description shows the bit fields laid out from bit 31 down to bit 0. After the Reserved bits and the SWJ_CFG[2:0] field (bits 26‑24), the next field listed is **TIM5CH4_IREMAP**, and the diagram then continues with the bits 15‑0. This placement means that TIM5CH4_IREMAP occupies the single bit immediately after bit 15, i.e., bit 16. Therefore the claimed bit offset of 16 for the field tim5ch4_iremap is consistent with the datasheet excerpt.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+
+The excerpt from the RM0041 reference manual shows the definition of the **AFIO_MAPR** register. In the table for this register, the field **TIM5CH4_IREMAP** is listed with the access type **rw** (read‑write). Therefore the field **tim5ch4_iremap** in the **mapr** register of the **afio** peripheral is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt from the RM0041 reference manual shows the **AFIO_MAPR** register with a field named **TIM5CH4_IREMAP** that can take only the values 0 or 1 (see Table 30 “TIM5 alternate function remapping”). This indicates that the field occupies a single bit. The register diagram also lists the field as a single‑bit entry (‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑
+
+We need to determine if bit_width of tim5ch4_iremap field is 1. Evidence: Table 30 shows TIM5CH4_IREMAP = 0 / 1, implying 1 bit. Also register map shows field as single bit. So true. Confidence high.The table titled **“TIM5 alternate function remapping(1)”** lists the field **TIM5CH4_IREMAP** with two possible values 0 and 1. This indicates that the field occupies a single binary position, i.e., its width is one bit. The AFIO_MAPR register diagram also treats TIM5CH4_IREMAP as a single‑bit entry. Therefore, the statement that the bit width of the **tim5ch4_iremap** field is 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+
+The search results include the description of the **AFIO_MAPR** register. In that description the line:
+
+> **Bit 2 USART1_REMAP:** USART1 remapping …
+
+clearly states that the `USART1_REMAP` field is located at bit 2 of the `AFIO_MAPR` register. The fact claims that the bit offset of the `usart1_remap` field is 2, which matches the documentation.
+
+Therefore the statement is true, and I am almost completely certain based on the explicit mention in the source.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted text from the STM32 reference manual (RM0041) shows the definition of the AFIO_MAPR register.  
+For bit 2 it states:
+
+*“Bit 2 USART1_REMAP: USART1 remapping … This bit is set and cleared by software.”*  
+
+The surrounding description of the register bits lists the access type as **rw** (read‑write) for all the remap bits, including USART1_REMAP. Therefore the field **usart1_remap** in the **mapr** register is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The AFIO_MAPR register description shown in the search results lists the **USART1_REMAP** field among many other remap fields. In the STM32 reference manual this field is a single‑bit flag (it is either 0 = no remap or 1 = remap), i.e., its bit width is 1. There is no indication anywhere that this field occupies 52 bits; a 52‑bit field would be far larger than the 32‑bit register itself. Therefore the statement that the **usart1_remap** field has a bit width of 52 is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results contain the definition of the AFIO_MAPR register. In the register layout it lists:
+
+```
+Bit 3 USART2_REMAP: USART2 remapping
+```
+
+This indicates that the field **USART2_REMAP** is located at bit offset 3 within the MAPR register. The fact we need to validate claims that the bit offset of the `usart2_remap` field is 3, which matches the information from the datasheet excerpt. Therefore the statement is true, and the evidence is explicit and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The snippet for the AFIO_MAPR register shows the **USART2_REMAP** bit description:
+
+- “Bit 3 USART2_REMAP: USART2 remapping … **This bit is set and cleared by software**.”
+
+This indicates that the field is read‑write (rw) and can be modified by software. It is not marked as a reserved field. Therefore the claim that the access type of the `usart2_remap` field is “reserved” is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The source excerpt from the STM32 reference manual shows the description for the **AFIO_MAPR** register. It lists **“Bit 3 USART2_REMAP: USART2 remapping”** and describes it as a single bit that can be set or cleared by software. Since it is defined as a single‑bit field, its bit width is 1. This matches the fact that the `usart2_remap` field of the `mapr` register has a bit width of 1.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The AFIO_MAPR register description shows that the **USART3_REMAP** field occupies bits **5:4** of the register (a 2‑bit field). Therefore its bit offset (the position of the least‑significant bit) is **4**.  
+The fact claims the bit offset is **77**, which does not appear anywhere in the register map and contradicts the documented layout. Hence the statement is false, and the supporting documentation is clear and unambiguous, giving full confidence.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt shows the description of the AFIO_MAPR register.  
+The register is described as “AF remap and debug I/O configuration register (AFIO_MAPR)” and the bit‑field list includes **USART3_REMAP[1:0]**.  
+For the other remap bits (e.g., USART2_REMAP, USART1_REMAP, SPI1_REMAP) the text says “This bit is set and cleared by software,” which corresponds to read‑write access.  
+In the register‑bit tables the access type for the bits of AFIO_MAPR is indicated with “rw” (read‑write) for the configurable fields. No indication is given that USART3_REMAP is anything other than read‑write. Therefore the most plausible interpretation is that the **usart3_remap** field is read‑write.
+
+Given the consistency of the documentation and the lack of any contrary statement, I am confident that the fact is true, though the source does not spell out the access for this specific field explicitly.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.93
+}
+```
+
+
+The excerpt from the STM32 reference manual shows the definition of the **USART3_REMAP** field in the AFIO_MAPR register:
+
+- “Bits **5:4** USART3_REMAP[1:0]: USART3 remapping”
+
+Bits 5 and 4 constitute a 2‑bit field (bit width = 2).  
+The fact claims that the bit width of the **usart3_remap** field is **88**, which contradicts the documented 2‑bit width.
+
+Therefore the statement is false, and the documentation clearly supports this conclusion.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results contain a section titled **“7.4.7 AF remap and debug I/O configuration register (AFIO_MAPR2)”**. In that section it explicitly states:
+
+```
+Address offset: 0x1C
+```
+
+This matches the fact we are asked to validate (`address_offset` = `0x1C`) for the `AFIO_MAPR2` (named “mapr2”) register of the `afio` peripheral.
+
+Therefore the statement is correct, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results include the AFIO register table.  
+In the section for **AFIO_MAPR2** (offset 0x1C) the line reads:
+
+```
+Reset value 0 0 0 0 0 0 0 0 0 0 0
+```
+
+All listed bits are zero, which corresponds to a reset value of **0x00000000** for the MAPR2 register. No non‑zero bits are shown, and there is no indication of any other default value.
+
+Therefore the statement that the reset value of the AFIO MAPR2 register is 0x00000000 is supported by the document.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The AFIO peripheral registers (e.g., AFIO_EVCR, AFIO_MAPR, AFIO_EXTICR1‑3) are all listed in the document as occupying a 32‑bit word each (each entry advances by 0x04 in the offset table).  
+Later text refers to the **AFIO_MAPR2** register (e.g., the TIM67_DAC_DMA_REMAP bit), which follows the same naming and layout conventions as the other AFIO registers. In STM32 reference manuals all AFIO registers are 32‑bit registers unless otherwise noted, and there is no indication that MAPR2 is an exception. Therefore the most reasonable interpretation is that AFIO_MAPR2 is a 32‑bit register, matching the claimed size of 32 bits.
+
+Since the documentation does not state a different size, I consider the statement true, with high confidence but not absolute certainty because the size is not explicitly printed for MAPR2 in the extracted excerpts.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.9
+}
+```
+
+
+The search results show the description of the **AFIO_MAPR2** register.  
+In the extracted text we see:
+
+> “Bit 10 FSMC_NADV: NADV connect/disconnect …”
+
+This directly states that the field **FSMC_NADV** is located at **bit 10** of the MAPR2 register. The fact to be validated claims that the bit offset of the `fsmc_nadv` field is 10, which matches the information found.
+
+Hence the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt from the RM0041 datasheet for the **AFIO MAPR2** register shows the description of **Bit 10 FSMC_NADV**:
+
+- “This bit is set and cleared by software…”.  
+- Bits that can be set and cleared by software are read‑write (R/W) fields.  
+- The surrounding table lists the access type for each bit as “rw”.
+
+Therefore the access type for the **FSMC_NADV** field is indeed **read‑write**.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results contain the description of the AFIO MAPR2 register. In the register layout it lists:
+
+- “Bit 10 FSMC_NADV: NADV connect/disconnect …”
+
+The wording “Bit 10” indicates that the field **FSMC_NADV** occupies a single bit position (bit 10). A field that occupies one bit has a bit‑width of 1.
+
+Therefore, the claim that the bit‑width of the fsmc_nadv field in the afio MAPR2 register is 1 is supported by the datasheet excerpt.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results include the description of the **AFIO_MAPR2** register.  
+In the register layout it states:
+
+- “Bits 31:14 Reserved.”
+- “Bit 13 MISC_REMAP: Miscellaneous features remapping.”
+
+Thus the field **MISC_REMAP** (named `misc_remap` in the input) occupies bit 13 of the register.  
+The fact to validate claims the bit offset is **18**, which contradicts the datasheet information. Therefore the statement is false. The information is clear and unambiguous, giving a very high confidence in this assessment.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The source excerpt for the AFIO_MAPR2 register shows that Bit 13 (MISC_REMAP) is described as “This bit is set and cleared by software…”. The register field table lists this bit with “rw”, indicating it is read‑write. Therefore the access type for the **misc_remap** field is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The sources describe the AFIO_MAPR2 register layout. They list “Bits 31:14 Reserved” and then “Bit 13 MISC_REMAP: Miscellaneous features remapping.” Since it is defined as a single bit (bit 13) with no sub‑fields, the width of the MISC_REMAP field is 1 bit. This matches the asserted value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The extracted text describes the **AFIO_MAPR2** register (named `MAPR2` in the AFIO peripheral).  
+In the register description it lists:
+
+- “**Bit 12 TIM12_REMAP**: TIM12 remapping …”
+
+Thus the field `TIM12_REMAP` is located at bit offset **12** within the `MAPR2` register of the `AFIO` peripheral.
+
+This directly matches the fact to be validated.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The provided excerpt lists the AFIO_MAPR2 register bits and describes several remap fields (e.g., TIM4_REMAP, TIM3_REMAP) as “set and cleared by software”, which indicates they are read‑write. Although the snippet does not contain an explicit line for the **TIM12_REMAP** field, the same document treats all timer‑remap bits in AFIO_MAPR2 as software‑controlled bits, and the table of TIM12 remapping shows the field can take values 0 or 1. This strongly suggests that **tim12_remap** is a read‑write bit.
+
+Hence, the statement that the `tim12_remap` field has “read‑write” access is consistent with the information in the datasheet, though the exact wording is not present in the excerpt, so confidence is high but not absolute.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.85
+}
+```
+
+
+The search results include the description of the AFIO_MAPR2 register.  
+It lists **Bit 12 TIM12_REMAP** and states that “This bit is set and cleared by software.”  
+Since it is described as a single bit, the bit‑width of the **tim12_remap** field is 1.  
+
+Therefore the fact that the bit width is 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The extracted excerpt from the STM32 reference manual (RM0041) lists the bits of the AFIO_MAPR2 register. It explicitly states:
+
+- “Bit 8 TIM13_REMAP: TIM13 remapping …”
+
+This directly confirms that the field **TIM13_REMAP** (named `tim13_remap` in the query) resides at bit offset 8 within the `AFIO_MAPR2` register.
+
+Therefore the statement that the bit offset of `tim13_remap` is 8 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The AFIO_MAPR2 register description lists **Bit 8 TIM13_REMAP** and states:
+
+> “This bit is set and cleared by software. It controls the mapping of the TIM13_CH1 alternate function onto the GPIO ports.”
+
+A bit that can be set and cleared by software is a read‑write field, not read‑only. Therefore the claim that the **tim13_remap** field has an **access** of “read‑only” is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted text shows that in the AFIO_MAPR2 register the field **TIM13_REMAP** is described as **“Bit 8 TIM13_REMAP: TIM13 remapping”** with two possible values (0 and 1). This indicates it occupies a single bit, therefore its bit width is 1. The fact matches the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted PDF excerpts describe the AFIO MAPR2 register layout. In several places the document explicitly lists:
+
+- “Bit 9 TIM14_REMAP: TIM14 remapping …”  
+
+This indicates that the field **TIM14_REMAP** within the **AFIO_MAPR2** register occupies bit position 9. The requested fact states that the bit offset for the field `tim14_remap` is `9`, which matches the information from the datasheet.
+
+Therefore the fact is correct, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The searched PDF excerpts describe the AFIO remap registers.  
+They show that bits in **AFIO_MAPR2** (e.g., TIM67_DAC_DMA_REMAP) are “set and cleared by software”, which means they are read‑write bits.  
+The tables for TIM12, TIM13 and TIM14 remapping (Tables 31‑33) refer to the “AF remap and debug I/O configuration register (AFIO_MAPR2)”, implying that the corresponding bits (including TIM14_REMAP) are part of this register.  
+Since remap bits in AFIO_MAPR2 are normally implemented as ordinary configuration bits that can be both read and written, the **TIM14_REMAP** field should have read‑write access.
+
+Thus the statement that the **tim14_remap** field of the **AFIO_MAPR2** register has “read‑write” access is consistent with the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.82
+}
+```
+
+
+The provided search results describe the **TIM14_REMAP** field inside the AFIO_MAPR (and MAPR2) register as **“Bit 9 TIM14_REMAP”**, meaning it occupies a single bit at position 9. A field that is a single bit has a bit‑width of **1**, not 14. Therefore the claim that the `tim14_remap` field has a bit width of 14 bits is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt from the STM32 reference manual (RM0041) describes the AFIO_MAPR2 register bits. It clearly lists:
+
+- “Bit 4 TIM1_DMA_REMAP: TIM1 DMA remapping”
+
+This indicates that the field **TIM1_DMA_REMAP** is located at bit offset 4 within the MAPR2 register. The fact to validate states that the bit offset for this field is 4, which matches the documentation.
+
+Therefore, the statement is true, and I am completely confident in this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt repeatedly refers to the **TIM1_DMA_REMAP** bit in the **AFIO_MAPR2** register as being “cleared” or “set”. A bit that can be set or cleared by software must be writable, and since the register can also be read to determine its current state, the field is read‑write. No source indicates it is read‑only. Therefore the statement that the `tim1_dma_remap` field has “read‑write” access is consistent with the documentation.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0. nine
+}
+```
+
+
+The extracted datasheet text describes **Bit 4 TIM1_DMA_REMAP** in the **AFIO_MAPR2** register. It is presented as a single bit that can be set or cleared by software, with no range of bits indicated. This means the field “tim1_dma_remap” occupies exactly one bit, i.e., its bit width is 1.  
+
+Thus the statement that the bit width of the TIM1_DMA_REMAP field is 1 is supported by the documentation.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The search results contain the description of the **AFIO_MAPR2** register. In the register layout it lists:
+
+- **Bit 11 TIM76_DAC_DMA_REMAP: TIM67_DAC DMA remapping** …  
+
+This indicates that the field **TIM67_DAC_DMA_REMAP** (named `tim67_dac_dma_remap` in the query) is located at bit position 11 of the MAPR2 register.
+
+Since the fact claims that the bit offset of `tim67_dac_dma_remap` is **11**, this matches the information found in the datasheet excerpt.
+
+Therefore the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The search results mention the **TIM67_DAC_DMA_REMAP** bit that resides in the **AFIO_MAPR2** register, confirming that the field exists.  
+However, none of the provided excerpts describe the access type (e.g., read‑only, read‑write, write‑only) for this bit or for the AFIO_MAPR2 register. Without explicit documentation of the field’s access permissions, I cannot verify that it is “read‑write”.
+
+Since the required information is not present in the supplied sources, I must treat the statement as unverified.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.0
+}
+```
+
+
+The extracted text repeatedly refers to **“the TIM67_DAC_DMA_REMAP bit in the AFIO_MAPR2 register.”**  
+The word *bit* (singular) indicates that this field occupies a single binary position. In STM32 reference manuals, remap fields such as TIM67_DAC_DMA_REMAP are defined as one‑bit flags. No other size information contradicts this, and the documentation does not describe the field as spanning multiple bits.  
+
+Therefore the statement that the **bit_width** of the **tim67_dac_dma_remap** field is **1** is consistent with the information provided.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+
+The extracted text from the STM32 reference manual (RM0041) describes the AFIO MAPR2 register bits. It explicitly states:
+
+- “Bit 3 CEC_REMAP: CEC remapping …”
+
+This matches the field **cec_remap** in the **mapr2** register and confirms that its bit offset is 3. Therefore the provided fact is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The provided excerpts describe the AFIO_MAPR2 register and list the **CEC_REMAP** field (named “cec_remap” in the query) as an alternate‑function selection bit that can be set to 0 or 1.  
+In STM32 reference manuals, bits that select an alternate function are normally configurable by software, i.e., they are **read‑write (rw)**. The text does not mention any read‑only or write‑only restriction for this field, and the register description states that AFIO registers are accessed by words and are writable. Therefore the access type “read‑write” for the `cec_remap` field is consistent with the documentation.
+
+**Conclusion:** The fact is true, with high confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0. nine
+}
+```
+
+
+The excerpt from the RM0041 document describes the AFIO_MAPR2 register bits.  
+It lists **“Bit 3 CEC_REMAP: CEC remapping”** and explains that this bit is set or cleared by software. Since it is defined as a single bit (Bit 3), the corresponding field **cec_remap** occupies exactly one bit, i.e., its bit‑width is 1. This directly matches the fact we are asked to validate.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt from the RM0041 reference manual lists the bits of the AFIO_MAPR2 register. It shows:
+
+- “Bit 0 TIM15_REMAP: TIM15 remapping …”
+
+This explicitly states that the TIM15_REMAP field occupies bit 0 of the MAPR2 register. The fact we are asked to validate claims that the bit offset for the **tim15_remap** field is 0, which matches the information in the source.
+
+Therefore the statement is true, and the source leaves no ambiguity.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted sections describe the AFIO_MAPR2 register bits. For each remap bit (e.g., TIM14_REMAP, TIM13_REMAP, TIM1_DMA_REMAP, etc.) the text explicitly says “This bit is set and cleared by software,” which indicates a read‑write (R/W) access type. The same description applies to Bit 0 TIM15_REMAP, although the excerpt only shows the bit name, the surrounding context (other bits) makes it clear that these bits are configurable by software. Therefore, the TIM15_REMAP field is not read‑only; it is read‑write.  
+
+Hence the statement that the `tim15_remap` field has “read-only” access is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.9
+}
+```
+
+
+The search results show the definition of the AFIO_MAPR2 register. It lists each field with its bit position, e.g.:
+
+- “Bit 0 TIM15_REMAP: TIM15 remapping”
+
+When a field is described as “Bit 0”, it occupies a single bit, meaning its bit width is 1. Therefore the field **tim15_remap** in the **mapr2** register has a bit width of 1, matching the provided value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The extracted excerpt from the STM32 reference manual (RM0041) lists the bits of the **AFIO_MAPR2** register. It explicitly says:
+
+```
+Bit 1 TIM16_REMAP: TIM16 remapping
+```
+
+Thus the **TIM16_REMAP** field is located at bit offset 1 within the MAPR2 register. The fact claims the bit offset is 1, which matches the documentation.
+
+**Conclusion:** The statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The provided excerpts describe bits in the **AFIO_MAPR2** register. They state that bits such as **TIM67_DAC_DMA_REMAP** “are set and cleared by software”, which implies a **read‑write** access type for those fields. Although the specific field **tim16_remap** is not mentioned explicitly in the extracted text, the AFIO mapping registers are uniformly defined as software‑settable bits, i.e., they are read‑write.  
+
+Thus, based on the general description of the register’s bits, it is reasonable to conclude that the **tim16_remap** field is also read‑write, but the evidence is indirect, so confidence is less than absolute.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.75
+}
+```
+
+
+The excerpt from the RM0041 reference manual shows the layout of the **AFIO_MAPR2** register.  
+In the bit‑field description it lists:
+
+- **Bit 1 TIM16_REMAP** – this field controls the TIM16 channel remapping and is described as “This bit is set and cleared by software…”.  
+
+Since it is described as “Bit 1”, the field occupies a single bit; therefore its **bit width is 1**.  
+
+The fact to validate claims that the bit width of the `tim16_remap` field is **41**, which contradicts the documentation. Hence the statement is false. The source clearly identifies the field as a single‑bit field, giving us very high confidence in this assessment.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results show the description of the **AFIO_MAPR2** register. In the listed bits it states:
+
+- “Bit 2 TIM17_REMAP: TIM17 remapping …”
+
+This directly indicates that the field **TIM17_REMAP** (named `tim17_remap` in the input) is located at bit offset 2 of the `AFIO_MAPR2` register.
+
+Therefore, the claim that the bit offset for `tim17_remap` is 2 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The search results only show the AFIO_MAPR register and its MAPR2 variant describing remap bits for TIM12, TIM13, TIM14 and other peripherals. There is no mention of a **TIM17_REMAP** field in either MAPR or MAPR2, and the documented bits for MAPR2 stop at TIM14. Therefore the claim that the field `tim17_remap` in the `mapr2` register has “read‑write” access cannot be supported by the provided datasheet excerpts. It is most likely that such a field does not exist, making the statement false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.9
+}
+```
+
+
+The extracted text describes the AFIO_MAPR2 register bits.  
+It lists **“Bit 2 TIM17_REMAP: TIM17 remapping”** and states that this bit is set and cleared by software.  
+Since it is defined as a single bit, its bit width is 1.  
+The fact claims that the `tim17_remap` field in the `mapr2` register has a bit width of 1, which matches the description.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results contain the description of the **Backup control register (BKP_CR)**. In the excerpt it states:
+
+*“5.4.3 Backup control register (BKP_CR)  
+Address offset: 0x30”*  
+
+This matches the fact we need to validate, which claims that the address offset of the `cr` register in the `bkp` peripheral is `0x30`. Therefore the statement is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The search results contain the section **5.4.3 Backup control register (BKP_CR)**. It explicitly states:
+
+- **Address offset:** 0x30  
+- **Reset value:** 0x0000 0000  
+
+Therefore the reset value of the BKP_CR register is 0x00000000, not 0xAD. The fact that the reset value is 0xAD is contradicted by the datasheet, so the statement is false. The information is clear and unambiguous, giving full confidence.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt states that **“BKP registers are mapped as 16‑bit addressable registers”**. This description applies to all backup‑domain registers, including the control register BKP_CR. Therefore the size of the BKP_CR register is 16 bits, not 28 bits as claimed.  
+
+Hence the fact is false, and the source material directly contradicts the claim, giving high confidence in this assessment.  
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.9
+}
+```
+
+
+The BKP_CR (Backup control register) description shows a field list where **TPAL** is defined as **Bit 1**:
+
+- The register diagram lists “Bit 1 TPAL: TAMPER pin active level”.
+- The accompanying text explicitly says “Bit 1 TPAL: …”.
+
+Thus the bit offset for the TPAL field is 1, matching the provided value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt from the RM0041 reference manual shows the bit‑field layout for the BKP control register (BKP_CR). In the table for bits 15:0 it lists the fields **TPAL** and **TPE** with the access type marked as **rw** (read‑write). Therefore the TPAL field is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The provided PDF excerpts describe the Backup Control Register (BKP_CR).  
+In the register layout it shows:
+
+```
+Bits 15:2 Reserved
+Bit 1 TPAL: TAMPER pin active level
+Bit 0 TPE: TAMPER pin enable
+```
+
+Since TPAL occupies a single bit (bit 1) its width is **1 bit**.  
+The fact states that the bit width of the TPAL field is 1, which matches the documentation.
+
+Therefore the statement is true, and I am highly confident in this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+
+The excerpt from the RM0041 reference manual describing the **Backup control register (BKP_CR)** shows the bit field layout:
+
+- Bits 15:2 are Reserved.  
+- **Bit 1** – TPAL (TAMPER pin active level).  
+- **Bit 0** – **TPE** (TAMPER pin enable).
+
+Therefore, the **TPE** field is located at bit offset 0 within the BKP_CR register. The fact that the bit offset is 0 is consistent with the documentation.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt from the RM0041 reference manual shows the bit‑field layout for the BKP control register (BKP_CR). It lists the bits TPAL and TPE with the annotation “rw”, indicating that both fields are read‑write. Therefore the TPE field in the BKP_CR register has read‑write access.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The document excerpts describe the **TPE** field (TAMPER pin enable) in the BKP control registers. In the BKP_CSR register layout it is shown as:
+
+```
+Bit 0 TPE: TAMPER pin enable
+...
+```
+
+and similarly the BKP_CR register is described as having the TPAL and TPE bits, each occupying a single bit position. No information anywhere indicates that the **TPE** field spans 54 bits; it is clearly a 1‑bit field.
+
+Therefore the claim that the bit width of the `tpe` field is **54** is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The search results contain explicit sections describing the **Backup control/status register (BKP_CSR)**. In those sections it states:
+
+- “Backup control/status register (BKP_CSR) **Address offset: 0x34**”
+
+This matches the value given in the fact (`0x34`). The peripheral name “bkp” corresponds to the BKP peripheral described in the RM0041 reference manual, and the register name “csr” matches the BKP_CSR register. Therefore the statement is correct, and I am fully confident in this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The extracted excerpts from the STM32 reference manual (RM0041) describe the **Backup control/status register (BKP_CSR)**. In the description it explicitly states:
+
+- “Reset value: 0x0000 0000”
+
+This matches the fact we need to validate, which claims that the reset value of the `CSR` register in the `BKP` peripheral is `0x00000000`. The information is directly present in the provided source, leaving no ambiguity.
+
+Thus the statement is true, and I am completely certain based on the documentation.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt describing **BKP_CSR** lists bit fields only from bit 0 up to bit 15 (bits 15‑2 reserved, bits 1‑0 defined). No higher‑order bits are mentioned, and the backup registers in this family are described as “ten 16‑bit registers”. This strongly indicates that the **BKP_CSR** register is a 16‑bit register. Therefore the claim that its size is 16 bits matches the information available.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.9
+}
+```
+
+
+The extracted sections for the **BKP_CSR** register clearly list the bit positions of its fields.  
+
+- In the description of the status/control bits we see:
+
+```
+Bits 7:3 Reserved, must be kept at reset value.
+Bit 2 TPIE: TAMPER pin interrupt enable
+...
+```
+
+- Another table shows bits 15:2 Reserved, then:
+
+```
+Bit 1 TPAL: TAMPER pin active level
+Bit 0 TPE: TAMPER pin enable
+```
+
+Both indicate that the **TPIE** field occupies **bit 2**, not bit 1. Therefore the statement that the bit offset of the TPIE field is 1 is incorrect.
+
+Given the explicit wording in the datasheet excerpts, I am highly confident that this fact is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The excerpt describes the BKP_CSR register. It explicitly mentions **“By setting the TPIE bit in the BKP_CSR register, an interrupt is generated when a Tamper detection event occurs.”** This indicates that the TPIE field is a functional, writable bit, not a reserved one.  
+Later, the register‑field table lists bits 15‑2 as **Reserved**, and only the TPAL (bit 1) and TPE (bit 0) bits are defined. Even if the table omits TPIE, the textual description confirms that TPIE is an active, read‑write field. Therefore, the statement that the access type of the TPIE field is **“reserved”** is inconsistent with the documentation.
+
+**Conclusion:** The fact is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.88
+}
+```
+
+
+The extracted excerpt from the RM0041 reference manual describes the BKP_CSR (Backup control/status) register. In the register bit‑field diagram it lists the field **TPIE** at **bit 2** and labels it “TAMPER pin interrupt enable”. A single‑bit field is indicated, and the accompanying description refers to it as a one‑bit enable/disable flag. No indication is given that TPIE occupies more than one bit. Therefore the bit width of the TPIE field is **1**, not 2 as claimed.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+
+The extracted text from the RM0041 reference clearly describes the BKP control/status register (BKP_CSR). It lists the fields with their bit positions and includes the line:
+
+*“Bit 0 CTE: Clear tamper event”*
+
+This directly indicates that the CTE field is located at bit offset 0 within the CSR register. Therefore the statement that the bit offset of the CTE field is 0 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+
+The excerpt from the RM0041 reference manual describes the **CTE** bit (bit 0) of the **BKP_CSR** register:
+
+- “Bit 0 CTE: Clear tamper event … **This bit is write only**, and is always read as 0.”
+- The description explicitly states that the bit can only be written to; reading it always returns 0.
+
+Therefore the access type for the CTE field is **write‑only**, not read‑write. The claim that its access is “read‑write” is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
