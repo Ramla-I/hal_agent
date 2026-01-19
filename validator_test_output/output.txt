@@ -1,0 +1,1106 @@
+---afio_evcr__address_offset_0x00---
+The search results include a section titled **“7.4.1 Event control register (AFIO_EVCR)”**. In that description it states:
+
+```
+Address offset: 0x00
+```
+
+This directly matches the fact that the `AFIO_EVCR` register (named “evcr” in the AFIO peripheral) has an address offset of `0x00`. The information is clear and unambiguous, so I am fully confident that the statement is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_evcr__reset_value_0x00000000---
+The table titled **“Table 49. AFIO register map and reset values”** lists the AFIO_EVCR register at offset 0x00. For this register the line **“Reset value 0 0 0 0 0 0 0”** shows that every bit of the register is reset to 0. This corresponds to a reset value of 0x00000000 for the whole 32‑bit register. Therefore the statement that the reset value of AFIO_EVCR is 0x00000000 is consistent with the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+---afio_evcr__size_32---
+The search results contain Table 49 “AFIO register map and reset values”. It lists the register at offset 0x00 named **AFIO_EVCR** and shows the bit positions from 31 down to 0, which indicates a full 32‑bit register. Therefore the size of the AFIO_EVCR register is 32 bits, matching the given fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_evcr_EVOE_bit_offset_7---
+The file excerpts describe the **AFIO_EVCR** (Event control register). In the register diagram it lists:
+
+- “Bit 7 EVOE: Event output enable …”
+
+This directly states that the **EVOE** field is located at bit offset 7 within the AFIO_EVCR register. The peripheral name, register name, and field name all match (case‑insensitive). Therefore the stated fact is correct, and the source unambiguously confirms it.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_evcr_EVOE_bit_width_1---
+The file search results contain the description of the AFIO EVCR register. It lists **Bit 7 EVOE: Event output enable** and shows it as a single bit field. A single‑bit field has a bit width of 1, matching the value given in the fact.
+
+Therefore the statement that the EVOE field in the AFIO_EVCR register has a bit width of 1 is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_evcr_EVOE_access_read-write---
+The AFIO_EVCR register description shows the EVOE field (bit 7) marked as **rw** and the text states “Set and cleared by software”, indicating it can be both read and written. Therefore the access type for the EVOE field is read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_evcr_PORT[2:0]_bit_offset_6---
+The excerpt describes the **AFIO_EVCR** register layout.  
+It lists the fields in order:
+
+- Bit 7 – **EVOE** (Event output enable)  
+- Bits 6‑4 – **PORT[2:0]** (3‑bit port selection)  
+- Bits 3‑0 – **PIN[3:0]** (4‑bit pin selection)
+
+Thus the least‑significant bit of the **PORT[2:0]** field is bit 4, giving the field a bit offset of **4**, not 6. The fact states a bit offset of 6, which does not match the datasheet information.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.96
+}
+```
+
+---afio_evcr_PORT[2:0]_bit_width_-1---
+The AFIO_EVCR register description shows a field named PORT[2:0] that occupies three bits (bits 6‑4). Therefore its bit‑width is 3, not -1. Since the claimed value “-1” does not match the documented width, the statement is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+---afio_evcr_PORT[2:0]_access_read-write---
+The excerpt for **AFIO_EVCR** shows the field layout:
+
+```
+EVOE PORT[2:0] PIN[3:0]
+rw   rw        rw
+```
+
+The “rw” annotation next to **PORT[2:0]** indicates that this field is **read‑write**. Therefore the statement that the `PORT[2:0]` field of the `EVCR` register has access type “read‑write” is supported by the datasheet text.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_evcr_PIN[3:0]_bit_offset_3---
+The extracted text for the **AFIO_EVCR** register shows the field definition:
+
+```
+Bits 3:0 PIN[3:0]: Pin selection (x = A .. E)
+```
+
+In register terminology, the *bit offset* of a field is the position of its least‑significant bit. Since the field occupies bits 3 down to 0, its offset is **0**, not 3. Therefore the statement that the bit offset of the `PIN[3:0]` field is 3 is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+---afio_evcr_PIN[3:0]_bit_width_-2---
+The search results contain the AFIO_EVCR register description. It shows that the field **PIN[3:0]** occupies bits 3 down to 0 of the register:
+
+```
+Bits 3:0 PIN[3:0]: Pin selection (x = A .. E)
+```
+
+A field that spans bits 3 through 0 has a width of **4 bits** (3‑0 + 1).  
+The fact to validate claims that the bit width of this field is **‑2**, which contradicts the documented width of 4 bits. Therefore the statement is false. The documentation clearly defines the field size, so I am very confident in this assessment.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+---afio_evcr_PIN[3:0]_access_read-write---
+The RM0041 excerpt describes the **AFIO_EVCR** register.  
+For the field **PIN[3:0]** (bits 3‑0) it states:
+
+- “Set and cleared by software. Select the pin used to output the Cortex® EVENTOUT signal.”
+- In the register bit‑field table the access column for these bits is shown as **rw**.
+
+Both statements indicate that the field can be both read and written, i.e., its access type is **read‑write**.
+
+Therefore the claim that the access type of the PIN[3:0] field in AFIO_EVCR is “read‑write” is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr1__address_offset_0x08---
+The search results include a section titled **“External interrupt configuration register 1 (AFIO_EXTICR1)”**. In that section it explicitly states:
+
+```
+Address offset: 0x08
+```
+
+This matches the requested peripheral **AFIO**, register **EXTICR1**, and the key **address_offset** with the value **0x08**. Therefore the fact is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr1__reset_value_0x0000---
+The search results contain the section **“7.4.3 External interrupt configuration register 1 (AFIO_EXTICR1)”** which explicitly states:
+
+- **Address offset:** 0x08  
+- **Reset value:** 0x0000  
+
+This matches the fact that the reset value of the `AFIO_EXTICR1` register is `0x0000`. The information is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr1__size_32---
+The search results show the AFIO EXTICR1 register (named **AFIO_EXTICR1**). The register description lists bits 31 down to 0, with “Bits 31:16 Reserved” and “Bits 15:0 EXTIx[3:0]”. This indicates that the register occupies the full 32 bit word (bits 0‑31). Therefore the size of the EXTICR1 register is 32 bits, which matches the claimed value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr1_EXTI0_bit_offset_0---
+The excerpt for **AFIO_EXTICR1** shows the lower 16 bits are divided into four 4‑bit fields:
+
+```
+Bits 15:0  EXTIx[3:0]: EXTI x configuration (x = 0 to 3)
+...
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+```
+
+Thus the field **EXTI0** occupies bits 3 down to 0, meaning its bit offset is 0. The requested value “0” matches this description.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr1_EXTI0_bit_width_4---
+The RM0041 excerpt for the **AFIO_EXTICR1** register shows the layout:
+
+```
+Bits 15:0  EXTIx[3:0]: EXTI x configuration (x = 0 to 3)
+...
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+```
+
+Each `EXTIx` field is defined as `[3:0]`, meaning it occupies bits 3 down to 0 – a width of **4 bits**. Therefore the field **EXTI0** in the **EXTICR1** register has a bit width of 4.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr1_EXTI0_access_read-write---
+The datasheet excerpt for the **AFIO_EXTICR1** register lists the bit fields `EXTI3[3:0] … EXTI0[3:0]`.  
+In the table each field is annotated with `rw`, which denotes **read‑write** access.  
+Therefore the field **EXTI0** of the **AFIO_EXTICR1** register is read‑write, matching the claim.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr1_EXTI1_bit_offset_4---
+The RM0041 excerpt describes the **AFIO_EXTICR1** register.  
+In the register diagram the lower 16 bits are divided into four 4‑bit fields:
+
+- bits 3:0 → EXTI0[3:0]  
+- bits 7:4 → EXTI1[3:0]  
+- bits 11:8 → EXTI2[3:0]  
+- bits 15:12 → EXTI3[3:0]
+
+Thus the field **EXTI1** starts at bit 4, i.e., its bit offset is 4. The fact states that the bit offset for the field EXTI1 in the register EXTICR1 is 4, which matches the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr1_EXTI1_bit_width_4---
+The excerpt from the RM0041 reference manual shows the layout of the **AFIO_EXTICR1** register. It lists the fields:
+
+```
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+```
+
+Each `EXTI x[3:0]` field occupies four bits (bits 3‑0, 7‑4, 11‑8, 15‑12). Therefore the **EXTI1** field is 4 bits wide. The fact states that the bit width of the EXTI1 field is 4, which matches the documentation.
+
+**Conclusion:** the statement is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr1_EXTI1_access_read-write---
+The excerpt for **AFIO_EXTICR1** shows the bit‑field layout:
+
+```
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+rw      rw      rw      rw
+```
+
+Each field, including **EXTI1**, is marked **rw**, meaning it is read‑write.  
+The fact states that the access type of the field **EXTI1** in register **EXTICR1** of peripheral **AFIO** is **read‑write**, which matches the description.
+
+Hence the statement is true, and the source is unambiguous, giving very high confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr1_EXTI2_bit_offset_8---
+The excerpt from the RM0041 reference manual shows the bit‑field layout for the register **AFIO_EXTICR1**.  
+In this register the fields are arranged as:
+
+- EXTI3 [bits 15:12]  
+- **EXTI2 [bits 11:8]**  
+- EXTI1 [bits 7:4]  
+- EXTI0 [bits 3:0]
+
+Thus the least‑significant bit (bit offset) of the field **EXTI2** is bit 8. The fact states that the bit offset is 8, which matches the datasheet description.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr1_EXTI2_bit_width_4---
+The datasheet excerpt for the **AFIO_EXTICR1** register shows the layout:
+
+```
+15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+```
+
+Each field is denoted as **[3:0]**, which means the field occupies bits 3 down to 0 – a total of **4 bits**.  
+Therefore the field named **EXTI2** has a bit‑width of 4, matching the supplied value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr1_EXTI2_access_read-write---
+The excerpt from the STM32 AFIO section clearly shows the layout of **AFIO_EXTICR1**.  
+For each EXTI line (EXTI0‑EXTI3) the bits are labeled **rw**, meaning they are readable and writable. The field **EXTI2** (bits 11:8) is one of these groups, so its access type is **read‑write**.  
+
+Thus the statement that the field EXTI2 in the EXTICR1 register has access “read‑write” is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr1_EXTI3_bit_offset_12---
+The excerpt from the RM0041 reference manual shows the bit‑field layout for **AFIO_EXTICR1**.  
+In the diagram the lower 16 bits are labelled:
+
+```
+15 14 13 12   11 10 9 8   7 6 5 4   3 2 1 0
+EXTI3[3:0]   EXTI2[3:0]  EXTI1[3:0]  EXTI0[3:0]
+```
+
+Thus the 4‑bit field **EXTI3** occupies bits 15 down to 12, meaning its least‑significant bit (the bit offset) is **12**. The fact states that the bit offset of the EXTI3 field in the EXTICR1 register is 12, which matches the documentation.
+
+**Conclusion:** the fact is true, and the supporting text is explicit, giving a very high confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr1_EXTI3_bit_width_4---
+The datasheet excerpt for **AFIO_EXTICR1** lists the fields as:
+
+```
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+```
+
+The notation **[3:0]** indicates that the field occupies bits 3 down to 0, which is a width of **4 bits**. Therefore, the bit‑width of the **EXTI3** field is indeed 4.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr1_EXTI3_access_read-write---
+The extracted section for **AFIO_EXTICR1** shows the layout of the register bits:
+
+```
+EXTI3[3:0] EXTI2[3:0] EXTI1[3:0] EXTI0[3:0]
+rw        rw        rw        rw ...
+```
+
+The line with “rw” under each field indicates that each EXTIx field, including **EXTI3**, is **read‑write**. Therefore the statement that the access type of the EXTI3 field is “read‑write” is supported by the datasheet excerpt.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr2__address_offset_0x0C---
+The search results contain the section **“7.4.4 External interrupt configuration register 2 (AFIO_EXTICR2)”** which explicitly states:
+
+- **Address offset: 0x0C**
+
+The same offset (0x0C) appears again in the register map table for **AFIO_EXTICR2**. This matches the provided value exactly, confirming that the address offset for the `EXTICR2` register in the AFIO peripheral is `0x0C`.
+
+Hence the statement is true, and the evidence is unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr2__reset_value_0x0000---
+The search results include the section “External interrupt configuration register 2 (AFIO_EXTICR2)” which explicitly lists:
+
+- **Address offset:** 0x0C  
+- **Reset value:** 0x0000  
+
+This matches the requested peripheral (AFIO), register (EXTICR2) and the reset value being validated (0x0000). The naming is case‑insensitive, so “afio” and “exticr2” correspond to “AFIO_EXTICR2”. Therefore the fact is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr2__size_32---
+The extracted text shows the AFIO_EXTICR2 register described with bits numbered 31 down to 0 and fields such as EXTI7[3:0] … EXTI4[3:0]. This layout corresponds to a full 32‑bit register. In STM32 reference manuals all AFIO registers are 32‑bit wide. Therefore the size of the **AFIO_EXTICR2** register is 32 bits, matching the claimed value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr2_EXTI4_bit_offset_0---
+The excerpt for **AFIO_EXTICR2** shows the field layout:
+
+- Bits 15‑12 : EXTI7[3:0]  
+- Bits 11‑8  : EXTI6[3:0]  
+- Bits 7‑4  : EXTI5[3:0]  
+- **Bits 3‑0  : EXTI4[3:0]**
+
+Thus the field **EXTI4** starts at bit 0 of the register. The fact states that the bit offset for EXTI4 is 0, which matches the datasheet information. Hence the fact is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr2_EXTI4_bit_width_4---
+The searched excerpt from the STM32 reference manual (RM0041) lists the layout of the **AFIO_EXTICR2** register.  
+In the register description we see the field definitions:
+
+```
+EXTI7[3:0]  EXTI6[3:0]  EXTI5[3:0]  EXTI4[3:0]
+```
+
+The notation **[3:0]** means that each field occupies bits 3 down to 0, i.e., a width of **4 bits**. Therefore the field **EXTI4** in the **AFIO_EXTICR2** register has a bit width of 4, matching the value given in the fact.
+
+Hence the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr2_EXTI4_access_read-write---
+The excerpt from **RM0041** lists the AFIO_EXTICR2 register (offset 0x0C).  
+For this register the table shows the four 4‑bit fields **EXTI7**, **EXTI6**, **EXTI5**, **EXTI4** and a line underneath indicating the access type for each bit as **rw** (read‑write).  
+
+Since the field **EXTI4** is marked “rw”, its access type is read‑write, which matches the supplied value “read‑write”. Therefore the fact is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr2_EXTI5_bit_offset_4---
+The RM0041 excerpt describes **AFIO_EXTICR2** (address offset 0x0C).  
+In the register diagram the fields are laid out as:
+
+- Bits 15‑12 → EXTI7[3:0]  
+- Bits 11‑8  → EXTI6[3:0]  
+- **Bits 7‑4   → EXTI5[3:0]**  
+- Bits 3‑0   → EXTI4[3:0]
+
+Thus the field **EXTI5** occupies bits 7 down to 4, giving it a **bit offset of 4** (the position of the least‑significant bit of the field). The fact states that the bit offset is 4, which matches the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr2_EXTI5_bit_width_4---
+The search results show the AFIO_EXTICR2 register (offset 0x0C) with the fields  
+
+`EXTI7[3:0]  EXTI6[3:0]  EXTI5[3:0]  EXTI4[3:0]`.  
+
+The notation `[3:0]` means the field occupies bits 3 down to 0, i.e., a width of 4 bits. Therefore the field **EXTI5** in the **EXTICR2** register has a bit width of 4.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr2_EXTI5_access_read-write---
+The AFIO peripheral includes the register **AFIO_EXTICR2** (offset 0x0C).  
+In the register map the fields are listed as:
+
+- EXTI7[3:0]  
+- EXTI6[3:0]  
+- **EXTI5[3:0]**  
+- EXTI4[3:0]
+
+The accompanying description shows the access type for the bits 15:0 (which contain the EXTIx fields) as “rw rw rw rw …”, meaning each EXTIx field is **read‑write**. Therefore the field **EXTI5** in **AFIO_EXTICR2** has read‑write access.
+
+Hence the statement that the access type is “read-write” is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr2_EXTI6_bit_offset_8---
+The excerpt for **AFIO_EXTICR2** shows the bit layout:
+
+```
+Bits 15:0  EXTIx[3:0]: EXTI x configuration (x = 4 to 7)
+
+... 
+EXTI7[3:0] EXTI6[3:0] EXTI5[3:0] EXTI4[3:0]
+```
+
+Each EXTI field occupies 4 bits. Starting from bit 0 for EXTI4, the fields are placed consecutively:
+
+- EXTI4 → bits 3‑0  
+- EXTI5 → bits 7‑4  
+- EXTI6 → bits 11‑8  
+- EXTI7 → bits 15‑12  
+
+Thus the **least‑significant bit (bit offset)** of the **EXTI6** field is **bit 8**, which matches the supplied value.
+
+Therefore, the statement is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr2_EXTI6_bit_width_4---
+The datasheet excerpt for the AFIO peripheral shows the layout of the **AFIO_EXTICR2** register.  
+In this register the bits are grouped as:
+
+```
+EXTI7[3:0]  EXTI6[3:0]  EXTI5[3:0]  EXTI4[3:0]
+```
+
+The notation `[3:0]` indicates that each field occupies four bits (bit 3 down to bit 0). Therefore the **EXTI6** field has a bit width of **4** bits, which matches the value given in the fact.
+
+Since the register name, peripheral name, and field name all correspond exactly (case‑insensitive) to the information in the document, I am fully confident that the statement is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr2_EXTI6_access_read-write---
+The excerpt from the STM32 reference manual (RM0041) lists the AFIO_EXTICR2 register (offset 0x0C). In the register description the access type for each 4‑bit field is shown as “rw”. The line
+
+```
+rw rw rw rw rw rw rw rw rw rw rw rw rw rw rw rw
+```
+
+covers the fields EXTI7[3:0], EXTI6[3:0], EXTI5[3:0], EXTI4[3:0] etc., indicating that each of these fields, including **EXTI6**, is read‑write. Therefore the statement that the field EXTI6 in the AFIO_EXTICR2 register has access type “read‑write” is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr2_EXTI7_bit_offset_12---
+The datasheet excerpt shows the layout of **AFIO_EXTICR2**.  
+For this register the bits are divided into four 4‑bit fields:
+
+- Bits **15‑12** – **EXTI7[3:0]**  
+- Bits **11‑8**  – **EXTI6[3:0]**  
+- Bits **7‑4**   – **EXTI5[3:0]**  
+- Bits **3‑0**   – **EXTI4[3:0]**
+
+Thus the field **EXTI7** starts at bit position **12** (its lowest bit is bit 12 and it spans bits 12‑15). The requested key is `bit_offset` with value `12`, which matches the information in the datasheet.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr2_EXTI7_bit_width_4---
+The datasheet excerpt for **AFIO_EXTICR2** lists the layout of the register bits as  
+
+```
+EXTI7[3:0] EXTI6[3:0] EXTI5[3:0] EXTI4[3:0]
+```
+
+and notes that each **EXTI x** field is a 4‑bit wide configuration (`[3:0]`). Therefore the field **EXTI7** occupies four bits, i.e., its **bit_width** is 4.
+
+Since the source explicitly shows the 4‑bit width for EXTI7, I am very confident that the fact is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr2_EXTI7_access_read-write---
+The datasheet excerpt for the AFIO peripheral shows the **AFIO_EXTICR2** register at offset 0x0C.  
+In the register description the bits 15:0 are divided into four 4‑bit fields:
+
+- EXTI7[3:0]  
+- EXTI6[3:0]  
+- EXTI5[3:0]  
+- EXTI4[3:0]
+
+The table of access types lists **“rw”** for every bit of the register, and the textual description says:
+
+> “These bits are written by software to select the source input for EXTIx external interrupt.”
+
+Both indicate that the fields are **read‑write**. Therefore the field **EXTI7** in **AFIO_EXTICR2** has read‑write access.
+
+Hence the statement that its access is “read‑write” is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr3__address_offset_0x10---
+The search results contain the section **7.4.5 External interrupt configuration register 3 (AFIO_EXTICR3)** and explicitly state:
+
+```
+Address offset: 0x10
+```
+
+This matches the requested peripheral **AFIO**, register **EXTICR3**, and the key **address_offset** with the value **0x10**. The information is directly taken from the datasheet, leaving no ambiguity.
+
+Therefore the statement is true, and I am very confident in this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr3__reset_value_0x0000---
+The search results contain the section titled **“External interrupt configuration register 3 (AFIO_EXTICR3)”**. In that section the datasheet explicitly states:
+
+- **Address offset:** 0x10  
+- **Reset value:** 0x0000  
+
+The fact we need to validate claims that the reset value of the `exticr3` register in the `afio` peripheral is `0x0000`. This matches exactly what the datasheet excerpt shows. Therefore the statement is true, and the evidence is unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr3__size_32---
+The excerpt lists **AFIO_EXTICR3** with an address offset (0x10) and shows a bit diagram that includes bits 31 … 0 (bits 31‑16 Reserved, bits 15‑0 used for EXTI fields). This indicates that the register occupies the full 32‑bit word width of the peripheral’s register map. Although the document does not explicitly state “size = 32 bits”, the presence of bits 0‑31 confirms a 32‑bit register, which matches the typical size of AFIO registers in STM32 devices.
+
+Thus, the claim that the size of the **EXTICR3** register is 32 bits is consistent with the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.96
+}
+```
+
+---afio_exticr3_EXTI8_bit_offset_0---
+The search results contain the description of the **AFIO_EXTICR3** register.  
+In the register layout it lists the low‑order 16 bits as  
+
+```
+EXTI11[3:0] EXTI10[3:0] EXTI9[3:0] EXTI8[3:0]
+```
+
+When a register is presented this way, the field that appears farthest to the right occupies the least‑significant bits. Therefore:
+
+* **EXTI8[3:0]** occupies bits **3 down to 0**.  
+* The starting bit (bit offset) of the **EXTI8** field is **0**.
+
+The fact states that the bit offset of the field **EXTI8** in **AFIO_EXTICR3** is 0, which matches the interpretation of the table. Hence the fact is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.95
+}
+```
+
+---afio_exticr3_EXTI8_bit_width_4---
+The datasheet excerpts show the layout of the **AFIO_EXTICR3** register.  
+In the register description it lists the four fields:
+
+- EXTI11[3:0]  
+- EXTI10[3:0]  
+- EXTI9[3:0]  
+- EXTI8[3:0]  
+
+Each field is denoted with “[3:0]”, which means the field occupies bits 3 down to 0 – a total of **4 bits**. Therefore the bit width of the field **EXTI8** is 4 bits, matching the fact being validated.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr3_EXTI8_access_read-write---
+The search results contain the description of the **AFIO_EXTICR3** register (offset 0x10). In the bit‑field table for this register the field **EXTI8[3:0]** is listed with the access type **rw** (read‑write) for each of its bits. Therefore the field EXTI8 is indeed read‑write.
+
+This directly confirms the statement that the access type of the EXTI8 field in the AFIO_EXTICR3 register is “read‑write”.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr3_EXTI9_bit_offset_4---
+The datasheet excerpt shows the layout of **AFIO_EXTICR3** (register `exticr3`).  
+For this register the fields are defined as:
+
+- Bits 15:12 → EXTI11[3:0]  
+- Bits 11:8 → EXTI10[3:0]  
+- **Bits 7:4 → EXTI9[3:0]**  
+- Bits 3:0 → EXTI8[3:0]
+
+Thus the field **EXTI9** occupies bits 7 down to 4, meaning its least‑significant bit (bit offset) is **4**.  
+The fact states that the bit offset of EXTI9 is 4, which matches the datasheet information.
+
+Therefore the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr3_EXTI9_bit_width_4---
+The excerpt from the RM0041 reference manual shows the definition of the **AFIO_EXTICR3** register:
+
+```
+Bits 15:0  EXTI11[3:0] EXTI10[3:0] EXTI9[3:0] EXTI8[3:0]
+```
+
+Each field is denoted as “[3:0]”, which means it occupies bits 3 down to 0 – a total of **4 bits**. Therefore the field **EXTI9** within the **EXTICR3** register has a bit width of 4.
+
+Since the provided fact states that the bit width of EXTI9 is 4, this matches the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr3_EXTI9_access_read-write---
+The search results contain the description of the **AFIO_EXTICR3** register (offset 0x10).  
+In the register table the four 4‑bit fields are listed as  
+
+```
+EXTI11[3:0]  EXTI10[3:0]  EXTI9[3:0]  EXTI8[3:0]
+```
+
+and the corresponding access column shows  
+
+```
+rw rw rw rw
+```
+
+meaning each of these fields is **read‑write**. Therefore the field **EXTI9** in the **EXTICR3** register is read‑write, matching the supplied fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr3_EXTI10_bit_offset_8---
+The excerpt shows the bit‑field layout for **AFIO_EXTICR3**:
+
+- Bits 15:12 → EXTI11[3:0]  
+- **Bits 11:8 → EXTI10[3:0]**  
+- Bits 7:4 → EXTI9[3:0]  
+- Bits 3:0 → EXTI8[3:0]
+
+Therefore the least‑significant bit of the EXTI10 field is at bit position 8, which matches the claimed bit offset.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr3_EXTI10_bit_width_4---
+The RM0041 excerpt lists the AFIO_EXTICR3 register fields as:
+
+```
+EXTI11[3:0] EXTI10[3:0] EXTI9[3:0] EXTI8[3:0]
+```
+
+The notation “[3:0]” indicates that each field occupies bits 3 down to 0, i.e., a width of 4 bits. Therefore the field **EXTI10** in the **AFIO_EXTICR3** register has a bit width of 4 bits, matching the provided value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr3_EXTI10_access_read-write---
+The search results contain the description of the **AFIO_EXTICR3** register (offset 0x10).  
+In the register diagram the fields are listed as  
+
+```
+EXTI11[3:0]  EXTI10[3:0]  EXTI9[3:0]  EXTI8[3:0]
+rw          rw          rw          rw
+```  
+
+The “rw” annotation denotes **read‑write** access for each of those 4‑bit fields, including the **EXTI10** field.  
+Therefore the statement that the EXTI10 field of the EXTICR3 register has access type “read‑write” matches the datasheet.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr3_EXTI11_bit_offset_12---
+The datasheet excerpt for **AFIO_EXTICR3** shows the bit layout:
+
+- Bits 15‑12 correspond to **EXTI11[3:0]**
+- Bits 11‑8 correspond to **EXTI10[3:0]**, etc.
+
+Thus the least‑significant bit (LSB) of the **EXTI11** field is at bit position **12**. The fact states that the bit offset for field **EXTI11** is 12, which matches the information in the file.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr3_EXTI11_bit_width_4---
+The search results contain the description of the AFIO_EXTICR3 register. In the register layout it lists the field **EXTI11[3:0]**. The notation “[3:0]” means the field occupies bits 3 down to 0, which is a total of 4 bits. Therefore the bit‑width of the EXTI11 field is 4, matching the asserted value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr3_EXTI11_access_read-write---
+The search results contain the description of the AFIO_EXTICR3 register (offset 0x10). In the register table the fields **EXTI11[3:0]**, **EXTI10[3:0]**, **EXTI9[3:0]**, and **EXTI8[3:0]** are each marked with **rw** for all bits, indicating they are read‑write. Therefore the field **EXTI11** in the **EXTICR3** register has read‑write access.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr4__address_offset_0x14---
+The search results contain several excerpts from the STM32 reference manual (RM0041) that describe the AFIO external interrupt configuration registers. In the section titled **“7.4.6 External interrupt configuration register 4 (AFIO_EXTICR4)”** it explicitly states:
+
+- **Address offset: 0x14**
+
+The register name given in the datasheet is **AFIO_EXTICR4**, which matches the requested register “exticr4” under the peripheral “afio” (names are case‑insensitive). Therefore the provided address offset of **0x14** is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr4__reset_value_0x0000---
+The search results contain several sections describing the AFIO peripheral’s External interrupt configuration register 4 (AFIO_EXTICR4). All of these sections state:
+
+- “External interrupt configuration register 4 (AFIO_EXTICR4) … Reset value: 0x0000”
+- The register map table also lists AFIO_EXTICR4 with a reset value of 0x0000.
+
+Thus the reset value of the EXTICR4 register in the AFIO peripheral is indeed 0x0000, matching the provided fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr4__size_32---
+The RM0041 excerpt lists the layout of AFIO_EXTICR4 with bit positions 31 down to 0, indicating a full 32‑bit register (bits 31:16 are reserved and bits 15:0 hold the EXTI fields). Therefore the size of the EXTICR4 register is 32 bits, which matches the claimed value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr4_EXTI12_bit_offset_0---
+The excerpt for **AFIO_EXTICR4** shows the 16‑bit layout:
+
+```
+Bits 15:12  EXTI15[3:0]
+Bits 11:8   EXTI14[3:0]
+Bits 7:4    EXTI13[3:0]
+Bits 3:0    EXTI12[3:0]
+```
+
+Thus the field **EXTI12** occupies bits 3 down to 0, giving it a **bit offset of 0** within the register. This matches the requested value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr4_EXTI12_bit_width_4---
+The datasheet excerpt for **AFIO_EXTICR4** (address offset 0x14) shows the lower 16 bits split into four 4‑bit fields:
+
+```
+EXTI15[3:0] EXTI14[3:0] EXTI13[3:0] EXTI12[3:0]
+```
+
+Each `EXTIx[3:0]` field is described as a 4‑bit configuration value that selects the source input for the corresponding external interrupt line. Therefore the field **EXTI12** has a bit width of **4 bits**.
+
+Since the fact states that the bit width of the field `EXTI12` in register `EXTICR4` of the `AFIO` peripheral is 4, this matches the information from the datasheet.
+
+**Conclusion:** the fact is true, and the supporting text is explicit, giving very high confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr4_EXTI12_access_read-write---
+The datasheet excerpt for the AFIO peripheral shows the definition of **AFIO_EXTICR4** (address offset 0x14).  
+In the bit‑field table for this register the four 4‑bit fields are listed as:
+
+```
+EXTI15[3:0]  EXTI14[3:0]  EXTI13[3:0]  EXTI12[3:0]
+rw          rw          rw          rw
+```
+
+The “rw” annotation means **read‑write** access for each field, including the field **EXTI12**. Therefore the statement that the access type of the field EXTI12 is “read‑write” is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+---afio_exticr4_EXTI13_bit_offset_4---
+The excerpt for **AFIO_EXTICR4** shows the 16 bits split into four 4‑bit fields:
+
+- Bits 15‑12 → EXTI15[3:0]  
+- Bits 11‑8  → EXTI14[3:0]  
+- Bits 7‑4   → EXTI13[3:0]  
+- Bits 3‑0   → EXTI12[3:0]
+
+Thus the field **EXTI13** occupies bits 7 down to 4, so its least‑significant bit (the bit offset) is **4**. The fact states that the bit offset of EXTI13 is 4, which matches the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr4_EXTI13_bit_width_4---
+The RM0041 excerpt lists the layout of **AFIO_EXTICR4**.  
+In the register diagram the lower 16 bits are split into four fields:
+
+- EXTI15[3:0]  
+- EXTI14[3:0]  
+- EXTI13[3:0]  
+- EXTI12[3:0]
+
+The notation “[3:0]” indicates that each EXTIx field occupies bits 3 down to 0 – i.e., a **4‑bit** width. Therefore the field **EXTI13** in the **EXTICR4** register has a bit width of 4.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr4_EXTI13_access_read-write---
+The datasheet excerpt for **AFIO_EXTICR4** shows the register layout:
+
+- Bits 15‑0 are divided into four 4‑bit fields: **EXTI15[3:0]**, **EXTI14[3:0]**, **EXTI13[3:0]**, **EXTI12[3:0]**.  
+- Directly beneath the bit‑field diagram the access type for each field is listed as `rw` (read‑write) for all four fields.
+
+Therefore, the field **EXTI13** in the **EXTICR4** register is indeed read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+---afio_exticr4_EXTI14_bit_offset_8---
+The excerpt for **AFIO_EXTICR4** shows the 16‑bit field layout:
+
+```
+Bits 15:0  EXTIx[3:0]: EXTI x configuration (x = 12 to 15)
+
+... 
+EXTI15[3:0] EXTI14[3:0] EXTI13[3:0] EXTI12[3:0]
+```
+
+Thus the field **EXTI14** occupies bits 11 down to 8, making its least‑significant bit (LSB) at position 8. The requested `bit_offset` value of 8 matches this description.
+
+Therefore the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+---afio_exticr4_EXTI14_bit_width_4---
+The search results contain the description of **AFIO_EXTICR4** (address offset 0x14). In the register diagram the fields are listed as  
+
+`EXTI15[3:0]  EXTI14[3:0]  EXTI13[3:0]  EXTI12[3:0]`  
+
+The notation **[3:0]** means that each field occupies bits 3 down to 0, i.e., **4 bits**. Therefore the field **EXTI14** has a bit‑width of 4, which matches the value given in the fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+

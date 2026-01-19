@@ -133,7 +133,8 @@ def extract_pages_from_pdf(pdf_path, pages):
             # Convert 1-based to 0-based index
             idx = page_num
             if idx < 0 or idx >= total_pages:
-                raise ValueError(f"Page number {page_num} is out of range for file with {total_pages} pages.")
+                print(f"Page number {page_num} is out of range for file with {total_pages} pages.")
+                continue
             try:
                 writer.add_page(input_pdf.pages[idx])
             except Exception as e:

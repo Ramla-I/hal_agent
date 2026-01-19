@@ -1,0 +1,1493 @@
+The search results contain several tables (e.g., Table 106, Table 109, Table 112) that list the bit fields of the FSMC BCRx registers. In each table the field **FACCEN** is shown at bit position 6 with no range, which means it occupies a single bit. Therefore its bit‑width is 1 bit, not 69 bits. Since the requested value is 69, the statement is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted sections describe the FSMC_BCRx registers (including BCR2). In the tables for FSMC_BCRx bit fields (e.g., Table 103), the field **MBKEN** is defined at **bit 0**:
+
+```
+0 MBKEN 0x1   // Memory bank enable bit
+```
+
+No other bit positions for MBKEN are mentioned, and a bit offset of 84 is impossible for a 32‑bit register. Therefore the statement that the MBKEN field in the BCR2 register has a bit offset of 84 is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted excerpt describes the FSMC BCRx registers.  
+In the bit‑field tables the line after the register diagram lists “rw” for each bit, indicating that all bits of the BCR registers are read‑write.  
+Bit 0 is named **MBKEN** (Memory bank enable bit) and is included in that list, so its access type is read‑write.
+
+Therefore the statement that the **MBKEN** field of the **BCR2** register has access type **read‑write** is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+The excerpt from the FSMC section of the reference manual lists the bit fields of the FSMC_BCRx registers.  
+For each bank (BCR1, BCR2, …) the field **MBKEN** is described as:
+
+```
+Bit 0 MBKEN: Memory bank enable bit.
+0: disabled
+1: enabled
+```
+
+Since it occupies a single bit (bit 0), its **bit width** is **1**.  
+The fact to validate claims that the bit width of the MBKEN field in the BCR2 register is **92**, which contradicts the datasheet information. Therefore the statement is false, and the contradiction is clear and unambiguous.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The excerpt from the FSMC chapter states **“Bits 3:2 MTYP[1:0]: Memory type.”**  
+This indicates that the MTYP field occupies bits 3 down to 2, so its least‑significant bit (the bit offset) is 2. The requested fact is that the bit offset of the `MTYP` field in the `BCR2` register is 2, which matches the description.
+
+Hence the statement is true, and the source directly confirms it, giving a very high confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The datasheet excerpt for the FSMC BCRx registers lists the field **MTYP[1:0]** (bits 3‑2) as “Memory type”. It is a functional field with defined values (00 = SRAM, 01 = PSRAM, 10 = NOR flash, 11 = reserved). The register‑field table (Table 98) shows this field under the “rw” column, indicating it is read‑write, not a reserved, read‑only, or write‑only field.  
+Therefore the statement that the access type of the **MTYP** field is **“reserved”** is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The FSMC BCRx register description shows the **MTYP** field occupying bits 3‑2, i.e. it is a 2‑bit field. This is stated explicitly in multiple excerpts:
+
+- “3‑2 MTYP[0:1] …” (Table 109)  
+- “Bits 3:2 MTYP[1:0]: Memory type.”  
+
+Therefore the bit‑width of the **mtyp** field is 2 bits, not 93 bits as claimed. The information in the datasheet directly contradicts the provided value.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The provided excerpt from the STM32 reference manual (RM0041) includes the definition of the FSMC BCRx registers. In the “Table 109. FSMC_BCRx bit fields” the entry:
+
+```
+1  MUXEN  0x0
+```
+
+shows that the field **MUXEN** is located at bit position 1. This description applies to all BCR registers (BCR1, BCR2, …), so for the register **BCR2** the bit offset of the **MUXEN** field is indeed 1. The source explicitly confirms this, leaving little doubt.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The excerpt from the STM32 reference manual (RM0041) shows the bit‑field description for the FSMC_BCRx registers.  
+For the **MUXEN** field (bit 1) the manual states:
+
+* “Bit 1 MUXEN: Address/data multiplexing enable bit …”  
+* In the register bit‑field table (Table 109) the columns for each bit are labeled **rw**, indicating that the bits are read‑write.  
+
+Therefore the access type of the **MUXEN** field is **read‑write**, not “write‑only”.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The search results contain several tables that describe the bit fields of the FSMC BCRx registers (the control register for each memory bank).  
+
+In these tables the entry for **MUXEN** is listed as:
+
+* “Bit 1 MUXEN …” (Table 109, Table 112, Table 116, etc.)  
+
+Since the entry specifies a single bit number (bit 1) and no range, the field occupies exactly one bit. Therefore the **bit width** of the MUXEN field is 1.
+
+The register name BCR2 is one of the FSMC BCRx registers, and the field definition is the same for all banks, so the information applies to BCR2 as well.
+
+Thus the statement that the bit width of the MUXEN field in FSMC BCR2 is 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The provided excerpts from **RM0041** list the bit fields of the FSMC_BCRx registers.  
+In the tables for the BCR registers (e.g., Table 116, Table 109, Table 112) the field **MWID** is described as occupying **bits 5‑4** (`5‑4 MWID As needed`). This means the least‑significant bit of the field is at offset 4 and the field width is 2 bits. No mention of a bit offset 55 appears anywhere for MWID or for the BCR2 register.
+
+Since the claimed bit offset for the `MWID` field is **55**, which contradicts the datasheet information, the statement is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+The table **FSMC_BCRx bit fields** (Table 100) lists all bits of the BCR registers with a column of access permissions marked “rw” for every bit position.  
+The field **MWID** occupies bits 5‑4 and is shown in the same table as a read‑write field (`5‑4 MWID As needed`). Therefore the access type for the MWID field in the BCR2 register is **read‑write**, matching the given fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.96
+}
+```
+
+The extracted tables for the FSMC BCRx registers show the field **MWID** occupying bits **5‑4**:
+
+- “5‑4 MWID As needed” (Table 109, Table 112, Table 114, etc.)
+
+Bits 5 and 4 together form a **2‑bit** field, which applies to all BCR registers, including **BCR2**. Therefore the bit width of the MWID field is 2.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+The search results contain detailed descriptions of the FSMC peripheral, including the **WAITCFG** field (bit 11) that appears in the FSMC_BCRx registers (e.g., BCR1, BCR2, …). However, nowhere in the provided excerpts is there any mention of a register named **suakmxxzlgtv**. Since the register name does not exist in the datasheet excerpts, we have no source to confirm that the field WAITCFG is located at bit offset 11 in that register. Therefore the statement cannot be verified and must be considered false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The searched PDF excerpts describe bit 11 WAITCFG of the FSMC BCRx registers as a **configurable** field that selects the wait‑timing behavior (e.g., “When NWAIT is inactive, the data is considered valid either immediately (bit WAITCFG = 1) or on the next clock edge (bit WAITCFG = 0)”).  
+The tables list WAITCFG under “Value to set” with “Don’t care” or “to be set according to memory”, which indicates it is a normal read‑write control bit, not a reserved field that must be kept at its reset value.  
+No part of the provided text marks WAITCFG as “Reserved”. Therefore the statement that the access type of the WAITCFG field is **reserved** is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.98
+}
+```
+
+The search results contain several tables that list the bit fields of the FSMC BCRx registers (including BCR2). In every table the field **WAITCFG** is shown as **Bit 11** with a single‑bit description (e.g., “Bit 11 WAITCFG 0x0” and “Bit 11 WAITCFG Don’t care”). No table indicates that WAITCFG spans multiple bits; it is a one‑bit field, so its bit‑width is 1.
+
+The statement to be validated claims that the bit‑width of the **WAITCFG** field in the **BCR2** register is **29**. Since the datasheet clearly defines WAITCFG as a single‑bit field, the claimed width of 29 is incorrect.
+
+**Conclusion:** the fact is false, and the evidence is unambiguous, giving full confidence.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The provided search results contain descriptions of the FSMC control registers (e.g., FSMC_BCRx) and list a field named **WAITEN** with the description “Bit 13 WAITEN: Wait enable bit.” This confirms that the field **WAITEN** exists and is located at bit offset 13, but it is a field of the FSMC BCR registers, not of any register named **EZRVP**.  
+
+The search results contain no mention of a register called **EZRVP** (or any similarly‑spelled name) within the FSMC peripheral. Because the specified register cannot be found in the datasheet excerpt, the statement that the field **WAITEN** in register **EZRVP** has a bit offset of 13 cannot be verified and must be considered false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The register **FSMC_BCR2** is described in the RM0041 documentation. The listed bit fields for the BCR registers include MBKEN, MUXEN, MTYP, ACCMOD, BUSTURN, BUSTURN, ADDSET, etc., as well as many control bits such as EXTMOD, WAITEN, WREN, etc. None of the provided excerpts mention a field named **dicafyjko** (or any similarly‑named field). Because this field does not appear in the datasheet for the BCR2 register, we cannot verify an access type for it. Therefore the statement that the field “dicafyjko” has a “read‑write” access type is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted PDF text contains the description of the **WAITEN** field in the FSMC BCR registers:
+
+- “**Bit 13 WAITEN: Wait enable bit** …” – this shows that the field exists.
+- The description is for a single bit (it is identified as “Bit 13”), which implies a **bit width of 1**.
+
+Even though the text refers to “FSMC_BCRx” (a generic name for the BCR registers), the same bit‑field layout is used for each bank register (BCR1, BCR2, etc.). Therefore, for the register **BCR2**, the **WAITEN** field also occupies one bit.
+
+Hence the statement that the **WAITEN** field of **FSMC_BCR2** has a bit width of 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+The search results contain the FSMC BCRx bit‑field table. In that table the entry for bit 9 is listed as **WAITPOL** (“Meaningful only if bit 15 is 1”). This directly matches the fact that the field WAITPOL in the BCR2 register has a bit offset of 9.
+
+Therefore the statement is true, and the source is explicit, giving full confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The search results show the FSMC BCRx register bit fields. In the table for FSMC_BCRx (Table 114) bit 9 is named **WAITPOL** with the description “to be set according to memory”. This indicates that the bit is a configurable field, not a reserved bit. The surrounding text also describes how the polarity of the NWAIT signal depends on the value of WAITPOL, confirming that the bit can be written and read. Therefore the access type of the WAITPOL field is not “reserved”; it is a normal read‑write configuration bit.  
+
+Hence the statement that the WAITPOL field’s access is “reserved” is false, and the evidence is clear.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.98
+}
+```
+
+The provided excerpts from the FSMC section of RM0041 contain the definition of the FSMC_BCRx registers (Table 103). In that table the entry for bit 9 is **WAITPOL**, and it is listed as a single‑bit field (“Bit 9 WAITPOL …”). The accompanying description also treats WAITPOL as a single‑bit flag (0 or 1). Therefore the bit width of the WAITPOL field in the BCR2 register is 1 bit, matching the claimed value.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The search results contain several FSMC BCRx bit‑field tables. In each of them the entry  
+
+```
+10 WRAPMOD 0x0
+```  
+
+appears, indicating that the field **WRAPMOD** (named “wrapmod” in the query) is located at bit position 10 of the BCR registers. Since the register name BCR2 belongs to the same family of BCRx registers, the same bit definition applies. Therefore the statement that the bit offset of the WRAPMOD field in FSMC BCR2 is 10 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The file excerpt describes the **WRAPMOD** field (bit 10) of the FSMC BCRx registers. It is presented as a “Value to set” with defined reset values (0 = disabled, 1 = enabled) and is used to enable or disable wrapped burst mode. Since the bit can be written by software and read back, its access type is **read‑write**. No text indicates it is read‑only or write‑only.
+
+Therefore the statement that the `wrapmod` field has access type “read-write” is consistent with the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+The extracted tables for the FSMC BCRx registers list a field named **WRAPMOD** at bit position 10. Since it occupies a single bit, its bit width is 1. This matches the fact being validated.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The extracted text from the FSMC section of the reference manual shows the definition of the **WREN** field:
+
+- “Bit 12 WREN: Write enable bit.”  
+- In the detailed bit‑field tables for FSMC_BCRx, the entry for **WREN** is also listed at bit position 12.
+
+There is no indication anywhere in the provided excerpts that **WREN** occupies bit 35; the register is only 32 bits wide, so a bit offset of 35 would be impossible. Therefore the statement that the **wren** field in **bcr2** has a bit offset of 35 is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The datasheet excerpt describes bit 12 **WREN** of the FSMC_BCRx registers:
+
+- It is a “Write enable bit” that can be set to 0 or 1 to disable or enable write operations.
+- The description implies the bit can be both **read** (to see the current setting) and **written** (to change the setting).
+
+Thus the field WREN has a read‑write access type. The statement that its access is “read‑write” is consistent with the information provided.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.95
+}
+```
+
+The supplied excerpt from the FSMC section lists the bit fields of the BCR registers (CBURSTRW, CPSIZE, ASYNCWAIT, EXTMOD, WAITEN, WREN, WAITCFG, etc.). There is no mention of a field named **AVOF** in FSMC_BCR2, nor any description of its width. Since the searched document does not contain this field, I cannot verify that it exists with a width of 1 bit.
+
+Therefore, the statement that the **AVOF** field in the **BCR2** register has a bit width of 1 is not supported by the available data.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The provided search results contain the FSMC register description. In the description of the **FSMC_BCRx** register (which applies to BCR1‑BCR4), the field **CPSIZE[2:0]** is described as:
+
+```
+Bits 18:16 CPSIZE[2:0]: CRAM page size.
+```
+
+This indicates that the CPSIZE field occupies bits 18 down to 16, so its **least‑significant bit offset** is **16**.  
+The peripheral name (fsmc), register name (bcr2) and field name (cpsize) all match the terminology used in the datasheet, and the bit offset matches the requested value.
+
+Therefore the fact is true, and the evidence is explicit.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The provided PDF excerpts describe the **FSMC_BCRx** registers, including the **CPSIZE[2:0]** field (bits 18‑16).  
+The tables list the *value* that can be written to this field (e.g., “0x0 (no effect on asynchronous mode)”), but they do **not** specify an “access” attribute such as read‑only, write‑only, or read‑write. For control‑register fields in the FSMC peripheral, the default access type is read‑write, not a hexadecimal value.  
+
+Since the fact claims that the **access** of the **CPSIZE** field is “0x0”, this does not correspond to any documented access type and contradicts the usual read‑write nature of the field. Therefore the statement is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+The provided search results contain the description of the **CPSIZE** field in the FSMC_BCRx registers (including BCR2). It states:
+
+- “Bits 18:16 CPSIZE[2:0] …”  
+
+Bits 18 down to 16 constitute the CPSIZE field, which is a 3‑bit wide field (bits 18, 17, 16). Therefore the bit width of the CPSIZE field is **3**.
+
+The fact claims that the bit width of the CPSIZE field is 3, which matches the information extracted from the datasheet excerpt. Hence the statement is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The datasheet excerpt states that the address offset for the FSMC chip‑select control registers (FSMC_BCR1..4) is defined as  
+
+```
+Address offset: 0xA0000000 + 8 * (x‑1),  x = 1…4
+```
+
+For the third register (x = 3, i.e., **BCR3**) the offset calculation is:
+
+```
+8 * (3‑1) = 8 * 2 = 16 decimal = 0x10
+```
+
+Thus the address offset of the `BCR3` register is indeed **0x10**, matching the value given in the fact.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The search results contain the section for the FSMC NOR/PSRAM control registers (FSMC_BCR1..4). It states:
+
+```
+Reset value: 0x0000 30DB for Bank1 and 0x0000 30D2 for Bank 2 to 4
+```
+
+Since the register in question is **BCR3**, it belongs to Bank 3, whose reset value is therefore **0x000030D2** (a 32‑bit value).  
+
+The fact to validate claims that the reset value of `bcr3` is `0x3A5A`. This does not match the documented reset value (different hex digits and different size). Hence the statement is false.
+
+Given the clear information from the datasheet excerpt, I am fully confident in this assessment.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The excerpt states that the NOR/PSRAM control registers (including FSMC_BCRx) “have to be accessed by words (32 bits).” This means each BCR register, such as BCR3, is a 32‑bit register. The fact claims the size is 3 bits, which contradicts the documented 32‑bit width. Therefore the statement is false, and the documentation clearly supports this conclusion.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+The extracted sections from the STM32 FSMC reference manual describe the bit fields of the FSMC_BCRx registers. In the description for the BCR registers it states:
+
+*“Bit 15 ASYNCWAIT: Wait signal during asynchronous transfers …”*
+
+This directly indicates that the field **ASYNCWAIT** is located at bit offset 15 in the BCR registers, including BCR3. Therefore the claimed bit offset of 15 for the field **asyncwait** in the **bcr3** register of the **fsmc** peripheral is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The search results contain detailed descriptions of the FSMC control registers (e.g., FSMC_BCRx) and their bit fields. The field **ASYNCWAIT** is documented (bit 15) as a configurable bit, i.e., it can be written by software and read back, so its access type would be read‑write.  
+
+However, the register name given in the fact is **“fkgaav”**, which does not appear anywhere in the retrieved FSMC documentation, nor is it a known FSMC register name. Because the register cannot be found, we cannot verify that the field ASYNCWAIT belongs to it, and therefore the statement that the field ASYNCWAIT in register fkgaav has access type read‑write is unsupported.
+
+Hence the fact is considered false, and we are completely certain of this assessment.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The provided PDF excerpt describes the **FSMC_BCRx** registers (BCR1‑4).  
+In the table of bit fields (Table 103) it lists:
+
+- **Bit 15 ASYNCWAIT** – “Wait signal during asynchronous transfers”.
+
+A bit that is identified by a single bit number (e.g., “Bit 15”) is a one‑bit field, so its **bit width** is 1.  
+Since BCR3 is one of the FSMC_BCRx registers, it contains the same ASYNCWAIT field with a width of 1 bit.  
+
+Therefore the statement that the **asyncwait** field in **BCR3** has a **bit_width** of 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The provided search results contain tables for FSMC registers such as **FSMC_BCRx**, **FSMC_BTRx**, etc. In those tables the field **BURSTEN** is listed at bit position 8, but there is no mention of a register named **DSDIATH**. Since the register “dsdiath” does not appear in the extracted documentation, I cannot verify that the field **bursten** (presumably “BURSTEN”) exists in that register or that its bit offset is 8. Therefore the fact cannot be confirmed.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.0
+}
+```
+
+The searched PDF contains the description of the **BURSTEN** bit (bit 8) of the FSMC_BCRx registers.  
+The text explains that this bit enables the synchronous burst protocol and does not mention any restriction such as “read‑only” or “write‑only”. In the bit‑field diagram the bits are marked with “rw”, indicating read‑write access for each field, including BURSTEN. Therefore the access type for the **bursten** field of the **BCR3** register is read‑write.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.96
+}
+```
+
+The search results only contain information about the FSMC peripheral’s registers such as FSMC_BCRx, FSMC_BTRx, etc. There is no mention of a register named **xmizafrndvm**, nor any entry that could correspond to that name. Consequently, I cannot find any definition of a field called **bursten** (or its bit‑width) within a register of that name. Because the register does not appear in the datasheet, the claim that the field bursten has a bit‑width of 1 cannot be verified and is therefore false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The search results contain several excerpts from the STM32 reference manual (RM0041) that describe the FSMC_BCRx registers.  
+In the “FSMC_BCRx bit fields” tables, the entry for **Bit 19** is labeled **CBURSTRW** (Write burst enable).  
+This directly states that the field **CBURSTRW** is located at bit position 19 of the BCR registers.  
+Since the register in question is BCR3 (one of the FSMC_BCRx registers) and the field name matches, the reported bit offset of 19 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The search results show the description of **Bit 19 CBURSTRW** in the FSMC_BCRx registers.  
+The text explains the function of the bit (enabling synchronous write bursts) and gives the possible values 0 and 1, which implies that software can both **write** the bit and **read** its current setting. No indication is given that the bit is read‑only or write‑only; it behaves like a normal control field, i.e., it is read‑write.
+
+Therefore, the claim that the access type of the **CBURSTRW** field is **read‑write** matches the information from the datasheet.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.96
+}
+```
+
+The search results contain the FSMC register tables. In the “FSMC_BCRx bit fields” tables (both Table 115/116 and Table 103) the field **CBURSTRW** is listed at bit 19 with a single bit position, i.e., it occupies only one bit. A single‑bit field therefore has a bit width of **1**. Since the register name BCR3 follows the same layout as the other BCRx registers, the field CBURSTRW in BCR3 also has a bit width of 1. Hence the statement is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The provided excerpt from the STM32 FSMC reference manual lists the bit fields of the FSMC_BCRx registers. It explicitly states:
+
+*“Bit 14 EXTMOD: Extended mode enable.”*
+
+Since the register being queried is **BCR3** (one of the FSMC_BCRx registers) and the field **EXTMOD** is described as occupying **bit 14**, the asserted bit offset of **14** is correct.
+
+Therefore the fact is true, and the source directly confirms it, giving very high confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The excerpt describes the **EXTMOD** bit (Bit 14) of the FSMC_BCRx registers.  
+It explains the meaning of the bit for both values 0 and 1 and states that it “enables” or “disables” a feature, which implies that software can both read its current state and write a new value. In the bit‑field tables of the FSMC section the bits are annotated with “rw”, indicating read‑write access for the control bits of the BCR registers. Therefore, the EXTMOD field is a read‑write bit.
+
+Given this information, the claim that the access type of the **EXTMOD** field in the **BCR3** register is **read‑write** is supported.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.9
+}
+```
+
+The provided excerpt from the STM32 reference manual (RM0041) describes the **EXTMOD** field of the **FSMC_BCRx** registers:
+
+- It is identified as **“Bit 14 EXTMOD: Extended mode enable.”**
+- The description refers to it as a single bit that can be set to 0 or 1.
+
+Since a single bit has a bit width of 1, the statement that the **EXTMOD** field in the **BCR3** register has a bit width of 1 is supported by the documentation.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The search results contain the FSMC BCRx bit‑field table. In that table the field **FACCEN** is listed as:
+
+```
+... 
+7  Reserved 0x1
+6  FACCEN   Set according to memory support
+5‑4 MWID    …
+```
+
+Thus the bit offset of the **FACCEN** field is bit 6, not bit 19 (bit 19 is the CBURSTRW field).  
+Therefore the statement that the bit offset of `faccen` in `bcr3` is 19 is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+The table **“FSMC_BCRx bit fields”** lists the field **FACCEN** (bit 6) together with a column of access attributes for each bit.  
+In that column the entry for bit 6 is marked **“rw”**, indicating that the field can be both read and written.  
+Therefore the access type of the FACCEN field is *read‑write*.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.95
+}
+```
+
+The extracted tables for the FSMC BCRx registers list the field **FACCEN** at bit position 6 (e.g., “6 FACCEN 0x1”). This indicates that FACCEN occupies a single bit, so its bit‑width is 1. The statement claims a bit‑width of 37, which contradicts the datasheet information. Therefore the fact is false, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The provided search results describe the FSMC_BCRx registers. In the bit‑field tables for FSMC_BCRx (which includes BCR3) the field **MBKEN** is listed as **Bit 0** (the least‑significant bit). There is no indication that MBKEN is located at bit 50; the only bit‑offset given for MBKEN is 0. Therefore the statement that the MBKEN field of the BCR3 register has a bit offset of 50 is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The excerpts from the FSMC section of the STM32 reference manual describe the **MBKEN** bit (bit 0) of the FSMC_BCRx registers:
+
+- “Bit 0 MBKEN: Memory bank enable bit. Enables the memory bank… 0: disabled, 1: enabled.”
+- The description explains that the bit can be **set** (written) to enable the bank and can be **cleared** (written) to disable it.  
+- No indication is given that the bit is read‑only; it is part of a control register that is written by software and can also be read back.
+
+Therefore the MBKEN field of the BCR3 register is a normal control bit with read‑write access.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.9
+}
+```
+
+The extracted tables describe the bit fields of the FSMC control registers (FSMC_BCRx).  
+For each BCR register the field **MBKEN** is listed at bit position 0 with a value of 0x1.  
+A field that occupies a single bit position has a bit‑width of 1.  
+Although the tables do not show a separate entry for BCR3, the same layout is used for all BCR1‑BCR4 registers, so MBKEN in BCR3 is also a 1‑bit field.
+
+Therefore the statement that the `mbken` field of the `bcr3` register has a bit width of 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The excerpt from the FSMC reference manual describes the **MTYP** field in the FSMC_BCRx registers as occupying bits **3:2** (shown as “3-2 MTYP[0:1]”).  
+When a field spans bits 3 down to 2, its least‑significant bit – i.e., its bit offset – is **2**.  
+Since BCR3 is one of the BCRx registers, the same bit‑field definition applies to it. Therefore, the claimed bit offset of 2 for the **MTYP** field of the **BCR3** register is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The excerpt describes the **MTYP[1:0]** field (bits 3:2) of the FSMC_BCR3 register as “Memory type” that is set by software to define the attached external memory. Control‑register fields that are configurable by software are read‑write unless explicitly marked otherwise.  
+
+In the bit‑field diagram the access type for the bits is shown as “rw” for all bits, and the table of bit fields lists **MTYP[0:1]** with the comment “As needed …”, which again implies that the software can both read and write this field. No description indicates it is read‑only or write‑only.
+
+Therefore, the claim that the **mtyp** field has **read‑write** access is consistent with the datasheet.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.95
+}
+```
+
+The search results contain the description of the FSMC BCRx registers.  
+The listed bit fields for the BCR registers are:
+
+- CBURSTRW (bit 19)  
+- CPSIZE [2:0] (bits 18‑16)  
+- ASYNCWAIT (bit 15)  
+- EXTMOD (bit 14)  
+- WAITEN (bit 13)  
+- WREN (bit 12)  
+- WAITCFG (bit 11)  
+- WRAPMOD, WAITPOL, BURSTEN, Reserved, FACCEN, MWID, MTYP [1:0], MUXEN, MBKEN, etc.
+
+No field named **HGP** (or any case‑variation) appears in the extracted text for FSMC_BCR3 or the generic BCRx description. Because the field cannot be found, we cannot confirm a bit‑width of 2 for it.
+
+Thus the statement is false, and we are completely certain of this assessment.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The provided search results contain the description of the **MUXEN** field for the FSMC control registers. It explicitly states:
+
+- “**Bit 1 MUXEN:** Address/data multiplexing enable bit.”
+
+This directly confirms that the **MUXEN** field is located at bit offset 1 in the FSMC_BCRx registers (including BCR3). Therefore, the fact that the bit offset of the `muxen` field in the `bcr3` register is 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The search results contain several tables titled “FSMC_BCRx bit fields”. In each of these tables, bit 1 is named **MUXEN** and is described as “Address/data multiplexing enable bit… When this bit is set…”. The wording indicates that the bit can be programmed by software and its value can be read back, which corresponds to a **read‑write** access type. No indication is given that the field is read‑only or write‑only.
+
+Therefore, the claim that the **MUXEN** field of the **BCR3** register has an access type of **read‑write** is supported by the documentation.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.85
+}
+```
+
+The datasheet excerpts list the **MUXEN** field in the FSMC BCRx registers (including BCR3). In each table the entry is shown as:
+
+```
+Bit No. 1  MUXEN  …
+```
+
+A single bit number indicates that the field occupies exactly one bit, i.e., its bit‑width is **1**. No alternative definition with a different width is found for the MUXEN field in BCR3. Therefore the statement that the bit‑width of the MUXEN field in FSMC BCR3 is 1 is supported by the documentation.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The extracted excerpt contains **Table 109. FSMC_BCRx bit fields**, which lists the bits for the **MWID** field as **“5‑4 MWID As needed”**.  
+For a multi‑bit field the bit offset is the position of the least‑significant bit; therefore the LSB of MWID is at bit 4.  
+Since BCR3 is an instance of the FSMC_BCRx register, the same bit‑field definition applies to it.
+
+Thus the statement that the **MWID** field in **BCR3** has a bit offset of **4** is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The provided excerpts contain the bit‑field description for the FSMC BCRx registers. In the tables (e.g., Table 109, Table 112) the field **MWID** occupies bits 5‑4 and is described as “As needed”. The surrounding bits are marked as read‑write (rw), and there is no indication that the MWID field is a reserved, read‑only, or write‑only field. Therefore the claim that the access type of the MWID field is **reserved** is not supported by the datasheet.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+The extracted tables for the FSMC BCRx registers (including BCR3) show the field **MWID** occupying bits 5‑4:
+
+- “5‑4 MWID As needed” (Table 109, Table 112, Table 114, Table 116, etc.)
+
+Bits 5‑4 correspond to a **2‑bit** wide field. There is no indication that MWID is 40 bits wide anywhere in the provided document. Therefore the statement that the bit width of the MWID field in FSMC BCR3 is 40 is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted sections of the STM32 FSMC chapter list the bit fields of the FSMC_BCRx registers (BCR1‑BCR4).  
+In the tables the field **WAITCFG** is shown at **bit 11**:
+
+- “Bit 11 WAITCFG …” (appears in multiple excerpts of Table 116/114 for FSMC_BCRx).  
+- The layout of BCR1, BCR2, BCR3, and BCR4 is identical, so the same bit position applies to **BCR3**.
+
+The fact claims that the bit offset of the **WAITCFG** field in the **BCR3** register is **11**, which matches the information from the datasheet.
+
+Therefore the statement is true, and I am fully certain of this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The datasheet excerpts show that bit 11 of FSMC_BCRx is named **WAITCFG** and is described as “Wait timing configuration”. It is listed among the normal bit fields (with a “rw” indicator in the bit‑field diagram) and is not mentioned as a reserved bit. Reserved bits are only bits 31‑20. Therefore the access type for the WAITCFG field is read‑write, not “reserved”.  
+
+The fact claims the access type is **reserved**, which contradicts the documentation. Hence the statement is false, and the evidence is clear.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.99
+}
+```
+
+The search results contain several excerpts from the STM32 FSMC (Flexible Static Memory Controller) reference manual (RM0041).  
+- In the description of the BCR3 register it lists **“Bit 11 WAITCFG: Wait timing configuration.”** – this indicates that the field occupies a single bit.  
+- The detailed register tables (e.g., Table 116 and Table 114) show **“Bit 11 WAITCFG 0x0”**, confirming that the field is a 1‑bit wide flag.  
+
+Since the fact claims that the `WAITCFG` field in the `BCR3` register has a **bit_width of 1**, the information from the datasheet directly supports this claim.
+
+**Conclusion:** The statement is true, and the supporting evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The extracted text from the STM32F4 reference manual (RM0041) contains the description of the **WAITEN** field within the FSMC_BCRx registers. It explicitly states:
+
+> “Bit 13 WAITEN: Wait enable bit…”.
+
+This confirms that the **WAITEN** field is located at bit offset 13 in the BCR registers (including BCR3). Therefore the statement that the bit offset of the **WAITEN** field in the FSMC BCR3 register is 13 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The extracted excerpt describes **WAITEN** (bit 13) of the FSMC_BCRx registers:
+
+- It is a *Wait enable bit* that can be programmed to enable or disable wait‑state insertion.  
+- The description implies the software can set this bit, i.e., it is configurable, which matches a **read‑write** access type.  
+- At the start of the document a series of “rw” entries appears, indicating that the bits of this register are read‑write. No indication is given that WAITEN is read‑only or write‑only.
+
+Therefore, the statement that the **WAITEN** field of the **BCR3** register has an access type of **read‑write** is consistent with the information available.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.9
+}
+```
+
+The excerpt from the FSMC reference manual lists the bit fields of the FSMC_BCRx registers (BCR1‑4). It explicitly states:
+
+- “Bit 13 WAITEN: Wait enable bit.”  
+
+A single‑bit field always has a bit width of 1. Since the register name is **BCR3** (one of the BCRx registers) and the field **WAITEN** is described as a single bit, the bit‑width for this field is indeed 1.
+
+Thus the claim that the WAITEN field in the FSMC BCR3 register has a bit width of 1 is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The datasheet excerpt contains the table **“FSMC_BCRx bit fields”** (Table 103).  
+In that table the bits for the BCR registers are listed, and it shows:
+
+- **Bit 9 WAITPOL** – “Meaningful only if bit 15 is 1”.
+
+Since the register name `BCR3` is one of the BCRx registers, it inherits the same bit‑field definition. Therefore the field `WAITPOL` has a bit offset of **9**, which matches the value given in the fact.
+
+Thus the statement is true, and the source is explicit.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The search results contain information about the FSMC peripheral, describing bits such as **WAITPOL** in the **FSMC_BCRx** registers. However, there is no mention of any register named **zuubowkrmo** in the FSMC documentation, and no definition of an access type for a field named *waitpol* within such a register. Because the specified register does not exist in the provided datasheet excerpts, the statement that its *waitpol* field has a “read‑write” access type cannot be verified and is therefore false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted excerpts contain the description of the FSMC_BCRx registers. In Table 103 (and repeated in Table 114) the entry for **Bit 9 WAITPOL** is given as a single bit (“Bit 9 WAITPOL …”). A single‑bit field has a bit width of 1. Therefore the claim that the WAITPOL field in the BCR3 register has a bit width of 1 is supported by the datasheet text.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The search results contain several tables titled **“FSMC_BCRx bit fields”** (e.g., Table 116 and Table 106). In each of these tables the line:
+
+```
+10 WRAPMOD 0x0
+```
+
+appears, indicating that the field **WRAPMOD** is located at bit 10 of the BCR registers (including BCR3). Therefore the statement that the `wrapmod` field of the `bcr3` register has a bit offset of 10 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The datasheet excerpt for the FSMC BCRx registers lists **Bit 10 WRAPMOD** as “Wrapped burst mode support” with defined values 0 and 1. It is a functional control bit, not a reserved field. Reserved bits are mentioned elsewhere (e.g., Bit 7 Reserved) but WRAPMOD is not among them. Therefore the access type of the WRAPMOD field is not “reserved”; it is a normal read‑write control bit.  
+
+Hence the statement that the access type of the `WRAPMOD` field is “reserved” is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The search results contain several tables that list the bit fields of the FSMC BCRx registers.  
+In Table 106 (and the continued tables for BCRx) the entry:
+
+```
+10 WRAPMOD 0x0
+```
+
+shows that **WRAPMOD** occupies bit 10 alone, i.e., it is a single‑bit field. A single‑bit field has a bit width of 1.  
+
+Therefore the statement that the `wrapmod` field of the `bcr3` register has a bit width of 1 matches the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The extracted text from the STM32F4 reference manual (RM0041) describes the FSMC_BCRx registers. In the description for FSMC_BCR3 it lists the individual bits, and it explicitly states:
+
+**“Bit 12 WREN: Write enable bit.”**
+
+This directly indicates that the field **WREN** is located at bit offset **12** within the BCR3 register. The peripheral name (FSMC), register name (BCR3), and field name (WREN) all match the information provided in the datasheet excerpt.
+
+Therefore, the claim that the bit offset of the WREN field in the FSMC_BCR3 register is 12 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The search results contain the description of the **WREN** field (bit 12) of the FSMC_BCRx registers.  
+The text states:
+
+*“Bit 12 **WREN**: Write enable bit. This bit indicates whether write operations are enabled/disabled in the bank by the FSMC… 0: Write operations are disabled… 1: Write operations are enabled (default after reset).”*
+
+Because the bit can be programmed by software to enable or disable writes, it is not read‑only; it can be both read to observe the current setting and written to change it. Thus the access type for the **WREN** field is **read‑write**.
+
+Therefore, the claim that the access type of the **WREN** field is “read‑write” is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.95
+}
+```
+
+The provided excerpt from the STM32 FSMC (Flexible static memory controller) documentation lists the bit fields of the FSMC_BCRx registers (BCR1‑4).  
+In the displayed sections we see descriptions for bits such as **CBURSTRW**, **CPSIZE**, **ASYNCWAIT**, **EXTMOD**, **WAITEN**, **WREN**, **WAITCFG**, etc. None of the text contains a field named **IATTMEU** (or a variant with different casing). Because the field name cannot be found in the description of the BCR3 register, we have no evidence that a field with that name exists, nor its bit‑width.
+
+Therefore the statement that the field *iattmeu* in the *BCR3* register has a bit‑width of 1 cannot be validated and should be considered false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The provided excerpt describes the FSMC control registers (FSMC_BCRx, where x = 1…4). It lists the bit fields for each BCR register, stating:
+
+- “Bits 18: 16 CPSIZE[2:0]” – this indicates that the CPSIZE field occupies bits 18 down to 16.
+- Consequently, the least‑significant bit of the CPSIZE field is bit 16, i.e., its bit offset is 16.
+
+Since BCR3 is one of the BCRx registers, it shares the same bit‑field layout. Therefore the claim that the CPSIZE field in the FSMC_BCR3 register has a bit offset of 16 is supported by the document.
+
+**Conclusion:** the fact is true with high confidence.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The search results show the description of the **CPSIZE** field in the FSMC BCRx registers.  
+In the tables the CPSIZE field (bits 18‑16) is listed with the generic access annotation **“rw”** (read‑write), and no numeric “access” value such as 0 is defined for this field. Moreover, the requested key in the fact is **“access”**, which is not one of the supported keys (the supported key for access information is **access_type**, whose values are strings like “read‑write”).  
+
+Since the datasheet does not provide an “access” attribute with a numeric value for the CPSIZE field, the statement that its access is 0 is not supported by the documentation.
+
+Therefore the fact is false, and I am completely certain of this assessment.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The RM0041 excerpt describes the **CPSIZE** field of the FSMC_BCRx registers:
+
+- It is labelled **“Bits 18:16 CPSIZE[2:0]”**, meaning the field occupies bits 18, 17, and 16.
+- The range 18‑16 corresponds to **3 bits** in width.
+- Multiple tables also list the field as “18‑16 CPSIZE” confirming the same three‑bit position.
+
+Therefore, the statement that the **cpsize** field in the **bcr3** register has a bit width of **3** is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The datasheet excerpt includes the FSMC register map (Table 118). It lists the offsets for the chip‑select control registers:
+
+- 0x0000 – FSMC_BCR1  
+- 0x0008 – FSMC_BCR2  
+- 0x0010 – FSMC_BCR3  
+- **0x0018 – FSMC_BCR4**
+
+Thus the address offset for the **BCR4** register is 0x0018, which is equivalent to the given value “0x18”. The peripheral name “fsmc” and register name “bcr4” match the entries in the datasheet, so the fact is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The search results contain the section **“SRAM/NOR‑flash chip‑select control registers 1..4 (FSMC_BCR1..4)”** which lists the reset values for these registers:
+
+- **Bank 1** (FSMC_BCR1) reset value = 0x000030DB  
+- **Bank 2‑4** (FSMC_BCR2, FSMC_BCR3, FSMC_BCR4) reset value = 0x000030D2  
+
+Thus the reset value of **FSMC_BCR4** is 0x000030D2.  
+The fact to validate states that the reset value is **0x2BF2**, which does not match the documented value. No wildcard notation (e.g., X’s) is present, so the exact value must be the same.
+
+Therefore the statement is false, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The excerpt states that the NOR/PSRAM control registers (FSMC_BCR1..4, which includes BCR4) “have to be accessed by words (32 bits).” This directly indicates that each BCR register is 32 bits wide. Therefore the claim that the size of the FSMC_BCR4 register is 32 bits is supported by the document.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The search results contain the description of the FSMC control registers (FSMC_BCR1‑4).  
+In the excerpt for the BCR registers it lists:
+
+*“Bit 15 ASYNCWAIT: Wait signal during asynchronous transfers …”*  
+
+This indicates that the field **ASYNCWAIT** is located at bit position 15 of each BCR register, including **BCR4**.  
+The fact states that the bit offset of the field `asyncwait` in register `bcr4` is **15**, which matches the datasheet text.
+
+Hence the statement is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The extracted text describes the **ASYNCWAIT** bit (bit 15) of the FSMC_BCRx registers.  
+It explains that the bit can be set to 0 or 1 to control the use of the NWAIT signal, which implies that software can both read its current value and write a new value. In the tables of bit fields the columns showing access permissions list “rw” for the bits, and the surrounding description treats the bit as configurable by the programmer. Therefore the access type for the **ASYNCWAIT** field is **read‑write**.
+
+Given this clear indication, I am confident that the statement “the asyncwait field has access = read‑write” is true.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+The extracted sections from the FSMC chapter of the reference manual list the **BCRx** register bit fields.  
+For the register **BCR4**, the description shows:
+
+* “Bit 15 ASYNCWAIT: Wait signal during asynchronous transfers …”
+
+This indicates that **ASYNCWAIT** occupies only **bit 15**, i.e., a single‑bit field. No table entry or description suggests that the field spans 15 bits; the only “15” present is the bit position itself. Therefore, the claim that the **bit width** of the *asyncwait* field is **15** bits is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted tables for the FSMC BCRx registers list the field **BURSTEN** at **bit 8** (see “Bit 8 BURSTEN 0x0” in Table 98/99). No indication is found that BURSTEN is located at bit 22. Therefore the claim that the BURSTEN field in FSMC BCR4 has a bit offset of 22 is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The datasheet excerpt lists the bit fields of the FSMC_BCRx registers.  
+In the bit‑field tables, each bit is annotated with “rw”, indicating **read‑write** access.  
+Bit 8 is named **BURSTEN** (the field name given, “bursten”, matches case‑insensitively).  
+Therefore the BURSTEN field of the FSMC_BCR4 register has read‑write access, matching the statement.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+The provided PDF excerpts list the FSMC_BCRx registers and their fields. In the tables for the BCR registers, the field **BURSTEN** appears at bit position 8 and is described as a single‑bit flag (e.g., “Bit 8 BURSTEN …”). No indication is given that this field spans multiple bits; its width is 1 bit. The claim that the **bit_width** of the **BURSTEN** field in **BCR4** is **57** bits contradicts the datasheet information, which clearly defines it as a 1‑bit field. Therefore the statement is false, and the contradiction is unambiguous.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted excerpts describe the **FSMC_BCRx** registers (including BCR4).  
+In the tables the field **CBURSTRW** is listed as:
+
+- “Bit 19 CBURSTRW …”  
+- “Bit 19 CBURSTRW: Write burst enable.”
+
+All bit numbers for these 32‑bit registers are between 0 and 31, and the only position assigned to the **CBURSTRW** field is bit 19. There is no mention of any other position such as 95, which would be outside the size of the register.
+
+Therefore the statement that the bit offset of **CBURSTRW** in **FSMC_BCR4** is 95 is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted sections describe **Bit 19 CBURSTRW** of the FSMC_BCRx registers (including BCR4).  
+The text explains that this bit “enables the synchronous burst protocol during write operations” and that it can be set to 0 or 1.  
+Since the bit can be **written** to select the mode and can also be **read** back to determine the current setting, it behaves as a normal configuration field, i.e., it is **read‑write**.  
+No indication is given that the field is read‑only or write‑only.
+
+Thus the statement that the `cburstrw` field has access type **read‑write** is consistent with the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.95
+}
+```
+
+The excerpts from the FSMC section of the reference manual list the **CBURSTRW** field in the BCR registers as a single‑bit field located at bit 19 (e.g., “19 CBURSTRW 0x1” and “19 CBURSTRW 0x0”). Therefore the bit width of the **CBURSTRW** field is 1, not 58.  
+
+Hence the statement that the bit width is 58 is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted excerpts from the STM32 reference manual (RM0041) list the bit‑field definitions for the FSMC BCRx registers. In the description for **BCR4** (and the other BCR registers) the line:
+
+```
+Bit 14 EXTMOD: Extended mode enable.
+```
+
+clearly states that the field **EXTMOD** is located at bit position 14. The fact we need to verify is that the bit offset of the `extmod` field in the `bcr4` register is 14, which matches exactly what the datasheet shows.
+
+Thus the statement is correct, and the evidence is unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The excerpt from the FSMC section of RM0041 describes **Bit 14 EXTMOD** of the FSMC_BCRx registers.  
+The surrounding tables list the access type for each bit as “rw”, meaning **read‑write**.  
+No indication is given that the field is read‑only or write‑only, and control bits such as EXTMOD are normally configurable by software.  
+
+Thus the field **EXTMOD** in the **BCR4** register has read‑write access, matching the claim.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.97
+}
+```
+
+The search results contain the description of the **EXTMOD** field in the FSMC BCRx registers:
+
+- “Bit 14 EXTMOD: Extended mode enable.”  
+- It is described as a single‑bit flag (bit 14), which means its **bit width is 1**.
+
+Since the fact claims that the bit width of the `EXTMOD` field in the `BCR4` register is **47**, this contradicts the datasheet information. Therefore the statement is false. The information is clear and directly found, so confidence is maximal.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted tables for the FSMC_BCRx registers (which include BCR4) list the field **FACCEN** at bit position 6:
+
+- In Table 106 and Table 109 the line reads “6 FACCEN …”.
+- The register is 32 bits wide, so valid bit offsets are 0‑31; 56 is outside this range.
+
+Therefore the claimed bit offset of 56 for the **faccen** field in **bcr4** is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The search results contain the FSMC BCRx tables (which also describe BCR4).  
+For bit 6 the field is named **FACCEN** and is listed among the other bits of the register.  
+The bit‑field diagram shows the access type for each bit as “rw” (read‑write).  
+No part of the extracted text indicates that FACCEN is write‑only; it is a normal
+read‑write control bit.  
+
+Since the fact states that the access type of the FACCEN field is **write‑only**, this contradicts the datasheet information, so the statement is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.98
+}
+```
+
+The RM0041 excerpts list the bit fields of the FSMC_BCRx registers. For each BCRx (including BCR4) the field **FACCEN** is shown at **bit 6** with no range, indicating it occupies a single bit. Therefore its bit‑width is 1, not 21 as claimed. Since the datasheet clearly defines FACCEN as a 1‑bit field, the statement that its bit width is 21 is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted sections describe the FSMC BCRx control registers.  
+In the tables for FSMC_BCRx (which include BCR1…BCR4) the **Bit 0** field is named **MBKEN** – “Memory bank enable bit”. This indicates that the MBKEN field is located at bit offset 0 in each BCR register, including BCR4.  
+The fact states that the bit offset of the MBKEN field in the FSMC BCR4 register is 0, which matches the datasheet information.
+
+Thus the statement is true, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The excerpt from the FSMC section of the reference manual describes bit 0 of the BCRx registers:
+
+- “Bit 0 MBKEN: Memory bank enable bit. Enables the memory bank… 0: disabled, 1: enabled.”
+- In the bit‑field tables MBKEN is listed as a normal functional bit, not as a reserved field.
+
+Therefore the MBKEN field is not a reserved field; it is a regular read‑write (enable) bit. The claim that its access type is “reserved” is incorrect.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The extracted sections contain the bit‑field tables for the FSMC BCRx registers (BCR1‑4).  
+In each table the lowest‑order bit is described as:
+
+```
+0 MBKEN 0x1
+```
+
+This indicates that the **MBKEN** field occupies a single bit (bit 0). Therefore its bit width is 1, which matches the requested value.
+
+**Conclusion:** the statement that the `MBKEN` field of the `FSMC_BCR4` register has a bit width of 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The extracted excerpts describe the MTYP field in the FSMC BCR registers as occupying bits 3 down to 2 (e.g., “Bits 3:2 MTYP[1:0]” and “3‑2 MTYP[0:1]”). In register‑bit terminology the **bit offset** is the index of the least‑significant bit of the field, which here is 2. Therefore the claimed bit offset of 2 for the MTYP field in the BCR4 register is consistent with the datasheet information.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.99
+}
+```
+
+The excerpt lists the bit‑fields of the FSMC_BCRx registers and shows a line of access‑type markers (`rw rw rw …`) for each field. The field **MTYP** (bits 3:2) appears in that line, indicating it is a read‑write field. No information suggests it is read‑only or write‑only, and the typical purpose of MTYP (selecting the memory type) requires software to both read and write the bits. Therefore the statement that the **MTYP** field of the **BCR4** register has access type “read‑write” is consistent with the datasheet excerpt.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.93
+}
+```
+
+The provided PDF excerpts contain the definition of the **MTYP** field for the FSMC_BCRx registers (including BCR4). In the tables the field is listed as **Bits 3‑2 MTYP[0:1]** (or MTYP[1:0]), indicating that it occupies two bits. Therefore the bit width of the MTYP field is 2 bits, not 54 bits as claimed.  
+
+Thus the statement that the bit width of the MTYP field in the FSMC BCR4 register is 54 is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The datasheet excerpt describes the FSMC BCR registers. In the description of the BCR register fields it states:
+
+- “Bit 1 MUXEN: Address/data multiplexing enable bit.”
+
+Thus the bit offset for the **MUXEN** field in any FSMC_BCRx register (including BCR4) is **1**. The fact to validate claims the bit offset is **96**, which does not match the documented offset.
+
+Therefore the statement is false, and the evidence is clear and unambiguous.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The datasheet excerpt lists the **MUXEN** bit (bit 1) of the FSMC_BCRx registers and describes it as “Address/data multiplexing enable bit.” The description explains the effect of setting the bit and the tables provide a “Value to set” (0x0), indicating that software can write this bit. Therefore the field is writable (read‑write), not read‑only.
+
+The claim that the **muxen** field has an access type of **read‑only** contradicts the documentation, which shows it is configurable by software.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.97
+}
+```
+
+The tables extracted from the FSMC section list the **FSMC_BCRx** registers.  
+In every table the field **MUXEN** is described as **Bit 1** (e.g., “1 MUXEN As needed” or “Bit 1 MUXEN: …”).  
+Since it occupies a single bit, its **bit width is 1**.  
+
+The fact claims the bit width of the field MUXEN in the BCR4 register is **68**, which contradicts the datasheet information.
+
+Therefore the statement is false, and I am completely certain of this assessment.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+
+The searched PDF contains the FSMC BCRx register definition.  
+In Table 109 (and the other tables) the field **MWID** is listed as occupying bits **5‑4** of the BCR registers.  
+When a field spans bits 5 down to 4, its least‑significant bit (the bit offset) is 4.  
+
+Since the register name BCR4 is one of the FSMC BCRx registers, it uses the same bit‑field layout, so the MWID field in BCR4 also has a bit offset of 4. The provided value matches this description.
+
+Therefore the statement is true, and I am very confident of this assessment.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.96
+}
+```
+
+The excerpt contains the FSMC BCRx register description (Table 100/109).  
+For bits 5‑4 the field is named **MWID** and the table lists “As needed” under “Value to set”, meaning software can write a value to these bits. In the bit‑field diagram the access type for all configurable bits of BCRx is shown as **rw**, indicating they are readable and writable. Therefore the MWID field of the BCR4 register is a read‑write field.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.96
+}
+```
+
+The search results contain several tables describing the FSMC_BCRx registers. In each of those tables (e.g., “Table 114. FSMC_BCRx bit fields”, “Table 109. FSMC_BCRx bit fields”, “Table 112. FSMC_BCRx bit fields”) the field **MWID** is listed as occupying bits **5‑4**. This means the field spans two bits, so its bit width is **2**.
+
+The fact to validate states that the bit width of the **MWID** field in the **BCR4** register is **75**. Since the documented width is 2 bits, the claimed value of 75 is incorrect.
+
+Given the clear documentation, I am very confident that the statement is false.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 0.98
+}
+```
+
+The search results contain the FSMC register bit‑field tables. In Table 116 (FSMC_BCRx bit fields) the entry for **WAITCFG** is listed as:
+
+```
+Bit 11 WAITCFG 0x0
+```
+
+This indicates that the WAITCFG field is located at bit offset 11 in the BCR registers (BCR1‑BCR4). Therefore the statement that the `waitcfg` field of the `bcr4` register has a bit offset of 11 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 1.0
+}
+```
+
+The datasheet excerpt for the FSMC BCRx registers lists the **WAITCFG** bit (bit 11) and describes its function:
+
+- “WAITCFG: to be set according to memory … When NWAIT is inactive, the data is considered valid either immediately (bit WAITCFG = 1) or on the next clock edge (bit WAITCFG = 0).”
+
+The wording “to be set” indicates that software can write this bit, and because it is a normal control bit in a register, its value can also be read back. Hence the access type for the WAITCFG field is read‑write.
+
+Therefore the statement that the **WAITCFG** field of the **FSMC_BCR4** register has access type “read‑write” is consistent with the documentation.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.9
+}
+```
+
+The search results contain several excerpts from the STM32 FSMC (Flexible Static Memory Controller) reference manual (RM0041).  
+In the description of the **FSMC_BCRx** registers (the BCR registers for each bank), the field **WAITCFG** is listed as:
+
+- “Bit 11 WAITCFG: Wait timing configuration.”  
+
+A single‑bit field is always 1 bit wide, so the bit‑width of the WAITCFG field is **1**.  
+Although the excerpts refer to “FSMC_BCRx” generically, the same bit‑field layout applies to all BCR registers (BCR1, BCR2, BCR3, BCR4). Therefore, for the specific register **BCR4**, the WAITCFG field also has a bit‑width of 1.
+
+Thus the statement that the WAITCFG field in FSMC → BCR4 has a bit width of 1 is correct.
+
+```json
+{
+    "is_true": true,
+    "confidence_score": 0.98
+}
+```
+
+The extracted sections from the FSMC documentation describe the **WAITEN** field as:
+
+> “Bit 13 WAITEN: Wait enable bit …”
+
+This indicates that the **WAITEN** field is located at bit offset 13 within the BCR registers (including BCR4). The fact we need to validate claims the bit offset is **1**, which contradicts the documented bit position.
+
+Therefore, the statement is false, and the documentation provides a clear, unambiguous indication of the correct bit offset.
+
+```json
+{
+    "is_true": false,
+    "confidence_score": 1.0
+}
+```
+

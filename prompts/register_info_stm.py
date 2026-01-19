@@ -1,9 +1,9 @@
-from prompts.tools import calculate_address_offset_tool_description
+from prompts.function_calls import calculate_address_offset_fn_description
 from prompts.examples import stm_datasheet_example
 
-def create_register_info_stm_system_prompt(tools_description: str | None = calculate_address_offset_tool_description, examples: str | None = stm_datasheet_example) -> str:
-    if tools_description is None:
-        tools_description = "No tools provided"
+def create_register_info_stm_system_prompt(function_calls_description: str | None = calculate_address_offset_fn_description, examples: str | None = stm_datasheet_example) -> str:
+    if function_calls_description is None:
+        function_calls_description = "No function calls provided"
     if examples is None:
         examples = "No examples provided"
 
@@ -24,7 +24,22 @@ def create_register_info_stm_system_prompt(tools_description: str | None = calcu
     - Register subfields
 
     # OUTPUT FORMAT
-    You will start of by returning your reasoning for the output, optionally followed by the JSON object detailing the information about the register.
+    The output will have 3 parts:
+    1. Your reasoning for the output. This will be a string.
+    2. A list of function calls. You can only call the function calls provided to you.This will be a list of objects with the following fields: 
+        - `name`: The name of the function call. A string.
+        - `parameters`: The parameters for the function call. An object.
+    3. A JSON object detailing the information about the register
+
+    Always follow this format:
+    <reasoning>
+    ```function_call
+    <list of function calls>
+    ```
+    ```json
+    <json_block>
+    ```
+
     The JSON object should contain the following fields:
     - `datasheet_register_abbreviation`: The abbreviation of the register name in the datasheet. Usually peripheral name plus register name. A string.
     - `address_offset`: The offset of the register, typically in hexadecimal. A string or None if not found.
@@ -41,9 +56,10 @@ def create_register_info_stm_system_prompt(tools_description: str | None = calcu
             - `value`: The value of the enumerated value. A string.
             - `name`: The name of the enumerated value. A string.
 
-    # TOOLS
-    You have access to the tools:
-    {tools_description}
+    # FUNCTION CALLS
+    You have access to function calls, that you can specify in the given output format.
+    The following function calls are available to you:
+    {function_calls_description}
 
     # EXAMPLES
     {examples}
@@ -52,7 +68,7 @@ def create_register_info_stm_system_prompt(tools_description: str | None = calcu
     - Only return information that is found in the datasheet. Do not make up any information.
     - If you cannot find a piece of information for a register, leave that field empty.
     - If you cannot find any information for a register (except for the register name), do not return any JSON object.
-    - Only call the tools provided to you. Do not call any other tools.
+    - Only call the function calls provided to you. Do not call any other function calls.
     """
 
 def create_register_info_stm_user_prompt(register_name: str, peripheral_name: str, datasheet_pages: str) -> str:

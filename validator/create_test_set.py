@@ -3,27 +3,29 @@ import random
 import re
 
 
-def create_test_set(csv_file_path, num_rows, keep_percentage, change_percentage):
+def create_test_set(csv_file_path, start_row, end_row, keep_percentage, incorrect_value_percentage, incorrect_name_percentage=0):
     """
     Creates a test set from a CSV file with modified values for testing.
     
     Args:
         csv_file_path (str): Path to the input CSV file
-        num_rows (int): Number of rows to work with
+        start_row (int): Start row index
+        end_row (int): End row index
         keep_percentage (float): Percentage of rows to keep unchanged (0-100)
-        change_percentage (float): Percentage of rows to change (0-100)
+        incorrect_value_percentage (float): Percentage of rows to change (0-100)
+        incorrect_name_percentage (float): Percentage of rows to have incorrect peripheral/register/field_name (0-100)
     
     Returns:
         pd.DataFrame: DataFrame with columns: peripheral, register, field_name, key, 
                      correct_value, and is_correct (True/False)
     
     Note:
-        keep_percentage + change_percentage should equal 100
+        keep_percentage + incorrect_value_percentage + incorrect_name_percentage should equal 100
     """
     # Read the CSV file
     df = pd.read_csv(csv_file_path)
     
-    df = df.head(num_rows).reset_index(drop=True)
+    df = df.iloc[start_row:end_row].reset_index(drop=True)
     
     # Keep only the specified columns
     columns_to_keep = ['peripheral', 'register', 'field_name', 'key', 'correct_value']
@@ -31,24 +33,62 @@ def create_test_set(csv_file_path, num_rows, keep_percentage, change_percentage)
     
     # Calculate number of rows to change
     total_rows = len(df)
-    num_to_change = int(total_rows * change_percentage / 100)
-    num_to_keep = total_rows - num_to_change
+    num_to_change = int(total_rows * incorrect_value_percentage / 100)
+    num_incorrect_names = int(total_rows * incorrect_name_percentage / 100)
     
     # Initialize the is_correct column with True
     df['is_correct'] = True
+    df['is_incorrect_name'] = False
     
-    # Randomly select rows to change
-    if num_to_change > 0:
-        change_indices = random.sample(range(total_rows), num_to_change)
+    # Initialize list to track rows with incorrect names
+    incorrect_name_indices = []
+    
+    # Randomly select rows to have incorrect names (peripheral, register, field_name)
+    if num_incorrect_names > 0:
+        incorrect_name_indices = random.sample(range(total_rows), num_incorrect_names)
         
-        for idx in change_indices:
-            # Change the correct_value randomly
-            original_value = df.loc[idx, 'correct_value']
-            new_value = _generate_random_value(original_value)
-            df.loc[idx, 'correct_value'] = new_value
+        for idx in incorrect_name_indices:
+            # Randomly pick one of peripheral, register, or field_name to replace with a random name
+            name_column = random.choice(['peripheral', 'register', 'field_name'])
+            df.loc[idx, name_column] = _generate_random_name()
             df.loc[idx, 'is_correct'] = False
+            df.loc[idx, 'is_incorrect_name'] = True
+    
+    # Randomly select rows to change the value (excluding those already changed for names)
+    if num_to_change > 0:
+        # Get available indices (exclude those already changed for names)
+        available_indices = [i for i in range(total_rows) if i not in incorrect_name_indices]
+        # Sample from available indices, but don't exceed the number available
+        num_to_change_actual = min(num_to_change, len(available_indices))
+        if num_to_change_actual > 0:
+            change_indices = random.sample(available_indices, num_to_change_actual)
+            
+            for idx in change_indices:
+                # Change the correct_value randomly
+                original_value = df.loc[idx, 'correct_value']
+                new_value = _generate_random_value(original_value)
+                df.loc[idx, 'correct_value'] = new_value
+                df.loc[idx, 'is_correct'] = False
     
     return df
+
+
+def _generate_random_name(length=None):
+    """
+    Generates a random name using a combination of letters.
+    
+    Args:
+        length (int, optional): Desired length of the name. If None, uses random length between 3-12.
+    
+    Returns:
+        str: A random string of letters
+    """
+    if length is None:
+        length = random.randint(3, 12)
+    
+    # Generate random combination of letters
+    letters = 'abcdefghijklmnopqrstuvwxyz'
+    return ''.join(random.choice(letters) for _ in range(length))
 
 
 def _generate_random_value(original_value):
@@ -81,7 +121,7 @@ def _generate_random_value(original_value):
             if random_hex != hex_num:
                 return f'0x{random_hex:X}'
     
-        # Check for access types like 'read-only', 'write-only', or 'read-write'
+    # Check for access types like 'read-only', 'write-only', or 'read-write'
     if isinstance(original_value, str):
         access_types = ["read-only", "write-only", "read-write", "reserved"]
         if original_value in access_types:
@@ -120,7 +160,7 @@ def save_test_set(df, output_path):
 if __name__ == '__main__':
     # Example usage
     csv_path = 'verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv'
-    result_df = create_test_set(csv_path, num_rows=1000, keep_percentage=70, change_percentage=30)
+    result_df = create_test_set(csv_path, start_row=1000, end_row=1500, keep_percentage=60, incorrect_value_percentage=30, incorrect_name_percentage=10)
     print(f"\nTotal rows: {len(result_df)}")
     print(f"Rows with is_correct=True: {result_df['is_correct'].sum()}")
     print(f"Rows with is_correct=False: {(~result_df['is_correct']).sum()}")

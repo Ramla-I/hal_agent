@@ -1,9 +1,18 @@
 import os
-from openai import OpenAI
+import sys
 
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-)
+# HACK, remove this once we have a proper package structure
+# Add the parent directory to sys.path
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+
+from config import client_openai
+from utils.utils import setup_logger
+
+# Set up logger for this module
+logger = setup_logger(__name__)
+
+client = client_openai
 
 # https://platform.openai.com/docs/guides/retrieval
 
@@ -12,6 +21,11 @@ def search_vector_store(query: str, vs_id: str, num_results: int, re_rank: bool,
         ranker = "auto"
     else:
         ranker = None
+    
+    # Truncate the query string to max 4096 characters (if necessary)
+    if len(query) > 4096:
+        logger.warning(f"Query is too long, truncating to 4096 characters. Original length: {len(query)}")
+        query = query[:4096]
 
     results = client.vector_stores.search(
         vector_store_id=vs_id,
@@ -38,8 +52,9 @@ def main():
     vs_id = "vs_6892501067b08191ac63cc6de06ee629"
     num_results = 10
     re_rank = True
-    
-    results = search_vector_store(query, vs_id, num_results, re_rank)
+    score_threshold = 0.15
+
+    results = search_vector_store(query, vs_id, num_results, re_rank, score_threshold)
     formatted_results = format_results(results)
 
 

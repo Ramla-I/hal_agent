@@ -1,0 +1,372 @@
+---exti_ftsr---
+I examined the provided excerpt. It mentions the section **8.3.7 EXTI register map** and references **Table 51** for the EXTI register map and reset values, but the actual table containing the details of each register (including FTSR) is not included in the text. No explicit address offset, reset value, register size, or sub‑field descriptions for the FTSR register appear in the supplied material. Consequently, there is no concrete information to extract for this register.
+
+Since no additional data can be obtained, I will not produce a JSON description.
+
+---exti_emr---
+The datasheet snippet contains a section titled **Event mask register (EXTI_EMR)**, which matches the requested register name “emr” of the “exti” peripheral.  
+From this section we can extract:
+
+* **Register abbreviation** – The datasheet uses the abbreviation **EXTI_EMR**; for the specific peripheral instance this becomes **EXTI_EMR** (the peripheral name is already part of the abbreviation).  
+* **Address offset** – Listed as **0x04**.  
+* **Reset value** – Listed as **0x0000 0000**.  
+* **Size** – The document states that “the peripheral registers have to be accessed by words (32‑bit)”, so the register size is **32 bits**.  
+* **Subfields** –  
+  * Bits **31:18** are reserved; they are not included as functional subfields.  
+  * Bits **17:0** are named **MRx** (Event mask on line *x*). The description says a ‘0’ masks the event request and a ‘1’ leaves it unmasked. No explicit access type is given, but mask registers are normally read‑write, so we treat them as **read‑write**.  
+  * The enumerated values for each MRx bit are:  
+    * **0** – Event request masked  
+    * **1** – Event request not masked  
+
+No calculation of address offset is required because the offset is given directly.
+
+---exti_rtsr---
+I examined the provided excerpt of the RM0041 datasheet. It includes a heading for “8.3.7 EXTI register map” and mentions “Table 51. External interrupt/event controller register map and reset values,” but the actual table contents (which would list registers such as RTSR, their address offsets, reset values, size, and bit‑field definitions) are not present in the supplied text. Consequently, none of the required details for the rtsr register of the exti peripheral can be extracted from the given material.
+
+---exti_pr---
+I examined the provided datasheet excerpt and located the section titled **“8.3.6 Pending register (EXTI_PR)”**. This section describes the register that matches the requested name “pr” for the EXTI peripheral.
+
+- The register is named **EXTI_PR** (Power control register PR for the EXTI peripheral).
+- The address offset is explicitly given as **0x14**.
+- The reset value is stated as **undefined**, so I will leave that field empty (`null`).
+- The peripheral registers can be accessed as half‑words (16 bit) or words (32 bit); the EXTI_PR register contains bits 31:0, therefore its size is **32 bits**.
+- The register is divided into:
+  * **Bits 31:18** – Reserved (not listed as subfields).
+  * **Bits 17:0** – **PRx**: pending bits for EXTI lines 0‑17.  
+    – Access: the bits are readable and can be cleared by writing a ‘1’, which is a typical read‑write (write‑1‑to‑clear) behavior.  
+    – Enumerated values: `0` = No trigger request occurred, `1` = Selected trigger request occurred.
+
+Thus the required information can be expressed as follows.
+
+---exti_swier---
+I examined the provided excerpt and located the section titled **Software interrupt event register (EXTI_SWIER)**, which corresponds to the requested register `swier` of the `exti` peripheral.  
+The datasheet explicitly gives:
+
+* **Register abbreviation** – `EXTI_SWIER` (the generic name with the peripheral prefix).  
+* **Address offset** – `0x10`.  
+* **Reset value** – `0x00000000`.  
+* **Size** – The register is described with bits 31 down to 0, indicating a 32‑bit register.  
+* **Subfields** –  
+  * Bits 31:18 are reserved and therefore omitted.  
+  * Bits 17:0 are named **SWIERx** (x = 0…17). The description states that writing a ‘1’ to a bit generates a software interrupt, while writing ‘0’ has no effect and the bits are cleared via the pending register. This makes the fields **write‑only**.  
+  * Enumerated values for each SWIERx field are: `0` – “No action”, `1` – “Generate interrupt”.
+
+No calculation of the address offset is required because it is directly provided.
+
+---exti_imr---
+I examined the provided datasheet excerpt and identified the section titled **“Interrupt mask register (EXTI_IMR)”**. This corresponds to the requested register `imr` of the `exti` peripheral, whose full abbreviation in the datasheet is `EXTI_IMR`.  
+The excerpt directly states the address offset (`0x00`) and the reset value (`0x0000 0000`). It also mentions that the peripheral registers are accessed as 32‑bit words, giving the register a size of 32 bits.  
+Bits 31:18 are reserved and therefore omitted from the subfield list. Bits 17:0 are described as **MRx** – individual mask bits for each interrupt line (x = 0…17). These bits are configurable by software, so their access type is read‑write. The possible enumerated values are 0 (masked) and 1 (not masked).  
+
+No calculation of the address offset is required because it is explicitly given.
+
+---bkp_dr42---
+The register name dr42 corresponds to the backup data register BKP_DRx with x = 42.  
+According to the datasheet, the BKP_DRx registers are defined only for x = 1 .. 20, with address offsets 0x04‑0x28 (for 1‑10) and 0x40‑0x64 (for 11‑20).  
+Since 42 is outside this defined range, there is no BKP_DR42 register described in the datasheet, and therefore no address offset, reset value, size, or subfield information can be extracted.  
+
+No function calls or JSON output are applicable.
+
+---bkp_dr32---
+The register name given is **dr32** for the **BKP** peripheral.  
+In the provided datasheet excerpt the backup data registers are defined only as **BKP_DRx** with **x = 1 … 20**. No register with index 32 is described, and there is no address offset, reset value, size, or sub‑field information for such a register. Consequently, there is no usable information to populate the JSON output for this register.  
+
+---bkp_dr18---
+The register **dr18** is the 18‑th backup data register of the BKP peripheral, i.e. **BKP_DR18**.  
+The datasheet gives the address offsets for the BKP_DRx series as two ranges: 0x04‑0x28 for registers 1‑10 and 0x40‑0x64 for registers 11‑20, each register occupying 4 bytes. Using the provided `calculate_address_offset` function with base 0x40, start 11, register 18 and size 4 bytes yields an offset of **0x5C**.  
+
+The reset value is listed as 0x0000 0000 and the register size is 32 bits (accessible as a half‑word or word).  
+Only one defined subfield exists: bits 15:0 (**D[15:0]**) which stores user backup data and is read‑write. No enumerated values are defined for this field.
+
+---bkp_dr23---
+I examined the provided excerpt of the STM32 backup register (BKP) documentation.  
+The backup data registers are defined as **BKP_DRx** with **x = 1 .. 20**. The address offsets are given for this range (0x04‑0x28, 0x40‑0x64) and a reset value of 0x00000000 is specified. No description or address is provided for any register beyond x = 20.  
+
+The requested register is **dr23** (i.e., BKP_DR23). Since the datasheet only defines backup data registers up to BKP_DR20, there is no information about a BKP_DR23 register. Therefore, no address offset, reset value, size, or subfield details can be extracted.
+
+---bkp_dr33---
+The register name given is **dr33** for the **BKP** peripheral.  
+In the provided datasheet excerpt, the only backup data registers described are **BKP_DRx** with **x = 1 .. 20**. No information is given for a register with index 33, and there are no other registers named “DR33” or similar in the BKP peripheral description. Consequently, the datasheet does not contain any address offset, reset value, size, or subfield information for **BKP_DR33**.
+
+Since no relevant data can be extracted, no JSON object is returned. No function calls are needed.
+
+---bkp_dr40---
+The requested register is **dr40** in the **BKP** peripheral.  
+In the provided RM0041 excerpt, the backup data registers are defined as **BKP_DRx** with **x = 1 … 20**. The address offset and description are given for this range only, and there is no mention of a **DR40** (or any register beyond DR20). Therefore, the datasheet does not contain any information about a **dr40** register.
+
+Since no relevant information (address offset, reset value, size, or subfields) can be extracted, I will not produce a JSON object for this register.
+
+---bkp_dr3---
+The function call calculated the offset for **BKP_DR3** as 0x0C, confirming the address offset for this register. All other required fields (reset value, size, and subfield information) were already extracted from the datasheet.
+
+---bkp_dr37---
+The register name **dr37** would correspond to the backup data register **BKP_DR37**, but the BKP peripheral only defines backup data registers **BKP_DRx** for **x = 1 .. 20**. The datasheet section 5.4.1 lists the address offset range (0x04‑0x28, 0x40‑0x64) and reset value (0x00000000) only for these 20 registers. Since **37** is outside the defined range, there is no information about a **BKP_DR37** register in the provided datasheet.
+
+Therefore, no address offset, reset value, size, or subfield information can be extracted for this register, and no JSON object should be returned.
+
+---bkp_dr2---
+The datasheet describes the backup data registers **BKP_DRx** (x = 1..20).  
+- The register name requested is **dr2**, which matches the concrete register **BKP_DR2**.  
+- The address offset range is given as “0x04 to 0x28, 0x40 to 0x64”. This corresponds to a stride of 0x04 bytes per register.  
+  For the first block (x = 1..10) the offset is **0x04 + (x‑1)·0x04**.  
+  Substituting **x = 2** gives **0x08**, so the address offset for BKP_DR2 is 0x08.  
+- The reset value is stated as **0x0000 0000**.  
+- Each BKP_DRx register holds 16 bits of user data (bits 15:0 **D[15:0]**) and can be accessed as half‑words or words; therefore the register size is **16 bits**.  
+- The only defined subfield is **D[15:0]**, described as “Backup data”. The bits are writable by software, so the access type is **read‑write**. No enumerated values are defined for this field.
+
+A function call is included to demonstrate how the address offset could be calculated programmatically.
+
+---bkp_dr27---
+The datasheet section for the Backup registers (BKP) only defines backup data registers **BKP_DRx** for **x = 1 .. 20**.  
+The requested register is **dr27**, which would correspond to **BKP_DR27**, but this register is not listed in the documented range. No address offset, reset value, size, or subfield description is provided for a register numbered 27.
+
+Since the datasheet contains no information about **BKP_DR27**, I cannot supply any register details, and according to the output restrictions I should not produce a JSON object.
+
+---bkp_dr36---
+The datasheet specifies backup data registers **BKP_DRx** only for **x = 1 … 20** with address offsets ranging from 0x04‑0x28 and 0x40‑0x64.  
+The requested register is **dr36**, which would correspond to **BKP_DR36**, but this index is outside the defined range. Consequently, the datasheet contains no address, reset value, size, or sub‑field information for this register.  
+
+According to the output rules, when no information is found (aside from the register name) we must not produce a JSON object.
+
+---bkp_dr5---
+The function `calculate_address_offset` returned **0x14**, which is the correct offset for the fifth backup data register (BKP_DR5). All other extracted information remains unchanged.
+
+---bkp_dr15---
+The backup data registers **BKP_DRx** are defined for x = 1…20. Their address offsets are given as two contiguous blocks:
+
+- Registers 1‑10: 0x04 to 0x28  
+- Registers 11‑20: 0x40 to 0x64  
+
+Each register occupies 4 bytes (32 bits), but only the lower 16 bits are used for data storage.  
+For **BKP_DR15** (the 15th register, which falls in the second block), the offset is calculated from the start of that block (0x40, corresponding to register 11). Adding (15 − 11) × 4 bytes yields an offset of **0x50**, which matches the result of the `calculate_address_offset` function call.
+
+The datasheet states a reset value of 0x0000 0000.  
+Bits 15:0 are named **D[15:0]** and can be read and written (no enumerated values are defined). The higher bits are not specified, so the effective size of the defined field is 16 bits.
+
+---bkp_dr30---
+The register name given is **dr30** for the **BKP** peripheral.  
+In the BKP section of the RM0041 datasheet, only backup data registers **BKP_DRx** with *x = 1 .. 20* are defined, along with several control and status registers (BKP_CR, BKP_CSR, BKP_RTCCR). There is no definition or address range for a **DR30** register, nor any mention of a register named “dr30”. Consequently, the datasheet does not provide any address offset, reset value, size, or subfield information for this register.
+
+Since no relevant information is found, no JSON object is returned and no function calls are needed.  
+
+---bkp_dr8---
+The datasheet section **5.4.1 Backup data register x (BKP_DRx) (x = 1 ..20)** defines the backup data registers.  
+The requested register **dr8** of peripheral **BKP** corresponds to **BKP_DR8**.
+
+* The address offset for the series is given as a range **0x04 to 0x28** with a step of 0x04.  
+  Using the provided `calculate_address_offset` function with base 0x04, start 1, register 8 and size 4 bytes yields an offset of **0x20**.  
+* The reset value for all BKP_DRx registers is **0x0000 0000**.  
+* The register size is 16 bits (bits 15:0 are defined; the register can be accessed as half‑word or word).  
+* One subfield is defined:  
+  * **D[15:0]** – backup data, read‑write, covering bits 15 down to 0, with no enumerated values.
+
+---bkp_dr17---
+The address offset for **BKP_DR17** is calculated as 0x58, based on the second block of backup registers (starting at 0x40) with a 4‑byte spacing.
+
+---bkp_dr9---
+I have used the provided `calculate_address_offset` function to determine the address offset for BKP_DR9. The calculation confirms that the offset is 0x24. The datasheet lists a reset value of 0x0000 0000, the register width is 16 bits (bits 15:0), and the only defined subfield is **D[15:0]**, which holds the backup data and is read‑write. No enumerated values are defined for this field.
+
+---bkp_dr31---
+The datasheet section for the Backup registers (BKP) defines backup data registers **BKP_DRx** only for **x = 1 .. 20**.  
+The requested register is **dr31**, which would correspond to **BKP_DR31**, but such a register is not described in the provided documentation (the address offset list stops at DR20 and the range “x = 1 ..20” is explicitly stated). Consequently, none of the required fields (address offset, reset value, size, sub‑fields) can be extracted for this register.
+
+Since no information about **BKP_DR31** is present, I will not produce a JSON object.
+
+---bkp_dr35---
+The register name pattern for the Backup data registers is **BKP_DRx**, where **x** ranges from 1 to 20 as specified in the datasheet section 5.4.1. The requested register is **dr35**, which would correspond to **BKP_DR35**. Since the valid range ends at 20, a DR35 does not exist in this peripheral. Consequently, there is no address offset, reset value, size, or subfield information available for this non‑existent register, and no function call is required.
+
+---bkp_dr22---
+I examined the provided datasheet excerpt.  
+The backup data registers are defined as **BKP_DRx** with *x = 1 .. 20*.  
+The requested register is **dr22**, which falls outside this defined range, and there is no separate description for a DR22 register elsewhere in the excerpt. Therefore, the datasheet does not contain any address offset, reset value, size, or sub‑field information for this register.
+
+No function calls are needed, and no JSON object can be produced because the required information is not present.
+
+---bkp_dr25---
+I examined the provided excerpt from the STM32 backup register (BKP) section of the RM0041 reference manual.  
+
+The only backup data registers described are **BKP_DRx** with **x = 1 .. 20**. Their address offsets are given as ranges (0x04‑0x28 and 0x40‑0x64) and each register is 16 bits wide (accessible as half‑words or words). No information is provided for a register named **DR25**; the valid range stops at 20, so a DR25 register does not exist in this peripheral.  
+
+Since the datasheet contains no entry for **BKP_DR25**, there is no address offset, reset value, size, or subfield description to extract. Consequently, I will not produce a JSON object for this register.
+
+---bkp_cr---
+The datasheet section **5.4.3 Backup control register (BKP_CR)** provides all required details for the requested register.  
+- The register name in the datasheet is **BKP_CR**, matching the peripheral BKP and the requested short name “cr”.  
+- The address offset is explicitly given as **0x30**.  
+- The reset value is listed as **0x0000 0000**.  
+- The register is described with bits 15‑0, indicating a 16‑bit width (the backup registers can be accessed as half‑words).  
+- Bits 15:2 are reserved, while bits 1 and 0 are defined:
+  * **TPAL** (bit 1) selects the active level of the TAMPER pin; it is a read‑write field with two enumerated values (0 = high level, 1 = low level).  
+  * **TPE** (bit 0) enables the TAMPER pin; it is also read‑write with two enumerated values (0 = GPIO mode, 1 = Tamper alternate I/O).
+
+No address calculation is required, so no function calls are needed.
+
+---bkp_dr4---
+The function `calculate_address_offset` returned **0x10**, which is the address offset for the **BKP_DR4** register. All other information was already extracted from the datasheet.
+
+---bkp_dr19---
+The function call confirms that the address offset for **BKP_DR19** is **0x60**.
+
+---bkp_dr13---
+The function `calculate_address_offset` returned **0x48**, which is the correct offset for the 13th backup data register (BKP_DR13) given the offset pattern described in the datasheet.
+
+---bkp_dr24---
+The datasheet excerpt describes the backup data registers as **BKP_DRx** with x ranging from 1 to 20. The requested register is dr24, which would correspond to BKP_DR24, but such a register is not defined in the provided documentation (the valid range ends at 20). Consequently, none of the required fields (address offset, reset value, size, subfields) can be obtained for this register.
+
+No function calls are needed.
+
+---bkp_dr11---
+I examined the provided excerpt of the RM0041 datasheet.  
+The register of interest is the backup data register **BKP_DRx** where *x* = 11, matching the requested name `dr11` for peripheral `bkp`.  
+
+From the “Backup data register x (BKP_DRx)” section:
+
+* **Address offset** is described as a range `0x04 to 0x28, 0x40 to 0x64`.  
+  The first range covers registers 1‑10 (offset 0x04 + (n‑1)·4).  
+  The second range starts at 0x40 for register 11, so the offset for **BKP_DR11** is **0x40**.  
+
+* **Reset value** is given as `0x0000 0000`.  
+
+* The register can be accessed as a 32‑bit word, although only the lower 16 bits are defined. The datasheet states “Bits 15:0 D[15:0] Backup data” and that the peripheral registers may be accessed by half‑words (16‑bit) or words (32‑bit). Therefore the register size is taken as **32 bits** (consistent with other 32‑bit registers in the peripheral).  
+
+* **Subfield**:  
+  * **Name** `D[15:0]` – the 16‑bit field containing user backup data.  
+  * **Description** `Backup data`.  
+  * **Access** `read-write` (the text says “These bits can be written with user data”).  
+  * **Bit range** bits 0‑15.  
+  * No enumerated values are defined.  
+
+No other subfields are documented; the upper bits (31:16) are implicitly reserved and are omitted from the subfield list.
+
+---bkp_dr1---
+The datasheet defines the **Backup data register x (BKP_DRx)** with address offsets ranging from **0x04 to 0x28** for registers 1‑10.  
+Using the provided `calculate_address_offset` function for register 1 (base 0x04, register size 4 bytes) returns **0x4**, confirming the offset for **BKP_DR1**.
+
+All other required fields are directly available in the excerpt:
+- Reset value: **0x0000 0000**  
+- Register size: 16 bits (half‑word access)  
+- Subfield: **D[15:0]** (backup data), read‑write, covering bits 0‑15 with no enumerated values.
+
+---bkp_rtccr---
+The datasheet section **5.4.2** describes the **RTC clock calibration register (BKP_RTCCR)**, which matches the requested register name “rtccr” in the “bkp” peripheral.  
+From the description we can extract:
+- **Abbreviation**: BKP_RTCCR (the datasheet’s naming convention for this register).  
+- **Address offset**: 0x2C.  
+- **Reset value**: 0x0000 0000.  
+- **Size**: the register fields are defined for bits 15‑0, and the peripheral can be accessed as half‑words (16 bit) or words (32 bit). The logical size of the register is therefore 16 bits.  
+- **Subfields**: the defined bits are ASOS (bit 9), ASOE (bit 8), CCO (bit 7) and CAL[6:0] (bits 6‑0). Reserved bits are omitted. For each subfield we include its description, access type (read‑write for configuration bits), bit positions, and any enumerated values explicitly given in the datasheet.
+
+---bkp_dr38---
+I searched the provided excerpt of the RM0041 datasheet for any definition of a backup data register numbered 38 (dr38) within the BKP peripheral. The BKP peripheral defines backup data registers **BKP_DRx** only for **x = 1 .. 20**. The address offset description lists two contiguous ranges (0x04‑0x28 and 0x40‑0x64) that cover exactly these 20 registers. No register with index 38 is mentioned anywhere in the supplied sections, nor is there any formula that would allow calculating an offset for such a register. Therefore, the register **dr38** does not exist in this peripheral according to the given datasheet excerpt, and no information (address offset, reset value, size, or subfields) can be extracted.
+
+---bkp_dr39---
+The register name `dr39` implies the backup data register BKP_DRx with x = 39.  
+The datasheet section **5.4.1 Backup data register x (BKP_DRx) (x = 1 ..20)** explicitly defines the valid range for x as 1 through 20 and provides the address offsets, reset value and bit fields only for those registers.  
+Since x = 39 is outside this defined range, there is no information about a BKP_DR39 register in the provided datasheet. Consequently, no address offset, reset value, size, or sub‑field details can be extracted.
+
+No function calls are needed.
+
+---bkp_dr6---
+The register **dr6** corresponds to the backup data register number 6 of the BKP peripheral, i.e. **BKP_DR6**.  
+From the datasheet, backup data registers **BKP_DRx (x = 1..20)** have address offsets ranging from 0x04 to 0x28 for registers 1‑10. Using the provided `calculate_address_offset` function with base 0x04, start 1, register 6, and a 4‑byte spacing yields an offset of **0x18**.  
+All BKP_DRx registers reset to **0x0000 0000**.  
+Each register is 16 bits wide (bits 15:0) and contains a single read‑write field **D[15:0]** that holds user data; no enumerated values are defined for this field.
+
+---bkp_dr14---
+The datasheet defines the backup data registers **BKP_DRx** (x = 1..20).  
+For registers 11‑20 the address offset follows the formula 0x40 + 4 · (x‑11).  
+Using the provided `calculate_address_offset` tool with the parameters  
+base = 0x40, start = 11, register = 14, size = 4 bytes yields an offset of **0x4C**.  
+
+The reset value for all BKP_DRx registers is **0x0000 0000**.  
+Each register is 16 bits wide (bits 15:0) and holds the field **D[15:0]**, which is readable and writable. No enumerated values are defined for this field.
+
+---bkp_csr---
+The datasheet section **5.4.4 Backup control/status register (BKP_CSR)** provides all required information for the requested register.
+
+* The register name in the datasheet is **BKP_CSR**, which matches the peripheral BKP and the given short name “csr”.  
+* **Address offset** is listed as **0x34**.  
+* **Reset value** is listed as **0x00000000**.  
+* The register is accessed as a half‑word (16 bits); the bit field table goes from bit 15 down to bit 0, confirming a **size of 16 bits**.  
+* The bit‑field description gives the following sub‑fields:
+
+| Bits | Name | Description | Access | Enumerated values |
+|------|------|-------------|--------|-------------------|
+| 15‑10 | Reserved | Must be kept at reset value | read‑only (treated as reserved) | – |
+| 9 | TIF | Tamper interrupt flag – set by hardware when a tamper event is detected and TPIE is set; cleared by writing 1 to CTI or by resetting TPIE | read‑only | 0 = No Tamper interrupt, 1 = A Tamper interrupt occurred |
+| 8 | TEF | Tamper event flag – set by hardware when a tamper event is detected; cleared by writing 1 to CTE | read‑only | 0 = No Tamper event, 1 = A Tamper event occurred |
+| 7‑3 | Reserved | Must be kept at reset value | read‑only (reserved) | – |
+| 2 | TPIE | Tamper pin interrupt enable | read‑write | 0 = Tamper interrupt disabled, 1 = Tamper interrupt enabled (requires TPE in BKP_CR) |
+| 1 | CTI | Clear tamper interrupt – write‑only, always reads as 0 | write‑only | 0 = No effect, 1 = Clear the Tamper interrupt and the TIF flag |
+| 0 | CTE | Clear tamper event – write‑only, always reads as 0 | write‑only | 0 = No effect, 1 = Reset the TEF flag and the tamper detector |
+
+Only non‑reserved fields are listed as subfields.
+
+---bkp_dr28---
+The datasheet describes backup data registers **BKP_DRx** only for **x = 1 .. 20**.  
+The register you asked for is **dr28**, which would correspond to **BKP_DR28**, but such a register is not defined in the RM0041 documentation – the valid range stops at **BKP_DR20**.  
+
+Because the register does not exist in the provided datasheet, there is no address offset, reset value, size, or sub‑field information to extract. According to the output rules, when no information can be found (apart from the name), we should not return a JSON object.
+
+---bkp_dr34---
+The datasheet describes backup data registers **BKP_DRx** only for x = 1 .. 20 and provides a separate **Backup control/status register (BKP_CSR)** at address offset 0x34.  
+There is no definition for a register named **dr34** (or BKP_DR34) in the BKP peripheral; the only register at offset 0x34 is BKP_CSR, not a data register. Therefore the requested register cannot be found in the provided documentation.
+
+---bkp_dr16---
+The function call returned the calculated address offset **0x54** for the BKP_DR16 register. This matches the formula for the second range of backup data registers (0x40 + (16‑11) × 4). All other extracted information remains unchanged.
+
+---bkp_dr26---
+I examined the provided datasheet excerpt for the Backup registers (BKP).  
+The only backup data registers described are **BKP_DRx** where *x* ranges from **1 to 20**.  
+The address offset is given as two contiguous ranges (0x04‑0x28 for registers 1‑10 and 0x40‑0x64 for registers 11‑20).  
+Since the requested register is **dr26**, which would correspond to **BKP_DR26**, it falls outside the defined range of backup data registers. Consequently, the datasheet contains no information about a register named **dr26** for the BKP peripheral.
+
+---bkp_dr10---
+The function call returned **0x28**, confirming that the 10th backup data register (BKP_DR10) is located at offset 0x28 from the BKP peripheral base address. The rest of the information (reset value, size, and subfield) comes directly from the datasheet description of the BKP_DRx registers.
+
+---bkp_dr12---
+The function call confirms that the address offset for **BKP_DR12** is **0x44**. All other extracted information remains the same.
+
+---bkp_dr21---
+The datasheet section **5.4.1** describes the backup data registers **BKP_DRx** with **x = 1 .. 20**. It provides the address offset range, reset value, and the D[15:0] field for these registers. Since the requested register is **dr21**, which corresponds to **BKP_DR21**, it lies outside the defined range (the maximum index is 20). Consequently, the datasheet contains no information about a **BKP_DR21** register.
+
+No address offset, reset value, size, or subfield details can be extracted because the register does not exist in the documented hardware. Therefore, according to the output restrictions, no JSON object should be returned.
+
+---bkp_dr20---
+The calculated address offset for BKP_DR20 is **0x64**, matching the second address range (0x40‑0x64) for registers 11‑20. All other extracted information remains unchanged.
+
+---bkp_dr29---
+I examined the datasheet section for the Backup registers (BKP). The only data registers described are **BKP_DRx** where **x = 1 .. 20**. The register you asked about is **dr29**, which falls outside this defined range, and the datasheet provides no information for such a register. Consequently, there is no address offset, reset value, size, or sub‑field description available for **BKP_DR29**.
+
+Since no relevant information can be extracted, I will not produce a JSON object for this register.
+
+---bkp_dr41---
+The datasheet section on **Backup data registers (BKP_DRx)** specifies that the register index x is defined only for the range 1 .. 20:
+
+- “Backup data register x (BKP_DRx) (x = 1 .. 20)”
+- Address offsets are given for these registers (0x04‑0x28, 0x40‑0x64).
+- No description, address, or reset information is provided for any register beyond x = 20.
+
+The requested register is **dr41**, which would correspond to BKP_DR41. Since the datasheet does not define a BKP_DR41 register (the valid indices stop at 20), there is no address offset, reset value, size, or subfield information to extract.
+
+Therefore, according to the output restrictions, no JSON object should be returned because the register is not described in the provided datasheet excerpt.
+
+---bkp_dr7---
+The datasheet describes the **Backup data register x (BKP_DRx)** family, which includes the requested **dr7** register for the **BKP** peripheral.  
+- The register abbreviation is **BKP_DR7** (the generic name BKP_DRx with x = 7).  
+- The address offset range for the BKP_DRx registers is **0x04 to 0x28, 0x40 to 0x64**, with each register spaced **0x04** bytes apart. Using the provided `calculate_address_offset` function for register 7 yields an offset of **0x1C**.  
+- All BKP_DRx registers have a reset value of **0x0000 0000**.  
+- The defined bits are **15:0**, representing the backup data field **D[15:0]**; this field is read‑write. The register can be accessed as a 16‑bit half‑word or a 32‑bit word, but the meaningful size of the defined field is 16 bits.  
+- No enumerated values are defined for this field.
+
+---tim2_ccr2---
+The datasheet section **13.4.14 TIMx capture/compare register 2 (TIMx_CCR2)** applies to TIM2 (as it is part of the “General‑purpose timers (TIM2 to TIM5)” group).  
+It explicitly states:
+
+* **Address offset:** 0x38  
+* **Reset value:** 0x0000  
+* **Bits 15:0 CCR2[15:0]** – the capture/compare value for channel 2. The register is 16 bits wide.  
+* The field is writable when the channel is configured as output; it is read‑only when configured as input. In the generic description the field is treated as a normal capture/compare register, so the default access can be considered **read‑write** (with the note that it becomes read‑only in input mode). No enumerated values are defined.
+
+Thus the required information can be extracted directly without any address‑calculation function calls.
+

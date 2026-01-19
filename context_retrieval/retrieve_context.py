@@ -12,7 +12,7 @@ from context_retrieval.keyword_search import create_keyword_info_json, get_keywo
 from context_retrieval.semantic_search import search_vector_store, format_results
 from agent_tools.pdf_ops import extract_pages_from_pdf
 from agent_tools.md_ops import remove_markdown_tables
-
+from s3_query_rewriter import run_query_rewriter
 
 def retrieve_context(
     context_retrieval_parameters: ContextRetrievalParameters,
@@ -20,7 +20,8 @@ def retrieve_context(
     device_dir: str, 
     peripheral_name: str,
     register_name: str,
-    manufacturer: Manufacturer
+    manufacturer: Manufacturer,
+    output_dir: str
 ):
     if context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.KEYWORD_SEARCH:
         keyword_info_path = create_keyword_info_json(device_name, device_dir, manufacturer)
@@ -45,6 +46,10 @@ def retrieve_context(
             context_retrieval_parameters.number_embeddings = 1
         elif context_retrieval_parameters.number_embeddings > 50:
             context_retrieval_parameters.number_embeddings = 50
+
+        if context_retrieval_parameters.query_rewrite:
+            query = run_query_rewriter(query, peripheral_name, register_name, context_retrieval_parameters.vs_id, output_dir)
+
         results = search_vector_store(query, context_retrieval_parameters.vs_id, context_retrieval_parameters.number_embeddings, context_retrieval_parameters.re_ranking, context_retrieval_parameters.score_threshold)
         if len(results.data) == 0:
             return None
@@ -61,13 +66,18 @@ def retrieve_context(
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) < 4:
-        print(f"Usage: {sys.argv[0]} <device_name> <device_dir> <output_dir> <peripheral_name> <register_name>")
-        sys.exit(1)
-    device_name = sys.argv[1]
-    device_dir = sys.argv[2]
-    output_dir = sys.argv[3]
-    peripheral_name = sys.argv[4]
-    register_name = sys.argv[5]
-    retrieve_context( device_name, device_dir, output_dir, peripheral_name, register_name)
-
+    
+    retrieve_context(
+        context_retrieval_parameters=ContextRetrievalParameters(
+            context_retrieval_method=ContextRetrievalMethod.SEMANTIC_SEARCH,
+            number_embeddings=16,
+            query_rewrite=True,
+            vs_id="vs_6892501067b08191ac63cc6de06ee629",
+        ),
+        device_name="rm0041",
+        device_dir="devices/rm0041",
+        peripheral_name="TIM2",
+        register_name="CR2",
+        manufacturer=Manufacturer.STM,
+        output_dir="context_retrieval_test"
+    )

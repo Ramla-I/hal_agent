@@ -1,145 +1,495 @@
-peripheral_name, register_name, field_name, key, value, true_value, agent_judgement, confidence_score
-afio, evcr, , address_offset, 0x0, True, True, 1.0
-afio, evcr, , reset_value, 0xC3, False, False, 1.0
-afio, evcr, , size, 62, False, False, 0.0
-afio, evcr, evoe, bit_offset, 7, True, True, 1.0
-afio, evcr, evoe, access, read-write, True, True, 1.0
-afio, evcr, evoe, bit_width, 40, False, False, 1.0
-afio, evcr, pin, bit_offset, 18, False, False, 0.99
-afio, evcr, pin, access, read-write, True, True, 0.99
-afio, evcr, pin, bit_width, 4, True, True, 0.99
-afio, evcr, port, bit_offset, 4, True, True, 0.92
-afio, evcr, port, access, read-write, True, True, 0.9
-afio, evcr, port, bit_width, 3, True, True, 0.98
-afio, exticr1, , address_offset, 0x8, True, True, 1.0
-afio, exticr1, , reset_value, 0x00000000, True, True, 0.99
-afio, exticr1, , size, 32, True, True, 1.0
-afio, exticr1, exti0, bit_offset, 0, True, True, 0.98
-afio, exticr1, exti0, access, read-write, True, True, 1.0
-afio, exticr1, exti0, bit_width, 4, True, True, 1.0
-afio, exticr1, exti1, bit_offset, 29, False, False, 0.98
-afio, exticr1, exti1, access, read-write, True, True, 1.0
-afio, exticr1, exti1, bit_width, 4, True, True, 0.99
-afio, exticr1, exti2, bit_offset, 8, True, True, 0.98
-afio, exticr1, exti2, access, read-write, True, True, 0.97
-afio, exticr1, exti2, bit_width, 50, False, False, 1.0
-afio, exticr1, exti3, bit_offset, 12, True, True, 0.99
-afio, exticr1, exti3, access, read-write, True, True, 0.98
-afio, exticr1, exti3, bit_width, 26, False, False, 1.0
-afio, exticr2, , address_offset, 0xC, True, True, 1.0
-afio, exticr2, , reset_value, 0x00000000, True, True, 0.99
-afio, exticr2, , size, 32, True, True, 0.97
-afio, exticr2, exti4, bit_offset, 0, True, True, 0.99
-afio, exticr2, exti4, access, read-only, False, False, 1.0
-afio, exticr2, exti4, bit_width, 4, True, True, 0.99
-afio, exticr2, exti5, bit_offset, 4, True, True, 0.98
-afio, exticr2, exti5, access, read-write, True, True, 0.99
-afio, exticr2, exti5, bit_width, 13, False, False, 1.0
-afio, exticr2, exti6, bit_offset, 8, True, True, 0.97
-afio, exticr2, exti6, access, read-write, True, True, 0.99
-afio, exticr2, exti6, bit_width, 4, True, True, 1.0
-afio, exticr2, exti7, bit_offset, 85, False, False, 1.0
-afio, exticr2, exti7, access, reserved, False, False, 0.99
-afio, exticr2, exti7, bit_width, 4, True, True, 1.0
-afio, exticr3, , address_offset, 0x10, True, True, 1.0
-afio, exticr3, , reset_value, 0x00000000, True, True, 0.98
-afio, exticr3, , size, 32, True, True, 0.99
-afio, exticr3, exti10, bit_offset, 78, False, False, 0.98
-afio, exticr3, exti10, access, read-write, True, True, 0.98
-afio, exticr3, exti10, bit_width, 4, True, True, 0.98
-afio, exticr3, exti11, bit_offset, 12, True, True, 0.99
-afio, exticr3, exti11, access, write-only, False, False, 0.99
-afio, exticr3, exti11, bit_width, 4, True, True, 0.99
-afio, exticr3, exti8, bit_offset, 0, True, True, 0.98
-afio, exticr3, exti8, access, read-write, True, True, 0.99
-afio, exticr3, exti8, bit_width, 25, False, False, 0.99
-afio, exticr3, exti9, bit_offset, 4, True, True, 0.98
-afio, exticr3, exti9, access, read-write, True, True, 0.99
-afio, exticr3, exti9, bit_width, 4, True, True, 0.98
-afio, exticr4, , address_offset, 0x14, True, True, 1.0
-afio, exticr4, , reset_value, 0x00000000, True, True, 0.98
-afio, exticr4, , size, 32, True, True, 0.95
-afio, exticr4, exti12, bit_offset, 0, True, True, 0.99
-afio, exticr4, exti12, access, reserved, False, False, 0.98
-afio, exticr4, exti12, bit_width, 4, True, True, 0.98
-afio, exticr4, exti13, bit_offset, 4, True, True, 0.98
-afio, exticr4, exti13, access, read-write, True, True, 0.99
-afio, exticr4, exti13, bit_width, 4, True, True, 0.98
-afio, exticr4, exti14, bit_offset, 89, False, False, 1.0
-afio, exticr4, exti14, access, read-only, False, False, 0.99
-afio, exticr4, exti14, bit_width, 34, False, False, 1.0
-afio, exticr4, exti15, bit_offset, 60, False, False, 0.99
-afio, exticr4, exti15, access, read-write, True, True, 1.0
-afio, exticr4, exti15, bit_width, 4, True, True, 0.99
-afio, mapr, , address_offset, 0x4, True, True, 1.0
-afio, mapr, , reset_value, 0x00000000, True, True, 1.0
-afio, mapr, , size, 96, False, False, 0.99
-afio, mapr, i2c1_remap, bit_offset, 1, True, True, 1.0
-afio, mapr, i2c1_remap, access, read-write, True, True, 0.98
-afio, mapr, i2c1_remap, bit_width, 1, True, True, 1.0
-afio, mapr, pd01_remap, bit_offset, 15, True, True, 0.99
-afio, mapr, pd01_remap, access, read-write, True, True, 0.98
-afio, mapr, pd01_remap, bit_width, 77, False, False, 1.0
-afio, mapr, spi1_remap, bit_offset, 0, True, True, 1.0
-afio, mapr, spi1_remap, access, read-write, True, True, 0.99
-afio, mapr, spi1_remap, bit_width, 1, True, True, 1.0
-afio, mapr, swj_cfg, bit_offset, 69, False, False, 1.0
-afio, mapr, swj_cfg, access, read-only, False, False, 1.0
-afio, mapr, swj_cfg, bit_width, 3, True, True, 0.99
-afio, mapr, tim1_remap, bit_offset, 6, True, True, 0.99
-afio, mapr, tim1_remap, access, write-only, False, False, 0.98
-afio, mapr, tim1_remap, bit_width, 2, True, True, 1.0
-afio, mapr, tim2_remap, bit_offset, 8, True, True, 0.96
-afio, mapr, tim2_remap, access, read-only, False, False, 0.98
-afio, mapr, tim2_remap, bit_width, 82, False, False, 1.0
-afio, mapr, tim3_remap, bit_offset, 10, True, True, 0.99
-afio, mapr, tim3_remap, access, read-write, True, True, 0.98
-afio, mapr, tim3_remap, bit_width, 2, True, True, 0.98
-afio, mapr, tim4_remap, bit_offset, 12, True, True, 0.98
-afio, mapr, tim4_remap, access, read-write, True, True, 0.98
-afio, mapr, tim4_remap, bit_width, 1, True, True, 0.99
-afio, mapr, tim5ch4_iremap, bit_offset, 16, True, True, 0.97
-afio, mapr, tim5ch4_iremap, access, read-write, True, True, 1.0
-afio, mapr, tim5ch4_iremap, bit_width, 1, True, True, 0.97
-afio, mapr, usart1_remap, bit_offset, 2, True, True, 0.99
-afio, mapr, usart1_remap, access, read-write, True, True, 0.98
-afio, mapr, usart1_remap, bit_width, 52, False, False, 0.99
-afio, mapr, usart2_remap, bit_offset, 3, True, True, 1.0
-afio, mapr, usart2_remap, access, reserved, False, False, 0.99
-afio, mapr, usart2_remap, bit_width, 1, True, True, 1.0
-afio, mapr, usart3_remap, bit_offset, 77, False, False, 1.0
-afio, mapr, usart3_remap, access, read-write, True, True, 0.93
-afio, mapr, usart3_remap, bit_width, 88, False, False, 0.99
-afio, mapr2, , address_offset, 0x1C, True, True, 0.99
-afio, mapr2, , reset_value, 0x00000000, True, True, 0.98
-afio, mapr2, , size, 32, True, True, 0.9
-afio, mapr2, fsmc_nadv, bit_offset, 10, True, True, 0.98
-afio, mapr2, fsmc_nadv, access, read-write, True, True, 0.99
-afio, mapr2, fsmc_nadv, bit_width, 1, True, True, 0.99
-afio, mapr2, misc_remap, bit_offset, 18, False, False, 0.99
-afio, mapr2, misc_remap, access, read-write, True, True, 0.98
-afio, mapr2, misc_remap, bit_width, 1, True, True, 0.98
-afio, mapr2, tim12_remap, bit_offset, 12, True, True, 0.98
-afio, mapr2, tim12_remap, access, read-write, True, True, 0.85
-afio, mapr2, tim12_remap, bit_width, 1, True, True, 1.0
-afio, mapr2, tim13_remap, bit_offset, 8, True, True, 0.99
-afio, mapr2, tim13_remap, access, read-only, False, False, 0.99
-afio, mapr2, tim13_remap, bit_width, 1, True, True, 0.99
-afio, mapr2, tim14_remap, bit_offset, 9, True, True, 0.99
-afio, mapr2, tim14_remap, access, read-write, True, True, 0.82
-afio, mapr2, tim14_remap, bit_width, 14, False, False, 1.0
-afio, mapr2, tim1_dma_remap, bit_offset, 4, True, True, 1.0
-afio, mapr2, tim1_dma_remap, bit_width, 1, True, True, 1.0
-afio, mapr2, tim67_dac_dma_remap, bit_offset, 11, True, True, 1.0
-afio, mapr2, tim67_dac_dma_remap, access, read-write, True, False, 0.0
-afio, mapr2, tim67_dac_dma_remap, bit_width, 1, True, True, 0.97
-afio, mapr2, cec_remap, bit_offset, 3, True, True, 1.0
-afio, mapr2, cec_remap, bit_width, 1, True, True, 0.98
-afio, mapr2, tim15_remap, bit_offset, 0, True, True, 0.99
-afio, mapr2, tim15_remap, access, read-only, False, False, 0.9
-afio, mapr2, tim15_remap, bit_width, 1, True, True, 1.0
-afio, mapr2, tim16_remap, bit_offset, 1, True, True, 1.0
-afio, mapr2, tim16_remap, access, read-write, True, True, 0.75
-afio, mapr2, tim16_remap, bit_width, 41, False, False, 0.99
-afio, mapr2, tim17_remap, bit_offset, 2, True, True, 1.0
-afio, mapr2, tim17_remap, access, read-write, True, False, 0.9
+peripheral_name,register_name,field_name,key,value,true_value,agent_judgement,confidence_score
+fsmc,bcr2,faccen,bit_width,69,False,False,1.0
+fsmc,bcr2,mbken,bit_offset,84,False,False,1.0
+fsmc,bcr2,mbken,access,read-write,True,True,0.95
+fsmc,bcr2,mbken,bit_width,92,False,False,1.0
+fsmc,bcr2,mtyp,bit_offset,2,True,True,1.0
+fsmc,bcr2,mtyp,access,reserved,False,False,1.0
+fsmc,bcr2,mtyp,bit_width,93,False,False,1.0
+fsmc,bcr2,muxen,bit_offset,1,True,True,0.99
+fsmc,bcr2,muxen,access,write-only,False,False,0.97
+fsmc,bcr2,muxen,bit_width,1,True,True,0.98
+fsmc,bcr2,mwid,bit_offset,55,False,False,1.0
+fsmc,bcr2,mwid,access,read-write,True,True,0.96
+fsmc,bcr2,mwid,bit_width,2,True,True,1.0
+fsmc,suakmxxzlgtv,waitcfg,bit_offset,11,False,False,1.0
+fsmc,bcr2,waitcfg,access,reserved,False,False,0.99
+fsmc,bcr2,waitcfg,bit_width,29,False,False,1.0
+fsmc,ezrvp,waiten,bit_offset,13,False,False,1.0
+fsmc,bcr2,dicafyjko,access,read-write,False,False,1.0
+fsmc,bcr2,waiten,bit_width,1,True,True,1.0
+fsmc,bcr2,waitpol,bit_offset,9,True,True,0.97
+fsmc,bcr2,waitpol,access,reserved,False,False,1.0
+fsmc,bcr2,waitpol,bit_width,1,True,True,0.99
+fsmc,bcr2,wrapmod,bit_offset,10,True,True,1.0
+liumqbjgosrj,bcr2,wrapmod,access,read-write,False,False,1.0
+fsmc,bcr2,wrapmod,bit_width,1,True,True,0.97
+fsmc,bcr2,wren,bit_offset,35,False,False,1.0
+fsmc,bcr2,wren,access,read-write,True,True,0.97
+fsmc,bcr2,avof,bit_width,1,False,False,1.0
+fsmc,bcr2,cpsize,bit_offset,16,True,True,0.99
+fsmc,bcr2,cpsize,access,0x0,False,False,0.98
+fsmc,bcr2,cpsize,bit_width,3,True,True,0.99
+fsmc,bcr3,,address_offset,0x10,True,True,0.99
+fsmc,bcr3,,reset_value,0x3A5A,False,False,1.0
+fsmc,bcr3,,size,3,False,False,1.0
+fsmc,bcr3,asyncwait,bit_offset,15,True,True,1.0
+fsmc,fkgaav,asyncwait,access,read-write,False,False,1.0
+fsmc,bcr3,asyncwait,bit_width,1,True,True,0.99
+fsmc,dsdiath,bursten,bit_offset,8,False,False,1.0
+fsmc,bcr3,bursten,access,read-write,True,True,0.97
+fsmc,xmizafrndvm,bursten,bit_width,1,False,False,1.0
+fsmc,bcr3,cburstrw,bit_offset,19,True,True,1.0
+fsmc,bcr3,cburstrw,access,read-write,True,True,0.93
+fsmc,bcr3,cburstrw,bit_width,1,True,True,0.99
+fsmc,bcr3,extmod,bit_offset,14,True,True,1.0
+fsmc,bcr3,extmod,access,read-write,True,True,0.95
+fsmc,bcr3,extmod,bit_width,1,True,True,0.99
+fsmc,bcr3,faccen,bit_offset,19,False,False,0.99
+fsmc,bcr3,faccen,bit_width,37,False,False,0.99
+fsmc,bcr3,mbken,bit_offset,50,False,False,0.99
+fsmc,bcr3,mbken,access,read-write,True,True,0.9
+fsmc,bcr3,mbken,bit_width,1,True,True,0.98
+fsmc,bcr3,mtyp,bit_offset,2,True,True,0.99
+fsmc,bcr3,mtyp,access,read-write,True,True,0.97
+fsmc,bcr3,hgp,bit_width,2,False,False,1.0
+fsmc,bcr3,muxen,bit_offset,1,True,True,1.0
+fsmc,bcr3,muxen,access,read-write,True,True,0.96
+fsmc,bcr3,muxen,bit_width,1,True,True,1.0
+fsmc,bcr3,mwid,bit_offset,4,True,True,0.98
+fsmc,bcr3,mwid,access,reserved,False,False,1.0
+fsmc,bcr3,mwid,bit_width,40,False,False,1.0
+fsmc,bcr3,waitcfg,bit_offset,11,True,True,0.98
+fsmc,bcr3,waitcfg,access,reserved,False,False,0.98
+fsmc,bcr3,waitcfg,bit_width,1,True,True,0.99
+fsmc,bcr3,waiten,bit_offset,13,True,True,0.99
+fsmc,bcr3,waiten,access,read-write,True,True,0.85
+fsmc,bcr3,waiten,bit_width,1,True,True,0.98
+fsmc,bcr3,waitpol,bit_offset,9,True,True,1.0
+fsmc,zuubowkrmo,waitpol,access,read-write,False,False,0.0
+fsmc,bcr3,waitpol,bit_width,1,True,True,1.0
+fsmc,bcr3,wrapmod,bit_offset,10,True,True,0.99
+fsmc,bcr3,wrapmod,access,reserved,False,False,0.97
+fsmc,bcr3,wrapmod,bit_width,1,True,True,0.99
+fsmc,bcr3,wren,bit_offset,12,True,True,1.0
+fsmc,bcr3,wren,access,read-write,True,True,0.96
+fsmc,bcr3,iattmeu,bit_width,1,False,False,1.0
+fsmc,bcr3,cpsize,bit_offset,16,True,True,0.97
+fsmc,bcr3,cpsize,access,0,False,False,0.97
+fsmc,bcr3,cpsize,bit_width,3,True,True,1.0
+fsmc,bcr4,,address_offset,0x18,True,True,1.0
+fsmc,bcr4,,reset_value,0x2BF2,False,False,1.0
+fsmc,bcr4,,size,32,True,True,1.0
+txz,bcr4,asyncwait,bit_offset,15,False,True,0.97
+fsmc,bcr4,asyncwait,access,read-write,True,True,0.95
+fsmc,bcr4,asyncwait,bit_width,15,False,False,1.0
+fsmc,bcr4,bursten,bit_offset,22,False,False,1.0
+fsmc,bcr4,bursten,bit_width,57,False,False,1.0
+fsmc,bcr4,cburstrw,bit_offset,95,False,False,1.0
+fsmc,bcr4,cburstrw,access,read-write,True,True,0.95
+fsmc,bcr4,cburstrw,bit_width,58,False,False,1.0
+fsmc,bcr4,extmod,bit_offset,14,True,True,1.0
+fsmc,bcr4,extmod,access,read-write,True,True,0.96
+fsmc,bcr4,extmod,bit_width,47,False,False,1.0
+fsmc,bcr4,faccen,bit_offset,56,False,False,1.0
+fsmc,bcr4,faccen,access,write-only,False,False,0.92
+fsmc,bcr4,faccen,bit_width,21,False,False,0.99
+fsmc,bcr4,mbken,bit_offset,0,True,True,0.99
+fsmc,bcr4,mbken,access,reserved,False,False,1.0
+fsmc,bcr4,mbken,bit_width,1,True,True,0.99
+fsmc,bcr4,mtyp,bit_offset,2,True,True,0.98
+fsmc,bcr4,mtyp,access,read-write,True,True,0.95
+fsmc,bcr4,mtyp,bit_width,54,False,False,0.99
+fsmc,bcr4,muxen,bit_offset,96,False,False,0.99
+fsmc,bcr4,muxen,access,read-only,False,False,0.98
+fsmc,bcr4,muxen,bit_width,68,False,False,1.0
+fsmc,bcr4,mwid,bit_offset,4,True,True,0.99
+fsmc,bcr4,mwid,access,read-write,True,True,0.85
+fsmc,bcr4,mwid,bit_width,75,False,False,1.0
+fsmc,bcr4,waitcfg,bit_offset,11,True,True,1.0
+fsmc,bcr4,waitcfg,access,read-write,True,True,0.95
+fsmc,bcr4,waitcfg,bit_width,1,True,True,0.98
+fsmc,bcr4,waiten,bit_offset,1,False,False,1.0
+fsmc,bcr4,waiten,access,read-only,False,False,0.98
+fsmc,bcr4,waiten,bit_width,1,True,True,0.98
+fsmc,bcr4,waitpol,bit_offset,9,True,True,1.0
+jwdnakm,bcr4,waitpol,access,read-write,False,False,0.0
+fsmc,bcr4,waitpol,bit_width,1,True,True,0.98
+fsmc,bcr4,wrapmod,bit_offset,10,True,True,1.0
+fsmc,bcr4,wrapmod,access,read-write,True,True,0.92
+fsmc,bcr4,wrapmod,bit_width,1,True,True,0.98
+fsmc,bcr4,wren,bit_offset,12,True,True,1.0
+fsmc,bcr4,wren,access,read-write,True,True,0.97
+fsmc,bcr4,wren,bit_width,99,False,False,0.99
+fsmc,bcr4,cpsize,bit_offset,25,False,False,1.0
+fsmc,bcr4,cpsize,access,,True,False,0.0
+fsmc,bcr4,cpsize,bit_width,3,True,True,1.0
+fsmc,btr1,,address_offset,0x4,True,True,0.99
+fsmc,btr1,,reset_value,0x1076516A,False,False,1.0
+fsmc,btr1,,size,32,True,True,0.99
+fsmc,btr1,accmod,bit_offset,28,True,True,0.99
+fsmc,btr1,accmod,access,read-write,True,True,0.98
+fsmc,btr1,accmod,bit_width,42,False,False,1.0
+fsmc,btr1,addhld,bit_offset,4,True,True,1.0
+fsmc,btr1,addhld,access,read-write,True,True,0.97
+fsmc,btr1,addhld,bit_width,4,True,True,0.99
+fsmc,btr1,addset,bit_offset,0,True,True,1.0
+fsmc,btr1,addset,access,read-write,True,True,0.97
+fsmc,btr1,addset,bit_width,4,True,True,1.0
+fsmc,btr1,busturn,bit_offset,3,False,False,1.0
+fsmc,btr1,busturn,access,reserved,False,False,0.98
+fsmc,btr1,busturn,bit_width,76,False,False,1.0
+fsmc,btr1,clkdiv,bit_offset,20,True,True,0.99
+fsmc,btr1,clkdiv,access,read-write,True,True,0.97
+fsmc,btr1,clkdiv,bit_width,4,True,True,1.0
+fsmc,btr1,datast,bit_offset,97,False,False,1.0
+fsmc,btr1,datast,access,read-write,True,True,0.86
+fsmc,btr1,datast,bit_width,8,True,True,0.99
+fsmc,btr1,datlat,bit_offset,24,True,True,1.0
+fsmc,btr1,datlat,access,write-only,False,False,0.98
+fsmc,btr1,datlat,bit_width,4,True,True,0.99
+fsmc,btr2,,address_offset,0xC,True,True,0.99
+fsmc,btr2,,reset_value,0x1F0B8B3E,False,False,1.0
+fsmc,btr2,,size,32,True,True,0.96
+fsmc,btr2,accmod,bit_offset,20,False,False,1.0
+fsmc,btr2,accmod,access,read-write,True,True,0.92
+fsmc,btr2,accmod,bit_width,50,False,False,1.0
+fsmc,btr2,addhld,bit_offset,4,True,True,0.99
+fsmc,btr2,addhld,access,read-write,True,True,0.9
+fsmc,yzauq,addhld,bit_width,4,False,False,0.0
+fsmc,btr2,addset,bit_offset,0,True,True,0.98
+fsmc,btr2,addset,access,read-only,False,False,0.96
+fsmc,btr2,addset,bit_width,4,True,True,0.98
+fsmc,btr2,busturn,bit_offset,34,False,False,1.0
+zyh,btr2,busturn,access,read-write,False,False,0.0
+fsmc,btr2,busturn,bit_width,4,True,True,0.98
+fsmc,btr2,clkdiv,bit_offset,20,True,True,1.0
+fsmc,vjkixlezq,clkdiv,bit_width,4,False,False,1.0
+fsmc,btr2,datast,bit_offset,8,True,True,0.99
+fsmc,btr2,datast,access,reserved,False,False,0.95
+fsmc,btr2,datast,bit_width,8,True,True,1.0
+fsmc,btr2,datlat,bit_offset,24,True,True,1.0
+fsmc,btr2,datlat,access,read-only,False,False,0.92
+fsmc,btr2,datlat,bit_width,4,True,True,1.0
+fsmc,btr3,,address_offset,0x14,True,True,0.97
+fsmc,btr3,,reset_value,0x0FFFFFFF,True,True,0.99
+fsmc,btr3,,size,71,False,False,0.99
+fsmc,btr3,fux,bit_offset,28,False,False,1.0
+fsmc,btr3,accmod,access,read-write,True,True,0.9
+fsmc,btr3,accmod,bit_width,2,True,True,0.97
+fsmc,btr3,addhld,bit_offset,4,True,True,0.99
+fsmc,btr3,addhld,access,reserved,False,False,1.0
+fsmc,btr3,addhld,bit_width,4,True,True,0.98
+fsmc,btr3,addset,bit_offset,37,False,False,0.99
+dejna,btr3,addset,access,read-write,False,True,0.85
+fsmc,btr3,addset,bit_width,4,True,True,1.0
+fsmc,btr3,busturn,bit_offset,71,False,False,0.99
+fsmc,btr3,busturn,access,write-only,False,False,0.85
+fsmc,btr3,busturn,bit_width,55,False,False,1.0
+fsmc,btr3,clkdiv,bit_offset,20,True,True,1.0
+ttghco,btr3,clkdiv,access,read-write,False,False,0.0
+fsmc,btr3,clkdiv,bit_width,16,False,False,1.0
+fsmc,btr3,datast,bit_offset,8,True,True,0.98
+fsmc,btr3,tzrj,access,read-write,False,False,1.0
+fsmc,btr3,datast,bit_width,76,False,False,1.0
+fsmc,btr3,datlat,bit_offset,24,True,True,0.98
+fsmc,btr3,datlat,access,read-write,True,True,0.85
+fsmc,btr3,datlat,bit_width,4,True,True,1.0
+fsmc,btr4,,address_offset,0x1C,True,True,1.0
+fsmc,btr4,,reset_value,0x0FFFFFFF,True,True,1.0
+fsmc,btr4,,size,32,True,True,0.96
+fsmc,btr4,accmod,bit_offset,90,False,False,1.0
+fsmc,btr4,accmod,bit_width,19,False,False,1.0
+fsmc,btr4,addhld,bit_offset,4,True,True,0.99
+fsmc,btr4,addhld,access,reserved,False,False,0.98
+fsmc,btr4,addhld,bit_width,4,True,True,0.99
+fsmc,btr4,addset,bit_offset,0,True,True,1.0
+fsmc,btr4,addset,access,read-write,True,True,0.85
+fsmc,btr4,addset,bit_width,15,False,False,1.0
+fsmc,btr4,busturn,bit_offset,7,False,False,1.0
+fsmc,btr4,busturn,access,read-write,True,True,0.86
+dbn,btr4,busturn,bit_width,4,False,False,0.92
+fsmc,btr4,clkdiv,bit_offset,20,True,True,1.0
+fsmc,btr4,clkdiv,access,read-only,False,False,0.95
+fsmc,btr4,clkdiv,bit_width,4,True,True,1.0
+fsmc,btr4,datast,bit_offset,8,True,True,0.99
+fsmc,poce,datast,access,read-write,False,False,0.0
+fsmc,btr4,datast,bit_width,28,False,False,1.0
+fsmc,btr4,datlat,bit_offset,76,False,False,0.99
+fsmc,btr4,datlat,access,reserved,False,False,1.0
+fsmc,btr4,datlat,bit_width,88,False,False,1.0
+fsmc,bwtr1,,address_offset,0x104,True,True,1.0
+fsmc,bwtr1,,reset_value,0xFFFFFFF,True,True,1.0
+fsmc,bwtr1,,size,13,False,False,1.0
+fsmc,bwtr1,addhld,bit_offset,4,True,True,0.99
+fsmc,bwtr1,addhld,access,write-only,False,False,1.0
+fsmc,bwtr1,addhld,bit_width,81,False,False,0.99
+fsmc,bwtr1,addset,bit_offset,0,True,True,1.0
+fsmc,bwtr1,addset,access,read-write,True,True,0.97
+fsmc,bwtr1,addset,bit_width,100,False,False,1.0
+fsmc,bwtr1,datast,bit_offset,8,True,True,0.99
+mpijsi,bwtr1,datast,access,read-write,False,False,0.0
+fsmc,bwtr1,yluylijatn,bit_width,8,False,False,1.0
+gbgge,bwtr1,accmod,bit_offset,28,False,False,1.0
+fsmc,bwtr1,accmod,access,read-write,True,True,0.96
+fsmc,bwtr1,accmod,bit_width,37,False,False,1.0
+fsmc,bwtr2,,address_offset,0x10C,True,True,0.99
+fsmc,bwtr2,,reset_value,0xFFFFFFF,True,True,1.0
+fsmc,bwtr2,accmod,bit_offset,28,True,True,0.99
+fsmc,bwtr2,accmod,access,read-write,True,False,0.0
+fsmc,bwtr2,accmod,bit_width,2,True,True,1.0
+fsmc,bwtr2,addhld,bit_offset,4,True,True,0.99
+fsmc,bwtr2,addhld,access,read-write,True,True,0.88
+fsmc,bwtr2,addhld,bit_width,4,True,True,1.0
+fsmc,bwtr2,addset,bit_offset,0,True,True,0.98
+fsmc,bwtr2,addset,access,reserved,False,False,0.98
+fsmc,bwtr2,addset,bit_width,4,True,True,0.99
+fsmc,bwtr2,datast,bit_offset,87,False,False,1.0
+fsmc,bwtr2,datast,bit_width,72,False,False,1.0
+fsmc,bwtr2,busturn,bit_offset,16,True,True,1.0
+fsmc,bwtr2,busturn,access,,True,False,0.99
+fsmc,bwtr2,busturn,bit_width,4,True,True,1.0
+fsmc,bwtr3,,address_offset,0x114,True,True,0.99
+fsmc,bwtr3,,reset_value,0xFFFFFFF,True,True,1.0
+pvhecntlfigl,bwtr3,,size,32,False,False,1.0
+fsmc,bwtr3,accmod,bit_offset,28,True,True,0.98
+oitvx,bwtr3,accmod,access,read-write,False,False,1.0
+fsmc,bwtr3,accmod,bit_width,2,True,True,0.99
+fsmc,rucrvuyspavc,addhld,bit_offset,4,False,False,1.0
+fsmc,bwtr3,addhld,access,read-write,True,True,0.95
+fsmc,bwtr3,addhld,bit_width,38,False,False,1.0
+fsmc,bwtr3,addset,bit_offset,0,True,True,0.99
+fsmc,bwtr3,addset,access,read-write,True,True,0.86
+fsmc,bwtr3,addset,bit_width,4,True,True,0.99
+fsmc,bwtr3,datast,bit_offset,8,True,True,0.97
+fsmc,bwtr3,datast,access,reserved,False,False,0.99
+fsmc,jwncipootkrl,datast,bit_width,8,False,False,1.0
+fsmc,bwtr3,busturn,bit_offset,16,True,True,0.99
+fsmc,bwtr3,busturn,access,0,False,False,0.95
+fsmc,bwtr3,busturn,bit_width,4,True,True,1.0
+fsmc,bwtr4,,address_offset,0x11C,True,True,1.0
+avvzl,bwtr4,,reset_value,0xFFFFFFF,False,False,0.0
+fsmc,bwtr4,,size,73,False,False,1.0
+fsmc,bwtr4,accmod,bit_offset,28,True,True,0.98
+fsmc,bwtr4,accmod,access,read-write,True,True,0.9
+fsmc,bwtr4,accmod,bit_width,50,False,False,1.0
+fsmc,bwtr4,wxwqml,bit_offset,4,False,False,1.0
+fsmc,bwtr4,oxfhlxy,access,read-write,False,False,1.0
+fsmc,krzzdt,addhld,bit_width,4,False,False,1.0
+fsmc,bwtr4,addset,bit_offset,0,True,True,1.0
+fsmc,bwtr4,addset,access,reserved,False,False,0.98
+fsmc,bwtr4,addset,bit_width,12,False,False,1.0
+fsmc,bwtr4,datast,bit_offset,8,True,True,0.99
+fsmc,bwtr4,datast,access,reserved,False,False,0.99
+fsmc,bwtr4,datast,bit_width,6,False,False,1.0
+fsmc,bwtr4,busturn,bit_offset,33,False,False,1.0
+fsmc,bwtr4,busturn,access,1,False,False,1.0
+fsmc,bwtr4,busturn,bit_width,4,True,True,0.99
+iwdg,kr,,address_offset,0x0,True,True,1.0
+iwdg,kr,,reset_value,0x00000000,True,True,1.0
+iwdg,kr,,size,32,True,True,0.98
+iwdg,kr,key,bit_offset,0,True,True,0.97
+iwdg,kr,key,access,write-only,True,True,1.0
+iwdg,kr,key,bit_width,16,True,True,1.0
+iwdg,pr,,address_offset,0x4,True,True,1.0
+iwdg,pr,,reset_value,0x00000000,True,True,1.0
+iwdg,pr,,size,32,True,True,1.0
+iwdg,pr,pr,bit_offset,93,False,False,1.0
+iwdg,pr,pr,access,write-only,False,False,1.0
+iwdg,pr,pr,bit_width,3,True,True,0.99
+iwdg,rlr,,address_offset,0x90,False,False,1.0
+iwdg,rlr,,reset_value,0x00000FFF,True,True,1.0
+iwdg,rlr,,size,32,True,True,0.95
+iwdg,nqelvwjjcbpo,rl,bit_offset,0,False,False,1.0
+iwdg,rlr,rl,access,read-write,True,True,0.97
+iwdg,rlr,rl,bit_width,12,True,True,0.99
+iwdg,sr,,address_offset,0x47,False,False,1.0
+iwdg,sr,,reset_value,0x00000000,True,True,1.0
+iwdg,sr,,size,32,True,True,0.96
+iwdg,sr,pvu,bit_offset,0,True,True,0.99
+iwdg,sr,pvu,access,read-write,False,False,1.0
+iwdg,sr,pvu,bit_width,1,True,True,0.99
+iwdg,sr,rvu,bit_offset,1,True,True,1.0
+iwdg,sr,rvu,access,read-only,True,True,0.99
+iwdg,sr,rvu,bit_width,1,True,True,1.0
+pwr,cr,,address_offset,0x0,True,True,0.85
+pwr,cr,,reset_value,0x00000000,True,False,0.0
+pwr,cr,,size,32,True,False,0.0
+pwr,cr,csbf,bit_offset,60,False,False,1.0
+pwr,cr,csbf,access,read-write,True,False,0.99
+pwr,cr,csbf,bit_width,1,True,True,1.0
+pwr,cr,cwuf,bit_offset,2,True,True,1.0
+pwr,cr,cwuf,access,read-only,False,False,1.0
+pwr,cr,cwuf,bit_width,1,True,True,1.0
+pwr,cr,dbp,bit_offset,8,True,True,1.0
+pwr,cr,dbp,access,read-only,False,False,0.99
+pwr,cr,dbp,bit_width,72,False,False,1.0
+irlslscpuwps,cr,lpds,bit_offset,0,False,False,1.0
+pwr,cr,lpds,access,read-write,True,True,0.98
+pwr,cr,lpds,bit_width,1,True,True,0.99
+pwr,cr,pdds,bit_offset,1,True,True,0.99
+pwr,cr,pdds,access,read-write,True,True,1.0
+pwr,cr,pdds,bit_width,1,True,True,0.98
+pwr,cr,pls,bit_offset,5,True,True,1.0
+pwr,cr,pls,access,read-write,True,False,0.0
+pwr,cr,pls,bit_width,3,True,True,0.99
+pwr,cr,pvde,bit_offset,98,False,False,1.0
+pwr,cr,pvde,access,read-write,True,True,1.0
+pwr,jokonls,pvde,bit_width,1,False,False,1.0
+pwr,csr,,address_offset,0x4,True,True,1.0
+pwr,csr,,reset_value,0x00000000,True,True,1.0
+pwr,csr,,size,32,True,True,0.95
+pwr,csr,ewup,bit_offset,93,False,False,1.0
+pwr,csr,ewup,access,read-write,True,True,0.99
+pwr,csr,ewup,bit_width,1,True,True,0.98
+pwr,csr,pvdo,bit_offset,2,True,True,1.0
+pwr,csr,pvdo,access,read-only,True,True,1.0
+pwr,dhrhsw,pvdo,bit_width,1,False,False,1.0
+pwr,csr,sbf,bit_offset,1,True,True,1.0
+pwr,csr,sbf,access,read-only,True,True,0.99
+pwr,csr,sbf,bit_width,1,True,True,1.0
+pwr,csr,wuf,bit_offset,21,False,False,1.0
+pwr,csr,wuf,access,read-only,True,True,0.99
+pwr,csr,wuf,bit_width,1,True,True,0.98
+rcc,ahbenr,,address_offset,0x14,True,True,1.0
+rcc,ahbenr,,reset_value,0x54,False,False,1.0
+rcc,ahbenr,,size,32,True,True,0.9
+rcc,ahbenr,crcen,bit_offset,6,True,True,0.99
+rcc,ahbenr,crcen,access,read-write,True,True,0.98
+rcc,ahbenr,crcen,bit_width,1,True,True,0.99
+rcc,ahbenr,dma1en,bit_offset,0,True,True,1.0
+rcc,ahbenr,dma1en,access,read-write,True,True,0.98
+rcc,ahbenr,dma1en,bit_width,16,False,False,1.0
+rcc,ahbenr,dma2en,bit_offset,1,True,True,0.99
+rcc,ahbenr,dma2en,access,write-only,False,False,0.99
+rcc,ahbenr,dma2en,bit_width,1,True,True,0.99
+rcc,ahbenr,flitfen,bit_offset,4,True,True,1.0
+rcc,ahbenr,flitfen,access,read-write,True,True,0.93
+rcc,ahbenr,flitfen,bit_width,1,True,True,1.0
+rcc,ahbenr,fsmcen,bit_offset,8,True,True,1.0
+rcc,ahbenr,fsmcen,access,read-write,True,True,0.99
+rcc,ahbenr,fsmcen,bit_width,1,True,True,0.99
+rcc,ahbenr,sramen,bit_offset,2,True,True,0.95
+rcc,ahbenr,sramen,access,read-write,True,True,0.99
+rcc,ahbenr,sramen,bit_width,1,True,True,1.0
+rcc,apb1enr,,address_offset,0x1C,True,True,1.0
+rcc,apb1enr,,reset_value,0x00000000,True,True,1.0
+rcc,apb1enr,,size,86,False,False,1.0
+rcc,apb1enr,bkpen,bit_offset,27,True,True,1.0
+rcc,apb1enr,bkpen,access,read-write,True,True,0.85
+rcc,apb1enr,bkpen,bit_width,76,False,False,1.0
+rcc,apb1enr,cecen,bit_offset,30,True,True,1.0
+rcc,apb1enr,cecen,access,write-only,False,False,0.98
+rcc,apb1enr,cecen,bit_width,1,True,True,0.99
+rcc,apb1enr,dacen,bit_offset,30,False,False,0.99
+rcc,apb1enr,dacen,access,read-write,True,True,1.0
+rcc,apb1enr,dacen,bit_width,42,False,False,0.99
+rcc,apb1enr,i2c1en,bit_offset,48,False,False,1.0
+rcc,apb1enr,i2c1en,access,reserved,False,False,0.99
+rcc,apb1enr,i2c1en,bit_width,1,True,True,0.99
+rcc,apb1enr,i2c2en,bit_offset,31,False,False,1.0
+rcc,apb1enr,i2c2en,access,read-write,True,True,0.95
+rcc,apb1enr,i2c2en,bit_width,1,True,True,0.99
+rcc,apb1enr,pwren,bit_offset,49,False,False,1.0
+rcc,apb1enr,pwren,access,read-write,True,True,0.92
+rcc,apb1enr,pwren,bit_width,1,True,True,0.99
+rcc,apb1enr,spi2en,bit_offset,12,False,False,0.98
+rcc,apb1enr,spi2en,access,read-write,True,True,0.97
+rcc,apb1enr,spi2en,bit_width,1,True,True,0.97
+rcc,lac,spi3en,bit_offset,15,False,False,1.0
+rcc,zlszgpkw,spi3en,access,read-write,False,False,1.0
+tzpwnxrct,apb1enr,spi3en,bit_width,1,False,False,1.0
+rcc,apb1enr,tim12en,bit_offset,6,True,True,1.0
+rcc,apb1enr,tim12en,access,read-write,True,True,0.98
+rcc,apb1enr,tim12en,bit_width,40,False,False,0.98
+rcc,apb1enr,tim13en,bit_offset,67,False,False,0.99
+rcc,apb1enr,tim13en,access,write-only,False,False,0.99
+rcc,apb1enr,tim13en,bit_width,1,True,True,0.97
+rcc,apb1enr,tim14en,bit_offset,8,True,True,0.99
+rcc,apb1enr,tim14en,access,read-write,True,True,0.98
+rcc,apb1enr,tim14en,bit_width,1,True,True,0.99
+rcc,apb1enr,tim2en,bit_offset,47,False,False,1.0
+rcc,apb1enr,tim2en,access,write-only,False,False,0.99
+rcc,apb1enr,tim2en,bit_width,87,False,False,0.98
+rcc,apb1enr,tim3en,bit_offset,1,True,True,1.0
+rcc,apb1enr,tim3en,access,read-write,True,True,0.98
+rcc,apb1enr,tim3en,bit_width,1,True,True,1.0
+rcc,apb1enr,tim4en,bit_offset,33,False,False,1.0
+rcc,apb1enr,tim4en,access,read-write,True,True,0.99
+rcc,apb1enr,tim4en,bit_width,1,True,True,0.98
+rcc,apb1enr,tim5en,bit_offset,3,True,True,0.9
+rcc,apb1enr,tim5en,access,read-write,True,True,0.97
+rcc,apb1enr,tim5en,bit_width,86,False,False,1.0
+rcc,apb1enr,tim6en,bit_offset,19,False,False,1.0
+rcc,apb1enr,tim6en,access,reserved,False,False,0.99
+rcc,apb1enr,tim6en,bit_width,54,False,False,1.0
+rcc,apb1enr,tim7en,bit_offset,5,True,False,0.99
+rcc,apb1enr,tim7en,access,read-write,True,True,0.98
+rcc,apb1enr,tim7en,bit_width,1,True,True,0.98
+rcc,apb1enr,uart4en,bit_offset,19,True,True,1.0
+rcc,apb1enr,uart4en,access,reserved,False,False,1.0
+rcc,apb1enr,uart4en,bit_width,85,False,False,1.0
+rcc,hyfon,uart5en,bit_offset,20,False,False,1.0
+rcc,apb1enr,uart5en,access,read-write,True,True,0.97
+rcc,apb1enr,uart5en,bit_width,99,False,False,1.0
+rcc,apb1enr,usart2en,bit_offset,17,True,True,1.0
+rcc,apb1enr,usart2en,access,read-write,True,True,1.0
+rcc,apb1enr,usart2en,bit_width,1,True,True,0.97
+rcc,apb1enr,usart3en,bit_offset,18,True,True,1.0
+rcc,apb1enr,usart3en,access,reserved,False,False,1.0
+rcc,apb1enr,usart3en,bit_width,1,True,True,0.98
+rcc,apb1enr,wwdgen,bit_offset,11,True,True,1.0
+rcc,apb1enr,whsgwdgra,access,read-write,False,True,0.92
+rcc,apb1enr,wwdgen,bit_width,1,True,True,0.96
+rcc,apb1rstr,,address_offset,0x10,True,True,1.0
+rcc,apb1rstr,,reset_value,0x00000000,True,True,1.0
+rcc,apb1rstr,,size,29,False,False,0.98
+rcc,apb1rstr,bkprst,bit_offset,27,True,True,1.0
+rcc,apb1rstr,bkprst,access,read-write,True,True,0.98
+rcc,apb1rstr,bkprst,bit_width,1,True,True,0.99
+rcc,apb1rstr,cecrst,bit_offset,30,True,True,1.0
+owlnjghpucep,apb1rstr,cecrst,access,read-write,False,False,1.0
+rcc,apb1rstr,cecrst,bit_width,29,False,False,1.0
+rcc,apb1rstr,dacrst,bit_offset,29,True,True,1.0
+rcc,apb1rstr,dacrst,access,read-write,True,True,0.96
+rcc,apb1rstr,dacrst,bit_width,83,False,False,1.0
+rcc,apb1rstr,i2c1rst,bit_offset,21,True,True,1.0
+rcc,apb1rstr,i2c1rst,access,read-only,False,False,0.99
+rcc,apb1rstr,i2c1rst,bit_width,1,True,True,0.97
+rcc,apb1rstr,i2c2rst,bit_offset,1,False,False,1.0
+rcc,apb1rstr,i2c2rst,access,read-write,True,True,0.99
+rcc,apb1rstr,i2c2rst,bit_width,91,False,False,1.0
+rcc,apb1rstr,pwrrst,bit_offset,55,False,False,1.0
+rcc,apb1rstr,pwrrst,access,read-write,True,True,0.97
+rcc,apb1rstr,pwrrst,bit_width,1,True,True,0.98
+rcc,apb1rstr,spi2rst,bit_offset,63,False,False,1.0
+rcc,apb1rstr,spi2rst,access,read-write,True,False,0.95
+rcc,apb1rstr,spi2rst,bit_width,46,False,False,1.0
+rcc,apb1rstr,spi3rst,bit_offset,15,True,True,1.0
+rcc,apb1rstr,spi3rst,access,write-only,False,False,0.99
+okcjdczoc,apb1rstr,spi3rst,bit_width,1,False,False,1.0
+rcc,apb1rstr,tim12rst,bit_offset,6,True,True,1.0
+rcc,uzvux,tim12rst,access,read-write,False,False,1.0
+rcc,apb1rstr,tim12rst,bit_width,1,True,True,0.99
+rcc,apb1rstr,tim13rst,bit_offset,7,True,True,0.98
+rcc,apb1rstr,tim13rst,access,reserved,False,False,1.0
+rcc,apb1rstr,pzjjorzgtz,bit_width,1,False,False,1.0
+rcc,apb1rstr,tim14rst,bit_offset,8,True,True,0.99
+rcc,apb1rstr,tim14rst,access,reserved,False,False,1.0
+rcc,apb1rstr,tim14rst,bit_width,1,True,True,0.98
+rcc,apb1rstr,tim2rst,bit_offset,0,True,True,0.99
+rcc,oeb,tim2rst,access,read-write,False,False,0.0
+rcc,apb1rstr,tim2rst,bit_width,1,True,True,0.98
+rcc,apb1rstr,dhpuvrut,bit_offset,1,False,False,1.0
+rcc,apb1rstr,tim3rst,access,read-write,True,True,0.96
+rcc,apb1rstr,tim3rst,bit_width,1,True,True,0.97
+rcc,apb1rstr,tim4rst,bit_offset,2,True,True,0.99
+rcc,yorwumbdeofk,tim4rst,access,read-write,False,False,1.0
+rcc,apb1rstr,tim4rst,bit_width,7,False,False,1.0
+rcc,apb1rstr,tim5rst,bit_offset,73,False,False,0.99
+rcc,apb1rstr,tim5rst,access,read-write,True,True,0.98
+rcc,apb1rstr,tim5rst,bit_width,61,False,False,1.0
+rcc,apb1rstr,tim6rst,bit_offset,52,False,False,1.0
+rcc,apb1rstr,tim6rst,access,reserved,False,False,0.99
+rcc,apb1rstr,tim6rst,bit_width,1,True,True,0.99
+rcc,apb1rstr,tim7rst,bit_offset,5,True,True,0.99

@@ -1,0 +1,2 @@
+model_name, true_positives, false_negatives, false_positives, true_negatives, accuracy, precision, recall, f1_score
+gpt-4.1-nano, 649, 41, 22, 268, 0.9357142857142857, 0.9672131147540983, 0.9405797101449276, 0.9537105069801616

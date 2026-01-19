@@ -35,14 +35,13 @@ class ContextRetrievalParameters(BaseModel):
     number_embeddings: int
     re_ranking: bool
     score_threshold: float
+    query_rewrite: bool
     vs_id: str
     regex: str
     other: str
 
-
 class CoverageImproverOutput(BaseModel):
     context_retrieval_parameters: ContextRetrievalParameters
-    reasoning: str
     stop_improving: bool
     
 @dataclass

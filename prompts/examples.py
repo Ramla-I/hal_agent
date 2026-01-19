@@ -113,5 +113,35 @@ stm_datasheet_example = """
     I can see that the register name is TIMx_CR2 where x can equal 1 or 8.
     So this information is not relevant to the TIM12 peripheral.
     Datasheet does not contain information about the TIM12_CR2 register.
-    I will return no JSONoutput for this register.
+    I will return no JSON output for this register.
+
+--- EXAMPLE 3 ---
+# INPUT
+## REGISTER NAME AND PERIPHERAL NAME
+    Register name: FSMC_BCR2
+    Peripheral name: FSMC
+
+## DATASHEET INPUT
+    ** SRAM/NOR-flash chip-select control registers 1..4 (FSMC_BCR1..4) **
+    Address offset: 0xA000 0000 + 8 * (x - 1), x = 1...4
+
+# OUTPUT
+    I can see that the register name is FSMC_BCRx where x can equal 2.
+    So this is the FSMC_BCR2 register.
+    The address offset is given as 0xA000 0000 + 8 * (x - 1), x = 1...4.
+    I will return a function call to calculate the address offset for the FSMC_BCR2 register.
+
+    ```function_call
+    { "function_calls": [
+        {
+            "name": "calculate_address_offset",
+            "parameters": {
+                "base_address_in_hex": "0xA000 0000", 
+                "start_register_number": 1,
+                "register_number": 2,
+                "register_size_in_bytes": 8
+            }
+        }
+    ]}
+    ```
 """

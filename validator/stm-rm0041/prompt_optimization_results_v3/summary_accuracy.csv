@@ -1,0 +1,5 @@
+model_name,true_positives,false_negatives,false_positives,true_negatives,accuracy,precision,recall,f1_score
+gpt-5.2,541,59,16,384,0.925,0.971,0.902,0.935
+gpt-oss-120b,563,35,6,394,0.959,0.989,0.941,0.965
+gpt-4.1-nano,562,31,83,312,0.885,0.871,0.948,0.908
+gpt-5-nano,575,25,65,335,0.910,0.898,0.958,0.927

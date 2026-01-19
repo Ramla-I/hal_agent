@@ -163,8 +163,8 @@ def get_table_of_contents(wrapper: RunContextWrapper[UserContext], md: bool = Fa
     #     page = doc.load_page(page_num)
     #     toc_text += page.get_text()
 
-@function_tool
+# @function_tool
 def calculate_address_offset(base_address_in_hex: str, start_register_number: int, register_number: int, register_size_in_bytes: int) -> str:
     base_address = int(base_address_in_hex, 16)
-    decimal_offset = base_address + ((register_number - start_register_number) * register_size_in_bytes)
+    decimal_offset = base_address + ((int(register_number) - int(start_register_number)) * int(register_size_in_bytes))
     return f"0x{decimal_offset:X}"
