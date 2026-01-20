@@ -68,7 +68,7 @@ stm_datasheet_example = """
                     }
                 ]
             },
-            { 
+            {
                 "name": "OT1",
                 "description": "Port 1 configuration bits",
                 "access": "read-write",
@@ -86,8 +86,9 @@ stm_datasheet_example = """
                         "name": "OutputOpenDrain"
                     }
                 ]
-            },
-        ]
+            }
+        ],
+        "access_constraints": []
     }
     ```
 
@@ -136,12 +137,136 @@ stm_datasheet_example = """
         {
             "name": "calculate_address_offset",
             "parameters": {
-                "base_address_in_hex": "0xA000 0000", 
+                "base_address_in_hex": "0xA000 0000",
                 "start_register_number": 1,
                 "register_number": 2,
                 "register_size_in_bytes": 8
             }
         }
     ]}
+    ```
+
+--- EXAMPLE 4 ---
+# INPUT
+## REGISTER NAME AND PERIPHERAL NAME
+    Register name: I2C_CR1
+    Peripheral name: I2C
+
+## DATASHEET INPUT
+    **26.6.1 I2C Control register 1 (I2C_CR1)**
+
+    Address offset: 0x00
+    Reset value: 0x0000
+
+    |15|14|13|12|11|10|9|8|7|6|5|4|3|2|1|0|
+    |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+    |SWRST|Res.|ALERT|PEC|POS|ACK|STOP|START|NOSTRETCH|ENGC|ENPEC|ENARP|SMBTYPE|Res.|SMBUS|PE|
+    |rw|Res.|rw|rw|rw|rw|rw|rw|rw|rw|rw|rw|rw|Res.|rw|rw|
+
+    Bit 9 **STOP**: Stop generation
+    This bit is set and cleared by software, cleared by hardware when a Stop condition is detected, set by hardware when a timeout error is detected.
+    0: No Stop generation.
+    1: Stop generation after the current byte transfer or after the current Start condition is sent.
+
+    Bit 8 **START**: Start generation
+    This bit is set and cleared by software and cleared by hardware when start is sent or PE=0.
+    0: No Start generation
+    1: Repeated start generation
+
+    Note: When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request.
+
+# OUTPUT
+    I can see that the register name is I2C_CR1.
+    The address offset is 0x00 and reset value is 0x0000.
+    The register is 16 bits (based on the bit field table).
+    I can see STOP and START bits which have special constraints mentioned in the Note.
+    The Note states that software must not write to I2C_CR1 while STOP, START, or PEC bits are set (before they are cleared by hardware).
+    This is an access constraint that needs to be captured.
+
+    ```json
+    {
+        "datasheet_register_abbreviation": "I2C_CR1",
+        "address_offset": "0x00",
+        "reset_value": "0x0000",
+        "size": 16,
+        "subfields": [
+            {
+                "name": "PE",
+                "description": "Peripheral enable",
+                "access": "read-write",
+                "bit_number": {
+                    "start_bit": 0,
+                    "end_bit": 0
+                },
+                "enumerated_values": []
+            },
+            {
+                "name": "START",
+                "description": "Start generation",
+                "access": "read-write",
+                "bit_number": {
+                    "start_bit": 8,
+                    "end_bit": 8
+                },
+                "enumerated_values": [
+                    {
+                        "value": "0",
+                        "name": "NoStart"
+                    },
+                    {
+                        "value": "1",
+                        "name": "Start"
+                    }
+                ]
+            },
+            {
+                "name": "STOP",
+                "description": "Stop generation",
+                "access": "read-write",
+                "bit_number": {
+                    "start_bit": 9,
+                    "end_bit": 9
+                },
+                "enumerated_values": [
+                    {
+                        "value": "0",
+                        "name": "NoStop"
+                    },
+                    {
+                        "value": "1",
+                        "name": "Stop"
+                    }
+                ]
+            }
+        ],
+        "access_constraints": [
+            {
+                "target_register": "I2C_CR1",
+                "target_fields": [],
+                "target_operation": "write",
+                "preconditions": [
+                    {
+                        "register_name": "I2C_CR1",
+                        "field_name": "STOP",
+                        "required_state": "cleared"
+                    },
+                    {
+                        "register_name": "I2C_CR1",
+                        "field_name": "START",
+                        "required_state": "cleared"
+                    },
+                    {
+                        "register_name": "I2C_CR1",
+                        "field_name": "PEC",
+                        "required_state": "cleared"
+                    }
+                ],
+                "postconditions": [],
+                "severity": "error",
+                "consequence": "Risk of setting a second STOP, START or PEC request",
+                "datasheet_text": "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
+            }
+        ]
+    }
     ```
 """
