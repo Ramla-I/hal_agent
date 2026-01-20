@@ -54,13 +54,38 @@ class UserContext:
     file_id: str
     vs_id: str
 
-class RegisterDependency(BaseModel):
-    dependent_register_name: str
-    dependent_subfield_name: str
-    dependee_register_name: str
-    dependee_subfield_name: str
-    dependency_type: str # read-after, write-after, other
-    relevant_sentence: str
+class FieldState(BaseModel):
+    """Represents a field state requirement (pre or post condition)"""
+    register_name: str  # Can be different register (e.g., "RTTDCS" when constraining "MTQC")
+    field_name: str
+    required_state: str  # "cleared", "set", "equals:<value>"
+
+class RegisterAccessConstraint(BaseModel):
+    """
+    Constraint on register/field access using linear types.
+
+    Preconditions are enforced by consuming linear type tokens.
+    Postconditions are enforced by producing linear type tokens that must be consumed elsewhere.
+
+    See REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md for detailed explanation and examples.
+    """
+    # What's being constrained
+    target_register: str
+    target_fields: list[str]  # Empty = whole register
+    target_operation: str  # "write", "read", "modify"
+
+    # Pre-conditions: linear types that must be CONSUMED
+    # e.g., to write, you must consume StopClearedToken
+    preconditions: list[FieldState]
+
+    # Post-conditions: linear types that are PRODUCED and must be used elsewhere
+    # e.g., writing produces ArbdisMustClearToken that must be consumed
+    postconditions: list[FieldState]
+
+    # Metadata
+    severity: str  # "error", "warning"
+    consequence: str
+    datasheet_text: str
 
 class BitNumber(BaseModel):
     start_bit: int
@@ -83,7 +108,7 @@ class RegisterInfo(BaseModel):
     reset_value: str
     size: int
     subfields: list[BitField]
-    dependencies: list[RegisterDependency]
+    access_constraints: list[RegisterAccessConstraint]
 
 class RegisterList(BaseModel):
     registers: list[RegisterInfo]

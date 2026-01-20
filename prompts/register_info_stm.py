@@ -22,6 +22,7 @@ def create_register_info_stm_system_prompt(function_calls_description: str | Non
     - Register reset value
     - Register size
     - Register subfields
+    - Register access constraints (requirements for safe register access)
 
     # OUTPUT FORMAT
     The output will have 3 parts:
@@ -55,6 +56,21 @@ def create_register_info_stm_system_prompt(function_calls_description: str | Non
         - `enumerated_values`: A list of enumerated values that could be empty if there are no enumerated values. Each object in the list has the following fields:
             - `value`: The value of the enumerated value. A string.
             - `name`: The name of the enumerated value. A string.
+    - `access_constraints`: A list of access constraints that could be empty if there are no constraints. Each object describes requirements for safely accessing the register. Each object in the list has the following fields:
+        - `target_register`: The name of the register being constrained. A string.
+        - `target_fields`: A list of field names being constrained, or empty list if the constraint applies to the whole register. List of strings.
+        - `target_operation`: The operation being constrained: "write", "read", or "modify". A string.
+        - `preconditions`: A list of field states that must be satisfied BEFORE the operation. Each object has:
+            - `register_name`: The register containing the field to check. A string.
+            - `field_name`: The field name to check. A string.
+            - `required_state`: The required state: "cleared", "set", or "equals:<value>". A string.
+        - `postconditions`: A list of field states that must be established AFTER the operation. Each object has:
+            - `register_name`: The register containing the field to modify. A string.
+            - `field_name`: The field name to modify. A string.
+            - `required_state`: The required end state: "cleared", "set", or "equals:<value>". A string.
+        - `severity`: The severity of the constraint: "error" or "warning". A string.
+        - `consequence`: Description of what happens if the constraint is violated. A string.
+        - `datasheet_text`: The original text from the datasheet describing this constraint. A string.
 
     # FUNCTION CALLS
     You have access to function calls, that you can specify in the given output format.
@@ -64,11 +80,32 @@ def create_register_info_stm_system_prompt(function_calls_description: str | Non
     # EXAMPLES
     {examples}
 
+    # ACCESS CONSTRAINTS GUIDANCE
+    Look for sentences in the datasheet that describe ordering or state requirements for register access:
+
+    Patterns to identify:
+    - "must set X before writing to Y" or "set X before configuring Y"
+    - "must clear X after Y" or "then clear X afterwards"
+    - "do not write to X while Y is set" or "must not access X when Y"
+    - "wait until hardware clears" or "before this bit is cleared by hardware"
+    - "only access during init" or "must be done only when"
+
+    Examples:
+    1. "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware"
+       → Constraint on I2C_CR1 write with preconditions: STOP=cleared, START=cleared, PEC=cleared
+
+    2. "Software must set RTTDCS.ARBDIS before configuring MTQC and then clear RTTDCS.ARBDIS afterwards"
+       → Constraint on MTQC write with precondition: ARBDIS=set and postcondition: ARBDIS=cleared
+
+    3. "The BUSY flag must be cleared before writing to the DATA register"
+       → Constraint on DATA write with precondition: BUSY=cleared
+
     # OUTPUT RESTRICTIONS
     - Only return information that is found in the datasheet. Do not make up any information.
     - If you cannot find a piece of information for a register, leave that field empty.
     - If you cannot find any information for a register (except for the register name), do not return any JSON object.
     - Only call the function calls provided to you. Do not call any other function calls.
+    - For access_constraints, only include constraints explicitly stated in the datasheet. Do not infer unstated constraints.
     """
 
 def create_register_info_stm_user_prompt(register_name: str, peripheral_name: str, datasheet_pages: str) -> str:

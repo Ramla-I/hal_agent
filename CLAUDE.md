@@ -1,0 +1,228 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+hal_agent is an AI-powered tool for extracting hardware register information from device datasheets (primarily embedded systems like STM32 microcontrollers). It uses OpenAI's API and agents SDK to parse datasheets, identify register details, and map them to driver code for hardware abstraction layer (HAL) development.
+
+The project implements a multi-stage pipeline that:
+1. Generates register information from datasheets using LLMs
+2. Improves coverage iteratively based on SVD file comparisons
+3. Validates extracted information using an LLM agent that classifies invariants against the datasheet
+4. Analyzes differences between agent output and SVD files to remove irrelevant differences (e.g., legitimate SVD bugs, acceptable variations)
+
+## Key Commands
+
+### Setup
+```bash
+# Set environment variables (required)
+export OPENAI_API_KEY="your-key-here"
+export GROQ_API_KEY="your-key-here"  # if using Groq models
+
+# Activate virtual environment
+source .venv/bin/activate
+```
+
+### Running the Pipeline
+
+```bash
+# Run the full analysis pipeline (generator + coverage improver + evaluation)
+python3 s0_run_full_analysis.py
+
+# Run individual stages
+python3 s1a_generator.py                    # Generate register info from datasheet
+python3 s2_coverage_improver.py             # Improve coverage based on SVD comparison
+python3 s3_query_rewriter.py                # Rewrite queries for better context retrieval
+python3 s4_validator.py                     # Validate extracted information
+python3 s5_analyzer.py                      # Analyze differences
+```
+
+### Optimization Scripts
+
+```bash
+# Run optimization experiments for specific components
+python3 s2a_coverage_improver_optimization.py   # Optimize coverage improver
+python3 s4a_validator_optimization.py           # Optimize validator
+```
+
+### Preprocessing
+
+```bash
+# Generate vector store for a new device datasheet
+python3 preprocessing/create_vector_store_openai.py
+```
+
+## Configuration
+
+All pipeline configuration is centralized in `config.py`:
+
+- `DEVICE_NAME`: Target device (e.g., "rm0041" for STM devices)
+- `GENERATOR_MODEL_NAME`: Model for register generation (e.g., "gpt-4o", "gpt-oss-120b")
+- `COVERAGE_IMPROVER_MODEL_NAME`: Model for coverage improvement
+- `VALIDATOR_MODEL_NAME`: Model for validation
+- `CONTEXT_RETRIEVAL_PARAMETERS`: Controls how context is retrieved from datasheets
+  - `context_retrieval_method`: "keyword_search", "semantic_search", or "regex"
+  - `pages_after_keyword`: Pages to include after keyword match
+  - `number_embeddings`: Number of embedding results for semantic search
+  - `re_ranking`: Enable/disable re-ranking of search results
+  - `query_rewrite`: Enable/disable query rewriting (calls s3_query_rewriter.py)
+  - `vs_id`: Vector store ID for the device datasheet
+- `user_contexts`: List of device configurations with run numbers, file IDs, and vector store IDs
+
+## Architecture
+
+### Pipeline Flow (s0_run_full_analysis.py)
+
+The main pipeline orchestrates a feedback loop:
+
+1. **Vector Store Setup**: Creates/uses OpenAI vector store for datasheet context retrieval
+2. **Iterative Loop** (runs `COVERAGE_IMPROVER_ITERATIONS` times):
+   - **Generator (S1)**: Extracts register info for each peripheral/register from SVD files
+   - **Coverage Improver (S2)**: Analyzes coverage gaps and adjusts context retrieval parameters
+3. **Post-Loop Evaluation**:
+   - **Validator (S4)**: TODO - Should run once after loop exits, but currently not integrated into s0_run_full_analysis.py
+   - Compare agent output with SVD files (creates diff CSVs)
+   - Run analyzer to filter out irrelevant differences (keeps only actual agent errors)
+   - Generate diff tables and compare with verified datasheets
+
+### Key Components
+
+**Generator (s1a_generator.py)**
+- Iterates through peripherals and registers from SVD files
+- Retrieves datasheet context using keyword/semantic search
+- Generates structured JSON output with register details (address, reset value, fields, etc.)
+- Uses function calling to retrieve additional context when needed
+- Output: `{peripheral}_{register}` JSON files + usage/reasoning in `info/`
+
+**Coverage Improver (s2_coverage_improver.py)**
+- Compares generator output with ground truth SVD files
+- Calculates peripheral/register/field coverage metrics
+- Uses reasoning to suggest improved context retrieval parameters
+- Output: `coverage_improver_output.json` with updated parameters + `coverage_info.json`
+
+**Query Rewriter (s3_query_rewriter.py)**
+- Rewrites search queries to improve context retrieval quality
+- Called by context retrieval system when `query_rewrite=True` in `CONTEXT_RETRIEVAL_PARAMETERS`
+- Uses LLM to reformulate queries for better semantic search results
+- Output: Rewritten queries in `agent_output_dir/query_rewrite/`
+
+**Validator (s4_validator.py)**
+- Builds invariants from agent output (address offsets, reset values, bit ranges, etc.)
+- Uses an LLM agent with file search to classify each invariant as true/false based on the datasheet
+- The agent searches the datasheet and provides a confidence-based classification
+- Output: `classification.csv`, `output.txt`, `usage.csv` in validator directory
+
+**Analyzer (s5_analyzer.py)**
+- Reviews differences between agent output and SVD files from `register_diff.csv`
+- Filters out irrelevant differences (e.g., legitimate bugs in SVD, acceptable variations)
+- Identifies which differences represent actual agent errors vs. correct deviations
+- Output: JSON with list of valid bug row IDs, plus filtered `register_diff_analyzer.csv`
+
+### Context Retrieval System
+
+Located in `context_retrieval/`:
+- **keyword_search.py**: Searches for register/peripheral names in markdown sections
+- **semantic_search.py**: Uses OpenAI vector store for semantic retrieval
+- **retrieve_context.py**: Main interface that dispatches to appropriate retrieval method and optionally calls query rewriter (s3_query_rewriter.py) when enabled
+
+### Agent Tools
+
+Located in `agent_tools/`:
+- **tools.py**: Core utilities (SVD parsing, address calculation, file operations)
+- **pdf_ops.py**: PDF processing (page extraction, text extraction)
+- **md_ops.py**: Markdown operations (table extraction, header parsing)
+- **get_pages_with_keyword.py**: Keyword-based page retrieval
+- **svd_parsing.py**: SVD file parsing utilities
+
+### Utilities
+
+Located in `utils/`:
+- **function_call_handler.py**: Provides unified abstraction for function calling
+- **result_saver.py**: Standardized output saving (JSON, CSV, text, usage tracking)
+- **parse_output.py**: Extracts JSON blocks and reasoning from LLM responses
+- **models.py**: Model name mapping and configuration
+
+### Prompts
+
+Located in `prompts/`:
+- **register_info_stm.py**: Generator system/user prompts for STM devices
+- **coverage_improver.py**: Coverage improver prompts and query generation
+- **validator.py**: Validator prompts for invariant checking
+- **query_rewriter.py**: Query rewriting prompts
+- **examples.py**: Few-shot examples for register extraction
+
+## Data Organization
+
+### Device Directory Structure
+```
+devices/{manufacturer}/{device_name}/
+├── {device_name}.pdf              # Original datasheet
+├── {device_name}.md               # Converted markdown (if applicable)
+├── svd/*.svd                      # Ground truth SVD files
+└── keyword_infos.json             # Keyword search metadata
+```
+
+### Output Directory Structure
+```
+agent_output/{manufacturer}/{device_name}/{run_number}/
+├── {peripheral}_{register}        # Generated register JSON files
+├── info/
+│   ├── summary.txt                # Model and parameters
+│   ├── usage.csv                  # Token usage per register
+│   └── reasoning.txt              # Reasoning text per register
+├── coverage_improver/
+│   ├── coverage_improver_output.json
+│   ├── coverage_info.json
+│   ├── reasoning.txt
+│   └── usage.csv
+├── query_rewrite/
+│   ├── query_rewrite.txt          # Rewritten queries
+│   └── usage.csv                  # Token usage for query rewriting
+└── validator/
+    ├── classification.csv
+    ├── output.txt
+    └── usage.csv
+```
+
+### Evaluation Directory Structure
+```
+evaluation/{manufacturer}/{device_name}/{run_number}/{svd_name}/
+├── register_diff.csv              # Register-level differences
+├── field_diff.csv                 # Field-level differences
+└── ...                            # Other comparison outputs
+```
+
+## Data Models (defs.py)
+
+Key Pydantic models:
+- `RegisterInfo`: Complete register specification with fields, dependencies
+- `BitField`: Individual field with bit range, access, enumerated values
+- `ContextRetrievalParameters`: Configuration for datasheet context retrieval
+- `CoverageInfo`: Coverage metrics and diff lists
+- `CoverageImproverOutput`: Updated parameters and stop flag
+
+## Adding a New Device
+
+1. Add datasheet PDF and SVD files to `devices/{manufacturer}/{device_name}/`
+2. Create vector store: `python3 preprocessing/create_vector_store_openai.py`
+3. Add device entry to `config.user_contexts` with manufacturer, run number, and IDs
+4. Update `config.DEVICE_NAME` to target the new device
+5. Run `python3 s0_run_full_analysis.py`
+
+## Deprecated/Unused Files
+
+The following files are no longer used in the current pipeline:
+
+- **preprocessing/split_datasheet.py**: Previously used to split STM datasheets into sections. No longer required in current workflow.
+- **s1b_generator_dependencies.py**: Legacy generator flow that handled register dependencies. Not used by `s0_run_full_analysis.py`. Use `s1a_generator.py` instead.
+
+## Important Notes
+
+- The project uses both OpenAI and Groq clients (configured in `config.py`)
+- Model name "gpt-oss-120b" routes to Groq, others to OpenAI (see `determine_client()`)
+- Context truncation is handled in `scripts/limit_context.py` based on model limits
+- The generator uses function calling to request additional context during extraction
+- Coverage improver adjusts retrieval parameters between iterations to improve results
+- Query rewriter (s3_query_rewriter.py) is invoked by the context retrieval system when `query_rewrite=True`
+- ResultSaver class provides standardized output formatting across all components
