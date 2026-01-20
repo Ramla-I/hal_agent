@@ -220,3 +220,6 @@ evaluation/
 *.pdf
 *.md
 *.svd
+
+# Coverage improver optimization
+coverage_improver_optimization/

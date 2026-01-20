@@ -28,6 +28,14 @@ def run_coverage_improver(
 ):
     logger.info(f"Running coverage improver for {model_name}")
 
+    # If the expected output files already exist, return early
+    output_json = os.path.join(output_dir, "coverage_improver_output.json")
+    coverage_info_json = os.path.join(output_dir, "coverage_info.json")
+
+    if os.path.exists(output_json) and os.path.exists(coverage_info_json):
+        logger.info(f"Output files already exist for {output_json} and {coverage_info_json}. Skipping.")
+        return
+
     # Create file search query and perform file search
     query = prompts.create_coverage_improver_file_search_query(coverage_info, context_retrieval_parameters)
     file_search = search_vector_store(query, vs_id, 4, True, 0.25)

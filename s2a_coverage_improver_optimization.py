@@ -21,6 +21,7 @@ from defs import CoverageImproverOutput
 from config import client_openai, client_groq
 from groq import Groq
 from openai import OpenAI
+from s4_validator import build_invariants_from_agent_output, run_validator
 
 def resolve_repo_root() -> str:
     """Return absolute path to the repository root."""
@@ -49,14 +50,14 @@ async def main() -> None:
     coverage_improver_reasoning_efforts = [None, "low", None, None]
     coverage_improver_iterations = config.COVERAGE_IMPROVER_ITERATIONS
 
-    id = 1
+    id = 3
 
     coverage_improver_model_name = coverage_improver_model_names[id]
     coverage_improver_client = coverage_improver_clients[id]
     coverage_improver_reasoning_effort = coverage_improver_reasoning_efforts[id]
 
     # Find run number for the current device in config.user_contexts
-    run_number = 1
+    run_number = 4
     device_ctx = None
     for ctx in getattr(config, "user_contexts", []):
         if getattr(ctx, "device_name", None) == device_name:
@@ -78,8 +79,11 @@ async def main() -> None:
         device_ctx.file_id = file_id
         update_user_context(device_ctx)
 
-    for i in range(coverage_improver_iterations):
+    for i in range(3,5):
+    # for i in range(coverage_improver_iterations):
+
         # ---- (S1) Run generator agent ----
+        print(f"Running generator for {coverage_improver_model_name} iteration {i}")
         generator_truncated_at_any_register = run_generator(
             client=generator_client, 
             model_name=generator_model_name, 
@@ -93,6 +97,7 @@ async def main() -> None:
         )
 
         # Run the validator on the agent output
+        print(f"Running validator for {coverage_improver_model_name} iteration {i}")
         invariants = build_invariants_from_agent_output(agent_output_folder)
         validator_output_dir = os.path.join(agent_output_folder, "validator")
         os.makedirs(validator_output_dir, exist_ok=True)
@@ -117,6 +122,7 @@ async def main() -> None:
         coverage_info = calculate_generator_coverage(svd_path, agent_output_folder)
        
         # Call coverage improver with information about the coverage, context retrieval parameters, 
+        print(f"Running coverage improver for {coverage_improver_model_name} iteration {i}")
         coverage_improver_output_dir = os.path.join(agent_output_folder, "coverage_improver")
         os.makedirs(coverage_improver_output_dir, exist_ok=True)
         run_coverage_improver(

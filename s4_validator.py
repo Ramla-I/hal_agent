@@ -82,41 +82,42 @@ def build_invariants_from_agent_output(agent_output_dir: str):
             })
 
         # Field-level invariants
-        for field in data.get("subfields", []) or []:
-            field_name = field.get("name", "")
-            bit_number = field.get("bit_number", {}) or {}
-            start_bit = bit_number.get("start_bit")
-            end_bit = bit_number.get("end_bit")
-            if start_bit is not None:
-                invariants.append({
-                    "peripheral_name": peripheral_name,
-                    "register_name": register_name,
-                    "field_name": field_name,
-                    "key": "bit_offset",
-                    "value": str(start_bit)
-                })
-            if start_bit is not None and end_bit is not None:
-                start_bit = int(start_bit)
-                end_bit = int(end_bit)
-                if start_bit > end_bit:
-                    start_bit, end_bit = end_bit, start_bit
+        if "subfields" in data:
+            for field in data.get("subfields", []) or []:
+                field_name = field.get("name", "")
+                bit_number = field.get("bit_number", {}) or {}
+                start_bit = bit_number.get("start_bit")
+                end_bit = bit_number.get("end_bit")
+                if start_bit is not None:
+                    invariants.append({
+                        "peripheral_name": peripheral_name,
+                        "register_name": register_name,
+                        "field_name": field_name,
+                        "key": "bit_offset",
+                        "value": str(start_bit)
+                    })
+                if start_bit is not None and end_bit is not None:
+                    start_bit = int(start_bit)
+                    end_bit = int(end_bit)
+                    if start_bit > end_bit:
+                        start_bit, end_bit = end_bit, start_bit
 
-                bit_width = end_bit - start_bit + 1
-                invariants.append({
-                    "peripheral_name": peripheral_name,
-                    "register_name": register_name,
-                    "field_name": field_name,
-                    "key": "bit_width",
-                    "value": str(bit_width)
-                })
-            if field.get("access") is not None:
-                invariants.append({
-                    "peripheral_name": peripheral_name,
-                    "register_name": register_name,
-                    "field_name": field_name,
-                    "key": "access",
-                    "value": str(field.get("access"))
-                })
+                    bit_width = end_bit - start_bit + 1
+                    invariants.append({
+                        "peripheral_name": peripheral_name,
+                        "register_name": register_name,
+                        "field_name": field_name,
+                        "key": "bit_width",
+                        "value": str(bit_width)
+                    })
+                if field.get("access") is not None:
+                    invariants.append({
+                        "peripheral_name": peripheral_name,
+                        "register_name": register_name,
+                        "field_name": field_name,
+                        "key": "access",
+                        "value": str(field.get("access"))
+                    })
 
     return invariants
 
@@ -178,6 +179,17 @@ def run_validator(
     classification_csv_name = "classification.csv"
     usage_csv_name = "usage.csv"
     output_txt_name = "output.txt"
+
+    classification_csv_path = os.path.join(output_dir, classification_csv_name)
+    usage_csv_path = os.path.join(output_dir, usage_csv_name)
+    output_txt_path = os.path.join(output_dir, output_txt_name)
+    if (
+        os.path.exists(classification_csv_path)
+        and os.path.exists(usage_csv_path)
+        and os.path.exists(output_txt_path)
+    ):
+        logger.info(f"Output files already exist for validator in {output_dir}. Skipping.")
+        return total_true, total_false
     
     logger.info(f"Running validator for {len(invariants)} invariants")
 
