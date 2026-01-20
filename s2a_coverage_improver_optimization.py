@@ -50,14 +50,14 @@ async def main() -> None:
     coverage_improver_reasoning_efforts = [None, "low", None, None]
     coverage_improver_iterations = config.COVERAGE_IMPROVER_ITERATIONS
 
-    id = 3
+    id = 2
 
     coverage_improver_model_name = coverage_improver_model_names[id]
     coverage_improver_client = coverage_improver_clients[id]
     coverage_improver_reasoning_effort = coverage_improver_reasoning_efforts[id]
 
     # Find run number for the current device in config.user_contexts
-    run_number = 4
+    run_number = 1
     device_ctx = None
     for ctx in getattr(config, "user_contexts", []):
         if getattr(ctx, "device_name", None) == device_name:
@@ -79,8 +79,7 @@ async def main() -> None:
         device_ctx.file_id = file_id
         update_user_context(device_ctx)
 
-    for i in range(3,5):
-    # for i in range(coverage_improver_iterations):
+    for i in range(coverage_improver_iterations):
 
         # ---- (S1) Run generator agent ----
         print(f"Running generator for {coverage_improver_model_name} iteration {i}")
