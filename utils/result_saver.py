@@ -31,9 +31,10 @@ class UsageStats:
     output_tokens: int
     reasoning_tokens: int
     total_tokens: int
-    
+    file_search_tokens: int = 0
+
     @classmethod
-    def from_response_usage(cls, model_name: str, usage) -> "UsageStats":
+    def from_response_usage(cls, model_name: str, usage, file_search_tokens: int = 0) -> "UsageStats":
         """Create UsageStats from API response usage object."""
         return cls(
             model_name=model_name,
@@ -41,7 +42,8 @@ class UsageStats:
             cached_tokens=usage.input_tokens_details.cached_tokens if hasattr(usage.input_tokens_details, 'cached_tokens') else 0,
             output_tokens=usage.output_tokens,
             reasoning_tokens=usage.output_tokens_details.reasoning_tokens if hasattr(usage.output_tokens_details, 'reasoning_tokens') else 0,
-            total_tokens=usage.total_tokens
+            total_tokens=usage.total_tokens,
+            file_search_tokens=file_search_tokens
         )
 
 
@@ -244,7 +246,8 @@ class ResultSaver:
             'cached_tokens': usage.cached_tokens,
             'output_tokens': usage.output_tokens,
             'reasoning_tokens': usage.reasoning_tokens,
-            'total_tokens': usage.total_tokens
+            'total_tokens': usage.total_tokens,
+            'file_search_tokens': usage.file_search_tokens
         }
         
         if additional_fields:

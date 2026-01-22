@@ -1,0 +1,124 @@
+# Performance Analysis Summary - Generator vs Validator
+
+## Generator Performance (5 registers, semantic search)
+
+### Timing (per embedding count)
+| Embeddings | Total Time | LLM Time | Search Time | Time/Register |
+|------------|------------|----------|-------------|---------------|
+| 4          | 17.55s     | 8.93s    | 8.62s       | 3.51s         |
+| 8          | 15.85s     | 8.98s    | 6.88s       | 3.17s ✅      |
+| 16         | 17.78s     | 11.70s   | 6.08s       | 3.56s         |
+| 50         | 27.54s     | 20.15s   | 7.39s       | 5.51s         |
+
+### Token Usage (per embedding count)
+| Embeddings | File Search Tokens | Input Tokens | File Search % |
+|------------|-------------------|--------------|---------------|
+| 4          | 3,219             | 7,556        | 42.6%         |
+| 8          | 6,445             | 10,785       | 59.8%         |
+| 16         | 12,880            | 17,225       | 74.8%         |
+| 50         | 39,438            | 43,761       | 90.1%         |
+
+### Key Findings
+- ✅ **8 embeddings is optimal** (fastest at 15.85s)
+- ⚠️ **LLM processing is the bottleneck** (scales with context size)
+- ✅ **Vector search time is stable** (~6-8s regardless of embedding count)
+- ❌ **More embeddings ≠ better quality** (16 embeddings introduced address offset errors)
+
+## Validator Performance (200 invariants, 4 embeddings)
+
+### Timing
+- **Total time**: 505.04s (~8.4 minutes)
+- **LLM calls**: 261.71s (51.8%)
+- **Vector search**: 243.33s (48.2%)
+- **Per invariant**: 2.526s average
+
+### Token Usage
+- **File search tokens**: 3,195 average (4 embeddings)
+- **Input tokens**: 5,143 average
+- **File search %**: 62.1%
+
+### Projected Full Run (5,607 invariants)
+- **Estimated time**: 236 minutes (~4 hours)
+- **API calls**: 5,607 (one per invariant)
+
+### Key Findings
+- ⚠️ **BOTH LLM and search are bottlenecks** (50/50 split)
+- 🔥 **Sequential processing is the killer** (5,607 individual API calls)
+- ✅ **High validation accuracy** (93% true)
+- ❌ **Validator is 16x slower per item** than generator (2.5s vs 3.2s for 5 items = 0.64s/item)
+
+## Critical Differences
+
+### Bottleneck Location
+| Component | Generator | Validator |
+|-----------|-----------|-----------|
+| LLM time  | 51-73%    | 52%       |
+| Search time| 27-49%   | 48%       |
+| **Bottleneck** | **LLM** | **Both!** |
+
+### Why Validator is Slower
+1. **Processing many small items** (5,607 invariants vs 300 registers)
+2. **No batching** (1 API call per invariant)
+3. **Repeated searches** (same register searched many times)
+4. **Per-item overhead** (network latency × 5,607)
+
+### Scale Difference
+| Metric | Generator | Validator | Ratio |
+|--------|-----------|-----------|-------|
+| Items processed | 5 registers | 200 invariants | 40x |
+| Total time | 15.85s | 505s | 32x |
+| Time per item | 3.17s | 2.53s | 0.8x |
+| Full run items | ~300 regs | ~5,607 invs | 19x |
+| Full run time (est) | ~16 min | ~236 min | 15x |
+
+## Optimization Priority Ranking
+
+### 🔥🔥🔥 CRITICAL: Batch Validator Calls
+- **Impact**: 98% reduction in API calls (5,607 → 112)
+- **Time saved**: 220 minutes (4h → 15min)
+- **Effort**: Medium (2-3 hours)
+- **Status**: Not implemented
+
+### 🔥🔥 HIGH: Implement Search Caching
+- **Impact**: 40-60% reduction in search calls
+- **Time saved**: ~100 minutes across pipeline
+- **Effort**: Low (already have search_cache.py)
+- **Status**: Code exists, needs integration
+
+### 🔥 MEDIUM: Reduce Generator Embeddings
+- **Impact**: Use 8 instead of 16 embeddings
+- **Time saved**: ~12% faster per register
+- **Effort**: Trivial (config change)
+- **Status**: Need to update config
+
+### ⚡ LOW: Parallelize Generator
+- **Impact**: 3-5x speedup (with rate limits)
+- **Time saved**: 10-12 minutes
+- **Effort**: Medium-high (3-4 hours)
+- **Status**: Not implemented
+
+## Recommended Action Plan
+
+### Phase 1: Quick Wins (30 minutes)
+1. ✅ Update config to use 8 embeddings (done in tests)
+2. ✅ Set QUERY_REWRITE = False (already done)
+3. Integrate search cache into semantic_search.py
+
+### Phase 2: Validator Batching (2-3 hours)
+4. Implement batch validation (50 invariants per call)
+5. Test on sample dataset
+6. Deploy to full pipeline
+
+### Phase 3: Further Optimization (future)
+7. Parallelize generator register processing
+8. Optimize validator batch size based on testing
+
+## Expected Final Performance
+
+| Pipeline Stage | Current | After Optimization | Speedup |
+|----------------|---------|-------------------|---------|
+| Generator      | 16 min  | 8 min             | 2x      |
+| Validator      | 236 min | 10 min            | 24x     |
+| **Total**      | **252 min** | **18 min**    | **14x** |
+
+**From 4+ hours to 18 minutes** with batching + caching + embedding optimization!

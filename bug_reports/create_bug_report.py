@@ -50,8 +50,6 @@ def read_csv_files(csv_files: List[str]) -> List[Dict[str, str]]:
                 field_name_col = find_column(headers, ['field_name', 'field name'])
                 
                 missing = []
-                if bug_col is None:
-                    missing.append('Bug')
                 if peripheral_col is None:
                     missing.append('peripheral')
                 if register_col is None:
@@ -68,9 +66,8 @@ def read_csv_files(csv_files: List[str]) -> List[Dict[str, str]]:
                     continue
                 
                 # Read rows and filter for Bug=1
-                for row in reader:
-                    bug_value = (row.get(bug_col) or '').strip()
-                    if bug_value == '1':
+                if bug_col is None:
+                    for row in reader:
                         bug_row = {
                             'peripheral': (row.get(peripheral_col) or '').strip(),
                             'register': (row.get(register_col) or '').strip(),
@@ -85,6 +82,25 @@ def read_csv_files(csv_files: List[str]) -> List[Dict[str, str]]:
                             if field_name:
                                 bug_row['field_name'] = field_name
                         bug_rows.append(bug_row)
+                else:
+                    for row in reader:
+                        bug_value = (row.get(bug_col) or '').strip()
+                        if bug_value == '1':
+                            bug_row = {
+                                'peripheral': (row.get(peripheral_col) or '').strip(),
+                                'register': (row.get(register_col) or '').strip(),
+                                'key': (row.get(key_col) or '').strip(),
+                                'just_svd': (row.get(just_svd_col) or '').strip(),
+                                'just_output': (row.get(just_output_col) or '').strip(),
+                                'actual_value': (row.get(actual_value_col) or '').strip() if actual_value_col else ''
+                            }
+                            # Add field_name if it exists
+                            if field_name_col:
+                                field_name = (row.get(field_name_col) or '').strip()
+                                if field_name:
+                                    bug_row['field_name'] = field_name
+                            bug_rows.append(bug_row)
+
         except FileNotFoundError:
             print(f"Error: File not found: {csv_file}", file=sys.stderr)
             continue

@@ -12,6 +12,27 @@ The project implements a multi-stage pipeline that:
 3. Validates extracted information using an LLM agent that classifies invariants against the datasheet
 4. Analyzes differences between agent output and SVD files to remove irrelevant differences (e.g., legitimate SVD bugs, acceptable variations)
 
+## Repository Structure
+
+```
+hal_agent/
+├── core/                       # Main pipeline scripts (s0-s5)
+├── optimization/               # Optimization experiments & analysis scripts
+│   ├── test_outputs/          # Test results (gitignored, see STRUCTURE.md)
+│   ├── s*a_*.py               # Optimization experiment scripts
+│   ├── compare_*.py           # Analysis scripts
+│   └── analyze_*.py           # Analysis scripts
+├── docs/                       # Documentation files
+├── agent_tools/                # Utilities for agents (SVD parsing, PDF ops, etc.)
+├── context_retrieval/          # Context retrieval system
+├── prompts/                    # LLM prompts for each component
+├── utils/                      # General utilities
+├── devices/                    # Device datasheets and SVD files
+├── preprocessing/              # Vector store creation
+├── scripts/                    # Helper scripts
+└── verified_datasheet/         # Verified ground truth data
+```
+
 ## Key Commands
 
 ### Setup
@@ -28,22 +49,26 @@ source .venv/bin/activate
 
 ```bash
 # Run the full analysis pipeline (generator + coverage improver + evaluation)
-python3 s0_run_full_analysis.py
+python3 core/s0_run_full_analysis.py
 
 # Run individual stages
-python3 s1a_generator.py                    # Generate register info from datasheet
-python3 s2_coverage_improver.py             # Improve coverage based on SVD comparison
-python3 s3_query_rewriter.py                # Rewrite queries for better context retrieval
-python3 s4_validator.py                     # Validate extracted information
-python3 s5_analyzer.py                      # Analyze differences
+python3 core/s1a_generator.py                    # Generate register info from datasheet
+python3 core/s2_coverage_improver.py             # Improve coverage based on SVD comparison
+python3 core/s3_query_rewriter.py                # Rewrite queries for better context retrieval
+python3 core/s4_validator.py                     # Validate extracted information
+python3 core/s5_analyzer.py                      # Analyze differences
 ```
 
 ### Optimization Scripts
 
 ```bash
 # Run optimization experiments for specific components
-python3 s2a_coverage_improver_optimization.py   # Optimize coverage improver
-python3 s4a_validator_optimization.py           # Optimize validator
+python3 optimization/s2a_coverage_improver_optimization.py   # Optimize coverage improver
+python3 optimization/s4a_validator_optimization.py           # Optimize validator (sequential & batched modes)
+
+# Analysis scripts (compare test results against verified data)
+python3 optimization/compare_generator_with_verified.py      # Compare generator output
+python3 optimization/analyze_generator_errors.py             # Detailed generator analysis
 ```
 
 ### Preprocessing
@@ -152,6 +177,21 @@ Located in `prompts/`:
 - **query_rewriter.py**: Query rewriting prompts
 - **examples.py**: Few-shot examples for register extraction
 
+## Performance Testing and Optimization
+
+When running performance tests or optimization experiments, follow the organization guidelines in:
+
+**`optimization/test_outputs/STRUCTURE.md`**
+
+This document defines:
+- How to organize test outputs by component and run number
+- Required files for each test run (README, analysis/, comparison CSVs)
+- Naming conventions and directory structure
+- How to write comprehensive analysis documents
+- Relationship between scripts and their outputs
+
+**Key principle:** All test outputs go in `optimization/test_outputs/{component}/{run_number}/` and are git-ignored. Each run should be self-contained with documentation, analysis, and raw data.
+
 ## Data Organization
 
 ### Device Directory Structure
@@ -215,7 +255,7 @@ Key Pydantic models:
 The following files are no longer used in the current pipeline:
 
 - **preprocessing/split_datasheet.py**: Previously used to split STM datasheets into sections. No longer required in current workflow.
-- **s1b_generator_dependencies.py**: Legacy generator flow that handled register dependencies. Not used by `s0_run_full_analysis.py`. Use `s1a_generator.py` instead.
+- **core/s1b_generator_dependencies.py**: Legacy generator flow that handled register dependencies. Not used by `core/s0_run_full_analysis.py`. Use `core/s1a_generator.py` instead.
 
 ## Important Notes
 

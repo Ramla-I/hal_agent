@@ -12,16 +12,20 @@ client_openai = OpenAI(
 )
 
 DEVICE_NAME = "rm0041"
+
+# Query rewrite flag - set to False to disable query rewriting
+QUERY_REWRITE = False
+
 CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
-    context_retrieval_method=ContextRetrievalMethod.KEYWORD_SEARCH, 
-    pages_after_keyword=2, 
-    remove_tables=True, 
-    number_embeddings=16, 
+    context_retrieval_method=ContextRetrievalMethod.KEYWORD_SEARCH,
+    pages_after_keyword=2,
+    remove_tables=True,
+    number_embeddings=16,
     re_ranking=True,
     score_threshold=0.25,
     query_rewrite=True,
     vs_id="",
-    regex="", 
+    regex="",
     other=""
 )
 

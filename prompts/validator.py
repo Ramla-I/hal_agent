@@ -208,6 +208,103 @@ def create_validator_user_prompt(peripheral_name: str, register_name: str, field
             "value": "{value}",
             "file_search_results": "{file_search_results}"
         }}
-        
+
         # OUTPUT
+    """
+
+
+# ============================================================================
+# BATCHED VALIDATOR PROMPTS (for validating multiple invariants per register)
+# ============================================================================
+
+def create_batched_validator_file_search_query(peripheral_name: str, register_name: str) -> str:
+    """Create search query for a register (will validate multiple invariants)"""
+    return f"""
+    Find comprehensive information about the register {register_name} in the peripheral {peripheral_name}.
+    Include information about the register's address offset, reset value, size, and all its fields/subfields.
+    """
+
+def create_batched_validator_system_prompt() -> str:
+    """System prompt for batched validation of multiple invariants for a register"""
+    return f"""
+    You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets.
+    You will need to validate multiple facts about a single register and return confidence scores for each.
+
+    # INPUT FORMAT
+    You will be given:
+    - The name of a peripheral and register
+    - A list of facts (invariants) to validate about that register
+    - File search results from the datasheet
+
+    Each fact has these fields:
+    - `peripheral_name`: The name of the peripheral
+    - `register_name`: The name of the register
+    - `field_name`: The name of the field (empty string if register-level)
+    - `key`: The property to validate (address_offset, reset_value, size, bit_offset, bit_width, access)
+    - `value`: The value to validate
+
+    # OUTPUT FORMAT
+    Start with your reasoning about the register and the facts you're validating.
+    Then return a JSON array with one object per invariant, in the same order as the input.
+
+    Each object should have:
+    - `invariant_index`: The index of the invariant (0-based)
+    - `is_true`: Boolean indicating if the fact is true
+    - `confidence_score`: Float between 0 and 1
+
+    Format:
+    <reasoning>
+    ```json
+    [
+        {{"invariant_index": 0, "is_true": true, "confidence_score": 1.0}},
+        {{"invariant_index": 1, "is_true": false, "confidence_score": 1.0}},
+        ...
+    ]
+    ```
+
+    # VALIDATION RULES
+    * Address offset means the offset from the peripheral's base address (not including base)
+    * Values like 0xXXXXXXX3 mean X can be any digit (e.g., 0x3403, 0x873 are valid)
+    * Reserved bits are read-only and must be kept at reset value
+    * Names are NOT case sensitive and should match the datasheet
+    * If you cannot find information, set is_true=false and confidence_score=1.0
+
+    # CONFIDENCE SCORING
+    - 1.0: 100% certain (found explicit confirmation or contradiction)
+    - 0.9-0.95: Very confident (strong evidence but not explicit)
+    - 0.7-0.85: Fairly confident (reasonable evidence)
+    - 0.5-0.65: Uncertain (conflicting or ambiguous information)
+    - 0.0: Cannot find any information about the register/field
+    """
+
+def create_batched_validator_user_prompt(peripheral_name: str, register_name: str, invariants: list, file_search_results: str) -> str:
+    """
+    Create user prompt for batched validation.
+
+    Args:
+        peripheral_name: Name of the peripheral
+        register_name: Name of the register
+        invariants: List of invariant dicts with keys: field_name, key, value
+        file_search_results: Formatted search results from vector store
+    """
+    # Format invariants as a numbered list
+    invariant_list = ""
+    for i, inv in enumerate(invariants):
+        invariant_list += f"""
+    {i}. field_name="{inv['field_name']}", key="{inv['key']}", value="{inv['value']}"
+"""
+
+    return f"""
+# INPUT
+Peripheral: {peripheral_name}
+Register: {register_name}
+
+Invariants to validate:
+{invariant_list}
+
+File search results:
+{file_search_results}
+
+# OUTPUT
+Provide reasoning and then a JSON array with validation results for each invariant (in order).
     """

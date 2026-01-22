@@ -216,10 +216,12 @@ agent_output_updated/
 # Evaluation
 evaluation/
 
-# Devices
-*.pdf
-*.md
-*.svd
+# Test outputs (organized)
+optimization/test_outputs/
+
+# Devices (only PDF/SVD, not markdown docs)
+devices/**/*.pdf
+devices/**/*.svd
 
 # Coverage improver optimization
 coverage_improver_optimization/
