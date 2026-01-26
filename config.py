@@ -29,7 +29,11 @@ CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
     query_rewrite=True,
     vs_id="",
     regex="",
-    other=""
+    other="",
+    # Contiguous chunk expansion (for semantic search)
+    chunk_expansion_enabled=True,
+    pages_after=2,
+    chunk_index_path=""
 )
 
 # CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(

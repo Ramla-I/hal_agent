@@ -117,36 +117,255 @@ def extract_section_hierarchy(content: str) -> Dict[str, Optional[str]]:
         'subsection': subsection
     }
 
+def expand_numeric_range(start: str, end: str) -> List[str]:
+    """
+    Expand a numeric range like '1..4' to ['1', '2', '3', '4'].
+
+    Args:
+        start: Start of range (e.g., '1')
+        end: End of range (e.g., '4')
+
+    Returns:
+        List of string values in the range
+    """
+    try:
+        return [str(i) for i in range(int(start), int(end) + 1)]
+    except ValueError:
+        return []
+
+
+def expand_alpha_range(start: str, end: str) -> List[str]:
+    """
+    Expand an alphabetic range like 'A..G' to ['A', 'B', 'C', 'D', 'E', 'F', 'G'].
+
+    Args:
+        start: Start letter (e.g., 'A')
+        end: End letter (e.g., 'G')
+
+    Returns:
+        List of letters in the range
+    """
+    if len(start) != 1 or len(end) != 1:
+        return []
+    try:
+        return [chr(i) for i in range(ord(start), ord(end) + 1)]
+    except (TypeError, ValueError):
+        return []
+
+
+def parse_range_string(range_str: str) -> List[str]:
+    """
+    Parse a range string and return all values.
+
+    Supports formats:
+    - Numeric range: '1..4', '1 .. 4', '1..20'
+    - Alphabetic range: 'A..G', 'A .. G'
+    - Comma list: '1,2,3', '1, 2, 3'
+    - Word range: '0 to 3', 'A to G'
+
+    Args:
+        range_str: Range specification string
+
+    Returns:
+        List of expanded values
+    """
+    range_str = range_str.strip()
+
+    # Pattern 1: Numeric range with '..' (e.g., '1..4', '1 .. 20')
+    match = re.match(r'(\d+)\s*\.\.\s*(\d+)', range_str)
+    if match:
+        return expand_numeric_range(match.group(1), match.group(2))
+
+    # Pattern 2: Alphabetic range with '..' (e.g., 'A..G')
+    match = re.match(r'([A-Z])\s*\.\.\s*([A-Z])', range_str)
+    if match:
+        return expand_alpha_range(match.group(1), match.group(2))
+
+    # Pattern 3: Comma-separated list (e.g., '1,2,3' or '1, 2')
+    if ',' in range_str:
+        return [v.strip() for v in range_str.split(',') if v.strip()]
+
+    # Pattern 4: Word range with 'to' (e.g., '0 to 3', 'A to G')
+    match = re.match(r'(\d+)\s+to\s+(\d+)', range_str, re.IGNORECASE)
+    if match:
+        return expand_numeric_range(match.group(1), match.group(2))
+
+    match = re.match(r'([A-Z])\s+to\s+([A-Z])', range_str, re.IGNORECASE)
+    if match:
+        return expand_alpha_range(match.group(1).upper(), match.group(2).upper())
+
+    return []
+
+
+def expand_parameterized_register(template: str, range_str: str) -> List[str]:
+    """
+    Expand a parameterized register template with a range.
+
+    Examples:
+        'GPIOx_CRL' with 'A..G' -> ['GPIOA_CRL', 'GPIOB_CRL', ..., 'GPIOG_CRL']
+        'ADC_JOFRx' with '1..4' -> ['ADC_JOFR1', 'ADC_JOFR2', 'ADC_JOFR3', 'ADC_JOFR4']
+
+    Args:
+        template: Register template with 'x' placeholder (e.g., 'GPIOx_CRL')
+        range_str: Range specification (e.g., 'A..G', '1..4')
+
+    Returns:
+        List of expanded register names
+    """
+    values = parse_range_string(range_str)
+    if not values:
+        return []
+
+    expanded = []
+    for val in values:
+        # Replace lowercase 'x' or uppercase 'X' with the value
+        expanded_name = template.replace('x', val).replace('X', val)
+        expanded.append(expanded_name)
+
+    return expanded
+
+
+def expand_contextual_register(context: str, template: str) -> Optional[str]:
+    """
+    Expand a register template using context from preceding text.
+
+    Example:
+        context='TIM1', template='TIMx_CR1' -> 'TIM1_CR1'
+        context='GPIOA', template='GPIOx_CRL' -> 'GPIOA_CRL'
+
+    Args:
+        context: Preceding text that contains the peripheral instance (e.g., 'TIM1')
+        template: Register template with 'x' placeholder (e.g., 'TIMx_CR1')
+
+    Returns:
+        Expanded register name, or None if expansion failed
+    """
+    # Extract the varying part from context
+    # e.g., 'TIM1' -> '1', 'GPIOA' -> 'A', 'ADC1' -> '1'
+    match = re.match(r'([A-Z]+)(\d+|[A-Z])$', context)
+    if match:
+        suffix = match.group(2)
+        return template.replace('x', suffix).replace('X', suffix)
+    return None
+
+
+def extract_register_mentions_with_expansion(content: str) -> tuple[List[str], List[str]]:
+    """
+    Enhanced register extraction that expands parameterized patterns.
+
+    Handles patterns:
+    1. Parenthesized registers: (BKP_DRx) (x = 1..20)
+    2. Standard parameterized: ADC_JOFRx (x=1..4), GPIOx_CRL (x=A..G)
+    3. Contextual expansion: TIM1 control register (TIMx_CR1)
+    4. Concrete patterns: AFIO_EXTICR1 (no x, keep as-is)
+    5. Template patterns: TIMx_CR1 (x without range, keep as template)
+
+    Args:
+        content: Chunk content to extract from
+
+    Returns:
+        Tuple of (registers, fields) where registers includes expanded names
+    """
+    registers = set()
+    templates = set()  # Keep track of templates for deduplication
+
+    # Pattern 1: Parenthesized register with range - (BKP_DRx) (x = 1..20)
+    # Note: [A-Z][A-Z0-9_]* allows underscores in register names like ADC_JOFRx
+    paren_pattern = r'\(([A-Z][A-Z0-9_]*[xX][A-Z0-9_]*)\)\s*\(\s*[xX]\s*=\s*([^)]+)\)'
+    for match in re.finditer(paren_pattern, content):
+        template = match.group(1)
+        range_str = match.group(2)
+        expanded = expand_parameterized_register(template, range_str)
+        if expanded:
+            registers.update(expanded)
+            templates.add(template.lower())
+
+    # Pattern 2: Standard parameterized - ADC_JOFRx (x=1..4), GPIOx_CRL (x=A..G)
+    # Matches register names with 'x' anywhere, followed by (x=range)
+    # The [A-Z0-9_]* allows underscores in names like ADC_JOFRx, ADC_JDRx
+    param_pattern = r'([A-Z][A-Z0-9_]*[xX][A-Z0-9_]*)\s*\(\s*[xX]\s*=\s*([^)]+)\)'
+    for match in re.finditer(param_pattern, content):
+        template = match.group(1)
+        range_str = match.group(2)
+
+        # Skip if already processed as parenthesized
+        if template.lower() in templates:
+            continue
+
+        expanded = expand_parameterized_register(template, range_str)
+        if expanded:
+            registers.update(expanded)
+            templates.add(template.lower())
+
+    # Pattern 3: Contextual expansion - "TIM1 control register 1 (TIMx_CR1)"
+    # Look for: PERIPHERAL_INSTANCE ... (TEMPLATEx_REG)
+    # Captures peripherals with instance numbers or letters followed by parenthesized template
+    contextual_pattern = r'([A-Z]+\d+|[A-Z]+[A-Z])\s+[^()]*?\(([A-Z]+)[xX](_[A-Z0-9_]+)\)'
+    for match in re.finditer(contextual_pattern, content):
+        context = match.group(1)  # e.g., 'TIM1'
+        template_prefix = match.group(2)  # e.g., 'TIM'
+        template_suffix = match.group(3)  # e.g., '_CR1'
+        template = f"{template_prefix}x{template_suffix}"
+
+        # Only expand if context base matches template prefix
+        context_base = context.rstrip('0123456789').rstrip('ABCDEFG')
+        if context_base == template_prefix:
+            expanded = expand_contextual_register(context, template)
+            if expanded:
+                registers.add(expanded)
+
+    # Pattern 4 & 5: Extract concrete register names and remaining templates
+    # Concrete pattern: PERIPHERAL_REGISTERNAME (no 'x')
+    concrete_pattern = r'\b([A-Z][A-Z0-9]*_[A-Z][A-Z0-9_]*)\b'
+    for match in re.finditer(concrete_pattern, content):
+        reg_name = match.group(1)
+
+        # Filter out common false positives
+        if reg_name in ['GPIO_Pin', 'HAL_OK', 'HAL_ERROR']:
+            continue
+
+        # Check if this is a template (contains x/X)
+        if 'x' in reg_name or 'X' in reg_name:
+            # Keep templates too - they can be useful for search
+            templates.add(reg_name.lower())
+            registers.add(reg_name)
+        else:
+            registers.add(reg_name)
+
+    return sorted(list(registers)), []  # Fields handled separately
+
+
 def extract_register_mentions(content: str) -> tuple[List[str], List[str]]:
     """
     Extract register names and field names mentioned in content.
 
-    Looks for patterns like:
+    This enhanced version expands parameterized patterns like:
+    - GPIOx_CRL (x=A..G) -> GPIOA_CRL, GPIOB_CRL, ..., GPIOG_CRL
+    - ADC_JOFRx (x=1..4) -> ADC_JOFR1, ADC_JOFR2, ADC_JOFR3, ADC_JOFR4
+    - TIM1 control register (TIMx_CR1) -> TIM1_CR1
+
+    Also extracts concrete patterns like:
     - AFIO_EXTICR1, GPIO_CRL, TIM2_CR1
     - EXTI0, SWJ_CFG, CNT[15:0]
     """
-    registers = set()
-    fields = set()
+    # Use enhanced extraction with expansion
+    registers, _ = extract_register_mentions_with_expansion(content)
+    registers_set = set(registers)
 
-    # Register pattern: PERIPHERAL_REGISTERNAME
-    register_pattern = r'\b([A-Z][A-Z0-9]*_[A-Z][A-Z0-9_]*)\b'
-    for match in re.finditer(register_pattern, content):
-        reg_name = match.group(1)
-        # Filter out common false positives
-        if reg_name not in ['GPIO_Pin', 'HAL_OK', 'HAL_ERROR']:
-            registers.add(reg_name)
+    # Extract fields separately
+    fields = set()
 
     # Field pattern: fieldname or fieldname[bits]
     field_pattern = r'\b([A-Z][A-Z0-9_]{2,})(?:\[\d+:\d+\]|\[\d+\])?\b'
     for match in re.finditer(field_pattern, content):
         field_name = match.group(1)
         # Only add if not already captured as register and is reasonably short
-        if field_name not in registers and len(field_name) <= 20:
+        if field_name not in registers_set and len(field_name) <= 20:
             # Filter common abbreviations that aren't fields
             if field_name not in ['GPIO', 'AFIO', 'TIM', 'USART', 'SPI', 'I2C', 'ADC', 'DMA']:
                 fields.add(field_name)
 
-    return sorted(list(registers)), sorted(list(fields))
+    return sorted(list(registers_set)), sorted(list(fields))
 
 def detect_content_features(content: str) -> Dict[str, bool]:
     """Detect presence of tables, code examples, diagrams."""
