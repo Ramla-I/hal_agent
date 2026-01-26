@@ -259,6 +259,14 @@ if __name__ == "__main__":
     print(f"Testing with peripheral: {test_peripheral}")
     print(f"Processing {len(test_registers)} registers: {test_registers}\n")
 
+    # Get vs_id_text from config
+    rm0041_context = next((ctx for ctx in config.user_contexts if ctx.device_name == 'rm0041'), None)
+    if not rm0041_context or not rm0041_context.vs_id_text:
+        raise ValueError("rm0041 vs_id_text not found in config.user_contexts")
+
+    vs_id_text = rm0041_context.vs_id_text
+    print(f"Using vs_id_text: {vs_id_text}\n")
+
     # Test with different number_embeddings values
     embedding_counts = [4, 8, 16, 50]
 
@@ -275,12 +283,12 @@ if __name__ == "__main__":
             re_ranking=True,
             score_threshold=0.25,
             query_rewrite=True,
-            vs_id="vs_6892501067b08191ac63cc6de06ee629",
+            vs_id=vs_id_text,
             regex="",
             other=""
         )
 
-        output_dir = f"generator_test_embeddings_{num_embeddings}"
+        output_dir = f"optimization/test_outputs/generator/3/text_chunks_embeddings_{num_embeddings}"
         os.makedirs(output_dir, exist_ok=True)
 
         # Reset timing stats for this test

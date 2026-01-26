@@ -53,7 +53,9 @@ class UserContext:
     run: int
     file_id: str
     vs_id: str
-
+    vs_id_text: str
+    vs_id_md: str
+    
 class FieldState(BaseModel):
     """Represents a field state requirement (pre or post condition)"""
     register_name: str  # Can be different register (e.g., "RTTDCS" when constraining "MTQC")
