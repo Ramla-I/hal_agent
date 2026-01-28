@@ -1,29 +1,22 @@
 #!/usr/bin/env python3
 """
-Extract structural metadata from a datasheet for preprocessing.
+Extract structural metadata from a datasheet using a naive/open-ended approach.
 
-This script queries an LLM to identify formatting conventions and patterns in a datasheet,
-which are used to improve automated register extraction. The extracted metadata includes:
+This script takes a zero-knowledge approach: instead of asking specific questions,
+it explains the project context to the LLM and asks it to identify what formatting
+information would be useful for register extraction and semantic retrieval.
 
-- Register naming conventions (e.g., compact notation like "ABCx(x=1..3)")
-- Subfield naming conventions (e.g., whether bit ranges are included like "PIN[3:0]")
-- Format of essential information (tables vs text vs figures)
-- Removable front/back matter (TOC, index pages that can be excluded)
+This approach helps discover datasheet-specific patterns that predefined questions
+might miss, and can suggest improvements to the extraction prompts.
 
 Supports both OpenAI and Google Gemini models with large context windows.
 
 Usage:
     # Using OpenAI (default)
-    python preprocessing/query_datasheet.py devices/stm/rm0041/rm0041.pdf
+    python preprocessing/query_datasheet_naive.py devices/stm/rm0041/rm0041.pdf
 
     # Using Gemini (larger context window)
-    python preprocessing/query_datasheet.py devices/stm/rm0041/rm0041.pdf --provider gemini
-
-    # Save output to file
-    python preprocessing/query_datasheet.py devices/stm/rm0041/rm0041.pdf -o output.json
-
-    # List the default preprocessing questions
-    python preprocessing/query_datasheet.py --list-questions
+    python preprocessing/query_datasheet_naive.py devices/stm/rm0041/rm0041.pdf --provider gemini
 
 Environment Variables:
     OPENAI_API_KEY: Required for OpenAI models
@@ -46,95 +39,51 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.result_saver import ResultSaver, UsageStats
 
-# Default questions to ask about the datasheet
-DEFAULT_QUESTIONS = [
-    # Register naming conventions
-    """What are the register naming conventions used in this datasheet?
-Identify patterns such as:
-- How peripheral and register names are separated (e.g., underscores like "GPIO_CR", no separator)
-- Placeholder variables for multiple instances: x, n, y, or explicit numbers (SPI0, SPI1)
-- Range notation styles: (x=1..7), (n=0...6), [n=0..1], or explicit ranges like BCR1..4
-- Whether instance numbers appear in peripheral name (FTM0_SC) or register name (DMA_CCR1)
-- Common prefixes (peripheral abbreviations) and suffixes (_CR, _SR, _DR, _ENR)
-Provide specific examples from the datasheet for each pattern found.""",
+# Project context and open-ended prompt
+NAIVE_PROMPT = """You are an expert at analyzing hardware datasheets and reference manuals.
 
-    # Subfield naming conventions
-    """What are the subfield/bitfield naming conventions used in this datasheet?
-Identify patterns such as:
-- Where bit ranges appear:
-  * In field name itself: PIN[3:0], ADCH[4:0]
-  * In separate column: "Bits 4-0" or "Bit 5:3"
-  * Both locations
-- How reserved/unused bits are labeled (Reserved, Res., RESERVED, etc.)
-- Numbering for repeated fields: CC1IE/CC2IE, CHnF, indexed suffixes
-- How enumerated values are formatted (tables, inline, binary notation)
-Provide specific examples from the datasheet.""",
+## Project Context
 
-    # Format of essential information
-    """How is essential register information formatted in this datasheet?
-Identify the typical layout for register documentation:
-- Register summary/map tables (location, columns included)
-- Individual register format:
-  * Header info (name, offset, reset value location)
-  * Bit diagram style (visual layout vs table)
-  * Access type indicators and where they appear
-  * Field description format
-- Where is the access type legend/abbreviation list defined?
-- Are there peripheral-level summary tables at the end of each section?
-Describe the structure with specific examples.""",
+We are building an automated system to extract register information from hardware datasheets. The pipeline works as follows:
 
-    # Removable front matter
-    """Analyze the BEGINNING of this datasheet to identify removable pages.
-Provide TWO page numbers:
-1. First page with register-related conventions or abbreviation definitions
-2. First page with actual register content (register maps, bit definitions)
+1. **Chunking**: The datasheet (PDF) is split into smaller text chunks for processing.
+2. **Semantic Search**: When we need to extract information about a specific register (e.g., "GPIO_CR1"), we use semantic search to retrieve the most relevant chunks from the datasheet.
+3. **LLM Extraction**: The retrieved chunks are passed to an LLM that extracts structured register data including:
+   - Register name and address offset
+   - Reset value
+   - Bit fields (name, bit range, access type, description)
+   - Enumerated values for each field
 
-Look for non-essential front matter such as:
-- Table of contents, list of figures/tables
-- Revision history, document conventions
-- General product overview, feature lists
-- Ordering information, package options
+## The Challenge
 
-Note: Some PDFs are excerpts that start directly with register content (no removable pages).""",
+Different datasheets from different manufacturers (STM, Intel, NXP, TI, etc.) use different formatting conventions. These variations can affect:
+- How well semantic search retrieves the right chunks
+- How accurately the LLM extracts register information
+- How we normalize and compare extracted data against reference files (SVD)
 
-    # Removable back matter
-    """Analyze the END of this datasheet to identify removable pages.
-Provide:
-1. Last page number containing actual register documentation
-2. Number of pages that can be removed from the end
+## Your Task
 
-Look for non-essential back matter such as:
-- Index pages
-- Appendices without register information
-- Package diagrams, ordering codes
-- Revision history at the end
-- Legal notices
+Analyze this datasheet and provide:
 
-Note: Some PDFs are excerpts that end directly with register content (no removable pages).""",
+1. **Formatting Metadata**: What formatting conventions and patterns are used in this datasheet that would be important to know before processing it? Consider:
+   - Naming conventions (registers, bitfields, peripherals)
+   - How information is structured (tables, prose, diagrams)
+   - Any compact notations or abbreviations used
+   - Page ranges that contain actual register content vs. front/back matter
 
-    # Technical details for extraction
-    """What technical details about this datasheet would help with automated register extraction?
-Identify:
-- Reset value format: hex (0x0000), binary (00b), with underscores (0000_0000h)?
-- Access type abbreviations used: rw/RW, r/RO, w/WO, rc_w0, w1c, etc.
-- Register width: 8-bit, 16-bit, 32-bit? How is this indicated?
-- Address format: absolute addresses or offsets from peripheral base?
-- 64-bit register handling: split into _L/_H pairs? Special access order?
-- Cross-reference format: how are other registers referenced in descriptions?
-- Any register aliasing (same register at multiple addresses)?
-Provide specific examples and the exact notation used.""",
+2. **Retrieval Optimization**: What information about this datasheet's format would help improve semantic search retrieval? For example:
+   - How are registers referenced/named in the text?
+   - Are there patterns that could help expand search queries?
+   - What sections are most informative for register details?
 
-    # Retrieval optimization hints
-    """What patterns in this datasheet would help improve semantic search retrieval?
-Consider:
-- How are registers referenced in prose text vs tables?
-- Are there section headers that reliably indicate register content?
-- What keywords consistently appear near register definitions?
-- Are there any naming patterns that could be used to expand search queries?
-  (e.g., "GPIOx" could expand to GPIOA, GPIOB, etc.)
-- Which sections contain the most complete register information?
-Provide specific patterns that could improve chunk retrieval accuracy.""",
-]
+3. **Extraction Hints**: What should the extraction LLM know about this specific datasheet to accurately parse register information? For example:
+   - How are reset values formatted?
+   - How are access types specified?
+   - Any unusual conventions or edge cases?
+
+4. **Suggested Prompt Improvements**: Based on your analysis, what specific instructions or examples should we add to our extraction prompts to handle this datasheet better?
+
+Please structure your response as a JSON object with keys: "formatting_metadata", "retrieval_optimization", "extraction_hints", and "prompt_improvements". Each section should contain detailed findings with specific examples from the datasheet."""
 
 
 def read_pdf_content(pdf_path: str, sample_pages: int = 0) -> str:
@@ -226,7 +175,6 @@ def read_datasheet(file_path: str, sample_pages: int = 0) -> str:
 
 def query_openai(
     content: str,
-    questions: list[str],
     model: str = "gpt-4.1",
     temperature: float = 0.0
 ) -> dict:
@@ -245,33 +193,17 @@ def query_openai(
 
     client = OpenAI(api_key=api_key)
 
-    questions_text = "\n".join(f"{i+1}. {q}" for i, q in enumerate(questions))
-
-    system_prompt = """You are an expert at analyzing hardware datasheets and reference manuals for preprocessing purposes.
-Your task is to extract structural metadata about how the datasheet is formatted, which will be used to improve automated register extraction.
-
-You will be given the content of a datasheet and a list of questions to answer.
-Focus on identifying patterns and conventions used throughout the document.
-Provide specific examples from the datasheet to support your answers.
-If information is not available or a pattern is not used, say so explicitly.
-Format your response as a JSON object with question numbers as keys."""
-
     user_prompt = f"""Here is the datasheet content:
 
 {content}
 
 ---
 
-Please answer the following questions about this datasheet:
-
-{questions_text}
-
-Respond with a JSON object where keys are "q1", "q2", etc. and values are your answers."""
+{NAIVE_PROMPT}"""
 
     response = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
         temperature=temperature,
@@ -314,7 +246,6 @@ Respond with a JSON object where keys are "q1", "q2", etc. and values are your a
 
 def query_gemini(
     content: str,
-    questions: list[str],
     model: str = "gemini-2.5-flash",
     temperature: float = 0.0
 ) -> dict:
@@ -334,26 +265,15 @@ def query_gemini(
 
     client = genai.Client(api_key=api_key)
 
-    questions_text = "\n".join(f"{i+1}. {q}" for i, q in enumerate(questions))
-
-    prompt = f"""You are an expert at analyzing hardware datasheets and reference manuals for preprocessing purposes.
-Your task is to extract structural metadata about how the datasheet is formatted, which will be used to improve automated register extraction.
-
-Here is the datasheet content:
+    prompt = f"""Here is the datasheet content:
 
 {content}
 
 ---
 
-Please answer the following questions about this datasheet:
+{NAIVE_PROMPT}
 
-{questions_text}
-
-Focus on identifying patterns and conventions used throughout the document.
-Provide specific examples from the datasheet to support your answers.
-If information is not available or a pattern is not used, say so explicitly.
-Respond with a JSON object where keys are "q1", "q2", etc. and values are your answers.
-Only output the JSON object, no other text."""
+Respond with only the JSON object, no other text."""
 
     response = client.models.generate_content(
         model=model,
@@ -407,31 +327,26 @@ Only output the JSON object, no other text."""
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Extract structural metadata from a datasheet for preprocessing.",
+        description="Extract datasheet metadata using a naive/open-ended approach.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-This script extracts metadata about datasheet formatting conventions:
-  - Register naming conventions (e.g., "ABCx(x=1..3)")
-  - Subfield naming conventions (e.g., "PIN[3:0]")
-  - Format of essential information (tables/text/figures)
-  - Removable front/back matter (TOC, index pages)
+This script uses a zero-knowledge approach: instead of asking specific questions,
+it explains the project context and asks the LLM to identify useful formatting
+information and suggest prompt improvements.
 
 Examples:
-    # Using OpenAI (default) - saves to devices/stm/rm0041/preprocessing_metadata_gpt-4.1.json
+    # Using OpenAI (default)
     python %(prog)s devices/stm/rm0041/rm0041.pdf
 
-    # Using Gemini - saves to devices/stm/rm0041/preprocessing_metadata_gemini-2.5-flash.json
+    # Using Gemini (larger context window)
     python %(prog)s devices/stm/rm0041/rm0041.pdf --provider gemini
 
-    # Save output to custom location
-    python %(prog)s devices/stm/rm0041/rm0041.pdf -o custom_output.json
-
-    # List default preprocessing questions
-    python %(prog)s --list-questions
+    # Sample pages for large PDFs
+    python %(prog)s devices/stm/rm0041/rm0041.pdf --provider gemini --sample-pages 100
 
 Supported models:
-    OpenAI: gpt-4.1 (default), gpt-4.1, gpt-4.1-mini
-    Gemini: gemini-2.5-flash (default, 1M context), gemini-3-pro (1M context)
+    OpenAI: gpt-4.1 (default, 1M context)
+    Gemini: gemini-2.5-flash (default, 1M context)
         """
     )
 
@@ -456,16 +371,9 @@ Supported models:
     )
 
     parser.add_argument(
-        "-q", "--questions",
-        nargs="+",
-        default=None,
-        help="Custom questions to ask (default: predefined preprocessing questions about naming conventions, formatting, etc.)"
-    )
-
-    parser.add_argument(
         "-o", "--output",
         default=None,
-        help="Output file path for JSON results (default: preprocessing_metadata_{model}.json alongside datasheet)"
+        help="Output file path for JSON results (default: preprocessing_naive_{model}.json alongside datasheet)"
     )
 
     parser.add_argument(
@@ -473,12 +381,6 @@ Supported models:
         type=float,
         default=0.0,
         help="Temperature for generation (default: 0.0)"
-    )
-
-    parser.add_argument(
-        "--list-questions",
-        action="store_true",
-        help="List the default questions and exit"
     )
 
     parser.add_argument(
@@ -494,23 +396,29 @@ Supported models:
         help="Sample N pages from beginning/middle/end instead of reading all (useful for large PDFs with API limits)"
     )
 
+    parser.add_argument(
+        "--show-prompt",
+        action="store_true",
+        help="Show the naive prompt and exit"
+    )
+
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
 
-    # Handle --list-questions
-    if args.list_questions:
-        print("Default questions:")
-        for i, q in enumerate(DEFAULT_QUESTIONS, 1):
-            print(f"  {i}. {q}")
+    # Handle --show-prompt
+    if args.show_prompt:
+        print("Naive prompt:")
+        print("-" * 70)
+        print(NAIVE_PROMPT)
         return 0
 
     # Validate datasheet is provided
     if not args.datasheet:
         print("Error: datasheet argument is required")
-        print("Usage: python query_datasheet.py <datasheet> [options]")
+        print("Usage: python query_datasheet_naive.py <datasheet> [options]")
         return 1
 
     # Validate datasheet path
@@ -526,23 +434,20 @@ def main():
     else:
         model = "gemini-2.5-flash"
 
-    # Determine questions
-    questions = args.questions if args.questions else DEFAULT_QUESTIONS
-
-    # Determine output path (default: alongside datasheet as preprocessing_metadata_{model}.json)
+    # Determine output path (default: alongside datasheet as preprocessing_naive_{model}.json)
     if args.output:
         output_path = args.output
     else:
         datasheet_dir = os.path.dirname(os.path.abspath(args.datasheet))
         # Sanitize model name for filename (replace slashes, etc.)
         model_safe = model.replace("/", "-").replace(":", "-")
-        output_path = os.path.join(datasheet_dir, f"preprocessing_metadata_{model_safe}.json")
+        output_path = os.path.join(datasheet_dir, f"preprocessing_naive_{model_safe}.json")
 
     print(f"Provider: {args.provider}")
     print(f"Model: {model}")
     print(f"Datasheet: {args.datasheet}")
     print(f"Output: {output_path}")
-    print(f"Questions: {len(questions)}")
+    print(f"Approach: Naive (open-ended, no predefined questions)")
     print()
 
     # Read datasheet content
@@ -558,9 +463,9 @@ def main():
     print(f"\nQuerying {args.provider} ({model})...")
     try:
         if args.provider == "openai":
-            result = query_openai(content, questions, model, args.temperature)
+            result = query_openai(content, model, args.temperature)
         else:
-            result = query_gemini(content, questions, model, args.temperature)
+            result = query_gemini(content, model, args.temperature)
     except Exception as e:
         print(f"Error querying LLM: {e}")
         return 1
@@ -570,7 +475,8 @@ def main():
 
     # Add metadata
     result["datasheet"] = args.datasheet
-    result["questions"] = questions
+    result["approach"] = "naive"
+    result["prompt"] = NAIVE_PROMPT
     result["timestamp"] = datetime.utcnow().isoformat() + "Z"
 
     # Print usage info
@@ -594,32 +500,46 @@ def main():
     if usage_stats:
         usage_csv_path = result_saver.save_usage_stats(
             usage_stats,
-            filename="preprocessing_usage.csv",
+            filename="preprocessing_naive_usage.csv",
             additional_fields={"datasheet": os.path.basename(args.datasheet)}
         )
         print(f"Usage saved to: {usage_csv_path}")
 
-    # Also print summary to terminal
+    # Print summary to terminal
     print("\n" + "=" * 70)
-    print("ANSWERS SUMMARY")
+    print("ANALYSIS SUMMARY")
     print("=" * 70)
 
     answers = result.get("answers", {})
-    for i, q in enumerate(questions, 1):
-        key = f"q{i}"
-        answer = answers.get(key, answers.get(str(i), "No answer"))
-        # Print first line of question and truncated answer
-        q_short = q.split('\n')[0][:60] + "..." if len(q.split('\n')[0]) > 60 else q.split('\n')[0]
-        print(f"\nQ{i}: {q_short}")
+
+    sections = [
+        ("formatting_metadata", "Formatting Metadata"),
+        ("retrieval_optimization", "Retrieval Optimization"),
+        ("extraction_hints", "Extraction Hints"),
+        ("prompt_improvements", "Prompt Improvements")
+    ]
+
+    for key, title in sections:
+        content = answers.get(key, "No content")
+        print(f"\n{title}:")
         print("-" * 40)
-        if isinstance(answer, str):
-            # Truncate long answers for terminal display
-            if len(answer) > 300:
-                print(answer[:300] + "...")
+        if isinstance(content, str):
+            if len(content) > 500:
+                print(content[:500] + "...")
             else:
-                print(answer)
-        else:
-            print(json.dumps(answer, indent=2)[:300] + "..." if len(json.dumps(answer, indent=2)) > 300 else json.dumps(answer, indent=2))
+                print(content)
+        elif isinstance(content, dict):
+            for k, v in list(content.items())[:3]:
+                v_str = str(v)[:200] + "..." if len(str(v)) > 200 else str(v)
+                print(f"  {k}: {v_str}")
+            if len(content) > 3:
+                print(f"  ... and {len(content) - 3} more items")
+        elif isinstance(content, list):
+            for item in content[:3]:
+                item_str = str(item)[:200] + "..." if len(str(item)) > 200 else str(item)
+                print(f"  - {item_str}")
+            if len(content) > 3:
+                print(f"  ... and {len(content) - 3} more items")
 
     if args.verbose:
         print("\n" + "=" * 70)
