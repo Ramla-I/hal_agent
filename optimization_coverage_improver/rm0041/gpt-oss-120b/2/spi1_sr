@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "SPI1_SR",
+  "address_offset": "0x08",
+  "reset_value": "0x0002",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "BSY",
+      "description": "Busy flag – set and cleared by hardware",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotBusy"
+        },
+        {
+          "value": "1",
+          "name": "Busy"
+        }
+      ]
+    },
+    {
+      "name": "OVR",
+      "description": "Overrun flag – set by hardware and reset by a software sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoOverrun"
+        },
+        {
+          "value": "1",
+          "name": "Overrun"
+        }
+      ]
+    },
+    {
+      "name": "MODF",
+      "description": "Mode fault flag – set by hardware and reset by a software sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoFault"
+        },
+        {
+          "value": "1",
+          "name": "Fault"
+        }
+      ]
+    },
+    {
+      "name": "CRCERR",
+      "description": "CRC error flag – set by hardware and cleared by software writing 0",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoError"
+        },
+        {
+          "value": "1",
+          "name": "Error"
+        }
+      ]
+    },
+    {
+      "name": "TXE",
+      "description": "Transmit buffer empty flag – set by hardware, cleared by writing to SPI_DR",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotEmpty"
+        },
+        {
+          "value": "1",
+          "name": "Empty"
+        }
+      ]
+    },
+    {
+      "name": "RXNE",
+      "description": "Receive buffer not empty flag – set by hardware, cleared by reading SPI_DR",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Empty"
+        },
+        {
+          "value": "1",
+          "name": "NotEmpty"
+        }
+      ]
+    }
+  ]
+}

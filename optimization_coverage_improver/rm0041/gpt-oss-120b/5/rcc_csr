@@ -1,0 +1,179 @@
+{
+  "datasheet_register_abbreviation": "RCC_CSR",
+  "address_offset": "0x24",
+  "reset_value": "0x0C000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "LPWRRSTF",
+      "description": "Low-power reset flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 31
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "ResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "WWDGRSTF",
+      "description": "Window watchdog reset flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 30
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "ResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "IWDGRSTF",
+      "description": "Independent watchdog reset flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "ResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "SFTRSTF",
+      "description": "Software reset flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "ResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "PORRSTF",
+      "description": "Power‑on reset flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "ResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "PINRSTF",
+      "description": "Pin reset flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "ResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "RMVF",
+      "description": "Remove reset flag – write 1 to clear reset flags",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearResetFlags"
+        }
+      ]
+    },
+    {
+      "name": "LSIRDY",
+      "description": "Internal low‑speed oscillator ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotReady"
+        },
+        {
+          "value": "1",
+          "name": "Ready"
+        }
+      ]
+    },
+    {
+      "name": "LSION",
+      "description": "Internal low‑speed oscillator enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OFF"
+        },
+        {
+          "value": "1",
+          "name": "ON"
+        }
+      ]
+    }
+  ]
+}

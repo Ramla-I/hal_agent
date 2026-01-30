@@ -1,0 +1,67 @@
+{
+  "datasheet_register_abbreviation": "I2C1_OAR1",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ADDMODE",
+      "description": "Addressing mode (slave mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "7-bit slave address (10-bit address not acknowledged)"
+        },
+        {
+          "value": "1",
+          "name": "10-bit slave address (7-bit address not acknowledged)"
+        }
+      ]
+    },
+    {
+      "name": "BIT14",
+      "description": "Should always be kept at 1 by software",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADD[9:8]",
+      "description": "Interface address bits 9‑8 (used in 10‑bit mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADD[7:1]",
+      "description": "Interface address bits 7‑1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADD0",
+      "description": "Interface address bit 0 (used in 10‑bit mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,293 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable. 0: Off – OC1 not active. 1: On – OC1 signal is output.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off"
+        },
+        {
+          "value": "1",
+          "name": "On"
+        }
+      ]
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity. 0: OC1 active high. 1: OC1 active low.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    },
+    {
+      "name": "CC1NE",
+      "description": "Capture/Compare 1 complementary output enable. 0: Off. 1: On.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off"
+        },
+        {
+          "value": "1",
+          "name": "On"
+        }
+      ]
+    },
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 complementary output polarity. 0: OC1N active high. 1: OC1N active low.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable. 0: Off. 1: On.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off"
+        },
+        {
+          "value": "1",
+          "name": "On"
+        }
+      ]
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output polarity. 0: OC2 active high. 1: OC2 active low.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    },
+    {
+      "name": "CC2NE",
+      "description": "Capture/Compare 2 complementary output enable. 0: Off. 1: On.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off"
+        },
+        {
+          "value": "1",
+          "name": "On"
+        }
+      ]
+    },
+    {
+      "name": "CC2NP",
+      "description": "Capture/Compare 2 complementary output polarity. 0: OC2N active high. 1: OC2N active low.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    },
+    {
+      "name": "CC3E",
+      "description": "Capture/Compare 3 output enable. 0: Off. 1: On.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off"
+        },
+        {
+          "value": "1",
+          "name": "On"
+        }
+      ]
+    },
+    {
+      "name": "CC3P",
+      "description": "Capture/Compare 3 output polarity. 0: OC3 active high. 1: OC3 active low.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    },
+    {
+      "name": "CC3NE",
+      "description": "Capture/Compare 3 complementary output enable. 0: Off. 1: On.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off"
+        },
+        {
+          "value": "1",
+          "name": "On"
+        }
+      ]
+    },
+    {
+      "name": "CC3NP",
+      "description": "Capture/Compare 3 complementary output polarity. 0: OC3N active high. 1: OC3N active low.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    },
+    {
+      "name": "CC4E",
+      "description": "Capture/Compare 4 output enable. 0: Off. 1: On.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off"
+        },
+        {
+          "value": "1",
+          "name": "On"
+        }
+      ]
+    },
+    {
+      "name": "CC4P",
+      "description": "Capture/Compare 4 output polarity. 0: OC4 active high. 1: OC4 active low.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    },
+    {
+      "name": "CC4NP",
+      "description": "Capture/Compare 4 complementary output polarity. 0: OC4N active high. 1: OC4N active low.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    }
+  ]
+}

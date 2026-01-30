@@ -1,0 +1,247 @@
+================================================================================
+COMPREHENSIVE GENERATOR TEXT CHUNKS ANALYSIS
+================================================================================
+
+Analyzing peripheral: afio
+Verified datasheet: verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv
+Base directory: optimization/generator_text_chunks
+
+Loading verified datasheet...
+Found 147 verified facts for afio
+
+Registers to check: ['evcr', 'exticr1', 'exticr2', 'exticr3', 'exticr4', 'mapr', 'mapr2']
+
+================================================================================
+ANALYZING: 4 embeddings
+Output directory: optimization/generator_text_chunks/embeddings_4
+================================================================================
+
+Accuracy Results:
+  Registers found: 5/7
+  Correct: 66/147 (44.9%)
+  Wrong:   0/147 (0.0%)
+  Missing: 81/147 (55.1%)
+
+Timing Results:
+  Total time: 33.75s
+  Generator LLM: 23.62s total, 3.37s avg (7 calls)
+  Vector search: 10.13s total, 1.45s avg (7 calls)
+
+================================================================================
+ANALYZING: 8 embeddings
+Output directory: optimization/generator_text_chunks/embeddings_8
+================================================================================
+
+Accuracy Results:
+  Registers found: 7/7
+  Correct: 56/147 (38.1%)
+  Wrong:   4/147 (2.7%)
+  Missing: 87/147 (59.2%)
+
+Timing Results:
+  Total time: 34.22s
+  Generator LLM: 25.80s total, 3.69s avg (7 calls)
+  Vector search: 8.42s total, 1.20s avg (7 calls)
+
+================================================================================
+ANALYZING: 16 embeddings
+Output directory: optimization/generator_text_chunks/embeddings_16
+================================================================================
+
+Accuracy Results:
+  Registers found: 7/7
+  Correct: 71/147 (48.3%)
+  Wrong:   7/147 (4.8%)
+  Missing: 69/147 (46.9%)
+
+Timing Results:
+  Total time: 35.93s
+  Generator LLM: 26.40s total, 3.77s avg (7 calls)
+  Vector search: 9.53s total, 1.36s avg (7 calls)
+
+================================================================================
+ANALYZING: 50 embeddings
+Output directory: optimization/generator_text_chunks/embeddings_50
+================================================================================
+
+Accuracy Results:
+  Registers found: 6/7
+  Correct: 83/147 (56.5%)
+  Wrong:   7/147 (4.8%)
+  Missing: 57/147 (38.8%)
+
+Timing Results:
+  Total time: 49.57s
+  Generator LLM: 39.08s total, 5.58s avg (7 calls)
+  Vector search: 10.48s total, 1.50s avg (7 calls)
+
+
+================================================================================
+ACCURACY SUMMARY
+================================================================================
+
+ embeddings  registers_found  total_registers  correct  wrong  missing  total  accuracy
+          4                5                7       66      0       81    147 44.897959
+          8                7                7       56      4       87    147 38.095238
+         16                7                7       71      7       69    147 48.299320
+         50                6                7       83      7       57    147 56.462585
+
+
+================================================================================
+TIMING SUMMARY
+================================================================================
+
+ embeddings  total_time  gen_total  gen_avg  gen_count  vs_total   vs_avg  vs_count
+          4   33.749436  23.615020 3.373574          7 10.134416 1.447774         7
+          8   34.224795  25.804711 3.686387          7  8.420084 1.202869         7
+         16   35.925569  26.398432 3.771205          7  9.527138 1.361020         7
+         50   49.567048  39.083925 5.583418          7 10.483123 1.497589         7
+
+
+================================================================================
+EMBEDDING OVERLAP ANALYSIS
+================================================================================
+
+
+Register: evcr
+------------------------------------------------------------
+   4 embeddings: 4 chunks
+   8 embeddings: 8 chunks
+  16 embeddings: 16 chunks
+  50 embeddings: 50 chunks
+
+  Overlap 4 → 8:
+    4/4 chunks retained (100%)
+    4 new chunks added
+    New chunks: rm0041_p187_c01.txt, rm0041_p202_c01.txt, rm0041_p484_c01.txt, rm0041_p526_c01.txt
+
+  Overlap 8 → 16:
+    8/8 chunks retained (100%)
+    8 new chunks added
+
+  Overlap 16 → 50:
+    16/16 chunks retained (100%)
+    34 new chunks added
+
+Register: exticr1
+------------------------------------------------------------
+   4 embeddings: 4 chunks
+   8 embeddings: 8 chunks
+  16 embeddings: 16 chunks
+  50 embeddings: 49 chunks
+
+  Overlap 4 → 8:
+    4/4 chunks retained (100%)
+    4 new chunks added
+    New chunks: rm0041_p187_c01.txt, rm0041_p202_c01.txt, rm0041_p206_c01.txt, rm0041_p526_c01.txt
+
+  Overlap 8 → 16:
+    8/8 chunks retained (100%)
+    8 new chunks added
+
+  Overlap 16 → 50:
+    16/16 chunks retained (100%)
+    33 new chunks added
+
+Register: exticr2
+------------------------------------------------------------
+   4 embeddings: 4 chunks
+   8 embeddings: 8 chunks
+  16 embeddings: 16 chunks
+  50 embeddings: 48 chunks
+
+  Overlap 4 → 8:
+    4/4 chunks retained (100%)
+    4 new chunks added
+    New chunks: rm0041_p187_c01.txt, rm0041_p202_c01.txt, rm0041_p206_c01.txt, rm0041_p365_c01.txt
+
+  Overlap 8 → 16:
+    8/8 chunks retained (100%)
+    8 new chunks added
+
+  Overlap 16 → 50:
+    16/16 chunks retained (100%)
+    32 new chunks added
+
+Register: exticr3
+------------------------------------------------------------
+   4 embeddings: 4 chunks
+   8 embeddings: 8 chunks
+  16 embeddings: 16 chunks
+  50 embeddings: 49 chunks
+
+  Overlap 4 → 8:
+    4/4 chunks retained (100%)
+    4 new chunks added
+    New chunks: rm0041_p187_c01.txt, rm0041_p202_c01.txt, rm0041_p365_c01.txt, rm0041_p526_c01.txt
+
+  Overlap 8 → 16:
+    8/8 chunks retained (100%)
+    8 new chunks added
+
+  Overlap 16 → 50:
+    16/16 chunks retained (100%)
+    33 new chunks added
+
+Register: exticr4
+------------------------------------------------------------
+   4 embeddings: 4 chunks
+   8 embeddings: 8 chunks
+  16 embeddings: 16 chunks
+  50 embeddings: 48 chunks
+
+  Overlap 4 → 8:
+    4/4 chunks retained (100%)
+    4 new chunks added
+    New chunks: rm0041_p187_c01.txt, rm0041_p209_c01.txt, rm0041_p365_c01.txt, rm0041_p526_c01.txt
+
+  Overlap 8 → 16:
+    8/8 chunks retained (100%)
+    8 new chunks added
+
+  Overlap 16 → 50:
+    16/16 chunks retained (100%)
+    32 new chunks added
+
+Register: mapr
+------------------------------------------------------------
+   4 embeddings: 4 chunks
+   8 embeddings: 8 chunks
+  16 embeddings: 16 chunks
+  50 embeddings: 48 chunks
+
+  Overlap 4 → 8:
+    3/4 chunks retained (75%)
+    5 new chunks added
+    New chunks: rm0041_p123_c01.txt, rm0041_p202_c01.txt, rm0041_p206_c01.txt, rm0041_p365_c01.txt, rm0041_p673_c01.txt
+
+  Overlap 8 → 16:
+    8/8 chunks retained (100%)
+    8 new chunks added
+
+  Overlap 16 → 50:
+    16/16 chunks retained (100%)
+    32 new chunks added
+
+Register: mapr2
+------------------------------------------------------------
+   4 embeddings: 4 chunks
+   8 embeddings: 8 chunks
+  16 embeddings: 16 chunks
+  50 embeddings: 48 chunks
+
+  Overlap 4 → 8:
+    4/4 chunks retained (100%)
+    4 new chunks added
+    New chunks: rm0041_p123_c01.txt, rm0041_p202_c01.txt, rm0041_p206_c01.txt, rm0041_p365_c01.txt
+
+  Overlap 8 → 16:
+    8/8 chunks retained (100%)
+    8 new chunks added
+
+  Overlap 16 → 50:
+    16/16 chunks retained (100%)
+    32 new chunks added
+
+
+Results saved to: optimization/generator_text_chunks/comprehensive_analysis.csv

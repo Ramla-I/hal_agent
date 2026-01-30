@@ -1,0 +1,41 @@
+{
+  "datasheet_register_abbreviation": "AFIO_MAPR2",
+  "address_offset": null,
+  "reset_value": null,
+  "size": 32,
+  "subfields": [],
+  "access_constraints": [
+    {
+      "target_register": "AFIO_MAPR2",
+      "target_fields": [],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Attempting to read the register without the AFIO clock enabled may result in undefined behavior.",
+      "datasheet_text": "To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    },
+    {
+      "target_register": "AFIO_MAPR2",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Attempting to write the register without the AFIO clock enabled may corrupt the register or have no effect.",
+      "datasheet_text": "To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    }
+  ]
+}

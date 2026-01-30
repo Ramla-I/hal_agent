@@ -1,0 +1,108 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCMR2",
+  "address_offset": "0x1C",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC3S",
+      "description": "Capture/Compare 3 selection (output/input mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC3FE",
+      "description": "Output compare 3 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC3PE",
+      "description": "Output compare 3 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC3M",
+      "description": "Output compare 3 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC3CE",
+      "description": "Output compare 3 clear enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC4S",
+      "description": "Capture/Compare 4 selection (output/input mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC4FE",
+      "description": "Output compare 4 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC4PE",
+      "description": "Output compare 4 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC4M",
+      "description": "Output compare 4 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC4CE",
+      "description": "Output compare 4 clear enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

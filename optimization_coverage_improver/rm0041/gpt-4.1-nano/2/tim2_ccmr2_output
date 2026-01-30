@@ -1,0 +1,188 @@
+{
+  "datasheet_register_abbreviation": "TIM2_CCMR2",
+  "address_offset": "0x1C",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "OC4M",
+      "description": "Output compare 4 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Frozen"
+        },
+        {
+          "value": "0b001",
+          "name": "Set active level on match"
+        },
+        {
+          "value": "0b010",
+          "name": "Set inactive level on match"
+        },
+        {
+          "value": "0b011",
+          "name": "Toggle"
+        },
+        {
+          "value": "0b100",
+          "name": "Force inactive level"
+        },
+        {
+          "value": "0b101",
+          "name": "Force active level"
+        },
+        {
+          "value": "0b110",
+          "name": "PWM mode 1"
+        },
+        {
+          "value": "0b111",
+          "name": "PWM mode 2"
+        }
+      ]
+    },
+    {
+      "name": "OC4PE",
+      "description": "Output compare 4 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC4FE",
+      "description": "Output compare 4 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC4S",
+      "description": "Capture/Compare 4 selection (channel direction)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output"
+        },
+        {
+          "value": "0b01",
+          "name": "Input, IC4 mapped on TI2"
+        },
+        {
+          "value": "0b10",
+          "name": "Input, IC4 mapped on TI1"
+        },
+        {
+          "value": "0b11",
+          "name": "Input, IC4 mapped on TRC"
+        }
+      ]
+    },
+    {
+      "name": "OC3M",
+      "description": "Output compare 3 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Frozen"
+        },
+        {
+          "value": "0b001",
+          "name": "Set active level on match"
+        },
+        {
+          "value": "0b010",
+          "name": "Set inactive level on match"
+        },
+        {
+          "value": "0b011",
+          "name": "Toggle"
+        },
+        {
+          "value": "0b100",
+          "name": "Force inactive level"
+        },
+        {
+          "value": "0b101",
+          "name": "Force active level"
+        },
+        {
+          "value": "0b110",
+          "name": "PWM mode 1"
+        },
+        {
+          "value": "0b111",
+          "name": "PWM mode 2"
+        }
+      ]
+    },
+    {
+      "name": "OC3PE",
+      "description": "Output compare 3 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC3FE",
+      "description": "Output compare 3 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC3S",
+      "description": "Capture/Compare 3 selection (channel direction)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output"
+        },
+        {
+          "value": "0b01",
+          "name": "Input, IC3 mapped on TI2"
+        },
+        {
+          "value": "0b10",
+          "name": "Input, IC3 mapped on TI1"
+        },
+        {
+          "value": "0b11",
+          "name": "Input, IC3 mapped on TRC"
+        }
+      ]
+    }
+  ]
+}

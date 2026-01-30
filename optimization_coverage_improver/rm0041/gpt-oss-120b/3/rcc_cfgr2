@@ -1,0 +1,83 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR2",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PREDIV1",
+      "description": "PREDIV1 division factor",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "Division by 1 (input clock not divided)"
+        },
+        {
+          "value": "0x1",
+          "name": "Division by 2"
+        },
+        {
+          "value": "0x2",
+          "name": "Division by 3"
+        },
+        {
+          "value": "0x3",
+          "name": "Division by 4"
+        },
+        {
+          "value": "0x4",
+          "name": "Division by 5"
+        },
+        {
+          "value": "0x5",
+          "name": "Division by 6"
+        },
+        {
+          "value": "0x6",
+          "name": "Division by 7"
+        },
+        {
+          "value": "0x7",
+          "name": "Division by 8"
+        },
+        {
+          "value": "0x8",
+          "name": "Division by 9"
+        },
+        {
+          "value": "0x9",
+          "name": "Division by 10"
+        },
+        {
+          "value": "0xA",
+          "name": "Division by 11"
+        },
+        {
+          "value": "0xB",
+          "name": "Division by 12"
+        },
+        {
+          "value": "0xC",
+          "name": "Division by 13"
+        },
+        {
+          "value": "0xD",
+          "name": "Division by 14"
+        },
+        {
+          "value": "0xE",
+          "name": "Division by 15"
+        },
+        {
+          "value": "0xF",
+          "name": "Division by 16"
+        }
+      ]
+    }
+  ]
+}

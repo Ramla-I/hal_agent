@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "TIM15_EGR",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "BG",
+      "description": "Break generation. This bit is set by software to generate a break event; it is automatically cleared by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "BreakEventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "TG",
+      "description": "Trigger generation. This bit is set by software to generate a trigger event; it is automatically cleared by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "TriggerEventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "COMG",
+      "description": "Capture/Compare control update generation. This bit can be set by software and is automatically cleared by hardware.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CCControlUpdateGenerated"
+        }
+      ]
+    },
+    {
+      "name": "CC2G",
+      "description": "Capture/Compare 2 generation. Set by software to generate a CC2 event; cleared by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC2EventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "CC1G",
+      "description": "Capture/Compare 1 generation. Set by software to generate a CC1 event; cleared by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC1EventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "UG",
+      "description": "Update generation. Set by software to re‑initialize the counter and generate an update; cleared by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "UpdateGenerated"
+        }
+      ]
+    }
+  ]
+}

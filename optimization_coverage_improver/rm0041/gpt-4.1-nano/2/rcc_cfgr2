@@ -1,0 +1,83 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR2",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PREDIV1[3:0]",
+      "description": "PREDIV1 division factor",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "PREDIV1 input clock not divided"
+        },
+        {
+          "value": "0x1",
+          "name": "PREDIV1 input clock divided by 2"
+        },
+        {
+          "value": "0x2",
+          "name": "PREDIV1 input clock divided by 3"
+        },
+        {
+          "value": "0x3",
+          "name": "PREDIV1 input clock divided by 4"
+        },
+        {
+          "value": "0x4",
+          "name": "PREDIV1 input clock divided by 5"
+        },
+        {
+          "value": "0x5",
+          "name": "PREDIV1 input clock divided by 6"
+        },
+        {
+          "value": "0x6",
+          "name": "PREDIV1 input clock divided by 7"
+        },
+        {
+          "value": "0x7",
+          "name": "PREDIV1 input clock divided by 8"
+        },
+        {
+          "value": "0x8",
+          "name": "PREDIV1 input clock divided by 9"
+        },
+        {
+          "value": "0x9",
+          "name": "PREDIV1 input clock divided by 10"
+        },
+        {
+          "value": "0xA",
+          "name": "PREDIV1 input clock divided by 11"
+        },
+        {
+          "value": "0xB",
+          "name": "PREDIV1 input clock divided by 12"
+        },
+        {
+          "value": "0xC",
+          "name": "PREDIV1 input clock divided by 13"
+        },
+        {
+          "value": "0xD",
+          "name": "PREDIV1 input clock divided by 14"
+        },
+        {
+          "value": "0xE",
+          "name": "PREDIV1 input clock divided by 15"
+        },
+        {
+          "value": "0xF",
+          "name": "PREDIV1 input clock divided by 16"
+        }
+      ]
+    }
+  ]
+}

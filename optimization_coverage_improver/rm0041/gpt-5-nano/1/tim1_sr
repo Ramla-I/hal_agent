@@ -1,0 +1,198 @@
+{
+  "datasheet_register_abbreviation": "TIM1_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC4OF",
+      "description": "Capture/Compare 4 overcapture flag (refer to CC1OF description)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture"
+        },
+        {
+          "value": "1",
+          "name": "Overcapture detected"
+        }
+      ]
+    },
+    {
+      "name": "CC3OF",
+      "description": "Capture/Compare 3 overcapture flag (refer to CC1OF description)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture"
+        },
+        {
+          "value": "1",
+          "name": "Overcapture detected"
+        }
+      ]
+    },
+    {
+      "name": "CC2OF",
+      "description": "Capture/Compare 2 overcapture flag (refer to CC1OF description)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture"
+        },
+        {
+          "value": "1",
+          "name": "Overcapture detected"
+        }
+      ]
+    },
+    {
+      "name": "CC1OF",
+      "description": "Capture/Compare 1 overcapture flag – set by hardware when a capture occurs while CC1IF is already high; cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture detected"
+        },
+        {
+          "value": "1",
+          "name": "Capture occurred while CC1IF was set"
+        }
+      ]
+    },
+    {
+      "name": "TIF",
+      "description": "Trigger interrupt flag – set by hardware on trigger event, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No trigger event occurred"
+        },
+        {
+          "value": "1",
+          "name": "Trigger interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "CC4IF",
+      "description": "Capture/Compare 4 interrupt flag (refer to CC1IF description).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No interrupt"
+        },
+        {
+          "value": "1",
+          "name": "Capture/compare 4 interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "CC3IF",
+      "description": "Capture/Compare 3 interrupt flag (refer to CC1IF description).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No interrupt"
+        },
+        {
+          "value": "1",
+          "name": "Capture/compare 3 interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "CC2IF",
+      "description": "Capture/Compare 2 interrupt flag (refer to CC1IF description).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No interrupt"
+        },
+        {
+          "value": "1",
+          "name": "Capture/compare 2 interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "CC1IF",
+      "description": "Capture/Compare 1 interrupt flag – set by hardware on match (output mode) or on capture (input mode); cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No interrupt / no capture"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt flag set or capture occurred"
+        }
+      ]
+    },
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag – set by hardware on an update event, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No update occurred"
+        },
+        {
+          "value": "1",
+          "name": "Update interrupt pending"
+        }
+      ]
+    }
+  ]
+}

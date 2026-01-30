@@ -1,0 +1,285 @@
+{
+  "datasheet_register_abbreviation": "AFIO_MAPR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SWJ_CFG[2:0]",
+      "description": "Serial wire JTAG configuration bits. Configure the SWJ and trace alternate function I/Os.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Full SWJ (JTAG-DP + SW-DP) – Reset state"
+        },
+        {
+          "value": "001",
+          "name": "Full SWJ (JTAG-DP + SW-DP) without NJTRST"
+        },
+        {
+          "value": "010",
+          "name": "JTAG-DP Disabled, SW-DP Enabled"
+        },
+        {
+          "value": "100",
+          "name": "JTAG-DP Disabled, SW-DP Disabled"
+        },
+        {
+          "value": "others",
+          "name": "Forbidden"
+        }
+      ]
+    },
+    {
+      "name": "PD01_REMAP",
+      "description": "Port D0/Port D1 mapping on OSC_IN/OSC_OUT.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (PD0/PD1 on their normal pins)"
+        },
+        {
+          "value": "1",
+          "name": "PD0 → OSC_IN, PD1 → OSC_OUT"
+        }
+      ]
+    },
+    {
+      "name": "TIM4_REMAP",
+      "description": "TIM4 channel remapping.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap"
+        },
+        {
+          "value": "1",
+          "name": "Remap (TIM4_CHx to PD12‑PD15)"
+        }
+      ]
+    },
+    {
+      "name": "TIM3_REMAP[1:0]",
+      "description": "TIM3 channel remapping.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "No remap"
+        },
+        {
+          "value": "01",
+          "name": "Partial remap (TIM3_CH1‑CH4 to PB4‑PB7)"
+        },
+        {
+          "value": "10",
+          "name": "Partial remap (TIM3_CH1‑CH4 to PC6‑PC9)"
+        },
+        {
+          "value": "11",
+          "name": "Full remap (TIM3_CH1‑CH4 to PC6‑PC9)"
+        }
+      ]
+    },
+    {
+      "name": "TIM2_REMAP[1:0]",
+      "description": "TIM2 channel and ETI remapping.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "No remap (CH1/ETR/PA0, CH2/PA1, CH3/PA2, CH4/PA3)"
+        },
+        {
+          "value": "01",
+          "name": "Partial remap (CH1/ETR/PA15, CH2/PB3, CH3/PA2, CH4/PA3)"
+        },
+        {
+          "value": "10",
+          "name": "Partial remap (CH1/ETR/PA0, CH2/PA1, CH3/PB10, CH4/PB11)"
+        },
+        {
+          "value": "11",
+          "name": "Full remap (CH1/ETR/PA15, CH2/PB3, CH3/PB10, CH4/PB11)"
+        }
+      ]
+    },
+    {
+      "name": "TIM1_REMAP[1:0]",
+      "description": "TIM1 channel and break input remapping.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "No remap (ETR/PA12, CH1/PA8, CH2/PA9, CH3/PA10, CH4/PA11, BKIN/PB12, CH1N/PB13, CH2N/PB14, CH3N/PB15)"
+        },
+        {
+          "value": "01",
+          "name": "Partial remap (ETR/PA12, CH1/PA8, CH2/PA9, CH3/PA10, CH4/PA11, BKIN/PA6, CH1N/PA7, CH2N/PB0, CH3N/PB1)"
+        },
+        {
+          "value": "10",
+          "name": "Not used"
+        },
+        {
+          "value": "11",
+          "name": "Full remap (ETR/PE7, CH1/PE9, CH2/PE11, CH3/PE13, CH4/PE14, BKIN/PE15, CH1N/PE8, CH2N/PE10, CH3N/PE12)"
+        }
+      ]
+    },
+    {
+      "name": "USART3_REMAP[1:0]",
+      "description": "USART3 alternate‑function remapping.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "No remap (TX/PB10, RX/PB11, CK/PB12, CTS/PB13, RTS/PB14)"
+        },
+        {
+          "value": "01",
+          "name": "Partial remap (TX/PC10, RX/PC11, CK/PC12, CTS/PB13, RTS/PB14)"
+        },
+        {
+          "value": "10",
+          "name": "Not used"
+        },
+        {
+          "value": "11",
+          "name": "Full remap (TX/PD8, RX/PD9, CK/PD10, CTS/PD11, RTS/PD12)"
+        }
+      ]
+    },
+    {
+      "name": "USART2_REMAP",
+      "description": "USART2 alternate‑function remapping.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (CTS/PA0, RTS/PA1, TX/PA2, RX/PA3, CK/PA4)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (CTS/PD3, RTS/PD4, TX/PD5, RX/PD6, CK/PD7)"
+        }
+      ]
+    },
+    {
+      "name": "USART1_REMAP",
+      "description": "USART1 alternate‑function remapping.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (TX/PA9, RX/PA10)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (TX/PB6, RX/PB7)"
+        }
+      ]
+    },
+    {
+      "name": "I2C1_REMAP",
+      "description": "I2C1 alternate‑function remapping.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (SCL/PB6, SDA/PB7)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (SCL/PB8, SDA/PB9)"
+        }
+      ]
+    },
+    {
+      "name": "SPI1_REMAP",
+      "description": "SPI1 alternate‑function remapping.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (NSS/PA4, SCK/PA5, MISO/PA6, MOSI/PA7)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (NSS/PA15, SCK/PB3, MISO/PB4, MOSI/PB5)"
+        }
+      ]
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "AFIO_MAPR",
+      "target_fields": [
+        "SWJ_CFG[2:0]"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Reading SWJ_CFG bits returns undefined data; they are write‑only.",
+      "datasheet_text": "These bits are write-only (when read, the value is undefined)."
+    },
+    {
+      "target_register": "AFIO_MAPR",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [],
+      "severity": "warning",
+      "consequence": "If the APB bridge write buffer is full, the write takes an extra APB cycle.",
+      "datasheet_text": "When the APB bridge write buffer is full, it takes one extra APB cycle when writing the AFIO_MAPR register."
+    }
+  ]
+}

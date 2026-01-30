@@ -1,0 +1,6 @@
+configuration,embeddings,model_name,true_positives,false_negatives,false_positives,true_negatives,accuracy,precision,recall,f1_score,batch_size,api_calls
+sequential,4,gpt-oss-120b,548,37,5,389,0.9571,0.9910,0.9368,0.9631,,1000
+batched,4,gpt-oss-120b,471,112,11,375,0.8731,0.9772,0.8079,0.8845,by_register,141
+batched,8,gpt-oss-120b,515,62,11,377,0.9244,0.9791,0.8925,0.9338,by_register,141
+batched,16,gpt-oss-120b,566,26,9,383,0.9644,0.9843,0.9561,0.9700,by_register,141
+batched,16,gpt-oss-120b,550,50,7,393,0.9430,0.9874,0.9167,0.9507,20,37

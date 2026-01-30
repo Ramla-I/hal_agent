@@ -1,0 +1,142 @@
+{
+  "datasheet_register_abbreviation": "SPI1_DR",
+  "address_offset": "0x0C",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "BSY",
+      "description": "Busy flag – indicates SPI communication is in progress",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotBusy"
+        },
+        {
+          "value": "1",
+          "name": "Busy"
+        }
+      ]
+    },
+    {
+      "name": "OVR",
+      "description": "Overrun flag – indicates data was received while previous data was not read",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoOverrun"
+        },
+        {
+          "value": "1",
+          "name": "Overrun"
+        }
+      ]
+    },
+    {
+      "name": "MODF",
+      "description": "Mode fault flag – indicates a master mode fault occurred",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoModeFault"
+        },
+        {
+          "value": "1",
+          "name": "ModeFault"
+        }
+      ]
+    },
+    {
+      "name": "CRCERR",
+      "description": "CRC error flag – indicates CRC mismatch when CRC checking is enabled",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CRCMatch"
+        },
+        {
+          "value": "1",
+          "name": "CRCError"
+        }
+      ]
+    },
+    {
+      "name": "Reserved_3_2",
+      "description": "Reserved bits, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TXE",
+      "description": "Transmit buffer empty flag – indicates Tx buffer is empty and ready for new data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TxNotEmpty"
+        },
+        {
+          "value": "1",
+          "name": "TxEmpty"
+        }
+      ]
+    },
+    {
+      "name": "RXNE",
+      "description": "Receive buffer not empty flag – indicates Rx buffer contains received data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "RxEmpty"
+        },
+        {
+          "value": "1",
+          "name": "RxNotEmpty"
+        }
+      ]
+    },
+    {
+      "name": "DR",
+      "description": "Data register – holds data to be transmitted (write) or received (read)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

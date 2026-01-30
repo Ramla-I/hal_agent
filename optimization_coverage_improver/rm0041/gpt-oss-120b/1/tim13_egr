@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "TIM13_EGR",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TG",
+      "description": "Trigger generation – set by software to generate a trigger event; automatically cleared by hardware",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "TriggerEvent"
+        }
+      ]
+    },
+    {
+      "name": "CC4G",
+      "description": "Capture/compare 4 generation – set by software to generate a capture/compare 4 event",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC4Event"
+        }
+      ]
+    },
+    {
+      "name": "CC3G",
+      "description": "Capture/compare 3 generation – set by software to generate a capture/compare 3 event",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC3Event"
+        }
+      ]
+    },
+    {
+      "name": "CC2G",
+      "description": "Capture/compare 2 generation – set by software to generate a capture/compare 2 event",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC2Event"
+        }
+      ]
+    },
+    {
+      "name": "CC1G",
+      "description": "Capture/compare 1 generation – set by software to generate a capture/compare 1 event",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC1Event"
+        }
+      ]
+    },
+    {
+      "name": "UG",
+      "description": "Update generation – set by software to re‑initialize the counter and generate an update event",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "UpdateEvent"
+        }
+      ]
+    }
+  ]
+}

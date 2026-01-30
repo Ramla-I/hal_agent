@@ -1,0 +1,274 @@
+{
+  "datasheet_register_abbreviation": "RCC_APB2RSTR",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "AFIORST",
+      "description": "Alternate function I/O reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset Alternate Function I/O"
+        }
+      ]
+    },
+    {
+      "name": "IOPARST",
+      "description": "I/O port A reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset I/O port A"
+        }
+      ]
+    },
+    {
+      "name": "IOPBRST",
+      "description": "I/O port B reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset I/O port B"
+        }
+      ]
+    },
+    {
+      "name": "IOPCRST",
+      "description": "I/O port C reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset I/O port C"
+        }
+      ]
+    },
+    {
+      "name": "IOPDRST",
+      "description": "I/O port D reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset I/O port D"
+        }
+      ]
+    },
+    {
+      "name": "IOPFRST",
+      "description": "I/O port F reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset I/O port F"
+        }
+      ]
+    },
+    {
+      "name": "IOPGRST",
+      "description": "I/O port G reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset I/O port G"
+        }
+      ]
+    },
+    {
+      "name": "ADC1RST",
+      "description": "ADC 1 interface reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset ADC 1 interface"
+        }
+      ]
+    },
+    {
+      "name": "TIM1RST",
+      "description": "TIM1 timer reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset TIM1 timer"
+        }
+      ]
+    },
+    {
+      "name": "SPI1RST",
+      "description": "SPI 1 reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset SPI 1"
+        }
+      ]
+    },
+    {
+      "name": "USART1RST",
+      "description": "USART 1 reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset USART 1"
+        }
+      ]
+    },
+    {
+      "name": "TIM15RST",
+      "description": "TIM15 reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset TIM15"
+        }
+      ]
+    },
+    {
+      "name": "TIM16RST",
+      "description": "TIM16 reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset TIM16"
+        }
+      ]
+    },
+    {
+      "name": "TIM17RST",
+      "description": "TIM17 reset",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset TIM17"
+        }
+      ]
+    }
+  ]
+}

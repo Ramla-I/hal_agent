@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "RTC_CRL",
+  "address_offset": "0x04",
+  "reset_value": "0x0020",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "RTOFF",
+      "description": "RTC operation OFF – reports the status of the last write operation performed on RTC registers",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "WriteInProgress"
+        },
+        {
+          "value": "1",
+          "name": "WriteCompleted"
+        }
+      ]
+    },
+    {
+      "name": "CNF",
+      "description": "Configuration flag – enables entry to configuration mode for writing RTC_CNT, RTC_ALR or RTC_PRL registers",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ExitConfigurationMode"
+        },
+        {
+          "value": "1",
+          "name": "EnterConfigurationMode"
+        }
+      ]
+    },
+    {
+      "name": "RSF",
+      "description": "Registers synchronized flag – set by hardware after RTC_CNT and RTC_DIV are updated, cleared by software",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotSynchronized"
+        },
+        {
+          "value": "1",
+          "name": "Synchronized"
+        }
+      ]
+    },
+    {
+      "name": "OWF",
+      "description": "Overflow flag – set by hardware when the 32‑bit programmable counter overflows",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OverflowNotDetected"
+        },
+        {
+          "value": "1",
+          "name": "OverflowDetected"
+        }
+      ]
+    },
+    {
+      "name": "ALRF",
+      "description": "Alarm flag – set by hardware when the counter reaches the alarm threshold",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AlarmNotDetected"
+        },
+        {
+          "value": "1",
+          "name": "AlarmDetected"
+        }
+      ]
+    },
+    {
+      "name": "SECF",
+      "description": "Second flag – set by hardware when the prescaler overflows (typically each second)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "SecondConditionNotMet"
+        },
+        {
+          "value": "1",
+          "name": "SecondConditionMet"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,312 @@
+{
+  "datasheet_register_abbreviation": "GPIOA_BRR",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "BR0",
+      "description": "Port A Reset bit 0",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR0"
+        }
+      ]
+    },
+    {
+      "name": "BR1",
+      "description": "Port A Reset bit 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR1"
+        }
+      ]
+    },
+    {
+      "name": "BR2",
+      "description": "Port A Reset bit 2",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR2"
+        }
+      ]
+    },
+    {
+      "name": "BR3",
+      "description": "Port A Reset bit 3",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR3"
+        }
+      ]
+    },
+    {
+      "name": "BR4",
+      "description": "Port A Reset bit 4",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR4"
+        }
+      ]
+    },
+    {
+      "name": "BR5",
+      "description": "Port A Reset bit 5",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR5"
+        }
+      ]
+    },
+    {
+      "name": "BR6",
+      "description": "Port A Reset bit 6",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR6"
+        }
+      ]
+    },
+    {
+      "name": "BR7",
+      "description": "Port A Reset bit 7",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR7"
+        }
+      ]
+    },
+    {
+      "name": "BR8",
+      "description": "Port A Reset bit 8",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR8"
+        }
+      ]
+    },
+    {
+      "name": "BR9",
+      "description": "Port A Reset bit 9",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR9"
+        }
+      ]
+    },
+    {
+      "name": "BR10",
+      "description": "Port A Reset bit 10",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR10"
+        }
+      ]
+    },
+    {
+      "name": "BR11",
+      "description": "Port A Reset bit 11",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR11"
+        }
+      ]
+    },
+    {
+      "name": "BR12",
+      "description": "Port A Reset bit 12",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR12"
+        }
+      ]
+    },
+    {
+      "name": "BR13",
+      "description": "Port A Reset bit 13",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR13"
+        }
+      ]
+    },
+    {
+      "name": "BR14",
+      "description": "Port A Reset bit 14",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR14"
+        }
+      ]
+    },
+    {
+      "name": "BR15",
+      "description": "Port A Reset bit 15",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ResetODR15"
+        }
+      ]
+    }
+  ]
+}

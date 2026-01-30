@@ -1,0 +1,15 @@
+{
+  "context_retrieval_parameters": {
+    "context_retrieval_method": "semantic_search",
+    "pages_after_keyword": 5,
+    "remove_tables": false,
+    "number_embeddings": 50,
+    "re_ranking": false,
+    "score_threshold": 0.05,
+    "query_rewrite": true,
+    "vs_id": "vs_6892501067b08191ac63cc6de06ee629",
+    "regex": "",
+    "other": ""
+  },
+  "stop_improving": false
+}

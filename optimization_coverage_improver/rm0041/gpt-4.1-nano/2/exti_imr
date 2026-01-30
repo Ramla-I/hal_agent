@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "EXTI_IMR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MRx",
+      "description": "Interrupt Mask on line x (x = 0..17)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    }
+  ]
+}

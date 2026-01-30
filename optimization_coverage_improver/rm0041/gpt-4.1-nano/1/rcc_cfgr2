@@ -1,0 +1,83 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR2",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PREDIV1",
+      "description": "PREDIV1 division factor",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "Div1_NotDivided"
+        },
+        {
+          "value": "0x1",
+          "name": "Div2"
+        },
+        {
+          "value": "0x2",
+          "name": "Div3"
+        },
+        {
+          "value": "0x3",
+          "name": "Div4"
+        },
+        {
+          "value": "0x4",
+          "name": "Div5"
+        },
+        {
+          "value": "0x5",
+          "name": "Div6"
+        },
+        {
+          "value": "0x6",
+          "name": "Div7"
+        },
+        {
+          "value": "0x7",
+          "name": "Div8"
+        },
+        {
+          "value": "0x8",
+          "name": "Div9"
+        },
+        {
+          "value": "0x9",
+          "name": "Div10"
+        },
+        {
+          "value": "0xA",
+          "name": "Div11"
+        },
+        {
+          "value": "0xB",
+          "name": "Div12"
+        },
+        {
+          "value": "0xC",
+          "name": "Div13"
+        },
+        {
+          "value": "0xD",
+          "name": "Div14"
+        },
+        {
+          "value": "0xE",
+          "name": "Div15"
+        },
+        {
+          "value": "0xF",
+          "name": "Div16"
+        }
+      ]
+    }
+  ]
+}

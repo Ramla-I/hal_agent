@@ -1,0 +1,159 @@
+{
+  "datasheet_register_abbreviation": "TIM16_BDTR",
+  "address_offset": "0x44",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "MOE",
+      "description": "Main output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "AOE",
+      "description": "Automatic output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "MOE can be set only by software"
+        },
+        {
+          "value": "1",
+          "name": "MOE can be set by software or automatically at next update event"
+        }
+      ]
+    },
+    {
+      "name": "BKP",
+      "description": "Break polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Break input BRK is active low"
+        },
+        {
+          "value": "1",
+          "name": "Break input BRK is active high"
+        }
+      ]
+    },
+    {
+      "name": "BKE",
+      "description": "Break enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Break inputs disabled"
+        },
+        {
+          "value": "1",
+          "name": "Break inputs enabled"
+        }
+      ]
+    },
+    {
+      "name": "OSSR",
+      "description": "Off‑state selection for Run mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "When inactive, OC/OCN outputs are disabled"
+        },
+        {
+          "value": "1",
+          "name": "When inactive, OC/OCN outputs are enabled with their inactive level as soon as CCxE=1 or CCxNE=1"
+        }
+      ]
+    },
+    {
+      "name": "OSSI",
+      "description": "Off‑state selection for Idle mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "When inactive, OC/OCN outputs are disabled"
+        },
+        {
+          "value": "1",
+          "name": "When inactive, OC/OCN outputs are forced first with their idle level as soon as CCxE=1 or CCxNE=1"
+        }
+      ]
+    },
+    {
+      "name": "LOCK",
+      "description": "Lock configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "LOCK OFF – No bit is write protected"
+        },
+        {
+          "value": "1",
+          "name": "LOCK Level 1 – DTG bits, OISx/OISxN bits, BKE/BKP/AOE bits write‑protected"
+        },
+        {
+          "value": "2",
+          "name": "LOCK Level 2 – Level 1 plus CC polarity bits and OSSR/OSSI bits write‑protected"
+        },
+        {
+          "value": "3",
+          "name": "LOCK Level 3 – Level 2 plus CC control bits (OCxM, OCxPE) write‑protected"
+        }
+      ]
+    },
+    {
+      "name": "DTG",
+      "description": "Dead‑time generator setup",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "datasheet_register_abbreviation": "RCC_CIR",
+  "address_offset": "0x008",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CSSC",
+      "description": "Clock security system interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PLLRDYC",
+      "description": "PLL ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSERDYC",
+      "description": "HSE ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSIRDYC",
+      "description": "HSI ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSERDYC",
+      "description": "LSE ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSIRDYC",
+      "description": "LSI ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PLLRDYIE",
+      "description": "PLL ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSERDYIE",
+      "description": "HSE ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSIRDYIE",
+      "description": "HSI ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSERDYIE",
+      "description": "LSE ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSIRDYIE",
+      "description": "LSI ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CSSF",
+      "description": "Clock security system interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PLLRDYF",
+      "description": "PLL ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSERDYF",
+      "description": "HSE ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSIRDYF",
+      "description": "HSI ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSERDYF",
+      "description": "LSE ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSIRDYF",
+      "description": "LSI ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,388 @@
+{
+  "datasheet_register_abbreviation": "RCC_APB1RSTR",
+  "address_offset": "0x10",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "AFIORST",
+      "description": "Alternate function I/O reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetAlternateFunction"
+        }
+      ]
+    },
+    {
+      "name": "IOPARST",
+      "description": "I/O port A reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetPortA"
+        }
+      ]
+    },
+    {
+      "name": "IOPBRST",
+      "description": "I/O port B reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetPortB"
+        }
+      ]
+    },
+    {
+      "name": "IOPCRST",
+      "description": "I/O port C reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetPortC"
+        }
+      ]
+    },
+    {
+      "name": "IOPDRST",
+      "description": "I/O port D reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetPortD"
+        }
+      ]
+    },
+    {
+      "name": "IOPERST",
+      "description": "I/O port E reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetPortE"
+        }
+      ]
+    },
+    {
+      "name": "IOPFRST",
+      "description": "I/O port F reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetPortF"
+        }
+      ]
+    },
+    {
+      "name": "IOPGRST",
+      "description": "I/O port G reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetPortG"
+        }
+      ]
+    },
+    {
+      "name": "UART5RST",
+      "description": "UART5 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetUART5"
+        }
+      ]
+    },
+    {
+      "name": "UART4RST",
+      "description": "UART4 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetUART4"
+        }
+      ]
+    },
+    {
+      "name": "USART3RST",
+      "description": "USART3 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetUSART3"
+        }
+      ]
+    },
+    {
+      "name": "USART2RST",
+      "description": "USART2 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetUSART2"
+        }
+      ]
+    },
+    {
+      "name": "SPI3RST",
+      "description": "SPI3 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetSPI3"
+        }
+      ]
+    },
+    {
+      "name": "SPI2RST",
+      "description": "SPI2 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetSPI2"
+        }
+      ]
+    },
+    {
+      "name": "I2C2RST",
+      "description": "I2C2 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetI2C2"
+        }
+      ]
+    },
+    {
+      "name": "I2C1RST",
+      "description": "I2C1 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 21
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetI2C1"
+        }
+      ]
+    },
+    {
+      "name": "BKPRST",
+      "description": "Backup interface reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetBackupInterface"
+        }
+      ]
+    },
+    {
+      "name": "PWRRST",
+      "description": "Power interface reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetPowerInterface"
+        }
+      ]
+    },
+    {
+      "name": "DACRST",
+      "description": "DAC interface reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetDACInterface"
+        }
+      ]
+    },
+    {
+      "name": "CECRST",
+      "description": "CEC reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 30
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ResetCEC"
+        }
+      ]
+    }
+  ]
+}

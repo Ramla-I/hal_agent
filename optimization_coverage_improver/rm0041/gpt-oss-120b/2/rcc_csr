@@ -1,0 +1,301 @@
+{
+  "datasheet_register_abbreviation": "RCC_CSR",
+  "address_offset": "0x24",
+  "reset_value": "0x0C000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "LPWRRSTF",
+      "description": "Low‑power reset flag. Set by hardware when a low‑power management reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 31
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoLowPowerReset"
+        },
+        {
+          "value": "1",
+          "name": "LowPowerResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "WWDGRSTF",
+      "description": "Window watchdog reset flag. Set by hardware when a window watchdog reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 30
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoWWDGReset"
+        },
+        {
+          "value": "1",
+          "name": "WWDGResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "IWDGRSTF",
+      "description": "Independent watchdog reset flag. Set by hardware when an independent watchdog reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoIWDGReset"
+        },
+        {
+          "value": "1",
+          "name": "IWDGResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "SFTRSTF",
+      "description": "Software reset flag. Set by hardware when a software reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoSoftwareReset"
+        },
+        {
+          "value": "1",
+          "name": "SoftwareResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "PORRSTF",
+      "description": "POR/PDR reset flag. Set by hardware when a POR/PDR reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoPORReset"
+        },
+        {
+          "value": "1",
+          "name": "PORResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "PINRSTF",
+      "description": "PIN reset flag. Set by hardware when a reset from the NRST pin occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoPinReset"
+        },
+        {
+          "value": "1",
+          "name": "PinResetOccurred"
+        }
+      ]
+    },
+    {
+      "name": "RMVF",
+      "description": "Remove reset flag. Set by software to clear all reset‑flag bits.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearResetFlags"
+        }
+      ]
+    },
+    {
+      "name": "BDRST",
+      "description": "Backup domain software reset. Set and cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ResetNotActivated"
+        },
+        {
+          "value": "1",
+          "name": "BackupDomainReset"
+        }
+      ]
+    },
+    {
+      "name": "RTCEN",
+      "description": "RTC clock enable. Set and cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "RTCDisabled"
+        },
+        {
+          "value": "1",
+          "name": "RTCEnabled"
+        }
+      ]
+    },
+    {
+      "name": "RTCSEL",
+      "description": "RTC clock source selection.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "NoClock"
+        },
+        {
+          "value": "01",
+          "name": "LSE"
+        },
+        {
+          "value": "10",
+          "name": "LSI"
+        },
+        {
+          "value": "11",
+          "name": "HSE_Div128"
+        }
+      ]
+    },
+    {
+      "name": "LSEBYP",
+      "description": "External low‑speed oscillator bypass. Can be written only when the external 32 kHz oscillator is disabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotBypassed"
+        },
+        {
+          "value": "1",
+          "name": "Bypassed"
+        }
+      ]
+    },
+    {
+      "name": "LSERDY",
+      "description": "External low‑speed oscillator ready flag. Set and cleared by hardware.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotReady"
+        },
+        {
+          "value": "1",
+          "name": "Ready"
+        }
+      ]
+    },
+    {
+      "name": "LSEON",
+      "description": "External low‑speed oscillator enable. Set and cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OFF"
+        },
+        {
+          "value": "1",
+          "name": "ON"
+        }
+      ]
+    },
+    {
+      "name": "LSIRDY",
+      "description": "Internal low‑speed oscillator ready flag. Set and cleared by hardware.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotReady"
+        },
+        {
+          "value": "1",
+          "name": "Ready"
+        }
+      ]
+    },
+    {
+      "name": "LSION",
+      "description": "Internal low‑speed oscillator enable. Set and cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OFF"
+        },
+        {
+          "value": "1",
+          "name": "ON"
+        }
+      ]
+    }
+  ]
+}

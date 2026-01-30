@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "I2C1_DR",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "DR",
+      "description": "8-bit data register – Byte received or to be transmitted to the bus",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    }
+  ]
+}

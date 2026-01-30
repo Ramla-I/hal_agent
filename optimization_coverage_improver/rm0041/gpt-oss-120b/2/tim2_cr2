@@ -1,0 +1,89 @@
+{
+  "datasheet_register_abbreviation": "TIM2_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TI1S",
+      "description": "TI1 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TI1 input (CH1 pin connected to TI1)"
+        },
+        {
+          "value": "1",
+          "name": "TI1 = XOR of CH1, CH2, CH3 pins"
+        }
+      ]
+    },
+    {
+      "name": "MMS[2:0]",
+      "description": "Master mode selection (TRGO output)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Reset – UG bit used as TRGO"
+        },
+        {
+          "value": "001",
+          "name": "Enable – Counter Enable (CNT_EN) used as TRGO"
+        },
+        {
+          "value": "010",
+          "name": "Update – Update event used as TRGO"
+        },
+        {
+          "value": "011",
+          "name": "Compare Pulse – CC1IF pulse sent as TRGO"
+        },
+        {
+          "value": "100",
+          "name": "Compare – OC1REF used as TRGO"
+        },
+        {
+          "value": "101",
+          "name": "Compare – OC2REF used as TRGO"
+        },
+        {
+          "value": "110",
+          "name": "Reserved"
+        },
+        {
+          "value": "111",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "CCDS",
+      "description": "Capture/compare DMA selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "DMA request on capture/compare event"
+        },
+        {
+          "value": "1",
+          "name": "DMA request on update event"
+        }
+      ]
+    }
+  ]
+}

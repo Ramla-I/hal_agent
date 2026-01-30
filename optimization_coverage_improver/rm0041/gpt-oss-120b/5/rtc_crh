@@ -1,0 +1,65 @@
+{
+  "datasheet_register_abbreviation": "RTC_CRH",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "OWIE",
+      "description": "Overflow interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OverflowInterruptMasked"
+        },
+        {
+          "value": "1",
+          "name": "OverflowInterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "ALRIE",
+      "description": "Alarm interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AlarmInterruptMasked"
+        },
+        {
+          "value": "1",
+          "name": "AlarmInterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "SECIE",
+      "description": "Second interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "SecondInterruptMasked"
+        },
+        {
+          "value": "1",
+          "name": "SecondInterruptEnabled"
+        }
+      ]
+    }
+  ]
+}

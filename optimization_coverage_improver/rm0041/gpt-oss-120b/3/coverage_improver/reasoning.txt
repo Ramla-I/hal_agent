@@ -1,0 +1,11 @@
+The missing peripherals (e.g., TIM7, TIM17, GPIOE, SPI2, I2C2, MPU, …) and the “*_input/ *_output” register variants are typical cases where the reference manual uses generic names such as TIMx, GPIOx or CCMRx instead of the exact SVD identifiers. A pure semantic‑search (even with query rewriting) can overlook those sections because the embedding model gives higher scores to prose descriptions and may rank away the dense tables that actually contain the register maps.  
+
+To pull the missing pieces we should:
+
+1. **Switch to keyword‑based retrieval** – searching for the exact peripheral or register name guarantees that the page containing the tabular register map is fetched.  
+2. **Increase the window after the keyword** – many register tables span more than a few pages; using a larger `pages_after_keyword` (e.g., 20) ensures the whole table is captured.  
+3. **Keep tables in the context** – the field definitions are almost always presented in tables, so `remove_tables` must stay `false`.  
+4. **Enable re‑ranking** – when we later fall back to semantic search (e.g., for ambiguous fields) a lightweight re‑ranking improves relevance without adding noise.  
+5. **Leave the other semantic parameters at their maximum** (`number_embeddings` = 50, `query_rewrite` = true) to retain the robustness for registers that are described in prose.
+
+These adjustments directly address the observed gaps while preserving the fact that the previous retrieval did not need truncation.

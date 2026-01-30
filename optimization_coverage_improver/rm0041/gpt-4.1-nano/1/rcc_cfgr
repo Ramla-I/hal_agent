@@ -1,0 +1,173 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": [
+    {
+      "name": "PLLXTPRE",
+      "description": "LSB of division factor PREDIV1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PLLSRC",
+      "description": "PLL entry clock source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HSI oscillator clock / 2 selected as PLL input clock"
+        },
+        {
+          "value": "1",
+          "name": "Clock from PREDIV1 selected as the PLL input clock"
+        }
+      ]
+    },
+    {
+      "name": "ADCPRE",
+      "description": "ADC prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "PCLK2 divided by 2"
+        },
+        {
+          "value": "01",
+          "name": "PCLK2 divided by 4"
+        },
+        {
+          "value": "10",
+          "name": "PCLK2 divided by 6"
+        },
+        {
+          "value": "11",
+          "name": "PCLK2 divided by 8"
+        }
+      ]
+    },
+    {
+      "name": "PPRE2",
+      "description": "APB high‑speed prescaler (APB2)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0xx",
+          "name": "HCLK not divided"
+        },
+        {
+          "value": "100",
+          "name": "HCLK divided by 2"
+        },
+        {
+          "value": "101",
+          "name": "HCLK divided by 4"
+        },
+        {
+          "value": "110",
+          "name": "HCLK divided by 8"
+        },
+        {
+          "value": "111",
+          "name": "HCLK divided by 16"
+        }
+      ]
+    },
+    {
+      "name": "PPRE1",
+      "description": "APB low‑speed prescaler (APB1)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0xx",
+          "name": "HCLK not divided"
+        },
+        {
+          "value": "100",
+          "name": "HCLK divided by 2"
+        },
+        {
+          "value": "101",
+          "name": "HCLK divided by 4"
+        },
+        {
+          "value": "110",
+          "name": "HCLK divided by 8"
+        },
+        {
+          "value": "111",
+          "name": "HCLK divided by 16"
+        }
+      ]
+    },
+    {
+      "name": "HPRE",
+      "description": "AHB prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0xxx",
+          "name": "SYSCLK not divided"
+        },
+        {
+          "value": "1000",
+          "name": "SYSCLK divided by 2"
+        },
+        {
+          "value": "1001",
+          "name": "SYSCLK divided by 4"
+        },
+        {
+          "value": "1010",
+          "name": "SYSCLK divided by 8"
+        },
+        {
+          "value": "1011",
+          "name": "SYSCLK divided by 16"
+        },
+        {
+          "value": "1100",
+          "name": "SYSCLK divided by 64"
+        },
+        {
+          "value": "1101",
+          "name": "SYSCLK divided by 128"
+        },
+        {
+          "value": "1110",
+          "name": "SYSCLK divided by 256"
+        },
+        {
+          "value": "1111",
+          "name": "SYSCLK divided by 512"
+        }
+      ]
+    }
+  ]
+}

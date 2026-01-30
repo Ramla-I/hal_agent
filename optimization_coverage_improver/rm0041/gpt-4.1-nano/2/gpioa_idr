@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "GPIOA_IDR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000XXXX",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "IDR[15:0]",
+      "description": "Port input data bits (y = 0 .. 15)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "context_retrieval_parameters": {
+    "context_retrieval_method": "keyword_search",
+    "pages_after_keyword": 6,
+    "remove_tables": false,
+    "number_embeddings": 32,
+    "re_ranking": true,
+    "score_threshold": 0.2,
+    "query_rewrite": true,
+    "vs_id": "vs_6892501067b08191ac63cc6de06ee629",
+    "regex": "",
+    "other": ""
+  },
+  "stop_improving": false
+}

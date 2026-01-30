@@ -1,0 +1,426 @@
+{
+  "datasheet_register_abbreviation": "RCC_APB1ENR",
+  "address_offset": "0x1C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CECEN",
+      "description": "CEC clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 30
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DACEN",
+      "description": "DAC interface clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "PWREN",
+      "description": "Power interface clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "BKPEN",
+      "description": "Backup interface clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "I2C2EN",
+      "description": "I2C 2 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "I2C1EN",
+      "description": "I2C 1 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 21
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "UART5EN",
+      "description": "UART 5 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "UART4EN",
+      "description": "UART 4 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "USART3EN",
+      "description": "USART 3 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "USART2EN",
+      "description": "USART 2 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "SPI3EN",
+      "description": "SPI 3 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "SPI2EN",
+      "description": "SPI 2 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "WWDGEN",
+      "description": "Window watchdog clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIM14EN",
+      "description": "Timer 14 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIM13EN",
+      "description": "Timer 13 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIM12EN",
+      "description": "Timer 12 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIM7EN",
+      "description": "Timer 7 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIM6EN",
+      "description": "Timer 6 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIM5EN",
+      "description": "Timer 5 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIM4EN",
+      "description": "Timer 4 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIM3EN",
+      "description": "Timer 3 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIM2EN",
+      "description": "Timer 2 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    }
+  ]
+}

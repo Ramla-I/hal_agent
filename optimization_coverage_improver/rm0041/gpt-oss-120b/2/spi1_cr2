@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "SPI1_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TXEIE",
+      "description": "Tx buffer empty interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TxE interrupt masked"
+        },
+        {
+          "value": "1",
+          "name": "TxE interrupt not masked"
+        }
+      ]
+    },
+    {
+      "name": "RXNEIE",
+      "description": "Rx buffer not empty interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "RXNE interrupt masked"
+        },
+        {
+          "value": "1",
+          "name": "RXNE interrupt not masked"
+        }
+      ]
+    },
+    {
+      "name": "ERRIE",
+      "description": "Error interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Error interrupt is masked"
+        },
+        {
+          "value": "1",
+          "name": "Error interrupt is enabled"
+        }
+      ]
+    },
+    {
+      "name": "SSOE",
+      "description": "SS output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "SS output is disabled in master mode"
+        },
+        {
+          "value": "1",
+          "name": "SS output is enabled in master mode"
+        }
+      ]
+    },
+    {
+      "name": "TXDMAEN",
+      "description": "Tx buffer DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Tx buffer DMA disabled"
+        },
+        {
+          "value": "1",
+          "name": "Tx buffer DMA enabled"
+        }
+      ]
+    },
+    {
+      "name": "RXDMAEN",
+      "description": "Rx buffer DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Rx buffer DMA disabled"
+        },
+        {
+          "value": "1",
+          "name": "Rx buffer DMA enabled"
+        }
+      ]
+    }
+  ]
+}

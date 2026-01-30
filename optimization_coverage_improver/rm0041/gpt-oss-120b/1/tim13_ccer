@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "TIM13_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC2NP",
+      "description": "Capture/Compare 2 output polarity (used with CC2P for complementary output polarity).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Active high (non‑inverted)"
+        },
+        {
+          "value": "1",
+          "name": "Active low (inverted)"
+        }
+      ]
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output polarity (selects polarity for channel 2).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Active high"
+        },
+        {
+          "value": "1",
+          "name": "Active low"
+        }
+      ]
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable (1 = channel 2 output enabled, 0 = disabled).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 complementary output polarity (used when channel is configured as output).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Active high (non‑inverted)"
+        },
+        {
+          "value": "1",
+          "name": "Active low (inverted)"
+        }
+      ]
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity (output: 0 = active high, 1 = active low; input: selects edge polarity for capture/trigger).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Active high / non‑inverted (rising edge)"
+        },
+        {
+          "value": "1",
+          "name": "Active low / inverted (falling edge)"
+        }
+      ]
+    },
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable (output: 0 = off, 1 = on; input: 0 = capture disabled, 1 = capture enabled).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    }
+  ]
+}

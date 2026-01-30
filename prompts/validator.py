@@ -225,15 +225,14 @@ def create_batched_validator_file_search_query(peripheral_name: str, register_na
     """
 
 def create_batched_validator_system_prompt() -> str:
-    """System prompt for batched validation of multiple invariants for a register"""
+    """System prompt for batched validation of multiple invariants across registers"""
     return f"""
     You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets.
-    You will need to validate multiple facts about a single register and return confidence scores for each.
+    You will need to validate multiple facts about one or more registers and return confidence scores for each.
 
     # INPUT FORMAT
     You will be given:
-    - The name of a peripheral and register
-    - A list of facts (invariants) to validate about that register
+    - A list of facts (invariants) to validate (each includes peripheral/register context)
     - File search results from the datasheet
 
     Each fact has these fields:
@@ -277,27 +276,26 @@ def create_batched_validator_system_prompt() -> str:
     - 0.0: Cannot find any information about the register/field
     """
 
-def create_batched_validator_user_prompt(peripheral_name: str, register_name: str, invariants: list, file_search_results: str) -> str:
+def create_batched_validator_user_prompt(batch_registers: list, invariants: list, file_search_results: str) -> str:
     """
     Create user prompt for batched validation.
 
     Args:
-        peripheral_name: Name of the peripheral
-        register_name: Name of the register
-        invariants: List of invariant dicts with keys: field_name, key, value
+        batch_registers: List of (peripheral, register) tuples
+        invariants: List of invariant dicts with keys: field_name, key, value, peripheral, register
         file_search_results: Formatted search results from vector store
     """
+    register_list = ", ".join([f"{p}.{r}" for p, r in batch_registers])
     # Format invariants as a numbered list
     invariant_list = ""
     for i, inv in enumerate(invariants):
         invariant_list += f"""
-    {i}. field_name="{inv['field_name']}", key="{inv['key']}", value="{inv['value']}"
+    {i}. peripheral="{inv['peripheral']}", register="{inv['register']}", field_name="{inv['field_name']}", key="{inv['key']}", value="{inv['value']}"
 """
 
     return f"""
 # INPUT
-Peripheral: {peripheral_name}
-Register: {register_name}
+Registers in batch: {register_list}
 
 Invariants to validate:
 {invariant_list}

@@ -1,0 +1,11 @@
+The low peripheral, register, and field coverage shows that the exact‑keyword approach is missing large parts of the reference manual.  
+Key issues are:
+
+* **Naming variations** – the datasheet often uses generic names (e.g., GPIOx_CRH, TIM1/12/13) while the SVD contains concrete names (GPIOA_CRH, TIM13). Pure keyword matching therefore fails to retrieve the relevant pages.  
+* **Tables contain most register‑field definitions** – removing tables discards the primary source of field information, which explains many “only‑in‑SVD” fields.  
+* **Only 2 pages after the keyword** limits the context to a tiny snippet; many registers are described several pages later.  
+* **Small embedding set and a relatively high score threshold** reduce the chance of pulling in useful semantic matches.
+
+Switching to **semantic search** with a larger embedding pool, lower score threshold, and keeping tables will capture the descriptive tables and tolerate naming differences. Keeping query rewriting helps map SVD names to the terminology used in the manual. The retrieval size can stay modest because the previous run did not hit any truncation limits.
+
+**Proposed improvement**

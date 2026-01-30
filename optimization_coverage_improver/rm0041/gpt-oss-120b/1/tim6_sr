@@ -1,0 +1,228 @@
+{
+  "datasheet_register_abbreviation": "TIM6_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "RESERVED_15_13",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC4OF",
+      "description": "Capture/Compare 4 overcapture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture"
+        },
+        {
+          "value": "1",
+          "name": "Overcapture detected"
+        }
+      ]
+    },
+    {
+      "name": "CC3OF",
+      "description": "Capture/Compare 3 overcapture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture"
+        },
+        {
+          "value": "1",
+          "name": "Overcapture detected"
+        }
+      ]
+    },
+    {
+      "name": "CC2OF",
+      "description": "Capture/Compare 2 overcapture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture"
+        },
+        {
+          "value": "1",
+          "name": "Overcapture detected"
+        }
+      ]
+    },
+    {
+      "name": "CC1OF",
+      "description": "Capture/Compare 1 overcapture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture"
+        },
+        {
+          "value": "1",
+          "name": "Overcapture detected"
+        }
+      ]
+    },
+    {
+      "name": "RESERVED_8_7",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIF",
+      "description": "Trigger interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No trigger event"
+        },
+        {
+          "value": "1",
+          "name": "Trigger interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "RESERVED_5",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC4IF",
+      "description": "Capture/Compare 4 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No interrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "CC3IF",
+      "description": "Capture/Compare 3 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No interrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "CC2IF",
+      "description": "Capture/Compare 2 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No interrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "CC1IF",
+      "description": "Capture/Compare 1 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No interrupt / No capture"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt pending / Capture occurred"
+        }
+      ]
+    },
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No update"
+        },
+        {
+          "value": "1",
+          "name": "Update interrupt pending"
+        }
+      ]
+    }
+  ]
+}

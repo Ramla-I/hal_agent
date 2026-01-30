@@ -1,0 +1,38 @@
+{
+  "datasheet_register_abbreviation": "WWDG_CFR",
+  "address_offset": "0x04",
+  "reset_value": "0x0000007F",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EWI",
+      "description": "Early wakeup interrupt",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "WDGTB",
+      "description": "Timer base",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "W",
+      "description": "7-bit window value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

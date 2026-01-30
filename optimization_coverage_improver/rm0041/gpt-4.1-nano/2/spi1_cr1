@@ -1,0 +1,298 @@
+{
+  "datasheet_register_abbreviation": "SPI_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "BIDIMODE",
+      "description": "Bidirectional data mode enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "2-line unidirectional data mode selected"
+        },
+        {
+          "value": "1",
+          "name": "1-line bidirectional data mode selected"
+        }
+      ]
+    },
+    {
+      "name": "BIDIOE",
+      "description": "Output enable in bidirectional mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output disabled (receive‑only mode)"
+        },
+        {
+          "value": "1",
+          "name": "Output enabled (transmit‑only mode)"
+        }
+      ]
+    },
+    {
+      "name": "CRCEN",
+      "description": "Hardware CRC calculation enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CRC calculation disabled"
+        },
+        {
+          "value": "1",
+          "name": "CRC calculation enabled"
+        }
+      ]
+    },
+    {
+      "name": "CRCNEXT",
+      "description": "CRC transfer next",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Data phase (no CRC phase)"
+        },
+        {
+          "value": "1",
+          "name": "Next transfer is CRC (CRC phase)"
+        }
+      ]
+    },
+    {
+      "name": "DFF",
+      "description": "Data frame format",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "8‑bit data frame format"
+        },
+        {
+          "value": "1",
+          "name": "16‑bit data frame format"
+        }
+      ]
+    },
+    {
+      "name": "RXONLY",
+      "description": "Receive only",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Full duplex (Transmit and receive)"
+        },
+        {
+          "value": "1",
+          "name": "Output disabled (Receive‑only mode)"
+        }
+      ]
+    },
+    {
+      "name": "SSM",
+      "description": "Software slave management",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Software slave management disabled"
+        },
+        {
+          "value": "1",
+          "name": "Software slave management enabled"
+        }
+      ]
+    },
+    {
+      "name": "SSI",
+      "description": "Internal slave select (effective only when SSM=1)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NSS pin value driven by hardware"
+        },
+        {
+          "value": "1",
+          "name": "NSS pin forced by SSI bit"
+        }
+      ]
+    },
+    {
+      "name": "LSBFIRST",
+      "description": "Frame format (LSB first / MSB first)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "MSB transmitted first"
+        },
+        {
+          "value": "1",
+          "name": "LSB transmitted first"
+        }
+      ]
+    },
+    {
+      "name": "SPE",
+      "description": "SPI enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Peripheral disabled"
+        },
+        {
+          "value": "1",
+          "name": "Peripheral enabled"
+        }
+      ]
+    },
+    {
+      "name": "BR",
+      "description": "Baud rate control",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "fPCLK/2"
+        },
+        {
+          "value": "001",
+          "name": "fPCLK/4"
+        },
+        {
+          "value": "010",
+          "name": "fPCLK/8"
+        },
+        {
+          "value": "011",
+          "name": "fPCLK/16"
+        },
+        {
+          "value": "100",
+          "name": "fPCLK/32"
+        },
+        {
+          "value": "101",
+          "name": "fPCLK/64"
+        },
+        {
+          "value": "110",
+          "name": "fPCLK/128"
+        },
+        {
+          "value": "111",
+          "name": "fPCLK/256"
+        }
+      ]
+    },
+    {
+      "name": "MSTR",
+      "description": "Master selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Slave configuration"
+        },
+        {
+          "value": "1",
+          "name": "Master configuration"
+        }
+      ]
+    },
+    {
+      "name": "CPOL",
+      "description": "Clock polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CK to 0 when idle"
+        },
+        {
+          "value": "1",
+          "name": "CK to 1 when idle"
+        }
+      ]
+    },
+    {
+      "name": "CPHA",
+      "description": "Clock phase",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "First clock transition is the first data capture edge"
+        },
+        {
+          "value": "1",
+          "name": "Second clock transition is the first data capture edge"
+        }
+      ]
+    }
+  ]
+}

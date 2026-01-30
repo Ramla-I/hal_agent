@@ -1,0 +1,226 @@
+{
+  "datasheet_register_abbreviation": "TIM12_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ETP",
+      "description": "External trigger polarity. 0: ETR non‑inverted, active at high level or rising edge. 1: ETR inverted, active at low level or falling edge.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ECE",
+      "description": "External clock enable. 0: External clock mode 2 disabled. 1: External clock mode 2 enabled; the counter is clocked by any active edge on the ETRF signal.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ETPS",
+      "description": "External trigger prescaler.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Prescaler OFF"
+        },
+        {
+          "value": "0b01",
+          "name": "Divided by 2"
+        },
+        {
+          "value": "0b10",
+          "name": "Divided by 4"
+        },
+        {
+          "value": "0b11",
+          "name": "Divided by 8"
+        }
+      ]
+    },
+    {
+      "name": "ETF",
+      "description": "External trigger filter. Defines sampling frequency and digital filter length for ETR.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "No filter, sampling at f_DTS"
+        },
+        {
+          "value": "0b0001",
+          "name": "f_SAMPLING = f_CK_INT, N=2"
+        },
+        {
+          "value": "0b0010",
+          "name": "f_SAMPLING = f_CK_INT, N=4"
+        },
+        {
+          "value": "0b0011",
+          "name": "f_SAMPLING = f_CK_INT, N=8"
+        },
+        {
+          "value": "0b0100",
+          "name": "f_SAMPLING = f_DTS/2, N=6"
+        },
+        {
+          "value": "0b0101",
+          "name": "f_SAMPLING = f_DTS/2, N=8"
+        },
+        {
+          "value": "0b0110",
+          "name": "f_SAMPLING = f_DTS/4, N=6"
+        },
+        {
+          "value": "0b0111",
+          "name": "f_SAMPLING = f_DTS/4, N=8"
+        },
+        {
+          "value": "0b1000",
+          "name": "f_SAMPLING = f_DTS/8, N=6"
+        },
+        {
+          "value": "0b1001",
+          "name": "f_SAMPLING = f_DTS/8, N=8"
+        },
+        {
+          "value": "0b1010",
+          "name": "f_SAMPLING = f_DTS/16, N=5"
+        },
+        {
+          "value": "0b1011",
+          "name": "f_SAMPLING = f_DTS/16, N=6"
+        },
+        {
+          "value": "0b1100",
+          "name": "f_SAMPLING = f_DTS/16, N=8"
+        },
+        {
+          "value": "0b1101",
+          "name": "f_SAMPLING = f_DTS/32, N=5"
+        },
+        {
+          "value": "0b1110",
+          "name": "f_SAMPLING = f_DTS/32, N=6"
+        },
+        {
+          "value": "0b1111",
+          "name": "f_SAMPLING = f_DTS/32, N=8"
+        }
+      ]
+    },
+    {
+      "name": "MSM",
+      "description": "Master/Slave mode. 0: No action. 1: Delays the effect of a trigger input event to allow perfect synchronization between the current timer and its slaves.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection. Selects the trigger input to synchronize the counter.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Internal Trigger 0 (ITR0)"
+        },
+        {
+          "value": "0b001",
+          "name": "Internal Trigger 1 (ITR1)"
+        },
+        {
+          "value": "0b010",
+          "name": "Internal Trigger 2 (ITR2)"
+        },
+        {
+          "value": "0b011",
+          "name": "Internal Trigger 3 (ITR3)"
+        },
+        {
+          "value": "0b100",
+          "name": "TI1 Edge Detector (TI1F_ED)"
+        },
+        {
+          "value": "0b101",
+          "name": "Filtered Timer Input 1 (TI1FP1)"
+        },
+        {
+          "value": "0b110",
+          "name": "Filtered Timer Input 2 (TI2FP2)"
+        },
+        {
+          "value": "0b111",
+          "name": "External Trigger input (ETRF)"
+        }
+      ]
+    },
+    {
+      "name": "SMS",
+      "description": "Slave mode selection. Determines the behavior of the timer when a trigger is selected.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Slave mode disabled"
+        },
+        {
+          "value": "0b001",
+          "name": "Encoder mode 1"
+        },
+        {
+          "value": "0b010",
+          "name": "Encoder mode 2"
+        },
+        {
+          "value": "0b011",
+          "name": "Encoder mode 3"
+        },
+        {
+          "value": "0b100",
+          "name": "Reset mode"
+        },
+        {
+          "value": "0b101",
+          "name": "Gated mode"
+        },
+        {
+          "value": "0b110",
+          "name": "Trigger mode"
+        },
+        {
+          "value": "0b111",
+          "name": "External Clock mode 1"
+        }
+      ]
+    }
+  ]
+}

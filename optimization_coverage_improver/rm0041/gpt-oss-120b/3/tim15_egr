@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "TIM15_EGR",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "BG",
+      "description": "Break generation",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "BreakEventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "TG",
+      "description": "Trigger generation",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "TriggerEventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "COMG",
+      "description": "Capture/Compare control update generation",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "COMUpdateGenerated"
+        }
+      ]
+    },
+    {
+      "name": "CC2G",
+      "description": "Capture/Compare 2 generation",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC2EventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "CC1G",
+      "description": "Capture/Compare 1 generation",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC1EventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "UG",
+      "description": "Update generation",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CounterReinitialized"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "datasheet_register_abbreviation": "TIM2_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "IC4F",
+      "description": "Input capture 4 filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "IC4PSC",
+      "description": "Input capture 4 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC4S",
+      "description": "Capture/Compare 4 selection (direction and input mapping)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "CC4 configured as output"
+        },
+        {
+          "value": "01",
+          "name": "CC4 input, IC4 mapped on TI4"
+        },
+        {
+          "value": "10",
+          "name": "CC4 input, IC4 mapped on TI3"
+        },
+        {
+          "value": "11",
+          "name": "CC4 input, IC4 mapped on TRC (requires TS selection)"
+        }
+      ]
+    },
+    {
+      "name": "IC3F",
+      "description": "Input capture 3 filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "IC3PSC",
+      "description": "Input capture 3 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC3S",
+      "description": "Capture/Compare 3 selection (direction and input mapping)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "CC3 configured as output"
+        },
+        {
+          "value": "01",
+          "name": "CC3 input, IC3 mapped on TI3"
+        },
+        {
+          "value": "10",
+          "name": "CC3 input, IC3 mapped on TI4"
+        },
+        {
+          "value": "11",
+          "name": "CC3 input, IC3 mapped on TRC (requires TS selection)"
+        }
+      ]
+    },
+    {
+      "name": "CC4P",
+      "description": "Capture/Compare 4 output polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC4E",
+      "description": "Capture/Compare 4 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC3P",
+      "description": "Capture/Compare 3 output polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC3E",
+      "description": "Capture/Compare 3 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "RTC_CRL",
+  "address_offset": "0x04",
+  "reset_value": "0x0020",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "RTOFF",
+      "description": "RTC operation OFF",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Last write operation on RTC registers is still ongoing."
+        },
+        {
+          "value": "1",
+          "name": "Last write operation on RTC registers terminated."
+        }
+      ]
+    },
+    {
+      "name": "CNF",
+      "description": "Configuration flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Exit configuration mode (start update of RTC registers)."
+        },
+        {
+          "value": "1",
+          "name": "Enter configuration mode."
+        }
+      ]
+    },
+    {
+      "name": "RSF",
+      "description": "Registers synchronized flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Registers not yet synchronized."
+        },
+        {
+          "value": "1",
+          "name": "Registers synchronized."
+        }
+      ]
+    },
+    {
+      "name": "OWF",
+      "description": "Overflow flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Overflow not detected"
+        },
+        {
+          "value": "1",
+          "name": "32-bit programmable counter overflow occurred."
+        }
+      ]
+    },
+    {
+      "name": "ALRF",
+      "description": "Alarm flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Alarm not detected"
+        },
+        {
+          "value": "1",
+          "name": "Alarm detected"
+        }
+      ]
+    },
+    {
+      "name": "SECF",
+      "description": "Second flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Second flag condition not met."
+        },
+        {
+          "value": "1",
+          "name": "Second flag condition met."
+        }
+      ]
+    }
+  ]
+}

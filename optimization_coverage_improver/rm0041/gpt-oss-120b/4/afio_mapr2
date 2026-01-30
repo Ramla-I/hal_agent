@@ -1,0 +1,217 @@
+{
+  "datasheet_register_abbreviation": "AFIO_MAPR2",
+  "address_offset": "0x1C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MISC_REMAP",
+      "description": "Miscellaneous features remapping (DMA2 channel 5 interrupt position and DAC trigger source)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "DMA2 channel 5 interrupt mapped with DMA2 channel 4 at position 59, TIM5 TRGO event selected as DAC Trigger 3, TIM5 triggers TIM1/3"
+        },
+        {
+          "value": "1",
+          "name": "DMA2 channel 5 interrupt mapped separately at position 60 and TIM15 TRGO event selected as DAC Trigger 3, TIM15 triggers TIM1/3"
+        }
+      ]
+    },
+    {
+      "name": "TIM12_REMAP",
+      "description": "TIM12 remapping (CH1/CH2 alternate function pins)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (CH1/PC4, CH2/PC5)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (CH1/PB12, CH2/PB13)"
+        }
+      ]
+    },
+    {
+      "name": "TIM67_DAC_DMA_REMAP",
+      "description": "TIM67/DAC DMA request remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (TIM6_DAC1 → DMA2 Channel3, TIM7_DAC2 → DMA2 Channel4)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (TIM6_DAC1 → DMA1 Channel3, TIM7_DAC2 → DMA1 Channel4)"
+        }
+      ]
+    },
+    {
+      "name": "FSMC_NADV",
+      "description": "NADV signal connect/disconnect for FSMC",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NADV connected (default)"
+        },
+        {
+          "value": "1",
+          "name": "NADV not connected (pin can be used by another peripheral)"
+        }
+      ]
+    },
+    {
+      "name": "TIM14_REMAP",
+      "description": "TIM14 channel 1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (PC9)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (PB1)"
+        }
+      ]
+    },
+    {
+      "name": "TIM13_REMAP",
+      "description": "TIM13 channel 1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (PC8)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (PB0)"
+        }
+      ]
+    },
+    {
+      "name": "TIM1_DMA_REMAP",
+      "description": "TIM1 DMA request remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (TIM1_CH1 → DMA1 Channel2, TIM1_CH2 → DMA1 Channel3)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (TIM1_CH1 → DMA1 Channel6, TIM1_CH2 → DMA1 Channel6)"
+        }
+      ]
+    },
+    {
+      "name": "CEC_REMAP",
+      "description": "CEC line remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (CEC/PB8)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (CEC/PB10)"
+        }
+      ]
+    },
+    {
+      "name": "TIM17_REMAP",
+      "description": "TIM17 channel 1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (CH1/PB9)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (CH1/PA7)"
+        }
+      ]
+    },
+    {
+      "name": "TIM16_REMAP",
+      "description": "TIM16 channel 1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (CH1/PB8)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (CH1/PA6)"
+        }
+      ]
+    },
+    {
+      "name": "TIM15_REMAP",
+      "description": "TIM15 channels 1 and 2 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap (CH1/PA2, CH2/PA3)"
+        },
+        {
+          "value": "1",
+          "name": "Remap (CH1/PB14, CH2/PB15)"
+        }
+      ]
+    }
+  ]
+}

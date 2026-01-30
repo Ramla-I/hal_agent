@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "TIM13_PSC",
+  "address_offset": "0x28",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "PSC",
+      "description": "Prescaler value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

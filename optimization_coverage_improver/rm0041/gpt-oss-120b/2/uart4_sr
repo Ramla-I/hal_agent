@@ -1,0 +1,65 @@
+{
+  "datasheet_register_abbreviation": "UART4_SR",
+  "address_offset": "0x00",
+  "reset_value": "0x000000C0",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PE",
+      "description": "Parity error flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoParityError"
+        },
+        {
+          "value": "1",
+          "name": "ParityError"
+        }
+      ]
+    },
+    {
+      "name": "FE",
+      "description": "Framing error flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoFramingError"
+        },
+        {
+          "value": "1",
+          "name": "FramingError"
+        }
+      ]
+    },
+    {
+      "name": "NF",
+      "description": "Noise detected flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoNoise"
+        },
+        {
+          "value": "1",
+          "name": "NoiseDetected"
+        }
+      ]
+    }
+  ]
+}

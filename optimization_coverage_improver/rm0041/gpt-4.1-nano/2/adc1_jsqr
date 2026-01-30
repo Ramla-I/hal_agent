@@ -1,0 +1,75 @@
+{
+  "datasheet_register_abbreviation": "ADC_JSQR",
+  "address_offset": "0x38",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "JL",
+      "description": "Injected sequence length",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 21
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "1 conversion"
+        },
+        {
+          "value": "01",
+          "name": "2 conversions"
+        },
+        {
+          "value": "10",
+          "name": "3 conversions"
+        },
+        {
+          "value": "11",
+          "name": "4 conversions"
+        }
+      ]
+    },
+    {
+      "name": "JSQ4",
+      "description": "Fourth conversion in injected sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 19
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "JSQ3",
+      "description": "Third conversion in injected sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 14
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "JSQ2",
+      "description": "Second conversion in injected sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "JSQ1",
+      "description": "First conversion in injected sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    }
+  ]
+}

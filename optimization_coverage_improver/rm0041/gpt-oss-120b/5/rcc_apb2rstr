@@ -1,0 +1,103 @@
+{
+  "datasheet_register_abbreviation": "RCC_APB2RSTR",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PLLRDYF",
+      "description": "PLL ready interrupt flag – set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "HSERDYF",
+      "description": "HSE ready interrupt flag – set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "HSIRDYF",
+      "description": "HSI ready interrupt flag – set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "LSERDYF",
+      "description": "LSE ready interrupt flag – set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "LSIRDYF",
+      "description": "LSI ready interrupt flag – set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    }
+  ]
+}

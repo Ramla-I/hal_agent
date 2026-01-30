@@ -1,0 +1,37 @@
+{
+  "datasheet_register_abbreviation": "AFIO_MAPR2",
+  "address_offset": "0x1C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MISC_REMAP",
+      "description": "Miscellaneous features remapping. Controls DMA2 channel‑5 interrupt position and DAC trigger source.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "DMA2 channel5 mapped with DMA2 channel4 at position 59, TIM5 TRGO selected as DAC Trigger 3, TIM5 triggers TIM1/3"
+        },
+        {
+          "value": "1",
+          "name": "DMA2 channel5 mapped separately at position 60, TIM15 TRGO selected as DAC Trigger 3, TIM15 triggers TIM1/3"
+        }
+      ]
+    },
+    {
+      "name": "TIM12_REMAP",
+      "description": "TIM12 remapping control.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    }
+  ]
+}

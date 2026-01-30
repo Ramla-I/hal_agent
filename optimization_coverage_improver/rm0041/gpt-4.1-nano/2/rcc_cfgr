@@ -1,0 +1,410 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SW",
+      "description": "System clock switch (software select)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "HSI selected as system clock"
+        },
+        {
+          "value": "0b01",
+          "name": "HSE selected as system clock"
+        },
+        {
+          "value": "0b10",
+          "name": "PLL selected as system clock"
+        },
+        {
+          "value": "0b11",
+          "name": "not allowed"
+        }
+      ]
+    },
+    {
+      "name": "SWS",
+      "description": "System clock switch status (hardware status)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "HSI used as system clock"
+        },
+        {
+          "value": "0b01",
+          "name": "HSE used as system clock"
+        },
+        {
+          "value": "0b10",
+          "name": "PLL used as system clock"
+        },
+        {
+          "value": "0b11",
+          "name": "not applicable"
+        }
+      ]
+    },
+    {
+      "name": "HPRE",
+      "description": "AHB prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "SYSCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b0001",
+          "name": "SYSCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b0010",
+          "name": "SYSCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b0011",
+          "name": "SYSCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b1000",
+          "name": "SYSCLK divided by 2"
+        },
+        {
+          "value": "0b1001",
+          "name": "SYSCLK divided by 4"
+        },
+        {
+          "value": "0b1010",
+          "name": "SYSCLK divided by 8"
+        },
+        {
+          "value": "0b1011",
+          "name": "SYSCLK divided by 16"
+        },
+        {
+          "value": "0b1100",
+          "name": "SYSCLK divided by 64"
+        },
+        {
+          "value": "0b1101",
+          "name": "SYSCLK divided by 128"
+        },
+        {
+          "value": "0b1110",
+          "name": "SYSCLK divided by 256"
+        },
+        {
+          "value": "0b1111",
+          "name": "SYSCLK divided by 512"
+        }
+      ]
+    },
+    {
+      "name": "PPRE1",
+      "description": "APB low‑speed prescaler (APB1)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "HCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b001",
+          "name": "HCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b010",
+          "name": "HCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b011",
+          "name": "HCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b100",
+          "name": "HCLK divided by 2"
+        },
+        {
+          "value": "0b101",
+          "name": "HCLK divided by 4"
+        },
+        {
+          "value": "0b110",
+          "name": "HCLK divided by 8"
+        },
+        {
+          "value": "0b111",
+          "name": "HCLK divided by 16"
+        }
+      ]
+    },
+    {
+      "name": "PPRE2",
+      "description": "APB high‑speed prescaler (APB2)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "HCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b001",
+          "name": "HCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b010",
+          "name": "HCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b011",
+          "name": "HCLK not divided (divide by 1)"
+        },
+        {
+          "value": "0b100",
+          "name": "HCLK divided by 2"
+        },
+        {
+          "value": "0b101",
+          "name": "HCLK divided by 4"
+        },
+        {
+          "value": "0b110",
+          "name": "HCLK divided by 8"
+        },
+        {
+          "value": "0b111",
+          "name": "HCLK divided by 16"
+        }
+      ]
+    },
+    {
+      "name": "ADCPRE",
+      "description": "ADC prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "PCLK2 divided by 2"
+        },
+        {
+          "value": "0b01",
+          "name": "PCLK2 divided by 4"
+        },
+        {
+          "value": "0b10",
+          "name": "PCLK2 divided by 6"
+        },
+        {
+          "value": "0b11",
+          "name": "PCLK2 divided by 8"
+        }
+      ]
+    },
+    {
+      "name": "PLLSRC",
+      "description": "PLL entry clock source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HSI oscillator clock / 2 selected as PLL input"
+        },
+        {
+          "value": "1",
+          "name": "Clock from PREDIV1 selected as PLL input"
+        }
+      ]
+    },
+    {
+      "name": "PLLXTPRE",
+      "description": "LSB of division factor PREDIV1 (PLL XTPRE)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PREDIV1 division factor = 1 (no division)"
+        },
+        {
+          "value": "1",
+          "name": "PREDIV1 division factor = 2"
+        }
+      ]
+    },
+    {
+      "name": "PLLMUL",
+      "description": "PLL multiplication factor",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 21
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "PLL input clock ×2"
+        },
+        {
+          "value": "0b0001",
+          "name": "PLL input clock ×3"
+        },
+        {
+          "value": "0b0010",
+          "name": "PLL input clock ×4"
+        },
+        {
+          "value": "0b0011",
+          "name": "PLL input clock ×5"
+        },
+        {
+          "value": "0b0100",
+          "name": "PLL input clock ×6"
+        },
+        {
+          "value": "0b0101",
+          "name": "PLL input clock ×7"
+        },
+        {
+          "value": "0b0110",
+          "name": "PLL input clock ×8"
+        },
+        {
+          "value": "0b0111",
+          "name": "PLL input clock ×9"
+        },
+        {
+          "value": "0b1000",
+          "name": "PLL input clock ×10"
+        },
+        {
+          "value": "0b1001",
+          "name": "PLL input clock ×11"
+        },
+        {
+          "value": "0b1010",
+          "name": "PLL input clock ×12"
+        },
+        {
+          "value": "0b1011",
+          "name": "PLL input clock ×13"
+        },
+        {
+          "value": "0b1100",
+          "name": "PLL input clock ×14"
+        },
+        {
+          "value": "0b1101",
+          "name": "PLL input clock ×15"
+        },
+        {
+          "value": "0b1110",
+          "name": "PLL input clock ×16"
+        },
+        {
+          "value": "0b1111",
+          "name": "PLL input clock ×16 (same as 1110)"
+        }
+      ]
+    },
+    {
+      "name": "MCO",
+      "description": "Microcontroller clock output selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "No clock"
+        },
+        {
+          "value": "0b001",
+          "name": "No clock"
+        },
+        {
+          "value": "0b010",
+          "name": "No clock"
+        },
+        {
+          "value": "0b011",
+          "name": "No clock"
+        },
+        {
+          "value": "0b100",
+          "name": "System clock (SYSCLK) selected"
+        },
+        {
+          "value": "0b101",
+          "name": "HSI clock selected"
+        },
+        {
+          "value": "0b110",
+          "name": "HSE clock selected"
+        },
+        {
+          "value": "0b111",
+          "name": "PLL clock divided by 2 selected"
+        }
+      ]
+    },
+    {
+      "name": "Reserved31_27",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 31
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "Reserved23_22",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 23
+      },
+      "enumerated_values": []
+    }
+  ]
+}

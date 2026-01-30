@@ -1,0 +1,165 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR1",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EXTI0",
+      "description": "EXTERNAL interrupt line 0 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA0"
+        },
+        {
+          "value": "1",
+          "name": "PB0"
+        },
+        {
+          "value": "2",
+          "name": "PC0"
+        },
+        {
+          "value": "3",
+          "name": "PD0"
+        },
+        {
+          "value": "4",
+          "name": "PE0"
+        },
+        {
+          "value": "5",
+          "name": "PF0"
+        },
+        {
+          "value": "6",
+          "name": "PG0"
+        }
+      ]
+    },
+    {
+      "name": "EXTI1",
+      "description": "EXTERNAL interrupt line 1 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA1"
+        },
+        {
+          "value": "1",
+          "name": "PB1"
+        },
+        {
+          "value": "2",
+          "name": "PC1"
+        },
+        {
+          "value": "3",
+          "name": "PD1"
+        },
+        {
+          "value": "4",
+          "name": "PE1"
+        },
+        {
+          "value": "5",
+          "name": "PF1"
+        },
+        {
+          "value": "6",
+          "name": "PG1"
+        }
+      ]
+    },
+    {
+      "name": "EXTI2",
+      "description": "EXTERNAL interrupt line 2 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA2"
+        },
+        {
+          "value": "1",
+          "name": "PB2"
+        },
+        {
+          "value": "2",
+          "name": "PC2"
+        },
+        {
+          "value": "3",
+          "name": "PD2"
+        },
+        {
+          "value": "4",
+          "name": "PE2"
+        },
+        {
+          "value": "5",
+          "name": "PF2"
+        },
+        {
+          "value": "6",
+          "name": "PG2"
+        }
+      ]
+    },
+    {
+      "name": "EXTI3",
+      "description": "EXTERNAL interrupt line 3 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA3"
+        },
+        {
+          "value": "1",
+          "name": "PB3"
+        },
+        {
+          "value": "2",
+          "name": "PC3"
+        },
+        {
+          "value": "3",
+          "name": "PD3"
+        },
+        {
+          "value": "4",
+          "name": "PE3"
+        },
+        {
+          "value": "5",
+          "name": "PF3"
+        },
+        {
+          "value": "6",
+          "name": "PG3"
+        }
+      ]
+    }
+  ],
+  "access_constraints": []
+}

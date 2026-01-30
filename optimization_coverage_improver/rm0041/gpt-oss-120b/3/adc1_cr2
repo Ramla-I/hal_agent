@@ -1,0 +1,324 @@
+{
+  "datasheet_register_abbreviation": "ADC1_CR2",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "AWDEN",
+      "description": "Analog watchdog enable on regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "JAWDEN",
+      "description": "Analog watchdog enable on injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DISCNUM",
+      "description": "Discontinuous mode channel count (regular)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "1 channel"
+        },
+        {
+          "value": "1",
+          "name": "2 channels"
+        },
+        {
+          "value": "2",
+          "name": "3 channels"
+        },
+        {
+          "value": "3",
+          "name": "4 channels"
+        },
+        {
+          "value": "4",
+          "name": "5 channels"
+        },
+        {
+          "value": "5",
+          "name": "6 channels"
+        },
+        {
+          "value": "6",
+          "name": "7 channels"
+        },
+        {
+          "value": "7",
+          "name": "8 channels"
+        }
+      ]
+    },
+    {
+      "name": "JDISCEN",
+      "description": "Discontinuous mode on injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DISCEN",
+      "description": "Discontinuous mode on regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "JAUTO",
+      "description": "Automatic injected‑group conversion after regular conversion",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "AWDSGL",
+      "description": "Enable watchdog on a single channel in scan mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Watchdog on all channels"
+        },
+        {
+          "value": "1",
+          "name": "Watchdog on single channel"
+        }
+      ]
+    },
+    {
+      "name": "SCAN",
+      "description": "Scan mode enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "JEOCIE",
+      "description": "Interrupt enable for injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "AWDIE",
+      "description": "Analog watchdog interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "EOCIE",
+      "description": "End‑of‑conversion interrupt enable (regular)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "AWDCH",
+      "description": "Analog watchdog channel select",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Channel0"
+        },
+        {
+          "value": "1",
+          "name": "Channel1"
+        },
+        {
+          "value": "2",
+          "name": "Channel2"
+        },
+        {
+          "value": "3",
+          "name": "Channel3"
+        },
+        {
+          "value": "4",
+          "name": "Channel4"
+        },
+        {
+          "value": "5",
+          "name": "Channel5"
+        },
+        {
+          "value": "6",
+          "name": "Channel6"
+        },
+        {
+          "value": "7",
+          "name": "Channel7"
+        },
+        {
+          "value": "8",
+          "name": "Channel8"
+        },
+        {
+          "value": "9",
+          "name": "Channel9"
+        },
+        {
+          "value": "10",
+          "name": "Channel10"
+        },
+        {
+          "value": "11",
+          "name": "Channel11"
+        },
+        {
+          "value": "12",
+          "name": "Channel12"
+        },
+        {
+          "value": "13",
+          "name": "Channel13"
+        },
+        {
+          "value": "14",
+          "name": "Channel14"
+        },
+        {
+          "value": "15",
+          "name": "Channel15"
+        },
+        {
+          "value": "16",
+          "name": "Channel16 (temperature sensor)"
+        },
+        {
+          "value": "17",
+          "name": "Channel17 (VREFINT)"
+        }
+      ]
+    }
+  ]
+}

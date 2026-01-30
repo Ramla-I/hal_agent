@@ -1,0 +1,176 @@
+{
+  "datasheet_register_abbreviation": "TIM16_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CKD",
+      "description": "Clock division",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "Div1"
+        },
+        {
+          "value": "01",
+          "name": "Div2"
+        },
+        {
+          "value": "10",
+          "name": "Div4"
+        },
+        {
+          "value": "11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "ARPE",
+      "description": "Auto-reload preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "BufferedDisabled"
+        },
+        {
+          "value": "1",
+          "name": "BufferedEnabled"
+        }
+      ]
+    },
+    {
+      "name": "CMS",
+      "description": "Center-aligned mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "EdgeAligned"
+        },
+        {
+          "value": "01",
+          "name": "CenterAligned1"
+        },
+        {
+          "value": "10",
+          "name": "CenterAligned2"
+        },
+        {
+          "value": "11",
+          "name": "CenterAligned3"
+        }
+      ]
+    },
+    {
+      "name": "DIR",
+      "description": "Direction (0: upcounter, 1: downcounter)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Upcounter"
+        },
+        {
+          "value": "1",
+          "name": "Downcounter"
+        }
+      ]
+    },
+    {
+      "name": "OPM",
+      "description": "One-pulse mode (0: continuous, 1: stop at next update)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Continuous"
+        },
+        {
+          "value": "1",
+          "name": "OnePulse"
+        }
+      ]
+    },
+    {
+      "name": "URS",
+      "description": "Update request source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AnyEvent"
+        },
+        {
+          "value": "1",
+          "name": "OverflowOnly"
+        }
+      ]
+    },
+    {
+      "name": "UDIS",
+      "description": "Update disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Enabled"
+        },
+        {
+          "value": "1",
+          "name": "Disabled"
+        }
+      ]
+    },
+    {
+      "name": "CEN",
+      "description": "Counter enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    }
+  ]
+}

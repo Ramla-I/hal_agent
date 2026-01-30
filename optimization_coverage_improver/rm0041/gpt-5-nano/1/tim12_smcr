@@ -1,0 +1,272 @@
+{
+  "datasheet_register_abbreviation": "TIM12_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ETP",
+      "description": "External trigger polarity (ETR). 0: non‑inverted (active high or rising edge). 1: inverted (active low or falling edge).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NonInverted"
+        },
+        {
+          "value": "1",
+          "name": "Inverted"
+        }
+      ]
+    },
+    {
+      "name": "ECE",
+      "description": "External clock enable (External clock mode 2). 0: disabled. 1: enabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "ETPS",
+      "description": "External trigger prescaler.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "Prescaler_OFF"
+        },
+        {
+          "value": "01",
+          "name": "Div2"
+        },
+        {
+          "value": "10",
+          "name": "Div4"
+        },
+        {
+          "value": "11",
+          "name": "Div8"
+        }
+      ]
+    },
+    {
+      "name": "ETF",
+      "description": "External trigger filter (digital filter configuration).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "NoFilter"
+        },
+        {
+          "value": "0x1",
+          "name": "fSAMPLING_fCK_INT_N2"
+        },
+        {
+          "value": "0x2",
+          "name": "fSAMPLING_fCK_INT_N4"
+        },
+        {
+          "value": "0x3",
+          "name": "fSAMPLING_fCK_INT_N8"
+        },
+        {
+          "value": "0x4",
+          "name": "fSAMPLING_fDTS_2_N6"
+        },
+        {
+          "value": "0x5",
+          "name": "fSAMPLING_fDTS_2_N8"
+        },
+        {
+          "value": "0x6",
+          "name": "fSAMPLING_fDTS_4_N6"
+        },
+        {
+          "value": "0x7",
+          "name": "fSAMPLING_fDTS_4_N8"
+        },
+        {
+          "value": "0x8",
+          "name": "fSAMPLING_fDTS_8_N6"
+        },
+        {
+          "value": "0x9",
+          "name": "fSAMPLING_fDTS_8_N8"
+        },
+        {
+          "value": "0xA",
+          "name": "fSAMPLING_fDTS_16_N5"
+        },
+        {
+          "value": "0xB",
+          "name": "fSAMPLING_fDTS_16_N6"
+        },
+        {
+          "value": "0xC",
+          "name": "fSAMPLING_fDTS_16_N8"
+        },
+        {
+          "value": "0xD",
+          "name": "fSAMPLING_fDTS_32_N5"
+        },
+        {
+          "value": "0xE",
+          "name": "fSAMPLING_fDTS_32_N6"
+        },
+        {
+          "value": "0xF",
+          "name": "fSAMPLING_fDTS_32_N8"
+        }
+      ]
+    },
+    {
+      "name": "MSM",
+      "description": "Master/Slave mode. 0: No action. 1: Delayed effect of trigger input for perfect synchronization.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "DelayedSync"
+        }
+      ]
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection (input source for synchronization).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "ITR0"
+        },
+        {
+          "value": "001",
+          "name": "ITR1"
+        },
+        {
+          "value": "010",
+          "name": "ITR2"
+        },
+        {
+          "value": "011",
+          "name": "ITR3"
+        },
+        {
+          "value": "100",
+          "name": "TI1F_ED"
+        },
+        {
+          "value": "101",
+          "name": "TI1FP1"
+        },
+        {
+          "value": "110",
+          "name": "TI2FP2"
+        },
+        {
+          "value": "111",
+          "name": "ETRF"
+        }
+      ]
+    },
+    {
+      "name": "OCCS",
+      "description": "OCREF clear selection. 0: OCREF_CLR_INT connected to OCREF_CLR input. 1: OCREF_CLR_INT connected to ETRF.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OCREF_CLR_INT_to_OCREF_CLR"
+        },
+        {
+          "value": "1",
+          "name": "OCREF_CLR_INT_to_ETRF"
+        }
+      ]
+    },
+    {
+      "name": "SMS",
+      "description": "Slave mode selection.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "SlaveDisabled"
+        },
+        {
+          "value": "001",
+          "name": "EncoderMode1"
+        },
+        {
+          "value": "010",
+          "name": "EncoderMode2"
+        },
+        {
+          "value": "011",
+          "name": "EncoderMode3"
+        },
+        {
+          "value": "100",
+          "name": "ResetMode"
+        },
+        {
+          "value": "101",
+          "name": "GatedMode"
+        },
+        {
+          "value": "110",
+          "name": "TriggerMode"
+        },
+        {
+          "value": "111",
+          "name": "ExternalClockMode1"
+        }
+      ]
+    }
+  ]
+}

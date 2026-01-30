@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "CRC_CR",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": []
+}

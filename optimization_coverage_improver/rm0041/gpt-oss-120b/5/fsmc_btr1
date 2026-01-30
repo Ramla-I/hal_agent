@@ -1,0 +1,151 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BTR1",
+  "address_offset": "0xA0000004",
+  "reset_value": "0x0FFFFFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ACCMOD",
+      "description": "Access mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AccessModeA"
+        },
+        {
+          "value": "1",
+          "name": "AccessModeB"
+        },
+        {
+          "value": "2",
+          "name": "AccessModeC"
+        },
+        {
+          "value": "3",
+          "name": "AccessModeD"
+        }
+      ]
+    },
+    {
+      "name": "DATLAT",
+      "description": "Data latency for synchronous NOR flash memory",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 27
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CLKDIV",
+      "description": "Clock divide ratio (FSMC_CLK period)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Reserved"
+        },
+        {
+          "value": "1",
+          "name": "CLKDIV_2HCLK"
+        },
+        {
+          "value": "2",
+          "name": "CLKDIV_3HCLK"
+        },
+        {
+          "value": "15",
+          "name": "CLKDIV_16HCLK"
+        }
+      ]
+    },
+    {
+      "name": "BUSTURN",
+      "description": "Bus turnaround phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "0 HCLK cycles"
+        },
+        {
+          "value": "1",
+          "name": "1 HCLK cycle"
+        },
+        {
+          "value": "15",
+          "name": "15 HCLK cycles (default)"
+        }
+      ]
+    },
+    {
+      "name": "DATAST",
+      "description": "Data‑phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDHLD",
+      "description": "Address‑hold phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Reserved"
+        },
+        {
+          "value": "1",
+          "name": "1 HCLK cycle"
+        },
+        {
+          "value": "15",
+          "name": "15 HCLK cycles (default)"
+        }
+      ]
+    },
+    {
+      "name": "ADDSET",
+      "description": "Address‑setup phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "0 HCLK cycles"
+        },
+        {
+          "value": "1",
+          "name": "1 HCLK cycle"
+        },
+        {
+          "value": "15",
+          "name": "15 HCLK cycles (default)"
+        }
+      ]
+    }
+  ]
+}

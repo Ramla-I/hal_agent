@@ -1,0 +1,56 @@
+{
+  "datasheet_register_abbreviation": "I2C_CCR",
+  "address_offset": "0x1C",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "F/S",
+      "description": "I2C master mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "SmMode"
+        },
+        {
+          "value": "1",
+          "name": "FmMode"
+        }
+      ]
+    },
+    {
+      "name": "DUTY",
+      "description": "Fast mode duty cycle",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "tlow_thigh_2"
+        },
+        {
+          "value": "1",
+          "name": "tlow_thigh_16_9"
+        }
+      ]
+    },
+    {
+      "name": "CCR",
+      "description": "Clock control bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    }
+  ]
+}

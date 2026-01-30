@@ -1,0 +1,38 @@
+{
+  "datasheet_register_abbreviation": "CEC_ESR",
+  "address_offset": null,
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "TERR",
+      "description": "Tx error",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TEOM",
+      "description": "Tx end of message",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TSOM",
+      "description": "Tx start of message",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

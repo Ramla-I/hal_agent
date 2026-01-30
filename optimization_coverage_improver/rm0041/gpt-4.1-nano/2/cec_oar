@@ -1,0 +1,23 @@
+{
+  "datasheet_register_abbreviation": "CEC_OAR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "OA[3:0]",
+      "description": "Own address bits (logical CEC address of the device)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "TV address (default)"
+        }
+      ]
+    }
+  ]
+}

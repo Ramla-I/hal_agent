@@ -1,0 +1,108 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCMR2",
+  "address_offset": "0x1C",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "OC2CE",
+      "description": "Output compare 2 clear enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC2M",
+      "description": "Output compare 2 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Frozen"
+        },
+        {
+          "value": "1",
+          "name": "ActiveOnMatch"
+        },
+        {
+          "value": "2",
+          "name": "InactiveOnMatch"
+        },
+        {
+          "value": "3",
+          "name": "Toggle"
+        },
+        {
+          "value": "4",
+          "name": "ForceInactive"
+        },
+        {
+          "value": "5",
+          "name": "ForceActive"
+        },
+        {
+          "value": "6",
+          "name": "PWMMode1"
+        },
+        {
+          "value": "7",
+          "name": "PWMMode2"
+        }
+      ]
+    },
+    {
+      "name": "OC2PE",
+      "description": "Output compare 2 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC2FE",
+      "description": "Output compare 2 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection (direction / input source)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output"
+        },
+        {
+          "value": "1",
+          "name": "Input_IC2_on_TI2"
+        },
+        {
+          "value": "2",
+          "name": "Input_IC2_on_TI1"
+        },
+        {
+          "value": "3",
+          "name": "Input_IC2_on_TRC"
+        }
+      ]
+    }
+  ]
+}

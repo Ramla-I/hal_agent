@@ -1,0 +1,164 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR2",
+  "address_offset": "0x0C",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EXTI4",
+      "description": "EXTI4 configuration bits (select GPIO source for EXTI line 4)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "PA[x]"
+        },
+        {
+          "value": "0b0001",
+          "name": "PB[x]"
+        },
+        {
+          "value": "0b0010",
+          "name": "PC[x]"
+        },
+        {
+          "value": "0b0011",
+          "name": "PD[x]"
+        },
+        {
+          "value": "0b0100",
+          "name": "PE[x]"
+        },
+        {
+          "value": "0b0101",
+          "name": "PF[x]"
+        },
+        {
+          "value": "0b0110",
+          "name": "PG[x]"
+        }
+      ]
+    },
+    {
+      "name": "EXTI5",
+      "description": "EXTI5 configuration bits (select GPIO source for EXTI line 5)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "PA[x]"
+        },
+        {
+          "value": "0b0001",
+          "name": "PB[x]"
+        },
+        {
+          "value": "0b0010",
+          "name": "PC[x]"
+        },
+        {
+          "value": "0b0011",
+          "name": "PD[x]"
+        },
+        {
+          "value": "0b0100",
+          "name": "PE[x]"
+        },
+        {
+          "value": "0b0101",
+          "name": "PF[x]"
+        },
+        {
+          "value": "0b0110",
+          "name": "PG[x]"
+        }
+      ]
+    },
+    {
+      "name": "EXTI6",
+      "description": "EXTI6 configuration bits (select GPIO source for EXTI line 6)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "PA[x]"
+        },
+        {
+          "value": "0b0001",
+          "name": "PB[x]"
+        },
+        {
+          "value": "0b0010",
+          "name": "PC[x]"
+        },
+        {
+          "value": "0b0011",
+          "name": "PD[x]"
+        },
+        {
+          "value": "0b0100",
+          "name": "PE[x]"
+        },
+        {
+          "value": "0b0101",
+          "name": "PF[x]"
+        },
+        {
+          "value": "0b0110",
+          "name": "PG[x]"
+        }
+      ]
+    },
+    {
+      "name": "EXTI7",
+      "description": "EXTI7 configuration bits (select GPIO source for EXTI line 7)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "PA[x]"
+        },
+        {
+          "value": "0b0001",
+          "name": "PB[x]"
+        },
+        {
+          "value": "0b0010",
+          "name": "PC[x]"
+        },
+        {
+          "value": "0b0011",
+          "name": "PD[x]"
+        },
+        {
+          "value": "0b0100",
+          "name": "PE[x]"
+        },
+        {
+          "value": "0b0101",
+          "name": "PF[x]"
+        },
+        {
+          "value": "0b0110",
+          "name": "PG[x]"
+        }
+      ]
+    }
+  ]
+}

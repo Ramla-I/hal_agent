@@ -1,0 +1,12 @@
+The low peripheral coverage (≈38 %) together with many registers missing from the SVD indicates that the exact‑keyword lookup is frequently failing to find the relevant sections of the reference manual (e.g., “TIM13_CCMR1_INPUT” is listed as “TIM13_CCMR1” or as a generic “TIMx_CCMR1”).  Keyword search also pulls entire PDF pages; with `pages_after_keyword=20` the retrieved context quickly exceeds the model’s token window, forcing truncation and discarding useful information such as the detailed bit‑field tables.
+
+Switching to **semantic search** solves both problems:
+
+* It matches concepts rather than exact strings, so naming variants (TIMx vs TIM13, USART vs UART, etc.) are captured.
+* It returns only the most relevant passages instead of whole pages, dramatically reducing token count and preventing truncation.
+* Enabling **query rewriting** further normalises names (e.g., expanding “UART4” → “USART4”) before the vector lookup.
+* Keeping tables (`remove_tables = false`) is important because many field definitions appear only in register‑bit tables.
+
+To balance recall and context size we lower the number of embeddings to 30 (enough to retrieve all needed registers) and raise the score threshold to 0.15, which filters out marginally relevant chunks while still including the essential register‑map sections. Re‑ranking is kept to surface the best matches first.
+
+These adjustments should raise peripheral, register, and field coverage while staying comfortably within the token limit for every query.

@@ -1,0 +1,95 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BTR4",
+  "address_offset": "0xA000001C",
+  "reset_value": "0x0FFFFFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ACCMOD",
+      "description": "Access mode (asynchronous timing)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 28
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "ModeA"
+        },
+        {
+          "value": "0b01",
+          "name": "ModeB"
+        },
+        {
+          "value": "0b10",
+          "name": "ModeC"
+        },
+        {
+          "value": "0b11",
+          "name": "ModeD"
+        }
+      ]
+    },
+    {
+      "name": "DATLAT",
+      "description": "Data latency for synchronous NOR flash memory",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 24
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CLKDIV",
+      "description": "Clock divide ratio for FSMC_CLK signal",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 20
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "BUSTURN",
+      "description": "Bus turnaround phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 16
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "DATAST",
+      "description": "Data‑phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDHLD",
+      "description": "Address‑hold phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDSET",
+      "description": "Address‑setup phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

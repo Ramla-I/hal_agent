@@ -1,0 +1,74 @@
+---AFIO_EVCR---
+I examined the provided datasheet excerpt for the AFIO peripheral.  
+The section titled **7.4.1 Event control register (AFIO_EVCR)** matches the requested register name (EVCR) for the AFIO peripheral, confirming that the full register abbreviation is **AFIO_EVCR**.  
+
+From the table and accompanying text I extracted:
+- Address offset = 0x00  
+- Reset value = 0x0000 0000  
+- The peripheral registers are accessed by 32‑bit words → register size = 32 bits.  
+
+The bit‑field table defines the following usable bits:
+- **Bit 7 – EVOE** (Event output enable) – read‑write.  
+- **Bits 6:4 – PORT[2:0]** – selects the GPIO port for the EVENTOUT signal – read‑write.  
+- **Bits 3:0 – PIN[3:0]** – selects the pin within the chosen port – read‑write, with enumerated values 0‑15 (Px0 … Px15).  
+
+Bits 31:8 are reserved and must remain at their reset value, so they are omitted from the subfield list.  
+
+The note preceding the register description states that the AFIO clock must be enabled (via the RCC_APB2ENR register) before any read or write of AFIO_EVCR (or related AFIO registers). This is captured as an access constraint requiring the AFIOEN bit in RCC_APB2ENR to be set prior to any access.
+
+No address calculation is needed because the offset is given directly.
+
+---AFIO_MAPR---
+The datasheet section for **AFIO_MAPR** (the MAPR register of the AFIO peripheral) provides the following explicit information:
+
+* Register abbreviation: **AFIO_MAPR** (the peripheral name “AFIO” plus the register name “MAPR”).
+* Address offset: **0x04**.
+* Reset value: **0x0000 0000**.
+* The register is described with a 32‑bit wide table, therefore its size is **32 bits**.
+* All defined bits are listed in the tables; reserved bits are omitted from the subfield list.
+* Each defined field has its access type (rw or w) indicated in the second row of the table.  
+  * The **SWJ_CFG[2:0]** bits are marked **w** – they are write‑only; reading returns undefined data.  
+  * All other fields are marked **rw** – read‑write.
+* Enumerated values are given only for **SWJ_CFG[2:0]** and **PD01_REMAP**; the remaining fields have no enumerated values in the provided excerpt.
+* No ordering or state‑dependency constraints are mentioned, so the `access_constraints` array is empty.
+
+Using this information the JSON object is built with all subfields, their bit positions, access types, and any enumerated values that are documented.
+
+---AFIO_EXTICR1---
+The datasheet snippet for **AFIO_EXTICR1** (register name EXTICR1 in peripheral AFIO) provides the address offset, reset value, register width, and the detailed bit‑field layout.  
+- The address offset is explicitly given as **0x08**.  
+- The reset value is **0x0000**.  
+- Bits 31:16 are marked *Reserved*, indicating the register occupies the full 32‑bit word but only the lower 16 bits are used; therefore the register size is **32 bits**.  
+- Bits 15:0 are defined as four 4‑bit fields **EXTI3[3:0]**, **EXTI2[3:0]**, **EXTI1[3:0]**, **EXTI0[3:0]**, each marked **rw** (read‑write).  
+- The description lists the enumerated values for each field (PA[x] … PG[x]) with the binary codes 0000‑0110.  
+
+No additional sentences in the excerpt describe ordering, pre‑conditions, or other safety requirements, so there are no access constraints to capture.
+
+---AFIO_EXTICR2---
+I examined the provided datasheet excerpts for the AFIO peripheral and located the section titled **“External interrupt configuration register 2 (AFIO_EXTICR2)”**. This section explicitly lists the register’s address offset as **0x0C**, its reset value as **0x0000**, and presents a 16‑bit table covering bits 15:0. The table shows four 4‑bit fields named **EXTI7[3:0]**, **EXTI6[3:0]**, **EXTI5[3:0]**, and **EXTI4[3:0]**, each marked as **rw** (read‑write). The accompanying description for these fields is the same as for EXTICR1: they select the source GPIO pin for the corresponding external interrupt line. The enumerated values for each field are given (0000 = PA[x], 0001 = PB[x], …, 0110 = PG[x]). No additional access constraints or special ordering requirements are mentioned in the text.
+
+---AFIO_EXTICR3---
+I examined the provided datasheet excerpt for the AFIO peripheral and located the section titled **“External interrupt configuration register 3 (AFIO_EXTICR3)”**. The excerpt explicitly lists the register’s address offset (0x10), reset value (0x0000), and a bit‑field table. The table shows that bits 31:16 are reserved, while bits 15:0 are divided into four 4‑bit fields, each named **EXTI8**, **EXTI9**, **EXTI10**, and **EXTI11**. All four fields are marked as read‑write (“rw”). The description states that each 4‑bit field selects the source pin for the corresponding EXTI line, with enumerated values 0000‑0110 mapping to pins PA[x] through PG[x].
+
+No additional notes or ordering requirements are present, so there are no access constraints to capture.
+
+---AFIO_EXTICR4---
+The datasheet fragment for the AFIO peripheral includes a table for **AFIO_EXTICR4**.  
+From the table we obtain:
+
+* **Register abbreviation** – the datasheet calls it `AFIO_EXTICR4`; for the requested peripheral `AFIO` and register name `EXTICR4` the full abbreviation is `AFIO_EXTICR4`.
+* **Address offset** – explicitly listed as `0x14`.
+* **Reset value** – explicitly listed as `0x0000`.
+* **Size** – the register is presented with bits 31 … 0, indicating a 32‑bit (word‑size) register.
+* **Subfields** – the lower 16 bits are divided into four 4‑bit fields that select the source pin for EXTI lines 12‑15:
+  * Bits 15:12 – `EXTI15[3:0]`
+  * Bits 11:8  – `EXTI14[3:0]`
+  * Bits 7:4   – `EXTI13[3:0]`
+  * Bits 3:0   – `EXTI12[3:0]`  
+  All are read‑write (`rw`). The enumerated values for each field are the same as described for EXTICR3:  
+  `0 = PAx`, `1 = PBx`, `2 = PCx`, `3 = PDx`, `4 = PEx`, `5 = PFx`, `6 = PGx`.  
+  The remaining values are reserved.
+* **Access constraints** – the snippet does not contain any ordering or state requirements, so no constraints are recorded.
+
+No address calculation is needed because the offset is given directly.
+

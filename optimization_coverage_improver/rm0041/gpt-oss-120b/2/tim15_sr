@@ -1,0 +1,160 @@
+{
+  "datasheet_register_abbreviation": "TIM15_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC2OF",
+      "description": "Capture/Compare 2 overcapture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture has been detected"
+        },
+        {
+          "value": "1",
+          "name": "Overcapture flag set"
+        }
+      ]
+    },
+    {
+      "name": "CC1OF",
+      "description": "Capture/Compare 1 overcapture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overcapture has been detected"
+        },
+        {
+          "value": "1",
+          "name": "Overcapture flag set"
+        }
+      ]
+    },
+    {
+      "name": "BIF",
+      "description": "Break interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No break event occurred"
+        },
+        {
+          "value": "1",
+          "name": "Break event detected"
+        }
+      ]
+    },
+    {
+      "name": "TIF",
+      "description": "Trigger interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No trigger event occurred"
+        },
+        {
+          "value": "1",
+          "name": "Trigger interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "COMIF",
+      "description": "COM interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No COM event occurred"
+        },
+        {
+          "value": "1",
+          "name": "COM interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "CC2IF",
+      "description": "Capture/Compare 2 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CC2 interrupt not pending"
+        },
+        {
+          "value": "1",
+          "name": "CC2 interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "CC1IF",
+      "description": "Capture/Compare 1 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CC1 interrupt not pending"
+        },
+        {
+          "value": "1",
+          "name": "CC1 interrupt pending"
+        }
+      ]
+    },
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No update event"
+        },
+        {
+          "value": "1",
+          "name": "Update interrupt pending"
+        }
+      ]
+    }
+  ]
+}

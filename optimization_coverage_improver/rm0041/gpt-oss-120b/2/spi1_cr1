@@ -1,0 +1,279 @@
+{
+  "datasheet_register_abbreviation": "SPI1_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "BIDIMODE",
+      "description": "Bidirectional data mode enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "2-line_unidirectional"
+        },
+        {
+          "value": "1",
+          "name": "1-line_bidirectional"
+        }
+      ]
+    },
+    {
+      "name": "BIDIOE",
+      "description": "Output enable in bidirectional mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output_disabled_receive_only"
+        },
+        {
+          "value": "1",
+          "name": "Output_enabled_transmit_only"
+        }
+      ]
+    },
+    {
+      "name": "CRCEN",
+      "description": "Hardware CRC calculation enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CRC_disabled"
+        },
+        {
+          "value": "1",
+          "name": "CRC_enabled"
+        }
+      ]
+    },
+    {
+      "name": "CRCNEXT",
+      "description": "CRC transfer next",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Data_phase"
+        },
+        {
+          "value": "1",
+          "name": "CRC_phase"
+        }
+      ]
+    },
+    {
+      "name": "DFF",
+      "description": "Data frame format (8‑bit or 16‑bit)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "8-bit"
+        },
+        {
+          "value": "1",
+          "name": "16-bit"
+        }
+      ]
+    },
+    {
+      "name": "RXONLY",
+      "description": "Receive only mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Full_duplex"
+        },
+        {
+          "value": "1",
+          "name": "Receive_only"
+        }
+      ]
+    },
+    {
+      "name": "SSM",
+      "description": "Software slave management",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Software_management_disabled"
+        },
+        {
+          "value": "1",
+          "name": "Software_management_enabled"
+        }
+      ]
+    },
+    {
+      "name": "SSI",
+      "description": "Internal slave select (effective when SSM=1)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NSS_low"
+        },
+        {
+          "value": "1",
+          "name": "NSS_high"
+        }
+      ]
+    },
+    {
+      "name": "SPE",
+      "description": "SPI enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Peripheral_disabled"
+        },
+        {
+          "value": "1",
+          "name": "Peripheral_enabled"
+        }
+      ]
+    },
+    {
+      "name": "BR",
+      "description": "Baud rate control",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "fPCLK_div2"
+        },
+        {
+          "value": "001",
+          "name": "fPCLK_div4"
+        },
+        {
+          "value": "010",
+          "name": "fPCLK_div8"
+        },
+        {
+          "value": "011",
+          "name": "fPCLK_div16"
+        },
+        {
+          "value": "100",
+          "name": "fPCLK_div32"
+        },
+        {
+          "value": "101",
+          "name": "fPCLK_div64"
+        },
+        {
+          "value": "110",
+          "name": "fPCLK_div128"
+        },
+        {
+          "value": "111",
+          "name": "fPCLK_div256"
+        }
+      ]
+    },
+    {
+      "name": "MSTR",
+      "description": "Master selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Slave_configuration"
+        },
+        {
+          "value": "1",
+          "name": "Master_configuration"
+        }
+      ]
+    },
+    {
+      "name": "CPOL",
+      "description": "Clock polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CK_low_when_idle"
+        },
+        {
+          "value": "1",
+          "name": "CK_high_when_idle"
+        }
+      ]
+    },
+    {
+      "name": "CPHA",
+      "description": "Clock phase",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "First_edge_capture"
+        },
+        {
+          "value": "1",
+          "name": "Second_edge_capture"
+        }
+      ]
+    }
+  ]
+}

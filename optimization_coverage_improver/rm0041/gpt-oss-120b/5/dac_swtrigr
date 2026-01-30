@@ -1,0 +1,46 @@
+{
+  "datasheet_register_abbreviation": "DAC_SWTRIGR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SWTRIG2",
+      "description": "DAC channel2 software trigger",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "SoftwareTriggerDisabled"
+        },
+        {
+          "value": "1",
+          "name": "SoftwareTriggerEnabled"
+        }
+      ]
+    },
+    {
+      "name": "SWTRIG1",
+      "description": "DAC channel1 software trigger",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "SoftwareTriggerDisabled"
+        },
+        {
+          "value": "1",
+          "name": "SoftwareTriggerEnabled"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "datasheet_register_abbreviation": "RCC_CR",
+  "address_offset": "0x000",
+  "reset_value": "0x00000003",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "HSION",
+      "description": "HSI oscillator enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HSIOff"
+        },
+        {
+          "value": "1",
+          "name": "HSIOn"
+        }
+      ]
+    },
+    {
+      "name": "HSIRDY",
+      "description": "HSI ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotReady"
+        },
+        {
+          "value": "1",
+          "name": "Ready"
+        }
+      ]
+    },
+    {
+      "name": "HSITRIM",
+      "description": "HSI calibration trimming",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSICAL",
+      "description": "HSI calibration value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSEON",
+      "description": "HSE oscillator enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HSEOff"
+        },
+        {
+          "value": "1",
+          "name": "HSEOn"
+        }
+      ]
+    },
+    {
+      "name": "HSERDY",
+      "description": "HSE ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotReady"
+        },
+        {
+          "value": "1",
+          "name": "Ready"
+        }
+      ]
+    },
+    {
+      "name": "HSEBYP",
+      "description": "HSE bypass",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CSSON",
+      "description": "Clock security system enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PLLON",
+      "description": "PLL enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PLLRDY",
+      "description": "PLL ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      },
+      "enumerated_values": []
+    }
+  ]
+}

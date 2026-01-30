@@ -1,0 +1,28 @@
+{
+  "datasheet_register_abbreviation": "CRC_CR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DATA",
+      "description": "General‑purpose 8‑bit data register bits, can be used as temporary storage for one byte and are not affected by CRC resets",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "RESET",
+      "description": "Resets the CRC calculation unit and sets the data register to 0xFFFFFFFF; this bit can only be set and is cleared automatically by hardware",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "datasheet_register_abbreviation": "TIM15_DMAR",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": [
+    {
+      "name": "MOE",
+      "description": "Main output enable. 0: OC and OCN outputs are disabled or forced to idle state. 1: OC and OCN outputs are enabled if their respective enable bits are set.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "AOE",
+      "description": "Automatic output enable. 0: MOE can be set only by software. 1: MOE can be set by software or automatically at the next update event (if the break input is not active).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "BKP",
+      "description": "Break polarity. 0: Break input BRK is active low. 1: Break input BRK is active high.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "BKE",
+      "description": "Break enable. 0: Break inputs (BRK and CSS clock failure event) disabled. 1: Break inputs (BRK and CSS clock failure event) enabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OSSR",
+      "description": "Off‑state selection for Run mode. 0: When inactive, OC/OCN outputs are disabled (signal = 0). 1: When inactive, OC/OCN outputs are enabled with their inactive level as soon as CCxE=1 or CCxNE=1 (signal = 1).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    }
+  ]
+}

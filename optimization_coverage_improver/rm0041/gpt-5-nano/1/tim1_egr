@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "TIM1_EGR",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TG",
+      "description": "Trigger generation – this bit is set by software in order to generate an event, it is automatically cleared by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "SetTIFFlag"
+        }
+      ]
+    },
+    {
+      "name": "CC4G",
+      "description": "Capture/compare 4 generation – this bit is set by software to generate a capture/compare event on channel 4, cleared automatically.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateCC4Event"
+        }
+      ]
+    },
+    {
+      "name": "CC3G",
+      "description": "Capture/compare 3 generation – this bit is set by software to generate a capture/compare event on channel 3, cleared automatically.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateCC3Event"
+        }
+      ]
+    },
+    {
+      "name": "CC2G",
+      "description": "Capture/compare 2 generation – this bit is set by software to generate a capture/compare event on channel 2, cleared automatically.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateCC2Event"
+        }
+      ]
+    },
+    {
+      "name": "CC1G",
+      "description": "Capture/compare 1 generation – this bit is set by software to generate a capture/compare event on channel 1, cleared automatically.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateCC1Event"
+        }
+      ]
+    },
+    {
+      "name": "UG",
+      "description": "Update generation – this bit can be set by software to re‑initialize the counter and generate an update of the registers, cleared automatically.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "ReinitializeCounterAndUpdate"
+        }
+      ]
+    }
+  ]
+}

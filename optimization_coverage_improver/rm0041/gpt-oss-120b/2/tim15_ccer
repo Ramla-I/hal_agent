@@ -1,0 +1,270 @@
+{
+  "datasheet_register_abbreviation": "TIM15_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "IC1F",
+      "description": "Input capture 1 filter – defines the sampling frequency and digital filter length for TI1 input.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "No filter, sampling at fDTS"
+        },
+        {
+          "value": "0x1",
+          "name": "fSAMPLING = fCK_INT, N=2"
+        },
+        {
+          "value": "0x2",
+          "name": "fSAMPLING = fCK_INT, N=4"
+        },
+        {
+          "value": "0x3",
+          "name": "fSAMPLING = fCK_INT, N=8"
+        },
+        {
+          "value": "0x4",
+          "name": "fSAMPLING = fDTS/2, N=6"
+        },
+        {
+          "value": "0x5",
+          "name": "fSAMPLING = fDTS/2, N=8"
+        },
+        {
+          "value": "0x6",
+          "name": "fSAMPLING = fDTS/4, N=6"
+        },
+        {
+          "value": "0x7",
+          "name": "fSAMPLING = fDTS/4, N=8"
+        },
+        {
+          "value": "0x8",
+          "name": "fSAMPLING = fDTS/8, N=6"
+        },
+        {
+          "value": "0x9",
+          "name": "fSAMPLING = fDTS/8, N=8"
+        },
+        {
+          "value": "0xA",
+          "name": "fSAMPLING = fDTS/16, N=5"
+        },
+        {
+          "value": "0xB",
+          "name": "fSAMPLING = fDTS/16, N=6"
+        },
+        {
+          "value": "0xC",
+          "name": "fSAMPLING = fDTS/16, N=8"
+        },
+        {
+          "value": "0xD",
+          "name": "fSAMPLING = fDTS/32, N=5"
+        },
+        {
+          "value": "0xE",
+          "name": "fSAMPLING = fDTS/32, N=6"
+        },
+        {
+          "value": "0xF",
+          "name": "fSAMPLING = fDTS/32, N=8"
+        }
+      ]
+    },
+    {
+      "name": "IC1PSC",
+      "description": "Input capture 1 prescaler – ratio of the prescaler acting on CC1 input (IC1). Reset when CC1E=0.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No prescaler (capture each event)"
+        },
+        {
+          "value": "1",
+          "name": "Capture once every 2 events"
+        },
+        {
+          "value": "2",
+          "name": "Capture once every 4 events"
+        },
+        {
+          "value": "3",
+          "name": "Capture once every 8 events"
+        }
+      ]
+    },
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection – configures channel 1 as input or output and selects the input source.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Channel configured as output"
+        },
+        {
+          "value": "1",
+          "name": "Input, IC1 mapped on TI1"
+        },
+        {
+          "value": "2",
+          "name": "Input, IC1 mapped on TI2"
+        },
+        {
+          "value": "3",
+          "name": "Input, IC1 mapped on TRC"
+        }
+      ]
+    },
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable – enables the CC1 output (or capture when channel is input).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off / capture disabled"
+        },
+        {
+          "value": "1",
+          "name": "On / capture enabled"
+        }
+      ]
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity – active high (0) or active low (1) for output; polarity selection for input capture.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Active high"
+        },
+        {
+          "value": "1",
+          "name": "Active low"
+        }
+      ]
+    },
+    {
+      "name": "CC1NE",
+      "description": "Capture/Compare 1 complementary output enable – enables complementary output OC1N.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off"
+        },
+        {
+          "value": "1",
+          "name": "On"
+        }
+      ]
+    },
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 complementary output polarity – OC1N active high (0) or active low (1).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Active high"
+        },
+        {
+          "value": "1",
+          "name": "Active low"
+        }
+      ]
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable – enables the CC2 output (or capture when channel is input).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Off / capture disabled"
+        },
+        {
+          "value": "1",
+          "name": "On / capture enabled"
+        }
+      ]
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output polarity – active high (0) or active low (1) for output; polarity selection for input capture.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Active high"
+        },
+        {
+          "value": "1",
+          "name": "Active low"
+        }
+      ]
+    },
+    {
+      "name": "CC2NP",
+      "description": "Capture/Compare 2 complementary output polarity – OC2N active high (0) or active low (1).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Active high"
+        },
+        {
+          "value": "1",
+          "name": "Active low"
+        }
+      ]
+    }
+  ]
+}

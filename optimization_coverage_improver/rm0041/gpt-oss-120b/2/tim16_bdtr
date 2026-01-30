@@ -1,0 +1,159 @@
+{
+  "datasheet_register_abbreviation": "TIM16_BDTR",
+  "address_offset": "0x44",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "MOE",
+      "description": "Main output enable. This bit is cleared asynchronously by hardware as soon as the break input is active. It is set by software or automatically depending on the AOE bit. It acts only on the channels which are configured in output.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OutputDisabledOrIdle"
+        },
+        {
+          "value": "1",
+          "name": "OutputEnabledIfChannelEnableBitsSet"
+        }
+      ]
+    },
+    {
+      "name": "AOE",
+      "description": "Automatic output enable.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "MOESoftwareOnly"
+        },
+        {
+          "value": "1",
+          "name": "MOESoftwareOrAutomatic"
+        }
+      ]
+    },
+    {
+      "name": "BKP",
+      "description": "Break polarity.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "BreakActiveLow"
+        },
+        {
+          "value": "1",
+          "name": "BreakActiveHigh"
+        }
+      ]
+    },
+    {
+      "name": "BKE",
+      "description": "Break enable.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "BreakDisabled"
+        },
+        {
+          "value": "1",
+          "name": "BreakEnabled"
+        }
+      ]
+    },
+    {
+      "name": "OSSR",
+      "description": "Off‑state selection for Run mode. Used when MOE=1 on channels having a complementary output.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OffStateDisabled"
+        },
+        {
+          "value": "1",
+          "name": "OffStateEnabledWithInactiveLevel"
+        }
+      ]
+    },
+    {
+      "name": "OSSI",
+      "description": "Off‑state selection for Idle mode. Used when MOE=0 on channels configured as outputs.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "IdleOffStateDisabled"
+        },
+        {
+          "value": "1",
+          "name": "IdleOffStateForcedToIdleLevel"
+        }
+      ]
+    },
+    {
+      "name": "LOCK[1:0]",
+      "description": "Lock configuration. Provides write protection against software errors.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "LOCK_OFF_NoProtection"
+        },
+        {
+          "value": "0b01",
+          "name": "LOCK_LEVEL1"
+        },
+        {
+          "value": "0b10",
+          "name": "LOCK_LEVEL2"
+        },
+        {
+          "value": "0b11",
+          "name": "LOCK_LEVEL3"
+        }
+      ]
+    },
+    {
+      "name": "DTG[7:0]",
+      "description": "Dead‑time generator setup. Defines the duration of the dead‑time inserted between the complementary outputs.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

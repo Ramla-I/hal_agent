@@ -1,0 +1,89 @@
+{
+  "datasheet_register_abbreviation": "TIM12_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TI1S",
+      "description": "TI1 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TI1Pin"
+        },
+        {
+          "value": "1",
+          "name": "XOR_CH1_CH2_CH3"
+        }
+      ]
+    },
+    {
+      "name": "MMS",
+      "description": "Master mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Reset"
+        },
+        {
+          "value": "001",
+          "name": "Enable"
+        },
+        {
+          "value": "010",
+          "name": "Update"
+        },
+        {
+          "value": "011",
+          "name": "ComparePulse"
+        },
+        {
+          "value": "100",
+          "name": "Compare_OC1REF"
+        },
+        {
+          "value": "101",
+          "name": "Compare_OC2REF"
+        },
+        {
+          "value": "110",
+          "name": "Compare_OC3REF"
+        },
+        {
+          "value": "111",
+          "name": "Compare_OC4REF"
+        }
+      ]
+    },
+    {
+      "name": "CCDS",
+      "description": "Capture/compare DMA selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "DMA_on_capture_compare_event"
+        },
+        {
+          "value": "1",
+          "name": "DMA_on_update_event"
+        }
+      ]
+    }
+  ]
+}

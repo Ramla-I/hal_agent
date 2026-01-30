@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "RTC_PRLL",
+  "address_offset": "0x0C",
+  "reset_value": "0x8000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "PRL[3:0]",
+      "description": "RTC prescaler reload value low",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    }
+  ]
+}

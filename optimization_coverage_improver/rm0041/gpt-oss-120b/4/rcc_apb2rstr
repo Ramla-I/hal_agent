@@ -1,0 +1,274 @@
+{
+  "datasheet_register_abbreviation": "RCC_APB2RSTR",
+  "address_offset": "0x00C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "IOPARST",
+      "description": "GPIO port A reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "IOPBRST",
+      "description": "GPIO port B reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "IOPCRST",
+      "description": "GPIO port C reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "IOPDRST",
+      "description": "GPIO port D reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "IOPFRST",
+      "description": "GPIO port E reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "IOPGRST",
+      "description": "GPIO port G reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "ADC1RST",
+      "description": "ADC1 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "TIM1RST",
+      "description": "Timer 1 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "SPI1RST",
+      "description": "SPI1 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "USART1RST",
+      "description": "USART1 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "TIM15RST",
+      "description": "Timer 15 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "TIM16RST",
+      "description": "Timer 16 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "TIM17RST",
+      "description": "Timer 17 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "AFIORST",
+      "description": "Alternate Function I/O reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 31
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    }
+  ]
+}

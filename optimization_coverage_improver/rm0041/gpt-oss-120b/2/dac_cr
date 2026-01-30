@@ -1,0 +1,488 @@
+{
+  "datasheet_register_abbreviation": "DAC_CR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DMAUDRIE2",
+      "description": "DAC channel2 DMA underrun interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DMAEN2",
+      "description": "DAC channel2 DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "MAMP2[3:0]",
+      "description": "DAC channel2 mask/amplitude selector",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0000",
+          "name": "Unmask bit0 of LFSR / triangle amplitude = 1"
+        },
+        {
+          "value": "0001",
+          "name": "Unmask bits[1:0] / amplitude = 3"
+        },
+        {
+          "value": "0010",
+          "name": "Unmask bits[2:0] / amplitude = 7"
+        },
+        {
+          "value": "0011",
+          "name": "Unmask bits[3:0] / amplitude = 15"
+        },
+        {
+          "value": "0100",
+          "name": "Unmask bits[4:0] / amplitude = 31"
+        },
+        {
+          "value": "0101",
+          "name": "Unmask bits[5:0] / amplitude = 63"
+        },
+        {
+          "value": "0110",
+          "name": "Unmask bits[6:0] / amplitude = 127"
+        },
+        {
+          "value": "0111",
+          "name": "Unmask bits[7:0] / amplitude = 255"
+        },
+        {
+          "value": "1000",
+          "name": "Unmask bits[8:0] / amplitude = 511"
+        },
+        {
+          "value": "1001",
+          "name": "Unmask bits[9:0] / amplitude = 1023"
+        },
+        {
+          "value": "1010",
+          "name": "Unmask bits[10:0] / amplitude = 2047"
+        },
+        {
+          "value": "1011",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        },
+        {
+          "value": "1100",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        },
+        {
+          "value": "1101",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        },
+        {
+          "value": "1110",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        },
+        {
+          "value": "1111",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        }
+      ]
+    },
+    {
+      "name": "WAVE2[1:0]",
+      "description": "DAC channel2 noise/triangle wave generation enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "Wave generation disabled"
+        },
+        {
+          "value": "01",
+          "name": "Noise wave generation enabled"
+        },
+        {
+          "value": "10",
+          "name": "Triangle wave generation enabled"
+        },
+        {
+          "value": "11",
+          "name": "Triangle wave generation enabled"
+        }
+      ]
+    },
+    {
+      "name": "TSEL2[2:0]",
+      "description": "DAC channel2 trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Timer 6 TRGO event"
+        },
+        {
+          "value": "001",
+          "name": "Timer 3 TRGO event"
+        },
+        {
+          "value": "010",
+          "name": "Timer 7 TRGO event"
+        },
+        {
+          "value": "011",
+          "name": "Timer 5 or Timer 15 TRGO event"
+        },
+        {
+          "value": "100",
+          "name": "Timer 2 TRGO event"
+        },
+        {
+          "value": "101",
+          "name": "Timer 4 TRGO event"
+        },
+        {
+          "value": "110",
+          "name": "External line 9"
+        },
+        {
+          "value": "111",
+          "name": "Software trigger"
+        }
+      ]
+    },
+    {
+      "name": "TEN2",
+      "description": "DAC channel2 trigger enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Trigger disabled"
+        },
+        {
+          "value": "1",
+          "name": "Trigger enabled"
+        }
+      ]
+    },
+    {
+      "name": "BOFF2",
+      "description": "DAC channel2 output buffer disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output buffer enabled"
+        },
+        {
+          "value": "1",
+          "name": "Output buffer disabled"
+        }
+      ]
+    },
+    {
+      "name": "EN2",
+      "description": "DAC channel2 enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Channel disabled"
+        },
+        {
+          "value": "1",
+          "name": "Channel enabled"
+        }
+      ]
+    },
+    {
+      "name": "DMAUDRIE1",
+      "description": "DAC channel1 DMA underrun interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DMAEN1",
+      "description": "DAC channel1 DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "MAMP1[3:0]",
+      "description": "DAC channel1 mask/amplitude selector",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0000",
+          "name": "Unmask bit0 of LFSR / triangle amplitude = 1"
+        },
+        {
+          "value": "0001",
+          "name": "Unmask bits[1:0] / amplitude = 3"
+        },
+        {
+          "value": "0010",
+          "name": "Unmask bits[2:0] / amplitude = 7"
+        },
+        {
+          "value": "0011",
+          "name": "Unmask bits[3:0] / amplitude = 15"
+        },
+        {
+          "value": "0100",
+          "name": "Unmask bits[4:0] / amplitude = 31"
+        },
+        {
+          "value": "0101",
+          "name": "Unmask bits[5:0] / amplitude = 63"
+        },
+        {
+          "value": "0110",
+          "name": "Unmask bits[6:0] / amplitude = 127"
+        },
+        {
+          "value": "0111",
+          "name": "Unmask bits[7:0] / amplitude = 255"
+        },
+        {
+          "value": "1000",
+          "name": "Unmask bits[8:0] / amplitude = 511"
+        },
+        {
+          "value": "1001",
+          "name": "Unmask bits[9:0] / amplitude = 1023"
+        },
+        {
+          "value": "1010",
+          "name": "Unmask bits[10:0] / amplitude = 2047"
+        },
+        {
+          "value": "1011",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        },
+        {
+          "value": "1100",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        },
+        {
+          "value": "1101",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        },
+        {
+          "value": "1110",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        },
+        {
+          "value": "1111",
+          "name": "Unmask bits[11:0] / amplitude = 4095"
+        }
+      ]
+    },
+    {
+      "name": "WAVE1[1:0]",
+      "description": "DAC channel1 noise/triangle wave generation enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "Wave generation disabled"
+        },
+        {
+          "value": "01",
+          "name": "Noise wave generation enabled"
+        },
+        {
+          "value": "10",
+          "name": "Triangle wave generation enabled"
+        },
+        {
+          "value": "11",
+          "name": "Triangle wave generation enabled"
+        }
+      ]
+    },
+    {
+      "name": "TSEL1[2:0]",
+      "description": "DAC channel1 trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Timer 6 TRGO event"
+        },
+        {
+          "value": "001",
+          "name": "Timer 3 TRGO event"
+        },
+        {
+          "value": "010",
+          "name": "Timer 7 TRGO event"
+        },
+        {
+          "value": "011",
+          "name": "Timer 5 or Timer 15 TRGO event"
+        },
+        {
+          "value": "100",
+          "name": "Timer 2 TRGO event"
+        },
+        {
+          "value": "101",
+          "name": "Timer 4 TRGO event"
+        },
+        {
+          "value": "110",
+          "name": "External line 9"
+        },
+        {
+          "value": "111",
+          "name": "Software trigger"
+        }
+      ]
+    },
+    {
+      "name": "TEN1",
+      "description": "DAC channel1 trigger enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Trigger disabled"
+        },
+        {
+          "value": "1",
+          "name": "Trigger enabled"
+        }
+      ]
+    },
+    {
+      "name": "BOFF1",
+      "description": "DAC channel1 output buffer disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output buffer enabled"
+        },
+        {
+          "value": "1",
+          "name": "Output buffer disabled"
+        }
+      ]
+    },
+    {
+      "name": "EN1",
+      "description": "DAC channel1 enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Channel disabled"
+        },
+        {
+          "value": "1",
+          "name": "Channel enabled"
+        }
+      ]
+    }
+  ]
+}

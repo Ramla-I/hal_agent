@@ -1,0 +1,262 @@
+{
+  "datasheet_register_abbreviation": "TIM2_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "OC2CE",
+      "description": "Output compare 2 clear enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OC2Ref not affected by ETRF input"
+        },
+        {
+          "value": "1",
+          "name": "OC2Ref cleared on ETRF high level"
+        }
+      ]
+    },
+    {
+      "name": "OC2M",
+      "description": "Output compare 2 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Frozen"
+        },
+        {
+          "value": "0b001",
+          "name": "Set channel 2 active on match"
+        },
+        {
+          "value": "0b010",
+          "name": "Set channel 2 inactive on match"
+        },
+        {
+          "value": "0b011",
+          "name": "Toggle"
+        },
+        {
+          "value": "0b100",
+          "name": "Force inactive level"
+        },
+        {
+          "value": "0b101",
+          "name": "Force active level"
+        },
+        {
+          "value": "0b110",
+          "name": "PWM mode 1"
+        },
+        {
+          "value": "0b111",
+          "name": "PWM mode 2"
+        }
+      ]
+    },
+    {
+      "name": "OC2PE",
+      "description": "Output compare 2 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Preload disabled"
+        },
+        {
+          "value": "1",
+          "name": "Preload enabled"
+        }
+      ]
+    },
+    {
+      "name": "OC2FE",
+      "description": "Output compare 2 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Fast disabled"
+        },
+        {
+          "value": "1",
+          "name": "Fast enabled"
+        }
+      ]
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection (channel direction)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Channel 2 configured as output"
+        },
+        {
+          "value": "0b01",
+          "name": "Channel 2 input, IC2 on TI2"
+        },
+        {
+          "value": "0b10",
+          "name": "Channel 2 input, IC2 on TI1"
+        },
+        {
+          "value": "0b11",
+          "name": "Channel 2 input, IC2 on TRC"
+        }
+      ]
+    },
+    {
+      "name": "OC1CE",
+      "description": "Output compare 1 clear enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OC1Ref not affected by ETRF input"
+        },
+        {
+          "value": "1",
+          "name": "OC1Ref cleared on ETRF high level"
+        }
+      ]
+    },
+    {
+      "name": "OC1M",
+      "description": "Output compare 1 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Frozen"
+        },
+        {
+          "value": "0b001",
+          "name": "Set channel 1 active on match"
+        },
+        {
+          "value": "0b010",
+          "name": "Set channel 1 inactive on match"
+        },
+        {
+          "value": "0b011",
+          "name": "Toggle"
+        },
+        {
+          "value": "0b100",
+          "name": "Force inactive level"
+        },
+        {
+          "value": "0b101",
+          "name": "Force active level"
+        },
+        {
+          "value": "0b110",
+          "name": "PWM mode 1"
+        },
+        {
+          "value": "0b111",
+          "name": "PWM mode 2"
+        }
+      ]
+    },
+    {
+      "name": "OC1PE",
+      "description": "Output compare 1 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Preload disabled"
+        },
+        {
+          "value": "1",
+          "name": "Preload enabled"
+        }
+      ]
+    },
+    {
+      "name": "OC1FE",
+      "description": "Output compare 1 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Fast disabled"
+        },
+        {
+          "value": "1",
+          "name": "Fast enabled"
+        }
+      ]
+    },
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection (channel direction)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Channel 1 configured as output"
+        },
+        {
+          "value": "0b01",
+          "name": "Channel 1 input, IC1 on TI1"
+        },
+        {
+          "value": "0b10",
+          "name": "Channel 1 input, IC1 on TI2"
+        },
+        {
+          "value": "0b11",
+          "name": "Channel 1 input, IC1 on TRC"
+        }
+      ]
+    }
+  ]
+}

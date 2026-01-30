@@ -1,0 +1,303 @@
+{
+  "datasheet_register_abbreviation": "USART_CR3",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ONEBIT",
+      "description": "One sample bit method enable – selects the sample method; when set the noise detection flag (NF) is disabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ThreeSampleBitMethod"
+        },
+        {
+          "value": "1",
+          "name": "OneSampleBitMethod"
+        }
+      ]
+    },
+    {
+      "name": "CTSIE",
+      "description": "CTS interrupt enable – generates an interrupt when CTS flag changes.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptInhibited"
+        },
+        {
+          "value": "1",
+          "name": "InterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "CTSE",
+      "description": "CTS enable – hardware flow‑control CTS function.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "RTSE",
+      "description": "RTS enable – hardware flow‑control RTS function.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DMAT",
+      "description": "DMA enable transmitter – enables DMA request for transmission.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DMAR",
+      "description": "DMA enable receiver – enables DMA request for reception.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "SCEN",
+      "description": "Smartcard mode enable – enables Smartcard mode.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "NACK",
+      "description": "Smartcard NACK enable – NACK transmission in case of parity error.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "HDSEL",
+      "description": "Half‑duplex selection – selects single‑wire half‑duplex mode.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "FullDuplex"
+        },
+        {
+          "value": "1",
+          "name": "HalfDuplex"
+        }
+      ]
+    },
+    {
+      "name": "IRLP",
+      "description": "IrDA low‑power – selects normal or low‑power IrDA mode.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NormalMode"
+        },
+        {
+          "value": "1",
+          "name": "LowPowerMode"
+        }
+      ]
+    },
+    {
+      "name": "IREN",
+      "description": "IrDA mode enable – enables IrDA mode.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "EIE",
+      "description": "Error interrupt enable – enables interrupt for framing, overrun or noise errors in multibuffer mode.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptInhibited"
+        },
+        {
+          "value": "1",
+          "name": "InterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "LBCL",
+      "description": "Last bit clock pulse – output clock pulse of the last data bit in synchronous mode.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PulseNotOutput"
+        },
+        {
+          "value": "1",
+          "name": "PulseOutput"
+        }
+      ]
+    },
+    {
+      "name": "LBDIE",
+      "description": "LIN break detection interrupt enable – mask for break detection interrupt.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptInhibited"
+        },
+        {
+          "value": "1",
+          "name": "InterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "LBDL",
+      "description": "LIN break detection length – selects 10‑bit or 11‑bit break detection.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "10BitBreakDetection"
+        },
+        {
+          "value": "1",
+          "name": "11BitBreakDetection"
+        }
+      ]
+    },
+    {
+      "name": "ADD[3:0]",
+      "description": "Address of the USART node – used in multiprocessor communication during mute mode.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    }
+  ]
+}

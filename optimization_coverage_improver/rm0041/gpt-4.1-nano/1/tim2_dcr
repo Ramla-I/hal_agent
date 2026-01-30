@@ -1,0 +1,58 @@
+{
+  "datasheet_register_abbreviation": "TIM2_DCR",
+  "address_offset": "0x48",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "DBL",
+      "description": "DMA burst length – defines the number of DMA transfers",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "1 transfer"
+        },
+        {
+          "value": "1",
+          "name": "2 transfers"
+        },
+        {
+          "value": "2",
+          "name": "3 transfers"
+        },
+        {
+          "value": "0x11",
+          "name": "18 transfers"
+        }
+      ]
+    },
+    {
+      "name": "DBA",
+      "description": "DMA base address – offset from TIMx_CR1 for DMA burst accesses",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TIMx_CR1"
+        },
+        {
+          "value": "1",
+          "name": "TIMx_CR2"
+        },
+        {
+          "value": "2",
+          "name": "TIMx_SMCR"
+        }
+      ]
+    }
+  ]
+}

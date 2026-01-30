@@ -1,0 +1,84 @@
+{
+  "datasheet_register_abbreviation": "PWR_CSR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EWUP",
+      "description": "Enable WKUP pin",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "WKUPPinGPIO"
+        },
+        {
+          "value": "1",
+          "name": "WKUPPinWakeup"
+        }
+      ]
+    },
+    {
+      "name": "PVDO",
+      "description": "PVD output",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "VddAboveThreshold"
+        },
+        {
+          "value": "1",
+          "name": "VddBelowThreshold"
+        }
+      ]
+    },
+    {
+      "name": "SBF",
+      "description": "Standby flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotInStandby"
+        },
+        {
+          "value": "1",
+          "name": "InStandby"
+        }
+      ]
+    },
+    {
+      "name": "WUF",
+      "description": "Wakeup flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoWakeup"
+        },
+        {
+          "value": "1",
+          "name": "WakeupOccurred"
+        }
+      ]
+    }
+  ]
+}

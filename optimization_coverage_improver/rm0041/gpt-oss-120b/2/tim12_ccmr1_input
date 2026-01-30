@@ -1,0 +1,136 @@
+{
+  "datasheet_register_abbreviation": "TIM12_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "IC2F",
+      "description": "Input capture 2 filter. Selects digital filter depth and sampling frequency for TI2 input.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "IC2PSC",
+      "description": "Input capture 2 prescaler. Sets capture event prescaler for channel 2.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoPrescaler"
+        },
+        {
+          "value": "1",
+          "name": "CaptureEvery2Events"
+        },
+        {
+          "value": "2",
+          "name": "CaptureEvery4Events"
+        },
+        {
+          "value": "3",
+          "name": "CaptureEvery8Events"
+        }
+      ]
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection (channel direction and input source).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output"
+        },
+        {
+          "value": "1",
+          "name": "Input_TI2"
+        },
+        {
+          "value": "2",
+          "name": "Input_TI1"
+        },
+        {
+          "value": "3",
+          "name": "Input_TRC"
+        }
+      ]
+    },
+    {
+      "name": "IC1F",
+      "description": "Input capture 1 filter. Selects digital filter depth and sampling frequency for TI1 input.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "IC1PSC",
+      "description": "Input capture 1 prescaler. Sets capture event prescaler for channel 1.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoPrescaler"
+        },
+        {
+          "value": "1",
+          "name": "CaptureEvery2Events"
+        },
+        {
+          "value": "2",
+          "name": "CaptureEvery4Events"
+        },
+        {
+          "value": "3",
+          "name": "CaptureEvery8Events"
+        }
+      ]
+    },
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection (channel direction and input source).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output"
+        },
+        {
+          "value": "1",
+          "name": "Input_TI1"
+        },
+        {
+          "value": "2",
+          "name": "Input_TI2"
+        },
+        {
+          "value": "3",
+          "name": "Input_TRC"
+        }
+      ]
+    }
+  ]
+}

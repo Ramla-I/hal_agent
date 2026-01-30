@@ -1,0 +1,84 @@
+{
+  "datasheet_register_abbreviation": "PWR_CSR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EWUP",
+      "description": "Enable WKUP pin",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "WKUP pin is used for general purpose I/O. An event on the WKUP pin does not wakeup the device from Standby mode."
+        },
+        {
+          "value": "1",
+          "name": "WKUP pin is used for wakeup from Standby mode and forced in input pull‑down configuration (rising edge on WKUP pin wakes‑up the system)."
+        }
+      ]
+    },
+    {
+      "name": "PVDO",
+      "description": "PVD output",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "VDD/V_DDA is higher than the PVD threshold selected with the PLS[2:0] bits."
+        },
+        {
+          "value": "1",
+          "name": "VDD/V_DDA is lower than the PVD threshold selected with the PLS[2:0] bits."
+        }
+      ]
+    },
+    {
+      "name": "SBF",
+      "description": "Standby flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Device has not been in Standby mode"
+        },
+        {
+          "value": "1",
+          "name": "Device has been in Standby mode"
+        }
+      ]
+    },
+    {
+      "name": "WUF",
+      "description": "Wakeup flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No wakeup event occurred"
+        },
+        {
+          "value": "1",
+          "name": "A wakeup event was received from the WKUP pin or from the RTC alarm"
+        }
+      ]
+    }
+  ]
+}

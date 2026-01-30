@@ -1,0 +1,65 @@
+{
+  "datasheet_register_abbreviation": "TIM13_EGR",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "UG",
+      "description": "Update generation",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateUpdate"
+        }
+      ]
+    },
+    {
+      "name": "CC1G",
+      "description": "Capture/compare 1 generation",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateCC1Event"
+        }
+      ]
+    },
+    {
+      "name": "CC2G",
+      "description": "Capture/compare 2 generation",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateCC2Event"
+        }
+      ]
+    }
+  ]
+}

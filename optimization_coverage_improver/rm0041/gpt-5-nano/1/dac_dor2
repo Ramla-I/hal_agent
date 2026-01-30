@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "DAC_DOR2",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": []
+}

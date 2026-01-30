@@ -1,0 +1,97 @@
+{
+  "datasheet_register_abbreviation": "TIM15_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "MSM",
+      "description": "Master/slave mode. 0: No action; 1: The effect of an event on the trigger input (TRGI) is delayed to allow perfect synchronization between the current timer and its slaves.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "MasterSlaveMode"
+        }
+      ]
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection. Selects the trigger input used to synchronize the counter.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "ITR0"
+        },
+        {
+          "value": "0b001",
+          "name": "ITR1"
+        },
+        {
+          "value": "0b010",
+          "name": "ITR2"
+        },
+        {
+          "value": "0b011",
+          "name": "ITR3"
+        },
+        {
+          "value": "0b100",
+          "name": "TI1F_ED"
+        },
+        {
+          "value": "0b101",
+          "name": "TI1FP1"
+        },
+        {
+          "value": "0b110",
+          "name": "TI2FP2"
+        }
+      ]
+    },
+    {
+      "name": "SMS",
+      "description": "Slave mode selection. Defines the operation mode of the timer when an external trigger is used.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "SlaveModeDisabled"
+        },
+        {
+          "value": "0b001",
+          "name": "EncoderMode1"
+        },
+        {
+          "value": "0b010",
+          "name": "EncoderMode2"
+        },
+        {
+          "value": "0b011",
+          "name": "EncoderMode3"
+        },
+        {
+          "value": "0b100",
+          "name": "ResetMode"
+        }
+      ]
+    }
+  ]
+}

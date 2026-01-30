@@ -1,0 +1,104 @@
+{
+  "datasheet_register_abbreviation": "TIM13_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC2NP",
+      "description": "Capture/Compare 2 complementary output polarity (refer to CC1NP description).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output polarity (refer to CC1P description).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHighOrNonInverted"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLowOrInverted"
+        }
+      ]
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable (refer to CC1E description).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "DisabledOrOff"
+        },
+        {
+          "value": "1",
+          "name": "EnabledOrOn"
+        }
+      ]
+    },
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 complementary output polarity. For output mode it must be cleared; for input mode it works with CC1P to define TI1FP1/TI2FP1 polarity.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity. In output mode: 0 = OC1 active high, 1 = OC1 active low. In input mode: selects edge polarity for capture/trigger (0 = non‑inverted/rising, 1 = inverted/falling).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHighOrRisingEdge"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLowOrFallingEdge"
+        }
+      ]
+    },
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable. In output mode: 0 = Off (OC1 not active), 1 = On (OC1 active). In input mode: 0 = Capture disabled, 1 = Capture enabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "DisabledOrOff"
+        },
+        {
+          "value": "1",
+          "name": "EnabledOrOn"
+        }
+      ]
+    }
+  ]
+}

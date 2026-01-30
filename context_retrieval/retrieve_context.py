@@ -17,7 +17,7 @@ from context_retrieval.semantic_search import (
 from context_retrieval.chunk_index import get_chunk_index
 from agent_tools.pdf_ops import extract_pages_from_pdf
 from agent_tools.md_ops import remove_markdown_tables
-from s3_query_rewriter import run_query_rewriter
+from core.s3_query_rewriter import run_query_rewriter
 
 def retrieve_context(
     context_retrieval_parameters: ContextRetrievalParameters,
@@ -53,7 +53,7 @@ def retrieve_context(
             context_retrieval_parameters.number_embeddings = 50
 
         # Check both config.QUERY_REWRITE flag and context_retrieval_parameters.query_rewrite
-        if hasattr(config, 'QUERY_REWRITE') and config.QUERY_REWRITE and context_retrieval_parameters.query_rewrite:
+        if config.QUERY_REWRITE and context_retrieval_parameters.query_rewrite:
             query = run_query_rewriter(query, peripheral_name, register_name, context_retrieval_parameters.vs_id, output_dir)
 
         results = search_vector_store(query, context_retrieval_parameters.vs_id, context_retrieval_parameters.number_embeddings, context_retrieval_parameters.re_ranking, context_retrieval_parameters.score_threshold)

@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "FLASH_AR",
+  "address_offset": "0x14",
+  "reset_value": null,
+  "size": 32,
+  "subfields": []
+}

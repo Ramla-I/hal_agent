@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "TIM12_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC2OF",
+      "description": "Capture/compare 2 over‑capture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoOvercapture"
+        },
+        {
+          "value": "1",
+          "name": "OvercaptureDetected"
+        }
+      ]
+    },
+    {
+      "name": "CC1OF",
+      "description": "Capture/compare 1 over‑capture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoOvercapture"
+        },
+        {
+          "value": "1",
+          "name": "OvercaptureDetected"
+        }
+      ]
+    },
+    {
+      "name": "TIF",
+      "description": "Trigger interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTrigger"
+        },
+        {
+          "value": "1",
+          "name": "TriggerPending"
+        }
+      ]
+    },
+    {
+      "name": "CC2IF",
+      "description": "Capture/compare 2 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoMatch"
+        },
+        {
+          "value": "1",
+          "name": "MatchOccurred"
+        }
+      ]
+    },
+    {
+      "name": "CC1IF",
+      "description": "Capture/compare 1 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoMatch"
+        },
+        {
+          "value": "1",
+          "name": "MatchOccurred"
+        }
+      ]
+    },
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoUpdate"
+        },
+        {
+          "value": "1",
+          "name": "UpdatePending"
+        }
+      ]
+    }
+  ]
+}

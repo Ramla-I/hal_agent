@@ -1,0 +1,113 @@
+{
+  "datasheet_register_abbreviation": "TIM15_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "MSM",
+      "description": "Master/slave mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "DelayedTriggerSynchronization"
+        }
+      ]
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ITR0"
+        },
+        {
+          "value": "1",
+          "name": "ITR1"
+        },
+        {
+          "value": "2",
+          "name": "ITR2"
+        },
+        {
+          "value": "3",
+          "name": "ITR3"
+        },
+        {
+          "value": "4",
+          "name": "TI1F_ED"
+        },
+        {
+          "value": "5",
+          "name": "TI1FP1"
+        },
+        {
+          "value": "6",
+          "name": "TI2FP2"
+        },
+        {
+          "value": "7",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "SMS",
+      "description": "Slave mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "EncoderMode1"
+        },
+        {
+          "value": "2",
+          "name": "EncoderMode2"
+        },
+        {
+          "value": "3",
+          "name": "EncoderMode3"
+        },
+        {
+          "value": "4",
+          "name": "ResetMode"
+        },
+        {
+          "value": "5",
+          "name": "GatedMode"
+        },
+        {
+          "value": "6",
+          "name": "TriggerMode"
+        },
+        {
+          "value": "7",
+          "name": "ExternalClockMode1"
+        }
+      ]
+    }
+  ]
+}

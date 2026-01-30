@@ -1,0 +1,272 @@
+{
+  "datasheet_register_abbreviation": "TIM2_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ETP",
+      "description": "External trigger polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Non‑inverted (active high or rising edge)"
+        },
+        {
+          "value": "1",
+          "name": "Inverted (active low or falling edge)"
+        }
+      ]
+    },
+    {
+      "name": "ECE",
+      "description": "External clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "External clock mode 2 disabled"
+        },
+        {
+          "value": "1",
+          "name": "External clock mode 2 enabled"
+        }
+      ]
+    },
+    {
+      "name": "ETPS",
+      "description": "External trigger prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "Prescaler OFF"
+        },
+        {
+          "value": "01",
+          "name": "Divided by 2"
+        },
+        {
+          "value": "10",
+          "name": "Divided by 4"
+        },
+        {
+          "value": "11",
+          "name": "Divided by 8"
+        }
+      ]
+    },
+    {
+      "name": "ETF",
+      "description": "External trigger filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0000",
+          "name": "No filter, sampling at fDTS"
+        },
+        {
+          "value": "0001",
+          "name": "fSAMPLING=fCK_INT, N=2"
+        },
+        {
+          "value": "0010",
+          "name": "fSAMPLING=fCK_INT, N=4"
+        },
+        {
+          "value": "0011",
+          "name": "fSAMPLING=fCK_INT, N=8"
+        },
+        {
+          "value": "0100",
+          "name": "fSAMPLING=fDTS/2, N=6"
+        },
+        {
+          "value": "0101",
+          "name": "fSAMPLING=fDTS/2, N=8"
+        },
+        {
+          "value": "0110",
+          "name": "fSAMPLING=fDTS/4, N=6"
+        },
+        {
+          "value": "0111",
+          "name": "fSAMPLING=fDTS/4, N=8"
+        },
+        {
+          "value": "1000",
+          "name": "fSAMPLING=fDTS/8, N=6"
+        },
+        {
+          "value": "1001",
+          "name": "fSAMPLING=fDTS/8, N=8"
+        },
+        {
+          "value": "1010",
+          "name": "fSAMPLING=fDTS/16, N=5"
+        },
+        {
+          "value": "1011",
+          "name": "fSAMPLING=fDTS/16, N=6"
+        },
+        {
+          "value": "1100",
+          "name": "fSAMPLING=fDTS/16, N=8"
+        },
+        {
+          "value": "1101",
+          "name": "fSAMPLING=fDTS/32, N=5"
+        },
+        {
+          "value": "1110",
+          "name": "fSAMPLING=fDTS/32, N=6"
+        },
+        {
+          "value": "1111",
+          "name": "fSAMPLING=fDTS/32, N=8"
+        }
+      ]
+    },
+    {
+      "name": "MSM",
+      "description": "Master/Slave mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No action"
+        },
+        {
+          "value": "1",
+          "name": "Delay trigger input effect (synchronization)"
+        }
+      ]
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Internal Trigger 0 (ITR0)"
+        },
+        {
+          "value": "001",
+          "name": "Internal Trigger 1 (ITR1)"
+        },
+        {
+          "value": "010",
+          "name": "Internal Trigger 2 (ITR2)"
+        },
+        {
+          "value": "011",
+          "name": "Internal Trigger 3 (ITR3)"
+        },
+        {
+          "value": "100",
+          "name": "TI1 Edge Detector (TI1F_ED)"
+        },
+        {
+          "value": "101",
+          "name": "Filtered Timer Input 1 (TI1FP1)"
+        },
+        {
+          "value": "110",
+          "name": "Filtered Timer Input 2 (TI2FP2)"
+        },
+        {
+          "value": "111",
+          "name": "External Trigger input (ETRF)"
+        }
+      ]
+    },
+    {
+      "name": "OCCS",
+      "description": "OCREF clear selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OCREF_CLR_INT connected to OCREF_CLR input"
+        },
+        {
+          "value": "1",
+          "name": "OCREF_CLR_INT connected to ETRF"
+        }
+      ]
+    },
+    {
+      "name": "SMS",
+      "description": "Slave mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Slave mode disabled"
+        },
+        {
+          "value": "001",
+          "name": "Encoder mode 1"
+        },
+        {
+          "value": "010",
+          "name": "Encoder mode 2"
+        },
+        {
+          "value": "011",
+          "name": "Encoder mode 3"
+        },
+        {
+          "value": "100",
+          "name": "Reset mode"
+        },
+        {
+          "value": "101",
+          "name": "Gated mode"
+        },
+        {
+          "value": "110",
+          "name": "Trigger mode"
+        },
+        {
+          "value": "111",
+          "name": "External clock mode 1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,236 @@
+{
+  "datasheet_register_abbreviation": "I2C_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "LAST",
+      "description": "DMA last transfer",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Next DMA EOT is not the last transfer"
+        },
+        {
+          "value": "1",
+          "name": "Next DMA EOT is the last transfer"
+        }
+      ]
+    },
+    {
+      "name": "DMAEN",
+      "description": "DMA requests enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "DMA requests disabled"
+        },
+        {
+          "value": "1",
+          "name": "DMA request enabled when TxE=1 or RxNE=1"
+        }
+      ]
+    },
+    {
+      "name": "ITBUFEN",
+      "description": "Buffer interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TxE=1 or RxNE=1 does not generate any interrupt"
+        },
+        {
+          "value": "1",
+          "name": "TxE=1 or RxNE=1 generates Event Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "ITEVTEN",
+      "description": "Event interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Event interrupt disabled"
+        },
+        {
+          "value": "1",
+          "name": "Event interrupt enabled"
+        }
+      ]
+    },
+    {
+      "name": "START",
+      "description": "Start generation",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No Start generation"
+        },
+        {
+          "value": "1",
+          "name": "Repeated start generation (master) / Start generation when bus is free (slave)"
+        }
+      ]
+    },
+    {
+      "name": "NOSTRETCH",
+      "description": "Clock stretching disable (Slave mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock stretching enabled"
+        },
+        {
+          "value": "1",
+          "name": "Clock stretching disabled"
+        }
+      ]
+    },
+    {
+      "name": "ENGC",
+      "description": "General call enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "General call disabled (Address 00h NACKed)"
+        },
+        {
+          "value": "1",
+          "name": "General call enabled (Address 00h ACKed)"
+        }
+      ]
+    },
+    {
+      "name": "ENPEC",
+      "description": "PEC enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PEC calculation disabled"
+        },
+        {
+          "value": "1",
+          "name": "PEC calculation enabled"
+        }
+      ]
+    },
+    {
+      "name": "ENARP",
+      "description": "ARP enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ARP disable"
+        },
+        {
+          "value": "1",
+          "name": "ARP enable"
+        }
+      ]
+    },
+    {
+      "name": "SMBTYPE",
+      "description": "SMBus type",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "SMBus Device"
+        },
+        {
+          "value": "1",
+          "name": "SMBus Host"
+        }
+      ]
+    },
+    {
+      "name": "SMBUS",
+      "description": "SMBus mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "I2C mode"
+        },
+        {
+          "value": "1",
+          "name": "SMBus mode"
+        }
+      ]
+    },
+    {
+      "name": "PE",
+      "description": "Peripheral enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Peripheral disable"
+        },
+        {
+          "value": "1",
+          "name": "Peripheral enable"
+        }
+      ]
+    }
+  ]
+}

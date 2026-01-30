@@ -1,0 +1,266 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection – direction and input mapping for channel 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output"
+        },
+        {
+          "value": "0b01",
+          "name": "Input_IC1_on_TI1"
+        },
+        {
+          "value": "0b10",
+          "name": "Input_IC1_on_TI2"
+        },
+        {
+          "value": "0b11",
+          "name": "Input_IC1_on_TRC"
+        }
+      ]
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection – direction and input mapping for channel 2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output"
+        },
+        {
+          "value": "0b01",
+          "name": "Input_IC2_on_TI2"
+        },
+        {
+          "value": "0b10",
+          "name": "Input_IC2_on_TI1"
+        },
+        {
+          "value": "0b11",
+          "name": "Input_IC2_on_TRC"
+        }
+      ]
+    },
+    {
+      "name": "IC1PSC",
+      "description": "Input capture 1 prescaler – ratio of prescaler for IC1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "NoPrescaler"
+        },
+        {
+          "value": "0b01",
+          "name": "CaptureEvery2Events"
+        },
+        {
+          "value": "0b10",
+          "name": "CaptureEvery4Events"
+        },
+        {
+          "value": "0b11",
+          "name": "CaptureEvery8Events"
+        }
+      ]
+    },
+    {
+      "name": "IC1F",
+      "description": "Input capture 1 filter – digital filter for TI1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "NoFilter"
+        },
+        {
+          "value": "0b0001",
+          "name": "fSAMPLING_fCK_INT_N2"
+        },
+        {
+          "value": "0b0010",
+          "name": "fSAMPLING_fCK_INT_N4"
+        },
+        {
+          "value": "0b0011",
+          "name": "fSAMPLING_fCK_INT_N8"
+        },
+        {
+          "value": "0b0100",
+          "name": "fSAMPLING_fDTS_div2_N6"
+        },
+        {
+          "value": "0b0101",
+          "name": "fSAMPLING_fDTS_div2_N8"
+        },
+        {
+          "value": "0b0110",
+          "name": "fSAMPLING_fDTS_div4_N6"
+        },
+        {
+          "value": "0b0111",
+          "name": "fSAMPLING_fDTS_div4_N8"
+        },
+        {
+          "value": "0b1000",
+          "name": "fSAMPLING_fDTS_div8_N6"
+        },
+        {
+          "value": "0b1001",
+          "name": "fSAMPLING_fDTS_div8_N8"
+        },
+        {
+          "value": "0b1010",
+          "name": "fSAMPLING_fDTS_div16_N5"
+        },
+        {
+          "value": "0b1011",
+          "name": "fSAMPLING_fDTS_div16_N6"
+        },
+        {
+          "value": "0b1100",
+          "name": "fSAMPLING_fDTS_div16_N8"
+        },
+        {
+          "value": "0b1101",
+          "name": "fSAMPLING_fDTS_div32_N5"
+        },
+        {
+          "value": "0b1110",
+          "name": "fSAMPLING_fDTS_div32_N6"
+        },
+        {
+          "value": "0b1111",
+          "name": "fSAMPLING_fDTS_div32_N8"
+        }
+      ]
+    },
+    {
+      "name": "IC2PSC",
+      "description": "Input capture 2 prescaler – ratio of prescaler for IC2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "NoPrescaler"
+        },
+        {
+          "value": "0b01",
+          "name": "CaptureEvery2Events"
+        },
+        {
+          "value": "0b10",
+          "name": "CaptureEvery4Events"
+        },
+        {
+          "value": "0b11",
+          "name": "CaptureEvery8Events"
+        }
+      ]
+    },
+    {
+      "name": "IC2F",
+      "description": "Input capture 2 filter – digital filter for TI2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "NoFilter"
+        },
+        {
+          "value": "0b0001",
+          "name": "fSAMPLING_fCK_INT_N2"
+        },
+        {
+          "value": "0b0010",
+          "name": "fSAMPLING_fCK_INT_N4"
+        },
+        {
+          "value": "0b0011",
+          "name": "fSAMPLING_fCK_INT_N8"
+        },
+        {
+          "value": "0b0100",
+          "name": "fSAMPLING_fDTS_div2_N6"
+        },
+        {
+          "value": "0b0101",
+          "name": "fSAMPLING_fDTS_div2_N8"
+        },
+        {
+          "value": "0b0110",
+          "name": "fSAMPLING_fDTS_div4_N6"
+        },
+        {
+          "value": "0b0111",
+          "name": "fSAMPLING_fDTS_div4_N8"
+        },
+        {
+          "value": "0b1000",
+          "name": "fSAMPLING_fDTS_div8_N6"
+        },
+        {
+          "value": "0b1001",
+          "name": "fSAMPLING_fDTS_div8_N8"
+        },
+        {
+          "value": "0b1010",
+          "name": "fSAMPLING_fDTS_div16_N5"
+        },
+        {
+          "value": "0b1011",
+          "name": "fSAMPLING_fDTS_div16_N6"
+        },
+        {
+          "value": "0b1100",
+          "name": "fSAMPLING_fDTS_div16_N8"
+        },
+        {
+          "value": "0b1101",
+          "name": "fSAMPLING_fDTS_div32_N5"
+        },
+        {
+          "value": "0b1110",
+          "name": "fSAMPLING_fDTS_div32_N6"
+        },
+        {
+          "value": "0b1111",
+          "name": "fSAMPLING_fDTS_div32_N8"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BWTR2",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": [
+    {
+      "name": "DATAST",
+      "description": "Data‑phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Reserved"
+        },
+        {
+          "value": "1",
+          "name": "DATAST phase duration = 1 × HCLK clock cycles"
+        }
+      ]
+    },
+    {
+      "name": "ADDHLD",
+      "description": "Address‑hold phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Reserved"
+        },
+        {
+          "value": "1",
+          "name": "ADDHLD phase duration = 1 × HCLK clock cycle"
+        }
+      ]
+    },
+    {
+      "name": "ADDSET",
+      "description": "Address‑setup phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ADDSET phase duration = 0 × HCLK clock cycle"
+        },
+        {
+          "value": "1",
+          "name": "ADDSET phase duration = 1 × HCLK clock cycle"
+        }
+      ]
+    }
+  ]
+}

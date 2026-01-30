@@ -1,0 +1,350 @@
+{
+  "datasheet_register_abbreviation": "EXTI_IMR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MR0",
+      "description": "Interrupt mask on line 0",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR1",
+      "description": "Interrupt mask on line 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR2",
+      "description": "Interrupt mask on line 2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR3",
+      "description": "Interrupt mask on line 3",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR4",
+      "description": "Interrupt mask on line 4",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR5",
+      "description": "Interrupt mask on line 5",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR6",
+      "description": "Interrupt mask on line 6",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR7",
+      "description": "Interrupt mask on line 7",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR8",
+      "description": "Interrupt mask on line 8",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR9",
+      "description": "Interrupt mask on line 9",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR10",
+      "description": "Interrupt mask on line 10",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR11",
+      "description": "Interrupt mask on line 11",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR12",
+      "description": "Interrupt mask on line 12",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR13",
+      "description": "Interrupt mask on line 13",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR14",
+      "description": "Interrupt mask on line 14",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR15",
+      "description": "Interrupt mask on line 15",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR16",
+      "description": "Interrupt mask on line 16",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    },
+    {
+      "name": "MR17",
+      "description": "Interrupt mask on line 17",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Masked"
+        },
+        {
+          "value": "1",
+          "name": "NotMasked"
+        }
+      ]
+    }
+  ]
+}

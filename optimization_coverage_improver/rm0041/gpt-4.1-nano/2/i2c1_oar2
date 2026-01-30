@@ -1,0 +1,37 @@
+{
+  "datasheet_register_abbreviation": "I2C_OAR2",
+  "address_offset": "0x0C",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ADD2",
+      "description": "Interface address bits [7:1] used in dual addressing mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ENDUAL",
+      "description": "Dual addressing mode enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Only OAR1 recognized in 7-bit addressing mode"
+        },
+        {
+          "value": "1",
+          "name": "Both OAR1 and OAR2 recognized in 7-bit addressing mode"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "datasheet_register_abbreviation": "TIM16_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1OF",
+      "description": "Capture/Compare 1 over‑capture flag – set by hardware when a capture occurs while CC1IF is already set; cleared by writing 0.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "BIF",
+      "description": "Break interrupt flag – set by hardware when the break input becomes active; cleared by writing 0.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIF",
+      "description": "Trigger interrupt flag – set by hardware on a trigger event; cleared by writing 0.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "COMIF",
+      "description": "COM interrupt flag – set by hardware on a COM event; cleared by writing 0.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1IF",
+      "description": "Capture/Compare 1 interrupt flag – set by hardware when the counter matches the compare value (output mode) or on a capture event (input mode); cleared by writing 0.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag – set by hardware on an update event (counter overflow or UG); cleared by writing 0.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

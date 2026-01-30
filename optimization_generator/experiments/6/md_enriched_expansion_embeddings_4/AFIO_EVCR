@@ -1,0 +1,137 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EVCR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EVOE",
+      "description": "Event output enable. When set the EVENTOUT Cortex output is connected to the I/O selected by the PORT[2:0] and PIN[3:0] bits.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PORT[2:0]",
+      "description": "Port selection (x = A .. E).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PIN[3:0]",
+      "description": "Pin selection (x = A .. E).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Px0_selected"
+        },
+        {
+          "value": "1",
+          "name": "Px1_selected"
+        },
+        {
+          "value": "2",
+          "name": "Px2_selected"
+        },
+        {
+          "value": "3",
+          "name": "Px3_selected"
+        },
+        {
+          "value": "4",
+          "name": "Px4_selected"
+        },
+        {
+          "value": "5",
+          "name": "Px5_selected"
+        },
+        {
+          "value": "6",
+          "name": "Px6_selected"
+        },
+        {
+          "value": "7",
+          "name": "Px7_selected"
+        },
+        {
+          "value": "8",
+          "name": "Px8_selected"
+        },
+        {
+          "value": "9",
+          "name": "Px9_selected"
+        },
+        {
+          "value": "10",
+          "name": "Px10_selected"
+        },
+        {
+          "value": "11",
+          "name": "Px11_selected"
+        },
+        {
+          "value": "12",
+          "name": "Px12_selected"
+        },
+        {
+          "value": "13",
+          "name": "Px13_selected"
+        },
+        {
+          "value": "14",
+          "name": "Px14_selected"
+        },
+        {
+          "value": "15",
+          "name": "Px15_selected"
+        }
+      ]
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "AFIO_EVCR",
+      "target_fields": [],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Read access will fail if the AFIO peripheral clock is not enabled.",
+      "datasheet_text": "To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    },
+    {
+      "target_register": "AFIO_EVCR",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Write access will fail if the AFIO peripheral clock is not enabled.",
+      "datasheet_text": "To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    }
+  ]
+}

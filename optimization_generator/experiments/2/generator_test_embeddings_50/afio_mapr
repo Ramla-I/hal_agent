@@ -1,0 +1,218 @@
+{
+  "datasheet_register_abbreviation": "AFIO_MAPR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SWJ_CFG",
+      "description": "Serial wire JTAG configuration",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Full SWJ (JTAG‑DP + SW‑DP) Reset State"
+        },
+        {
+          "value": "001",
+          "name": "Full SWJ (JTAG‑DP + SW‑DP) without NJTRST"
+        },
+        {
+          "value": "010",
+          "name": "JTAG‑DP Disabled and SW‑DP Enabled"
+        },
+        {
+          "value": "100",
+          "name": "JTAG‑DP Disabled and SW‑DP Disabled"
+        },
+        {
+          "value": "others",
+          "name": "No effect"
+        }
+      ]
+    },
+    {
+      "name": "PD01_REMAP",
+      "description": "Port D0/D1 mapping on OSC_IN/OSC_OUT",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap"
+        },
+        {
+          "value": "1",
+          "name": "PD0 remapped on OSC_IN, PD1 remapped on OSC_OUT"
+        }
+      ]
+    },
+    {
+      "name": "TIM4_REMAP",
+      "description": "TIM4 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIM3_REMAP",
+      "description": "TIM3 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIM2_REMAP",
+      "description": "TIM2 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIM1_REMAP",
+      "description": "TIM1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "USART3_REMAP",
+      "description": "USART3 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "USART2_REMAP",
+      "description": "USART2 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap"
+        },
+        {
+          "value": "1",
+          "name": "Remap"
+        }
+      ]
+    },
+    {
+      "name": "USART1_REMAP",
+      "description": "USART1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap"
+        },
+        {
+          "value": "1",
+          "name": "Remap"
+        }
+      ]
+    },
+    {
+      "name": "I2C1_REMAP",
+      "description": "I2C1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap"
+        },
+        {
+          "value": "1",
+          "name": "Remap"
+        }
+      ]
+    },
+    {
+      "name": "SPI1_REMAP",
+      "description": "SPI1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remap"
+        },
+        {
+          "value": "1",
+          "name": "Remap"
+        }
+      ]
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "AFIO_MAPR",
+      "target_fields": [],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "AFIO register access is undefined if the AFIO peripheral clock is not enabled",
+      "datasheet_text": "Note: To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    },
+    {
+      "target_register": "AFIO_MAPR",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "AFIO register write is ignored or may cause bus fault if the AFIO peripheral clock is not enabled",
+      "datasheet_text": "Note: To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    }
+  ]
+}

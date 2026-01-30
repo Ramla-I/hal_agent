@@ -1,0 +1,51 @@
+{
+  "datasheet_register_abbreviation": "IWDG_PR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PR",
+      "description": "Prescaler divider",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "/4"
+        },
+        {
+          "value": "1",
+          "name": "/8"
+        },
+        {
+          "value": "2",
+          "name": "/16"
+        },
+        {
+          "value": "3",
+          "name": "/32"
+        },
+        {
+          "value": "4",
+          "name": "/64"
+        },
+        {
+          "value": "5",
+          "name": "/128"
+        },
+        {
+          "value": "6",
+          "name": "/256"
+        },
+        {
+          "value": "7",
+          "name": "/256"
+        }
+      ]
+    }
+  ]
+}

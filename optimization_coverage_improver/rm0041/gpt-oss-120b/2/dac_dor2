@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "DAC_DOR2",
+  "address_offset": "0x30",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DACC2DOR[11:0]",
+      "description": "DAC channel2 data output",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    }
+  ]
+}

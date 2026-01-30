@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "ADC_JOFR1",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "JOFFSET1",
+      "description": "Data offset for injected channel 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    }
+  ]
+}

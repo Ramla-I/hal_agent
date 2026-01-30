@@ -1,0 +1,616 @@
+{
+  "datasheet_register_abbreviation": "GPIOA_BSRR",
+  "address_offset": "0x10",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "BS0",
+      "description": "Port A Set bit 0 – sets ODR0 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS1",
+      "description": "Port A Set bit 1 – sets ODR1 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS2",
+      "description": "Port A Set bit 2 – sets ODR2 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS3",
+      "description": "Port A Set bit 3 – sets ODR3 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS4",
+      "description": "Port A Set bit 4 – sets ODR4 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS5",
+      "description": "Port A Set bit 5 – sets ODR5 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS6",
+      "description": "Port A Set bit 6 – sets ODR6 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS7",
+      "description": "Port A Set bit 7 – sets ODR7 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS8",
+      "description": "Port A Set bit 8 – sets ODR8 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS9",
+      "description": "Port A Set bit 9 – sets ODR9 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS10",
+      "description": "Port A Set bit 10 – sets ODR10 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS11",
+      "description": "Port A Set bit 11 – sets ODR11 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS12",
+      "description": "Port A Set bit 12 – sets ODR12 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS13",
+      "description": "Port A Set bit 13 – sets ODR13 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS14",
+      "description": "Port A Set bit 14 – sets ODR14 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BS15",
+      "description": "Port A Set bit 15 – sets ODR15 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "BR0",
+      "description": "Port A Reset bit 0 – resets ODR0 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR1",
+      "description": "Port A Reset bit 1 – resets ODR1 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR2",
+      "description": "Port A Reset bit 2 – resets ODR2 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR3",
+      "description": "Port A Reset bit 3 – resets ODR3 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR4",
+      "description": "Port A Reset bit 4 – resets ODR4 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR5",
+      "description": "Port A Reset bit 5 – resets ODR5 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 21
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR6",
+      "description": "Port A Reset bit 6 – resets ODR6 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR7",
+      "description": "Port A Reset bit 7 – resets ODR7 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR8",
+      "description": "Port A Reset bit 8 – resets ODR8 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR9",
+      "description": "Port A Reset bit 9 – resets ODR9 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR10",
+      "description": "Port A Reset bit 10 – resets ODR10 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR11",
+      "description": "Port A Reset bit 11 – resets ODR11 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR12",
+      "description": "Port A Reset bit 12 – resets ODR12 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR13",
+      "description": "Port A Reset bit 13 – resets ODR13 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR14",
+      "description": "Port A Reset bit 14 – resets ODR14 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 30
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    },
+    {
+      "name": "BR15",
+      "description": "Port A Reset bit 15 – resets ODR15 when written with 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 31
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    }
+  ]
+}

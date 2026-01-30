@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "TIM13_CCR1",
+  "address_offset": "0x34",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CCR1",
+      "description": "Capture/Compare 1 value; holds the compare value for channel 1 (output) or the captured counter value (input).",
+      "access": "read/write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "datasheet_register_abbreviation": "UART4_BRR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DIV_Mantissa",
+      "description": "Mantissa of USARTDIV (bits 15:4)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "DIV_Fraction",
+      "description": "Fraction of USARTDIV (bits 3:0)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    }
+  ]
+}

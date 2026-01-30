@@ -1,0 +1,88 @@
+{
+  "datasheet_register_abbreviation": "TIM2_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC4P",
+      "description": "Capture/Compare 4 output polarity (refer to CC1P description)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC4E",
+      "description": "Capture/Compare 4 output enable (refer to CC1E description)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC3P",
+      "description": "Capture/Compare 3 output polarity (refer to CC1P description)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC3E",
+      "description": "Capture/Compare 3 output enable (refer to CC1E description)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output polarity (refer to CC1P description)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable (refer to CC1E description)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity (output: 0=active high, 1=active low; input: selects edge polarity for capture/trigger)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable (output: 0=off, 1=on; input: 0=disable capture, 1=enable capture)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

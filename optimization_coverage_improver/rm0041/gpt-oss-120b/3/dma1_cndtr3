@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "DMA_CNDTR3",
+  "address_offset": "0x34",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "NDT",
+      "description": "Number of data to transfer (0 up to 65535). This register can only be written when the channel is disabled; once the channel is enabled it is read‑only, indicating the remaining data items.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

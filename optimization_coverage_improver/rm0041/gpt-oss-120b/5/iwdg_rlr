@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "IWDG_RLR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000FFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "RL",
+      "description": "Watchdog counter reload value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    }
+  ]
+}

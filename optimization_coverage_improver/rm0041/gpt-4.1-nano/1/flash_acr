@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "FLASH_ACR",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": []
+}

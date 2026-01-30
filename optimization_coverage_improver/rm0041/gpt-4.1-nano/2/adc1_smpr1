@@ -1,0 +1,352 @@
+{
+  "datasheet_register_abbreviation": "ADC_SMPR1",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SMP10",
+      "description": "Channel 10 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Cycles_1_5"
+        },
+        {
+          "value": "1",
+          "name": "Cycles_7_5"
+        },
+        {
+          "value": "2",
+          "name": "Cycles_13_5"
+        },
+        {
+          "value": "3",
+          "name": "Cycles_28_5"
+        },
+        {
+          "value": "4",
+          "name": "Cycles_41_5"
+        },
+        {
+          "value": "5",
+          "name": "Cycles_55_5"
+        },
+        {
+          "value": "6",
+          "name": "Cycles_71_5"
+        },
+        {
+          "value": "7",
+          "name": "Cycles_239_5"
+        }
+      ]
+    },
+    {
+      "name": "SMP11",
+      "description": "Channel 11 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Cycles_1_5"
+        },
+        {
+          "value": "1",
+          "name": "Cycles_7_5"
+        },
+        {
+          "value": "2",
+          "name": "Cycles_13_5"
+        },
+        {
+          "value": "3",
+          "name": "Cycles_28_5"
+        },
+        {
+          "value": "4",
+          "name": "Cycles_41_5"
+        },
+        {
+          "value": "5",
+          "name": "Cycles_55_5"
+        },
+        {
+          "value": "6",
+          "name": "Cycles_71_5"
+        },
+        {
+          "value": "7",
+          "name": "Cycles_239_5"
+        }
+      ]
+    },
+    {
+      "name": "SMP12",
+      "description": "Channel 12 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Cycles_1_5"
+        },
+        {
+          "value": "1",
+          "name": "Cycles_7_5"
+        },
+        {
+          "value": "2",
+          "name": "Cycles_13_5"
+        },
+        {
+          "value": "3",
+          "name": "Cycles_28_5"
+        },
+        {
+          "value": "4",
+          "name": "Cycles_41_5"
+        },
+        {
+          "value": "5",
+          "name": "Cycles_55_5"
+        },
+        {
+          "value": "6",
+          "name": "Cycles_71_5"
+        },
+        {
+          "value": "7",
+          "name": "Cycles_239_5"
+        }
+      ]
+    },
+    {
+      "name": "SMP13",
+      "description": "Channel 13 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Cycles_1_5"
+        },
+        {
+          "value": "1",
+          "name": "Cycles_7_5"
+        },
+        {
+          "value": "2",
+          "name": "Cycles_13_5"
+        },
+        {
+          "value": "3",
+          "name": "Cycles_28_5"
+        },
+        {
+          "value": "4",
+          "name": "Cycles_41_5"
+        },
+        {
+          "value": "5",
+          "name": "Cycles_55_5"
+        },
+        {
+          "value": "6",
+          "name": "Cycles_71_5"
+        },
+        {
+          "value": "7",
+          "name": "Cycles_239_5"
+        }
+      ]
+    },
+    {
+      "name": "SMP14",
+      "description": "Channel 14 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Cycles_1_5"
+        },
+        {
+          "value": "1",
+          "name": "Cycles_7_5"
+        },
+        {
+          "value": "2",
+          "name": "Cycles_13_5"
+        },
+        {
+          "value": "3",
+          "name": "Cycles_28_5"
+        },
+        {
+          "value": "4",
+          "name": "Cycles_41_5"
+        },
+        {
+          "value": "5",
+          "name": "Cycles_55_5"
+        },
+        {
+          "value": "6",
+          "name": "Cycles_71_5"
+        },
+        {
+          "value": "7",
+          "name": "Cycles_239_5"
+        }
+      ]
+    },
+    {
+      "name": "SMP15",
+      "description": "Channel 15 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Cycles_1_5"
+        },
+        {
+          "value": "1",
+          "name": "Cycles_7_5"
+        },
+        {
+          "value": "2",
+          "name": "Cycles_13_5"
+        },
+        {
+          "value": "3",
+          "name": "Cycles_28_5"
+        },
+        {
+          "value": "4",
+          "name": "Cycles_41_5"
+        },
+        {
+          "value": "5",
+          "name": "Cycles_55_5"
+        },
+        {
+          "value": "6",
+          "name": "Cycles_71_5"
+        },
+        {
+          "value": "7",
+          "name": "Cycles_239_5"
+        }
+      ]
+    },
+    {
+      "name": "SMP16",
+      "description": "Channel 16 sample time selection (temperature sensor / VREFINT)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 20
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Cycles_1_5"
+        },
+        {
+          "value": "1",
+          "name": "Cycles_7_5"
+        },
+        {
+          "value": "2",
+          "name": "Cycles_13_5"
+        },
+        {
+          "value": "3",
+          "name": "Cycles_28_5"
+        },
+        {
+          "value": "4",
+          "name": "Cycles_41_5"
+        },
+        {
+          "value": "5",
+          "name": "Cycles_55_5"
+        },
+        {
+          "value": "6",
+          "name": "Cycles_71_5"
+        },
+        {
+          "value": "7",
+          "name": "Cycles_239_5"
+        }
+      ]
+    },
+    {
+      "name": "SMP17",
+      "description": "Channel 17 sample time selection (temperature sensor / VREFINT)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Cycles_1_5"
+        },
+        {
+          "value": "1",
+          "name": "Cycles_7_5"
+        },
+        {
+          "value": "2",
+          "name": "Cycles_13_5"
+        },
+        {
+          "value": "3",
+          "name": "Cycles_28_5"
+        },
+        {
+          "value": "4",
+          "name": "Cycles_41_5"
+        },
+        {
+          "value": "5",
+          "name": "Cycles_55_5"
+        },
+        {
+          "value": "6",
+          "name": "Cycles_71_5"
+        },
+        {
+          "value": "7",
+          "name": "Cycles_239_5"
+        }
+      ]
+    }
+  ]
+}

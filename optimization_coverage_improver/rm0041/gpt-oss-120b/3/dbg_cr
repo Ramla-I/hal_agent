@@ -1,0 +1,434 @@
+{
+  "datasheet_register_abbreviation": "DBGMCU_CR",
+  "address_offset": "0xE0042004",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DBG_TIM12_STOP",
+      "description": "TIM12 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM13_STOP",
+      "description": "TIM13 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM14_STOP",
+      "description": "TIM14 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM15_STOP",
+      "description": "TIM15 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM16_STOP",
+      "description": "TIM16 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM17_STOP",
+      "description": "TIM17 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM5_STOP",
+      "description": "TIM5 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted, outputs behave normally"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted, outputs disabled"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM6_STOP",
+      "description": "TIM6 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted, outputs behave normally"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted, outputs disabled"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM7_STOP",
+      "description": "TIM7 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted, outputs behave normally"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted, outputs disabled"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM1_STOP",
+      "description": "TIM1 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM2_STOP",
+      "description": "TIM2 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM3_STOP",
+      "description": "TIM3 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_TIM4_STOP",
+      "description": "TIM4 counter stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock fed even if core halted"
+        },
+        {
+          "value": "1",
+          "name": "Clock stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_WWDG_STOP",
+      "description": "Debug window watchdog stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Watchdog continues counting"
+        },
+        {
+          "value": "1",
+          "name": "Watchdog stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_IWDG_STOP",
+      "description": "Debug independent watchdog stopped when core is halted",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Watchdog continues counting"
+        },
+        {
+          "value": "1",
+          "name": "Watchdog stopped when core halted"
+        }
+      ]
+    },
+    {
+      "name": "DBG_I2C1_SMBUS_TIMEOUT",
+      "description": "SMBUS timeout mode stopped when Core is halted (I2C1)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Normal behavior"
+        },
+        {
+          "value": "1",
+          "name": "SMBUS timeout frozen"
+        }
+      ]
+    },
+    {
+      "name": "DBG_I2C2_SMBUS_TIMEOUT",
+      "description": "SMBUS timeout mode stopped when Core is halted (I2C2)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Normal behavior"
+        },
+        {
+          "value": "1",
+          "name": "SMBUS timeout frozen"
+        }
+      ]
+    },
+    {
+      "name": "TRACE_IOEN",
+      "description": "Trace pin assignment enable (0 = pins not assigned, 1 = pins assigned)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Trace pins not assigned (default)"
+        },
+        {
+          "value": "1",
+          "name": "Trace pins assigned"
+        }
+      ]
+    },
+    {
+      "name": "TRACE_MODE",
+      "description": "Trace pin assignment mode (effective only when TRACE_IOEN = 1)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "Asynchronous mode"
+        },
+        {
+          "value": "01",
+          "name": "Synchronous mode, TRACEDATA size = 1"
+        },
+        {
+          "value": "10",
+          "name": "Synchronous mode, TRACEDATA size = 2"
+        },
+        {
+          "value": "11",
+          "name": "Synchronous mode, TRACEDATA size = 4"
+        }
+      ]
+    },
+    {
+      "name": "DBG_STANDBY",
+      "description": "Debug Standby mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "FCLK=Off, HCLK=Off (whole digital part unpowered)"
+        },
+        {
+          "value": "1",
+          "name": "FCLK=On, HCLK=On (digital part powered, clocks from internal RC)"
+        }
+      ]
+    },
+    {
+      "name": "DBG_STOP",
+      "description": "Debug Stop mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "FCLK=Off, HCLK=Off in STOP mode"
+        },
+        {
+          "value": "1",
+          "name": "FCLK=On, HCLK=On in STOP mode"
+        }
+      ]
+    },
+    {
+      "name": "DBG_SLEEP",
+      "description": "Debug Sleep mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "FCLK=On, HCLK=Off (CPU clock active, HCLK disabled)"
+        },
+        {
+          "value": "1",
+          "name": "FCLK=On, HCLK=On (both clocks active)"
+        }
+      ]
+    }
+  ]
+}

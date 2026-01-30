@@ -1,0 +1,350 @@
+{
+  "datasheet_register_abbreviation": "RCC_CIR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CSSC",
+      "description": "Clock security system interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearCSSF"
+        }
+      ]
+    },
+    {
+      "name": "PLLRDYC",
+      "description": "PLL ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearPLLRDYF"
+        }
+      ]
+    },
+    {
+      "name": "HSERDYC",
+      "description": "HSE ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearHSERDYF"
+        }
+      ]
+    },
+    {
+      "name": "HSIRDYC",
+      "description": "HSI ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearHSIRDYF"
+        }
+      ]
+    },
+    {
+      "name": "LSERDYC",
+      "description": "LSE ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearLSERDYF"
+        }
+      ]
+    },
+    {
+      "name": "LSIRDYC",
+      "description": "LSI ready interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearLSIRDYF"
+        }
+      ]
+    },
+    {
+      "name": "PLLRDYIE",
+      "description": "PLL ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "HSERDYIE",
+      "description": "HSE ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "HSIRDYIE",
+      "description": "HSI ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "LSERDYIE",
+      "description": "LSE ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "LSIRDYIE",
+      "description": "LSI ready interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "CSSF",
+      "description": "Clock security system interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "PLLRDYF",
+      "description": "PLL ready interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "HSERDYF",
+      "description": "HSE ready interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "HSIRDYF",
+      "description": "HSI ready interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "LSERDYF",
+      "description": "LSE ready interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "LSIRDYF",
+      "description": "LSI ready interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    },
+    {
+      "name": "LSIRDY",
+      "description": "LSI ready interrupt flag (bit 0)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt"
+        }
+      ]
+    }
+  ]
+}

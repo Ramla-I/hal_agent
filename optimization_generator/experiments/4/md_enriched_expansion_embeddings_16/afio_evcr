@@ -1,0 +1,121 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EVCR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EVOE",
+      "description": "Event output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PORT",
+      "description": "Port selection for EVENTOUT (A‑E)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PIN",
+      "description": "Pin selection for EVENTOUT (Px0‑Px15)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Px0"
+        },
+        {
+          "value": "1",
+          "name": "Px1"
+        },
+        {
+          "value": "2",
+          "name": "Px2"
+        },
+        {
+          "value": "3",
+          "name": "Px3"
+        },
+        {
+          "value": "4",
+          "name": "Px4"
+        },
+        {
+          "value": "5",
+          "name": "Px5"
+        },
+        {
+          "value": "6",
+          "name": "Px6"
+        },
+        {
+          "value": "7",
+          "name": "Px7"
+        },
+        {
+          "value": "8",
+          "name": "Px8"
+        },
+        {
+          "value": "9",
+          "name": "Px9"
+        },
+        {
+          "value": "10",
+          "name": "Px10"
+        },
+        {
+          "value": "11",
+          "name": "Px11"
+        },
+        {
+          "value": "12",
+          "name": "Px12"
+        },
+        {
+          "value": "13",
+          "name": "Px13"
+        },
+        {
+          "value": "14",
+          "name": "Px14"
+        },
+        {
+          "value": "15",
+          "name": "Px15"
+        }
+      ]
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "AFIO_EVCR",
+      "target_fields": [],
+      "target_operation": "read/write",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Register cannot be accessed unless the AFIO peripheral clock is enabled via RCC_APB2ENR.AFIOEN.",
+      "datasheet_text": "To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    }
+  ]
+}

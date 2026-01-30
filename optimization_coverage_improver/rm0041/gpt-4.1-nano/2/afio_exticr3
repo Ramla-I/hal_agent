@@ -1,0 +1,164 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR3",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EXTI8",
+      "description": "External interrupt 8 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PAx"
+        },
+        {
+          "value": "1",
+          "name": "PBx"
+        },
+        {
+          "value": "2",
+          "name": "PCx"
+        },
+        {
+          "value": "3",
+          "name": "PDx"
+        },
+        {
+          "value": "4",
+          "name": "PEx"
+        },
+        {
+          "value": "5",
+          "name": "PFx"
+        },
+        {
+          "value": "6",
+          "name": "PGx"
+        }
+      ]
+    },
+    {
+      "name": "EXTI9",
+      "description": "External interrupt 9 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PAx"
+        },
+        {
+          "value": "1",
+          "name": "PBx"
+        },
+        {
+          "value": "2",
+          "name": "PCx"
+        },
+        {
+          "value": "3",
+          "name": "PDx"
+        },
+        {
+          "value": "4",
+          "name": "PEx"
+        },
+        {
+          "value": "5",
+          "name": "PFx"
+        },
+        {
+          "value": "6",
+          "name": "PGx"
+        }
+      ]
+    },
+    {
+      "name": "EXTI10",
+      "description": "External interrupt 10 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PAx"
+        },
+        {
+          "value": "1",
+          "name": "PBx"
+        },
+        {
+          "value": "2",
+          "name": "PCx"
+        },
+        {
+          "value": "3",
+          "name": "PDx"
+        },
+        {
+          "value": "4",
+          "name": "PEx"
+        },
+        {
+          "value": "5",
+          "name": "PFx"
+        },
+        {
+          "value": "6",
+          "name": "PGx"
+        }
+      ]
+    },
+    {
+      "name": "EXTI11",
+      "description": "External interrupt 11 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PAx"
+        },
+        {
+          "value": "1",
+          "name": "PBx"
+        },
+        {
+          "value": "2",
+          "name": "PCx"
+        },
+        {
+          "value": "3",
+          "name": "PDx"
+        },
+        {
+          "value": "4",
+          "name": "PEx"
+        },
+        {
+          "value": "5",
+          "name": "PFx"
+        },
+        {
+          "value": "6",
+          "name": "PGx"
+        }
+      ]
+    }
+  ]
+}

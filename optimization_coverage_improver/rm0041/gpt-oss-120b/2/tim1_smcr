@@ -1,0 +1,141 @@
+{
+  "datasheet_register_abbreviation": "TIM1_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ETP",
+      "description": "External trigger polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NonInverted"
+        },
+        {
+          "value": "1",
+          "name": "Inverted"
+        }
+      ]
+    },
+    {
+      "name": "ECE",
+      "description": "External clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "ETPS",
+      "description": "External trigger prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "PrescalerOff"
+        },
+        {
+          "value": "01",
+          "name": "Div2"
+        },
+        {
+          "value": "10",
+          "name": "Div4"
+        },
+        {
+          "value": "11",
+          "name": "Div8"
+        }
+      ]
+    },
+    {
+      "name": "ETF",
+      "description": "External trigger filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "MSM",
+      "description": "Master/Slave mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "DelayTrigger"
+        }
+      ]
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OCCS",
+      "description": "OCREF clear selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OCREF_CLR_INT"
+        },
+        {
+          "value": "1",
+          "name": "ETRF"
+        }
+      ]
+    },
+    {
+      "name": "SMS",
+      "description": "Slave mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

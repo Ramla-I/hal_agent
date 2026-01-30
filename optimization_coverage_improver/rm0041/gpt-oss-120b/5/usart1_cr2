@@ -1,0 +1,178 @@
+{
+  "datasheet_register_abbreviation": "USART1_CR2",
+  "address_offset": "0x10",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "LINEN",
+      "description": "LIN mode enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "STOP",
+      "description": "Stop bits configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "1_Stop_bit"
+        },
+        {
+          "value": "01",
+          "name": "0.5_Stop_bit"
+        },
+        {
+          "value": "10",
+          "name": "2_Stop_bits"
+        },
+        {
+          "value": "11",
+          "name": "1.5_Stop_bits"
+        }
+      ]
+    },
+    {
+      "name": "CLKEN",
+      "description": "Clock enable for CK pin",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CK_pin_disabled"
+        },
+        {
+          "value": "1",
+          "name": "CK_pin_enabled"
+        }
+      ]
+    },
+    {
+      "name": "CPOL",
+      "description": "Clock polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Steady_low_outside_window"
+        },
+        {
+          "value": "1",
+          "name": "Steady_high_outside_window"
+        }
+      ]
+    },
+    {
+      "name": "CPHA",
+      "description": "Clock phase",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "First_clock_transition_captures_data"
+        },
+        {
+          "value": "1",
+          "name": "Second_clock_transition_captures_data"
+        }
+      ]
+    },
+    {
+      "name": "LBCL",
+      "description": "Last bit clock pulse",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Pulse_not_output"
+        },
+        {
+          "value": "1",
+          "name": "Pulse_output"
+        }
+      ]
+    },
+    {
+      "name": "LBDIE",
+      "description": "LIN break detection interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Interrupt_inhibited"
+        },
+        {
+          "value": "1",
+          "name": "Interrupt_generated"
+        }
+      ]
+    },
+    {
+      "name": "LBDL",
+      "description": "LIN break detection length",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "10_bit_break_detection"
+        },
+        {
+          "value": "1",
+          "name": "11_bit_break_detection"
+        }
+      ]
+    },
+    {
+      "name": "ADD[3:0]",
+      "description": "Address of the USART node (multiprocessor mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

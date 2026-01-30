@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "UART4_SR",
+  "address_offset": "0x00",
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PE",
+      "description": "Parity error flag. Set by hardware when a parity error occurs in receiver mode; cleared by a read from the status register followed by a read or write to the USART_DR data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoParityError"
+        },
+        {
+          "value": "1",
+          "name": "ParityError"
+        }
+      ]
+    }
+  ]
+}

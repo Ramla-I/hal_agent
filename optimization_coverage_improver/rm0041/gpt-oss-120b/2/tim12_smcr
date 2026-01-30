@@ -1,0 +1,104 @@
+{
+  "datasheet_register_abbreviation": "TIM12_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "MSM",
+      "description": "Master/Slave mode – enables delayed effect of the trigger input",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection – selects trigger input for synchronization",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "ITR0"
+        },
+        {
+          "value": "0b001",
+          "name": "ITR1"
+        },
+        {
+          "value": "0b010",
+          "name": "ITR2"
+        },
+        {
+          "value": "0b011",
+          "name": "ITR3"
+        },
+        {
+          "value": "0b100",
+          "name": "TI1F_ED"
+        },
+        {
+          "value": "0b101",
+          "name": "TI1FP1"
+        },
+        {
+          "value": "0b110",
+          "name": "TI2FP2"
+        },
+        {
+          "value": "0b111",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "SMS",
+      "description": "Slave mode selection – chooses the slave‑mode operation",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "SlaveModeDisabled"
+        },
+        {
+          "value": "0b001",
+          "name": "Reserved"
+        },
+        {
+          "value": "0b010",
+          "name": "Reserved"
+        },
+        {
+          "value": "0b011",
+          "name": "Reserved"
+        },
+        {
+          "value": "0b100",
+          "name": "ResetMode"
+        },
+        {
+          "value": "0b101",
+          "name": "GatedMode"
+        },
+        {
+          "value": "0b110",
+          "name": "TriggerMode"
+        },
+        {
+          "value": "0b111",
+          "name": "ExternalClockMode1"
+        }
+      ]
+    }
+  ]
+}

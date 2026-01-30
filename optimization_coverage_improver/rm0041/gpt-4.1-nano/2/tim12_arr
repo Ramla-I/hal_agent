@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "TIM12_ARR",
+  "address_offset": "0x2C",
+  "reset_value": "0xFFFF",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ARR",
+      "description": "Auto-reload value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "BKP_DR35",
+  "address_offset": "0x8C",
+  "reset_value": null,
+  "size": 16,
+  "subfields": [
+    {
+      "name": "D",
+      "description": "User data bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "datasheet_register_abbreviation": "RCC_AHBENR",
+  "address_offset": "0x14",
+  "reset_value": "0x00000014",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "WWDGRST",
+      "description": "Window watchdog reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset window watchdog"
+        }
+      ]
+    },
+    {
+      "name": "TIM14RST",
+      "description": "Timer 14 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset timer 14"
+        }
+      ]
+    },
+    {
+      "name": "TIM13RST",
+      "description": "Timer 13 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset timer 13"
+        }
+      ]
+    },
+    {
+      "name": "TIM12RST",
+      "description": "Timer 12 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset timer 12"
+        }
+      ]
+    },
+    {
+      "name": "TIM7RST",
+      "description": "Timer 7 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset timer 7"
+        }
+      ]
+    },
+    {
+      "name": "TIM6RST",
+      "description": "Timer 6 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset timer 6"
+        }
+      ]
+    },
+    {
+      "name": "TIM5RST",
+      "description": "Timer 5 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset timer 5"
+        }
+      ]
+    },
+    {
+      "name": "TIM4RST",
+      "description": "Timer 4 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset timer 4"
+        }
+      ]
+    },
+    {
+      "name": "TIM3RST",
+      "description": "Timer 3 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset timer 3"
+        }
+      ]
+    },
+    {
+      "name": "TIM2RST",
+      "description": "Timer 2 reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Reset timer 2"
+        }
+      ]
+    }
+  ]
+}

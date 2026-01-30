@@ -1,0 +1,38 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BWTR1",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": [
+    {
+      "name": "DATAST",
+      "description": "Data‑phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDHLD",
+      "description": "Address‑hold phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDSET",
+      "description": "Address‑setup phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

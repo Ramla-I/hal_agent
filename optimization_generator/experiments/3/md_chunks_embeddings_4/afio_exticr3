@@ -1,0 +1,165 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR3",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "EXTI8",
+      "description": "EXTI8 configuration bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA8"
+        },
+        {
+          "value": "1",
+          "name": "PB8"
+        },
+        {
+          "value": "2",
+          "name": "PC8"
+        },
+        {
+          "value": "3",
+          "name": "PD8"
+        },
+        {
+          "value": "4",
+          "name": "PE8"
+        },
+        {
+          "value": "5",
+          "name": "PF8"
+        },
+        {
+          "value": "6",
+          "name": "PG8"
+        }
+      ]
+    },
+    {
+      "name": "EXTI9",
+      "description": "EXTI9 configuration bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA9"
+        },
+        {
+          "value": "1",
+          "name": "PB9"
+        },
+        {
+          "value": "2",
+          "name": "PC9"
+        },
+        {
+          "value": "3",
+          "name": "PD9"
+        },
+        {
+          "value": "4",
+          "name": "PE9"
+        },
+        {
+          "value": "5",
+          "name": "PF9"
+        },
+        {
+          "value": "6",
+          "name": "PG9"
+        }
+      ]
+    },
+    {
+      "name": "EXTI10",
+      "description": "EXTI10 configuration bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA10"
+        },
+        {
+          "value": "1",
+          "name": "PB10"
+        },
+        {
+          "value": "2",
+          "name": "PC10"
+        },
+        {
+          "value": "3",
+          "name": "PD10"
+        },
+        {
+          "value": "4",
+          "name": "PE10"
+        },
+        {
+          "value": "5",
+          "name": "PF10"
+        },
+        {
+          "value": "6",
+          "name": "PG10"
+        }
+      ]
+    },
+    {
+      "name": "EXTI11",
+      "description": "EXTI11 configuration bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA11"
+        },
+        {
+          "value": "1",
+          "name": "PB11"
+        },
+        {
+          "value": "2",
+          "name": "PC11"
+        },
+        {
+          "value": "3",
+          "name": "PD11"
+        },
+        {
+          "value": "4",
+          "name": "PE11"
+        },
+        {
+          "value": "5",
+          "name": "PF11"
+        },
+        {
+          "value": "6",
+          "name": "PG11"
+        }
+      ]
+    }
+  ],
+  "access_constraints": []
+}

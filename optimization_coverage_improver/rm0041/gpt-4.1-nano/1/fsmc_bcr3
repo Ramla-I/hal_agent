@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BCR3",
+  "address_offset": "0xA0000010",
+  "reset_value": null,
+  "size": null,
+  "subfields": []
+}

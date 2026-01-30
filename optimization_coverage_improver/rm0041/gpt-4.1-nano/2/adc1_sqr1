@@ -1,0 +1,415 @@
+{
+  "datasheet_register_abbreviation": "ADC_SQR1",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "L[3:0]",
+      "description": "Regular channel sequence length – number of conversions in the regular sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "1 conversion"
+        },
+        {
+          "value": "1",
+          "name": "2 conversions"
+        },
+        {
+          "value": "2",
+          "name": "3 conversions"
+        },
+        {
+          "value": "3",
+          "name": "4 conversions"
+        },
+        {
+          "value": "4",
+          "name": "5 conversions"
+        },
+        {
+          "value": "5",
+          "name": "6 conversions"
+        },
+        {
+          "value": "6",
+          "name": "7 conversions"
+        },
+        {
+          "value": "7",
+          "name": "8 conversions"
+        },
+        {
+          "value": "8",
+          "name": "9 conversions"
+        },
+        {
+          "value": "9",
+          "name": "10 conversions"
+        },
+        {
+          "value": "10",
+          "name": "11 conversions"
+        },
+        {
+          "value": "11",
+          "name": "12 conversions"
+        },
+        {
+          "value": "12",
+          "name": "13 conversions"
+        },
+        {
+          "value": "13",
+          "name": "14 conversions"
+        },
+        {
+          "value": "14",
+          "name": "15 conversions"
+        },
+        {
+          "value": "15",
+          "name": "16 conversions"
+        }
+      ]
+    },
+    {
+      "name": "SQ16[4:0]",
+      "description": "Channel number assigned to the 16th conversion in the regular sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Channel 0"
+        },
+        {
+          "value": "1",
+          "name": "Channel 1"
+        },
+        {
+          "value": "2",
+          "name": "Channel 2"
+        },
+        {
+          "value": "3",
+          "name": "Channel 3"
+        },
+        {
+          "value": "4",
+          "name": "Channel 4"
+        },
+        {
+          "value": "5",
+          "name": "Channel 5"
+        },
+        {
+          "value": "6",
+          "name": "Channel 6"
+        },
+        {
+          "value": "7",
+          "name": "Channel 7"
+        },
+        {
+          "value": "8",
+          "name": "Channel 8"
+        },
+        {
+          "value": "9",
+          "name": "Channel 9"
+        },
+        {
+          "value": "10",
+          "name": "Channel 10"
+        },
+        {
+          "value": "11",
+          "name": "Channel 11"
+        },
+        {
+          "value": "12",
+          "name": "Channel 12"
+        },
+        {
+          "value": "13",
+          "name": "Channel 13"
+        },
+        {
+          "value": "14",
+          "name": "Channel 14"
+        },
+        {
+          "value": "15",
+          "name": "Channel 15"
+        },
+        {
+          "value": "16",
+          "name": "Channel 16 (temperature sensor)"
+        },
+        {
+          "value": "17",
+          "name": "Channel 17 (VREFINT)"
+        }
+      ]
+    },
+    {
+      "name": "SQ15[4:0]",
+      "description": "Channel number assigned to the 15th conversion in the regular sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Channel 0"
+        },
+        {
+          "value": "1",
+          "name": "Channel 1"
+        },
+        {
+          "value": "2",
+          "name": "Channel 2"
+        },
+        {
+          "value": "3",
+          "name": "Channel 3"
+        },
+        {
+          "value": "4",
+          "name": "Channel 4"
+        },
+        {
+          "value": "5",
+          "name": "Channel 5"
+        },
+        {
+          "value": "6",
+          "name": "Channel 6"
+        },
+        {
+          "value": "7",
+          "name": "Channel 7"
+        },
+        {
+          "value": "8",
+          "name": "Channel 8"
+        },
+        {
+          "value": "9",
+          "name": "Channel 9"
+        },
+        {
+          "value": "10",
+          "name": "Channel 10"
+        },
+        {
+          "value": "11",
+          "name": "Channel 11"
+        },
+        {
+          "value": "12",
+          "name": "Channel 12"
+        },
+        {
+          "value": "13",
+          "name": "Channel 13"
+        },
+        {
+          "value": "14",
+          "name": "Channel 14"
+        },
+        {
+          "value": "15",
+          "name": "Channel 15"
+        },
+        {
+          "value": "16",
+          "name": "Channel 16 (temperature sensor)"
+        },
+        {
+          "value": "17",
+          "name": "Channel 17 (VREFINT)"
+        }
+      ]
+    },
+    {
+      "name": "SQ14[4:0]",
+      "description": "Channel number assigned to the 14th conversion in the regular sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Channel 0"
+        },
+        {
+          "value": "1",
+          "name": "Channel 1"
+        },
+        {
+          "value": "2",
+          "name": "Channel 2"
+        },
+        {
+          "value": "3",
+          "name": "Channel 3"
+        },
+        {
+          "value": "4",
+          "name": "Channel 4"
+        },
+        {
+          "value": "5",
+          "name": "Channel 5"
+        },
+        {
+          "value": "6",
+          "name": "Channel 6"
+        },
+        {
+          "value": "7",
+          "name": "Channel 7"
+        },
+        {
+          "value": "8",
+          "name": "Channel 8"
+        },
+        {
+          "value": "9",
+          "name": "Channel 9"
+        },
+        {
+          "value": "10",
+          "name": "Channel 10"
+        },
+        {
+          "value": "11",
+          "name": "Channel 11"
+        },
+        {
+          "value": "12",
+          "name": "Channel 12"
+        },
+        {
+          "value": "13",
+          "name": "Channel 13"
+        },
+        {
+          "value": "14",
+          "name": "Channel 14"
+        },
+        {
+          "value": "15",
+          "name": "Channel 15"
+        },
+        {
+          "value": "16",
+          "name": "Channel 16 (temperature sensor)"
+        },
+        {
+          "value": "17",
+          "name": "Channel 17 (VREFINT)"
+        }
+      ]
+    },
+    {
+      "name": "SQ13[4:0]",
+      "description": "Channel number assigned to the 13th conversion in the regular sequence",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Channel 0"
+        },
+        {
+          "value": "1",
+          "name": "Channel 1"
+        },
+        {
+          "value": "2",
+          "name": "Channel 2"
+        },
+        {
+          "value": "3",
+          "name": "Channel 3"
+        },
+        {
+          "value": "4",
+          "name": "Channel 4"
+        },
+        {
+          "value": "5",
+          "name": "Channel 5"
+        },
+        {
+          "value": "6",
+          "name": "Channel 6"
+        },
+        {
+          "value": "7",
+          "name": "Channel 7"
+        },
+        {
+          "value": "8",
+          "name": "Channel 8"
+        },
+        {
+          "value": "9",
+          "name": "Channel 9"
+        },
+        {
+          "value": "10",
+          "name": "Channel 10"
+        },
+        {
+          "value": "11",
+          "name": "Channel 11"
+        },
+        {
+          "value": "12",
+          "name": "Channel 12"
+        },
+        {
+          "value": "13",
+          "name": "Channel 13"
+        },
+        {
+          "value": "14",
+          "name": "Channel 14"
+        },
+        {
+          "value": "15",
+          "name": "Channel 15"
+        },
+        {
+          "value": "16",
+          "name": "Channel 16 (temperature sensor)"
+        },
+        {
+          "value": "17",
+          "name": "Channel 17 (VREFINT)"
+        }
+      ]
+    }
+  ]
+}

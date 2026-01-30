@@ -1,0 +1,136 @@
+{
+  "datasheet_register_abbreviation": "TIM2_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection (input mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output (channel configured as output)"
+        },
+        {
+          "value": "0b01",
+          "name": "Input, IC1 mapped on TI1"
+        },
+        {
+          "value": "0b10",
+          "name": "Input, IC1 mapped on TI2"
+        },
+        {
+          "value": "0b11",
+          "name": "Input, IC1 mapped on TRC"
+        }
+      ]
+    },
+    {
+      "name": "IC1PSC",
+      "description": "Input capture 1 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "No prescaler (capture each edge)"
+        },
+        {
+          "value": "0b01",
+          "name": "Capture every 2 events"
+        },
+        {
+          "value": "0b10",
+          "name": "Capture every 4 events"
+        },
+        {
+          "value": "0b11",
+          "name": "Capture every 8 events"
+        }
+      ]
+    },
+    {
+      "name": "IC1F",
+      "description": "Input capture 1 filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection (input mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output (channel configured as output)"
+        },
+        {
+          "value": "0b01",
+          "name": "Input, IC2 mapped on TI2"
+        },
+        {
+          "value": "0b10",
+          "name": "Input, IC2 mapped on TI1"
+        },
+        {
+          "value": "0b11",
+          "name": "Input, IC2 mapped on TRC"
+        }
+      ]
+    },
+    {
+      "name": "IC2PSC",
+      "description": "Input capture 2 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "No prescaler (capture each edge)"
+        },
+        {
+          "value": "0b01",
+          "name": "Capture every 2 events"
+        },
+        {
+          "value": "0b10",
+          "name": "Capture every 4 events"
+        },
+        {
+          "value": "0b11",
+          "name": "Capture every 8 events"
+        }
+      ]
+    },
+    {
+      "name": "IC2F",
+      "description": "Input capture 2 filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

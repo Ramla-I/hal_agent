@@ -1,0 +1,146 @@
+{
+  "datasheet_register_abbreviation": "ADC_CR1",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "AWDEN",
+      "description": "Analog watchdog enable on regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "JAWDEN",
+      "description": "Analog watchdog enable on injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DISCNUM",
+      "description": "Discontinuous mode channel count (number of regular channels converted in discontinuous mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "1 channel"
+        },
+        {
+          "value": "1",
+          "name": "2 channels"
+        },
+        {
+          "value": "2",
+          "name": "3 channels"
+        },
+        {
+          "value": "3",
+          "name": "4 channels"
+        },
+        {
+          "value": "4",
+          "name": "5 channels"
+        },
+        {
+          "value": "5",
+          "name": "6 channels"
+        },
+        {
+          "value": "6",
+          "name": "7 channels"
+        },
+        {
+          "value": "7",
+          "name": "8 channels"
+        }
+      ]
+    },
+    {
+      "name": "JDISCEN",
+      "description": "Discontinuous mode on injected channels enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DISCEN",
+      "description": "Discontinuous mode on regular channels enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "JAUTO",
+      "description": "Automatic injected group conversion enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    }
+  ]
+}

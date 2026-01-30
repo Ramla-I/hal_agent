@@ -1,0 +1,274 @@
+{
+  "datasheet_register_abbreviation": "I2C_SR1",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "SMBALERT",
+      "description": "SMBus alert flag – indicates SMBus alert event (set by hardware, cleared by software).",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAlert"
+        },
+        {
+          "value": "1",
+          "name": "AlertOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TIMEOUT",
+      "description": "Timeout or Tlow error flag – indicates a timeout condition on the bus.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTimeout"
+        },
+        {
+          "value": "1",
+          "name": "TimeoutOccurred"
+        }
+      ]
+    },
+    {
+      "name": "PECERR",
+      "description": "Packet error checking error flag – PEC error detected in reception.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoError"
+        },
+        {
+          "value": "1",
+          "name": "Error"
+        }
+      ]
+    },
+    {
+      "name": "OVR",
+      "description": "Overrun/Underrun error flag – data lost because of overrun.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoOverrun"
+        },
+        {
+          "value": "1",
+          "name": "Overrun"
+        }
+      ]
+    },
+    {
+      "name": "AF",
+      "description": "Acknowledge failure flag – NACK received after address or data byte.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AcknowledgeOk"
+        },
+        {
+          "value": "1",
+          "name": "AcknowledgeFailed"
+        }
+      ]
+    },
+    {
+      "name": "ARLO",
+      "description": "Arbitration lost flag – arbitration lost during master mode.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoArbitrationLost"
+        },
+        {
+          "value": "1",
+          "name": "ArbitrationLost"
+        }
+      ]
+    },
+    {
+      "name": "BERR",
+      "description": "Bus error flag – misplaced start/stop condition detected.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoBusError"
+        },
+        {
+          "value": "1",
+          "name": "BusError"
+        }
+      ]
+    },
+    {
+      "name": "TxE",
+      "description": "Transmit data register empty – set when DR register is empty and can accept new data.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotEmpty"
+        },
+        {
+          "value": "1",
+          "name": "Empty"
+        }
+      ]
+    },
+    {
+      "name": "RxNE",
+      "description": "Receive buffer not empty – set when DR register contains received data.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Empty"
+        },
+        {
+          "value": "1",
+          "name": "NotEmpty"
+        }
+      ]
+    },
+    {
+      "name": "STOPF",
+      "description": "Stop detection flag – indicates a stop condition was detected (slave mode).",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoStop"
+        },
+        {
+          "value": "1",
+          "name": "StopDetected"
+        }
+      ]
+    },
+    {
+      "name": "ADD10",
+      "description": "10-bit header sent – set after the first address byte is sent in 10‑bit addressing mode.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HeaderNotSent"
+        },
+        {
+          "value": "1",
+          "name": "HeaderSent"
+        }
+      ]
+    },
+    {
+      "name": "BTF",
+      "description": "Byte transfer finished – set when a byte has been fully transferred.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TransferNotFinished"
+        },
+        {
+          "value": "1",
+          "name": "TransferFinished"
+        }
+      ]
+    },
+    {
+      "name": "ADDR",
+      "description": "Address sent/matched – set when address phase is complete (master) or address matched (slave).",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotSet"
+        },
+        {
+          "value": "1",
+          "name": "Set"
+        }
+      ]
+    },
+    {
+      "name": "SB",
+      "description": "Start bit – set when a start condition has been generated (master mode).",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoStart"
+        },
+        {
+          "value": "1",
+          "name": "StartGenerated"
+        }
+      ]
+    }
+  ]
+}

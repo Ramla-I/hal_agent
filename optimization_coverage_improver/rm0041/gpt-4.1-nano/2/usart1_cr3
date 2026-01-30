@@ -1,0 +1,94 @@
+{
+  "datasheet_register_abbreviation": "USART1_CR3",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ONEBIT",
+      "description": "One sample bit method enable – selects between three‑sample and one‑sample methods.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ThreeSampleBitMethod"
+        },
+        {
+          "value": "1",
+          "name": "OneSampleBitMethod"
+        }
+      ]
+    },
+    {
+      "name": "LBCL",
+      "description": "Last bit clock pulse – controls whether the clock pulse of the last transmitted data bit is output on the CK pin in synchronous mode.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ClockPulseNotOutput"
+        },
+        {
+          "value": "1",
+          "name": "ClockPulseOutput"
+        }
+      ]
+    },
+    {
+      "name": "LBDIE",
+      "description": "LIN break detection interrupt enable – masks/unmasks the interrupt generated when a LIN break is detected.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptInhibited"
+        },
+        {
+          "value": "1",
+          "name": "InterruptGenerated"
+        }
+      ]
+    },
+    {
+      "name": "LBDL",
+      "description": "LIN break detection length – selects 10‑bit or 11‑bit break detection length.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "10BitBreakDetection"
+        },
+        {
+          "value": "1",
+          "name": "11BitBreakDetection"
+        }
+      ]
+    },
+    {
+      "name": "ADD[3:0]",
+      "description": "Address of the USART node – used in multiprocessor communication for address‑mark detection.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    }
+  ]
+}

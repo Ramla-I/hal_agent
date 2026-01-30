@@ -1,0 +1,262 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection (channel direction)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output"
+        },
+        {
+          "value": "0b01",
+          "name": "Input_TI1"
+        },
+        {
+          "value": "0b10",
+          "name": "Input_TI2"
+        },
+        {
+          "value": "0b11",
+          "name": "Input_TRC"
+        }
+      ]
+    },
+    {
+      "name": "OC1FE",
+      "description": "Output 1 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "OC1PE",
+      "description": "Output 1 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "OC1M",
+      "description": "Output 1 mode (OC1M[2:0])",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Frozen"
+        },
+        {
+          "value": "0b001",
+          "name": "ActiveOnMatch"
+        },
+        {
+          "value": "0b010",
+          "name": "InactiveOnMatch"
+        },
+        {
+          "value": "0b011",
+          "name": "Toggle"
+        },
+        {
+          "value": "0b100",
+          "name": "ForceInactive"
+        },
+        {
+          "value": "0b101",
+          "name": "ForceActive"
+        },
+        {
+          "value": "0b110",
+          "name": "PWMMode1"
+        },
+        {
+          "value": "0b111",
+          "name": "PWMMode2"
+        }
+      ]
+    },
+    {
+      "name": "OC1CE",
+      "description": "Output 1 clear enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection (channel direction)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output"
+        },
+        {
+          "value": "0b01",
+          "name": "Input_TI2"
+        },
+        {
+          "value": "0b10",
+          "name": "Input_TI1"
+        },
+        {
+          "value": "0b11",
+          "name": "Input_TRC"
+        }
+      ]
+    },
+    {
+      "name": "OC2FE",
+      "description": "Output 2 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "OC2PE",
+      "description": "Output 2 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "OC2M",
+      "description": "Output 2 mode (OC2M[2:0])",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Frozen"
+        },
+        {
+          "value": "0b001",
+          "name": "ActiveOnMatch"
+        },
+        {
+          "value": "0b010",
+          "name": "InactiveOnMatch"
+        },
+        {
+          "value": "0b011",
+          "name": "Toggle"
+        },
+        {
+          "value": "0b100",
+          "name": "ForceInactive"
+        },
+        {
+          "value": "0b101",
+          "name": "ForceActive"
+        },
+        {
+          "value": "0b110",
+          "name": "PWMMode1"
+        },
+        {
+          "value": "0b111",
+          "name": "PWMMode2"
+        }
+      ]
+    },
+    {
+      "name": "OC2CE",
+      "description": "Output 2 clear enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    }
+  ]
+}

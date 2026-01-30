@@ -1,0 +1,509 @@
+{
+  "datasheet_register_abbreviation": "ADC_CR2",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "AWDEN",
+      "description": "Analog watchdog enable on regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "JAWDEN",
+      "description": "Analog watchdog enable on injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DISCNUM",
+      "description": "Discontinuous mode channel count",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "1 channel"
+        },
+        {
+          "value": "001",
+          "name": "2 channels"
+        },
+        {
+          "value": "010",
+          "name": "3 channels"
+        },
+        {
+          "value": "011",
+          "name": "4 channels"
+        },
+        {
+          "value": "100",
+          "name": "5 channels"
+        },
+        {
+          "value": "101",
+          "name": "6 channels"
+        },
+        {
+          "value": "110",
+          "name": "7 channels"
+        },
+        {
+          "value": "111",
+          "name": "8 channels"
+        }
+      ]
+    },
+    {
+      "name": "JDISCEN",
+      "description": "Discontinuous mode on injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "DISCEN",
+      "description": "Discontinuous mode on regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "JAUTO",
+      "description": "Automatic injected group conversion",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "AWDSGL",
+      "description": "Enable watchdog on a single channel in scan mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Watchdog on all channels"
+        },
+        {
+          "value": "1",
+          "name": "Watchdog on single channel"
+        }
+      ]
+    },
+    {
+      "name": "SCAN",
+      "description": "Scan mode enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "JEOCIE",
+      "description": "Interrupt enable for injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "AWDIE",
+      "description": "Analog watchdog interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "EOCIE",
+      "description": "Interrupt enable for end of conversion",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "AWDCH",
+      "description": "Analog watchdog channel select bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "00000",
+          "name": "ADC channel 0"
+        },
+        {
+          "value": "00001",
+          "name": "ADC channel 1"
+        },
+        {
+          "value": "00010",
+          "name": "ADC channel 2"
+        },
+        {
+          "value": "00011",
+          "name": "ADC channel 3"
+        },
+        {
+          "value": "00100",
+          "name": "ADC channel 4"
+        },
+        {
+          "value": "00101",
+          "name": "ADC channel 5"
+        },
+        {
+          "value": "00110",
+          "name": "ADC channel 6"
+        },
+        {
+          "value": "00111",
+          "name": "ADC channel 7"
+        },
+        {
+          "value": "01000",
+          "name": "ADC channel 8"
+        },
+        {
+          "value": "01001",
+          "name": "ADC channel 9"
+        },
+        {
+          "value": "01010",
+          "name": "ADC channel 10"
+        },
+        {
+          "value": "01011",
+          "name": "ADC channel 11"
+        },
+        {
+          "value": "01100",
+          "name": "ADC channel 12"
+        },
+        {
+          "value": "01101",
+          "name": "ADC channel 13"
+        },
+        {
+          "value": "01110",
+          "name": "ADC channel 14"
+        },
+        {
+          "value": "01111",
+          "name": "ADC channel 15"
+        },
+        {
+          "value": "10000",
+          "name": "ADC channel 16 (temperature sensor)"
+        },
+        {
+          "value": "10001",
+          "name": "ADC channel 17 (VREFINT)"
+        },
+        {
+          "value": "10010‑11111",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "TSVREFE",
+      "description": "Temperature sensor and VREFINT enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "SWSTART",
+      "description": "Start conversion of regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No start"
+        },
+        {
+          "value": "1",
+          "name": "Start conversion"
+        }
+      ]
+    },
+    {
+      "name": "JSWSTART",
+      "description": "Start conversion of injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 21
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No start"
+        },
+        {
+          "value": "1",
+          "name": "Start conversion"
+        }
+      ]
+    },
+    {
+      "name": "EXTTRIG",
+      "description": "External trigger conversion mode for regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "External trigger disabled"
+        },
+        {
+          "value": "1",
+          "name": "External trigger enabled"
+        }
+      ]
+    },
+    {
+      "name": "EXTSEL",
+      "description": "External event select for regular group",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "TIM1_CC1 event"
+        },
+        {
+          "value": "001",
+          "name": "TIM1_CC2 event"
+        },
+        {
+          "value": "010",
+          "name": "TIM1_CC3 event"
+        },
+        {
+          "value": "011",
+          "name": "TIM2_CC2 event"
+        },
+        {
+          "value": "100",
+          "name": "TIM3_TRGO event"
+        },
+        {
+          "value": "101",
+          "name": "TIM4_CC4 event"
+        },
+        {
+          "value": "110",
+          "name": "EXTI line 11"
+        },
+        {
+          "value": "111",
+          "name": "SWSTART (software)"
+        }
+      ]
+    },
+    {
+      "name": "JEXTTRIG",
+      "description": "External trigger conversion mode for injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "External trigger disabled"
+        },
+        {
+          "value": "1",
+          "name": "External trigger enabled"
+        }
+      ]
+    },
+    {
+      "name": "JEXTSEL",
+      "description": "External event select for injected group",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "TIM1_TRGO event"
+        },
+        {
+          "value": "001",
+          "name": "TIM1_CC4 event"
+        },
+        {
+          "value": "010",
+          "name": "TIM2_TRGO event"
+        },
+        {
+          "value": "011",
+          "name": "TIM2_CC1 event"
+        },
+        {
+          "value": "100",
+          "name": "TIM3_CC4 event"
+        },
+        {
+          "value": "101",
+          "name": "TIM4_TRGO event"
+        },
+        {
+          "value": "110",
+          "name": "EXTI line 15"
+        },
+        {
+          "value": "111",
+          "name": "JSWSTART (software)"
+        }
+      ]
+    }
+  ]
+}

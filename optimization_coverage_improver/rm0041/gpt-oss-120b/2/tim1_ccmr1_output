@@ -1,0 +1,48 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": null,
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC1FE",
+      "description": "Output compare 1 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC1PE",
+      "description": "Output compare 1 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OC1M",
+      "description": "Output compare 1 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "RCC_APB2RSTR",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": []
+}

@@ -1,0 +1,157 @@
+{
+  "datasheet_register_abbreviation": "TIM15_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "OIS2",
+      "description": "Output idle state 2 (OC2 output)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OC2_0"
+        },
+        {
+          "value": "1",
+          "name": "OC2_1"
+        }
+      ]
+    },
+    {
+      "name": "OIS1N",
+      "description": "Output idle state 1 (OC1N output)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OC1N_0"
+        },
+        {
+          "value": "1",
+          "name": "OC1N_1"
+        }
+      ]
+    },
+    {
+      "name": "OIS1",
+      "description": "Output idle state 1 (OC1 output)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OC1_0"
+        },
+        {
+          "value": "1",
+          "name": "OC1_1"
+        }
+      ]
+    },
+    {
+      "name": "MMS",
+      "description": "Master mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Reset"
+        },
+        {
+          "value": "1",
+          "name": "Enable"
+        },
+        {
+          "value": "2",
+          "name": "Update"
+        },
+        {
+          "value": "3",
+          "name": "ComparePulse"
+        },
+        {
+          "value": "4",
+          "name": "CompareOC1"
+        },
+        {
+          "value": "5",
+          "name": "CompareOC2"
+        }
+      ]
+    },
+    {
+      "name": "CCDS",
+      "description": "Capture/compare DMA selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "DMA_on_CC_event"
+        },
+        {
+          "value": "1",
+          "name": "DMA_on_update_event"
+        }
+      ]
+    },
+    {
+      "name": "CCUS",
+      "description": "Capture/compare control update selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Update_on_COMG_only"
+        },
+        {
+          "value": "1",
+          "name": "Update_on_COMG_or_TRGI_edge"
+        }
+      ]
+    },
+    {
+      "name": "CCPC",
+      "description": "Capture/compare preloaded control",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Preload_disabled"
+        },
+        {
+          "value": "1",
+          "name": "Preload_enabled"
+        }
+      ]
+    }
+  ]
+}

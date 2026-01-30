@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "FLASH_OBR",
+  "address_offset": "0x201C",
+  "reset_value": null,
+  "size": 32,
+  "subfields": []
+}

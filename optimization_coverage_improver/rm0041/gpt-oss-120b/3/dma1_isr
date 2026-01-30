@@ -1,0 +1,540 @@
+{
+  "datasheet_register_abbreviation": "DMA_ISR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "TEIF7",
+      "description": "Channel 7 transfer‑error flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferError"
+        },
+        {
+          "value": "1",
+          "name": "TransferErrorOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TEIF6",
+      "description": "Channel 6 transfer‑error flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferError"
+        },
+        {
+          "value": "1",
+          "name": "TransferErrorOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TEIF5",
+      "description": "Channel 5 transfer‑error flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferError"
+        },
+        {
+          "value": "1",
+          "name": "TransferErrorOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TEIF4",
+      "description": "Channel 4 transfer‑error flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferError"
+        },
+        {
+          "value": "1",
+          "name": "TransferErrorOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TEIF3",
+      "description": "Channel 3 transfer‑error flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferError"
+        },
+        {
+          "value": "1",
+          "name": "TransferErrorOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TEIF2",
+      "description": "Channel 2 transfer‑error flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferError"
+        },
+        {
+          "value": "1",
+          "name": "TransferErrorOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TEIF1",
+      "description": "Channel 1 transfer‑error flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferError"
+        },
+        {
+          "value": "1",
+          "name": "TransferErrorOccurred"
+        }
+      ]
+    },
+    {
+      "name": "HTIF7",
+      "description": "Channel 7 half‑transfer flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoHalfTransfer"
+        },
+        {
+          "value": "1",
+          "name": "HalfTransferOccurred"
+        }
+      ]
+    },
+    {
+      "name": "HTIF6",
+      "description": "Channel 6 half‑transfer flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoHalfTransfer"
+        },
+        {
+          "value": "1",
+          "name": "HalfTransferOccurred"
+        }
+      ]
+    },
+    {
+      "name": "HTIF5",
+      "description": "Channel 5 half‑transfer flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoHalfTransfer"
+        },
+        {
+          "value": "1",
+          "name": "HalfTransferOccurred"
+        }
+      ]
+    },
+    {
+      "name": "HTIF4",
+      "description": "Channel 4 half‑transfer flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoHalfTransfer"
+        },
+        {
+          "value": "1",
+          "name": "HalfTransferOccurred"
+        }
+      ]
+    },
+    {
+      "name": "HTIF3",
+      "description": "Channel 3 half‑transfer flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoHalfTransfer"
+        },
+        {
+          "value": "1",
+          "name": "HalfTransferOccurred"
+        }
+      ]
+    },
+    {
+      "name": "HTIF2",
+      "description": "Channel 2 half‑transfer flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoHalfTransfer"
+        },
+        {
+          "value": "1",
+          "name": "HalfTransferOccurred"
+        }
+      ]
+    },
+    {
+      "name": "HTIF1",
+      "description": "Channel 1 half‑transfer flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoHalfTransfer"
+        },
+        {
+          "value": "1",
+          "name": "HalfTransferOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TCIF7",
+      "description": "Channel 7 transfer‑complete flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferComplete"
+        },
+        {
+          "value": "1",
+          "name": "TransferComplete"
+        }
+      ]
+    },
+    {
+      "name": "TCIF6",
+      "description": "Channel 6 transfer‑complete flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 21
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferComplete"
+        },
+        {
+          "value": "1",
+          "name": "TransferComplete"
+        }
+      ]
+    },
+    {
+      "name": "TCIF5",
+      "description": "Channel 5 transfer‑complete flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferComplete"
+        },
+        {
+          "value": "1",
+          "name": "TransferComplete"
+        }
+      ]
+    },
+    {
+      "name": "TCIF4",
+      "description": "Channel 4 transfer‑complete flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferComplete"
+        },
+        {
+          "value": "1",
+          "name": "TransferComplete"
+        }
+      ]
+    },
+    {
+      "name": "TCIF3",
+      "description": "Channel 3 transfer‑complete flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferComplete"
+        },
+        {
+          "value": "1",
+          "name": "TransferComplete"
+        }
+      ]
+    },
+    {
+      "name": "TCIF2",
+      "description": "Channel 2 transfer‑complete flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferComplete"
+        },
+        {
+          "value": "1",
+          "name": "TransferComplete"
+        }
+      ]
+    },
+    {
+      "name": "TCIF1",
+      "description": "Channel 1 transfer‑complete flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTransferComplete"
+        },
+        {
+          "value": "1",
+          "name": "TransferComplete"
+        }
+      ]
+    },
+    {
+      "name": "GIF7",
+      "description": "Channel 7 global‑interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEvent"
+        },
+        {
+          "value": "1",
+          "name": "EventOccurred"
+        }
+      ]
+    },
+    {
+      "name": "GIF6",
+      "description": "Channel 6 global‑interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEvent"
+        },
+        {
+          "value": "1",
+          "name": "EventOccurred"
+        }
+      ]
+    },
+    {
+      "name": "GIF5",
+      "description": "Channel 5 global‑interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEvent"
+        },
+        {
+          "value": "1",
+          "name": "EventOccurred"
+        }
+      ]
+    },
+    {
+      "name": "GIF4",
+      "description": "Channel 4 global‑interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEvent"
+        },
+        {
+          "value": "1",
+          "name": "EventOccurred"
+        }
+      ]
+    },
+    {
+      "name": "GIF3",
+      "description": "Channel 3 global‑interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEvent"
+        },
+        {
+          "value": "1",
+          "name": "EventOccurred"
+        }
+      ]
+    },
+    {
+      "name": "GIF2",
+      "description": "Channel 2 global‑interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEvent"
+        },
+        {
+          "value": "1",
+          "name": "EventOccurred"
+        }
+      ]
+    },
+    {
+      "name": "GIF1",
+      "description": "Channel 1 global‑interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEvent"
+        },
+        {
+          "value": "1",
+          "name": "EventOccurred"
+        }
+      ]
+    }
+  ]
+}

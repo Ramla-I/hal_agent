@@ -1,0 +1,85 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BWTR1",
+  "address_offset": null,
+  "reset_value": "0xFFFF",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "DATAST",
+      "description": "Data‑phase duration (bits 15:8)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0x00",
+          "name": "Reserved"
+        },
+        {
+          "value": "0x01",
+          "name": "DATAST phase duration = 1 × HCLK"
+        },
+        {
+          "value": "0x02",
+          "name": "DATAST phase duration = 2 × HCLK"
+        },
+        {
+          "value": "0xFF",
+          "name": "DATAST phase duration = 255 × HCLK (reset default)"
+        }
+      ]
+    },
+    {
+      "name": "ADDHLD",
+      "description": "Address‑hold phase duration (bits 7:4)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "Reserved"
+        },
+        {
+          "value": "0x1",
+          "name": "ADDHLD phase duration = 1 × HCLK"
+        },
+        {
+          "value": "0x2",
+          "name": "ADDHLD phase duration = 2 × HCLK"
+        },
+        {
+          "value": "0xF",
+          "name": "ADDHLD phase duration = 15 × HCLK (reset default)"
+        }
+      ]
+    },
+    {
+      "name": "ADDSET",
+      "description": "Address‑setup phase duration (bits 3:0)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "ADDSET phase duration = 0 × HCLK"
+        },
+        {
+          "value": "0x1",
+          "name": "ADDSET phase duration = 1 × HCLK"
+        },
+        {
+          "value": "0xF",
+          "name": "ADDSET phase duration = 15 × HCLK (reset default)"
+        }
+      ]
+    }
+  ]
+}

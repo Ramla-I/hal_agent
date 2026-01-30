@@ -1,0 +1,165 @@
+{
+  "datasheet_register_abbreviation": "PWR_CR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DBP",
+      "description": "Disable backup domain write protection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AccessDisabled"
+        },
+        {
+          "value": "1",
+          "name": "AccessEnabled"
+        }
+      ]
+    },
+    {
+      "name": "PLS",
+      "description": "PVD level selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "2_2V"
+        },
+        {
+          "value": "1",
+          "name": "2_3V"
+        },
+        {
+          "value": "2",
+          "name": "2_4V"
+        },
+        {
+          "value": "3",
+          "name": "2_5V"
+        },
+        {
+          "value": "4",
+          "name": "2_6V"
+        },
+        {
+          "value": "5",
+          "name": "2_7V"
+        },
+        {
+          "value": "6",
+          "name": "2_8V"
+        },
+        {
+          "value": "7",
+          "name": "2_9V"
+        }
+      ]
+    },
+    {
+      "name": "PVDE",
+      "description": "Programmable voltage detector enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PVDDisabled"
+        },
+        {
+          "value": "1",
+          "name": "PVDEnabled"
+        }
+      ]
+    },
+    {
+      "name": "CSBF",
+      "description": "Clear standby flag (write‑1‑to‑clear)",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearStandbyFlag"
+        }
+      ]
+    },
+    {
+      "name": "CWUF",
+      "description": "Clear wakeup flag (write‑1‑to‑clear)",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearWakeupFlag"
+        }
+      ]
+    },
+    {
+      "name": "PDDS",
+      "description": "Power‑down deepsleep",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "EnterStopOnDeepsleep"
+        },
+        {
+          "value": "1",
+          "name": "EnterStandbyOnDeepsleep"
+        }
+      ]
+    },
+    {
+      "name": "LPDS",
+      "description": "Low‑power deepsleep",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "RegulatorOnInStop"
+        },
+        {
+          "value": "1",
+          "name": "RegulatorLowPowerInStop"
+        }
+      ]
+    }
+  ]
+}

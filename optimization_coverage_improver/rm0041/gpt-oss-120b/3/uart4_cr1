@@ -1,0 +1,293 @@
+{
+  "datasheet_register_abbreviation": "USART_CR1",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "OVER8",
+      "description": "Oversampling mode (0: oversampling by 16, 1: oversampling by 8)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "OversamplingBy16"
+        },
+        {
+          "value": "1",
+          "name": "OversamplingBy8"
+        }
+      ]
+    },
+    {
+      "name": "UE",
+      "description": "USART enable (0: disabled, 1: enabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "M",
+      "description": "Word length (0: 8 data bits, 1: 9 data bits)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "EightDataBits"
+        },
+        {
+          "value": "1",
+          "name": "NineDataBits"
+        }
+      ]
+    },
+    {
+      "name": "WAKE",
+      "description": "Wakeup method (0: Idle line, 1: Address mark)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "IdleLine"
+        },
+        {
+          "value": "1",
+          "name": "AddressMark"
+        }
+      ]
+    },
+    {
+      "name": "PCE",
+      "description": "Parity control enable (0: disabled, 1: enabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "PS",
+      "description": "Parity selection (0: even parity, 1: odd parity)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "EvenParity"
+        },
+        {
+          "value": "1",
+          "name": "OddParity"
+        }
+      ]
+    },
+    {
+      "name": "PEIE",
+      "description": "Parity error interrupt enable (0: interrupt inhibited, 1: enabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptInhibited"
+        },
+        {
+          "value": "1",
+          "name": "InterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "TXEIE",
+      "description": "TXE interrupt enable (0: interrupt inhibited, 1: enabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptInhibited"
+        },
+        {
+          "value": "1",
+          "name": "InterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "TCIE",
+      "description": "Transmission complete interrupt enable (0: interrupt inhibited, 1: enabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptInhibited"
+        },
+        {
+          "value": "1",
+          "name": "InterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "RXNEIE",
+      "description": "RXNE interrupt enable (0: interrupt inhibited, 1: enabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptInhibited"
+        },
+        {
+          "value": "1",
+          "name": "InterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "IDLEIE",
+      "description": "Idle line interrupt enable (0: interrupt inhibited, 1: enabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptInhibited"
+        },
+        {
+          "value": "1",
+          "name": "InterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "TE",
+      "description": "Transmitter enable (0: disabled, 1: enabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "RE",
+      "description": "Receiver enable (0: disabled, 1: enabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "RWU",
+      "description": "Receiver wakeup (0: active mode, 1: mute mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveMode"
+        },
+        {
+          "value": "1",
+          "name": "MuteMode"
+        }
+      ]
+    },
+    {
+      "name": "SBK",
+      "description": "Send break (0: no break, 1: break character transmitted)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoBreak"
+        },
+        {
+          "value": "1",
+          "name": "BreakTransmitted"
+        }
+      ]
+    }
+  ]
+}

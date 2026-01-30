@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "IWDG_RLR",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": []
+}

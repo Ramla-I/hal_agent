@@ -1,0 +1,56 @@
+{
+  "datasheet_register_abbreviation": "AFIO_MAPR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SWJ_CFG",
+      "description": "Serial wire JTAG configuration",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "FullSWJ_JTAGDP_SWDP"
+        },
+        {
+          "value": "1",
+          "name": "FullSWJ_JTAGDP_SWDP_no_NJTRST"
+        },
+        {
+          "value": "2",
+          "name": "JTAGDP_Disabled_SWDP_Enabled"
+        },
+        {
+          "value": "4",
+          "name": "JTAGDP_Disabled_SWDP_Disabled"
+        }
+      ]
+    },
+    {
+      "name": "PD01_REMAP",
+      "description": "Port D0/Port D1 mapping on OSC_IN/OSC_OUT",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIM4_REMAP",
+      "description": "TIM4 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": []
+}

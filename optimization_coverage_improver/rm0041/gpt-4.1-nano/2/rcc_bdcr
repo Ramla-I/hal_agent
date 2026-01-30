@@ -1,0 +1,130 @@
+{
+  "datasheet_register_abbreviation": "RCC_BDCR",
+  "address_offset": "0x20",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "BDRST",
+      "description": "Backup domain software reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Reset not activated"
+        },
+        {
+          "value": "1",
+          "name": "Resets the entire Backup domain"
+        }
+      ]
+    },
+    {
+      "name": "RTCEN",
+      "description": "RTC clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "RTC clock disabled"
+        },
+        {
+          "value": "1",
+          "name": "RTC clock enabled"
+        }
+      ]
+    },
+    {
+      "name": "RTCSEL",
+      "description": "RTC clock source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "No clock"
+        },
+        {
+          "value": "01",
+          "name": "LSE oscillator clock used as RTC clock"
+        },
+        {
+          "value": "10",
+          "name": "LSI oscillator clock used as RTC clock"
+        },
+        {
+          "value": "11",
+          "name": "HSE oscillator divided by 128 used as RTC clock"
+        }
+      ]
+    },
+    {
+      "name": "LSEBYP",
+      "description": "External low-speed oscillator bypass",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "LSE oscillator not bypassed"
+        },
+        {
+          "value": "1",
+          "name": "LSE oscillator bypassed"
+        }
+      ]
+    },
+    {
+      "name": "LSERDY",
+      "description": "External low-speed oscillator ready",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "External 32 kHz oscillator not ready"
+        },
+        {
+          "value": "1",
+          "name": "External 32 kHz oscillator ready"
+        }
+      ]
+    },
+    {
+      "name": "LSEON",
+      "description": "External low-speed oscillator enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "External low-speed oscillator OFF"
+        },
+        {
+          "value": "1",
+          "name": "External low-speed oscillator ON"
+        }
+      ]
+    }
+  ]
+}

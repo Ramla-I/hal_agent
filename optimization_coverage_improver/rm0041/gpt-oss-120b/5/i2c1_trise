@@ -1,0 +1,28 @@
+{
+  "datasheet_register_abbreviation": "I2C_TRISE",
+  "address_offset": "0x20",
+  "reset_value": "0x0002",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TRISE[5:0]",
+      "description": "Maximum rise time in Fast/Standard mode (Master mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

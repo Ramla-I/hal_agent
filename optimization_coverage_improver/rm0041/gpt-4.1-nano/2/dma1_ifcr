@@ -1,0 +1,540 @@
+{
+  "datasheet_register_abbreviation": "DMA_IFCR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CTEIF1",
+      "description": "Channel 1 transfer error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTEIF1"
+        }
+      ]
+    },
+    {
+      "name": "CTEIF2",
+      "description": "Channel 2 transfer error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTEIF2"
+        }
+      ]
+    },
+    {
+      "name": "CTEIF3",
+      "description": "Channel 3 transfer error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTEIF3"
+        }
+      ]
+    },
+    {
+      "name": "CTEIF4",
+      "description": "Channel 4 transfer error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTEIF4"
+        }
+      ]
+    },
+    {
+      "name": "CTEIF5",
+      "description": "Channel 5 transfer error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTEIF5"
+        }
+      ]
+    },
+    {
+      "name": "CTEIF6",
+      "description": "Channel 6 transfer error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTEIF6"
+        }
+      ]
+    },
+    {
+      "name": "CTEIF7",
+      "description": "Channel 7 transfer error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTEIF7"
+        }
+      ]
+    },
+    {
+      "name": "CHTIF1",
+      "description": "Channel 1 half‑transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearHTIF1"
+        }
+      ]
+    },
+    {
+      "name": "CHTIF2",
+      "description": "Channel 2 half‑transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearHTIF2"
+        }
+      ]
+    },
+    {
+      "name": "CHTIF3",
+      "description": "Channel 3 half‑transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearHTIF3"
+        }
+      ]
+    },
+    {
+      "name": "CHTIF4",
+      "description": "Channel 4 half‑transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearHTIF4"
+        }
+      ]
+    },
+    {
+      "name": "CHTIF5",
+      "description": "Channel 5 half‑transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearHTIF5"
+        }
+      ]
+    },
+    {
+      "name": "CHTIF6",
+      "description": "Channel 6 half‑transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearHTIF6"
+        }
+      ]
+    },
+    {
+      "name": "CHTIF7",
+      "description": "Channel 7 half‑transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearHTIF7"
+        }
+      ]
+    },
+    {
+      "name": "CTCIF1",
+      "description": "Channel 1 transfer‑complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTCIF1"
+        }
+      ]
+    },
+    {
+      "name": "CTCIF2",
+      "description": "Channel 2 transfer‑complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTCIF2"
+        }
+      ]
+    },
+    {
+      "name": "CTCIF3",
+      "description": "Channel 3 transfer‑complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTCIF3"
+        }
+      ]
+    },
+    {
+      "name": "CTCIF4",
+      "description": "Channel 4 transfer‑complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTCIF4"
+        }
+      ]
+    },
+    {
+      "name": "CTCIF5",
+      "description": "Channel 5 transfer‑complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTCIF5"
+        }
+      ]
+    },
+    {
+      "name": "CTCIF6",
+      "description": "Channel 6 transfer‑complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 21
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTCIF6"
+        }
+      ]
+    },
+    {
+      "name": "CTCIF7",
+      "description": "Channel 7 transfer‑complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTCIF7"
+        }
+      ]
+    },
+    {
+      "name": "CGIF1",
+      "description": "Channel 1 global‑interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearGIF1"
+        }
+      ]
+    },
+    {
+      "name": "CGIF2",
+      "description": "Channel 2 global‑interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearGIF2"
+        }
+      ]
+    },
+    {
+      "name": "CGIF3",
+      "description": "Channel 3 global‑interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearGIF3"
+        }
+      ]
+    },
+    {
+      "name": "CGIF4",
+      "description": "Channel 4 global‑interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearGIF4"
+        }
+      ]
+    },
+    {
+      "name": "CGIF5",
+      "description": "Channel 5 global‑interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearGIF5"
+        }
+      ]
+    },
+    {
+      "name": "CGIF6",
+      "description": "Channel 6 global‑interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearGIF6"
+        }
+      ]
+    },
+    {
+      "name": "CGIF7",
+      "description": "Channel 7 global‑interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearGIF7"
+        }
+      ]
+    }
+  ]
+}

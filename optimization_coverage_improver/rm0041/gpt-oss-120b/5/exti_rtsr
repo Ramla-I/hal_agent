@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "EXTI_RTSR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "TR",
+      "description": "Rising trigger event configuration bits for lines 0‑17",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    }
+  ]
+}

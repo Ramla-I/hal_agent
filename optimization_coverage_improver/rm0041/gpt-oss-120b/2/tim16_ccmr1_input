@@ -1,0 +1,156 @@
+{
+  "datasheet_register_abbreviation": "TIM16_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "COMG",
+      "description": "Capture/Compare control update generation",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateWhenCCPCSet"
+        }
+      ]
+    },
+    {
+      "name": "IC1F",
+      "description": "Input capture 1 filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoFilter"
+        },
+        {
+          "value": "1",
+          "name": "fSAMPLING=fCK_INT_N2"
+        },
+        {
+          "value": "2",
+          "name": "fSAMPLING=fCK_INT_N4"
+        },
+        {
+          "value": "3",
+          "name": "fSAMPLING=fCK_INT_N8"
+        },
+        {
+          "value": "4",
+          "name": "fSAMPLING=fDTS/2_N6"
+        },
+        {
+          "value": "5",
+          "name": "fSAMPLING=fDTS/2_N8"
+        },
+        {
+          "value": "6",
+          "name": "fSAMPLING=fDTS/4_N6"
+        },
+        {
+          "value": "7",
+          "name": "fSAMPLING=fDTS/4_N8"
+        },
+        {
+          "value": "8",
+          "name": "fSAMPLING=fDTS/8_N6"
+        },
+        {
+          "value": "9",
+          "name": "fSAMPLING=fDTS/8_N8"
+        },
+        {
+          "value": "10",
+          "name": "fSAMPLING=fDTS/16_N5"
+        },
+        {
+          "value": "11",
+          "name": "fSAMPLING=fDTS/16_N6"
+        },
+        {
+          "value": "12",
+          "name": "fSAMPLING=fDTS/16_N8"
+        },
+        {
+          "value": "13",
+          "name": "fSAMPLING=fDTS/32_N5"
+        },
+        {
+          "value": "14",
+          "name": "fSAMPLING=fDTS/32_N6"
+        },
+        {
+          "value": "15",
+          "name": "fSAMPLING=fDTS/32_N8"
+        }
+      ]
+    },
+    {
+      "name": "IC1PSC",
+      "description": "Input capture 1 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoPrescaler"
+        },
+        {
+          "value": "1",
+          "name": "CaptureEvery2Events"
+        },
+        {
+          "value": "2",
+          "name": "CaptureEvery4Events"
+        },
+        {
+          "value": "3",
+          "name": "CaptureEvery8Events"
+        }
+      ]
+    },
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection (channel direction and input)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output"
+        },
+        {
+          "value": "1",
+          "name": "Input_TI1"
+        },
+        {
+          "value": "2",
+          "name": "Input_TI2"
+        },
+        {
+          "value": "3",
+          "name": "Input_TRC"
+        }
+      ]
+    }
+  ]
+}

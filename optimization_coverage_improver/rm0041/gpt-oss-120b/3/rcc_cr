@@ -1,0 +1,180 @@
+{
+  "datasheet_register_abbreviation": "RCC_CR",
+  "address_offset": "0x00",
+  "reset_value": "0x0000XX83",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PLLRDY",
+      "description": "PLL clock ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PLL unlocked"
+        },
+        {
+          "value": "1",
+          "name": "PLL locked"
+        }
+      ]
+    },
+    {
+      "name": "PLLON",
+      "description": "PLL enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PLL OFF"
+        },
+        {
+          "value": "1",
+          "name": "PLL ON"
+        }
+      ]
+    },
+    {
+      "name": "CSSON",
+      "description": "Clock security system enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Clock detector OFF"
+        },
+        {
+          "value": "1",
+          "name": "Clock detector ON"
+        }
+      ]
+    },
+    {
+      "name": "HSEBYP",
+      "description": "External high‑speed clock bypass",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HSE oscillator not bypassed"
+        },
+        {
+          "value": "1",
+          "name": "HSE oscillator bypassed"
+        }
+      ]
+    },
+    {
+      "name": "HSERDY",
+      "description": "External high‑speed clock ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HSE oscillator not ready"
+        },
+        {
+          "value": "1",
+          "name": "HSE oscillator ready"
+        }
+      ]
+    },
+    {
+      "name": "HSEON",
+      "description": "External high‑speed clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HSE oscillator OFF"
+        },
+        {
+          "value": "1",
+          "name": "HSE oscillator ON"
+        }
+      ]
+    },
+    {
+      "name": "HSICAL",
+      "description": "Internal high‑speed clock calibration",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSITRIM",
+      "description": "Internal high‑speed clock trimming",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HSIRDY",
+      "description": "Internal high‑speed clock ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Internal 8 MHz RC oscillator not ready"
+        },
+        {
+          "value": "1",
+          "name": "Internal 8 MHz RC oscillator ready"
+        }
+      ]
+    },
+    {
+      "name": "HSION",
+      "description": "Internal high‑speed clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Internal 8 MHz RC oscillator OFF"
+        },
+        {
+          "value": "1",
+          "name": "Internal 8 MHz RC oscillator ON"
+        }
+      ]
+    }
+  ]
+}

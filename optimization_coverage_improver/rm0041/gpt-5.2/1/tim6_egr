@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "TIM6_EGR",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TG",
+      "description": "Trigger generation. Set by software to generate a trigger event; cleared automatically by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "TriggerGeneration"
+        }
+      ]
+    },
+    {
+      "name": "CC4G",
+      "description": "Capture/compare 4 generation. Set by software to generate a CC4 event; cleared automatically by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC4Generation"
+        }
+      ]
+    },
+    {
+      "name": "CC3G",
+      "description": "Capture/compare 3 generation. Set by software to generate a CC3 event; cleared automatically by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC3Generation"
+        }
+      ]
+    },
+    {
+      "name": "CC2G",
+      "description": "Capture/compare 2 generation. Set by software to generate a CC2 event; cleared automatically by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC2Generation"
+        }
+      ]
+    },
+    {
+      "name": "CC1G",
+      "description": "Capture/compare 1 generation. Set by software to generate a CC1 event; cleared automatically by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CC1Generation"
+        }
+      ]
+    },
+    {
+      "name": "UG",
+      "description": "Update generation. Set by software to re‑initialize the counter and generate an update event; cleared automatically by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "UpdateGeneration"
+        }
+      ]
+    }
+  ]
+}

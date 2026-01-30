@@ -1,0 +1,440 @@
+{
+  "datasheet_register_abbreviation": "GPIOA_CRH",
+  "address_offset": "0x04",
+  "reset_value": "0x44444444",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CNF8",
+      "description": "Port A configuration bits for pin 8 (input mode CNF bits)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 31
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AnalogMode"
+        },
+        {
+          "value": "0b01",
+          "name": "FloatingInput"
+        },
+        {
+          "value": "0b10",
+          "name": "InputPullUpPullDown"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MODE8",
+      "description": "Port A mode bits for pin 8",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "InputMode"
+        },
+        {
+          "value": "0b01",
+          "name": "Output10MHz"
+        },
+        {
+          "value": "0b10",
+          "name": "Output2MHz"
+        },
+        {
+          "value": "0b11",
+          "name": "Output50MHz"
+        }
+      ]
+    },
+    {
+      "name": "CNF9",
+      "description": "Port A configuration bits for pin 9 (input mode CNF bits)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 27
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AnalogMode"
+        },
+        {
+          "value": "0b01",
+          "name": "FloatingInput"
+        },
+        {
+          "value": "0b10",
+          "name": "InputPullUpPullDown"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MODE9",
+      "description": "Port A mode bits for pin 9",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 25
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "InputMode"
+        },
+        {
+          "value": "0b01",
+          "name": "Output10MHz"
+        },
+        {
+          "value": "0b10",
+          "name": "Output2MHz"
+        },
+        {
+          "value": "0b11",
+          "name": "Output50MHz"
+        }
+      ]
+    },
+    {
+      "name": "CNF10",
+      "description": "Port A configuration bits for pin 10 (input mode CNF bits)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AnalogMode"
+        },
+        {
+          "value": "0b01",
+          "name": "FloatingInput"
+        },
+        {
+          "value": "0b10",
+          "name": "InputPullUpPullDown"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MODE10",
+      "description": "Port A mode bits for pin 10",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 21
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "InputMode"
+        },
+        {
+          "value": "0b01",
+          "name": "Output10MHz"
+        },
+        {
+          "value": "0b10",
+          "name": "Output2MHz"
+        },
+        {
+          "value": "0b11",
+          "name": "Output50MHz"
+        }
+      ]
+    },
+    {
+      "name": "CNF11",
+      "description": "Port A configuration bits for pin 11 (input mode CNF bits)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AnalogMode"
+        },
+        {
+          "value": "0b01",
+          "name": "FloatingInput"
+        },
+        {
+          "value": "0b10",
+          "name": "InputPullUpPullDown"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MODE11",
+      "description": "Port A mode bits for pin 11",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "InputMode"
+        },
+        {
+          "value": "0b01",
+          "name": "Output10MHz"
+        },
+        {
+          "value": "0b10",
+          "name": "Output2MHz"
+        },
+        {
+          "value": "0b11",
+          "name": "Output50MHz"
+        }
+      ]
+    },
+    {
+      "name": "CNF12",
+      "description": "Port A configuration bits for pin 12 (input mode CNF bits)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AnalogMode"
+        },
+        {
+          "value": "0b01",
+          "name": "FloatingInput"
+        },
+        {
+          "value": "0b10",
+          "name": "InputPullUpPullDown"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MODE12",
+      "description": "Port A mode bits for pin 12",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "InputMode"
+        },
+        {
+          "value": "0b01",
+          "name": "Output10MHz"
+        },
+        {
+          "value": "0b10",
+          "name": "Output2MHz"
+        },
+        {
+          "value": "0b11",
+          "name": "Output50MHz"
+        }
+      ]
+    },
+    {
+      "name": "CNF13",
+      "description": "Port A configuration bits for pin 13 (input mode CNF bits)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AnalogMode"
+        },
+        {
+          "value": "0b01",
+          "name": "FloatingInput"
+        },
+        {
+          "value": "0b10",
+          "name": "InputPullUpPullDown"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MODE13",
+      "description": "Port A mode bits for pin 13",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "InputMode"
+        },
+        {
+          "value": "0b01",
+          "name": "Output10MHz"
+        },
+        {
+          "value": "0b10",
+          "name": "Output2MHz"
+        },
+        {
+          "value": "0b11",
+          "name": "Output50MHz"
+        }
+      ]
+    },
+    {
+      "name": "CNF14",
+      "description": "Port A configuration bits for pin 14 (input mode CNF bits)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AnalogMode"
+        },
+        {
+          "value": "0b01",
+          "name": "FloatingInput"
+        },
+        {
+          "value": "0b10",
+          "name": "InputPullUpPullDown"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MODE14",
+      "description": "Port A mode bits for pin 14",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "InputMode"
+        },
+        {
+          "value": "0b01",
+          "name": "Output10MHz"
+        },
+        {
+          "value": "0b10",
+          "name": "Output2MHz"
+        },
+        {
+          "value": "0b11",
+          "name": "Output50MHz"
+        }
+      ]
+    },
+    {
+      "name": "CNF15",
+      "description": "Port A configuration bits for pin 15 (input mode CNF bits)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AnalogMode"
+        },
+        {
+          "value": "0b01",
+          "name": "FloatingInput"
+        },
+        {
+          "value": "0b10",
+          "name": "InputPullUpPullDown"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MODE15",
+      "description": "Port A mode bits for pin 15",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "InputMode"
+        },
+        {
+          "value": "0b01",
+          "name": "Output10MHz"
+        },
+        {
+          "value": "0b10",
+          "name": "Output2MHz"
+        },
+        {
+          "value": "0b11",
+          "name": "Output50MHz"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "datasheet_register_abbreviation": "TIM12_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "MMS[2:0]",
+      "description": "Master mode selection – selects the information to be sent in Master mode to slave timers for synchronization (TRGO).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Reset"
+        },
+        {
+          "value": "1",
+          "name": "Enable"
+        },
+        {
+          "value": "2",
+          "name": "Update"
+        },
+        {
+          "value": "3",
+          "name": "ComparePulse"
+        },
+        {
+          "value": "4",
+          "name": "Compare_OC1REF"
+        },
+        {
+          "value": "5",
+          "name": "Compare_OC2REF"
+        },
+        {
+          "value": "6",
+          "name": "Reserved"
+        },
+        {
+          "value": "7",
+          "name": "Reserved"
+        }
+      ]
+    }
+  ]
+}

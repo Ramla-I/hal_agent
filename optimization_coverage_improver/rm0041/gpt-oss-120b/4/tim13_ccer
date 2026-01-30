@@ -1,0 +1,65 @@
+{
+  "datasheet_register_abbreviation": "TIM13_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 complementary output polarity. Must be kept cleared for TIM13 (no complementary output).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Non‑inverted (must be 0)"
+        },
+        {
+          "value": "1",
+          "name": "Inverted (not usable for TIM13)"
+        }
+      ]
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity. For output: 0 = active‑high, 1 = active‑low. For input: 0 = non‑inverted (rising edge), 1 = inverted (falling edge).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Active‑high / non‑inverted"
+        },
+        {
+          "value": "1",
+          "name": "Active‑low / inverted"
+        }
+      ]
+    },
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 enable. As output: 0 = disabled, 1 = enabled. As input: 0 = capture disabled, 1 = capture enabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    }
+  ]
+}

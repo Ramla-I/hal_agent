@@ -1,0 +1,69 @@
+---afio_exticr2---
+I examined the provided datasheet excerpts for the AFIO peripheral. The section titled **“External interrupt configuration register 2 (AFIO_EXTICR2)”** gives the register name, address offset, reset value, and a 32‑bit field layout. The table shows four 4‑bit subfields (EXTI4, EXTI5, EXTI6, EXTI7) each marked as read‑write (rw). Bits 31‑16 are reserved and are omitted from subfield listings. The enumerated values for each 4‑bit field are identical to those described for EXTICR1: binary values 0000‑0110 map to the pins PA‑PG respectively. No additional ordering or safety constraints are mentioned for this register.
+
+---afio_mapr2---
+I examined the supplied sections of the RM0041 reference manual looking for the AFIO MAPR2 register. The only AFIO register described in the provided excerpts is the Event Control Register (AFIO_EVCR) with its address offset 0x00 and reset value 0x0000 0000. The description mentions that AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX exist, but no further details (address offset, reset value, size, sub‑fields, or access constraints) are given for AFIO_MAPR2 in the excerpts provided.
+
+Because the required information for the MAPR2 register is not present in the supplied datasheet pages, I cannot populate any of the requested fields. According to the instructions, when no information other than the register name is available, no JSON output should be produced.
+
+---afio_mapr---
+I examined the provided excerpts and found the section titled **“Table 49. AFIO register map and reset values”**.  
+It lists the AFIO registers with their offsets and reset values. The entry for offset 0x04 corresponds to **AFIO_MAPR**, which matches the requested register name “mapr” of the AFIO peripheral.
+
+From the same section a bit‑field description for AFIO_MAPR is given, showing the individual fields and their bit positions. No explicit enumerated values are listed for these fields, so the enumerated values list will be empty for each subfield.
+
+A note in the Debug support chapter (file `rm0041_p673_c01.txt`) mentions that writing to the AFIO_MAPR register may require an extra APB cycle when the APB bridge write buffer is full. This constitutes an access‑constraint that must be captured.
+
+No address calculation is required because the offset is directly given (0x04).
+
+---afio_evcr---
+I examined the provided datasheet excerpts and identified the section titled **“Event control register (AFIO_EVCR)”** which corresponds to the register name `evcr` in the `afio` peripheral.  
+From the text I extracted the following details:
+
+* **Register abbreviation** – the datasheet uses the name `AFIO_EVCR`; for the specific peripheral instance this is `AFIO_EVCR` (the same for all AFIO instances).  
+* **Address offset** – explicitly given as `0x00`.  
+* **Reset value** – explicitly given as `0x0000 0000`.  
+* **Size** – the peripheral registers are accessed by 32‑bit words, therefore the register is 32 bits wide.  
+* **Sub‑fields** – the bit‑field table lists three usable fields:
+  * **EVOE** – bit 7, read‑write, enables the EVENTOUT signal.  
+  * **PORT[2:0]** – bits 6:4, read‑write, selects the GPIO port used for EVENTOUT. (The datasheet does not list enumerated values, so they are omitted.)  
+  * **PIN[3:0]** – bits 3:0, read‑write, selects the pin within the chosen port. Enumerated values 0b0000 … 0b1111 correspond to Px0 … Px15.  
+* **Access constraints** – the note preceding the register description states that the AFIO clock must be enabled (via the `AFIOEN` bit in `RCC_APB2ENR`) before any read or write to `AFIO_EVCR` (or the related AFIO registers). This is captured as a pre‑condition for both read and write operations.
+
+No address calculations are required, so no function calls are needed.
+
+---afio_exticr1---
+The datasheet section **7.4.3 External interrupt configuration register 1 (AFIO_EXTICR1)** provides the needed details for the **AFIO_EXTICR1** register (the AFIO peripheral’s EXTICR1).  
+- The register abbreviation is **AFIO_EXTICR1**.  
+- Its address offset is explicitly listed as **0x08** and the reset value as **0x0000**.  
+- The bit‑field table shows a 32‑bit register: the upper 16 bits are reserved, the lower 16 bits are split into four 4‑bit fields (EXTI0‑EXTI3), each marked as read‑write.  
+- The description of each 4‑bit field explains that it selects the GPIO pin source for the corresponding EXTI line, and the enumerated values (0000‑0110) map to pins PA‑PG.  
+- A note in the surrounding text states that **the AFIO clock must be enabled before configuring any AFIO_EXTICRx register**, which is an explicit access‑constraint.
+
+Below is the extracted information formatted as required.
+
+---afio_exticr4---
+The datasheet sections for the AFIO peripheral list **AFIO_EXTICR4** (External interrupt configuration register 4) with an address offset of **0x14** and a reset value of **0x0000**.  
+The register is 32 bits wide; bits 31‑16 are reserved.  
+Bits 15‑0 are divided into four 4‑bit fields **EXTI15[3:0]**, **EXTI14[3:0]**, **EXTI13[3:0]**, and **EXTI12[3:0]**. Each field selects the GPIO pin that is mapped to the corresponding external‑interrupt line (12‑15). The fields are read‑write and have the same enumerated mapping:
+
+- `0000` → PA[x] pin  
+- `0001` → PB[x] pin  
+- `0010` → PC[x] pin  
+- `0011` → PD[x] pin  
+- `0100` → PE[x] pin  
+- `0101` → PF[x] pin  
+- `0110` → PG[x] pin  
+
+No explicit access‑constraint sentences are present for this register, so the `access_constraints` list is empty.
+
+---afio_exticr3---
+The datasheet section **7.4.5** describes the **AFIO_EXTICR3** register, which corresponds to the requested **exticr3** register of the **AFIO** peripheral.  
+- The register name in the datasheet is **AFIO_EXTICR3**.  
+- Its address offset is explicitly given as **0x10** and its reset value as **0x0000**.  
+- The register is a 32‑bit wide word; bits 31‑16 are reserved and must stay at the reset value.  
+- Bits 15‑0 are divided into four 4‑bit fields that select the source pin for external interrupts 8‑11: **EXTI11[3:0]**, **EXTI10[3:0]**, **EXTI9[3:0]**, **EXTI8[3:0]**. Each field is read‑write.  
+- The enumerated values for each field are the same:  
+  `0000 = PA[x]`, `0001 = PB[x]`, `0010 = PC[x]`, `0011 = PD[x]`, `0100 = PE[x]`, `0101 = PF[x]`, `0110 = PG[x]`.  
+- No special access constraints are mentioned for this register.
+

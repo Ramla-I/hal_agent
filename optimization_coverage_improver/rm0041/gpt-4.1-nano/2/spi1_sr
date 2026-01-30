@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "SPI1_SR",
+  "address_offset": "0x08",
+  "reset_value": "0x0002",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "BSY",
+      "description": "Busy flag – set when SPI is busy communicating; cleared by hardware when the transfer finishes or when SPI is disabled.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotBusy"
+        },
+        {
+          "value": "1",
+          "name": "Busy"
+        }
+      ]
+    },
+    {
+      "name": "OVR",
+      "description": "Overrun flag – set when data received is lost because RXNE was not cleared before the next byte arrived.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoOverrun"
+        },
+        {
+          "value": "1",
+          "name": "OverrunOccurred"
+        }
+      ]
+    },
+    {
+      "name": "MODF",
+      "description": "Mode fault flag – set when a master mode fault occurs (NSS low in master mode).",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoModeFault"
+        },
+        {
+          "value": "1",
+          "name": "ModeFault"
+        }
+      ]
+    },
+    {
+      "name": "CRCERR",
+      "description": "CRC error flag – set when a CRC error is detected (mismatch between received CRC and calculated value).",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoCrcError"
+        },
+        {
+          "value": "1",
+          "name": "CrcError"
+        }
+      ]
+    },
+    {
+      "name": "TXE",
+      "description": "Transmit buffer empty flag – set when the Tx buffer is empty and new data can be written; cleared by writing to the data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TxNotEmpty"
+        },
+        {
+          "value": "1",
+          "name": "TxEmpty"
+        }
+      ]
+    },
+    {
+      "name": "RXNE",
+      "description": "Receive buffer not empty flag – set when received data is available in the Rx buffer; cleared by reading the data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "RxEmpty"
+        },
+        {
+          "value": "1",
+          "name": "RxNotEmpty"
+        }
+      ]
+    }
+  ]
+}

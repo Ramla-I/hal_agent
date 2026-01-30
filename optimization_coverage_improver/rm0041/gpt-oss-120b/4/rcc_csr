@@ -1,0 +1,98 @@
+{
+  "datasheet_register_abbreviation": "RCC_CSR",
+  "address_offset": "0x24",
+  "reset_value": "0x0C000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "LPWRRSTF",
+      "description": "Low‑power reset flag. Set by hardware when a low‑power management reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 31
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "WWDGRSTF",
+      "description": "Window watchdog reset flag. Set by hardware when a window watchdog reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 30
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "IWDGRSTF",
+      "description": "Independent watchdog reset flag. Set by hardware when an independent watchdog reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "SFTRSTF",
+      "description": "Software reset flag. Set by hardware when a software reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PORRSTF",
+      "description": "POR/PDR reset flag. Set by hardware when a power‑on/power‑down reset occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PINRSTF",
+      "description": "PIN reset flag. Set by hardware when a reset from the NRST pin occurs. Cleared by writing to the RMVF bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "RMVF",
+      "description": "Remove reset flag. Set by software to clear all reset flags.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSIRDY",
+      "description": "Internal low‑speed oscillator ready flag. Set and cleared by hardware when the LSI RC oscillator stabilises.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSION",
+      "description": "Internal low‑speed oscillator enable. Set/cleared by software to turn the LSI RC on or off.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

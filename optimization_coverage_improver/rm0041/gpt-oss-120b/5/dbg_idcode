@@ -1,0 +1,47 @@
+{
+  "datasheet_register_abbreviation": "DBGMCU_IDCODE",
+  "address_offset": "0xE0042000",
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "REV_ID",
+      "description": "Revision identifier",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 31
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "DEV_ID",
+      "description": "Device identifier",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0x420",
+          "name": "Low/Medium‑density device ID"
+        },
+        {
+          "value": "0x428",
+          "name": "High‑density device ID"
+        }
+      ]
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved bits, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

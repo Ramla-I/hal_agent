@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "DMA_CMAR5",
+  "address_offset": "0x24",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MA",
+      "description": "Base address of the memory area from/to which the data are read/written. When MSIZE is 01 (16‑bit), MA[0] is ignored; when MSIZE is 10 (32‑bit), MA[1:0] are ignored. Access is automatically aligned to the appropriate word/half‑word boundary.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 31
+      },
+      "enumerated_values": []
+    }
+  ]
+}

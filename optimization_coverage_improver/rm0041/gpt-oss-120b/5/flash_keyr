@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "FLASH_KEYR",
+  "address_offset": "0x40022004",
+  "reset_value": null,
+  "size": 32,
+  "subfields": []
+}

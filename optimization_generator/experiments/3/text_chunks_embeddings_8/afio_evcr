@@ -1,0 +1,72 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EVCR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EVOE",
+      "description": "Event output enable. When set the EVENTOUT Cortex® output is connected to the I/O selected by the PORT[2:0] and PIN[3:0] bits.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PORT[2:0]",
+      "description": "Port selection. Select the port used to output the EVENTOUT signal.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PIN[3:0]",
+      "description": "Pin selection. Select the pin used to output the Cortex® EVENTOUT signal.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "AFIO_EVCR",
+      "target_fields": [],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "AFIO clock not enabled, read access may fail",
+      "datasheet_text": "To read/write the AFIO_EVCR ... the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    },
+    {
+      "target_register": "AFIO_EVCR",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "AFIO clock not enabled, write access may fail",
+      "datasheet_text": "To read/write the AFIO_EVCR ... the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    }
+  ]
+}

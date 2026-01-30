@@ -1,0 +1,5 @@
+embeddings,llm_time_s,search_time_s,total_time_s,avg_llm_time_s,avg_search_time_s,llm_percentage,search_percentage
+4,24.52,9.12,33.64,3.503,1.303,72.9,27.1
+8,32.28,10.14,42.42,4.612,1.448,76.1,23.9
+16,35.21,9.65,44.85,5.030,1.378,78.5,21.5
+50,45.61,9.80,55.41,6.515,1.401,82.3,17.7

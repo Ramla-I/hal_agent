@@ -1,0 +1,113 @@
+{
+  "datasheet_register_abbreviation": "I2C_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "SWRST",
+      "description": "Software reset – when set, the I2C is under reset state",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "I2C Peripheral not under reset"
+        },
+        {
+          "value": "1",
+          "name": "I2C Peripheral under reset state"
+        }
+      ]
+    },
+    {
+      "name": "ALERT",
+      "description": "SMBus alert – drives or releases the SMBA pin",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Releases SMBA pin high (Alert Response Address Header followed by NACK)"
+        },
+        {
+          "value": "1",
+          "name": "Drives SMBA pin low (Alert Response Address Header followed by ACK)"
+        }
+      ]
+    },
+    {
+      "name": "PEC",
+      "description": "Packet error checking – indicates a PEC transfer",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No PEC transfer"
+        },
+        {
+          "value": "1",
+          "name": "PEC transfer (in Tx or Rx mode)"
+        }
+      ]
+    },
+    {
+      "name": "POS",
+      "description": "Acknowledge/PEC Position for data reception",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ACK controls current byte; PEC indicates current byte"
+        },
+        {
+          "value": "1",
+          "name": "ACK controls next byte; PEC indicates next byte"
+        }
+      ]
+    },
+    {
+      "name": "ACK",
+      "description": "Acknowledge enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No acknowledge returned"
+        },
+        {
+          "value": "1",
+          "name": "Acknowledge returned after a byte is received (matched address or data)"
+        }
+      ]
+    },
+    {
+      "name": "STOP",
+      "description": "Stop generation",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    }
+  ]
+}

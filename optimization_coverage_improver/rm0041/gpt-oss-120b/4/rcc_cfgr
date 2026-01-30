@@ -1,0 +1,236 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR",
+  "address_offset": "0x004",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PLLXTPRE",
+      "description": "LSB of division factor PREDIV1 (controls division by 2 when PLL is disabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PREDIV1_not_divided"
+        },
+        {
+          "value": "1",
+          "name": "PREDIV1_divided_by_2"
+        }
+      ]
+    },
+    {
+      "name": "PLLSRC",
+      "description": "PLL entry clock source (selects HSI/2 or PREDIV1 as PLL input)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HSI_divided_by_2"
+        },
+        {
+          "value": "1",
+          "name": "PREDIV1_selected"
+        }
+      ]
+    },
+    {
+      "name": "ADCPRE",
+      "description": "ADC prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "PLL2_divided_by_2"
+        },
+        {
+          "value": "01",
+          "name": "PLL2_divided_by_4"
+        },
+        {
+          "value": "10",
+          "name": "PLL2_divided_by_6"
+        },
+        {
+          "value": "11",
+          "name": "PLL2_divided_by_8"
+        }
+      ]
+    },
+    {
+      "name": "PPRE2",
+      "description": "APB high‑speed prescaler (APB2)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0xx",
+          "name": "HCLK_not_divided"
+        },
+        {
+          "value": "100",
+          "name": "HCLK_divided_by_2"
+        },
+        {
+          "value": "101",
+          "name": "HCLK_divided_by_4"
+        },
+        {
+          "value": "110",
+          "name": "HCLK_divided_by_8"
+        },
+        {
+          "value": "111",
+          "name": "HCLK_divided_by_16"
+        }
+      ]
+    },
+    {
+      "name": "PPRE1",
+      "description": "APB low‑speed prescaler (APB1)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0xx",
+          "name": "HCLK_not_divided"
+        },
+        {
+          "value": "100",
+          "name": "HCLK_divided_by_2"
+        },
+        {
+          "value": "101",
+          "name": "HCLK_divided_by_4"
+        },
+        {
+          "value": "110",
+          "name": "HCLK_divided_by_8"
+        },
+        {
+          "value": "111",
+          "name": "HCLK_divided_by_16"
+        }
+      ]
+    },
+    {
+      "name": "HPRE",
+      "description": "AHB prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0xxx",
+          "name": "SYSCLK_not_divided"
+        },
+        {
+          "value": "1000",
+          "name": "SYSCLK_divided_by_2"
+        },
+        {
+          "value": "1001",
+          "name": "SYSCLK_divided_by_4"
+        },
+        {
+          "value": "1010",
+          "name": "SYSCLK_divided_by_8"
+        },
+        {
+          "value": "1011",
+          "name": "SYSCLK_divided_by_16"
+        },
+        {
+          "value": "1100",
+          "name": "SYSCLK_divided_by_64"
+        },
+        {
+          "value": "1101",
+          "name": "SYSCLK_divided_by_128"
+        },
+        {
+          "value": "1110",
+          "name": "SYSCLK_divided_by_256"
+        },
+        {
+          "value": "1111",
+          "name": "SYSCLK_divided_by_512"
+        }
+      ]
+    },
+    {
+      "name": "SWS",
+      "description": "System clock switch status (read‑only)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "HSI_selected"
+        },
+        {
+          "value": "01",
+          "name": "HSE_selected"
+        },
+        {
+          "value": "10",
+          "name": "PLL_selected"
+        },
+        {
+          "value": "11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "SW",
+      "description": "System clock switch (selects system clock source)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "HSI_selected"
+        },
+        {
+          "value": "01",
+          "name": "HSE_selected"
+        },
+        {
+          "value": "10",
+          "name": "PLL_selected"
+        },
+        {
+          "value": "11",
+          "name": "Reserved"
+        }
+      ]
+    }
+  ]
+}

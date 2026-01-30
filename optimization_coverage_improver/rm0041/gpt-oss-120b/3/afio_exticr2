@@ -1,0 +1,164 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR2",
+  "address_offset": "0x0C",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EXTI4",
+      "description": "External interrupt line 4 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "PA[x] pin"
+        },
+        {
+          "value": "0b0001",
+          "name": "PB[x] pin"
+        },
+        {
+          "value": "0b0010",
+          "name": "PC[x] pin"
+        },
+        {
+          "value": "0b0011",
+          "name": "PD[x] pin"
+        },
+        {
+          "value": "0b0100",
+          "name": "PE[x] pin"
+        },
+        {
+          "value": "0b0101",
+          "name": "PF[x] pin"
+        },
+        {
+          "value": "0b0110",
+          "name": "PG[x] pin"
+        }
+      ]
+    },
+    {
+      "name": "EXTI5",
+      "description": "External interrupt line 5 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "PA[x] pin"
+        },
+        {
+          "value": "0b0001",
+          "name": "PB[x] pin"
+        },
+        {
+          "value": "0b0010",
+          "name": "PC[x] pin"
+        },
+        {
+          "value": "0b0011",
+          "name": "PD[x] pin"
+        },
+        {
+          "value": "0b0100",
+          "name": "PE[x] pin"
+        },
+        {
+          "value": "0b0101",
+          "name": "PF[x] pin"
+        },
+        {
+          "value": "0b0110",
+          "name": "PG[x] pin"
+        }
+      ]
+    },
+    {
+      "name": "EXTI6",
+      "description": "External interrupt line 6 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "PA[x] pin"
+        },
+        {
+          "value": "0b0001",
+          "name": "PB[x] pin"
+        },
+        {
+          "value": "0b0010",
+          "name": "PC[x] pin"
+        },
+        {
+          "value": "0b0011",
+          "name": "PD[x] pin"
+        },
+        {
+          "value": "0b0100",
+          "name": "PE[x] pin"
+        },
+        {
+          "value": "0b0101",
+          "name": "PF[x] pin"
+        },
+        {
+          "value": "0b0110",
+          "name": "PG[x] pin"
+        }
+      ]
+    },
+    {
+      "name": "EXTI7",
+      "description": "External interrupt line 7 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "PA[x] pin"
+        },
+        {
+          "value": "0b0001",
+          "name": "PB[x] pin"
+        },
+        {
+          "value": "0b0010",
+          "name": "PC[x] pin"
+        },
+        {
+          "value": "0b0011",
+          "name": "PD[x] pin"
+        },
+        {
+          "value": "0b0100",
+          "name": "PE[x] pin"
+        },
+        {
+          "value": "0b0101",
+          "name": "PF[x] pin"
+        },
+        {
+          "value": "0b0110",
+          "name": "PG[x] pin"
+        }
+      ]
+    }
+  ]
+}

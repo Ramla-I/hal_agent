@@ -1,0 +1,46 @@
+{
+  "datasheet_register_abbreviation": "IWDG_SR",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "RVU",
+      "description": "Watchdog counter reload value update (set by hardware, cleared when update completes)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Update complete"
+        },
+        {
+          "value": "1",
+          "name": "Update ongoing"
+        }
+      ]
+    },
+    {
+      "name": "PVU",
+      "description": "Watchdog prescaler value update (set by hardware, cleared when update completes)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Update complete"
+        },
+        {
+          "value": "1",
+          "name": "Update ongoing"
+        }
+      ]
+    }
+  ]
+}

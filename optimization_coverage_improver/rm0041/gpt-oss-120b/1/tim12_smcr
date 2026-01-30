@@ -1,0 +1,171 @@
+{
+  "datasheet_register_abbreviation": "TIM12_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ETP",
+      "description": "External trigger polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ECE",
+      "description": "External clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ETPS",
+      "description": "External trigger prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "Prescaler OFF"
+        },
+        {
+          "value": "01",
+          "name": "Prescaler divided by 2"
+        },
+        {
+          "value": "10",
+          "name": "Prescaler divided by 4"
+        },
+        {
+          "value": "11",
+          "name": "Prescaler divided by 8"
+        }
+      ]
+    },
+    {
+      "name": "ETF",
+      "description": "External trigger filter (defines sampling frequency and digital filter length)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "MSM",
+      "description": "Master/Slave mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Internal Trigger 0 (ITR0)"
+        },
+        {
+          "value": "001",
+          "name": "Internal Trigger 1 (ITR1)"
+        },
+        {
+          "value": "010",
+          "name": "Internal Trigger 2 (ITR2)"
+        },
+        {
+          "value": "011",
+          "name": "Internal Trigger 3 (ITR3)"
+        },
+        {
+          "value": "100",
+          "name": "TI1 Edge Detector (TI1F_ED)"
+        },
+        {
+          "value": "101",
+          "name": "Filtered Timer Input 1 (TI1FP1)"
+        },
+        {
+          "value": "110",
+          "name": "Filtered Timer Input 2 (TI2FP2)"
+        },
+        {
+          "value": "111",
+          "name": "External Trigger input (ETRF)"
+        }
+      ]
+    },
+    {
+      "name": "OCCS",
+      "description": "OCREF clear selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "SMS",
+      "description": "Slave mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Slave mode disabled"
+        },
+        {
+          "value": "001",
+          "name": "Encoder mode 1"
+        },
+        {
+          "value": "010",
+          "name": "Encoder mode 2"
+        },
+        {
+          "value": "011",
+          "name": "Encoder mode 3"
+        },
+        {
+          "value": "100",
+          "name": "Reset mode"
+        },
+        {
+          "value": "101",
+          "name": "Gated mode"
+        },
+        {
+          "value": "110",
+          "name": "Trigger mode"
+        },
+        {
+          "value": "111",
+          "name": "External Clock mode 1"
+        }
+      ]
+    }
+  ]
+}

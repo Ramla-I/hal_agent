@@ -1,0 +1,137 @@
+{
+  "datasheet_register_abbreviation": "TIM13_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection (channel direction and input source)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output"
+        },
+        {
+          "value": "0b01",
+          "name": "Input_IC1_on_TI1"
+        },
+        {
+          "value": "0b10",
+          "name": "Input_IC1_on_TI2"
+        },
+        {
+          "value": "0b11",
+          "name": "Input_IC1_on_TRC"
+        }
+      ]
+    },
+    {
+      "name": "IC1PSC",
+      "description": "Input capture 1 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "NoPrescaler"
+        },
+        {
+          "value": "0b01",
+          "name": "CaptureEvery2Events"
+        },
+        {
+          "value": "0b10",
+          "name": "CaptureEvery4Events"
+        },
+        {
+          "value": "0b11",
+          "name": "CaptureEvery8Events"
+        }
+      ]
+    },
+    {
+      "name": "IC1F",
+      "description": "Input capture 1 filter (sampling frequency and digital filter length)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "NoFilter"
+        },
+        {
+          "value": "0b0001",
+          "name": "fSAMPLING_fCK_INT_N2"
+        },
+        {
+          "value": "0b0010",
+          "name": "fSAMPLING_fCK_INT_N4"
+        },
+        {
+          "value": "0b0011",
+          "name": "fSAMPLING_fCK_INT_N8"
+        },
+        {
+          "value": "0b0100",
+          "name": "fSAMPLING_fDTS/2_N6"
+        },
+        {
+          "value": "0b0101",
+          "name": "fSAMPLING_fDTS/2_N8"
+        },
+        {
+          "value": "0b0110",
+          "name": "fSAMPLING_fDTS/4_N6"
+        },
+        {
+          "value": "0b0111",
+          "name": "fSAMPLING_fDTS/4_N8"
+        },
+        {
+          "value": "0b1000",
+          "name": "fSAMPLING_fDTS/8_N6"
+        },
+        {
+          "value": "0b1001",
+          "name": "fSAMPLING_fDTS/8_N8"
+        },
+        {
+          "value": "0b1010",
+          "name": "fSAMPLING_fDTS/16_N5"
+        },
+        {
+          "value": "0b1011",
+          "name": "fSAMPLING_fDTS/16_N6"
+        },
+        {
+          "value": "0b1100",
+          "name": "fSAMPLING_fDTS/16_N8"
+        },
+        {
+          "value": "0b1101",
+          "name": "fSAMPLING_fDTS/32_N5"
+        },
+        {
+          "value": "0b1110",
+          "name": "fSAMPLING_fDTS/32_N6"
+        },
+        {
+          "value": "0b1111",
+          "name": "fSAMPLING_fDTS/32_N8"
+        }
+      ]
+    }
+  ]
+}

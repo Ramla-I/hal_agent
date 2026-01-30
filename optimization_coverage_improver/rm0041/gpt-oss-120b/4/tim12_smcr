@@ -1,0 +1,104 @@
+{
+  "datasheet_register_abbreviation": "TIM12_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "MSM",
+      "description": "Master/Slave mode – delay the effect of a trigger event for synchronization.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection – selects which input is used as the trigger for the slave mode controller.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "ITR0"
+        },
+        {
+          "value": "0b001",
+          "name": "ITR1"
+        },
+        {
+          "value": "0b010",
+          "name": "ITR2"
+        },
+        {
+          "value": "0b011",
+          "name": "ITR3"
+        },
+        {
+          "value": "0b100",
+          "name": "TI1F_ED"
+        },
+        {
+          "value": "0b101",
+          "name": "TI1FP1"
+        },
+        {
+          "value": "0b110",
+          "name": "TI2FP2"
+        },
+        {
+          "value": "0b111",
+          "name": "ETRF"
+        }
+      ]
+    },
+    {
+      "name": "SMS",
+      "description": "Slave mode selection – defines how the timer reacts to the selected trigger.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Slave mode disabled"
+        },
+        {
+          "value": "0b001",
+          "name": "Encoder mode 1"
+        },
+        {
+          "value": "0b010",
+          "name": "Encoder mode 2"
+        },
+        {
+          "value": "0b011",
+          "name": "Encoder mode 3"
+        },
+        {
+          "value": "0b100",
+          "name": "Reset mode"
+        },
+        {
+          "value": "0b101",
+          "name": "Gated mode"
+        },
+        {
+          "value": "0b110",
+          "name": "Trigger mode"
+        },
+        {
+          "value": "0b111",
+          "name": "External Clock mode 1"
+        }
+      ]
+    }
+  ]
+}

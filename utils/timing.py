@@ -21,18 +21,42 @@ class TimingStats:
         self.timings[operation].append(duration)
         self.counts[operation] += 1
 
+    @staticmethod
+    def _percentile(sorted_values: List[float], percentile: float) -> float:
+        """Compute percentile with linear interpolation."""
+        if not sorted_values:
+            return 0.0
+        if percentile <= 0:
+            return sorted_values[0]
+        if percentile >= 100:
+            return sorted_values[-1]
+        index = (len(sorted_values) - 1) * (percentile / 100.0)
+        lower = int(index)
+        upper = min(lower + 1, len(sorted_values) - 1)
+        if lower == upper:
+            return sorted_values[lower]
+        weight = index - lower
+        return sorted_values[lower] * (1 - weight) + sorted_values[upper] * weight
+
     def get_stats(self, operation: str) -> Dict:
         """Get statistics for a specific operation"""
         if operation not in self.timings:
             return {}
 
         durations = self.timings[operation]
+        sorted_durations = sorted(durations)
         return {
             "count": len(durations),
             "total_time": sum(durations),
             "avg_time": sum(durations) / len(durations),
             "min_time": min(durations),
             "max_time": max(durations),
+            "p25_time": self._percentile(sorted_durations, 25),
+            "median_time": self._percentile(sorted_durations, 50),
+            "p75_time": self._percentile(sorted_durations, 75),
+            "p90_time": self._percentile(sorted_durations, 90),
+            "p95_time": self._percentile(sorted_durations, 95),
+            "p99_time": self._percentile(sorted_durations, 99),
         }
 
     def get_all_stats(self) -> Dict:
@@ -64,6 +88,12 @@ class TimingStats:
             print(f"  Average:    {stats['avg_time']:.3f}s")
             print(f"  Min:        {stats['min_time']:.3f}s")
             print(f"  Max:        {stats['max_time']:.3f}s")
+            print(f"  P25:        {stats['p25_time']:.3f}s")
+            print(f"  Median:     {stats['median_time']:.3f}s")
+            print(f"  P75:        {stats['p75_time']:.3f}s")
+            print(f"  P90:        {stats['p90_time']:.3f}s")
+            print(f"  P95:        {stats['p95_time']:.3f}s")
+            print(f"  P99:        {stats['p99_time']:.3f}s")
 
         print("\n" + "=" * 80)
         print(f"OVERALL TOTAL: {sum(s['total_time'] for s in all_stats.values()):.2f}s")

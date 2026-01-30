@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "UART5_DR",
+  "address_offset": "0x04",
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DR",
+      "description": "Data value (transmit or receive) – bits 0‑8",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    }
+  ]
+}

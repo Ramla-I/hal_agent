@@ -1,0 +1,84 @@
+{
+  "datasheet_register_abbreviation": "TIM16_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable. When the channel is configured as output: 0 = Off (OC1 disabled), 1 = On (OC1 enabled). When the channel is configured as input: 0 = Capture disabled, 1 = Capture enabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity. 0 = OC1 active high, 1 = OC1 active low (or polarity of TI1FP1 when channel is input).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    },
+    {
+      "name": "CC1NE",
+      "description": "Capture/Compare 1 complementary output enable. 0 = Complementary output disabled, 1 = Complementary output enabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 complementary output polarity. 0 = OC1N active high, 1 = OC1N active low.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHigh"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLow"
+        }
+      ]
+    }
+  ]
+}

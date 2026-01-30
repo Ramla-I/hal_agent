@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "RTC_ALRL",
+  "address_offset": "0x24",
+  "reset_value": "0xFFFF",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ALR[15:0]",
+      "description": "RTC alarm low",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

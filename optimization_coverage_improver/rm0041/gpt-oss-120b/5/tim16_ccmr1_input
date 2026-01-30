@@ -1,0 +1,103 @@
+{
+  "datasheet_register_abbreviation": "TIM16_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "BG",
+      "description": "Break generation – set by software to generate a break event, cleared automatically by hardware",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "BreakEventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "TG",
+      "description": "Trigger generation – set by software to generate a trigger event, cleared automatically by hardware",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "TriggerEventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "COMG",
+      "description": "Capture/Compare control update generation – set by software, cleared automatically by hardware",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "UpdateGenerationEnabled"
+        }
+      ]
+    },
+    {
+      "name": "CC1G",
+      "description": "Capture/Compare 1 generation – set by software to generate a capture/compare event on channel 1, cleared automatically",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "CaptureCompareEventGenerated"
+        }
+      ]
+    },
+    {
+      "name": "UG",
+      "description": "Update generation – set by software to re‑initialize the counter and update registers, cleared automatically",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "UpdateGenerated"
+        }
+      ]
+    }
+  ]
+}

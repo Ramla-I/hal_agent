@@ -1,0 +1,83 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR2",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PREDIV1[3:0]",
+      "description": "PREDIV1 division factor",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PREDIV1_input_clock_not_divided"
+        },
+        {
+          "value": "1",
+          "name": "PREDIV1_divided_by_2"
+        },
+        {
+          "value": "2",
+          "name": "PREDIV1_divided_by_3"
+        },
+        {
+          "value": "3",
+          "name": "PREDIV1_divided_by_4"
+        },
+        {
+          "value": "4",
+          "name": "PREDIV1_divided_by_5"
+        },
+        {
+          "value": "5",
+          "name": "PREDIV1_divided_by_6"
+        },
+        {
+          "value": "6",
+          "name": "PREDIV1_divided_by_7"
+        },
+        {
+          "value": "7",
+          "name": "PREDIV1_divided_by_8"
+        },
+        {
+          "value": "8",
+          "name": "PREDIV1_divided_by_9"
+        },
+        {
+          "value": "9",
+          "name": "PREDIV1_divided_by_10"
+        },
+        {
+          "value": "10",
+          "name": "PREDIV1_divided_by_11"
+        },
+        {
+          "value": "11",
+          "name": "PREDIV1_divided_by_12"
+        },
+        {
+          "value": "12",
+          "name": "PREDIV1_divided_by_13"
+        },
+        {
+          "value": "13",
+          "name": "PREDIV1_divided_by_14"
+        },
+        {
+          "value": "14",
+          "name": "PREDIV1_divided_by_15"
+        },
+        {
+          "value": "15",
+          "name": "PREDIV1_divided_by_16"
+        }
+      ]
+    }
+  ]
+}

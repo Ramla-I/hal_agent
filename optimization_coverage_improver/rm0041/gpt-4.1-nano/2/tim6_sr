@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "TIM6_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag – set by hardware on an update event, cleared by software",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoUpdate"
+        },
+        {
+          "value": "1",
+          "name": "UpdatePending"
+        }
+      ]
+    }
+  ]
+}

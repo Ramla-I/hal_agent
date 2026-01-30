@@ -1,0 +1,165 @@
+{
+  "datasheet_register_abbreviation": "SPI1_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "SSI",
+      "description": "Internal slave select – has effect only when the SSM bit is set; the value is forced onto the NSS pin.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "LSBFIRST",
+      "description": "Frame format – 0: MSB transmitted first, 1: LSB transmitted first.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "MSBFirst"
+        },
+        {
+          "value": "1",
+          "name": "LSBFirst"
+        }
+      ]
+    },
+    {
+      "name": "SPE",
+      "description": "SPI enable – 0: Peripheral disabled, 1: Peripheral enabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "BR",
+      "description": "Baud rate control – selects fPCLK division factor.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "fPCLK/2"
+        },
+        {
+          "value": "001",
+          "name": "fPCLK/4"
+        },
+        {
+          "value": "010",
+          "name": "fPCLK/8"
+        },
+        {
+          "value": "011",
+          "name": "fPCLK/16"
+        },
+        {
+          "value": "100",
+          "name": "fPCLK/32"
+        },
+        {
+          "value": "101",
+          "name": "fPCLK/64"
+        },
+        {
+          "value": "110",
+          "name": "fPCLK/128"
+        },
+        {
+          "value": "111",
+          "name": "fPCLK/256"
+        }
+      ]
+    },
+    {
+      "name": "MSTR",
+      "description": "Master selection – 0: Slave configuration, 1: Master configuration.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Slave"
+        },
+        {
+          "value": "1",
+          "name": "Master"
+        }
+      ]
+    },
+    {
+      "name": "CPOL",
+      "description": "Clock polarity – 0: CK = 0 when idle, 1: CK = 1 when idle.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "IdleLow"
+        },
+        {
+          "value": "1",
+          "name": "IdleHigh"
+        }
+      ]
+    },
+    {
+      "name": "CPHA",
+      "description": "Clock phase – 0: First clock transition is first data capture edge, 1: Second clock transition is first data capture edge.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "FirstEdge"
+        },
+        {
+          "value": "1",
+          "name": "SecondEdge"
+        }
+      ]
+    }
+  ]
+}

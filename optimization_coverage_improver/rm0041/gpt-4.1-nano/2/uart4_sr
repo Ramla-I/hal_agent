@@ -1,0 +1,198 @@
+{
+  "datasheet_register_abbreviation": "UART4_SR",
+  "address_offset": "0x00",
+  "reset_value": "0xXXXX XXXX",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PE",
+      "description": "Parity error flag. Set by hardware when a parity error occurs in receiver mode. Cleared by a read of the status register followed by a read or write to the data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoParityError"
+        },
+        {
+          "value": "1",
+          "name": "ParityError"
+        }
+      ]
+    },
+    {
+      "name": "FE",
+      "description": "Framing error flag. Set by hardware when a de‑synchronization, excessive noise or a break character is detected. Cleared by a read of the status register followed by a read of the data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoFramingError"
+        },
+        {
+          "value": "1",
+          "name": "FramingError"
+        }
+      ]
+    },
+    {
+      "name": "NF",
+      "description": "Noise detected flag. Set by hardware when noise is detected on a received frame. Cleared by a read of the status register followed by a read of the data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoNoise"
+        },
+        {
+          "value": "1",
+          "name": "NoiseDetected"
+        }
+      ]
+    },
+    {
+      "name": "ORE",
+      "description": "Overrun error flag. Set by hardware when a data overrun occurs. Cleared by a read of the status register followed by a read of the data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoOverrun"
+        },
+        {
+          "value": "1",
+          "name": "Overrun"
+        }
+      ]
+    },
+    {
+      "name": "IDLE",
+      "description": "Idle line detected flag. Set by hardware when an idle line is detected. Cleared by a read of the status register followed by a read of the data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotIdle"
+        },
+        {
+          "value": "1",
+          "name": "IdleDetected"
+        }
+      ]
+    },
+    {
+      "name": "RXNE",
+      "description": "Read data register not empty flag. Set by hardware when the receive data register contains unread data. Cleared by reading the data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "RXEmpty"
+        },
+        {
+          "value": "1",
+          "name": "RXNotEmpty"
+        }
+      ]
+    },
+    {
+      "name": "TC",
+      "description": "Transmission complete flag. Set by hardware when transmission of a frame is complete. Cleared by software writing 0.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotComplete"
+        },
+        {
+          "value": "1",
+          "name": "Complete"
+        }
+      ]
+    },
+    {
+      "name": "TXE",
+      "description": "Transmit data register empty flag. Set by hardware when the transmit data register is empty and can accept new data. Cleared when data is written to the data register.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TXNotEmpty"
+        },
+        {
+          "value": "1",
+          "name": "TXEmpty"
+        }
+      ]
+    },
+    {
+      "name": "LBD",
+      "description": "LIN break detection flag. Set by hardware when a LIN break is detected. Cleared by software writing 0.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoBreak"
+        },
+        {
+          "value": "1",
+          "name": "BreakDetected"
+        }
+      ]
+    },
+    {
+      "name": "CTS",
+      "description": "CTS flag. Set by hardware when the CTS input line is asserted. Cleared by software writing 0.",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CTSLow"
+        },
+        {
+          "value": "1",
+          "name": "CTSHigh"
+        }
+      ]
+    }
+  ]
+}

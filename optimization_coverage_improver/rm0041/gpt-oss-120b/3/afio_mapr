@@ -1,0 +1,144 @@
+{
+  "datasheet_register_abbreviation": "AFIO_MAPR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SWJ_CFG",
+      "description": "Serial wire JTAG configuration",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 26
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "Full SWJ (JTAG-DP + SW-DP) Reset State"
+        },
+        {
+          "value": "0b001",
+          "name": "Full SWJ (JTAG-DP + SW-DP) without NJTRST"
+        },
+        {
+          "value": "0b010",
+          "name": "JTAG-DP Disabled, SW-DP Enabled"
+        },
+        {
+          "value": "0b100",
+          "name": "JTAG-DP Disabled, SW-DP Disabled"
+        }
+      ]
+    },
+    {
+      "name": "PD01_REMAP",
+      "description": "Port D0/Port D1 mapping on OSC_IN/OSC_OUT",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No remapping of PD0 and PD1"
+        },
+        {
+          "value": "1",
+          "name": "PD0 remapped on OSC_IN, PD1 remapped on OSC_OUT"
+        }
+      ]
+    },
+    {
+      "name": "TIM4_REMAP",
+      "description": "TIM4 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIM3_REMAP",
+      "description": "TIM3 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIM2_REMAP",
+      "description": "TIM2 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIM1_REMAP",
+      "description": "TIM1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "USART3_REMAP",
+      "description": "USART3 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "USART2_REMAP",
+      "description": "USART2 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "USART1_REMAP",
+      "description": "USART1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "I2C1_REMAP",
+      "description": "I2C1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "SPI1_REMAP",
+      "description": "SPI1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

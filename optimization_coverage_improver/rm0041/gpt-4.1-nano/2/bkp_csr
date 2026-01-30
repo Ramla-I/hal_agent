@@ -1,0 +1,151 @@
+{
+  "datasheet_register_abbreviation": "BKP_CSR",
+  "address_offset": "0x34",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TIF",
+      "description": "Tamper interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTamperInterrupt"
+        },
+        {
+          "value": "1",
+          "name": "TamperInterruptOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TEF",
+      "description": "Tamper event flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTamperEvent"
+        },
+        {
+          "value": "1",
+          "name": "TamperEventOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TPIE",
+      "description": "TAMPER pin interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "InterruptDisabled"
+        },
+        {
+          "value": "1",
+          "name": "InterruptEnabled"
+        }
+      ]
+    },
+    {
+      "name": "CTI",
+      "description": "Clear tamper interrupt (write‑only, always reads 0)",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTamperInterrupt"
+        }
+      ]
+    },
+    {
+      "name": "CTE",
+      "description": "Clear tamper event (write‑only, always reads 0)",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "ClearTamperEvent"
+        }
+      ]
+    },
+    {
+      "name": "ASOE",
+      "description": "Alarm or second output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AlarmPulseSelected"
+        },
+        {
+          "value": "1",
+          "name": "SecondPulseSelected"
+        }
+      ]
+    },
+    {
+      "name": "CCO",
+      "description": "Calibration clock output",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "OutputRTCClockDiv64"
+        }
+      ]
+    },
+    {
+      "name": "CAL",
+      "description": "Calibration value (number of clock pulses ignored every 2^20 pulses)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    }
+  ]
+}

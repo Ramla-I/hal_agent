@@ -1,0 +1,95 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BWTR3",
+  "address_offset": "0xA0000114",
+  "reset_value": "0x0FFFFFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ACCMOD",
+      "description": "Access mode (00 = access mode A, 01 = access mode B, 10 = access mode C, 11 = access mode D)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AccessModeA"
+        },
+        {
+          "value": "0b01",
+          "name": "AccessModeB"
+        },
+        {
+          "value": "0b10",
+          "name": "AccessModeC"
+        },
+        {
+          "value": "0b11",
+          "name": "AccessModeD"
+        }
+      ]
+    },
+    {
+      "name": "DATLAT",
+      "description": "Data latency (don’t care for many modes)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 27
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CLKDIV",
+      "description": "Clock divide ratio (defines FSMC_CLK period)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 23
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "BUSTURN",
+      "description": "Bus‑turnaround phase duration (0‑15 HCLK cycles)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 19
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "DATAST",
+      "description": "Second access‑phase duration (write: DATAST+1 HCLK cycles, read: DATAST HCLK cycles)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDHLD",
+      "description": "Address‑hold phase duration (don’t care in some modes)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDSET",
+      "description": "Address‑setup phase duration (0‑15 HCLK cycles)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    }
+  ]
+}

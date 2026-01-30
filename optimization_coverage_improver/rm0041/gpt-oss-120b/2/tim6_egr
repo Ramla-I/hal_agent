@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "TIM6_EGR",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "UG",
+      "description": "Update generation – this bit can be set by software, it is automatically cleared by hardware.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "UpdateGeneration"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "datasheet_register_abbreviation": "TIM13_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CKD",
+      "description": "Clock division – indicates the division ratio between the timer clock (CK_INT) frequency and the sampling clock used by the digital filters (TIx)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "t_DTS = t_CK_INT"
+        },
+        {
+          "value": "0b01",
+          "name": "t_DTS = 2 × t_CK_INT"
+        },
+        {
+          "value": "0b10",
+          "name": "t_DTS = 4 × t_CK_INT"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "ARPE",
+      "description": "Auto-reload preload enable – enables buffering of the auto-reload register",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "OPM",
+      "description": "One-pulse mode – when set, the counter stops counting at the next update event",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "URS",
+      "description": "Update request source – selects the events that generate an update interrupt/DMA request",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "UDIS",
+      "description": "Update disable – disables generation of update events when set",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CEN",
+      "description": "Counter enable – enables or disables the timer counter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

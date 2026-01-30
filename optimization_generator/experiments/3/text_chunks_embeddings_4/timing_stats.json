@@ -1,0 +1,16 @@
+{
+  "vector_store_search": {
+    "count": 7,
+    "total_time": 10.134415864944458,
+    "avg_time": 1.4477736949920654,
+    "min_time": 0.991814136505127,
+    "max_time": 2.023768186569214
+  },
+  "generator_llm_call": {
+    "count": 7,
+    "total_time": 23.615020036697388,
+    "avg_time": 3.37357429095677,
+    "min_time": 1.1557550430297852,
+    "max_time": 4.7227089405059814
+  }
+}

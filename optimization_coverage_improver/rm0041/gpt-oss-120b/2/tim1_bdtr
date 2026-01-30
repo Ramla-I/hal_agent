@@ -1,0 +1,159 @@
+{
+  "datasheet_register_abbreviation": "TIM1_BDTR",
+  "address_offset": "0x44",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "MOE",
+      "description": "Main output enable. Cleared asynchronously by hardware when the break input is active; set by software or automatically depending on AOE. Affects only channels configured as output.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "DisabledOrIdle"
+        },
+        {
+          "value": "1",
+          "name": "EnabledIfChannelEnabled"
+        }
+      ]
+    },
+    {
+      "name": "AOE",
+      "description": "Automatic output enable. 0 – MOE can be set only by software. 1 – MOE can be set by software or automatically at the next update event if the break input is not active.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "SoftwareOnly"
+        },
+        {
+          "value": "1",
+          "name": "SoftwareOrAuto"
+        }
+      ]
+    },
+    {
+      "name": "BKP",
+      "description": "Break polarity. 0 – Break input BRK is active low. 1 – Break input BRK is active high.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveLow"
+        },
+        {
+          "value": "1",
+          "name": "ActiveHigh"
+        }
+      ]
+    },
+    {
+      "name": "BKE",
+      "description": "Break enable. 0 – Break inputs (BRK and CSS clock‑failure event) disabled. 1 – Break inputs enabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "OSSR",
+      "description": "Off‑state selection for Run mode. 0 – When inactive, OC/OCN outputs are disabled. 1 – When inactive, OC/OCN outputs are enabled with their idle level as soon as CCxE=1 or CCxNE=1.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "EnabledWithIdleLevel"
+        }
+      ]
+    },
+    {
+      "name": "OSSI",
+      "description": "Off‑state selection for Idle mode. 0 – When inactive, OC/OCN outputs are disabled. 1 – When inactive, OC/OCN outputs are forced first with their idle level as soon as CCxE=1 or CCxNE=1.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "ForcedIdleFirst"
+        }
+      ]
+    },
+    {
+      "name": "LOCK",
+      "description": "Lock configuration (write protection).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "LOCK_OFF"
+        },
+        {
+          "value": "01",
+          "name": "LOCK_LEVEL1"
+        },
+        {
+          "value": "10",
+          "name": "LOCK_LEVEL2"
+        },
+        {
+          "value": "11",
+          "name": "LOCK_LEVEL3"
+        }
+      ]
+    },
+    {
+      "name": "DTG",
+      "description": "Dead‑time generator setup. 8‑bit field that defines the duration of the dead‑time inserted between complementary outputs.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

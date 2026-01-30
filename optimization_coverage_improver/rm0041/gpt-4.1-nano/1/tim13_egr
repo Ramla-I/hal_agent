@@ -1,0 +1,65 @@
+{
+  "datasheet_register_abbreviation": "TIM13_EGR",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "UG",
+      "description": "Update generation – setting this bit by software re‑initialises the counter and generates an update of the registers.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateUpdate"
+        }
+      ]
+    },
+    {
+      "name": "CC1G",
+      "description": "Capture/compare 1 generation – setting this bit generates a capture/compare event on channel 1.",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateCC1Event"
+        }
+      ]
+    },
+    {
+      "name": "TG",
+      "description": "Trigger generation – setting this bit generates a trigger event (sets the TIF flag).",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoAction"
+        },
+        {
+          "value": "1",
+          "name": "GenerateTrigger"
+        }
+      ]
+    }
+  ]
+}

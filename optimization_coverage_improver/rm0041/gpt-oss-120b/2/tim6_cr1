@@ -1,0 +1,103 @@
+{
+  "datasheet_register_abbreviation": "TIM6_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ARPE",
+      "description": "Auto-reload preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotBuffered"
+        },
+        {
+          "value": "1",
+          "name": "Buffered"
+        }
+      ]
+    },
+    {
+      "name": "OPM",
+      "description": "One-pulse mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoStop"
+        },
+        {
+          "value": "1",
+          "name": "StopAtNextUpdate"
+        }
+      ]
+    },
+    {
+      "name": "URS",
+      "description": "Update request source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AllEvents"
+        },
+        {
+          "value": "1",
+          "name": "OverflowOnly"
+        }
+      ]
+    },
+    {
+      "name": "UDIS",
+      "description": "Update disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Enabled"
+        },
+        {
+          "value": "1",
+          "name": "Disabled"
+        }
+      ]
+    },
+    {
+      "name": "CEN",
+      "description": "Counter enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    }
+  ]
+}

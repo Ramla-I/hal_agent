@@ -1,0 +1,75 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BWTR1",
+  "address_offset": "0xA0000104",
+  "reset_value": "0x0FFFFFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ACCMOD",
+      "description": "Access mode. Specifies the asynchronous access modes. Effective only when EXTMOD is set in FSMC_BCRx.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AccessModeA"
+        },
+        {
+          "value": "0b01",
+          "name": "AccessModeB"
+        },
+        {
+          "value": "0b10",
+          "name": "AccessModeC"
+        },
+        {
+          "value": "0b11",
+          "name": "AccessModeD"
+        }
+      ]
+    },
+    {
+      "name": "BUSTURN",
+      "description": "Bus turnaround phase duration.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 19
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "DATAST",
+      "description": "Data‑phase duration. For write accesses the effective duration is DATAST+1 HCLK cycles.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDHLD",
+      "description": "Address‑hold phase duration (don’t‑care for synchronous accesses).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDSET",
+      "description": "Address‑setup phase duration. For write accesses the effective duration is ADDSET HCLK cycles.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    }
+  ]
+}

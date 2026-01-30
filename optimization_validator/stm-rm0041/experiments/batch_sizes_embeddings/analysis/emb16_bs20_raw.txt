@@ -1,0 +1,45 @@
+================================================================================
+RUNNING: BATCHED mode with 16 embeddings (batch_size=20) - TEST set
+================================================================================
+Model: gpt-oss-120b
+Output: validator/output/rm0041/gpt-oss-120b_batched_test_emb16_bs20
+================================================================================
+
+Running BATCHED validator for gpt-oss-120b with test set validator/stm-rm0041/test_set_rm0041.csv (mode: batch_size=20)
+Batched 1000 invariants into 36 batches (avg size: 27.8)
+⚠️  Context limit exceeded for batch_32_(13_registers) (28 invariants)
+   Splitting into 2 sub-batches by registers: 6 and 7 registers
+Total output errors: 0
+
+Accuracy Metrics:
+  Accuracy:  94.30%
+  Precision: 98.74%
+  Recall:    91.67%
+  F1 Score:  95.07%
+
+========================================================================================================================
+VALIDATOR OPTIMIZATION COMPARISON - TEST SET
+========================================================================================================================
+
+Configuration             | API Calls  | LLM Time     | Search Time  | Total Time   | F1 Score  
+--------------------------+------------+--------------+--------------+--------------+-----------
+batched, 16 emb           |         37 |     942.86s |     414.08s |    1356.93s |    95.07%
+
+Quality Metrics
+------------------------------------------------------------------------------------------------------------------------
+Configuration             | Accuracy   | Precision  | Recall     | F1 Score   | TP     | FP     | TN     | FN    
+--------------------------+------------+------------+------------+------------+--------+--------+--------+-------
+batched, 16 emb           |    94.30% |    98.74% |    91.67% |    95.07% |    550 |      7 |    393 |     50
+
+Token Usage
+----------------------------------------------------------------------------------------------------
+Configuration             | Avg File Search    | Avg Input       | Avg Batch Size 
+--------------------------+--------------------+-----------------+----------------
+batched, 16 emb           |            49006 |         50345 |            27.0
+
+Efficiency vs Sequential (4 emb)
+----------------------------------------------------------------------------------------------------
+Configuration             | Speedup      | Time Saved   | API Call Reduction  
+--------------------------+--------------+--------------+---------------------
+
+========================================================================================================================

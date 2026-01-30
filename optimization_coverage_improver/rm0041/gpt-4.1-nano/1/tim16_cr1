@@ -1,0 +1,176 @@
+{
+  "datasheet_register_abbreviation": "TIM16_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CKD",
+      "description": "Clock division – division ratio between timer clock and digital filter sampling clock",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "tDTS = tCK_INT"
+        },
+        {
+          "value": "01",
+          "name": "tDTS = 2 × tCK_INT"
+        },
+        {
+          "value": "10",
+          "name": "tDTS = 4 × tCK_INT"
+        },
+        {
+          "value": "11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "ARPE",
+      "description": "Auto‑reload preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TIMx_ARR register is not buffered"
+        },
+        {
+          "value": "1",
+          "name": "TIMx_ARR register is buffered"
+        }
+      ]
+    },
+    {
+      "name": "CMS",
+      "description": "Center‑aligned mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "00",
+          "name": "Edge‑aligned mode"
+        },
+        {
+          "value": "01",
+          "name": "Center‑aligned mode 1"
+        },
+        {
+          "value": "10",
+          "name": "Center‑aligned mode 2"
+        },
+        {
+          "value": "11",
+          "name": "Center‑aligned mode 3"
+        }
+      ]
+    },
+    {
+      "name": "DIR",
+      "description": "Direction – upcounter (0) or downcounter (1)",
+      "access": "read-only in center‑aligned or encoder mode, otherwise read‑write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Counter used as upcounter"
+        },
+        {
+          "value": "1",
+          "name": "Counter used as downcounter"
+        }
+      ]
+    },
+    {
+      "name": "OPM",
+      "description": "One‑pulse mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Counter not stopped at update event"
+        },
+        {
+          "value": "1",
+          "name": "Counter stops counting at next update event"
+        }
+      ]
+    },
+    {
+      "name": "URS",
+      "description": "Update request source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Any event (overflow, UG, slave‑mode) generates update"
+        },
+        {
+          "value": "1",
+          "name": "Only overflow generates update"
+        }
+      ]
+    },
+    {
+      "name": "UDIS",
+      "description": "Update disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "UEV enabled"
+        },
+        {
+          "value": "1",
+          "name": "UEV disabled"
+        }
+      ]
+    },
+    {
+      "name": "CEN",
+      "description": "Counter enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Counter disabled"
+        },
+        {
+          "value": "1",
+          "name": "Counter enabled"
+        }
+      ]
+    }
+  ]
+}

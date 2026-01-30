@@ -1,0 +1,48 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCER",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": [
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": null,
+        "end_bit": null
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity (0 = active on rising edge)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": null,
+        "end_bit": null
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": null,
+        "end_bit": null
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output polarity (0 = active on rising edge, 1 = active on falling edge)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": null,
+        "end_bit": null
+      },
+      "enumerated_values": []
+    }
+  ]
+}

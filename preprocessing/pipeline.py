@@ -8,6 +8,7 @@ This script consolidates the preprocessing workflow into a single command:
 3. Optionally augment chunks with embedded metadata headers
 4. Upload to OpenAI vector store with metadata attributes
 5. Save chunk index CSV for contiguous chunk expansion during retrieval
+6. Update device's vector_stores.json configuration
 
 Usage:
     # Basic usage - chunk, enrich, and upload
@@ -20,6 +21,10 @@ Usage:
     # With metadata embedding and markdown format
     python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
         --embed-metadata --format markdown
+
+    # With a named vector store entry (saved to vector_stores.json)
+    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
+        --store-name md_enriched --format markdown --embed-metadata
 
     # Skip upload (for testing)
     python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
@@ -39,7 +44,9 @@ Output:
     │   │   └── all_metadata.json
     │   ├── upload_summary.csv # Chunk index for retrieval expansion
     │   └── {name}_chunks_metadata.csv
-    └── vector_store_info.json # Vector store ID and config
+    └── vector_store_info.json # Vector store ID and config (legacy)
+
+    Also updates: {device_dir}/vector_stores.json with new vector store entry
 """
 
 import argparse
@@ -53,6 +60,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.utils import setup_logger
+from utils.vector_store_config import (
+    load_vector_stores,
+    update_vector_store,
+    VectorStoreInfo,
+    DeviceVectorStores
+)
 
 logger = setup_logger(__name__)
 
@@ -199,7 +212,7 @@ def save_vector_store_info(
     metadata_enriched: bool,
     embed_metadata: bool
 ):
-    """Save vector store info to JSON file."""
+    """Save vector store info to JSON file (legacy per-run file)."""
     info = {
         "vector_store_id": vector_store_id,
         "vector_store_name": vector_store_name,
@@ -217,6 +230,69 @@ def save_vector_store_info(
 
     logger.info(f"Vector store info saved to: {info_path}")
     return info_path
+
+
+def update_device_vector_stores(
+    device_dir: str,
+    store_name: str,
+    vector_store_id: str,
+    description: str,
+    chunk_count: int,
+    chunk_index_path: str,
+    local_path: str = None
+) -> str:
+    """
+    Update the device's vector_stores.json with new vector store info.
+
+    Args:
+        device_dir: Path to device directory (e.g., 'devices/stm/rm0041')
+        store_name: Name for this vector store entry (e.g., 'md_enriched')
+        vector_store_id: OpenAI vector store ID
+        description: Human-readable description
+        chunk_count: Number of chunks uploaded
+        chunk_index_path: Relative path to upload_summary.csv
+        local_path: Relative path to local chunk files
+
+    Returns:
+        Path to updated vector_stores.json
+    """
+    config_path = os.path.join(device_dir, "vector_stores.json")
+
+    # Create default config if it doesn't exist
+    if not os.path.exists(config_path):
+        # Extract device info from path
+        device_name = os.path.basename(device_dir)
+        manufacturer = os.path.basename(os.path.dirname(device_dir))
+
+        initial_config = {
+            "device_name": device_name,
+            "manufacturer": manufacturer,
+            "vector_stores": {},
+            "default": store_name
+        }
+        with open(config_path, 'w') as f:
+            json.dump(initial_config, f, indent=2)
+        logger.info(f"Created new vector_stores.json at {config_path}")
+
+    # Update the config with new vector store
+    config = update_vector_store(
+        device_dir=device_dir,
+        name=store_name,
+        vs_id=vector_store_id,
+        description=description,
+        file_count=chunk_count,
+        chunk_index_path=chunk_index_path,
+        created_at=datetime.utcnow().strftime("%Y-%m-%d")
+    )
+
+    # Also update local_path if provided
+    if local_path and store_name in config.vector_stores:
+        config.vector_stores[store_name].local_path = local_path
+        from utils.vector_store_config import save_vector_stores
+        save_vector_stores(device_dir, config)
+
+    logger.info(f"Updated vector_stores.json: {store_name} -> {vector_store_id}")
+    return config_path
 
 
 def main():
@@ -258,8 +334,16 @@ Examples:
         help="Base output directory (default: same directory as PDF)"
     )
     parser.add_argument(
+        "--device-dir",
+        help="Device directory for vector_stores.json (default: same directory as PDF)"
+    )
+    parser.add_argument(
+        "--store-name",
+        help="Name for entry in vector_stores.json (e.g., 'md_enriched', 'text_chunks')"
+    )
+    parser.add_argument(
         "--vector-store-name",
-        help="Name for the vector store (default: {datasheet_name}_enriched)"
+        help="Display name for the OpenAI vector store (default: {datasheet_name}_{store_name})"
     )
 
     # Chunking options
@@ -340,15 +424,26 @@ Examples:
 
     # Determine output directories
     pdf_dir = os.path.dirname(os.path.abspath(args.pdf_path))
+    device_dir = args.device_dir or pdf_dir
     base_output_dir = args.output_dir or os.path.join(pdf_dir, "chunks")
 
     format_subdir = "md" if args.format == "markdown" else "text"
     chunks_dir = os.path.join(base_output_dir, format_subdir)
     metadata_dir = os.path.join(chunks_dir, "metadata")
-    augmented_dir = os.path.join(base_output_dir, f"{format_subdir}_augmented") if args.embed_metadata else None
+    augmented_dir = os.path.join(base_output_dir, f"{format_subdir}_enriched") if args.embed_metadata else None
 
     file_extension = ".md" if args.format == "markdown" else ".txt"
-    vector_store_name = args.vector_store_name or f"{args.datasheet_name}_enriched"
+
+    # Determine store name for vector_stores.json
+    if args.store_name:
+        store_name = args.store_name
+    elif args.embed_metadata:
+        store_name = f"{format_subdir}_enriched"
+    else:
+        store_name = f"{format_subdir}_chunks"
+
+    # Display name for OpenAI vector store
+    vector_store_name = args.vector_store_name or f"{args.datasheet_name}_{store_name}"
 
     # Print configuration
     print("\n" + "=" * 70)
@@ -356,12 +451,14 @@ Examples:
     print("=" * 70)
     print(f"\nInput PDF: {args.pdf_path}")
     print(f"Datasheet name: {args.datasheet_name}")
+    print(f"Device directory: {device_dir}")
     print(f"Output directory: {base_output_dir}")
     print(f"Format: {args.format}")
     print(f"Chunk tokens: {args.max_tokens} (overlap: {args.overlap_tokens})")
     print(f"Embed metadata: {args.embed_metadata}")
     print(f"Skip upload: {args.skip_upload}")
     if not args.skip_upload:
+        print(f"Store name: {store_name}")
         print(f"Vector store name: {vector_store_name}")
     print("=" * 70)
 
@@ -410,6 +507,7 @@ Examples:
     # Step 4: Upload to vector store
     vector_store_id = None
     chunk_index_path = ""
+    vector_stores_json_path = None
 
     if not args.skip_upload:
         print("\n" + "-" * 70)
@@ -424,7 +522,7 @@ Examples:
         )
         chunk_index_path = upload_summary_path
 
-        # Save vector store info
+        # Save legacy vector store info file
         print("\n" + "-" * 70)
         save_vector_store_info(
             base_output_dir,
@@ -437,6 +535,35 @@ Examples:
             embed_metadata=args.embed_metadata
         )
 
+        # Update device's vector_stores.json
+        print("\n" + "-" * 70)
+        logger.info("Step 5: Updating device vector_stores.json")
+
+        # Calculate relative paths from device_dir
+        rel_chunk_index = os.path.relpath(chunk_index_path, device_dir)
+        rel_local_path = os.path.relpath(upload_chunks_dir, device_dir)
+
+        # Build description
+        desc_parts = []
+        if args.format == "markdown":
+            desc_parts.append("Markdown")
+        else:
+            desc_parts.append("Text")
+        desc_parts.append(f"chunks ({args.max_tokens} tokens, {args.overlap_tokens} overlap)")
+        if args.embed_metadata:
+            desc_parts.append("with embedded metadata")
+        description = " ".join(desc_parts)
+
+        vector_stores_json_path = update_device_vector_stores(
+            device_dir=device_dir,
+            store_name=store_name,
+            vector_store_id=vector_store_id,
+            description=description,
+            chunk_count=len(file_infos),
+            chunk_index_path=rel_chunk_index,
+            local_path=rel_local_path
+        )
+
     # Summary
     print("\n" + "=" * 70)
     print("PIPELINE COMPLETE")
@@ -447,10 +574,15 @@ Examples:
         print(f"Augmented chunks: {augmented_dir}")
     if vector_store_id:
         print(f"\nVector Store ID: {vector_store_id}")
+        print(f"Store name: {store_name}")
         print(f"Chunk index: {chunk_index_path}")
-        print(f"\nAdd to config.py:")
-        print(f'  vs_id = "{vector_store_id}"')
-        print(f'  chunk_index_path = "{chunk_index_path}"')
+        if vector_stores_json_path:
+            print(f"\nUpdated: {vector_stores_json_path}")
+            print(f"  Entry: {store_name}")
+        print(f"\nTo use this vector store:")
+        print(f"  from utils.vector_store_config import get_vector_stores")
+        print(f"  config = get_vector_stores('{device_dir}')")
+        print(f"  vs_id = config.get_vs_id('{store_name}')")
     print("=" * 70)
 
     return 0

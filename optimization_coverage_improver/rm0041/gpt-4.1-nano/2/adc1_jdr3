@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "ADC_JDR3",
+  "address_offset": "0x44",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "JDATA",
+      "description": "Injected data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

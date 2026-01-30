@@ -1,0 +1,148 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BCR3",
+  "address_offset": "0x0010",
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CBURSTRW",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CPSIZE",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 17
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ASYNCWAIT",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "EXTMOD",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "WAITEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "WRAPMOD",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "WAITCFG",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "WAITPOL",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "BURSTEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "FACCEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "MWID",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "MTYP",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "MUXEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "MBKEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

@@ -1,0 +1,321 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BCR4",
+  "address_offset": "0xA0000018",
+  "reset_value": "0x000030D2",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CBURSTRW",
+      "description": "Write burst enable. For Cellular RAM (PSRAM) memories, this bit enables the synchronous burst protocol during write operations.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AsyncMode"
+        },
+        {
+          "value": "1",
+          "name": "SyncMode"
+        }
+      ]
+    },
+    {
+      "name": "CPSIZE",
+      "description": "CRAM page size. Used for Cellular RAM 1.5 to split burst accesses at page boundaries.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "NoBurstSplit"
+        },
+        {
+          "value": "0b001",
+          "name": "128Bytes"
+        },
+        {
+          "value": "0b010",
+          "name": "256Bytes"
+        },
+        {
+          "value": "0b011",
+          "name": "512Bytes"
+        },
+        {
+          "value": "0b100",
+          "name": "1024Bytes"
+        }
+      ]
+    },
+    {
+      "name": "ASYNCWAIT",
+      "description": "Wait signal during asynchronous transfers. Enables/disables use of the NWAIT signal in asynchronous protocols.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NWAITIgnored"
+        },
+        {
+          "value": "1",
+          "name": "NWAITUsed"
+        }
+      ]
+    },
+    {
+      "name": "EXTMOD",
+      "description": "Extended mode enable. Allows separate read/write timing registers (FSMC_BWTR) when set.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ExtendedModeDisabled"
+        },
+        {
+          "value": "1",
+          "name": "ExtendedModeEnabled"
+        }
+      ]
+    },
+    {
+      "name": "WAITEN",
+      "description": "Wait enable bit. Enables wait‑state insertion via the NWAIT signal for synchronous flash accesses.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "WaitDisabled"
+        },
+        {
+          "value": "1",
+          "name": "WaitEnabled"
+        }
+      ]
+    },
+    {
+      "name": "WREN",
+      "description": "Write enable bit. Controls whether write operations are allowed for the bank.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "WriteDisabled"
+        },
+        {
+          "value": "1",
+          "name": "WriteEnabled"
+        }
+      ]
+    },
+    {
+      "name": "WAITCFG",
+      "description": "Wait timing configuration. Determines when NWAIT is asserted relative to the wait state.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NWAITBeforeWaitState"
+        },
+        {
+          "value": "1",
+          "name": "NWAITDuringWaitState"
+        }
+      ]
+    },
+    {
+      "name": "WRAPMOD",
+      "description": "Wrapped burst mode support. Controls whether AHB wrapped bursts are split into linear accesses.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "WrapDisabled"
+        },
+        {
+          "value": "1",
+          "name": "WrapEnabled"
+        }
+      ]
+    },
+    {
+      "name": "WAITPOL",
+      "description": "Wait signal polarity bit. Sets NWAIT polarity when used.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NWAITActiveLow"
+        },
+        {
+          "value": "1",
+          "name": "NWAITActiveHigh"
+        }
+      ]
+    },
+    {
+      "name": "BURSTEN",
+      "description": "Burst enable bit. Enables/disables synchronous burst accesses for compatible memories.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "BurstDisabled"
+        },
+        {
+          "value": "1",
+          "name": "BurstEnabled"
+        }
+      ]
+    },
+    {
+      "name": "FACCEN",
+      "description": "Flash access enable. Enables NOR flash memory access operations.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "FlashAccessDisabled"
+        },
+        {
+          "value": "1",
+          "name": "FlashAccessEnabled"
+        }
+      ]
+    },
+    {
+      "name": "MWID",
+      "description": "Memory databus width. Selects external memory data width.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "8bits"
+        },
+        {
+          "value": "0b01",
+          "name": "16bits"
+        },
+        {
+          "value": "0b10",
+          "name": "Reserved"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MTYP",
+      "description": "Memory type. Defines the type of external memory attached to the bank.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "SRAM"
+        },
+        {
+          "value": "0b01",
+          "name": "PSRAM"
+        },
+        {
+          "value": "0b10",
+          "name": "NORFlash"
+        },
+        {
+          "value": "0b11",
+          "name": "Reserved"
+        }
+      ]
+    },
+    {
+      "name": "MUXEN",
+      "description": "Address/data multiplexing enable. Enables multiplexed address and data on the bus for NOR/PSRAM.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NonMultiplexed"
+        },
+        {
+          "value": "1",
+          "name": "Multiplexed"
+        }
+      ]
+    },
+    {
+      "name": "MBKEN",
+      "description": "Memory bank enable. Enables or disables the selected memory bank.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "BankDisabled"
+        },
+        {
+          "value": "1",
+          "name": "BankEnabled"
+        }
+      ]
+    }
+  ]
+}

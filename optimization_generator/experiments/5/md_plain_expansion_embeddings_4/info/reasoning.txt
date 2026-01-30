@@ -1,0 +1,66 @@
+---afio_exticr3---
+I examined the provided excerpt and identified the section titled **“External interrupt configuration register 3 (AFIO_EXTICR3)”**. This matches the requested register name `exticr3` within the `afio` peripheral, confirming that the register abbreviation in the datasheet is **AFIO_EXTICR3**.
+
+From the datasheet:
+- **Address offset** is given as `0x10`.
+- **Reset value** is `0x0000`.
+- The bit‑field table shows a 32‑bit wide register (bits 31..0), so the **size** is 32 bits.
+- Bits 31:16 are reserved and omitted from subfields.
+- Bits 15:0 are divided into four 4‑bit fields, each named **EXTI8[3:0]**, **EXTI9[3:0]**, **EXTI10[3:0]**, and **EXTI11[3:0]**. All are marked `rw`, so their access type is **read‑write**.
+- The description for **EXTIx[3:0]** (x = 8‑11) lists enumerated values mapping the 4‑bit code to specific GPIO pins (PA[x], PB[x], PC[x], PD[x], PE[x], PF[x], PG[x]).
+
+No additional ordering or state requirements are mentioned, so there are no access constraints to capture.
+
+---afio_evcr---
+The datasheet excerpt **7.4.1 Event control register (AFIO_EVCR)** describes the register that matches the requested name `evcr` of the `afio` peripheral.
+
+* The register is named **AFIO_EVCR**; for the AFIO peripheral this is the `AFIO_EVCR` register.
+* Address offset is given as **0x00**.
+* Reset value is **0x0000 0000**.
+* The peripheral registers are accessed as 32‑bit words → register size = **32 bits**.
+* Bit‑field table shows:
+  * **Bits 31:8** – Reserved (no sub‑fields).
+  * **Bit 7** – **EVOE** (Event output enable) – read‑write.
+  * **Bits 6:4** – **PORT[2:0]** (Port selection) – read‑write. The description is not expanded in the excerpt, so no enumerated values are listed.
+  * **Bits 3:0** – **PIN[3:0]** (Pin selection, x = A..E) – read‑write, with enumerated values 0‑15 mapping to Px0 … Px15 as shown.
+* A note preceding the register description states that the AFIO clock must be enabled (via the RCC APB2ENR register) before reading or writing any AFIO register, including AFIO_EVCR. This is recorded as an access‑constraint.
+
+No address‑calculation is required because the offset is directly given.
+
+---afio_exticr4---
+I examined the provided excerpts and located the section titled **“External interrupt configuration register 4 (AFIO_EXTICR4)”**. This section matches the requested register name `exticr4` for the AFIO peripheral. The datasheet specifies:
+
+* **Address offset** = 0x14  
+* **Reset value** = 0x0000  
+* The register is a 32‑bit register (bits 31‑16 are reserved, bits 15‑0 are used).  
+* It contains four 4‑bit fields, each configuring the source for EXTI 12‑15:
+  * **EXTI12[3:0]** – bits 3 … 0  
+  * **EXTI13[3:0]** – bits 7 … 4  
+  * **EXTI14[3:0]** – bits 11 … 8  
+  * **EXTI15[3:0]** – bits 15 … 12  
+* All four fields are **read‑write**.  
+* Enumerated values for each field are the same:  
+  * 0 → PA[x] pin, 1 → PB[x] pin, 2 → PC[x] pin, 3 → PD[x] pin, 4 → PE[x] pin, 5 → PF[x] pin (the “x” corresponds to the EXTI line number).  
+
+No additional access‑ordering constraints are mentioned in the excerpt.
+
+---afio_mapr2---
+I searched through the provided excerpts for any mention of the AFIO peripheral or a register named MAPR2 (or MAPR2 / AFIO_MAPR2). None of the sections contain information about AFIO registers, their addresses, reset values, size, fields, or access constraints. Therefore, the datasheet does not contain the required details for the MAPR2 register.
+
+---afio_mapr---
+I examined the provided excerpts and identified the register that matches the requested name `mapr` in the `AFIO` peripheral. The datasheet describes the **AF remap and debug I/O configuration register (AFIO_MAPR)**, giving its offset, reset value, size, and a detailed bit‑field table. From the tables and accompanying text I extracted the register’s abbreviation, address offset, reset value, size, all defined sub‑fields (ignoring reserved bits), their access types, bit positions and any enumerated values that are explicitly listed. No ordering or state constraints were mentioned for this register, so the access‑constraints list is empty.
+
+---afio_exticr2---
+I examined the provided datasheet excerpts for the AFIO peripheral. The register `exticr2` corresponds to **AFIO_EXTICR2** as indicated by the section titled “External interrupt configuration register 2 (AFIO_EXTICR2)”. The excerpt gives the address offset `0x0C` and reset value `0x0000`. The bit‑field table shows that bits 15:0 are used for four 4‑bit fields (EXTI4, EXTI5, EXTI6, EXTI7) and bits 31:16 are reserved, implying a 32‑bit register size. Each 4‑bit field is labeled **EXTIx[3:0]** and the description states that these bits select the source input for the corresponding EXTI line, with enumerated values 0‑6 mapping to pins PA‑PG. All fields are marked as read‑write. No additional access constraints (ordering, required states, etc.) are mentioned in the excerpt.
+
+---afio_exticr1---
+I examined the provided excerpt.  
+The section titled **“External interrupt configuration register 1 (AFIO_EXTICR1)”** corresponds to the register named exticr1 of the AFIO peripheral.  
+The datasheet explicitly gives:
+* **Address offset:** 0x08  
+* **Reset value:** 0x0000  
+* The register is a 32‑bit wide word (bits 31‑16 are reserved, bits 15‑0 are used).  
+
+The lower 16 bits are divided into four 4‑bit fields, each named EXTI x [3:0] for x = 0 … 3. The table marks these fields as **rw**, so they are read‑write.  
+The description states that these fields select the GPIO pin that drives the corresponding EXTI line, with the enumerated mapping:
+

@@ -1,0 +1,7 @@
+{
+  "datasheet_register_abbreviation": "TIM6_DIER",
+  "address_offset": "0x0C",
+  "reset_value": "0x0000",
+  "size": null,
+  "subfields": []
+}

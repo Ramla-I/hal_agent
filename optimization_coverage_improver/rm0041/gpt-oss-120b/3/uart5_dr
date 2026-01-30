@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "UART5_DR",
+  "address_offset": "0x04",
+  "reset_value": "0xXXXX XXXX",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DR[8:0]",
+      "description": "Data value – contains the received or transmitted byte (bits 0‑8). The register is split into a transmit buffer (TDR) and a receive buffer (RDR).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    }
+  ]
+}

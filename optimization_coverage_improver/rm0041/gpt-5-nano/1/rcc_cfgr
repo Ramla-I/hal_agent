@@ -1,0 +1,198 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR",
+  "address_offset": null,
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PLLXTPRE",
+      "description": "LSB of division factor PREDIV1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoDivision"
+        },
+        {
+          "value": "1",
+          "name": "DivideBy2"
+        }
+      ]
+    },
+    {
+      "name": "PLLSRC",
+      "description": "PLL entry clock source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "HSI_Div2"
+        },
+        {
+          "value": "1",
+          "name": "PREDIV1"
+        }
+      ]
+    },
+    {
+      "name": "ADCPRE",
+      "description": "ADC prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Div2"
+        },
+        {
+          "value": "1",
+          "name": "Div4"
+        },
+        {
+          "value": "2",
+          "name": "Div6"
+        },
+        {
+          "value": "3",
+          "name": "Div8"
+        }
+      ]
+    },
+    {
+      "name": "PPRE2",
+      "description": "APB high‑speed prescaler (APB2)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Div1"
+        },
+        {
+          "value": "1",
+          "name": "Div1"
+        },
+        {
+          "value": "2",
+          "name": "Div1"
+        },
+        {
+          "value": "4",
+          "name": "Div2"
+        },
+        {
+          "value": "5",
+          "name": "Div4"
+        },
+        {
+          "value": "6",
+          "name": "Div8"
+        },
+        {
+          "value": "7",
+          "name": "Div16"
+        }
+      ]
+    },
+    {
+      "name": "PPRE1",
+      "description": "APB low‑speed prescaler (APB1)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Div1"
+        },
+        {
+          "value": "1",
+          "name": "Div1"
+        },
+        {
+          "value": "2",
+          "name": "Div1"
+        },
+        {
+          "value": "4",
+          "name": "Div2"
+        },
+        {
+          "value": "5",
+          "name": "Div4"
+        },
+        {
+          "value": "6",
+          "name": "Div8"
+        },
+        {
+          "value": "7",
+          "name": "Div16"
+        }
+      ]
+    },
+    {
+      "name": "HPRE",
+      "description": "AHB prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Div1"
+        },
+        {
+          "value": "8",
+          "name": "Div2"
+        },
+        {
+          "value": "9",
+          "name": "Div4"
+        },
+        {
+          "value": "10",
+          "name": "Div8"
+        },
+        {
+          "value": "11",
+          "name": "Div16"
+        },
+        {
+          "value": "12",
+          "name": "Div64"
+        },
+        {
+          "value": "13",
+          "name": "Div128"
+        },
+        {
+          "value": "14",
+          "name": "Div256"
+        },
+        {
+          "value": "15",
+          "name": "Div512"
+        }
+      ]
+    }
+  ]
+}

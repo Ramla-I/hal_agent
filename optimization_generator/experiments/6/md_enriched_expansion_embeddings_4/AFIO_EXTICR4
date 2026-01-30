@@ -1,0 +1,165 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR4",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EXTI12",
+      "description": "EXTI12 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA12"
+        },
+        {
+          "value": "1",
+          "name": "PB12"
+        },
+        {
+          "value": "2",
+          "name": "PC12"
+        },
+        {
+          "value": "3",
+          "name": "PD12"
+        },
+        {
+          "value": "4",
+          "name": "PE12"
+        },
+        {
+          "value": "5",
+          "name": "PF12"
+        },
+        {
+          "value": "6",
+          "name": "PG12"
+        }
+      ]
+    },
+    {
+      "name": "EXTI13",
+      "description": "EXTI13 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA13"
+        },
+        {
+          "value": "1",
+          "name": "PB13"
+        },
+        {
+          "value": "2",
+          "name": "PC13"
+        },
+        {
+          "value": "3",
+          "name": "PD13"
+        },
+        {
+          "value": "4",
+          "name": "PE13"
+        },
+        {
+          "value": "5",
+          "name": "PF13"
+        },
+        {
+          "value": "6",
+          "name": "PG13"
+        }
+      ]
+    },
+    {
+      "name": "EXTI14",
+      "description": "EXTI14 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA14"
+        },
+        {
+          "value": "1",
+          "name": "PB14"
+        },
+        {
+          "value": "2",
+          "name": "PC14"
+        },
+        {
+          "value": "3",
+          "name": "PD14"
+        },
+        {
+          "value": "4",
+          "name": "PE14"
+        },
+        {
+          "value": "5",
+          "name": "PF14"
+        },
+        {
+          "value": "6",
+          "name": "PG14"
+        }
+      ]
+    },
+    {
+      "name": "EXTI15",
+      "description": "EXTI15 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "PA15"
+        },
+        {
+          "value": "1",
+          "name": "PB15"
+        },
+        {
+          "value": "2",
+          "name": "PC15"
+        },
+        {
+          "value": "3",
+          "name": "PD15"
+        },
+        {
+          "value": "4",
+          "name": "PE15"
+        },
+        {
+          "value": "5",
+          "name": "PF15"
+        },
+        {
+          "value": "6",
+          "name": "PG15"
+        }
+      ]
+    }
+  ],
+  "access_constraints": []
+}

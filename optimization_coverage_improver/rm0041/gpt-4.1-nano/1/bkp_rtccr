@@ -1,0 +1,75 @@
+{
+  "datasheet_register_abbreviation": "BKP_RTCCR",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "ASOS",
+      "description": "Alarm or second output selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "AlarmPulse"
+        },
+        {
+          "value": "1",
+          "name": "SecondPulse"
+        }
+      ]
+    },
+    {
+      "name": "ASOE",
+      "description": "Alarm or second output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "CCO",
+      "description": "Calibration clock output",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoEffect"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "CAL[6:0]",
+      "description": "Calibration value (number of clock pulses ignored every 2^20 pulses)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    }
+  ]
+}

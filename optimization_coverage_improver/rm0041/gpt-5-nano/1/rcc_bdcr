@@ -1,0 +1,75 @@
+{
+  "datasheet_register_abbreviation": "RCC_BDCR",
+  "address_offset": "0x20",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "BDRST",
+      "description": "Backup domain software reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "RTCEN",
+      "description": "RTC clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "RTCSEL",
+      "description": "RTC clock source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoClock"
+        },
+        {
+          "value": "1",
+          "name": "LSE"
+        },
+        {
+          "value": "2",
+          "name": "LSI"
+        },
+        {
+          "value": "3",
+          "name": "HSE_DIV128"
+        }
+      ]
+    },
+    {
+      "name": "LSEBYP",
+      "description": "External low-speed oscillator bypass",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSEON",
+      "description": "External low-speed oscillator enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

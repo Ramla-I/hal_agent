@@ -1,0 +1,198 @@
+{
+  "datasheet_register_abbreviation": "UART4_SR",
+  "address_offset": "0x00",
+  "reset_value": "0x000000C0",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PE",
+      "description": "Parity error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoParityError"
+        },
+        {
+          "value": "1",
+          "name": "ParityError"
+        }
+      ]
+    },
+    {
+      "name": "FE",
+      "description": "Framing error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoFramingError"
+        },
+        {
+          "value": "1",
+          "name": "FramingError"
+        }
+      ]
+    },
+    {
+      "name": "NF",
+      "description": "Noise detected flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoNoise"
+        },
+        {
+          "value": "1",
+          "name": "NoiseDetected"
+        }
+      ]
+    },
+    {
+      "name": "ORE",
+      "description": "Overrun error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoOverrun"
+        },
+        {
+          "value": "1",
+          "name": "OverrunError"
+        }
+      ]
+    },
+    {
+      "name": "IDLE",
+      "description": "Idle line detected",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotIdle"
+        },
+        {
+          "value": "1",
+          "name": "IdleDetected"
+        }
+      ]
+    },
+    {
+      "name": "RXNE",
+      "description": "Read data register not empty",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Empty"
+        },
+        {
+          "value": "1",
+          "name": "NotEmpty"
+        }
+      ]
+    },
+    {
+      "name": "TC",
+      "description": "Transmission complete",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "TransmissionIncomplete"
+        },
+        {
+          "value": "1",
+          "name": "TransmissionComplete"
+        }
+      ]
+    },
+    {
+      "name": "TXE",
+      "description": "Transmit data register empty",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotEmpty"
+        },
+        {
+          "value": "1",
+          "name": "Empty"
+        }
+      ]
+    },
+    {
+      "name": "LBD",
+      "description": "LIN break detection flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoBreak"
+        },
+        {
+          "value": "1",
+          "name": "BreakDetected"
+        }
+      ]
+    },
+    {
+      "name": "CTS",
+      "description": "Clear to send flag (not available for UART4/UART5)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ClearToSendInactive"
+        },
+        {
+          "value": "1",
+          "name": "ClearToSendActive"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "RTC_DIVH",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "DIV[19:16]",
+      "description": "RTC clock divider high",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    }
+  ]
+}

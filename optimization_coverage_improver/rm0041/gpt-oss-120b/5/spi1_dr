@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "SPI1_DR",
+  "address_offset": "0x0C",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "DR",
+      "description": "Data register (bits 15:0) used for transmit/receive",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ]
+}

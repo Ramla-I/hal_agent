@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "TIM16_RCR",
+  "address_offset": null,
+  "reset_value": null,
+  "size": 16,
+  "subfields": [
+    {
+      "name": "REP[7:0]",
+      "description": "Repetition counter value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    }
+  ]
+}

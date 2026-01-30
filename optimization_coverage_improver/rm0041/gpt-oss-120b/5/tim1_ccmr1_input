@@ -1,0 +1,155 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCMR1",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection – defines channel 1 direction and input source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output"
+        },
+        {
+          "value": "0b01",
+          "name": "Input – IC1 mapped on TI1"
+        },
+        {
+          "value": "0b10",
+          "name": "Input – IC1 mapped on TI2"
+        },
+        {
+          "value": "0b11",
+          "name": "Input – IC1 mapped on TRC"
+        }
+      ]
+    },
+    {
+      "name": "IC1PSC",
+      "description": "Input capture 1 prescaler – ratio of prescaler acting on CC1 input",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "No prescaler"
+        },
+        {
+          "value": "0b01",
+          "name": "Capture every 2 events"
+        },
+        {
+          "value": "0b10",
+          "name": "Capture every 4 events"
+        },
+        {
+          "value": "0b11",
+          "name": "Capture every 8 events"
+        }
+      ]
+    },
+    {
+      "name": "IC1F",
+      "description": "Input capture 1 filter – digital filter applied to TI1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "COMG",
+      "description": "Capture/Compare control update generation – allows update of CCxE, CCxNE and OCxM when CCPC is set",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No action"
+        },
+        {
+          "value": "1",
+          "name": "Update enabled when CCPC is set"
+        }
+      ]
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection – defines channel 2 direction and input source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "Output"
+        },
+        {
+          "value": "0b01",
+          "name": "Input – IC2 mapped on TI2"
+        },
+        {
+          "value": "0b10",
+          "name": "Input – IC2 mapped on TI1"
+        },
+        {
+          "value": "0b11",
+          "name": "Input – IC2 mapped on TRC"
+        }
+      ]
+    },
+    {
+      "name": "IC2PSC",
+      "description": "Input capture 2 prescaler – ratio of prescaler acting on CC2 input",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "No prescaler"
+        },
+        {
+          "value": "0b01",
+          "name": "Capture every 2 events"
+        },
+        {
+          "value": "0b10",
+          "name": "Capture every 4 events"
+        },
+        {
+          "value": "0b11",
+          "name": "Capture every 8 events"
+        }
+      ]
+    },
+    {
+      "name": "IC2F",
+      "description": "Input capture 2 filter – digital filter applied to TI2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    }
+  ]
+}

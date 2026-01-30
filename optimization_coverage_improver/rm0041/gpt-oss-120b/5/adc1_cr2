@@ -1,0 +1,324 @@
+{
+  "datasheet_register_abbreviation": "ADC_CR2",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "AWDSGL",
+      "description": "Enable the watchdog on a single channel in scan mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Analog watchdog enabled on all channels"
+        },
+        {
+          "value": "1",
+          "name": "Analog watchdog enabled on a single channel"
+        }
+      ]
+    },
+    {
+      "name": "SCAN",
+      "description": "Scan mode enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Scan mode disabled"
+        },
+        {
+          "value": "1",
+          "name": "Scan mode enabled"
+        }
+      ]
+    },
+    {
+      "name": "JEOCIE",
+      "description": "Interrupt enable for injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "JEOC interrupt disabled"
+        },
+        {
+          "value": "1",
+          "name": "JEOC interrupt enabled"
+        }
+      ]
+    },
+    {
+      "name": "AWDIE",
+      "description": "Analog watchdog interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Analog watchdog interrupt disabled"
+        },
+        {
+          "value": "1",
+          "name": "Analog watchdog interrupt enabled"
+        }
+      ]
+    },
+    {
+      "name": "EOCIE",
+      "description": "Interrupt enable for end of conversion (EOC)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "EOC interrupt disabled"
+        },
+        {
+          "value": "1",
+          "name": "EOC interrupt enabled"
+        }
+      ]
+    },
+    {
+      "name": "AWDCH",
+      "description": "Analog watchdog channel select bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ADC analog Channel0"
+        },
+        {
+          "value": "1",
+          "name": "ADC analog Channel1"
+        },
+        {
+          "value": "2",
+          "name": "ADC analog Channel2"
+        },
+        {
+          "value": "3",
+          "name": "ADC analog Channel3"
+        },
+        {
+          "value": "4",
+          "name": "ADC analog Channel4"
+        },
+        {
+          "value": "5",
+          "name": "ADC analog Channel5"
+        },
+        {
+          "value": "6",
+          "name": "ADC analog Channel6"
+        },
+        {
+          "value": "7",
+          "name": "ADC analog Channel7"
+        },
+        {
+          "value": "8",
+          "name": "ADC analog Channel8"
+        },
+        {
+          "value": "9",
+          "name": "ADC analog Channel9"
+        },
+        {
+          "value": "10",
+          "name": "ADC analog Channel10"
+        },
+        {
+          "value": "11",
+          "name": "ADC analog Channel11"
+        },
+        {
+          "value": "12",
+          "name": "ADC analog Channel12"
+        },
+        {
+          "value": "13",
+          "name": "ADC analog Channel13"
+        },
+        {
+          "value": "14",
+          "name": "ADC analog Channel14"
+        },
+        {
+          "value": "15",
+          "name": "ADC analog Channel15"
+        },
+        {
+          "value": "16",
+          "name": "ADC analog Channel16 (temperature sensor)"
+        },
+        {
+          "value": "17",
+          "name": "ADC analog Channel17 (VREFINT)"
+        }
+      ]
+    },
+    {
+      "name": "TSVREFE",
+      "description": "Temperature sensor and VREFINT enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Temperature sensor and VREFINT disabled"
+        },
+        {
+          "value": "1",
+          "name": "Temperature sensor and VREFINT enabled"
+        }
+      ]
+    },
+    {
+      "name": "SWSTART",
+      "description": "Start conversion of regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Conversion not started"
+        },
+        {
+          "value": "1",
+          "name": "Start conversion"
+        }
+      ]
+    },
+    {
+      "name": "DISCNUM",
+      "description": "Discontinuous mode channel count",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "1 channel"
+        },
+        {
+          "value": "1",
+          "name": "2 channels"
+        },
+        {
+          "value": "2",
+          "name": "3 channels"
+        },
+        {
+          "value": "3",
+          "name": "4 channels"
+        },
+        {
+          "value": "4",
+          "name": "5 channels"
+        },
+        {
+          "value": "5",
+          "name": "6 channels"
+        },
+        {
+          "value": "6",
+          "name": "7 channels"
+        },
+        {
+          "value": "7",
+          "name": "8 channels"
+        }
+      ]
+    },
+    {
+      "name": "JDISCEN",
+      "description": "Discontinuous mode on injected channels enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Discontinuous mode on injected channels disabled"
+        },
+        {
+          "value": "1",
+          "name": "Discontinuous mode on injected channels enabled"
+        }
+      ]
+    },
+    {
+      "name": "DISCEN",
+      "description": "Discontinuous mode on regular channels enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Discontinuous mode on regular channels disabled"
+        },
+        {
+          "value": "1",
+          "name": "Discontinuous mode on regular channels enabled"
+        }
+      ]
+    },
+    {
+      "name": "JAUTO",
+      "description": "Automatic injected group conversion enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Automatic injected group conversion disabled"
+        },
+        {
+          "value": "1",
+          "name": "Automatic injected group conversion enabled"
+        }
+      ]
+    }
+  ]
+}

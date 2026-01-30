@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "TIM16_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1OF",
+      "description": "Capture/Compare 1 overcapture flag. Set by hardware, cleared by software by writing 0.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoOvercapture"
+        },
+        {
+          "value": "1",
+          "name": "OvercaptureDetected"
+        }
+      ]
+    },
+    {
+      "name": "BIF",
+      "description": "Break interrupt flag. Set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoBreakEvent"
+        },
+        {
+          "value": "1",
+          "name": "BreakEventOccurred"
+        }
+      ]
+    },
+    {
+      "name": "TIF",
+      "description": "Trigger interrupt flag. Set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoTriggerEvent"
+        },
+        {
+          "value": "1",
+          "name": "TriggerInterruptPending"
+        }
+      ]
+    },
+    {
+      "name": "COMIF",
+      "description": "COM interrupt flag. Set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoCOMEvent"
+        },
+        {
+          "value": "1",
+          "name": "COMInterruptPending"
+        }
+      ]
+    },
+    {
+      "name": "CC1IF",
+      "description": "Capture/Compare 1 interrupt flag. Set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoCC1Interrupt"
+        },
+        {
+          "value": "1",
+          "name": "CC1InterruptPending"
+        }
+      ]
+    },
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag. Set by hardware, cleared by software.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoUpdate"
+        },
+        {
+          "value": "1",
+          "name": "UpdateInterruptPending"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "datasheet_register_abbreviation": "TIM13_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 complementary output polarity. For output mode the bit must be cleared; for input mode it works with CC1P to define TI1FP1/TI2FP1 polarity.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NormalPolarity"
+        },
+        {
+          "value": "1",
+          "name": "InvertedPolarity"
+        }
+      ]
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity. Output mode: 0 = OC1 active high, 1 = OC1 active low. Input mode: 0 = non‑inverted/rising edge, 1 = inverted/falling edge.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "ActiveHighOrRising"
+        },
+        {
+          "value": "1",
+          "name": "ActiveLowOrFalling"
+        }
+      ]
+    },
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable. Output mode: 0 = Off (OC1 not active), 1 = On (OC1 active). Input mode: 0 = Capture disabled, 1 = Capture enabled.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BWTR1",
+  "address_offset": "0xA0000104",
+  "reset_value": "0x0FFFFFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ACCMOD",
+      "description": "Access mode (asynchronous)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 29
+      },
+      "enumerated_values": [
+        {
+          "value": "0b00",
+          "name": "AccessModeA"
+        },
+        {
+          "value": "0b01",
+          "name": "AccessModeB"
+        },
+        {
+          "value": "0b10",
+          "name": "AccessModeC"
+        },
+        {
+          "value": "0b11",
+          "name": "AccessModeD"
+        }
+      ]
+    },
+    {
+      "name": "DATLAT",
+      "description": "Data latency (don’t care for write timing)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 27
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CLKDIV",
+      "description": "Clock divide ratio (don’t care for write timing)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 23
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "BUSTURN",
+      "description": "Bus turnaround phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 19
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "BUSTURN_0"
+        },
+        {
+          "value": "0x1",
+          "name": "BUSTURN_1"
+        },
+        {
+          "value": "0x2",
+          "name": "BUSTURN_2"
+        },
+        {
+          "value": "0x3",
+          "name": "BUSTURN_3"
+        },
+        {
+          "value": "0x4",
+          "name": "BUSTURN_4"
+        },
+        {
+          "value": "0x5",
+          "name": "BUSTURN_5"
+        },
+        {
+          "value": "0x6",
+          "name": "BUSTURN_6"
+        },
+        {
+          "value": "0x7",
+          "name": "BUSTURN_7"
+        },
+        {
+          "value": "0x8",
+          "name": "BUSTURN_8"
+        },
+        {
+          "value": "0x9",
+          "name": "BUSTURN_9"
+        },
+        {
+          "value": "0xA",
+          "name": "BUSTURN_10"
+        },
+        {
+          "value": "0xB",
+          "name": "BUSTURN_11"
+        },
+        {
+          "value": "0xC",
+          "name": "BUSTURN_12"
+        },
+        {
+          "value": "0xD",
+          "name": "BUSTURN_13"
+        },
+        {
+          "value": "0xE",
+          "name": "BUSTURN_14"
+        },
+        {
+          "value": "0xF",
+          "name": "BUSTURN_15"
+        }
+      ]
+    },
+    {
+      "name": "DATAST",
+      "description": "Data‑phase duration (for write accesses effective duration = DATAST + 1 HCLK cycles)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDHLD",
+      "description": "Address‑hold phase duration (don’t care for write timing)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADDSET",
+      "description": "Address‑setup phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "ADDSET_0"
+        },
+        {
+          "value": "0x1",
+          "name": "ADDSET_1"
+        },
+        {
+          "value": "0x2",
+          "name": "ADDSET_2"
+        },
+        {
+          "value": "0x3",
+          "name": "ADDSET_3"
+        },
+        {
+          "value": "0x4",
+          "name": "ADDSET_4"
+        },
+        {
+          "value": "0x5",
+          "name": "ADDSET_5"
+        },
+        {
+          "value": "0x6",
+          "name": "ADDSET_6"
+        },
+        {
+          "value": "0x7",
+          "name": "ADDSET_7"
+        },
+        {
+          "value": "0x8",
+          "name": "ADDSET_8"
+        },
+        {
+          "value": "0x9",
+          "name": "ADDSET_9"
+        },
+        {
+          "value": "0xA",
+          "name": "ADDSET_10"
+        },
+        {
+          "value": "0xB",
+          "name": "ADDSET_11"
+        },
+        {
+          "value": "0xC",
+          "name": "ADDSET_12"
+        },
+        {
+          "value": "0xD",
+          "name": "ADDSET_13"
+        },
+        {
+          "value": "0xE",
+          "name": "ADDSET_14"
+        },
+        {
+          "value": "0xF",
+          "name": "ADDSET_15"
+        }
+      ]
+    }
+  ]
+}

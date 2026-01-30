@@ -1,0 +1,85 @@
+{
+  "datasheet_register_abbreviation": "BKP_RTCCR",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "Reserved15_10",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ASOS",
+      "description": "Alarm or second output selection. When ASOE is set, this bit selects whether the signal output on the TAMPER pin is the RTC Second pulse signal or the Alarm pulse signal.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "RTC Alarm pulse output selected"
+        },
+        {
+          "value": "1",
+          "name": "RTC Second pulse output selected"
+        }
+      ]
+    },
+    {
+      "name": "ASOE",
+      "description": "Alarm or second output enable. When set, the ASOS bit can be used to select the output on the TAMPER pin.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Alarm/Second output disabled"
+        },
+        {
+          "value": "1",
+          "name": "Alarm/Second output enabled"
+        }
+      ]
+    },
+    {
+      "name": "CCO",
+      "description": "Calibration clock output. Setting this bit outputs the RTC clock divided by 64 on the TAMPER pin.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No effect"
+        },
+        {
+          "value": "1",
+          "name": "Calibration clock output enabled"
+        }
+      ]
+    },
+    {
+      "name": "CAL[6:0]",
+      "description": "Calibration value. Indicates the number of clock pulses ignored every 2^20 clock pulses, allowing the RTC clock to be slowed down up to 121 ppm.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    }
+  ]
+}

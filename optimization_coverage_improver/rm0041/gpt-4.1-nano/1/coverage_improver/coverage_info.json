@@ -1,0 +1,2163 @@
+{
+  "peripheral_coverage": 37.735849056603776,
+  "register_coverage": 69.29460580912863,
+  "field_coverage": 57.503506311360454,
+  "peripherals_only_in_svd": [
+    "dbg",
+    "usart1",
+    "tim3",
+    "usart3",
+    "nvic",
+    "gpiof",
+    "uart4",
+    "tim7",
+    "dma1",
+    "stk",
+    "gpiog",
+    "tim4",
+    "tim5",
+    "spi3",
+    "spi1",
+    "dma2",
+    "nvic_stir",
+    "i2c1",
+    "tim17",
+    "gpioa",
+    "tim14",
+    "scb_actrl",
+    "gpiob",
+    "gpioc",
+    "adc1",
+    "gpiod",
+    "i2c2",
+    "spi2",
+    "uart5",
+    "usart2",
+    "gpioe",
+    "mpu",
+    "scb"
+  ],
+  "peripherals_only_in_agent_output": [],
+  "peripherals_present_in_both": [
+    "cec",
+    "tim16",
+    "tim12",
+    "pwr",
+    "rcc",
+    "exti",
+    "tim1",
+    "iwdg",
+    "bkp",
+    "tim13",
+    "rtc",
+    "crc",
+    "flash",
+    "dac",
+    "tim6",
+    "afio",
+    "tim2",
+    "tim15",
+    "wwdg",
+    "fsmc"
+  ],
+  "registers_only_in_svd": {
+    "cec": [
+      "csr",
+      "oar",
+      "pres"
+    ],
+    "tim16": [
+      "ccmr1_output",
+      "ccmr1_input"
+    ],
+    "tim12": [
+      "ccmr1_output",
+      "ccmr1_input"
+    ],
+    "pwr": [],
+    "rcc": [
+      "apb1rstr"
+    ],
+    "exti": [
+      "ftsr"
+    ],
+    "tim1": [
+      "cr2",
+      "ccmr1_output",
+      "ccmr2_output",
+      "bdtr",
+      "cnt",
+      "ccmr2_input",
+      "cr1",
+      "ccmr1_input"
+    ],
+    "iwdg": [],
+    "bkp": [
+      "dr29",
+      "dr21",
+      "dr26",
+      "dr40",
+      "dr32",
+      "dr27",
+      "dr23",
+      "dr37",
+      "dr39",
+      "dr31",
+      "dr24",
+      "dr28",
+      "dr41",
+      "dr35",
+      "dr42",
+      "dr25",
+      "dr36",
+      "dr30",
+      "dr33",
+      "dr22",
+      "dr38"
+    ],
+    "tim13": [
+      "ccmr1_output",
+      "ccmr1_input"
+    ],
+    "rtc": [
+      "divl",
+      "alrh",
+      "cntl",
+      "divh",
+      "alrl"
+    ],
+    "crc": [
+      "dr"
+    ],
+    "flash": [
+      "obr",
+      "wrpr",
+      "ar",
+      "keyr",
+      "sr",
+      "optkeyr",
+      "cr"
+    ],
+    "dac": [
+      "dhr12ld",
+      "dhr12r2",
+      "sr",
+      "dhr8rd",
+      "cr",
+      "dor2"
+    ],
+    "tim6": [
+      "cr2"
+    ],
+    "afio": [],
+    "tim2": [
+      "ccmr2_input",
+      "ccmr1_output",
+      "ccmr2_output",
+      "ccmr1_input"
+    ],
+    "tim15": [
+      "ccer",
+      "ccmr1_output",
+      "ccr2",
+      "dcr",
+      "ccmr1_input"
+    ],
+    "wwdg": [
+      "cr"
+    ],
+    "fsmc": [
+      "btr4",
+      "btr3",
+      "btr1",
+      "btr2"
+    ]
+  },
+  "registers_only_in_agent_output": {
+    "cec": [],
+    "tim16": [],
+    "tim12": [],
+    "pwr": [],
+    "rcc": [],
+    "exti": [],
+    "tim1": [],
+    "iwdg": [],
+    "bkp": [],
+    "tim13": [],
+    "rtc": [],
+    "crc": [],
+    "flash": [],
+    "dac": [],
+    "tim6": [],
+    "afio": [],
+    "tim2": [],
+    "tim15": [],
+    "wwdg": [],
+    "fsmc": []
+  },
+  "registers_present_in_both": {
+    "cec": [
+      "esr",
+      "rxd",
+      "txd",
+      "cfgr"
+    ],
+    "tim16": [
+      "bdtr",
+      "psc",
+      "cnt",
+      "cr2",
+      "rcr",
+      "ccer",
+      "sr",
+      "dmar",
+      "cr1",
+      "egr",
+      "dcr",
+      "arr",
+      "dier",
+      "ccr1"
+    ],
+    "tim12": [
+      "psc",
+      "cnt",
+      "cr2",
+      "ccer",
+      "sr",
+      "smcr",
+      "cr1",
+      "egr",
+      "arr",
+      "ccr2",
+      "dier",
+      "ccr1"
+    ],
+    "pwr": [
+      "csr",
+      "cr"
+    ],
+    "rcc": [
+      "csr",
+      "apb2rstr",
+      "bdcr",
+      "apb2enr",
+      "ahbenr",
+      "apb1enr",
+      "cir",
+      "cr",
+      "cfgr",
+      "cfgr2"
+    ],
+    "exti": [
+      "imr",
+      "emr",
+      "pr",
+      "swier",
+      "rtsr"
+    ],
+    "tim1": [
+      "psc",
+      "ccer",
+      "rcr",
+      "ccr4",
+      "smcr",
+      "dmar",
+      "sr",
+      "egr",
+      "dcr",
+      "arr",
+      "ccr2",
+      "dier",
+      "ccr1",
+      "ccr3"
+    ],
+    "iwdg": [
+      "rlr",
+      "kr",
+      "pr",
+      "sr"
+    ],
+    "bkp": [
+      "dr16",
+      "dr15",
+      "dr2",
+      "dr20",
+      "dr13",
+      "dr14",
+      "rtccr",
+      "dr19",
+      "dr12",
+      "dr17",
+      "dr7",
+      "dr4",
+      "dr3",
+      "dr1",
+      "csr",
+      "dr10",
+      "dr5",
+      "dr8",
+      "dr6",
+      "dr11",
+      "dr9",
+      "dr34",
+      "dr18",
+      "cr"
+    ],
+    "tim13": [
+      "psc",
+      "cnt",
+      "ccer",
+      "sr",
+      "cr1",
+      "egr",
+      "arr",
+      "dier",
+      "ccr1"
+    ],
+    "rtc": [
+      "prll",
+      "crh",
+      "crl",
+      "cnth",
+      "prlh"
+    ],
+    "crc": [
+      "cr",
+      "idr"
+    ],
+    "flash": [
+      "acr"
+    ],
+    "dac": [
+      "dhr8r1",
+      "dhr12r1",
+      "dhr12l1",
+      "dhr8r2",
+      "dor1",
+      "dhr12l2",
+      "dhr12rd",
+      "swtrigr"
+    ],
+    "tim6": [
+      "psc",
+      "cnt",
+      "sr",
+      "cr1",
+      "egr",
+      "arr",
+      "dier"
+    ],
+    "afio": [
+      "evcr",
+      "exticr1",
+      "mapr2",
+      "mapr",
+      "exticr2",
+      "exticr4",
+      "exticr3"
+    ],
+    "tim2": [
+      "psc",
+      "cnt",
+      "cr2",
+      "ccer",
+      "sr",
+      "ccr4",
+      "dmar",
+      "smcr",
+      "cr1",
+      "egr",
+      "dcr",
+      "arr",
+      "ccr2",
+      "dier",
+      "ccr1",
+      "ccr3"
+    ],
+    "tim15": [
+      "bdtr",
+      "psc",
+      "cnt",
+      "cr2",
+      "rcr",
+      "sr",
+      "smcr",
+      "dmar",
+      "cr1",
+      "egr",
+      "arr",
+      "dier",
+      "ccr1"
+    ],
+    "wwdg": [
+      "cfr",
+      "sr"
+    ],
+    "fsmc": [
+      "bwtr2",
+      "bcr4",
+      "bwtr1",
+      "bcr3",
+      "bcr1",
+      "bcr2",
+      "bwtr3",
+      "bwtr4"
+    ]
+  },
+  "fields_only_in_svd": {
+    "cec": {
+      "esr": [
+        "bpe",
+        "line",
+        "acke",
+        "tbtfe",
+        "rbtfe",
+        "bte",
+        "sbe"
+      ],
+      "rxd": [],
+      "txd": [],
+      "cfgr": []
+    },
+    "tim16": {
+      "bdtr": [],
+      "psc": [],
+      "cnt": [],
+      "cr2": [
+        "ccus",
+        "ois1n",
+        "ccpc",
+        "ois1"
+      ],
+      "rcr": [
+        "rep"
+      ],
+      "ccer": [
+        "cc1np",
+        "cc1ne"
+      ],
+      "sr": [
+        "bif",
+        "comif"
+      ],
+      "dmar": [],
+      "cr1": [],
+      "egr": [
+        "comg",
+        "bg"
+      ],
+      "dcr": [],
+      "arr": [],
+      "dier": [
+        "comie",
+        "bie"
+      ],
+      "ccr1": []
+    },
+    "tim12": {
+      "psc": [],
+      "cnt": [],
+      "cr2": [],
+      "ccer": [],
+      "sr": [],
+      "smcr": [],
+      "cr1": [],
+      "egr": [],
+      "arr": [],
+      "ccr2": [],
+      "dier": [],
+      "ccr1": []
+    },
+    "pwr": {
+      "csr": [],
+      "cr": []
+    },
+    "rcc": {
+      "csr": [],
+      "apb2rstr": [
+        "afiorst",
+        "iopfrst",
+        "iopgrst",
+        "tim16rst",
+        "adc1rst",
+        "spi1rst",
+        "tim1rst",
+        "iopbrst",
+        "tim17rst",
+        "iopdrst",
+        "usart1rst",
+        "ioperst",
+        "ioparst",
+        "iopcrst",
+        "tim15rst"
+      ],
+      "bdcr": [
+        "lserdy"
+      ],
+      "apb2enr": [
+        "iopaen",
+        "iopgen",
+        "spi1en",
+        "afioen",
+        "tim17en",
+        "iopcen",
+        "iopfen",
+        "iopben",
+        "tim15en",
+        "tim1en",
+        "usart1en",
+        "iopden",
+        "adc1en",
+        "tim16en",
+        "iopeen"
+      ],
+      "ahbenr": [
+        "flitfen",
+        "crcen",
+        "fsmcen",
+        "dma2en",
+        "dma1en",
+        "sramen"
+      ],
+      "apb1enr": [],
+      "cir": [
+        "hsirdyie",
+        "lsirdyie",
+        "pllrdyie",
+        "lserdyie",
+        "hserdyie",
+        "lsirdyc",
+        "cssf",
+        "pllrdyc",
+        "lserdyc",
+        "hserdyc",
+        "lsirdyf",
+        "lserdyf",
+        "hserdyf",
+        "cssc",
+        "hsirdyc",
+        "pllrdyf",
+        "hsirdyf"
+      ],
+      "cr": [
+        "hsitrim",
+        "pllrdy",
+        "hsebyp",
+        "hserdy",
+        "hsirdy",
+        "hsical",
+        "hsion",
+        "hseon",
+        "csson",
+        "pllon"
+      ],
+      "cfgr": [
+        "pllmul",
+        "mco",
+        "sws",
+        "sw"
+      ],
+      "cfgr2": []
+    },
+    "exti": {
+      "imr": [],
+      "emr": [
+        "mr11",
+        "mr17",
+        "mr14",
+        "mr15",
+        "mr5",
+        "mr10",
+        "mr3",
+        "mr1",
+        "mr6",
+        "mr4",
+        "mr7",
+        "mr8",
+        "mr0",
+        "mr9",
+        "mr2",
+        "mr12",
+        "mr16",
+        "mr13"
+      ],
+      "pr": [
+        "pr8",
+        "pr14",
+        "pr15",
+        "pr6",
+        "pr1",
+        "pr16",
+        "pr11",
+        "pr13",
+        "pr10",
+        "pr12",
+        "pr5",
+        "pr9",
+        "pr7",
+        "pr4",
+        "pr2",
+        "pr17",
+        "pr0",
+        "pr3"
+      ],
+      "swier": [],
+      "rtsr": [
+        "tr5",
+        "tr11",
+        "tr2",
+        "tr3",
+        "tr13",
+        "tr6",
+        "tr12",
+        "tr0",
+        "tr1",
+        "tr8",
+        "tr14",
+        "tr9",
+        "tr10",
+        "tr16",
+        "tr4",
+        "tr17",
+        "tr15",
+        "tr7"
+      ]
+    },
+    "tim1": {
+      "psc": [],
+      "ccer": [
+        "cc3np",
+        "cc3p",
+        "cc2ne",
+        "cc2e",
+        "cc2p",
+        "cc1np",
+        "cc4e",
+        "cc4p",
+        "cc1ne",
+        "cc3e",
+        "cc2np",
+        "cc1e",
+        "cc1p",
+        "cc3ne"
+      ],
+      "rcr": [],
+      "ccr4": [
+        "ccr4"
+      ],
+      "smcr": [
+        "ts",
+        "etf",
+        "etp",
+        "ece",
+        "etps",
+        "msm",
+        "sms"
+      ],
+      "dmar": [],
+      "sr": [
+        "bif",
+        "comif"
+      ],
+      "egr": [
+        "comg",
+        "bg"
+      ],
+      "dcr": [],
+      "arr": [
+        "arr"
+      ],
+      "ccr2": [
+        "ccr2"
+      ],
+      "dier": [
+        "comde",
+        "comie",
+        "bie"
+      ],
+      "ccr1": [
+        "ccr1"
+      ],
+      "ccr3": [
+        "ccr3"
+      ]
+    },
+    "iwdg": {
+      "rlr": [
+        "rl"
+      ],
+      "kr": [
+        "key"
+      ],
+      "pr": [
+        "pr"
+      ],
+      "sr": [
+        "pvu",
+        "rvu"
+      ]
+    },
+    "bkp": {
+      "dr16": [
+        "d16"
+      ],
+      "dr15": [
+        "d15"
+      ],
+      "dr2": [
+        "d2"
+      ],
+      "dr20": [
+        "d20"
+      ],
+      "dr13": [
+        "dr13"
+      ],
+      "dr14": [
+        "d14"
+      ],
+      "rtccr": [
+        "cal"
+      ],
+      "dr19": [
+        "d19"
+      ],
+      "dr12": [
+        "dr12"
+      ],
+      "dr17": [
+        "d17"
+      ],
+      "dr7": [
+        "d7"
+      ],
+      "dr4": [
+        "d4"
+      ],
+      "dr3": [
+        "d3"
+      ],
+      "dr1": [
+        "d1"
+      ],
+      "csr": [],
+      "dr10": [
+        "d10"
+      ],
+      "dr5": [
+        "d5"
+      ],
+      "dr8": [
+        "d8"
+      ],
+      "dr6": [
+        "d6"
+      ],
+      "dr11": [
+        "dr11"
+      ],
+      "dr9": [
+        "d9"
+      ],
+      "dr34": [
+        "d34"
+      ],
+      "dr18": [
+        "d18"
+      ],
+      "cr": []
+    },
+    "tim13": {
+      "psc": [],
+      "cnt": [],
+      "ccer": [],
+      "sr": [],
+      "cr1": [],
+      "egr": [],
+      "arr": [],
+      "dier": [],
+      "ccr1": []
+    },
+    "rtc": {
+      "prll": [
+        "prll"
+      ],
+      "crh": [],
+      "crl": [],
+      "cnth": [
+        "cnth"
+      ],
+      "prlh": [
+        "prlh"
+      ]
+    },
+    "crc": {
+      "cr": [
+        "reset"
+      ],
+      "idr": [
+        "idr"
+      ]
+    },
+    "flash": {
+      "acr": [
+        "hlfcya"
+      ]
+    },
+    "dac": {
+      "dhr8r1": [],
+      "dhr12r1": [
+        "dacc1dhr"
+      ],
+      "dhr12l1": [],
+      "dhr8r2": [],
+      "dor1": [
+        "dacc1dor"
+      ],
+      "dhr12l2": [],
+      "dhr12rd": [
+        "dacc2dhr",
+        "dacc1dhr"
+      ],
+      "swtrigr": [
+        "swtrig2",
+        "swtrig1"
+      ]
+    },
+    "tim6": {
+      "psc": [],
+      "cnt": [
+        "cnt"
+      ],
+      "sr": [],
+      "cr1": [],
+      "egr": [],
+      "arr": [],
+      "dier": []
+    },
+    "afio": {
+      "evcr": [
+        "port"
+      ],
+      "exticr1": [],
+      "mapr2": [
+        "tim16_remap",
+        "cec_remap",
+        "misc_remap",
+        "tim13_remap",
+        "tim17_remap",
+        "tim67_dac_dma_remap",
+        "tim15_remap",
+        "fsmc_nadv",
+        "tim1_dma_remap",
+        "tim12_remap",
+        "tim14_remap"
+      ],
+      "mapr": [
+        "tim5ch4_iremap"
+      ],
+      "exticr2": [],
+      "exticr4": [],
+      "exticr3": []
+    },
+    "tim2": {
+      "psc": [],
+      "cnt": [],
+      "cr2": [
+        "mms"
+      ],
+      "ccer": [],
+      "sr": [],
+      "ccr4": [],
+      "dmar": [],
+      "smcr": [
+        "etf",
+        "etps",
+        "occs",
+        "etp",
+        "ece"
+      ],
+      "cr1": [],
+      "egr": [],
+      "dcr": [],
+      "arr": [],
+      "ccr2": [],
+      "dier": [],
+      "ccr1": [],
+      "ccr3": []
+    },
+    "tim15": {
+      "bdtr": [
+        "lock",
+        "bkp",
+        "ossr",
+        "moe",
+        "aoe",
+        "ossi",
+        "dtg",
+        "bke"
+      ],
+      "psc": [],
+      "cnt": [],
+      "cr2": [],
+      "rcr": [],
+      "sr": [],
+      "smcr": [
+        "ts",
+        "sms"
+      ],
+      "dmar": [
+        "dmab"
+      ],
+      "cr1": [],
+      "egr": [],
+      "arr": [],
+      "dier": [],
+      "ccr1": []
+    },
+    "wwdg": {
+      "cfr": [],
+      "sr": [
+        "ewi"
+      ]
+    },
+    "fsmc": {
+      "bwtr2": [
+        "clkdiv",
+        "addset",
+        "addhld",
+        "datlat",
+        "accmod",
+        "datast"
+      ],
+      "bcr4": [
+        "faccen",
+        "waiten",
+        "waitpol",
+        "mbken",
+        "cburstrw",
+        "extmod",
+        "waitcfg",
+        "wren",
+        "bursten",
+        "mwid",
+        "wrapmod",
+        "asyncwait",
+        "mtyp",
+        "muxen"
+      ],
+      "bwtr1": [
+        "clkdiv",
+        "datlat",
+        "accmod"
+      ],
+      "bcr3": [
+        "faccen",
+        "waiten",
+        "waitpol",
+        "mbken",
+        "cburstrw",
+        "extmod",
+        "waitcfg",
+        "wren",
+        "bursten",
+        "mwid",
+        "wrapmod",
+        "asyncwait",
+        "mtyp",
+        "muxen"
+      ],
+      "bcr1": [],
+      "bcr2": [
+        "faccen",
+        "waiten",
+        "waitpol",
+        "mbken",
+        "cburstrw",
+        "extmod",
+        "waitcfg",
+        "wren",
+        "bursten",
+        "mwid",
+        "wrapmod",
+        "asyncwait",
+        "mtyp",
+        "muxen"
+      ],
+      "bwtr3": [
+        "clkdiv",
+        "datlat",
+        "accmod"
+      ],
+      "bwtr4": [
+        "clkdiv",
+        "datlat",
+        "accmod"
+      ]
+    }
+  },
+  "fields_only_in_agent_output": {
+    "cec": {
+      "esr": [
+        "teom",
+        "tsom",
+        "terr"
+      ],
+      "rxd": [],
+      "txd": [],
+      "cfgr": []
+    },
+    "tim16": {
+      "bdtr": [],
+      "psc": [],
+      "cnt": [],
+      "cr2": [
+        "mms",
+        "ti1s"
+      ],
+      "rcr": [
+        "rep[7:0]"
+      ],
+      "ccer": [
+        "cc3p",
+        "cc2e",
+        "cc2p",
+        "cc4p",
+        "cc4e",
+        "cc3e"
+      ],
+      "sr": [
+        "cc4of",
+        "cc2if",
+        "cc3if",
+        "cc2of",
+        "cc4if",
+        "cc3of"
+      ],
+      "dmar": [],
+      "cr1": [
+        "cms",
+        "dir"
+      ],
+      "egr": [
+        "cc2g",
+        "cc4g",
+        "cc3g"
+      ],
+      "dcr": [],
+      "arr": [],
+      "dier": [
+        "cc4ie",
+        "cc2ie",
+        "cc3de",
+        "cc2de",
+        "cc4de",
+        "cc3ie"
+      ],
+      "ccr1": []
+    },
+    "tim12": {
+      "psc": [],
+      "cnt": [],
+      "cr2": [
+        "ccds",
+        "ti1s"
+      ],
+      "ccer": [],
+      "sr": [
+        "cc4of",
+        "cc3of",
+        "cc3if",
+        "cc4if"
+      ],
+      "smcr": [
+        "ece",
+        "etps",
+        "etp",
+        "etf"
+      ],
+      "cr1": [
+        "cms",
+        "dir"
+      ],
+      "egr": [
+        "cc4g",
+        "cc3g"
+      ],
+      "arr": [],
+      "ccr2": [],
+      "dier": [
+        "cc4ie",
+        "cc3de",
+        "cc2de",
+        "cc1de",
+        "tde",
+        "cc4de",
+        "cc3ie",
+        "ude"
+      ],
+      "ccr1": []
+    },
+    "pwr": {
+      "csr": [],
+      "cr": []
+    },
+    "rcc": {
+      "csr": [],
+      "apb2rstr": [],
+      "bdcr": [],
+      "apb2enr": [],
+      "ahbenr": [
+        "tim12rst",
+        "tim6rst",
+        "tim13rst",
+        "reserved10_9",
+        "tim14rst",
+        "tim7rst",
+        "tim2rst",
+        "tim5rst",
+        "tim4rst",
+        "tim3rst",
+        "wwdgrst"
+      ],
+      "apb1enr": [],
+      "cir": [],
+      "cr": [],
+      "cfgr": [],
+      "cfgr2": []
+    },
+    "exti": {
+      "imr": [],
+      "emr": [
+        "reserved",
+        "mrx"
+      ],
+      "pr": [
+        "prx"
+      ],
+      "swier": [],
+      "rtsr": []
+    },
+    "tim1": {
+      "psc": [],
+      "ccer": [],
+      "rcr": [
+        "reserved"
+      ],
+      "ccr4": [],
+      "smcr": [],
+      "dmar": [],
+      "sr": [],
+      "egr": [],
+      "dcr": [],
+      "arr": [],
+      "ccr2": [],
+      "dier": [
+        "reserved5",
+        "reserved15",
+        "reserved7",
+        "reserved13"
+      ],
+      "ccr1": [],
+      "ccr3": []
+    },
+    "iwdg": {
+      "rlr": [],
+      "kr": [],
+      "pr": [],
+      "sr": []
+    },
+    "bkp": {
+      "dr16": [
+        "d"
+      ],
+      "dr15": [
+        "d[15:0]"
+      ],
+      "dr2": [
+        "d"
+      ],
+      "dr20": [
+        "d[15:0]"
+      ],
+      "dr13": [
+        "d[15:0]"
+      ],
+      "dr14": [
+        "d[15:0]"
+      ],
+      "rtccr": [
+        "cal[6:0]"
+      ],
+      "dr19": [
+        "d[15:0]"
+      ],
+      "dr12": [
+        "d"
+      ],
+      "dr17": [
+        "d"
+      ],
+      "dr7": [
+        "d"
+      ],
+      "dr4": [
+        "d[15:0]"
+      ],
+      "dr3": [
+        "d"
+      ],
+      "dr1": [
+        "d[15:0]"
+      ],
+      "csr": [],
+      "dr10": [
+        "d[15:0]"
+      ],
+      "dr5": [
+        "d"
+      ],
+      "dr8": [
+        "d"
+      ],
+      "dr6": [
+        "d"
+      ],
+      "dr11": [
+        "d"
+      ],
+      "dr9": [
+        "d"
+      ],
+      "dr34": [
+        "tif",
+        "cte",
+        "tpie",
+        "tef",
+        "cti"
+      ],
+      "dr18": [
+        "d[15:0]"
+      ],
+      "cr": []
+    },
+    "tim13": {
+      "psc": [],
+      "cnt": [],
+      "ccer": [
+        "cc2e",
+        "cc2np",
+        "cc2p"
+      ],
+      "sr": [
+        "tif",
+        "cc4of",
+        "cc2if",
+        "cc3if",
+        "cc2of",
+        "cc4if",
+        "cc3of"
+      ],
+      "cr1": [
+        "opm"
+      ],
+      "egr": [
+        "tg"
+      ],
+      "arr": [],
+      "dier": [
+        "cc4ie",
+        "cc2ie",
+        "cc3de",
+        "tie",
+        "cc2de",
+        "cc1de",
+        "tde",
+        "cc4de",
+        "cc3ie",
+        "ude"
+      ],
+      "ccr1": []
+    },
+    "rtc": {
+      "prll": [
+        "prl[15:0]"
+      ],
+      "crh": [],
+      "crl": [],
+      "cnth": [],
+      "prlh": [
+        "prl[19:16]"
+      ]
+    },
+    "crc": {
+      "cr": [],
+      "idr": []
+    },
+    "flash": {
+      "acr": []
+    },
+    "dac": {
+      "dhr8r1": [],
+      "dhr12r1": [
+        "ten1",
+        "mamp1",
+        "tsel1",
+        "boff1",
+        "wave1",
+        "en1"
+      ],
+      "dhr12l1": [],
+      "dhr8r2": [],
+      "dor1": [],
+      "dhr12l2": [],
+      "dhr12rd": [],
+      "swtrigr": [
+        "ten1",
+        "mamp1",
+        "tsel1",
+        "boff1",
+        "wave1",
+        "en1"
+      ]
+    },
+    "tim6": {
+      "psc": [],
+      "cnt": [],
+      "sr": [
+        "tif",
+        "cc4of",
+        "cc2if",
+        "cc3if",
+        "cc1if",
+        "cc2of",
+        "cc4if",
+        "cc3of",
+        "cc1of"
+      ],
+      "cr1": [],
+      "egr": [
+        "tg",
+        "cc4g",
+        "cc3g",
+        "cc2g",
+        "cc1g"
+      ],
+      "arr": [],
+      "dier": [
+        "cc4ie",
+        "cc2ie",
+        "cc3de",
+        "tie",
+        "cc2de",
+        "cc1de",
+        "tde",
+        "cc4de",
+        "cc3ie",
+        "cc1ie"
+      ]
+    },
+    "afio": {
+      "evcr": [],
+      "exticr1": [],
+      "mapr2": [],
+      "mapr": [],
+      "exticr2": [],
+      "exticr4": [],
+      "exticr3": []
+    },
+    "tim2": {
+      "psc": [],
+      "cnt": [],
+      "cr2": [
+        "mms[2:0]"
+      ],
+      "ccer": [],
+      "sr": [],
+      "ccr4": [],
+      "dmar": [],
+      "smcr": [],
+      "cr1": [],
+      "egr": [],
+      "dcr": [],
+      "arr": [],
+      "ccr2": [],
+      "dier": [],
+      "ccr1": [],
+      "ccr3": []
+    },
+    "tim15": {
+      "bdtr": [],
+      "psc": [],
+      "cnt": [],
+      "cr2": [],
+      "rcr": [],
+      "sr": [],
+      "smcr": [
+        "ccus",
+        "ccpc",
+        "ts[2:0]"
+      ],
+      "dmar": [
+        "bkp",
+        "ossr",
+        "moe",
+        "aoe",
+        "bke"
+      ],
+      "cr1": [],
+      "egr": [],
+      "arr": [],
+      "dier": [],
+      "ccr1": []
+    },
+    "wwdg": {
+      "cfr": [],
+      "sr": [
+        "ewif"
+      ]
+    },
+    "fsmc": {
+      "bwtr2": [
+        "addhld[3:0]",
+        "datast[7:0]",
+        "addset[3:0]"
+      ],
+      "bcr4": [],
+      "bwtr1": [],
+      "bcr3": [],
+      "bcr1": [
+        "wrapmod",
+        "cpsize"
+      ],
+      "bcr2": [],
+      "bwtr3": [],
+      "bwtr4": []
+    }
+  },
+  "fields_present_in_both": {
+    "cec": {
+      "esr": [],
+      "rxd": [
+        "rxd"
+      ],
+      "txd": [
+        "txd"
+      ],
+      "cfgr": [
+        "pe",
+        "btem",
+        "bpem",
+        "ie"
+      ]
+    },
+    "tim16": {
+      "bdtr": [
+        "lock",
+        "bkp",
+        "ossr",
+        "moe",
+        "aoe",
+        "ossi",
+        "dtg",
+        "bke"
+      ],
+      "psc": [
+        "psc"
+      ],
+      "cnt": [
+        "cnt"
+      ],
+      "cr2": [
+        "ccds"
+      ],
+      "rcr": [],
+      "ccer": [
+        "cc1e",
+        "cc1p"
+      ],
+      "sr": [
+        "uif",
+        "tif",
+        "cc1of",
+        "cc1if"
+      ],
+      "dmar": [
+        "dmab"
+      ],
+      "cr1": [
+        "ckd",
+        "opm",
+        "udis",
+        "arpe",
+        "cen",
+        "urs"
+      ],
+      "egr": [
+        "ug",
+        "cc1g",
+        "tg"
+      ],
+      "dcr": [
+        "dba",
+        "dbl"
+      ],
+      "arr": [
+        "arr"
+      ],
+      "dier": [
+        "tie",
+        "cc1de",
+        "uie",
+        "tde",
+        "cc1ie",
+        "ude"
+      ],
+      "ccr1": [
+        "ccr1"
+      ]
+    },
+    "tim12": {
+      "psc": [
+        "psc"
+      ],
+      "cnt": [
+        "cnt"
+      ],
+      "cr2": [
+        "mms"
+      ],
+      "ccer": [
+        "cc2e",
+        "cc1np",
+        "cc2p",
+        "cc1e",
+        "cc2np",
+        "cc1p"
+      ],
+      "sr": [
+        "tif",
+        "cc2if",
+        "cc1if",
+        "cc2of",
+        "uif",
+        "cc1of"
+      ],
+      "smcr": [
+        "ts",
+        "msm",
+        "sms"
+      ],
+      "cr1": [
+        "ckd",
+        "opm",
+        "udis",
+        "arpe",
+        "cen",
+        "urs"
+      ],
+      "egr": [
+        "cc2g",
+        "cc1g",
+        "ug",
+        "tg"
+      ],
+      "arr": [
+        "arr"
+      ],
+      "ccr2": [
+        "ccr2"
+      ],
+      "dier": [
+        "cc1ie",
+        "cc2ie",
+        "uie",
+        "tie"
+      ],
+      "ccr1": [
+        "ccr1"
+      ]
+    },
+    "pwr": {
+      "csr": [
+        "pvdo",
+        "wuf",
+        "ewup",
+        "sbf"
+      ],
+      "cr": [
+        "pls",
+        "dbp",
+        "cwuf",
+        "pdds",
+        "pvde",
+        "lpds",
+        "csbf"
+      ]
+    },
+    "rcc": {
+      "csr": [
+        "iwdgrstf",
+        "lpwrrstf",
+        "porrstf",
+        "pinrstf",
+        "lsirdy",
+        "rmvf",
+        "wwdgrstf",
+        "sftrstf",
+        "lsion"
+      ],
+      "apb2rstr": [],
+      "bdcr": [
+        "lsebyp",
+        "bdrst",
+        "rtcsel",
+        "rtcen",
+        "lseon"
+      ],
+      "apb2enr": [],
+      "ahbenr": [],
+      "apb1enr": [
+        "spi3en",
+        "uart4en",
+        "tim13en",
+        "spi2en",
+        "i2c2en",
+        "wwdgen",
+        "tim14en",
+        "uart5en",
+        "dacen",
+        "i2c1en",
+        "usart3en",
+        "usart2en",
+        "tim7en",
+        "tim4en",
+        "tim6en",
+        "tim5en",
+        "tim3en",
+        "cecen",
+        "bkpen",
+        "tim12en",
+        "tim2en",
+        "pwren"
+      ],
+      "cir": [],
+      "cr": [],
+      "cfgr": [
+        "ppre1",
+        "hpre",
+        "pllxtpre",
+        "adcpre",
+        "pllsrc",
+        "ppre2"
+      ],
+      "cfgr2": [
+        "prediv1"
+      ]
+    },
+    "exti": {
+      "imr": [
+        "mr6",
+        "mr7",
+        "mr4",
+        "mr8",
+        "mr0",
+        "mr11",
+        "mr9",
+        "mr17",
+        "mr2",
+        "mr12",
+        "mr14",
+        "mr16",
+        "mr15",
+        "mr5",
+        "mr10",
+        "mr13",
+        "mr1",
+        "mr3"
+      ],
+      "emr": [],
+      "pr": [],
+      "swier": [
+        "swier13",
+        "swier14",
+        "swier7",
+        "swier16",
+        "swier15",
+        "swier8",
+        "swier12",
+        "swier9",
+        "swier3",
+        "swier1",
+        "swier2",
+        "swier11",
+        "swier4",
+        "swier17",
+        "swier5",
+        "swier10",
+        "swier6",
+        "swier0"
+      ],
+      "rtsr": []
+    },
+    "tim1": {
+      "psc": [
+        "psc"
+      ],
+      "ccer": [],
+      "rcr": [
+        "rep"
+      ],
+      "ccr4": [],
+      "smcr": [],
+      "dmar": [
+        "dmab"
+      ],
+      "sr": [
+        "tif",
+        "cc4of",
+        "cc2if",
+        "cc3if",
+        "cc1if",
+        "cc2of",
+        "uif",
+        "cc4if",
+        "cc3of",
+        "cc1of"
+      ],
+      "egr": [
+        "tg",
+        "cc1g",
+        "cc4g",
+        "cc3g",
+        "cc2g",
+        "ug"
+      ],
+      "dcr": [
+        "dba",
+        "dbl"
+      ],
+      "arr": [],
+      "ccr2": [],
+      "dier": [
+        "cc4ie",
+        "cc2ie",
+        "cc3de",
+        "tie",
+        "cc2de",
+        "cc1de",
+        "uie",
+        "tde",
+        "cc4de",
+        "cc3ie",
+        "cc1ie",
+        "ude"
+      ],
+      "ccr1": [],
+      "ccr3": []
+    },
+    "iwdg": {
+      "rlr": [],
+      "kr": [],
+      "pr": [],
+      "sr": []
+    },
+    "bkp": {
+      "dr16": [],
+      "dr15": [],
+      "dr2": [],
+      "dr20": [],
+      "dr13": [],
+      "dr14": [],
+      "rtccr": [
+        "asos",
+        "asoe",
+        "cco"
+      ],
+      "dr19": [],
+      "dr12": [],
+      "dr17": [],
+      "dr7": [],
+      "dr4": [],
+      "dr3": [],
+      "dr1": [],
+      "csr": [
+        "tif",
+        "cte",
+        "tpie",
+        "tef",
+        "cti"
+      ],
+      "dr10": [],
+      "dr5": [],
+      "dr8": [],
+      "dr6": [],
+      "dr11": [],
+      "dr9": [],
+      "dr34": [],
+      "dr18": [],
+      "cr": [
+        "tpal",
+        "tpe"
+      ]
+    },
+    "tim13": {
+      "psc": [
+        "psc"
+      ],
+      "cnt": [
+        "cnt"
+      ],
+      "ccer": [
+        "cc1e",
+        "cc1np",
+        "cc1p"
+      ],
+      "sr": [
+        "uif",
+        "cc1of",
+        "cc1if"
+      ],
+      "cr1": [
+        "ckd",
+        "udis",
+        "arpe",
+        "cen",
+        "urs"
+      ],
+      "egr": [
+        "cc1g",
+        "ug"
+      ],
+      "arr": [
+        "arr"
+      ],
+      "dier": [
+        "cc1ie",
+        "uie"
+      ],
+      "ccr1": [
+        "ccr1"
+      ]
+    },
+    "rtc": {
+      "prll": [],
+      "crh": [
+        "owie",
+        "secie",
+        "alrie"
+      ],
+      "crl": [
+        "alrf",
+        "cnf",
+        "rtoff",
+        "secf",
+        "rsf",
+        "owf"
+      ],
+      "cnth": [],
+      "prlh": []
+    },
+    "crc": {
+      "cr": [],
+      "idr": []
+    },
+    "flash": {
+      "acr": []
+    },
+    "dac": {
+      "dhr8r1": [
+        "dacc1dhr"
+      ],
+      "dhr12r1": [],
+      "dhr12l1": [
+        "dacc1dhr"
+      ],
+      "dhr8r2": [
+        "dacc2dhr"
+      ],
+      "dor1": [],
+      "dhr12l2": [
+        "dacc2dhr"
+      ],
+      "dhr12rd": [],
+      "swtrigr": []
+    },
+    "tim6": {
+      "psc": [
+        "psc"
+      ],
+      "cnt": [],
+      "sr": [
+        "uif"
+      ],
+      "cr1": [
+        "opm",
+        "udis",
+        "arpe",
+        "cen",
+        "urs"
+      ],
+      "egr": [
+        "ug"
+      ],
+      "arr": [
+        "arr"
+      ],
+      "dier": [
+        "uie",
+        "ude"
+      ]
+    },
+    "afio": {
+      "evcr": [
+        "pin",
+        "evoe"
+      ],
+      "exticr1": [
+        "exti2",
+        "exti1",
+        "exti3",
+        "exti0"
+      ],
+      "mapr2": [],
+      "mapr": [
+        "tim1_remap",
+        "tim4_remap",
+        "usart1_remap",
+        "usart2_remap",
+        "pd01_remap",
+        "spi1_remap",
+        "swj_cfg",
+        "i2c1_remap",
+        "tim2_remap",
+        "usart3_remap",
+        "tim3_remap"
+      ],
+      "exticr2": [
+        "exti6",
+        "exti7",
+        "exti4",
+        "exti5"
+      ],
+      "exticr4": [
+        "exti12",
+        "exti14",
+        "exti15",
+        "exti13"
+      ],
+      "exticr3": [
+        "exti8",
+        "exti10",
+        "exti11",
+        "exti9"
+      ]
+    },
+    "tim2": {
+      "psc": [
+        "psc"
+      ],
+      "cnt": [
+        "cnt"
+      ],
+      "cr2": [
+        "ccds",
+        "ti1s"
+      ],
+      "ccer": [
+        "cc3p",
+        "cc2e",
+        "cc2p",
+        "cc4p",
+        "cc4e",
+        "cc3e",
+        "cc1e",
+        "cc1p"
+      ],
+      "sr": [
+        "tif",
+        "cc4of",
+        "cc2if",
+        "cc3if",
+        "cc1if",
+        "cc2of",
+        "uif",
+        "cc4if",
+        "cc3of",
+        "cc1of"
+      ],
+      "ccr4": [
+        "ccr4"
+      ],
+      "dmar": [
+        "dmab"
+      ],
+      "smcr": [
+        "ts",
+        "msm",
+        "sms"
+      ],
+      "cr1": [
+        "ckd",
+        "opm",
+        "cms",
+        "udis",
+        "arpe",
+        "dir",
+        "cen",
+        "urs"
+      ],
+      "egr": [
+        "tg",
+        "cc1g",
+        "cc4g",
+        "cc3g",
+        "cc2g",
+        "ug"
+      ],
+      "dcr": [
+        "dba",
+        "dbl"
+      ],
+      "arr": [
+        "arr"
+      ],
+      "ccr2": [
+        "ccr2"
+      ],
+      "dier": [
+        "cc4ie",
+        "cc2ie",
+        "tie",
+        "cc3de",
+        "cc2de",
+        "cc1de",
+        "uie",
+        "tde",
+        "cc4de",
+        "cc3ie",
+        "cc1ie",
+        "ude"
+      ],
+      "ccr1": [
+        "ccr1"
+      ],
+      "ccr3": [
+        "ccr3"
+      ]
+    },
+    "tim15": {
+      "bdtr": [],
+      "psc": [
+        "psc"
+      ],
+      "cnt": [
+        "cnt"
+      ],
+      "cr2": [
+        "ois2",
+        "mms",
+        "ois1n",
+        "ccds",
+        "ccpc",
+        "ccus",
+        "ois1"
+      ],
+      "rcr": [
+        "rep"
+      ],
+      "sr": [
+        "tif",
+        "bif",
+        "cc2if",
+        "comif",
+        "cc1if",
+        "cc2of",
+        "uif",
+        "cc1of"
+      ],
+      "smcr": [
+        "msm"
+      ],
+      "dmar": [],
+      "cr1": [
+        "ckd",
+        "opm",
+        "udis",
+        "arpe",
+        "cen",
+        "urs"
+      ],
+      "egr": [
+        "comg",
+        "tg",
+        "bg",
+        "cc1g",
+        "cc2g",
+        "ug"
+      ],
+      "arr": [
+        "arr"
+      ],
+      "dier": [
+        "cc2ie",
+        "comie",
+        "tie",
+        "bie",
+        "cc2de",
+        "cc1de",
+        "uie",
+        "tde",
+        "cc1ie",
+        "ude"
+      ],
+      "ccr1": [
+        "ccr1"
+      ]
+    },
+    "wwdg": {
+      "cfr": [
+        "wdgtb",
+        "w",
+        "ewi"
+      ],
+      "sr": []
+    },
+    "fsmc": {
+      "bwtr2": [],
+      "bcr4": [],
+      "bwtr1": [
+        "datast",
+        "addset",
+        "addhld"
+      ],
+      "bcr3": [],
+      "bcr1": [
+        "faccen",
+        "waiten",
+        "waitpol",
+        "mbken",
+        "cburstrw",
+        "extmod",
+        "waitcfg",
+        "wren",
+        "bursten",
+        "mwid",
+        "asyncwait",
+        "mtyp",
+        "muxen"
+      ],
+      "bcr2": [],
+      "bwtr3": [
+        "datast",
+        "addset",
+        "addhld"
+      ],
+      "bwtr4": [
+        "datast",
+        "addset",
+        "addhld"
+      ]
+    }
+  }
+}

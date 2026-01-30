@@ -1,0 +1,68 @@
+{
+  "datasheet_register_abbreviation": "TIM12_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CC2NP",
+      "description": "Capture/Compare 2 complementary output polarity (refer to CC1NP description).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output polarity.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 complementary output polarity (output‑configured: must be cleared; input‑configured: used with CC1P for polarity).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output polarity (or input polarity when channel is configured as input).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable (or capture enable when channel is configured as input).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ]
+}

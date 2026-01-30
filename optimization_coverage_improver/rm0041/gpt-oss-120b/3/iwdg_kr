@@ -1,0 +1,31 @@
+{
+  "datasheet_register_abbreviation": "IWDG_KR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "KEY",
+      "description": "Key value (write only, read returns 0x0000). Used to enable access to PR and RLR registers (0xAAAA), reload the counter (0x5555), and start the watchdog (0xCCCC).",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0xAAAA",
+          "name": "EnableAccess"
+        },
+        {
+          "value": "0x5555",
+          "name": "ReloadCounter"
+        },
+        {
+          "value": "0xCCCC",
+          "name": "StartWatchdog"
+        }
+      ]
+    }
+  ]
+}

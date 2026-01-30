@@ -1,0 +1,89 @@
+{
+  "datasheet_register_abbreviation": "TIM16_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TI1S",
+      "description": "TI1 selection – 0: TIMx_CH1 pin connected to TI1 input, 1: TIMx_CH1, CH2 and CH3 pins combined (XOR) to TI1 input",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Direct"
+        },
+        {
+          "value": "1",
+          "name": "XOR"
+        }
+      ]
+    },
+    {
+      "name": "MMS",
+      "description": "Master mode selection – selects the information sent to slave timers (TRGO)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "000",
+          "name": "Reset"
+        },
+        {
+          "value": "001",
+          "name": "Enable"
+        },
+        {
+          "value": "010",
+          "name": "Update"
+        },
+        {
+          "value": "011",
+          "name": "ComparePulse"
+        },
+        {
+          "value": "100",
+          "name": "CompareOC1REF"
+        },
+        {
+          "value": "101",
+          "name": "CompareOC2REF"
+        },
+        {
+          "value": "110",
+          "name": "CompareOC3REF"
+        },
+        {
+          "value": "111",
+          "name": "CompareOC4REF"
+        }
+      ]
+    },
+    {
+      "name": "CCDS",
+      "description": "Capture/compare DMA selection – 0: DMA request on CCx event, 1: DMA request on update event",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CCxEvent"
+        },
+        {
+          "value": "1",
+          "name": "UpdateEvent"
+        }
+      ]
+    }
+  ]
+}

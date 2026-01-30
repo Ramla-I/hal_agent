@@ -1,0 +1,73 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BWTR3",
+  "address_offset": null,
+  "reset_value": null,
+  "size": null,
+  "subfields": [
+    {
+      "name": "DATAST",
+      "description": "Data‑phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0x00",
+          "name": "Reserved"
+        },
+        {
+          "value": "0x01",
+          "name": "1 HCLK cycle"
+        },
+        {
+          "value": "0xFF",
+          "name": "255 HCLK cycles"
+        }
+      ]
+    },
+    {
+      "name": "ADDHLD",
+      "description": "Address‑hold phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "Reserved"
+        },
+        {
+          "value": "0x1",
+          "name": "1 HCLK cycle"
+        },
+        {
+          "value": "0xF",
+          "name": "15 HCLK cycles"
+        }
+      ]
+    },
+    {
+      "name": "ADDSET",
+      "description": "Address‑setup phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "0 HCLK cycles"
+        },
+        {
+          "value": "0xF",
+          "name": "15 HCLK cycles"
+        }
+      ]
+    }
+  ]
+}

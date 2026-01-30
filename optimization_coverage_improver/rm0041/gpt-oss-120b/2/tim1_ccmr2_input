@@ -1,0 +1,136 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCMR2",
+  "address_offset": "0x1C",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "IC2F",
+      "description": "Input capture 2 filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "IC2PSC",
+      "description": "Input capture 2 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoPrescaler"
+        },
+        {
+          "value": "1",
+          "name": "Div2"
+        },
+        {
+          "value": "2",
+          "name": "Div4"
+        },
+        {
+          "value": "3",
+          "name": "Div8"
+        }
+      ]
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output"
+        },
+        {
+          "value": "1",
+          "name": "IC2OnTI2"
+        },
+        {
+          "value": "2",
+          "name": "IC2OnTI1"
+        },
+        {
+          "value": "3",
+          "name": "IC2OnTRC"
+        }
+      ]
+    },
+    {
+      "name": "IC1F",
+      "description": "Input capture 1 filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "IC1PSC",
+      "description": "Input capture 1 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoPrescaler"
+        },
+        {
+          "value": "1",
+          "name": "Div2"
+        },
+        {
+          "value": "2",
+          "name": "Div4"
+        },
+        {
+          "value": "3",
+          "name": "Div8"
+        }
+      ]
+    },
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output"
+        },
+        {
+          "value": "1",
+          "name": "IC1OnTI1"
+        },
+        {
+          "value": "2",
+          "name": "IC1OnTI2"
+        },
+        {
+          "value": "3",
+          "name": "IC1OnTRC"
+        }
+      ]
+    }
+  ]
+}

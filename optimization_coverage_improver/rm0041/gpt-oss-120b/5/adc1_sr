@@ -1,0 +1,122 @@
+{
+  "datasheet_register_abbreviation": "ADC_SR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "AWD",
+      "description": "Analog watchdog flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No watchdog event"
+        },
+        {
+          "value": "1",
+          "name": "Watchdog event occurred"
+        }
+      ]
+    },
+    {
+      "name": "EOC",
+      "description": "Regular channel end of conversion",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Conversion not complete"
+        },
+        {
+          "value": "1",
+          "name": "Conversion complete"
+        }
+      ]
+    },
+    {
+      "name": "JEOC",
+      "description": "Injected channel end of conversion",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Conversion not complete"
+        },
+        {
+          "value": "1",
+          "name": "Conversion complete"
+        }
+      ]
+    },
+    {
+      "name": "JSTRT",
+      "description": "Injected channel start flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No start"
+        },
+        {
+          "value": "1",
+          "name": "Start occurred"
+        }
+      ]
+    },
+    {
+      "name": "STRT",
+      "description": "Regular channel start flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No start"
+        },
+        {
+          "value": "1",
+          "name": "Start occurred"
+        }
+      ]
+    },
+    {
+      "name": "OVR",
+      "description": "Overrun flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "No overrun"
+        },
+        {
+          "value": "1",
+          "name": "Overrun occurred"
+        }
+      ]
+    }
+  ]
+}

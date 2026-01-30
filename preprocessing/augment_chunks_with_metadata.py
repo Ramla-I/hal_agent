@@ -68,8 +68,8 @@ def generate_metadata_header(metadata: Dict) -> str:
     lines = ["<!-- CHUNK METADATA"]
 
     # Basic identifiers
-    lines.append(f"Chunk ID: {metadata.get('chunk_id', 'unknown')}")
-    lines.append(f"Page: {metadata.get('page', 'unknown')}")
+    # lines.append(f"Chunk ID: {metadata.get('chunk_id', 'unknown')}")
+    # lines.append(f"Page: {metadata.get('page', 'unknown')}")
 
     # Hierarchical context
     if metadata.get('chapter'):
@@ -92,8 +92,8 @@ def generate_metadata_header(metadata: Dict) -> str:
         lines.append(f"Registers: {reg_list}")
 
     # Content classification
-    lines.append(f"Content Type: {metadata.get('chunk_type', 'general')}")
-    lines.append(f"Importance: {metadata.get('importance', 'medium')}")
+    # lines.append(f"Content Type: {metadata.get('chunk_type', 'general')}")
+    # lines.append(f"Importance: {metadata.get('importance', 'medium')}")
 
     # Features
     features = []
