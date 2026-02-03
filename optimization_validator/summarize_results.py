@@ -1,6 +1,5 @@
 import csv
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -12,16 +11,19 @@ from utils.models import model_costs
 # aggregates the results, and writes a markdown summary (output file "summary.md" in the results directory).
 # It expects per-model subfolders, each containing accuracy and usage results files,
 # and compiles these into both table and summary formats for easy comparison and reporting.
-def summarize_results(results_dir="stm-rm0041/experiments/batch_sizes_embeddings"):
+def summarize_results(results_dir="stm-rm0041/experiments/batch_sizes_embeddings", halve_vector_store_time: bool = False):
     """
     Summarize prompt optimization results into a markdown file.
     
     Args:
         results_dir: Path to the prompt_optimization_results directory
+        halve_vector_store_time: If True, halve vector_store_search total_time
     """
-    output_file = results_dir + "/summary.md"
+    script_dir = Path(__file__).resolve().parent
     results_path = Path(results_dir)
-    output_path = Path(output_file)
+    if not results_path.is_absolute():
+        results_path = script_dir / results_path
+    output_path = results_path / "summary.md"
     
     # Collect accuracy data
     accuracy_data = []
@@ -152,11 +154,17 @@ def summarize_results(results_dir="stm-rm0041/experiments/batch_sizes_embeddings
             with open(timing_files[0], 'r') as f:
                 timing_stats = json.load(f)
             for operation, stats in timing_stats.items():
+                total_time = stats.get('total_time', '')
+                if halve_vector_store_time and operation == "vector_store_search":
+                    try:
+                        total_time = float(total_time) / 2
+                    except (TypeError, ValueError):
+                        pass
                 timing_data.append({
                     'model_name': model_name,
                     'operation': operation,
                     'count': stats.get('count', ''),
-                    'total_time': stats.get('total_time', ''),
+                    'total_time': total_time,
                     'avg_time': stats.get('avg_time', ''),
                     'min_time': stats.get('min_time', ''),
                     'p25_time': stats.get('p25_time', ''),
@@ -319,5 +327,20 @@ def summarize_results(results_dir="stm-rm0041/experiments/batch_sizes_embeddings
 
 
 if __name__ == "__main__":
-    summarize_results()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Summarize optimization results into markdown/CSV files.")
+    parser.add_argument(
+        "--results-dir",
+        default="stm-rm0041/experiments/batch_sizes_embeddings",
+        help="Path to the results directory",
+    )
+    parser.add_argument(
+        "--halve-file-search-time",
+        action="store_true",
+        help="Halve vector_store_search total time (for legacy double-counted runs)",
+    )
+    args = parser.parse_args()
+
+    summarize_results(args.results_dir, halve_vector_store_time=args.halve_file_search_time)
 

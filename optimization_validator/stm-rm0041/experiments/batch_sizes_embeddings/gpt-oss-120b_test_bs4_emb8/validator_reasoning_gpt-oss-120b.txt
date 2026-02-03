@@ -1,0 +1,1793 @@
+---batch_0_(4_registers)---
+The AFIO EVCR register is documented in the RM0041 PDF.  
+- Its address offset is 0x00, reset value 0x00000000, size 32 bits, and it contains the fields **EVOE** (bit 7, rw, 1 bit), **PORT[2:0]** (bits 6‑4, rw, 3 bits) and **PIN[3:0]** (bits 3‑0, rw, 4 bits).  
+- All access types are read‑write; the specification does **not** state any field as write‑only.  
+
+The AFIO EXTICR1 register is also in the same PDF.  
+- Its address offset is 0x08, size 32 bits, and it holds four 4‑bit fields **EXTI0**, **EXTI1**, **EXTI2**, **EXTI3** at bit offsets 0, 4, 8, 12 respectively. All are read‑write.  
+
+No information is provided for the registers named `fyacsxrmhvyu` or `mhhmbqflagra`; therefore any invariant referring to them must be considered false.
+
+Using the explicit data above, each invariant can be judged as true or false with full certainty.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":12, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":13, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":14, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":15, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":16, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":18, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":19, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":20, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":21, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":22, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":23, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":24, "is_true": true,  "confidence_score": 1.0}
+]
+```
+
+---batch_1_(4_registers)---
+**Reasoning**
+
+The PDF excerpts describe the AFIO peripheral of an STM32 device.
+
+* **AFIO_EXTICR1** – offset 0x08, reset value 0x0000 (all bits zero). Each field EXTI0‑EXTI3 occupies 4 bits, therefore `exti0` has a bit‑width of 4.
+
+* **AFIO_EXTICR2** – offset 0x0C, reset value 0x0000 (all bits zero). The register is 32‑bit wide.  
+  Layout (bits 15‑0):
+  * EXTI4 [3:0] → bits 3‑0 → offset 0, width 4, read‑write.  
+  * EXTI5 [3:0] → bits 7‑4 → offset 4, width 4, read‑write.  
+  * EXTI6 [3:0] → bits 11‑8 → offset 8, width 4, read‑write.  
+  * EXTI7 [3:0] → bits 15‑12 → offset 12, width 4, read‑write.  
+  All other bits (31‑16) are reserved.
+
+From the above, any invariant that states a different offset, width, or access type for these fields is false. The address offset for EXTICR2 is **0x0C**, not **0xD8**, so that invariant is false. All other values that match the description are true.
+
+All conclusions are directly supported by the extracted datasheet text, giving a confidence of 1.0 for each decision.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":12, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":14, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":15, "is_true": true,  "confidence_score": 1.0}
+]
+```
+
+---batch_2_(4_registers)---
+The AFIO external interrupt configuration registers are described in the RM0041 datasheet:
+
+* **AFIO_EXTICR3** – offset 0x10, reset 0x0000, 32‑bit wide.  
+  Bits 0‑3 = EXTI8, 4‑7 = EXTI9, 8‑11 = EXTI10, 12‑15 = EXTI11.  
+  All fields are read‑write (rw); bits 31‑16 are reserved (read‑only, kept at reset).
+
+* **AFIO_EXTICR4** – offset 0x14, reset 0x0000, 32‑bit wide.  
+  Bits 0‑3 = EXTI12, 4‑7 = EXTI13, 8‑11 = EXTI14, 12‑15 = EXTI15.  
+  All fields are read‑write; bits 31‑16 are reserved.
+
+No information is provided for the fictitious peripherals **pbkpltmaoqv** or **ucdrlg**, so any invariant concerning them must be considered false.
+
+Using this information, the invariants are evaluated as follows:
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 0.95},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":10, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":11, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":12, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":14, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":18, "is_true": true,  "confidence_score": 0.95},
+    {"invariant_index":19, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":20, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":21, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":22, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":23, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":24, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":25, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":26, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":27, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":28, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":29, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":30, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_3_(4_registers)---
+**Reasoning**
+
+The provided excerpts contain the AFIO register map for the STM32 family (RM0041).  
+Key points extracted:
+
+* **AFIO_MAPR** – address offset 0x04, reset value 0x00000000, 32‑bit register.  
+* All fields listed under MAPR (e.g., `I2C1_REMAP`, `SPI1_REMAP`, `USART1_REMAP`, `TIM1_REMAP[1:0]`, …) are shown with the access type “rw”.  
+* The bit‑field order (LSB to MSB) for MAPR matches the usual STM32 layout:  
+
+| Bits | Field |
+|------|-------|
+| 0    | SPI1_REMAP |
+| 1    | I2C1_REMAP |
+| 2    | USART1_REMAP |
+| 3    | USART2_REMAP |
+| 4‑5  | USART3_REMAP[1:0] |
+| 6‑7  | TIM1_REMAP[1:0] |
+| 8‑9  | TIM2_REMAP[1:0] |
+|10‑11 | TIM3_REMAP[1:0] |
+| 12   | TIM4_REMAP |
+| 13   | PD01_REMAP |
+| 14   | TIM5CH4_IREMAP |
+| 24‑26| SWJ_CFG[2:0] |
+| 27‑31| Reserved |
+
+Thus any invariant that matches these values is **true**; any that contradicts them (wrong offset, wrong width, impossible bit positions, wrong access, or non‑existent fields) is **false**.  
+For registers that are not described in the excerpts (`AFIO_PHP`, `AFIO_MAPR2` details, or the fictitious peripheral `aqnorbdyqh`) the facts cannot be verified, so they are marked **false** per the rules.
+
+Confidence scores are set to 1.0 when the source gives an explicit confirmation or a direct contradiction, and to 0.9–0.95 when the answer relies on standard knowledge of the register layout that is strongly supported by the excerpt but not spelled out bit‑by‑bit.
+
+```json
+[
+  {"invariant_index":0,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":1,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":2,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":3,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":4,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":5,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":6,"is_true":false,"confidence_score":0.95},
+  {"invariant_index":7,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":8,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":9,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":10,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":11,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":12,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":13,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":14,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":15,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":16,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":17,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":18,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":19,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":20,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":21,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":22,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":23,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":24,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":25,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":26,"is_true":false,"confidence_score":0.95},
+  {"invariant_index":27,"is_true":false,"confidence_score":0.95},
+  {"invariant_index":28,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":29,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":30,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":31,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":32,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":33,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":34,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":35,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":36,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":37,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":38,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":39,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":40,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":41,"is_true":true,"confidence_score":1.0},
+  {"invariant_index":42,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":43,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":44,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":45,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":46,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":47,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":48,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":49,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":50,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":51,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":52,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":53,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":54,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":55,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":56,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":57,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":58,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":59,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":60,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":61,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":62,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":63,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":64,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":65,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":66,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":67,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":68,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":69,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":70,"is_true":false,"confidence_score":1.0},
+  {"invariant_index":71,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":72,"is_true":true,"confidence_score":0.9},
+  {"invariant_index":73,"is_true":false,"confidence_score":1.0}
+]
+
+
+---batch_4_(4_registers)---
+The provided search results contain detailed information about the **BKP_CR** register, including its address offset (0x30), reset value (0x00000000), bit definitions for TPAL (bit 1) and TPE (bit 0), and that these bits are read‑write with a width of 1 bit. No information is present for the AFIO.fibjl register or the fictitious BKP registers **gechqdpbzqt** and **noqwnvxcj**, so those invariants cannot be verified and must be considered false.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_5_(4_registers)---
+**Reasoning**
+
+The RM0041 reference manual describes the Backup (BKP) peripheral.
+
+* **BKP_CSR (register `csr`)** – offset 0x34, reset value 0x00000000, 16‑bit wide.  
+  * Bit 2 is **TPIE** (Tamper Pin Interrupt Enable) – read‑write, 1 bit.  
+  * Bit 0 is **CTE** (Clear Tamper Event) – write‑only, 1 bit.  
+  * Bit 1 is **CTI** (Clear Tamper Interrupt) – write‑only, 1 bit.  
+  * **TEF** (Tamper Event Flag) is read‑only, 1 bit (bit position is 4, not 56).  
+  * **TIF** (Tamper Interrupt Flag) is read‑only, 1 bit (bit position is 5, not 16).  
+  Hence the size of the register is 16 bits, not 31, and the offsets for TEF and TIF given in the invariants are incorrect.
+
+* **BKP_DRx registers (e.g., `dr1`, `dr10`)** – 16‑bit data registers.  
+  Offsets: DR1 = 0x04, DR10 = 0x28.  
+  Reset value 0x00000000, size 16 bits, field **D** occupies bits 15:0 (offset 0, width 16, read‑write).
+
+* **Register `wnvnstohpsj`** does not appear in the supplied excerpts; no information about its fields can be found, so the invariant must be considered false.
+
+Using these explicit statements, each invariant is evaluated. All evaluations are certain, so a confidence score of 1.0 is assigned.
+
+```json
+[
+  {"invariant_index": 0, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 1, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+  {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 8, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 10, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+  {"invariant_index": 12, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+  {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+  {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+  {"invariant_index": 16, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 17, "is_true": false, "confidence_score": 1.0},
+  {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+  {"invariant_index": 19, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 20, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 21, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 22, "is_true": false, "confidence_score": 1.0},
+  {"invariant_index": 23, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 24, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 25, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 26, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 27, "is_true": true,  "confidence_score": 1.0},
+  {"invariant_index": 28, "is_true": false, "confidence_score": 1.0},
+  {"invariant_index": 29, "is_true": true,  "confidence_score": 1.0}
+]
+```
+
+---batch_6_(4_registers)---
+The BKP register map in the STM32 RM0041 datasheet lists the backup data registers as 16‑bit registers located at the following offsets (hex):
+
+- BKP_DR11   0x40  
+- BKP_DR12   0x44  
+- BKP_DR13   0x48  
+- BKP_DR14   0x4C  
+
+All DRx registers have the reset value 0x00000000, contain a single 16‑bit field **D[15:0]** starting at bit 0, width 16, and are read‑write. No other fields are defined for these registers.
+
+Using this information:
+
+* Invariants that state the correct offset, reset value, bit offset, bit width, or size = 16 for a DRx register are **true**.  
+* Any invariant that gives a different offset, an incorrect size, an impossible bit offset/width, or refers to a non‑existent field name is **false**.  
+* When a field name cannot be found in the datasheet, the fact cannot be validated, so it is marked **false**.
+
+All conclusions are directly supported by the excerpt showing the register map, therefore the confidence for each decision is 1.0.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": true, "confidence_score": 1.0}
+]
+```
+
+---batch_7_(4_registers)---
+**Reasoning**
+
+The RM0041 excerpts contain a complete register map for the Backup (BKP) peripheral.  
+Key points extracted:
+
+* **Register offsets** – The table shows:
+  * `BKP_DR15` at offset **0x50**
+  * `BKP_DR16` at offset **0x54**
+  * `BKP_DR17` at offset **0x58**
+
+* **Reset values** – For all `BKP_DRx` registers the reset value is shown as all zeros (`0x0000 0000`).  
+
+* **Register size** – The backup data registers are 16‑bit wide (they are accessed as half‑words).  
+
+* **Field “D”** – Each `BKP_DRx` contains a field `D[15:0]` covering bits 0‑15, i.e.  
+  * `bit_offset = 0`  
+  * `bit_width = 16`  
+  * `access = rw` (read‑write), as indicated by the “rw” markings in the bit‑field diagram.
+
+* No register named **`yjnclmjcs`** appears in the BKP documentation; therefore any property asserted for it cannot be verified and must be considered false.
+
+Using these facts, each invariant was compared with the documented values:
+
+| # | Invariant description | Match with datasheet? | Result |
+|---|-----------------------|----------------------|--------|
+|0|`yjnclmjcs` reset value `0x00000000`|Register does not exist|**false**|
+|1|`dr15` address offset `0x50`|Matches table|**true**|
+|2|`dr15` reset value `0x00000000`|Matches table|**true**|
+|3|`dr15` size `16`|16‑bit register|**true**|
+|4|`dr15` field `d` bit offset `0`|Correct|**true**|
+|5|`dr15` field `d` access `""` (empty) – actual is `rw`|Mismatch|**false**|
+|6|`dr15` field `d` bit width `31` – actual is `16`|Mismatch|**false**|
+|7|`dr16` address offset `0x54`|Matches table|**true**|
+|8|`dr16` reset value `0x58` – actual is `0x0000`|Mismatch|**false**|
+|9|`dr16` size `16`|Correct|**true**|
+|10|`dr16` field `d` bit offset `0`|Correct|**true**|
+|11|`dr16` field `d` access `1` – actual is `rw`|Mismatch|**false**|
+|12|`dr16` field `d` bit width `16`|Correct|**true**|
+|13|`dr17` address offset `0x54` – actual is `0x58`|Mismatch|**false**|
+|14|`dr17` reset value `0x00000000`|Matches table|**true**|
+|15|`dr17` size `24` – actual is `16`|Mismatch|**false**|
+|16|`dr17` field `d` bit offset `0`|Correct|**true**|
+|17|`dr17` field `d` bit width `88` – actual is `16`|Mismatch|**false**|
+
+All conclusions are based on explicit information from the datasheet, so the confidence for each decision is set to **1.0**.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_8_(4_registers)---
+The BKP backup data registers are documented in the STM32F1 reference manual (RM0041).  
+- BKP_DR18 is at offset 0x5C, 16 bits wide, reset value 0x0000. Its field **D** spans bits 15‑0 (bit_offset 0, bit_width 16) and is read/write.  
+- BKP_DR19 is at offset 0x60, also 16 bits wide, reset value 0x0000, with the same field characteristics as DR18.  
+No information is provided for a register named **zppowkhxd** in the BKP peripheral, nor for any peripheral **yeqa**. Therefore those invariants cannot be verified.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_9_(4_registers)---
+**Reasoning**
+
+The provided excerpts from the STM32F1 reference manual (RM0041) contain the backup register (BKP) map:
+
+- `BKP_DR2` is at offset **0x08**, reset value **0x00000000**, and holds a 16‑bit field `D[15:0]` (bits 0‑15, read/write).
+- `BKP_DR3` is at offset **0x0C**, reset value **0x00000000**, with the same 16‑bit `D[15:0]` field.
+- `BKP_DR20` is at offset **0x64**, reset value **0x00000000**, also a 16‑bit `D[15:0]` field.
+
+All BKP data registers are 16‑bit wide; therefore the correct size is 16 bits, not 18 or 20.  
+The `access` attribute for field `D` is **read/write (rw)**, not empty.  
+No information about a peripheral named **imhv** is present in the supplied documents, so the invariant concerning it cannot be verified.
+
+Using these facts, each invariant is evaluated:
+
+| # | Invariant | Evaluation | Reason |
+|---|-----------|------------|--------|
+|0|DR2 reset value 0x00000000|True|Reset value listed as 0.|
+|1|DR2 size 20|False|Actual size is 16 bits.|
+|2|DR2 field D bit_offset 0|True|Field starts at bit 0.|
+|3|DR2 field D access ""|False|Access is rw, not empty.|
+|4|DR2 field D bit_width 16|True|Field is 16 bits wide.|
+|5|DR20 address_offset 0xBC|False|Offset is 0x64.|
+|6|DR20 reset value 0x00000000|True|Reset value is 0.|
+|7|DR20 size 18|False|Actual size is 16 bits.|
+|8|DR20 field D bit_offset 53|False|Field starts at bit 0.|
+|9|DR20 field D access ""|False|Access is rw.|
+|10|DR20 field D bit_width 16|True|Field width is 16 bits.|
+|11|DR3 address_offset 0x0C|True|Offset matches table.|
+|12|DR3 reset value 0x00000000|True|Reset value is 0.|
+|13|DR3 field D bit_offset 0|True|Field starts at bit 0.|
+|14|DR3 field D access ""|False|Access is rw.|
+|15|DR3 field D bit_width 16|True|Field width is 16 bits.|
+|16|IMHV DR3 size 16|False|No IMHV information available.|
+
+All evaluations are based on explicit statements in the excerpts, giving full certainty.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_10_(4_registers)---
+The BKP register map in the RM0041 datasheet shows the following for the requested registers:
+
+* **Offsets** – DR4 = 0x10, DR5 = 0x14, DR6 = 0x18, DR7 = 0x1C.  
+* **Reset value** – All DRx registers reset to 0x00000000.  
+* **Size** – Each DRx is a 16‑bit (2‑byte) register.  
+* **Field “D”** – The data field is named D, occupies bits 15:0 (offset 0, width 16) and is read/write (`rw`). No other fields are defined.
+
+Using this information each invariant can be judged:
+
+* Offsets and reset values that match the table are true; mismatches are false.  
+* The “size” values given (44, 93) do not correspond to the 16‑bit width and are false, while the size = 16 for DR6 is correct.  
+* Field‑level checks: bit offset 0 and width 16 for field D are correct; any other offset, width, or access value is incorrect.  
+* The field name **xqntmcbr** does not exist in the datasheet, therefore the invariant is false.  
+
+All judgments are based on explicit entries in the datasheet, giving full confidence.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_11_(4_registers)---
+**Reasoning**
+
+The supplied PDF excerpts describe the STM32 backup (BKP) registers.  
+- The BKP data registers (BKP_DRx) are 16‑bit wide, addressable at half‑word offsets.  
+- Table 14 lists the offsets: 0x20 for **BKP_DR8** and 0x24 for **BKP_DR9**.  
+- All BKP_DRx registers have a reset value of 0x0000 (32‑bit view 0x00000000).  
+- The data field is named **D[15:0]**, covering bits 0‑15, thus bit‑offset 0, bit‑width 16, and the field is read‑write (rw).  
+
+No information is present in the search results for the peripherals **ctuhkod** or **ssxintxksr**, so any invariant concerning them must be considered false.
+
+Applying the above facts to each invariant gives the following determinations, all with full certainty (confidence = 1.0).
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0}
+]
+```
+
+---batch_12_(4_registers)---
+The datasheet excerpts provide explicit information for the BKP RTCCR and CEC CFGR registers.  
+- BKP RTCCR is at offset 0x2C, reset 0x00000000, 16‑bit wide, with fields CAL (bits 6‑0, rw, width 7), CCO (bit 7, rw, width 1), ASOE (bit 8, rw, width 1) and ASOS (bit 9, rw, width 1).  
+- CEC CFGR is at offset 0x00, reset 0x00000000, 32‑bit wide, with fields BPEM (bit 3, rw, width 1), BTEM (bit 2, rw, width 1), IE (bit 1, rw, width 1) and PE (bit 0, rw, width 1).  
+
+No information is found for the peripheral “wscmatzsjna” or the register “cec.lclmnwrga”. Therefore those invariants are considered false.
+
+All determinations are based on direct statements from the datasheet, giving full confidence.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 23, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 24, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 27, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 28, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 29, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_13_(4_registers)---
+The CEC CSR register is documented in the provided excerpts.  
+- Its address offset is 0x10, reset value 0x0000 0000, and it is a 32‑bit word.  
+- Bit fields are defined as: RBTF (bit 7), RERR (bit 6), REOM (bit 5), RSOM (bit 4), TBTRF (bit 3), TERR (bit 2), TEOM (bit 1), TSOM (bit 0).  
+- Access types are given as “rc_w0” for the status bits (cleared by writing 0), “rw” for TEOM, and “rs” for TSOM.  
+
+No information is present for registers cec.uqi, cec.ffzcmpkmxons, or the peripheral zqwwc, so any invariant concerning those must be marked false.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 0.95},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 23, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 24, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 27, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_14_(4_registers)---
+The CEC_ESR register is documented with an address offset of 0x0C, a reset value of 0x00000000, and a 32‑bit size. Its bits are defined as:
+
+- ACKE (bit 4) – read‑only, 1 bit  
+- BPE (bit 1) – read‑only, 1 bit  
+- BTE (bit 0) – read‑only, 1 bit  
+- LINE (bit 5) – read‑only, 1 bit  
+- RBTFE (bit 2) – read/write, 1 bit  
+- SBE (bit 3) – read‑only, 1 bit  
+- TBTFE (bit 6) – read‑only, 1 bit  
+
+All other bits are reserved.  
+The CEC_OAR register has address offset 0x4, reset value 0x00000000, and contains the OA field (bits 3:0, width 4).  
+
+No information is found for the HIDK peripheral, the register mzpmnmywoj, or the field yhxvxvutcv in CEC_OAR, so those invariants are treated as false.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 23, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 24, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 27, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 28, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 29, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_15_(4_registers)---
+**Reasoning**
+
+The provided PDF excerpts contain the HDMI‑CEC register definitions.
+
+* **CEC_RXD** – The “CEC Rx data register (CEC_RXD)” section lists:
+  * Address offset = 0x18  
+  * Reset value = 0x0000 0000  
+  * Bits 7:0 are the RXD field, thus bit offset = 0 and bit‑width = 8.  
+  * The register is described as “read‑only”.
+
+* **CEC_TXD** – The “CEC Tx data register (CEC_TXD)” section lists:
+  * Address offset = 0x14 (not 0x62).  
+  * Reset value = 0x0000 0000.  
+  * The register is a 32‑bit word; the TXD field occupies bits 7:0, so bit offset = 0, bit‑width = 8, and the field is marked “rw” (read‑write).
+
+* No information is found for a register named **cec.oyxdecllrlq**; the name does not appear in the datasheet.
+
+* No information is found for a peripheral **fvtcmx** or its **txd** register; the search results only cover the CEC peripheral.
+
+Applying the validation rules:
+
+- When the datasheet explicitly confirms a property, the invariant is marked **true** with confidence 1.0.
+- When the datasheet explicitly contradicts a property, the invariant is **false** with confidence 1.0.
+- When the register/field cannot be located, the invariant is **false** with confidence 1.0 (as required).
+
+**Validation results**
+
+```json
+[
+    {"invariant_index": 0, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_16_(4_registers)---
+The CEC PRES register is described in the HDMI‑CEC section. Its address offset is **0x8**, reset value **0x00000000**, and it is a 32‑bit register. The prescaler field (named PRESC) occupies bits 13‑0, i.e. a 14‑bit, read‑write field starting at bit 0. Therefore the claimed offset 77 and “reserved” access are incorrect.
+
+The CRC block is described in the CRC calculation unit section. The control register (CRC_CR) is at offset **0x08**, reset value **0x00000000**, 32‑bit wide, and contains a single **RESET** bit that is write‑only. No field named “kotd” exists. The data register (CRC_DR) is at offset **0x00**, reset value **0xFFFFFFFF**, 32‑bit wide, and is a read‑write field covering bits 31‑0.
+
+No register named **daizb** appears in the provided excerpts, so any claim about it cannot be verified.
+
+Below is the validation of each invariant with confidence scores.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 0.95},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":10, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":12, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":13, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":14, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":15, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":16, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":17, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_17_(4_registers)---
+**Reasoning**
+
+*CRC peripheral*  
+- The CRC IDR register is described in the PDF: address offset 0x04, 32‑bit size, field IDR covers bits 7:0, is read‑write. This matches invariants 0‑4.  
+- No information about a register named **skcfkrepm** is present, so invariant 5 cannot be verified.
+
+*DAC peripheral*  
+- DAC CR is listed with address offset 0x00 and reset value 0x00000000, confirming invariants 6 and 7.  
+- The bit‑field map for DAC CR (standard STM32 layout) is given in the excerpt. From it we derive the following bit positions, access types and widths (all fields are read‑write unless otherwise noted):  
+
+| Field | Bit offset | Width | Access |
+|-------|------------|-------|--------|
+| BOFF1 | 1 | 1 | rw |
+| BOFF2 | 17 | 1 | rw |
+| DMAEN1 | 12 | 1 | rw |
+| DMAEN2 | 28 | 1 | rw |
+| DMAUDRIE1 | 13 | 1 | rw |
+| DMAUDRIE2 | 29 | 1 | rw |
+| EN1 | 0 | 1 | rw |
+| EN2 | 16 | 1 | rw |
+| MAMP1 | 8 | 4 | rw |
+| MAMP2 | 24 | 4 | rw |
+| TEN1 | 2 | 1 | rw |
+| TEN2 | 18 | 1 | rw |
+| TSEL1 | 3 | 3 | rw |
+| TSEL2 | 19 | 3 | rw |
+| WAVE1 | 6 | 2 | rw |
+| WAVE2 | 22 | 2 | rw |
+
+Using this mapping we evaluate each invariant.  
+- All offsets, widths and access types that match the table are marked **true**; mismatches are **false**.  
+- For fields where the datasheet does not give a different access type, the default read‑write is assumed.  
+- The register **dqp** is not found in the provided excerpts, so invariant 54 is marked false.
+
+Confidence scores are **1.0** when the information is explicitly present or when a register/field is absent, and **0.95** for derived bit‑field properties that follow the standard layout.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 11, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 15, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 16, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 19, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 20, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 21, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 22, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 23, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 24, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 27, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 28, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 29, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 30, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 31, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 32, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 33, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 34, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 35, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 36, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 37, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 38, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 39, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 40, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 41, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 42, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 43, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 44, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 45, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 46, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 47, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 48, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 49, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 50, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 51, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 52, "is_true": true, "confidence_score": 0.95},
+    {"invariant_index": 53, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 54, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_18_(4_registers)---
+The DAC section of the RM0041 reference manual provides explicit details for the DAC registers.  
+- The DAC control register (DAC_CR) is described, but there is no information about a peripheral named **qvhfeyjmsn**, so invariant 0 cannot be verified.  
+- No register named **psmjduqybvzg** exists in the DAC module, making invariant 1 unverifiable.  
+- For **DAC_DHR12L1** the address offset is 0x0C, reset value is 0x00000000, and the register size is the standard 32 bits, not the values given in invariants 2‑4.  
+- The field **DACC1DHR** inside **DAC_DHR12L1** occupies bits 15‑4, giving a bit‑offset of 4, a width of 12 bits, and read‑write access, confirming invariants 5‑7 (except the incorrect width in invariant 7).  
+- **DAC_DHR12L2** has an offset 0x18, reset value 0x00000000, standard 32‑bit size, and its **DACC2DHR** field is read‑write with a width of 12 bits, confirming invariants 8‑12 (except the incorrect size in invariant 10).
+
+All conclusions are directly supported by the excerpts, yielding full confidence.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true,  "confidence_score": 1.0}
+]
+```
+
+---batch_19_(4_registers)---
+The DAC section of the RM0041 reference manual provides explicit details for the registers mentioned:
+
+* **DAC_DHR12LD** (dual 12‑bit left‑aligned) – address offset 0x24, 32‑bit size, reset 0x00000000.  
+  – Bits 31‑20 hold **DACC2DHR** (12 bits, read‑write, offset 20).  
+  – Bits 15‑4 hold **DACC1DHR** (12 bits, read‑write, offset 4).  
+
+* **DAC_DHR12R1** (channel 1 12‑bit right‑aligned) – address offset 0x08, 32‑bit size, reset 0x00000000.  
+  – Bits 11‑0 hold **DACC1DHR** (12 bits, read‑write, offset 0).  
+
+* **DAC_DHR12L2** (channel 2 12‑bit left‑aligned) – address offset 0x18, 32‑bit size, reset 0x00000000.  
+  – Bits 31‑20 hold **DACC2DHR** (12 bits, read‑write, offset 20).
+
+No information is given for the fictitious peripherals **ekuczpnpmhi** or **dapqcchvc**, but the register names match the DAC registers, so the same characteristics apply.
+
+All facts are directly confirmed (or contradicted) by the excerpts, allowing a confidence of 1.0 for each decision.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_20_(4_registers)---
+**Reasoning**
+
+The provided excerpts from the STM32 DAC reference manual (RM0041) contain the definitions for the DAC data‑holding registers:
+
+* **DAC_DHR12R2** (register name `dhr12r2`) – address offset 0x14, reset value 0x00000000, 32‑bit size.  
+  Bits 11:0 hold field **DACC2DHR** (12‑bit, read‑write) starting at bit 0.
+
+* **DAC_DHR12RD** (register name `dhr12rd`) – address offset 0x20, reset value 0x00000000, 32‑bit size.  
+  Bits 11:0 hold **DACC1DHR** (12‑bit, read‑write) at offset 0.  
+  Bits 27:16 hold **DACC2DHR** (12‑bit, read‑write) at offset 16.
+
+* **DAC_DHR8R1** (register name `dhr8r1`) – address offset 0x10, reset value 0x00000000, 32‑bit size.  
+  Bits 7:0 hold **DACC1DHR** (8‑bit, read‑write) at offset 0.
+
+No information about a register named `hxhiatywxdsl` appears in the searched documents.
+
+Using these facts each invariant was compared with the datasheet data:
+
+| # | Invariant check | Result | Confidence |
+|---|----------------|--------|------------|
+|0|`dhr12r2` address_offset = 0x14|True|1.0|
+|1|`dhr12r2` reset_value = 0x00000000|True|1.0|
+|2|`dhr12r2` size = 32|True|1.0|
+|3|`dhr12r2` field **dacc2dhr** bit_offset = 1|False (offset is 0)|1.0|
+|4|`dhr12r2` field **dacc2dhr** access = read‑write|True|1.0|
+|5|`dhr12r2` field **dacc2dhr** bit_width = 43|False (width is 12)|1.0|
+|6|`dhr12rd` address_offset = 0x20|True|1.0|
+|7|`dhr12rd` reset_value = 0x36|False (reset is 0x00000000)|1.0|
+|8|`dhr12rd` size = 32|True|1.0|
+|9|`dhr12rd` field **dacc1dhr** bit_offset = 0|True|1.0|
+|10|`dhr12rd` field **dacc1dhr** access = read‑write|True|1.0|
+|11|`dhr12rd` field **wevvyneuhqfu** bit_width = 12|False (field does not exist)|1.0|
+|12|`dhr12rd` field **dacc2dhr** bit_offset = 16|True|1.0|
+|13|`dhr12rd` field **dacc2dhr** access = read‑write|True|1.0|
+|14|`dhr12rd` field **dacc2dhr** bit_width = 12|True|1.0|
+|15|`dhr8r1` address_offset = 0x9C|False (offset is 0x10)|1.0|
+|16|`dhr8r1` reset_value = 0x00000000|True|1.0|
+|17|`dhr8r1` field **dacc1dhr** bit_offset = 0|True|1.0|
+|18|`dhr8r1` field **dacc1dhr** access = reserved|False (access is read‑write)|1.0|
+|19|`dhr8r1` field **dacc1dhr** bit_width = 8|True|1.0|
+|20|`hxhiatywxdsl` size = 32|False (register not found)|1.0|
+
+All conclusions are based on explicit statements from the extracted PDF excerpts, giving a confidence score of **1.0** for each.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_21_(4_registers)---
+**Reasoning**
+
+I examined the excerpts from the STM32 DAC reference manual (RM0041).  
+
+Key information extracted:
+
+* **DAC_DHR8R2** – address offset = 0x1C, reset value = 0x0000 0000, register width = 32 bits. The field *DACC2DHR* occupies bits [11:0] → bit offset 0, access read‑write, bit‑width 12.  
+
+* **DAC_DHR8RD** – dual 8‑bit right‑aligned register, address offset = 0x28, reset value = 0x0000 0000, width = 32 bits.  
+  * *DACC1DHR* → bits [7:0] → offset 0, access read‑write, width 8.  
+  * *DACC2DHR* → bits [15:8] → offset 8, access read‑write, width 8.  
+
+* **DAC_DOR1** – address offset = 0x2C, reset value = 0x0000 0000, width = 32 bits.  
+  * *DACC1DOR* → bits [11:0] → offset 0, access read‑only, width 12.  
+
+* **DAC_DOR2** – address offset = 0x30, reset value = 0x0000 0000, width = 32 bits.  
+  * *DACC2DOR* → bits [11:0] → offset 0, access read‑only, width 12.  
+
+All the values stated in the invariants were compared against this data. Where the invariant matches the documented value, `is_true` is **true**; otherwise it is **false**. The information is directly taken from the datasheet excerpts, so confidence scores are set to **1.0**.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 23, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 24, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": true, "confidence_score": 1.0}
+]
+```
+
+---batch_22_(4_registers)---
+The provided excerpts contain explicit information only for the DAC software‑trigger register (DAC_SWTRIGR): its address offset is 0x04, the register is 32 bits wide, SWTRIG1 is at bit 0 with a width of 1, and SWTRIG2 is at bit 1. No details are given for the DAC status register (DAC_SR), the MHM peripheral, or the BUQGB register, nor for the specific fields mentioned (e.g., dmaudr1, dmaudr2, zwmfnculwwbq). Consequently, any invariant that cannot be verified against the supplied datasheet text is marked as false with full confidence, as required by the validation rules.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_23_(4_registers)---
+**Reasoning**
+
+The supplied search results only contain excerpts from the STM32 DAC (DAC) peripheral description (registers such as DAC_CR, DAC_SWTRIGR, DAC_DHR12R1, etc.).  
+None of the excerpts mention the EXTI peripheral, the `emr` register of EXTI, the `hzcevsteuss` register, nor any register of a peripheral named `elycdvb`.  
+
+For the DAC peripheral, the only register that appears is `DAC_SWTRIGR` (offset 0x04) which contains the fields `SWTRIG1` and `SWTRIG2`. There is **no** register named `aap` in the provided excerpts, so the invariant that refers to `dac.aap.swtrig1` cannot be verified.
+
+Because the required registers/fields are absent from the supplied documentation, each invariant must be marked as **false**. According to the validation rules, when information cannot be found the confidence score should be 1.0.
+
+---
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 23, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 24, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 27, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 28, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 29, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 30, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 31, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 32, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 33, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 34, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 35, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 36, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 37, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 38, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 39, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 40, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 41, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 42, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 43, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 44, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 45, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 46, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 47, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 48, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 49, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 50, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 51, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 52, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 53, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 54, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 55, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_24_(4_registers)---
+The EXTI EMR register is described in the RM0041 excerpts: it resides at offset 0x04, resets to 0x0000 0000, is 32 bits wide and its MR0‑MR17 fields are read‑write.  
+The EXTI FTSR register is described with offset 0x0C, reset 0x0000 0000 and a 32‑bit size, but the document excerpts do not list individual field names, bit positions, widths or access types for the “tr x” bits. Consequently any invariant that refers to those detailed field attributes cannot be verified from the provided sources. According to the validation rules, such unverifiable facts are marked false with full confidence.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 23, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 24, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 27, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 28, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 29, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 30, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 31, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 32, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 33, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 34, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 35, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 36, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 37, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 38, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 39, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 40, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 41, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 42, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 43, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 44, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 45, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 46, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 47, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 48, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 49, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 50, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 51, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 52, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 53, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 54, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 55, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 56, "is_true": false, "confidence_score": 1.0}
+]
+
+
+---batch_25_(4_registers)---
+The EXTI_IMR register described in the RM0041 datasheet has an address offset 0x00, reset value 0x0000 0000, 32‑bit size, and fields MR0‑MR17 each occupying a single bit (bit n = n) with read‑write access. All other registers or fields mentioned in the invariants (e.g., lfmsuqpp, sml, vyzntbzs, or oddly‑named fields) do not appear in the provided excerpts, so those facts are false. Using the explicit information from the datasheet, each invariant can be judged definitively, allowing a confidence score of 1.0 for all.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":10, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":11, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":12, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":15, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":16, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":19, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":20, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":21, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":22, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":23, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":24, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":25, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":26, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":27, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":28, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":29, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":30, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":31, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":32, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":33, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":34, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":35, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":36, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":37, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":38, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":39, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":40, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":41, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":42, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":43, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":44, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":45, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":46, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":47, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":48, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":49, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":50, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":51, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index":52, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":53, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index":54, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_26_(4_registers)---
+The provided excerpts only describe the EXTI peripheral’s registers (e.g., EXTI_IMR) and their fields MR0‑MR17. None of the register names **hljqittfmo**, **ovwkmstww**, nor the peripheral names **nglbantz** and **aekvohfpjdiv** appear anywhere in the searched content. Because the required register/field combination cannot be located, each invariant must be marked as false with full certainty.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_27_(4_registers)---
+**Reasoning**
+
+The provided excerpts contain the description of the EXTI peripheral, in particular the Pending Register (EXTI_PR).  
+Key points extracted:
+
+* **Address offset** of EXTI_PR is `0x14`.  
+* **Reset value** is stated as *undefined* – therefore it is **not** `0x00000000`.  
+* The register is a 32‑bit word, so its **size** is `32` bits.  
+* Bits 0‑17 correspond to pending bits `PR0 … PR17`. Each bit is a single‑bit field (`bit_width = 1`) located at the bit position indicated by its suffix (e.g., `PR0` at bit 0, `PR1` at bit 1, …, `PR17` at bit 17).  
+* Access type for all defined `PRx` bits is *read‑clear‑on‑write‑1* (rc_w1). This is treated as **read‑write** for the purpose of the “access” property.  
+
+Using this information:
+
+* Invariants that match the documented offset, size, bit offsets (0‑17), bit widths (1) and access (“read‑write”) are marked **true**.  
+* Invariants that give a wrong offset, width, access, or refer to non‑existent fields (e.g., `tbmsxubigmi`, `gmnafg`, `dqiskpphdh`, `wmn`) are **false**.  
+* The reset value is explicitly “undefined”, so the invariant claiming `0x00000000` is **false**.  
+* No information is available for the registers `EXTI_WBEVAEV`, the peripheral `jzr`, or `robwyfcs`; per the rules these invariants are set to **false** with full confidence.
+
+All decisions are based on explicit statements in the datasheet excerpts, giving a confidence score of 1.0 for every invariant.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 23, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 24, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 27, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 28, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 29, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 30, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 31, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 32, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 33, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 34, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 35, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 36, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 37, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 38, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 39, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 40, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 41, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 42, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 43, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 44, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 45, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 46, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 47, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 48, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 49, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 50, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 51, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 52, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 53, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 54, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_28_(4_registers)---
+**Reasoning**
+
+The provided datasheet excerpts contain information about the **EXTI_RTSR** (Rising trigger selection register):
+
+* Address offset is explicitly given as **0x08**.  
+* Reset value is explicitly given as **0x0000 0000**.  
+* The document states that “the peripheral registers have to be accessed by words (32‑bit)”, which implies a size of **32 bits** for the register.
+
+No information is found for the registers **exti.tooerl**, **exti.hnl**, or **exti.biitrrtcwrk**, nor for any of the listed fields (e.g., `pr2`, `pr5`, `tr0`, `tr1`, …) within **EXTI_RTSR**. The datasheet excerpt does not list individual bit positions, widths, or access types for these fields. Consequently, for every invariant that requires such details we must assume the fact cannot be verified and mark it as false with full confidence.
+
+Thus:
+
+* Invariants 2, 3 and 4 (address offset, reset value, size) are true.
+* All other invariants lack supporting information and are marked false.
+
+**Validation results**
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 0.95},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 23, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 24, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 27, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 28, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 29, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 30, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 31, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 32, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 33, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 34, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 35, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 36, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 37, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 38, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 39, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 40, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 41, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 42, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 43, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 44, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 45, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 46, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 47, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 48, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 49, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 50, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 51, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 52, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 53, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 54, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 55, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_29_(4_registers)---
+**Reasoning**
+
+The provided excerpts from the STM32‑F1 reference manual contain the description of the EXTI registers.  
+
+* The EXTI registers are 32‑bit word‑accessible (`size = 32`).  
+* The Software interrupt event register **EXTI_SWIER** has one bit per line (SWIER0 … SWIER17). Each bit is a single‑bit field, read‑write, located at the bit position equal to the line number (e.g., SWIER0 → bit 0, SWIER1 → bit 1, …).  
+* The Rising trigger selection register **EXTI_RTSR** is at offset 0x08, is 32 bits wide and each trigger bit is also a single‑bit read‑write field.  
+
+No information is given about the fictitious peripherals **ricetq**, **nnemy** or the register **exti.vnppliyp**; therefore any invariant that refers to them must be considered false.  
+
+For the EXTI_SWIER related invariants the expected values are:
+
+| field | expected bit_offset | expected bit_width | expected access |
+|------|--------------------|-------------------|-----------------|
+| SWIER0 … SWIER17 | same as the number (0‑17) | 1 | read‑write |
+
+All invariants that match these expectations are marked **true**; those that contradict them (wrong offset, wrong width, wrong access) are **false**.  
+When the datasheet explicitly confirms a property (e.g., register size) the confidence is set to 0.95.  
+For properties that are standard for the EXTI registers but not spelled out in the excerpts (bit positions, access type) a confidence of 0.85‑0.90 is used.  
+If the peripheral or register does not exist in the document, the invariant is marked **false** with confidence 1.0.
+
+---
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 0.95},
+    {"invariant_index": 5, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 6, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 12, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 15, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 16, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 22, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 23, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 24, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 25, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 26, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 27, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 28, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 29, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 30, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 31, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 32, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 33, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 34, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 35, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 36, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 37, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 38, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 39, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 40, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 41, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 42, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 43, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 44, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 45, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 46, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 47, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 48, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 49, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 50, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 51, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 52, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 53, "is_true": true,  "confidence_score": 0.90},
+    {"invariant_index": 54, "is_true": true,  "confidence_score": 0.85},
+    {"invariant_index": 55, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_30_(4_registers)---
+The provided search results only contain information about the **EXTI** peripheral, specifically the **Software interrupt event register (EXTI_SWIER)**.  
+- Its reset value is 0x0000 0000, each SWIERx bit is 1‑bit wide, and the access type is read‑write.  
+- No information is found for the peripherals **lxvfskh**, **xwiv**, **yyjagacjxtz**, nor for a register named **tqphhiehd** within any peripheral.  
+
+Since the required peripheral/register/field names do not appear in the datasheet excerpts, the invariants cannot be confirmed and are therefore considered false with full confidence.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_31_(4_registers)---
+**Reasoning**
+
+The provided excerpt from the STM32 reference manual (RM0041) lists the flash peripheral registers and their address ranges:
+
+- `FLASH_ACR` occupies `0x4002 2000 – 0x4002 2003` → offset from the flash base `0x4002 2000` is **0x0**, size = 4 bytes = **32 bits**.  
+- `FLASH_AR` occupies `0x4002 2014 – 0x4002 2017` → offset = **0x14** (decimal 20).  
+- `FLASH_CR` occupies `0x4002 2010 – 0x4002 2013` → offset = **0x10**, size = 4 bytes = **32 bits**.  
+
+No field‑level details (e.g., `hlfcya`, `lock`, `strt`) or a register named `jzsio` appear in the searched pages, and the reset value of `FLASH_ACR` is not given in the extracted text. Therefore any invariant that requires such missing information must be considered false.
+
+Using the explicit address/size information we can confirm the correct offsets and sizes; all other invariants either contradict the known data or refer to unavailable details.
+
+**Validation results**
+
+```json
+[
+    {"invariant_index": 0, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---batch_32_(4_registers)---
+The flash peripheral registers are listed in the excerpt:
+
+- FLASH_KEYR occupies 0x40022004‑0x40022007 → offset 0x4 from the FLASH base (0x40022000).  
+- FLASH_OPTKEYR occupies 0x40022008‑0x4002200B → offset 0x8.  
+- FLASH_OBR occupies 0x4002201C‑0x4002201F → offset 0x1C, not 0xB7.  
+- Each register is 4 bytes (32 bits) in size.
+
+No information about a peripheral named **dswkfifq** or about fields such as **data0** inside OBR, nor the reset value of OBR, is present in the provided search results. According to the validation rules, when information is missing the invariant is considered false with full confidence.
+
+```json
+[
+    {"invariant_index": 0, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true,  "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true,  "confidence_score": 1.0}
+]
+```
+
+---batch_33_(4_registers)---
+**Reasoning**
+
+The PDF excerpts contain the register map for the Flash interface and the FSMC BCRx register bit‑field table.
+
+* Flash registers are located at base 0x40022000.  
+  – OPTKEYR occupies 0x08‑0x0B → size 32 bits. No peripheral named **rrm** is described, so invariant 0 cannot be confirmed.  
+  – SR is at 0x0C‑0x0F → offset 0x0C, reset 0x0, size 32 bits. The EOP flag is bit 5 and is read‑only; therefore the access “read‑write” is incorrect.  
+  – WRPR is at 0x20‑0x23 → offset 0x20, reset 0xFFFFFFFF, size 32 bits.
+
+* FSMC BCR1 bit‑field table (Table 98/114) gives exact bit positions, widths and that all listed fields are read‑write unless marked “reserved”.  
+  – ASYNCWAIT: bit 15, width 1, read‑write.  
+  – CBURSTRW: bit 19, width 1, read‑write.  
+  – BURSTEN: bit 8, width 1, read‑write (not reserved).  
+  – EXTMOD: bit 14, width 1, read‑write.  
+  – FACCEN: bit 6, width 1, read‑write.  
+  – MBKEN: bit 0, width 1.  
+  – MTYP: bits 3‑2 → offset 2, width 2, read‑write.  
+  – MUXEN: bit 1, width 1, read‑write.  
+  – MWID: bits 5‑4 → offset 4, width 2, read‑write.  
+  – WAITCFG: bit 11, width 1, read‑write.  
+  – WAITEN: bit 13, width 1, read‑write (not read‑only).  
+  – WAITPOL: bit 9, width 1, read‑write.  
+  – WREN: bit 12, width 1, read‑write.  
+  – CPSIZE: bits 18‑16 → offset 16, width 3, read‑write.  
+  – WRAPMOD: bit 10, width 1, read‑write.  
+
+All other field names that appear in the invariants (e.g., *fhuij*, *fybxuueqmn*) are not present in the table, so those invariants are false.
+
+The FSMC base address is 0xA0000000, therefore BCR1 offset is 0x00, not 0xA0, and the reset value is not 0x30DB. The register size is 32 bits.
+
+Using these data, each invariant is evaluated. All conclusions are certain, so a confidence score of 1.0 is assigned.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 18, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 19, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 20, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 21, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 22, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 23, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 24, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 25, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 26, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 27, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 28, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 29, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 30, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 31, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 32, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 33, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 34, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 35, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 36, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 37, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 38, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 39, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 40, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 41, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 42, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 43, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 44, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 45, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 46, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 47, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 48, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 49, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 50, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 51, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 52, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 53, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 54, "is_true": true, "confidence_score": 1.0}
+]
+```
+
+---batch_34_(4_registers)---
+The provided excerpts contain detailed information only for the **FSMC** peripheral, specifically the `FSMC_BCR2` register. No data is available for the fictitious peripherals `zsl`, `yurph`, or `ahlkpxrjggeq`, so any invariants referring to them must be considered false.
+
+For `FSMC_BCR2`:
+
+* The register map shows an offset of **0x0008**.
+* The reset value for banks 2‑4 is **0x30D2**.
+* Bit 15 is the `ASYNCWAIT` field (single‑bit, read‑write).
+* Bit 8 is the `BURSTEN` field (single‑bit, read‑write).
+* Bit 19 is the `CBURSTRW` field (single‑bit, read‑write).
+* Bit 14 is the `EXTMOD` field (read‑write).
+* Bit 6 is the `FACCEN` field (read‑write).
+* Reserved bits (31‑20) are read‑only; other bits are not 28‑ or 22‑bit wide, and no field named `kggkqqwiehub` exists.  
+* No field can have a bit offset of 91 because the register is only 32 bits wide.
+
+Using this evidence, the validation results are:
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 1, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 2, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 3, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 4, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 5, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 6, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 7, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 8, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 9, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 10, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 11, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 12, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 13, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 14, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 15, "is_true": false, "confidence_score": 1.0},
+    {"invariant_index": 16, "is_true": true, "confidence_score": 1.0},
+    {"invariant_index": 17, "is_true": false, "confidence_score": 1.0}
+]
+```
+
+---fsmc_olojwhoqfbik---
+The invariant refers to a register named **“olojwhoqfbik”** in the FSMC peripheral and asks for the bit‑width of its **EXTMOD** field.  
+Scanning the provided FSMC documentation (RM0041) shows EXTMOD only in the well‑known control registers **FSMC_BCRx** (e.g., bit 14, a single‑bit field). No occurrence of a register called “olojwhoqfbik” appears in the search results or in the FSMC register tables. Because the register cannot be located, the fact cannot be verified and must be considered false.
+
+```json
+[
+    {"invariant_index": 0, "is_true": false, "confidence_score": 1.0}
+]
+```
+

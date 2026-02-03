@@ -2,10 +2,12 @@
 Tradeoff plots for filtered experiments (F1 + time thresholds).
 
 Outputs:
-  - time_vs_tokens_f1_filtered.png
-  - f1_vs_tokens_time_filtered.png
-  - time_breakdown_bars.png
-  - token_breakdown_bars.png
+  - plot_time_vs_tokens_f1_filtered.png
+  - plot_f1_vs_tokens_time_filtered.png
+  - plot_time_breakdown_bars.png
+  - plot_token_breakdown_bars.png
+  - plot_batch_size_vs_usage_f1.png
+  - plot_batch_size_embeddings_tokens_f1.png
 
 Example:
     python optimization_validator/plot_experiment_tradeoffs.py \
@@ -16,9 +18,11 @@ Example:
 
 import argparse
 import csv
+import re
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib import ticker as mticker
 
 
 def _read_csv_rows(path: Path) -> list[dict]:
@@ -102,6 +106,24 @@ def _format_label(model_name: str) -> str:
     if model_name.startswith(prefix):
         return model_name[len(prefix):]
     return model_name
+
+
+def _parse_batch_size(model_name: str) -> int | None:
+    match = re.search(r"_bs(\d+)", model_name)
+    if match:
+        return int(match.group(1))
+    return None
+
+
+def _is_sequential(model_name: str) -> bool:
+    return "sequential" in model_name
+
+
+def _parse_embedding_count(model_name: str) -> int | None:
+    match = re.search(r"_emb(\d+)", model_name)
+    if match:
+        return int(match.group(1))
+    return None
 
 
 def _build_points(experiment_dir: Path) -> list[dict]:
@@ -241,6 +263,269 @@ def _scatter_f1_vs_tokens(points: list[dict], output_path: Path, min_f1: float):
     plt.savefig(output_path, dpi=200)
 
 
+def _build_batch_usage_points(experiment_dir: Path, usage_field: str) -> list[dict]:
+    accuracy_rows = _read_csv_rows(experiment_dir / "summary_accuracy.csv")
+    usage_rows = _read_csv_rows(experiment_dir / "summary_usage.csv")
+    timing_rows = _read_csv_rows(experiment_dir / "summary_timing.csv")
+
+    api_calls = _compute_api_calls(timing_rows)
+    f1_by_model = {}
+    for row in accuracy_rows:
+        model_name = row.get("model_name", "").strip()
+        if not model_name:
+            continue
+        try:
+            f1_by_model[model_name] = float(row.get("f1_score", 0))
+        except (TypeError, ValueError):
+            f1_by_model[model_name] = 0.0
+
+    points = []
+    for row in usage_rows:
+        model_name = row.get("model_name", "").strip()
+        if not model_name:
+            continue
+        batch_size = _parse_batch_size(model_name)
+        if batch_size is None:
+            continue
+        try:
+            usage_value = float(row.get(usage_field, 0))
+        except (TypeError, ValueError):
+            usage_value = 0.0
+        label = _format_label(model_name).replace("sequential", "seq")
+        points.append({
+            "model_name": model_name,
+            "label": label,
+            "batch_size": batch_size,
+            "usage": usage_value,
+            "f1_score": f1_by_model.get(model_name, 0.0),
+            "api_calls": api_calls.get(model_name, 0),
+        })
+    return points
+
+
+def _scatter_batch_size_vs_usage(points: list[dict], output_path: Path, usage_field: str):
+    x_vals = [p["batch_size"] for p in points]
+    y_vals = [p["usage"] for p in points]
+    colors = [p["f1_score"] for p in points]
+
+    plt.figure(figsize=(8, 5))
+    scatter = plt.scatter(
+        x_vals,
+        y_vals,
+        c=colors,
+        cmap="viridis",
+        s=120,
+        alpha=0.8,
+        edgecolors="k",
+        linewidths=0.5,
+    )
+    plt.xlabel("Batch size (invariants per call)")
+    plt.ylabel(usage_field.replace("_", " ").title())
+    plt.title("Batch size vs usage (colored by F1 score)")
+    plt.colorbar(scatter, label="F1 score")
+    plt.xticks(sorted(set(x_vals)))
+
+    for p in points:
+        plt.annotate(
+            f"{p['label']} (calls={p['api_calls']})",
+            (p["batch_size"], p["usage"]),
+            textcoords="offset points",
+            xytext=(5, 3),
+            fontsize=8,
+        )
+
+    plt.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output_path, dpi=200)
+
+
+def _build_batch_embedding_points(experiment_dir: Path) -> list[dict]:
+    usage_rows = _read_csv_rows(experiment_dir / "summary_usage.csv")
+    accuracy_rows = _read_csv_rows(experiment_dir / "summary_accuracy.csv")
+    timing_rows = _read_csv_rows(experiment_dir / "summary_timing.csv")
+    api_calls = _compute_api_calls(timing_rows)
+    total_times = _compute_total_times(timing_rows)
+
+    tokens_by_model = {}
+    for row in usage_rows:
+        model_name = row.get("model_name", "").strip()
+        if not model_name:
+            continue
+        try:
+            tokens_by_model[model_name] = float(row.get("total_tokens", 0))
+        except (TypeError, ValueError):
+            tokens_by_model[model_name] = 0.0
+
+    f1_by_model = {}
+    for row in accuracy_rows:
+        model_name = row.get("model_name", "").strip()
+        if not model_name:
+            continue
+        try:
+            f1_by_model[model_name] = float(row.get("f1_score", 0))
+        except (TypeError, ValueError):
+            f1_by_model[model_name] = 0.0
+
+    points = []
+    for model_name, tokens in tokens_by_model.items():
+        batch_size = _parse_batch_size(model_name)
+        emb = _parse_embedding_count(model_name)
+        is_seq = _is_sequential(model_name)
+        if is_seq:
+            continue
+        if batch_size is None or emb is None:
+            continue
+        series_label = f"max {emb} emb"
+        points.append({
+            "model_name": model_name,
+            "batch_size": batch_size,
+            "embeddings": emb,
+            "is_sequential": is_seq,
+            "series_label": series_label,
+            "tokens": tokens,
+            "f1_score": f1_by_model.get(model_name, 0.0),
+            "api_calls": api_calls.get(model_name, 0),
+            "total_time": total_times.get(model_name, 0.0),
+        })
+    return points
+
+
+def _bar_tokens_line_f1_by_batch(points: list[dict], output_path: Path):
+    if not points:
+        return
+    batch_sizes = sorted({p["batch_size"] for p in points if p["batch_size"] is not None})
+    has_sequential = any(p["is_sequential"] for p in points)
+    embeddings = sorted({p["embeddings"] for p in points})
+    series_labels = {emb: f"max {emb} emb" for emb in embeddings}
+
+    emb_to_idx = {emb: idx for idx, emb in enumerate(embeddings)}
+    group_gap = 0.6
+    bar_width = 0.6 / max(1, len(embeddings))
+
+    x_positions = []
+    bar_values = []
+    line_values = []
+    time_values = []
+
+    colors = ["#8FB6E3", "#EFB985", "#9FD99A", "#BFA2D3", "#E99B9B"]
+    hatches = ["//", "\\\\", "xx", "..", "++"]
+
+    group_keys = (["Sequential"] if has_sequential else []) + batch_sizes
+    for g_idx, group_key in enumerate(group_keys):
+        base = g_idx * (len(embeddings) * bar_width + group_gap)
+        for emb in embeddings:
+            match = next(
+                (
+                    p for p in points
+                    if ((p["batch_size"] == group_key and not p["is_sequential"]) if group_key != "Sequential" else p["is_sequential"])
+                    and p["embeddings"] == emb
+                ),
+                None,
+            )
+            if not match:
+                continue
+            pos = base + emb_to_idx[emb] * bar_width
+            x_positions.append(pos)
+            bar_values.append(match["tokens"])
+            line_values.append(match["f1_score"])
+            time_values.append(match["total_time"])
+
+    fig, ax1 = plt.subplots(figsize=(9, 5))
+    for emb in embeddings:
+        emb_positions = []
+        emb_values = []
+        for g_idx, group_key in enumerate(group_keys):
+            match = next(
+                (
+                    p for p in points
+                    if ((p["batch_size"] == group_key and not p["is_sequential"]) if group_key != "Sequential" else p["is_sequential"])
+                    and p["embeddings"] == emb
+                ),
+                None,
+            )
+            base = g_idx * (len(embeddings) * bar_width + group_gap)
+            pos = base + emb_to_idx[emb] * bar_width
+            emb_positions.append(pos)
+            emb_values.append(match["tokens"] if match else 0.0)
+        color = colors[emb_to_idx[emb] % len(colors)]
+        hatch = hatches[emb_to_idx[emb] % len(hatches)]
+        ax1.bar(
+            emb_positions,
+            emb_values,
+            width=bar_width,
+            color=color,
+            hatch=hatch,
+            edgecolor="black",
+            label=series_labels[emb],
+        )
+    ax1.set_ylabel("Usage (tokens)")
+
+    ax2 = ax1.twinx()
+    ax2.plot(x_positions, line_values, color="#F2A65A", marker="o", linewidth=1.5, label="F1 score")
+    ax2.axhline(0.92, linestyle=":", color="red", linewidth=1)
+    ax2.set_ylabel("F1 score")
+    max_f1 = max(line_values) if line_values else 1.0
+    ax2.set_ylim(0, min(1.05, max_f1 + 0.05))
+
+    ax3 = ax1.twinx()
+    ax3.spines["right"].set_position(("outward", 40))
+    ax3.plot(x_positions, time_values, color="#6B7280", linestyle="--", marker="s", linewidth=1.2, label="Total time (s)")
+    ax3.set_ylabel("Total time (s)")
+    ax3.tick_params(axis="y", colors="#6B7280")
+    max_time = max(time_values) if time_values else 0.0
+    ax3.set_ylim(0, max_time * 1.15 if max_time else 1.0)
+
+    group_centers = [
+        g_idx * (len(embeddings) * bar_width + group_gap) + (len(embeddings) - 1) * bar_width / 2
+        for g_idx in range(len(group_keys))
+    ]
+    x_labels = []
+    for group_key in group_keys:
+        if group_key == "Sequential":
+            api_vals = sorted({p["api_calls"] for p in points if p["is_sequential"]})
+            api_label = api_vals[0] if api_vals else 0
+            x_labels.append(f"Sequential\n(api={api_label})")
+        else:
+            api_vals = sorted({p["api_calls"] for p in points if p["batch_size"] == group_key})
+            api_label = api_vals[0] if api_vals else 0
+            x_labels.append(f"{group_key}\n(api={api_label})")
+    ax1.set_xticks(group_centers)
+    ax1.set_xticklabels(x_labels)
+    ax1.tick_params(axis="x", bottom=True, labelbottom=True, labelrotation=0, labelsize=9, pad=8)
+    ax1.set_xlabel("Batch size (registers per batch)\n(number of LLM API calls)")
+    ax1.set_title("Usage, F1 Score and Time by Batch Size (grouped by max embeddings)")
+    max_tokens = max(bar_values) if bar_values else 0.0
+    ax1.set_ylim(0, max_tokens * 1.15 if max_tokens else 1.0)
+
+    formatter = mticker.FuncFormatter(lambda x, pos: f"{x / 1_000_000:.1f}".rstrip("0").rstrip("."))
+    ax1.yaxis.set_major_formatter(formatter)
+    ax1.set_ylabel("Usage (tokens, millions)")
+
+    handles1, labels1 = ax1.get_legend_handles_labels()
+    handles2, labels2 = ax2.get_legend_handles_labels()
+    handles3, labels3 = ax3.get_legend_handles_labels()
+    legend_items = {}
+    for handle, label in zip(handles1 + handles2 + handles3, labels1 + labels2 + labels3):
+        if label not in legend_items:
+            legend_items[label] = handle
+    ax1.legend(
+        list(legend_items.values()),
+        list(legend_items.keys()),
+        loc="center right",
+        bbox_to_anchor=(1.0, 0.6),
+        fontsize=7,
+        handlelength=1.1,
+        labelspacing=0.2,
+        borderpad=0.2,
+    )
+
+    fig.subplots_adjust(bottom=0.28, right=0.82)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=200)
+    pdf_path = output_path.with_suffix(".pdf")
+    fig.savefig(pdf_path)
+
+
 def _bar_time_breakdown(points: list[dict], output_path: Path, min_f1: float, max_time: float):
     points = _sort_points(points)
     labels = [f"{p['label']} (calls={p['api_calls']})" for p in points]
@@ -309,6 +594,11 @@ def main():
         default=1000.0,
         help="Maximum total time (s) to include",
     )
+    parser.add_argument(
+        "--usage-field",
+        default="total_tokens",
+        help="Field from summary_usage.csv for batch size plot",
+    )
     args = parser.parse_args()
 
     experiment_dir = Path(args.experiment_dir)
@@ -322,27 +612,40 @@ def main():
 
     _scatter_time_vs_tokens(
         filtered,
-        experiment_dir / "time_vs_tokens_f1_filtered.png",
+        experiment_dir / "plot_time_vs_tokens_f1_filtered.png",
         args.min_f1,
     )
     _scatter_f1_vs_tokens(
         filtered,
-        experiment_dir / "f1_vs_tokens_time_filtered.png",
+        experiment_dir / "plot_f1_vs_tokens_time_filtered.png",
         args.min_f1,
     )
     _bar_time_breakdown(
         filtered,
-        experiment_dir / "time_breakdown_bars.png",
+        experiment_dir / "plot_time_breakdown_bars.png",
         args.min_f1,
         args.max_time,
     )
     _bar_token_breakdown(
         experiment_dir,
         filtered,
-        experiment_dir / "token_breakdown_bars.png",
+        experiment_dir / "plot_token_breakdown_bars.png",
         args.min_f1,
         args.max_time,
     )
+    batch_points = _build_batch_usage_points(experiment_dir, args.usage_field)
+    if batch_points:
+        _scatter_batch_size_vs_usage(
+            batch_points,
+            experiment_dir / "plot_batch_size_vs_usage_f1.png",
+            args.usage_field,
+        )
+    batch_emb_points = _build_batch_embedding_points(experiment_dir)
+    if batch_emb_points:
+        _bar_tokens_line_f1_by_batch(
+            batch_emb_points,
+            experiment_dir / "plot_batch_size_embeddings_tokens_f1.png",
+        )
     print(f"Saved plots to {experiment_dir}")
 
 

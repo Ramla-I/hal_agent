@@ -349,8 +349,7 @@ def process_single_batch(
             for peripheral_name, register_name in batch_registers
         ]
         combined_query = "\n".join(combined_query_parts)
-        with timed_operation("vector_store_search"):
-            file_search = search_vector_store(combined_query, vs_id, num_embeddings, True, 0.25)
+        file_search = search_vector_store(combined_query, vs_id, num_embeddings, True, 0.25)
         embeddings_returned = len(file_search.data)
         combined_file_search = format_results(file_search)
 
@@ -671,15 +670,10 @@ if __name__ == "__main__":
         experiment_dir = os.path.join(base_dir, "experiments", experiment_name)
         configurations = [
             # {"mode": "sequential", "embeddings": 4, "batch_size": None},
-            # {"mode": "batched", "embeddings": 4, "batch_size": None},  # One register per batch
-            # {"mode": "batched", "embeddings": 8, "batch_size": None},  # One register per batch
-            # {"mode": "batched", "embeddings": 16, "batch_size": None},  # One register per batch
-            # Examples with batch_size (uncomment to test):
-            # {"mode": "batched", "embeddings": 8, "batch_size": 2},  # ~2 registers per batch
-            {"mode": "batched", "embeddings": 8, "batch_size": 3},  # ~2 registers per batch
-            {"mode": "batched", "embeddings": 16, "batch_size": 2},  # ~2 registers per batch
+            # {"mode": "batched", "embeddings": 4, "batch_size": 1},  # ~2 registers per batch
+            # {"mode": "batched", "embeddings": 8, "batch_size": 1},  # ~2 registers per batch
+            {"mode": "batched", "embeddings": 4, "batch_size": 4},  # ~2 registers per batch
             # {"mode": "batched", "embeddings": 16, "batch_size": 3},  # ~2 registers per batch
-            # {"mode": "batched", "embeddings": 16, "batch_size": 50},  # ~50 registers per batch
         ]
 
         results = []
@@ -691,7 +685,7 @@ if __name__ == "__main__":
 
             # Create output directory name
             if mode == "batched" and batch_size is not None:
-                output_dir = os.path.join(experiment_dir, f"{model_names[id]}_{mode}_{DATASET}_emb{num_emb}_bs{batch_size}")
+                output_dir = os.path.join(experiment_dir, f"{model_names[id]}_{DATASET}_emb{num_emb}_bs{batch_size}")
             else:
                 output_dir = os.path.join(experiment_dir, f"{model_names[id]}_{mode}_{DATASET}_emb{num_emb}")
             os.makedirs(output_dir, exist_ok=True)
@@ -835,7 +829,7 @@ if __name__ == "__main__":
         NUM_EMBEDDINGS = 4
 
         experiment_dir = os.path.join(base_dir, "experiments", "batch_sizes_embeddings")
-        output_dir = os.path.join(experiment_dir, f"{model_names[id]}_{MODE}_{DATASET}_emb{NUM_EMBEDDINGS}")
+        output_dir = os.path.join(experiment_dir, f"{model_names[id]}_{DATASET}_bs{BATCH_SIZE}_emb{NUM_EMBEDDINGS}")
         os.makedirs(output_dir, exist_ok=True)
 
         print(f"\n{'='*80}")

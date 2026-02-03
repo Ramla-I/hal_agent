@@ -148,7 +148,7 @@ def main():
     parser.add_argument(
         "--output",
         default=None,
-        help="Output PNG path (default: <experiment-dir>/time_vs_f1_scatter.png)",
+        help="Output PNG path (default: <experiment-dir>/plot_time_vs_f1_scatter.png)",
     )
     parser.add_argument(
         "--annotate",
@@ -158,7 +158,7 @@ def main():
     args = parser.parse_args()
 
     experiment_dir = Path(args.experiment_dir)
-    output_path = Path(args.output) if args.output else experiment_dir / "time_vs_f1_scatter.png"
+    output_path = Path(args.output) if args.output else experiment_dir / "plot_time_vs_f1_scatter.png"
 
     points = build_scatter_data(experiment_dir)
     if not points:

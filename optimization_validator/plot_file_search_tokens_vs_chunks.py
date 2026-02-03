@@ -138,21 +138,43 @@ def main():
     parser.add_argument(
         "--output",
         default=None,
-        help="Output PNG path (default: <experiment-dir>/file_search_tokens_vs_chunks.png)",
+        help="Output PNG path (default: <experiment-dir>/plot_file_search_tokens_vs_chunks.png)",
     )
     args = parser.parse_args()
 
     experiment_dir = Path(args.experiment_dir)
-    output_path = Path(args.output) if args.output else experiment_dir / "file_search_tokens_vs_chunks.png"
+    output_path = Path(args.output) if args.output else experiment_dir / "plot_file_search_tokens_vs_chunks.png"
 
+    plot_file_search_tokens_vs_chunks(
+        experiment_dir=experiment_dir,
+        test_set_path=Path(args.test_set),
+        peripheral_mapping_path=Path(args.peripheral_mapping),
+        token_column=args.token_column,
+        min_f1=args.min_f1,
+        max_time=args.max_time,
+        output_path=output_path,
+    )
+    print(f"Saved plot to {output_path}")
+
+
+def plot_file_search_tokens_vs_chunks(
+    *,
+    experiment_dir: Path,
+    test_set_path: Path,
+    peripheral_mapping_path: Path,
+    token_column: str,
+    min_f1: float,
+    max_time: float,
+    output_path: Path,
+):
     accuracy_rows = _read_csv_rows(experiment_dir / "summary_accuracy.csv")
     timing_rows = _read_csv_rows(experiment_dir / "summary_timing.csv")
     total_times = _compute_total_times(timing_rows)
     api_calls = _compute_api_calls(timing_rows)
 
     # Compute total chunk tokens for peripherals in test set
-    peripherals = _collect_peripherals(Path(args.test_set))
-    token_map = _load_peripheral_token_map(Path(args.peripheral_mapping), args.token_column)
+    peripherals = _collect_peripherals(test_set_path)
+    token_map = _load_peripheral_token_map(peripheral_mapping_path, token_column)
     missing = sorted([p for p in peripherals if p not in token_map])
     total_chunk_tokens = sum(token_map.get(p, 0) for p in peripherals)
 
@@ -167,7 +189,7 @@ def main():
         except (TypeError, ValueError):
             f1_score = 0.0
         total_time = total_times.get(model_name, 0.0)
-        if f1_score >= args.min_f1 and total_time <= args.max_time:
+        if f1_score >= min_f1 and total_time <= max_time:
             filtered_models.append(model_name)
 
     # Build bars
@@ -197,7 +219,6 @@ def main():
 
     if missing:
         print(f"Warning: missing peripherals in mapping: {', '.join(missing)}")
-    print(f"Saved plot to {output_path}")
 
 
 if __name__ == "__main__":
