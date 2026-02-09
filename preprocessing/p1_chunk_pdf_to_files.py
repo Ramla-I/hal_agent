@@ -26,6 +26,7 @@ from pathlib import Path
 import tiktoken
 import pymupdf  # PyMuPDF
 import pymupdf4llm  # For markdown conversion
+import re
 
 # Import encoding from config
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -70,6 +71,204 @@ def chunk_text(text: str, max_tokens: int = 800, overlap_tokens: int = 100) -> l
             break
 
     return chunks
+
+
+def _is_md_table_separator(line: str) -> bool:
+    """
+    Detect markdown table separator lines like:
+      |---|---|
+      |:---|---:|
+    """
+    s = line.strip()
+    if "|" not in s:
+        return False
+    s_inner = s.strip("|").strip()
+    if not s_inner:
+        return False
+    # A separator line is composed of pipes, colons, dashes and spaces.
+    if re.fullmatch(r"[:\-\|\s]+", s) is None:
+        return False
+    # Require at least one dash to avoid matching random pipes.
+    return "-" in s_inner
+
+
+def _is_md_table_row(line: str) -> bool:
+    """
+    Heuristic for markdown table row lines: contain >=2 pipes and some non-pipe content.
+    """
+    s = line.rstrip("\n")
+    if s.strip().startswith("```"):
+        return False
+    if s.count("|") < 2:
+        return False
+    # Must contain something besides pipes/spaces to avoid matching "||||".
+    return re.search(r"[A-Za-z0-9]", s) is not None
+
+
+def _is_table_block_start(lines: list[str], i: int) -> bool:
+    """
+    Detect the start of a markdown table block.
+
+    Prefer canonical:
+      header row + separator row
+    But accept consecutive pipe rows as a fallback.
+    """
+    if i >= len(lines):
+        return False
+    if _is_md_table_row(lines[i]):
+        if i + 1 < len(lines) and _is_md_table_separator(lines[i + 1]):
+            return True
+        if i + 1 < len(lines) and _is_md_table_row(lines[i + 1]):
+            return True
+    return False
+
+
+def _extract_table_block(lines: list[str], start_idx: int) -> tuple[str, int]:
+    """
+    Extract a contiguous markdown table block starting at start_idx.
+
+    Returns:
+      (table_text, next_index_after_block)
+    """
+    i = start_idx
+    table_lines: list[str] = []
+    while i < len(lines):
+        line = lines[i]
+        if _is_md_table_row(line) or _is_md_table_separator(line):
+            table_lines.append(line)
+            i += 1
+            continue
+        break
+
+    # Consume one trailing blank line if present.
+    if i < len(lines) and lines[i].strip() == "":
+        table_lines.append(lines[i])
+        i += 1
+
+    return "\n".join(table_lines).rstrip("\n"), i
+
+
+def chunk_markdown_preserving_tables(
+    md_text: str,
+    max_tokens: int = 800,
+    overlap_tokens: int = 100,
+) -> list[str]:
+    """
+    Split markdown into token-limited chunks while preserving table blocks.
+
+    - Tables are detected via pipe-row/separator heuristics and are never split across chunks.
+    - If a single table block exceeds max_tokens, it will be emitted as a single oversize chunk.
+    - For non-table text blocks that exceed max_tokens, we fall back to token-based chunking.
+
+    Note: This preserves tables *within a page*. If a table spans multiple pages in the PDF,
+    it may still be split across pages upstream (we chunk per page).
+    """
+    encoding = tiktoken.get_encoding(TIKTOKEN_ENCODING)
+    lines = md_text.splitlines()
+
+    # 1) Convert to blocks (either text or a full table block).
+    blocks: list[tuple[str, str]] = []  # (kind, text)
+    paragraph_lines: list[str] = []
+
+    def flush_paragraph() -> None:
+        nonlocal paragraph_lines
+        if not paragraph_lines:
+            return
+        text = "\n".join(paragraph_lines).strip("\n")
+        if text.strip():
+            blocks.append(("text", text))
+        paragraph_lines = []
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+
+        # Keep fenced code blocks intact.
+        if line.strip().startswith("```"):
+            flush_paragraph()
+            code_lines = [line]
+            i += 1
+            while i < len(lines):
+                code_lines.append(lines[i])
+                if lines[i].strip().startswith("```"):
+                    i += 1
+                    break
+                i += 1
+            blocks.append(("text", "\n".join(code_lines).strip("\n")))
+            continue
+
+        if _is_table_block_start(lines, i):
+            flush_paragraph()
+
+            # Include an immediately preceding caption line if it looks like a table caption.
+            # (Common patterns: "Table 48.", "**Table 48. ...**")
+            if i - 1 >= 0:
+                prev = lines[i - 1].strip()
+                if prev and re.search(r"\btable\b", prev, re.IGNORECASE) and not prev.startswith("#"):
+                    blocks.append(("text", prev))
+
+            table_text, next_i = _extract_table_block(lines, i)
+            blocks.append(("table", table_text))
+            i = next_i
+            continue
+
+        paragraph_lines.append(line)
+        i += 1
+
+    flush_paragraph()
+
+    # 2) Pack blocks into chunks up to max_tokens, without splitting tables.
+    chunks: list[str] = []
+    current_parts: list[str] = []
+    current_tokens = 0
+
+    def flush_chunk() -> None:
+        nonlocal current_parts, current_tokens
+        if not current_parts:
+            return
+        chunks.append("\n\n".join([p for p in current_parts if p.strip()]).strip("\n"))
+        current_parts = []
+        current_tokens = 0
+
+    for kind, block_text in blocks:
+        block_tokens = len(encoding.encode(block_text))
+
+        if kind == "table":
+            if current_parts and current_tokens + block_tokens > max_tokens:
+                flush_chunk()
+            current_parts.append(block_text)
+            current_tokens += block_tokens
+            # Emit immediately so subsequent text doesn't get glued to the table.
+            flush_chunk()
+            continue
+
+        # kind == "text"
+        if block_tokens > max_tokens:
+            flush_chunk()
+            chunks.extend([c.strip("\n") for c in chunk_text(block_text, max_tokens=max_tokens, overlap_tokens=overlap_tokens) if c.strip()])
+            continue
+
+        if current_parts and current_tokens + block_tokens > max_tokens:
+            flush_chunk()
+
+        current_parts.append(block_text)
+        current_tokens += block_tokens
+
+    flush_chunk()
+
+    # 3) Apply token overlap between chunks (simple prepend).
+    if overlap_tokens <= 0 or len(chunks) <= 1:
+        return chunks
+
+    out: list[str] = [chunks[0]]
+    prev_tokens = encoding.encode(chunks[0])
+    for idx in range(1, len(chunks)):
+        current = chunks[idx]
+        overlap = encoding.decode(prev_tokens[-overlap_tokens:]) if len(prev_tokens) > overlap_tokens else encoding.decode(prev_tokens)
+        out.append((overlap + "\n\n" + current).strip("\n"))
+        prev_tokens = encoding.encode(current)
+
+    return out
 
 
 def extract_text_plain(pdf_path: str) -> dict[int, str]:
@@ -169,7 +368,10 @@ def extract_and_chunk_pdf(
             continue
 
         # Chunk the page text
-        page_chunks = chunk_text(page_text, max_tokens, overlap_tokens)
+        if format == "markdown":
+            page_chunks = chunk_markdown_preserving_tables(page_text, max_tokens=max_tokens, overlap_tokens=overlap_tokens)
+        else:
+            page_chunks = chunk_text(page_text, max_tokens, overlap_tokens)
 
         print(f"  Page {page_num + 1}: {len(page_chunks)} chunks ({count_tokens(page_text)} tokens)")
 
@@ -203,10 +405,10 @@ def extract_and_chunk_pdf(
     print(f"\nTotal chunks created: {global_chunk_id}")
     print(f"Saved to: {output_dir}/")
 
-    # Save metadata summary
-    metadata_path = os.path.join(output_dir, f"{datasheet_name}_chunks_metadata.csv")
-    save_metadata_csv(chunk_metadata, metadata_path)
-    print(f"Metadata saved to: {metadata_path}")
+    # Save chunk index CSV
+    index_path = os.path.join(output_dir, "chunks_index.csv")
+    save_metadata_csv(chunk_metadata, index_path)
+    print(f"Chunk index saved to: {index_path}")
 
     return chunk_metadata
 

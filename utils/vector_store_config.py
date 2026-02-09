@@ -174,7 +174,7 @@ def update_vector_store(
         vs_id: New vs_id (if uploading)
         description: Updated description
         file_count: Number of files uploaded
-        chunk_index_path: Path to upload_summary.csv
+        chunk_index_path: Path to chunks_index.csv
         created_at: Creation date
 
     Returns:

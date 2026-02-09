@@ -16,7 +16,7 @@ Usage:
 
     # With custom output directory
     python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
-        --output-dir devices/stm/rm0041/chunks
+        --output-dir chunked_datasheets/stm/rm0041/chunks
 
     # With metadata embedding and markdown format
     python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
@@ -35,18 +35,21 @@ Usage:
         --dry-run
 
 Output:
-    {output_dir}/
-    ├── text/ or md/           # Chunk files
-    │   ├── {name}_p001_c01.txt
-    │   ├── ...
-    │   ├── metadata/          # Enriched metadata JSON
-    │   │   ├── {chunk_id}_metadata.json
-    │   │   └── all_metadata.json
-    │   ├── upload_summary.csv # Chunk index for retrieval expansion
-    │   └── {name}_chunks_metadata.csv
-    └── vector_store_info.json # Vector store ID and config (legacy)
+    Chunks (in --output-dir, defaults to {pdf_dir}/chunks/):
+        {output_dir}/
+        ├── text/ or md/           # Chunk files
+        │   ├── {name}_p001_c01.txt
+        │   ├── ...
+        │   ├── chunks_index.csv   # Chunk index (basic metadata + file_ids after upload)
+        │   ├── metadata.json      # Enriched metadata for all chunks
+        │   └── metadata_summary.json  # Summary statistics
+        └── vector_store_info.json # Vector store ID and config (legacy)
 
-    Also updates: {device_dir}/vector_stores.json with new vector store entry
+    Config (in --device-dir, defaults to PDF's directory):
+        {device_dir}/vector_stores.json  # Canonical vector store registry
+
+    IMPORTANT: vector_stores.json belongs in the device directory (e.g., devices/stm/rm0041/),
+    NOT in the chunked_datasheets directory. Use --device-dir to specify explicitly if needed.
 """
 
 import argparse
@@ -79,7 +82,7 @@ def run_chunking(
     format: str
 ) -> list:
     """Run the PDF chunking step."""
-    from preprocessing.chunk_pdf_to_files import extract_and_chunk_pdf
+    from preprocessing.p1_chunk_pdf_to_files import extract_and_chunk_pdf
 
     logger.info(f"Step 1: Chunking PDF ({format} format)")
     logger.info(f"  Input: {pdf_path}")
@@ -106,7 +109,7 @@ def run_enrichment(
     use_llm: bool = False
 ) -> dict:
     """Run the metadata enrichment step."""
-    from preprocessing.enrich_chunk_metadata import enrich_chunk_directory, generate_metadata_summary
+    from preprocessing.p2_enrich_chunk_metadata import enrich_chunk_directory, generate_metadata_summary
 
     logger.info("Step 2: Enriching chunk metadata")
     logger.info(f"  Chunks: {chunks_dir}")
@@ -133,15 +136,22 @@ def run_augmentation(
     chunks_dir: str,
     metadata_dir: str,
     output_dir: str,
-    file_extension: str
+    file_extension: str,
+    include_fields: list[str] | None = None,
 ) -> int:
-    """Run the metadata augmentation step (embed metadata in chunks)."""
-    from preprocessing.augment_chunks_with_metadata import augment_chunk_directory
+    """Run the metadata augmentation step (embed metadata in chunks).
+
+    Args:
+        include_fields: which metadata fields to embed (see p3_augment_chunks_with_metadata.PRESETS).
+    """
+    from preprocessing.p3_augment_chunks_with_metadata import augment_chunk_directory
 
     logger.info("Step 3: Augmenting chunks with embedded metadata")
     logger.info(f"  Chunks: {chunks_dir}")
     logger.info(f"  Metadata: {metadata_dir}")
     logger.info(f"  Output: {output_dir}")
+    if include_fields:
+        logger.info(f"  Fields: {include_fields}")
 
     chunks_path = Path(chunks_dir)
     metadata_path = Path(metadata_dir)
@@ -151,7 +161,8 @@ def run_augmentation(
         chunks_path,
         metadata_path,
         output_path,
-        file_extension=file_extension
+        file_extension=file_extension,
+        include_fields=include_fields,
     )
 
     logger.info(f"  Augmented {processed} chunks")
@@ -168,9 +179,9 @@ def run_upload(
     chunk_overlap_tokens: int
 ) -> tuple:
     """Run the vector store upload step."""
-    from preprocessing.upload_enriched_chunks import (
+    from preprocessing.vector_store_uploader import (
         create_vector_store_with_enriched_chunks,
-        save_upload_summary
+        save_upload_summary,
     )
     from openai import OpenAI
 
@@ -191,8 +202,8 @@ def run_upload(
         chunk_overlap_tokens
     )
 
-    # Save upload summary
-    summary_path = os.path.join(chunks_dir, "upload_summary.csv")
+    # Save chunk index (includes file_ids from upload)
+    summary_path = os.path.join(chunks_dir, "chunks_index.csv")
     save_upload_summary(vector_store_id, file_infos, summary_path)
 
     logger.info(f"  Vector store ID: {vector_store_id}")
@@ -250,7 +261,7 @@ def update_device_vector_stores(
         vector_store_id: OpenAI vector store ID
         description: Human-readable description
         chunk_count: Number of chunks uploaded
-        chunk_index_path: Relative path to upload_summary.csv
+        chunk_index_path: Relative path to chunks_index.csv
         local_path: Relative path to local chunk files
 
     Returns:
@@ -310,7 +321,7 @@ Examples:
 
     # Custom output directory
     python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \\
-        --output-dir devices/stm/rm0041/chunks
+        --output-dir chunked_datasheets/stm/rm0041/chunks
 
     # Skip upload for testing
     python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \\
@@ -331,11 +342,11 @@ Examples:
     # Output options
     parser.add_argument(
         "--output-dir",
-        help="Base output directory (default: same directory as PDF)"
+        help="Base output directory for chunks (default: {pdf_dir}/chunks/). Use this for chunked_datasheets/."
     )
     parser.add_argument(
         "--device-dir",
-        help="Device directory for vector_stores.json (default: same directory as PDF)"
+        help="Device directory for vector_stores.json (default: same directory as PDF). Keep this in devices/."
     )
     parser.add_argument(
         "--store-name",
@@ -377,6 +388,29 @@ Examples:
         action="store_true",
         help="Use LLM for enhanced metadata extraction (slower, more accurate)"
     )
+    parser.add_argument(
+        "--augment-preset",
+        choices=["default", "minimal", "registers_only", "full", "none"],
+        default="default",
+        help="Preset for which metadata fields to embed (default: default). Use --list-augment-fields to see details.",
+    )
+    parser.add_argument(
+        "--augment-include",
+        nargs="*",
+        default=None,
+        help="Additional metadata fields to include (on top of preset)",
+    )
+    parser.add_argument(
+        "--augment-exclude",
+        nargs="*",
+        default=None,
+        help="Metadata fields to exclude from preset",
+    )
+    parser.add_argument(
+        "--list-augment-fields",
+        action="store_true",
+        help="List available augmentation fields and presets, then exit",
+    )
 
     # Upload options
     parser.add_argument(
@@ -417,6 +451,17 @@ Examples:
 
     args = parser.parse_args()
 
+    # Handle --list-augment-fields
+    if args.list_augment_fields:
+        from preprocessing.p3_augment_chunks_with_metadata import ALL_FIELDS, PRESETS
+        print("Available augmentation fields:")
+        for f in ALL_FIELDS:
+            print(f"  - {f}")
+        print("\nPresets:")
+        for name, fields in PRESETS.items():
+            print(f"  {name}: {', '.join(fields) if fields else '(empty)'}")
+        return 0
+
     # Validate inputs
     if not os.path.exists(args.pdf_path):
         print(f"Error: PDF file not found: {args.pdf_path}")
@@ -427,12 +472,18 @@ Examples:
     device_dir = args.device_dir or pdf_dir
     base_output_dir = args.output_dir or os.path.join(pdf_dir, "chunks")
 
+    # NOTE: `chunk_pdf_to_files.py` currently always writes chunk files as `.txt`
+    # even when `--format markdown` is used (content is markdown, extension remains `.txt`).
+    # Keep the directory name (`md/` vs `text/`) to reflect extraction mode, but always
+    # use `.txt` for chunk file discovery/enrichment/augmentation unless/until the
+    # chunker is updated to emit `.md` files.
     format_subdir = "md" if args.format == "markdown" else "text"
     chunks_dir = os.path.join(base_output_dir, format_subdir)
-    metadata_dir = os.path.join(chunks_dir, "metadata")
+    # Metadata is now saved directly in chunks_dir (no separate metadata/ subdirectory)
+    metadata_dir = chunks_dir
     augmented_dir = os.path.join(base_output_dir, f"{format_subdir}_enriched") if args.embed_metadata else None
 
-    file_extension = ".md" if args.format == "markdown" else ".txt"
+    file_extension = ".txt"
 
     # Determine store name for vector_stores.json
     if args.store_name:
@@ -465,7 +516,7 @@ Examples:
     if args.dry_run:
         print("\n[DRY RUN] Would execute the following steps:")
         print(f"  1. Chunk PDF to {chunks_dir}")
-        print(f"  2. Enrich metadata to {metadata_dir}")
+        print(f"  2. Enrich metadata (metadata.json in {chunks_dir})")
         if args.embed_metadata:
             print(f"  3. Augment chunks to {augmented_dir}")
         if not args.skip_upload:
@@ -495,12 +546,23 @@ Examples:
     # Step 3: Augment chunks (optional)
     upload_chunks_dir = chunks_dir
     if args.embed_metadata:
+        # Build include_fields from preset +/- include/exclude
+        from preprocessing.p3_augment_chunks_with_metadata import PRESETS
+        include_fields = list(PRESETS[args.augment_preset])
+        if args.augment_include:
+            for f in args.augment_include:
+                if f not in include_fields:
+                    include_fields.append(f)
+        if args.augment_exclude:
+            include_fields = [f for f in include_fields if f not in args.augment_exclude]
+
         print("\n" + "-" * 70)
         run_augmentation(
             chunks_dir,
             metadata_dir,
             augmented_dir,
-            file_extension
+            file_extension,
+            include_fields=include_fields,
         )
         upload_chunks_dir = augmented_dir
 
