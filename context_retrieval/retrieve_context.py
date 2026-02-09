@@ -76,7 +76,8 @@ def retrieve_context(
                     results,
                     chunk_index=chunk_index,
                     pages_after=context_retrieval_parameters.pages_after,
-                    expansion_enabled=True
+                    expansion_enabled=True,
+                    table_pages_only=context_retrieval_parameters.expand_table_pages_only
                 )
             else:
                 formatted_results = format_results(results)

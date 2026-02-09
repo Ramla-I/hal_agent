@@ -102,7 +102,8 @@ def extract_pages_from_results(results) -> set:
 def expand_with_contiguous_chunks(
     results,
     chunk_index: ChunkIndex,
-    pages_after: int = 2
+    pages_after: int = 2,
+    table_pages_only: bool = False
 ) -> tuple[str, set]:
     """
     Expand semantic search results with chunks from subsequent pages.
@@ -115,6 +116,7 @@ def expand_with_contiguous_chunks(
         results: OpenAI vector store search results
         chunk_index: ChunkIndex instance for page-to-chunk lookups
         pages_after: Number of pages to expand after each retrieved chunk (default: 2)
+        table_pages_only: Only expand pages that contain tables (default: False)
 
     Returns:
         Tuple of (formatted_expansion_content, set_of_chunk_ids_added)
@@ -134,10 +136,10 @@ def expand_with_contiguous_chunks(
         chunk_id = filename.rsplit('.', 1)[0] if '.' in filename else filename
         original_chunk_ids.add(chunk_id)
 
-    # Compute expansion pages
+    # Compute expansion pages (with optional table filter)
     expansion_pages = set()
     for page in result_pages:
-        contiguous = chunk_index.get_contiguous_pages(page, pages_after)
+        contiguous = chunk_index.get_contiguous_pages(page, pages_after, table_pages_only=table_pages_only)
         expansion_pages.update(contiguous)
 
     # Remove pages that are already in results
@@ -182,7 +184,8 @@ def format_results_with_expansion(
     results,
     chunk_index: ChunkIndex = None,
     pages_after: int = 2,
-    expansion_enabled: bool = True
+    expansion_enabled: bool = True,
+    table_pages_only: bool = False
 ) -> str:
     """
     Format search results with optional contiguous chunk expansion.
@@ -192,6 +195,7 @@ def format_results_with_expansion(
         chunk_index: ChunkIndex instance (required if expansion_enabled)
         pages_after: Number of pages to expand after each result
         expansion_enabled: Whether to include contiguous chunk expansion
+        table_pages_only: Only expand pages that contain tables (default: False)
 
     Returns:
         Formatted string with results and expansion chunks wrapped in <sources>
@@ -208,7 +212,7 @@ def format_results_with_expansion(
     expansion_content = ''
     if expansion_enabled and chunk_index is not None:
         expansion_content, _ = expand_with_contiguous_chunks(
-            results, chunk_index, pages_after
+            results, chunk_index, pages_after, table_pages_only=table_pages_only
         )
 
     return f"<sources>{formatted_results}{expansion_content}</sources>"

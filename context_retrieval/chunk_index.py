@@ -1,20 +1,26 @@
 """
 Chunk Index for local lookup and contiguous chunk expansion.
 
-This module provides a ChunkIndex class that loads chunk metadata from upload_summary.csv
+This module provides a ChunkIndex class that loads chunk metadata from chunks_index.csv
 and enables efficient lookup of chunks by page number. This supports contiguous chunk
 expansion where semantic search results are expanded with chunks from subsequent pages.
 
 OpenAI vector store search does NOT support metadata filtering, so we use this local
 index to perform page-based lookups after semantic search returns initial results.
+
+Table-aware expansion:
+The ChunkIndex can also load metadata.json (from the enrichment step) to determine
+which pages contain tables. This enables the table_pages_only filter for contiguous
+chunk expansion.
 """
 
 import csv
+import json
 import os
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 import sys
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -29,7 +35,7 @@ class ChunkIndex:
     """
     Index for mapping pages to chunks and reading chunk content locally.
 
-    Loads chunk metadata from upload_summary.csv which contains:
+    Loads chunk metadata from chunks_index.csv which contains:
     - chunk_id: e.g., 'rm0041_p187_c01'
     - file_id: OpenAI file ID
     - file_path: local path to chunk file
@@ -38,12 +44,13 @@ class ChunkIndex:
     - token_count: number of tokens in chunk
     """
 
-    def __init__(self, upload_summary_csv: str):
+    def __init__(self, upload_summary_csv: str, load_metadata: bool = True):
         """
-        Initialize the chunk index from an upload_summary.csv file.
+        Initialize the chunk index from a chunks_index.csv file.
 
         Args:
-            upload_summary_csv: Path to the upload_summary.csv file
+            upload_summary_csv: Path to the chunks_index.csv file (legacy name kept for compatibility)
+            load_metadata: Whether to load metadata.json for table information (default: True)
         """
         self.csv_path = upload_summary_csv
         self.page_to_chunks: Dict[int, List[dict]] = defaultdict(list)
@@ -51,7 +58,14 @@ class ChunkIndex:
         self.file_id_to_info: Dict[str, dict] = {}
         self._base_dir: Optional[str] = None
 
+        # Table-aware expansion data
+        self._chunk_has_tables: Dict[str, bool] = {}  # chunk_id -> has_tables
+        self._pages_with_tables: Set[int] = set()  # pages that have at least one chunk with tables
+
         self._load_from_csv(upload_summary_csv)
+
+        if load_metadata:
+            self._load_metadata()
 
     def _load_from_csv(self, csv_path: str):
         """Load chunk index from CSV file."""
@@ -92,6 +106,41 @@ class ChunkIndex:
 
         logger.info(f"Loaded chunk index: {len(self.chunk_id_to_info)} chunks across {len(self.page_to_chunks)} pages")
 
+    def _load_metadata(self):
+        """
+        Load metadata.json to get table information per chunk.
+
+        The metadata.json file is expected to be in the same directory as the chunks_index.csv.
+        It contains a dict mapping chunk_id -> metadata, where metadata includes 'has_tables'.
+        """
+        csv_dir = os.path.dirname(self.csv_path)
+        metadata_path = os.path.join(csv_dir, "metadata.json")
+
+        if not os.path.exists(metadata_path):
+            logger.debug(f"No metadata.json found at {metadata_path} - table filtering disabled")
+            return
+
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                all_metadata = json.load(f)
+
+            for chunk_id, metadata in all_metadata.items():
+                has_tables = metadata.get('has_tables', False)
+                self._chunk_has_tables[chunk_id] = has_tables
+
+                # If this chunk has tables, mark its page as having tables
+                if has_tables:
+                    chunk_info = self.chunk_id_to_info.get(chunk_id)
+                    if chunk_info:
+                        page = chunk_info.get('page_number', 0)
+                        if page > 0:
+                            self._pages_with_tables.add(page)
+
+            logger.info(f"Loaded table metadata: {len(self._pages_with_tables)} pages with tables")
+
+        except Exception as e:
+            logger.warning(f"Error loading metadata.json: {e} - table filtering disabled")
+
     def get_chunks_for_pages(self, pages: List[int]) -> List[dict]:
         """
         Get all chunks for given page numbers, sorted by page then chunk_index.
@@ -108,19 +157,64 @@ class ChunkIndex:
                 chunks.extend(self.page_to_chunks[page])
         return chunks
 
-    def get_contiguous_pages(self, page: int, pages_after: int = 2) -> List[int]:
+    def get_contiguous_pages(self, page: int, pages_after: int = 2, table_pages_only: bool = False) -> List[int]:
         """
         Return page numbers for contiguous pages after a given page.
 
         Args:
             page: Starting page number (1-indexed)
             pages_after: Number of pages to include after the starting page
+            table_pages_only: If True, only include pages that contain tables
 
         Returns:
-            List of page numbers [page+1, page+2, ...] up to pages_after
+            List of page numbers [page+1, page+2, ...] up to pages_after,
+            optionally filtered to only pages with tables.
         """
         max_page = max(self.page_to_chunks.keys()) if self.page_to_chunks else 0
-        return [p for p in range(page + 1, page + 1 + pages_after) if p <= max_page]
+        contiguous = [p for p in range(page + 1, page + 1 + pages_after) if p <= max_page]
+
+        if table_pages_only:
+            contiguous = [p for p in contiguous if self.page_has_tables(p)]
+
+        return contiguous
+
+    def page_has_tables(self, page: int) -> bool:
+        """
+        Check if a page has at least one chunk containing tables.
+
+        Args:
+            page: Page number (1-indexed)
+
+        Returns:
+            True if the page has tables, False otherwise
+        """
+        return page in self._pages_with_tables
+
+    def chunk_has_tables(self, chunk_id: str) -> bool:
+        """
+        Check if a specific chunk contains tables.
+
+        Args:
+            chunk_id: The chunk ID to check
+
+        Returns:
+            True if the chunk has tables, False otherwise
+        """
+        return self._chunk_has_tables.get(chunk_id, False)
+
+    def get_pages_with_tables(self) -> Set[int]:
+        """
+        Get all page numbers that have at least one chunk with tables.
+
+        Returns:
+            Set of page numbers with tables
+        """
+        return self._pages_with_tables.copy()
+
+    @property
+    def has_table_metadata(self) -> bool:
+        """Check if table metadata was loaded successfully."""
+        return len(self._chunk_has_tables) > 0
 
     def get_chunk_by_id(self, chunk_id: str) -> Optional[dict]:
         """Get chunk info by chunk_id."""
@@ -223,7 +317,7 @@ def get_chunk_index(upload_summary_csv: str) -> ChunkIndex:
     the same CSV file multiple times.
 
     Args:
-        upload_summary_csv: Path to the upload_summary.csv file
+        upload_summary_csv: Path to the chunks_index.csv file (legacy name kept for compatibility)
 
     Returns:
         ChunkIndex instance (cached if previously loaded)
@@ -246,7 +340,7 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: python chunk_index.py <upload_summary.csv>")
+        print("Usage: python chunk_index.py <chunks_index.csv>")
         sys.exit(1)
 
     csv_path = sys.argv[1]

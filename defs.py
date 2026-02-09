@@ -42,7 +42,8 @@ class ContextRetrievalParameters(BaseModel):
     # Contiguous chunk expansion parameters
     chunk_expansion_enabled: bool = True  # Enable contiguous chunk expansion after semantic search
     pages_after: int = 2  # Number of pages to expand after each retrieved chunk
-    chunk_index_path: str = ""  # Path to upload_summary.csv for chunk index
+    chunk_index_path: str = ""  # Path to chunks_index.csv for chunk index
+    expand_table_pages_only: bool = False  # Only expand pages that contain tables
 
 class CoverageImproverOutput(BaseModel):
     context_retrieval_parameters: ContextRetrievalParameters
