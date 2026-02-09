@@ -1,8 +1,0 @@
-model_name,input_tokens,cached_tokens,output_tokens,reasoning_tokens,total_tokens,file_search_tokens,peripheral_name,register_name
-gpt-oss-120b,7269,0,1933,620,9202,2913,afio,mapr
-gpt-oss-120b,6958,4096,1696,812,8654,2599,afio,evcr
-gpt-oss-120b,7272,4096,1462,426,8734,2908,afio,exticr3
-gpt-oss-120b,7271,0,1431,404,8702,2909,afio,exticr4
-gpt-oss-120b,7114,4096,318,207,7432,2744,afio,mapr2
-gpt-oss-120b,7269,0,1476,463,8745,2908,afio,exticr1
-gpt-oss-120b,7270,0,1529,350,8799,2907,afio,exticr2

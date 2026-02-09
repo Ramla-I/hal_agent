@@ -1,8 +1,0 @@
-{
-  "datasheet_register_abbreviation": "AFIO_MAPR2",
-  "address_offset": null,
-  "reset_value": null,
-  "size": null,
-  "subfields": [],
-  "access_constraints": []
-}

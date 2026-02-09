@@ -1,4 +1,0 @@
-embeddings,registers_found,total_registers,correct,wrong,missing,total,accuracy
-4,6,7,110,1,36,147,74.82993197278913
-8,6,7,100,11,36,147,68.02721088435374
-16,6,7,111,0,36,147,75.51020408163265

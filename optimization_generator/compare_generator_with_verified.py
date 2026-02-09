@@ -35,8 +35,27 @@ import re
 from collections import defaultdict
 import pandas as pd
 
+from utils.generator_facts import extract_facts_from_generator_output
+
+def _format_fact_key(fact):
+    return f"{fact[0]}.{fact[1]}.{fact[2]}.{fact[3]}"
+
 def load_verified_datasheet(csv_path, peripheral_filter=None):
-    """Load verified datasheet and return as dict keyed by (peripheral, register, field_name, key)"""
+    """
+    Load the verified datasheet CSV into a fact dict.
+
+    Assumptions about input:
+    - CSV has columns: `peripheral`, `register`, `field_name`, `key`, `correct_value`
+    - Rows with empty `correct_value` are ignored.
+    - `field_name == ""` represents register-level facts.
+
+    Args:
+        csv_path: Path to verified CSV file.
+        peripheral_filter: If provided, only keep rows where `peripheral == peripheral_filter`.
+
+    Returns:
+        Dict mapping `(peripheral, register, field_name, key)` -> `correct_value` (as read from CSV).
+    """
     verified = {}
 
     with open(csv_path, 'r') as f:
@@ -62,7 +81,21 @@ def load_verified_datasheet(csv_path, peripheral_filter=None):
     return verified
 
 def load_generator_output(output_dir, peripheral, register):
-    """Load generator output JSON for a specific register"""
+    """
+    Load a generator output JSON for a given peripheral/register.
+
+    Assumptions about input:
+    - Generator outputs are stored as files named exactly `<peripheral>_<register>` (no extension).
+    - File contents are JSON-encoded register objects.
+
+    Args:
+        output_dir: Directory containing generator outputs.
+        peripheral: Peripheral name used in filename prefix.
+        register: Register name used in filename suffix.
+
+    Returns:
+        Parsed JSON object (dict) on success, or `None` if file missing/unreadable/invalid JSON.
+    """
     filename = f"{peripheral}_{register}"
     filepath = os.path.join(output_dir, filename)
 
@@ -75,62 +108,17 @@ def load_generator_output(output_dir, peripheral, register):
     except:
         return None
 
-def extract_facts_from_generator_output(output_json, peripheral, register):
-    """Extract facts from generator output in same format as verified datasheet"""
-    facts = {}
-
-    if not output_json:
-        return facts
-
-    # Register-level facts
-    for key in ['address_offset', 'reset_value', 'size']:
-        if key in output_json:
-            fact_key = (peripheral, register, '', key)
-            facts[fact_key] = str(output_json[key])
-
-    # Field-level facts (handle both 'subfields' and 'fields' key)
-    fields_list = output_json.get('subfields', output_json.get('fields', []))
-
-    for field in fields_list:
-        # Get field name (handle both 'name' and 'field_name')
-        field_name = field.get('name', field.get('field_name', '')).lower()
-
-        # Access
-        if 'access' in field:
-            fact_key = (peripheral, register, field_name, 'access')
-            facts[fact_key] = str(field['access'])
-
-        # Bit offset and width (handle both formats)
-        if 'bit_number' in field:
-            # New format with start_bit/end_bit
-            bit_info = field['bit_number']
-            if 'start_bit' in bit_info and 'end_bit' in bit_info:
-                # Ensure start_bit is the smaller value, end_bit is the larger
-                start_bit = min(bit_info['start_bit'], bit_info['end_bit'])
-                end_bit = max(bit_info['start_bit'], bit_info['end_bit'])
-
-                # bit_offset is the smaller value (start_bit)
-                fact_key = (peripheral, register, field_name, 'bit_offset')
-                facts[fact_key] = str(start_bit)
-
-                # bit_width is the difference + 1
-                bit_width = end_bit - start_bit + 1
-                fact_key = (peripheral, register, field_name, 'bit_width')
-                facts[fact_key] = str(bit_width)
-        else:
-            # Old format with direct bit_offset/bit_width
-            if 'bit_offset' in field:
-                fact_key = (peripheral, register, field_name, 'bit_offset')
-                facts[fact_key] = str(field['bit_offset'])
-
-            if 'bit_width' in field:
-                fact_key = (peripheral, register, field_name, 'bit_width')
-                facts[fact_key] = str(field['bit_width'])
-
-    return facts
-
 def normalize_value(value):
-    """Normalize values for comparison"""
+    """
+    Normalize values for string comparison.
+
+    Assumptions about input:
+    - Values may be ints, strings, or other JSON-serializable types.
+    - Hex strings may appear as `"0x..."`.
+
+    Returns:
+        Lowercased/trimmed string, with hex strings normalized to canonical `hex(int(...))` when possible.
+    """
     if not value:
         return None
 
@@ -146,14 +134,29 @@ def normalize_value(value):
     return value
 
 def normalize_register(name):
-    """Normalize register names for exact comparison (case-insensitive)."""
+    """
+    Normalize register names for exact matching (case-insensitive).
+
+    Returns:
+        Lowercased, trimmed string. (No fuzzy logic for registers in comparisons.)
+    """
     if name is None:
         return ''
     return str(name).strip().lower()
 
 
 def normalize_name(name):
-    """Normalize field names for fuzzy comparison."""
+    """
+    Normalize subfield names for matching.
+
+    Assumptions about input:
+    - Names may include bit-range suffixes like `port[3:0]`.
+    - Names may include separators/underscores; those are removed for matching robustness.
+
+    Returns:
+        Lowercased alphanumeric-only string with bracketed bit-ranges removed.
+        Example: `"PORT[3:0]" -> "port"`.
+    """
     if name is None:
         return ''
     cleaned = str(name).strip().lower()
@@ -163,7 +166,20 @@ def normalize_name(name):
 
 
 def match_name_score(left, right):
-    """Score name match: 3 exact, 2 prefix/suffix, 1 substring, 0 no match."""
+    """
+    Score two normalized names for fuzzy matching.
+
+    Assumptions:
+    - Inputs are already normalized (typically via `normalize_name()`).
+    - This is used for **subfield** matching only; registers are matched exactly elsewhere.
+
+    Returns:
+        Integer score:
+        - 3: exact match
+        - 2: prefix/suffix match (one side contains the other at the ends)
+        - 1: substring match (guarded by min length >= 4)
+        - 0: no match
+    """
     if not left or not right:
         return 0
     if left == right:
@@ -180,7 +196,16 @@ def match_name_score(left, right):
 
 
 def build_generator_index(generator_facts):
-    """Index generator facts for fuzzy lookup by (peripheral, key, register)."""
+    """
+    Build an index of generator facts for fuzzy subfield lookup.
+
+    Assumptions about input:
+    - `generator_facts` keys are `(peripheral, register, field_name, key)` tuples.
+
+    Returns:
+        Dict keyed by `(peripheral, key, norm_register)` with values as candidate dicts:
+        `{fact_key, register, field_name, value, norm_register, norm_field_name}`.
+    """
     index = defaultdict(list)
     for (peripheral, register, field_name, key), value in generator_facts.items():
         norm_register = normalize_register(register)
@@ -196,7 +221,16 @@ def build_generator_index(generator_facts):
 
 
 def build_generator_exact_map(generator_facts):
-    """Exact lookup by normalized register and field names."""
+    """
+    Build an exact lookup map for generator facts using normalized names.
+
+    Assumptions:
+    - Register matching is exact on `normalize_register(register)`.
+    - Subfield matching is exact on `normalize_name(field_name)` in the first pass.
+
+    Returns:
+        Dict keyed by `(peripheral, norm_register, norm_field, key)` -> `{fact_key, value}`.
+    """
     exact_map = {}
     for (peripheral, register, field_name, key), value in generator_facts.items():
         norm_register = normalize_register(register)
@@ -209,7 +243,23 @@ def build_generator_exact_map(generator_facts):
 
 
 def find_fuzzy_generator_fact(peripheral, register, field_name, key, generator_index, used_fact_keys):
-    """Find best fuzzy match for a verified fact in generator output."""
+    """
+    Find the best unused fuzzy match for a verified **subfield-level** fact.
+
+    Assumptions:
+    - Register names must match exactly (case-insensitive) via `normalize_register()`.
+      Fuzzy matching never crosses registers.
+    - Only subfield-level facts (`field_name != ""`) are eligible for fuzzy matching.
+    - `used_fact_keys` prevents a generator fact from being matched to multiple verified facts.
+
+    Args:
+        peripheral/register/field_name/key: Components of the verified fact key tuple.
+        generator_index: Output of `build_generator_index()`.
+        used_fact_keys: Set of generator fact keys already consumed by exact/fuzzy matches.
+
+    Returns:
+        Candidate dict from the generator index (includes `value` and `fact_key`), or `None`.
+    """
     norm_register = normalize_register(register)
     candidates = generator_index.get((peripheral, key, norm_register), [])
     if not candidates:
@@ -239,7 +289,12 @@ def find_fuzzy_generator_fact(peripheral, register, field_name, key, generator_i
 def compare_outputs(verified_facts, generator_facts, registers_found):
     """Compare generator output against verified facts.
 
-    Only compares facts for registers that are present in the generator output.
+    Matching policy:
+    - Registers are compared only when `(peripheral, register)` is in `registers_found`.
+    - Register names are treated as exact (no fuzzy matching across registers).
+    - Subfields use a two-pass strategy:
+      - Pass 1: exact match on normalized subfield name (`normalize_name`), reserving matched facts.
+      - Pass 2: fuzzy match remaining subfields (prefix/suffix/substring), without stealing reserved facts.
 
     Args:
         verified_facts: Dict of verified facts keyed by (peripheral, register, field_name, key)
@@ -247,7 +302,10 @@ def compare_outputs(verified_facts, generator_facts, registers_found):
         registers_found: Set of (peripheral, register) tuples that were found in generator output
 
     Returns:
-        Tuple of (correct, wrong, missing) lists
+        Tuple `(correct, wrong, missing)` where each is a list of dicts:
+        - correct: `{fact, value}`
+        - wrong: `{fact, correct, generated}`
+        - missing: `{fact, correct_value}`
     """
     correct = []
     wrong = []
@@ -356,7 +414,6 @@ def save_errors_to_csv(wrong, missing, output_dir, dir_name):
             for w in wrong:
                 fact = w['fact']
                 writer.writerow([fact[0], fact[1], fact[2], fact[3], w['correct'], w['generated']])
-        print(f"  Saved wrong facts to: {wrong_file}")
 
     # Save missing facts
     if missing:
@@ -367,10 +424,24 @@ def save_errors_to_csv(wrong, missing, output_dir, dir_name):
             for m in missing:
                 fact = m['fact']
                 writer.writerow([fact[0], fact[1], fact[2], fact[3], m['correct_value']])
-        print(f"  Saved missing facts to: {missing_file}")
+    return {
+        'wrong_csv': wrong_file if wrong else None,
+        'missing_csv': missing_file if missing else None,
+    }
 
 def parse_args():
-    """Parse command line arguments."""
+    """
+    Parse CLI arguments.
+
+    Returns:
+        argparse.Namespace with:
+        - verified: path to verified CSV
+        - generator_dirs: list of generator directories
+        - parent_dirs: optional list of parent dirs to expand into generator_dirs
+        - peripheral: optional peripheral filter
+        - output: summary CSV filename (written under `analysis/`)
+        - errors_dir: optional override for detailed error CSV directory
+    """
     parser = argparse.ArgumentParser(
         description="Compare generator outputs against verified datasheet.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -400,6 +471,12 @@ Examples:
         help="One or more generator output directories to compare"
     )
     parser.add_argument(
+        "--parent-dirs",
+        nargs="*",
+        default=[],
+        help="Parent directories containing generator output subdirectories"
+    )
+    parser.add_argument(
         "-p", "--peripheral",
         default=None,
         help="Filter by peripheral name (default: all peripherals)"
@@ -418,6 +495,12 @@ Examples:
 
 
 def main():
+    """
+    Entry point.
+
+    Reads the verified CSV, loads generator outputs, extracts facts, compares outputs,
+    prints metrics, and writes summary + per-run wrong/missing CSVs under `analysis/`.
+    """
     args = parse_args()
 
     # Validate inputs
@@ -425,43 +508,69 @@ def main():
         print(f"Error: Verified datasheet not found: {args.verified}")
         sys.exit(1)
 
-    for gen_dir in args.generator_dirs:
+    # Expand parent directories into generator directories
+    generator_dirs = list(args.generator_dirs)
+    for parent_dir in args.parent_dirs:
+        if not os.path.isdir(parent_dir):
+            print(f"Error: Parent directory not found: {parent_dir}")
+            sys.exit(1)
+        for entry in sorted(os.listdir(parent_dir)):
+            if entry == "analysis":
+                continue
+            full_path = os.path.join(parent_dir, entry)
+            if os.path.isdir(full_path):
+                generator_dirs.append(full_path)
+
+    if not generator_dirs:
+        print("Error: No generator directories provided.")
+        sys.exit(1)
+
+    for gen_dir in generator_dirs:
         if not os.path.isdir(gen_dir):
             print(f"Error: Generator directory not found: {gen_dir}")
             sys.exit(1)
 
+    # Determine analysis output directory and output file path
+    output_base_dir = os.path.dirname(args.output) or "."
+    analysis_dir = os.path.join(output_base_dir, "analysis")
+    os.makedirs(analysis_dir, exist_ok=True)
+
+    output_filename = os.path.basename(args.output)
+    output_path = os.path.join(analysis_dir, output_filename)
+
     # Determine errors output directory
-    errors_dir = args.errors_dir if args.errors_dir else os.path.dirname(args.output) or "."
+    errors_dir = args.errors_dir if args.errors_dir else analysis_dir
 
     peripheral_filter = args.peripheral
     peripheral_desc = peripheral_filter if peripheral_filter else "all peripherals"
 
-    print(f"Comparing generator outputs for: {peripheral_desc}")
-    print(f"Verified datasheet: {args.verified}")
-    print(f"Generator directories: {args.generator_dirs}")
-    print(f"Errors output directory: {errors_dir}\n")
+    # Console should stay quiet; only print startup info.
+    print(f"Started comparison for {peripheral_desc}. Writing outputs under: {analysis_dir}")
+
+    # Compact outputs:
+    # - One summary CSV (per generator directory)
+    # - One register-level CSV (per generator directory, per register)
+    # - One fact-level error CSV (wrong + missing facts)
+    output_stem = Path(output_filename).stem
+    register_results_path = os.path.join(analysis_dir, f"{output_stem}_register_results.csv")
+    fact_errors_path = os.path.join(analysis_dir, f"{output_stem}_fact_errors.csv")
 
     # Load verified datasheet
-    print("Loading verified datasheet...")
     verified_facts = load_verified_datasheet(args.verified, peripheral_filter=peripheral_filter)
-    print(f"Found {len(verified_facts)} verified facts\n")
 
     # Get list of (peripheral, register) pairs to check
     register_pairs = set()
     for (p, r, f, k) in verified_facts.keys():
         register_pairs.add((p, r))
     register_pairs = sorted(register_pairs)
-    print(f"Register pairs to check: {len(register_pairs)}\n")
 
     # Compare each generator directory
     results = []
+    all_register_rows = []
+    all_error_rows = []
 
-    for output_dir in args.generator_dirs:
+    for output_dir in generator_dirs:
         dir_name = os.path.basename(os.path.normpath(output_dir))
-
-        print(f"{'='*80}")
-        print(f"ANALYZING: {dir_name}")
-        print(f"{'='*80}\n")
 
         # Collect all facts from this configuration
         all_generator_facts = {}
@@ -477,6 +586,14 @@ def main():
         # Compare against verified (only for registers that are present)
         correct, wrong, missing = compare_outputs(verified_facts, all_generator_facts, registers_found)
 
+        # Compare against verified (all registers in verified datasheet)
+        all_registers_set = set(register_pairs)
+        correct_all, wrong_all, missing_all = compare_outputs(
+            verified_facts,
+            all_generator_facts,
+            all_registers_set,
+        )
+
         # Calculate metrics (for registers that are present)
         total_facts_for_present_registers = len(correct) + len(wrong) + len(missing)
         num_correct = len(correct)
@@ -484,41 +601,90 @@ def main():
         num_missing = len(missing)
         accuracy = (num_correct / total_facts_for_present_registers * 100) if total_facts_for_present_registers > 0 else 0
 
-        print(f"Registers found: {len(registers_found)}/{len(register_pairs)}")
-        if len(registers_found) <= 10:
-            print(f"Registers: {sorted(registers_found)}\n")
-        else:
-            print()
+        # Calculate metrics (for all registers)
+        total_facts_all_registers = len(correct_all) + len(wrong_all) + len(missing_all)
+        num_correct_all = len(correct_all)
+        num_wrong_all = len(wrong_all)
+        num_missing_all = len(missing_all)
+        accuracy_all = (num_correct_all / total_facts_all_registers * 100) if total_facts_all_registers > 0 else 0
 
-        print(f"Results (for {len(registers_found)} present registers, {total_facts_for_present_registers} facts):")
-        print(f"  Correct: {num_correct}/{total_facts_for_present_registers} ({num_correct/total_facts_for_present_registers*100:.1f}%)" if total_facts_for_present_registers > 0 else "  Correct: 0")
-        print(f"  Wrong:   {num_wrong}/{total_facts_for_present_registers} ({num_wrong/total_facts_for_present_registers*100:.1f}%)" if total_facts_for_present_registers > 0 else "  Wrong: 0")
-        print(f"  Missing: {num_missing}/{total_facts_for_present_registers} ({num_missing/total_facts_for_present_registers*100:.1f}%)" if total_facts_for_present_registers > 0 else "  Missing: 0")
-        print()
+        # Per-register breakdown (one row per verified register)
+        for peripheral, register in register_pairs:
+            verified_reg_facts = {
+                k: v for k, v in verified_facts.items()
+                if k[0] == peripheral and k[1] == register
+            }
+            total_verified_reg_facts = len(verified_reg_facts)
+            found = (peripheral, register) in registers_found
 
-        # Show sample wrong predictions
-        if wrong:
-            print(f"Sample wrong predictions (showing first 5):")
-            for i, w in enumerate(wrong[:5]):
-                fact = w['fact']
-                print(f"  {i+1}. {fact[0]}.{fact[1]}.{fact[2]}.{fact[3]}: correct={w['correct']}, generated={w['generated']}")
-            if len(wrong) > 5:
-                print(f"  ... and {len(wrong)-5} more")
-            print()
+            if found:
+                c_r, w_r, m_r = compare_outputs(
+                    verified_reg_facts,
+                    all_generator_facts,
+                    {(peripheral, register)},
+                )
+                correct_r = len(c_r)
+                wrong_r = len(w_r)
+                missing_r = len(m_r)
+            else:
+                correct_r = 0
+                wrong_r = 0
+                missing_r = total_verified_reg_facts
 
-        # Show sample missing facts
-        if missing:
-            print(f"Sample missing facts (showing first 5):")
-            for i, m in enumerate(missing[:5]):
-                fact = m['fact']
-                print(f"  {i+1}. {fact[0]}.{fact[1]}.{fact[2]}.{fact[3]}: correct_value={m['correct_value']}")
-            if len(missing) > 5:
-                print(f"  ... and {len(missing)-5} more")
-            print()
+            total_r = correct_r + wrong_r + missing_r
+            acc_r = (correct_r / total_r * 100) if total_r > 0 else 0
 
-        # Save detailed wrong and missing facts to CSV
-        save_errors_to_csv(wrong, missing, errors_dir, dir_name)
-        print()
+            all_register_rows.append({
+                "generator_directory": dir_name,
+                "peripheral": peripheral,
+                "register": register,
+                "register_found": found,
+                "correct": correct_r,
+                "wrong": wrong_r,
+                "missing": missing_r,
+                "total_facts": total_r,
+                "accuracy": acc_r,
+            })
+
+            # Fact-level errors for this register
+            if found:
+                for w_item in w_r:
+                    fact = w_item["fact"]
+                    all_error_rows.append({
+                        "generator_directory": dir_name,
+                        "error_type": "wrong",
+                        "peripheral": fact[0],
+                        "register": fact[1],
+                        "field_name": fact[2],
+                        "key": fact[3],
+                        "correct_value": w_item["correct"],
+                        "generated_value": w_item["generated"],
+                    })
+                for m_item in m_r:
+                    fact = m_item["fact"]
+                    all_error_rows.append({
+                        "generator_directory": dir_name,
+                        "error_type": "missing",
+                        "peripheral": fact[0],
+                        "register": fact[1],
+                        "field_name": fact[2],
+                        "key": fact[3],
+                        "correct_value": m_item["correct_value"],
+                        "generated_value": "",
+                    })
+            else:
+                # If the register output is missing entirely, mark all its verified facts as missing.
+                for fact_key, correct_value in verified_reg_facts.items():
+                    all_error_rows.append({
+                        "generator_directory": dir_name,
+                        "error_type": "missing",
+                        "peripheral": fact_key[0],
+                        "register": fact_key[1],
+                        "field_name": fact_key[2],
+                        "key": fact_key[3],
+                        "correct_value": correct_value,
+                        "generated_value": "",
+                    })
 
         results.append({
             'directory': dir_name,
@@ -528,22 +694,30 @@ def main():
             'wrong': num_wrong,
             'missing': num_missing,
             'total_facts': total_facts_for_present_registers,
-            'accuracy': accuracy
+            'accuracy': accuracy,
+            'correct_all': num_correct_all,
+            'wrong_all': num_wrong_all,
+            'missing_all': num_missing_all,
+            'total_facts_all': total_facts_all_registers,
+            'accuracy_all': accuracy_all,
         })
 
-    # Summary table
-    print(f"\n{'='*80}")
-    print("SUMMARY COMPARISON")
-    print(f"{'='*80}\n")
-
     df = pd.DataFrame(results)
-    print("Performance by Generator Directory:")
-    print(df.to_string(index=False))
-    print()
 
     # Save results
-    df.to_csv(args.output, index=False)
-    print(f"Results saved to: {args.output}")
+    df.to_csv(output_path, index=False)
+
+    # Save compact detailed outputs
+    df_registers = pd.DataFrame(all_register_rows)
+    df_registers.to_csv(register_results_path, index=False)
+
+    df_errors = pd.DataFrame(all_error_rows)
+    df_errors.to_csv(fact_errors_path, index=False)
+
+    print("Outputs:")
+    print(f"  Summary:         {output_path}")
+    print(f"  Per-register:    {register_results_path}")
+    print(f"  Wrong + missing: {fact_errors_path}")
 
 if __name__ == "__main__":
     main()
