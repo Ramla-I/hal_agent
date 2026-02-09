@@ -2,13 +2,13 @@
 Create a bar chart of total tokens per peripheral.
 
 Bars use `total_tokens_chunks_800_400` (chunk_count * 800) from
-`devices/stm/rm0041/peripheral_pages_mapping.csv`, and each bar is labeled
+`devices/stm/rm0041/peripheral_pages_md/peripheral_pages_mapping.csv`, and each bar is labeled
 with the chunk count.
 
 Example:
     python plots/plot_peripheral_chunk_tokens.py \
-        --csv devices/stm/rm0041/peripheral_pages_mapping.csv \
-        --output devices/stm/rm0041/peripheral_chunk_tokens.png
+        --csv devices/stm/rm0041/peripheral_pages_md/peripheral_pages_mapping.csv \
+        --output devices/stm/rm0041/other/peripheral_chunk_tokens.png
 """
 
 from __future__ import annotations
@@ -31,13 +31,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--csv",
-        default="devices/stm/rm0041/peripheral_pages_mapping.csv",
+        default="devices/stm/rm0041/peripheral_pages_md/peripheral_pages_mapping.csv",
         help="Input mapping CSV",
     )
     parser.add_argument(
         "--output",
-        default="devices/stm/rm0041/peripheral_chunk_tokens.png",
-        help="Output PNG path",
+        default="devices/stm/rm0041/other/peripheral_chunk_tokens.png",
+        help="Output image path (typically .png). A .pdf will also be saved.",
     )
     args = parser.parse_args()
 
@@ -98,7 +98,10 @@ def main() -> None:
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=200)
+    pdf_path = output_path.with_suffix(".pdf")
+    fig.savefig(pdf_path)
     print(f"Saved chart to: {output_path}")
+    print(f"Saved chart to: {pdf_path}")
 
 
 if __name__ == "__main__":

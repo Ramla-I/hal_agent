@@ -5,7 +5,7 @@ update a mapping CSV with token and chunk counts.
 Usage:
     python scripts/extract_peripheral_pages.py \
         --pdf-path devices/stm/rm0041/rm0041.pdf \
-        --mapping-csv devices/stm/rm0041/peripheral_pages_mapping.csv
+        --mapping-csv devices/stm/rm0041/peripheral_pages_md/peripheral_pages_mapping.csv
 """
 
 from __future__ import annotations
@@ -101,7 +101,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--mapping-csv",
-        default="devices/stm/rm0041/peripheral_pages_mapping.csv",
+        default="devices/stm/rm0041/peripheral_pages_md/peripheral_pages_mapping.csv",
         help="CSV mapping file with peripheral_name,start_page,end_page",
     )
     parser.add_argument(

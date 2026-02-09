@@ -4,6 +4,8 @@ import csv
 import os
 from typing import Dict, List, Optional, Any
 
+from utils.generator_facts import convert_generator_register_to_svd_like
+
 
 def convert_hex_string_to_int(hex_str):
     """Convert hex string to integer, handling various formats."""
@@ -107,44 +109,24 @@ def parse_agent_output_register(json_path: str) -> Optional[Dict]:
         print(f"Error reading {json_path}: {e}")
         return None
     
-    # Convert agent output format to SVD-like format
-    def bitfield_to_svd_field(field):
-        """Convert agent BitField to SVD-like field format."""
-        bit_number = field.get('bit_number', {})
-        if isinstance(bit_number, dict):
-            start = bit_number.get('start_bit', 0)
-            end = bit_number.get('end_bit', 0)
-            bit_offset = min(start, end)
-            bit_width = abs(end - start) + 1
-        else:
-            bit_offset = None
-            bit_width = None
-        
-        return {
-            'name': field.get('name', '').lower(),
-            'bit_offset': bit_offset,
-            'bit_width': bit_width
-        }
-    
-    fields = []
-    for f in register_data.get('subfields', []):
-        fields.append(bitfield_to_svd_field(f))
-    
+    svd_like = convert_generator_register_to_svd_like(
+        register_data,
+        include_enums=False,
+        default_zero=False,
+    )
+    if svd_like is None:
+        return None
+
     # Convert address_offset and reset_value
-    address_offset = register_data.get('address_offset', '')
+    address_offset = svd_like.get('address_offset', '')
     if address_offset:
-        address_offset = convert_hex_string_to_int(address_offset)
-    
-    reset_value = register_data.get('reset_value', '')
+        svd_like['address_offset'] = convert_hex_string_to_int(address_offset)
+
+    reset_value = svd_like.get('reset_value', '')
     if reset_value:
-        reset_value = convert_hex_string_to_int(reset_value)
-    
-    return {
-        'address_offset': address_offset,
-        'reset_value': reset_value,
-        'size': register_data.get('size', None),
-        'fields': fields
-    }
+        svd_like['reset_value'] = convert_hex_string_to_int(reset_value)
+
+    return svd_like
 
 
 def parse_agent_output_registers(output_directory: str) -> Dict[str, Dict[str, Dict]]:

@@ -88,7 +88,7 @@ def main():
     plot_file_search_tokens_vs_chunks(
         experiment_dir=experiment_dir,
         test_set_path=script_dir / "stm-rm0041/test_set_rm0041.csv",
-        peripheral_mapping_path=script_dir.parent / "devices/stm/rm0041/peripheral_pages_mapping.csv",
+        peripheral_mapping_path=script_dir.parent / "devices/stm/rm0041/peripheral_pages_md/peripheral_pages_mapping.csv",
         token_column="total_tokens_chunks_800_400",
         min_f1=args.min_f1,
         max_time=args.max_time,

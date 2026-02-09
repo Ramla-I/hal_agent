@@ -14,6 +14,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(parent_dir)
 
 from defs import RegisterInfo, BitField, BitNumber
+from utils.generator_facts import convert_generator_register_to_svd_like
 
 def strip_bracket_suffix(s):
     if isinstance(s, str):
@@ -102,53 +103,13 @@ def parse_output_register_from_json(output_path):
         content = f.read()
     register = json.loads(content)
 
-    # The JSON file (output) uses the RegisterInfo model, which has a different structure from the SVD dicts expected by compare_registers_from_json.
-    # We'll convert the loaded json (RegisterInfo dict) to an SVD-like dict:
-    def bitfield_to_svd_field(field):
-        # field: BitField-as-dict
-        # SVD expects:
-        #   name, description, bit_offset, bit_width, enumerated_values (with 'name', 'value')
-        bit_number = field.get('bit_number', {})
-        if isinstance(bit_number, dict):
-            start = bit_number.get('start_bit', 0)
-            end = bit_number.get('end_bit', 0)
-            if start != None and end != None:
-                bit_offset = min(start, end)
-                bit_width = abs(end - start) + 1
-            else:
-                bit_offset = None
-                bit_width = None
-        else:
-            bit_offset = None
-            bit_width = None
-        # Enumerated values:
-        enum_list = field.get('enumerated_values', [])
-        enumerated_values = []
-        for enum in enum_list:
-            enumerated_values.append({
-                'name': enum.get('name', '').lower(),
-                'value': enum.get('value', '')
-            })
-        return {
-            'name': field.get('name', '').lower(),
-            'description': field.get('description', ''),
-            'bit_offset': bit_offset,
-            'bit_width': bit_width,
-            'enumerated_values': enumerated_values
-        }
-
-    fields = []
-    for f in register.get('subfields', []):
-        fields.append(bitfield_to_svd_field(f))
-
-    svd_like = {
-        'address_offset': register.get('address_offset', ''),
-        'reset_value': register.get('reset_value', ''),
-        'size': register.get('size', None),
-        'fields': fields
-    }
-    register = svd_like
-    return register
+    # Convert the loaded json (RegisterInfo dict) to an SVD-like dict
+    svd_like = convert_generator_register_to_svd_like(
+        register,
+        include_enums=True,
+        default_zero=False,
+    )
+    return svd_like
 
 def parse_output_registers_from_json(output_directory):
     peripherals = {}

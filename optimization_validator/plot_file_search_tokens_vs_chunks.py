@@ -5,7 +5,7 @@ Example:
     python optimization_validator/plot_file_search_tokens_vs_chunks.py \
       --experiment-dir optimization_validator/stm-rm0041/experiments/batch_sizes_embeddings \
       --test-set optimization_validator/stm-rm0041/test_set_rm0041.csv \
-      --peripheral-mapping devices/stm/rm0041/peripheral_pages_mapping.csv \
+      --peripheral-mapping devices/stm/rm0041/peripheral_pages_md/peripheral_pages_mapping.csv \
       --min-f1 0.92 \
       --max-time 1000
 """
@@ -115,7 +115,7 @@ def main():
     )
     parser.add_argument(
         "--peripheral-mapping",
-        default="devices/stm/rm0041/peripheral_pages_mapping.csv",
+        default="devices/stm/rm0041/peripheral_pages_md/peripheral_pages_mapping.csv",
         help="Path to peripheral pages mapping CSV",
     )
     parser.add_argument(

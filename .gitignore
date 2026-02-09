@@ -213,6 +213,24 @@ agent_output/
 agent_output_updated/
 *.bak
 
+# Generated local artifacts (do not commit)
+.matplotlib/
+chunked_datasheets/
+optimization_generator/.mplconfig/
+optimization_generator/experiments/
+
+# Preprocessing scratch/output folders
+preprocessing/datasheet_metadata_single_pass/
+preprocessing/old/
+
+# Device-local preprocessing/run artifacts
+devices/**/preprocessing_*.json
+devices/**/preprocessing_*.csv
+devices/**/chunks/
+devices/**/peripheral_pages_md/
+devices/**/ddm/
+devices/**/other/
+
 # Evaluation
 evaluation/
 

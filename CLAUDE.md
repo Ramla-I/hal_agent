@@ -45,6 +45,12 @@ export GROQ_API_KEY="your-key-here"  # if using Groq models
 source .venv/bin/activate
 ```
 
+> **IMPORTANT FOR CLAUDE**: Always activate the virtual environment before running Python commands:
+> ```bash
+> source .venv/bin/activate && python <script>
+> ```
+> The system Python does not have required dependencies (pydantic, openai, tiktoken, etc.).
+
 ### Running the Pipeline
 
 ```bash
@@ -74,7 +80,10 @@ python3 optimization/analyze_generator_errors.py             # Detailed generato
 ### Preprocessing
 
 ```bash
-# Generate vector store for a new device datasheet
+# Recommended: chunk + enrich + upload + update devices/.../vector_stores.json
+python3 preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --embed-metadata
+
+# Legacy (raw PDF upload, no chunking/enrichment)
 python3 preprocessing/create_vector_store_openai.py
 ```
 
