@@ -61,6 +61,23 @@ CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
 #     "regex": "",
 #     "other": ""
 #   },
+# Local Vector DB example (ChromaDB + FastEmbed, free and offline):
+# CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
+#     context_retrieval_method=ContextRetrievalMethod.LOCAL_VECTOR_DB,
+#     pages_after_keyword=0,
+#     remove_tables=False,
+#     number_embeddings=5,
+#     re_ranking=False,
+#     score_threshold=0.0,
+#     query_rewrite=False,
+#     vs_id="",
+#     regex="",
+#     other="",
+#     local_db_name="rm0041_md",     # ChromaDB database name
+#     keyword_boost=True,             # Hybrid semantic + keyword matching
+#     reranker_type="local",          # FlashRank local reranker ("", "local", "cohere", "bge")
+# )
+
 # MODEL_NAME = "gpt-4o"
 GENERATOR_MODEL_NAME = "gpt-oss-120b"
 GENERATOR_ITER = 1 # Number of iterations for the generator agent

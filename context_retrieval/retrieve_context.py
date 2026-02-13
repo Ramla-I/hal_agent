@@ -15,6 +15,7 @@ from context_retrieval.semantic_search import (
     format_results_with_expansion
 )
 from context_retrieval.chunk_index import get_chunk_index
+from context_retrieval.local_vector_search import search_local_vector_db
 from agent_tools.pdf_ops import extract_pages_from_pdf
 from agent_tools.md_ops import remove_markdown_tables
 from core.s3_query_rewriter import run_query_rewriter
@@ -84,6 +85,26 @@ def retrieve_context(
 
             embedding_ids = extract_embedding_ids(results)
             return formatted_results, embedding_ids
+
+    elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.LOCAL_VECTOR_DB:
+        query = f"For the {peripheral_name}_{register_name} register, retrieve all information about its offset, reset value, size, readonly bits, writeonly bits, readwrite bits, and subfields."
+        if context_retrieval_parameters.number_embeddings < 1:
+            context_retrieval_parameters.number_embeddings = 1
+
+        if config.QUERY_REWRITE and context_retrieval_parameters.query_rewrite:
+            query = run_query_rewriter(query, peripheral_name, register_name,
+                                       context_retrieval_parameters.local_db_name, output_dir)
+
+        return search_local_vector_db(
+            query=query,
+            db_name=context_retrieval_parameters.local_db_name,
+            n_results=context_retrieval_parameters.number_embeddings,
+            keyword_boost=context_retrieval_parameters.keyword_boost,
+            reranker_type=context_retrieval_parameters.reranker_type,
+            score_threshold=context_retrieval_parameters.score_threshold,
+            db_path=context_retrieval_parameters.local_db_path,
+            embedding_provider=context_retrieval_parameters.local_embedding_provider,
+        )
 
     elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.REGEX:
         print(f"Retrieving context from regex for {device_name} {peripheral_name} {register_name}")

@@ -11,6 +11,7 @@ class Manufacturer(Enum):
 class ContextRetrievalMethod(Enum):
     KEYWORD_SEARCH = "keyword_search"
     SEMANTIC_SEARCH = "semantic_search"
+    LOCAL_VECTOR_DB = "local_vector_db"
     REGEX = "regex"
 
 class CoverageInfo(BaseModel):
@@ -44,6 +45,12 @@ class ContextRetrievalParameters(BaseModel):
     pages_after: int = 2  # Number of pages to expand after each retrieved chunk
     chunk_index_path: str = ""  # Path to chunks_index.csv for chunk index
     expand_table_pages_only: bool = False  # Only expand pages that contain tables
+    # Local vector DB parameters (used when context_retrieval_method == LOCAL_VECTOR_DB)
+    local_db_name: str = ""  # ChromaDB database name (e.g., "rm0041_md")
+    local_db_path: str = ""  # Override path to databases directory
+    keyword_boost: bool = True  # Apply keyword boost after search
+    reranker_type: str = ""  # "", "local" (FlashRank), "cohere", "bge"
+    local_embedding_provider: str = "local"  # "local" (FastEmbed) or "openai"
 
 class CoverageImproverOutput(BaseModel):
     context_retrieval_parameters: ContextRetrievalParameters

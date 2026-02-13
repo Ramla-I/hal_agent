@@ -23,11 +23,17 @@ class VectorStoreInfo:
     file_count: Optional[int] = None
     chunk_index_path: Optional[str] = None
     local_path: Optional[str] = None
+    local_db_name: Optional[str] = None  # ChromaDB database name for local vector DB
 
     @property
     def is_uploaded(self) -> bool:
         """Check if this vector store has been uploaded (has a vs_id)."""
         return self.vs_id is not None
+
+    @property
+    def is_local(self) -> bool:
+        """Check if this is a local vector DB entry."""
+        return self.local_db_name is not None
 
 
 @dataclass
@@ -58,6 +64,11 @@ class DeviceVectorStores:
         if vs and vs.chunk_index_path:
             return os.path.join(self._device_dir, vs.chunk_index_path)
         return None
+
+    def get_local_db_name(self, name: str) -> Optional[str]:
+        """Get the local ChromaDB database name for a named vector store."""
+        vs = self.vector_stores.get(name)
+        return vs.local_db_name if vs else None
 
     def list_available(self) -> list:
         """List all vector stores that have been uploaded (have vs_id)."""
@@ -101,6 +112,7 @@ def load_vector_stores(device_dir: str) -> DeviceVectorStores:
             file_count=info.get("file_count"),
             chunk_index_path=info.get("chunk_index_path"),
             local_path=info.get("local_path"),
+            local_db_name=info.get("local_db_name"),
         )
 
     return DeviceVectorStores(
@@ -147,6 +159,8 @@ def save_vector_stores(device_dir: str, config: DeviceVectorStores) -> str:
             vs_data["chunk_index_path"] = vs.chunk_index_path
         if vs.local_path:
             vs_data["local_path"] = vs.local_path
+        if vs.local_db_name:
+            vs_data["local_db_name"] = vs.local_db_name
 
         data["vector_stores"][name] = vs_data
 

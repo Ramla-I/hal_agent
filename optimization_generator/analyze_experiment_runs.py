@@ -72,6 +72,9 @@ def short_name(s: Any) -> str:
     s = re.sub(r"_emb(\d+)", r"_e\1", s)
     s = re.sub(r"_pages(\d+)", r"_p\1", s)
     s = s.replace("tableonly", "to")
+    # Local vector DB abbreviations: local_ -> l_, _rrlocal -> _rrl, _kb -> _kb (already short)
+    s = re.sub(r"^local_", "l_", s)
+    s = re.sub(r"_rr(\w+)", lambda m: f"_rr{m.group(1)[0]}", s)  # _rrlocal -> _rrl
     return s
 
 
@@ -101,14 +104,55 @@ def _parse_run_config_from_name(run_name: str, run_dir: Path) -> RunConfig:
       - md_emb4_pages2
       - md_emb4_pages2_tableonly
       - md_enriched_emb1_pages0_tableonly
+      - local_rm0041_md_emb1_kb_rrlocal  (local vector DB)
 
     If parsing fails, config fields remain None.
     """
+    # Pattern for local vector DB runs: local_{db_name}_emb{N}[_kb][_rr{type}]
+    local_pattern = re.compile(
+        r"^local_(?P<db_name>.+?)_emb(?P<embeddings>\d+)(?P<kb>_kb)?(?:_rr(?P<reranker>\w+))?$"
+    )
+    m_local = local_pattern.match(run_name)
+    if m_local:
+        db_name = m_local.group("db_name")
+        embeddings = int(m_local.group("embeddings"))
+        kb = bool(m_local.group("kb"))
+        reranker = m_local.group("reranker") or ""
+        return RunConfig(
+            run_name=run_name,
+            run_dir=run_dir,
+            peripheral=None,
+            vs_type=f"local_{db_name}",
+            embeddings=embeddings,
+            pages_after=None,
+            table_pages_only_expansion=None,
+            config_name=run_name,
+        )
+
+    # Pattern for non-local runs with db name prefix but no pages: {db_name}_emb{N}[_kb][_rr{type}]
+    db_emb_pattern = re.compile(
+        r"^(?P<db_name>.+?)_emb(?P<embeddings>\d+)(?P<kb>_kb)?(?:_rr(?P<reranker>\w+))?$"
+    )
+
     pattern = re.compile(
         r"^(?P<vs_type>.+?)_emb(?P<embeddings>\d+)_pages(?P<pages_after>\d+)(?P<tableonly>_tableonly)?$"
     )
     m = pattern.match(run_name)
     if not m:
+        # Try the db_emb pattern (no pages_after, e.g. "md_emb1_kb_rrlocal")
+        m_db = db_emb_pattern.match(run_name)
+        if m_db:
+            return RunConfig(
+                run_name=run_name,
+                run_dir=run_dir,
+                peripheral=None,
+                vs_type=m_db.group("db_name"),
+                embeddings=int(m_db.group("embeddings")),
+                pages_after=None,
+                table_pages_only_expansion=None,
+                config_name=run_name,
+            )
+
         # Try "<peripheral>_<config...>" pattern, e.g. "bkp_md_emb1_pages0"
         if "_" in run_name:
             peripheral_candidate, rest = run_name.split("_", 1)
@@ -564,7 +608,7 @@ def main() -> None:
     # =========================
     # EDIT THESE VARIABLES
     # =========================
-    RUNS_ROOT = "optimization_generator/experiments/afio_peripheral"
+    RUNS_ROOT = "optimization_generator/experiments/local_vector_db_v1"
     OUTPUT_DIR: Optional[str] = None  # default: f"{RUNS_ROOT}/analysis"
     TITLE_PREFIX = None  # e.g. "AFIO peripheral sweep"
     MIN_ACCURACY: Optional[float] = None          # e.g. 95.0

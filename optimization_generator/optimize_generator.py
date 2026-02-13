@@ -135,6 +135,16 @@ def _generate_output_prefix(vs_type: str, num_embeddings: int, pages_after: int,
     return "_".join(parts)
 
 
+def _generate_local_output_prefix(db_name: str, num_embeddings: int, keyword_boost: bool, reranker_type: str) -> str:
+    """Generate a descriptive output folder name for local vector DB configuration."""
+    parts = [f"local_{db_name}", f"emb{num_embeddings}"]
+    if keyword_boost:
+        parts.append("kb")
+    if reranker_type:
+        parts.append(f"rr{reranker_type}")
+    return "_".join(parts)
+
+
 def _get_verified_csv_path(device_dir: str, svd: str, peripheral: Optional[str] = None) -> Optional[str]:
     """
     Find the verified datasheet CSV for a device.
@@ -332,23 +342,30 @@ def main():
     MODEL_NAME = getattr(config, "GENERATOR_MODEL_NAME", "gpt-oss-120b")
     RUN_NUMBER = getattr(config, "GENERATOR_ITER", 1)
 
-    # Sweep parameters
+    # Sweep parameters (OpenAI vector store)
+    USE_OPENAI_VECTOR_STORE = False             # Set to False to skip OpenAI vector store configs
     VS_TYPES = ["md", "md_enriched"]               # ["text", "md", "md_enriched"]
     EMBEDDING_COUNTS = [1, 2]                   # e.g. [4, 8, 16]
     PAGES_AFTER_VALUES = [0, 1]                    # e.g. [1, 2, 3]
     TABLE_PAGES_ONLY_EXPANSION_VALUES = [False, True]    # e.g. [False, True] to sweep both modes
 
-    # Retrieval options
+    # Retrieval options (OpenAI)
     CHUNK_EXPANSION_ENABLED = True
     VS_ID_OVERRIDE: Optional[str] = None       # set to a vector-store ID to bypass vector_stores.json resolution
     CHUNK_INDEX_PATH_OVERRIDE: Optional[str] = None
 
+    # Local vector DB sweep parameters
+    USE_LOCAL_VECTOR_DB = True                 # Set to True to include local vector DB configs in sweep
+    LOCAL_DB_NAMES = ["rm0041_md"]              # ChromaDB database names to sweep
+    LOCAL_EMBEDDING_COUNTS = [1, 2]          # n_results values to sweep for local DB
+    KEYWORD_BOOST_VALUES = [False, True]        # Keyword boost on/off
+    RERANKER_TYPES = ["", "local"]              # "" = no reranker, "local" = FlashRank
+    LOCAL_DB_PATH = ""                          # Override databases directory (default: vector_db/databases/)
+
     # Output
-    # Keep the output layout consistent with `experiments/verified_peripherals_v2/`:
-    # - one folder per configuration (e.g. `md_emb1_pages0_tableonly/`)
-    # - generator outputs at the config folder root (`<peripheral>_<register>`)
-    # - consolidated comparison + timing artifacts in `info/`
+    # OpenAI experiments go to verified_peripherals_v2/, local to local_vector_db_v1/
     OUTPUT_PARENT = "optimization_generator/experiments/verified_peripherals_v2"
+    LOCAL_OUTPUT_PARENT = "optimization_generator/experiments/local_vector_db_v2"
     OUTPUT_PREFIX_BASE: Optional[str] = None   # e.g. "my_sweep"; if set, each config becomes "<base>_<auto>"
 
     # Verified comparison
@@ -376,15 +393,43 @@ def main():
     # (swept per-config)
 
     timing = get_timing_stats()
-    os.makedirs(OUTPUT_PARENT, exist_ok=True)
+    if USE_OPENAI_VECTOR_STORE:
+        os.makedirs(OUTPUT_PARENT, exist_ok=True)
 
-    # Build configuration matrix
+    # Build configuration matrix - each entry is a dict with all config
     configs = []
-    for vs_type in vs_types:
-        for num_embeddings in embedding_counts:
-            for pages_after in pages_after_values:
-                for table_pages_only in table_pages_only_values:
-                    configs.append((vs_type, num_embeddings, pages_after, table_pages_only))
+
+    # OpenAI vector store configs
+    if USE_OPENAI_VECTOR_STORE:
+        for vs_type in vs_types:
+            for num_embeddings in embedding_counts:
+                for pages_after in pages_after_values:
+                    for table_pages_only in table_pages_only_values:
+                        configs.append({
+                            "backend": "openai",
+                            "vs_type": vs_type,
+                            "num_embeddings": num_embeddings,
+                            "pages_after": pages_after,
+                            "table_pages_only": table_pages_only,
+                        })
+
+    # Local vector DB configs (if enabled)
+    if USE_LOCAL_VECTOR_DB:
+        os.makedirs(LOCAL_OUTPUT_PARENT, exist_ok=True)
+        for local_db in LOCAL_DB_NAMES:
+            for num_embeddings in LOCAL_EMBEDDING_COUNTS:
+                for kb in KEYWORD_BOOST_VALUES:
+                    for rt in RERANKER_TYPES:
+                        configs.append({
+                            "backend": "local",
+                            "local_db_name": local_db,
+                            "num_embeddings": num_embeddings,
+                            "keyword_boost": kb,
+                            "reranker_type": rt,
+                        })
+
+    openai_count = sum(1 for c in configs if c["backend"] == "openai")
+    local_count = sum(1 for c in configs if c["backend"] == "local")
 
     print(f"\n{'='*70}")
     print(f"GENERATOR EXPERIMENT SWEEP")
@@ -394,12 +439,18 @@ def main():
         print("Peripherals: (all)")
     else:
         print(f"Peripherals: {peripherals_to_run}")
-    print(f"Configurations to run: {len(configs)}")
-    print(f"  VS types: {vs_types}")
-    print(f"  Embedding counts: {embedding_counts}")
-    print(f"  Pages after: {pages_after_values}")
-    print(f"  Chunk expansion: {chunk_expansion_enabled}")
-    print(f"  Table pages only (expansion): {table_pages_only_values}")
+    print(f"Configurations to run: {len(configs)} ({openai_count} OpenAI, {local_count} local)")
+    if openai_count > 0:
+        print(f"  OpenAI VS types: {vs_types}")
+        print(f"  OpenAI embedding counts: {embedding_counts}")
+        print(f"  Pages after: {pages_after_values}")
+        print(f"  Chunk expansion: {chunk_expansion_enabled}")
+        print(f"  Table pages only (expansion): {table_pages_only_values}")
+    if local_count > 0:
+        print(f"  Local DB names: {LOCAL_DB_NAMES}")
+        print(f"  Local embedding counts: {LOCAL_EMBEDDING_COUNTS}")
+        print(f"  Keyword boost: {KEYWORD_BOOST_VALUES}")
+        print(f"  Reranker types: {RERANKER_TYPES}")
     print(f"{'='*70}\n")
 
     client = config.client_groq if CLIENT == "groq" else config.client_openai
@@ -413,51 +464,93 @@ def main():
     # (`<peripheral>_<register>`), so generator outputs do not collide.
     run_idx = 0
     total_runs = len(configs)
-    for (vs_type, num_embeddings, pages_after, table_pages_only) in configs:
+    for cfg in configs:
         run_idx += 1
-        print(f"\n[{run_idx}/{total_runs}] Running: vs_type={vs_type}, embeddings={num_embeddings}, pages_after={pages_after}, table_pages_only_expansion={table_pages_only}")
+        backend = cfg["backend"]
+        num_embeddings = cfg["num_embeddings"]
 
-        # Resolve vector store info
-        if VS_ID_OVERRIDE:
-            vs_id = VS_ID_OVERRIDE
-            chunk_index_path = CHUNK_INDEX_PATH_OVERRIDE or ""
-        else:
-            vs_id, chunk_index_path = _resolve_vs_info(device_dir, vs_type, None)
+        if backend == "openai":
+            vs_type = cfg["vs_type"]
+            pages_after = cfg["pages_after"]
+            table_pages_only = cfg["table_pages_only"]
 
-        # Override chunk_index_path if explicitly provided
-        if CHUNK_INDEX_PATH_OVERRIDE:
-            chunk_index_path = CHUNK_INDEX_PATH_OVERRIDE
+            print(f"\n[{run_idx}/{total_runs}] Running: backend=openai, vs_type={vs_type}, embeddings={num_embeddings}, pages_after={pages_after}, table_pages_only_expansion={table_pages_only}")
 
-        context_retrieval_parameters = ContextRetrievalParameters(
-            context_retrieval_method=DEFAULT_CONTEXT_METHOD,
-            pages_after_keyword=DEFAULT_PAGES_AFTER_KEYWORD,
-            remove_tables=DEFAULT_REMOVE_TABLES,
-            number_embeddings=num_embeddings,
-            re_ranking=DEFAULT_RE_RANKING,
-            score_threshold=DEFAULT_SCORE_THRESHOLD,
-            query_rewrite=DEFAULT_QUERY_REWRITE,
-            vs_id=vs_id,
-            regex="",
-            other="",
-            # Chunk expansion parameters
-            chunk_expansion_enabled=chunk_expansion_enabled,
-            pages_after=pages_after,
-            chunk_index_path=chunk_index_path,
-            expand_table_pages_only=table_pages_only,
-        )
+            # Resolve vector store info
+            if VS_ID_OVERRIDE:
+                vs_id = VS_ID_OVERRIDE
+                chunk_index_path = CHUNK_INDEX_PATH_OVERRIDE or ""
+            else:
+                vs_id, chunk_index_path = _resolve_vs_info(device_dir, vs_type, None)
 
-        # Generate output directory name (ONE per configuration)
-        auto_prefix = _generate_output_prefix(vs_type, num_embeddings, pages_after, table_pages_only)
-        if OUTPUT_PREFIX_BASE:
-            output_prefix = f"{OUTPUT_PREFIX_BASE}_{auto_prefix}"
-        else:
-            output_prefix = auto_prefix
+            if CHUNK_INDEX_PATH_OVERRIDE:
+                chunk_index_path = CHUNK_INDEX_PATH_OVERRIDE
 
-        output_dir = os.path.join(OUTPUT_PARENT, output_prefix)
+            context_retrieval_parameters = ContextRetrievalParameters(
+                context_retrieval_method=DEFAULT_CONTEXT_METHOD,
+                pages_after_keyword=DEFAULT_PAGES_AFTER_KEYWORD,
+                remove_tables=DEFAULT_REMOVE_TABLES,
+                number_embeddings=num_embeddings,
+                re_ranking=DEFAULT_RE_RANKING,
+                score_threshold=DEFAULT_SCORE_THRESHOLD,
+                query_rewrite=DEFAULT_QUERY_REWRITE,
+                vs_id=vs_id,
+                regex="",
+                other="",
+                chunk_expansion_enabled=chunk_expansion_enabled,
+                pages_after=pages_after,
+                chunk_index_path=chunk_index_path,
+                expand_table_pages_only=table_pages_only,
+            )
+
+            auto_prefix = _generate_output_prefix(vs_type, num_embeddings, pages_after, table_pages_only)
+            if OUTPUT_PREFIX_BASE:
+                output_prefix = f"{OUTPUT_PREFIX_BASE}_{auto_prefix}"
+            else:
+                output_prefix = auto_prefix
+
+            output_dir = os.path.join(OUTPUT_PARENT, output_prefix)
+
+            print(f"  VS ID: {vs_id}")
+            print(f"  Chunk index: {chunk_index_path or '(none)'}")
+
+        elif backend == "local":
+            local_db_name = cfg["local_db_name"]
+            keyword_boost = cfg["keyword_boost"]
+            reranker_type = cfg["reranker_type"]
+
+            print(f"\n[{run_idx}/{total_runs}] Running: backend=local, db={local_db_name}, embeddings={num_embeddings}, keyword_boost={keyword_boost}, reranker={reranker_type or '(none)'}")
+
+            context_retrieval_parameters = ContextRetrievalParameters(
+                context_retrieval_method=ContextRetrievalMethod.LOCAL_VECTOR_DB,
+                pages_after_keyword=0,
+                remove_tables=False,
+                number_embeddings=num_embeddings,
+                re_ranking=False,
+                score_threshold=DEFAULT_SCORE_THRESHOLD,
+                query_rewrite=DEFAULT_QUERY_REWRITE,
+                vs_id="",
+                regex="",
+                other="",
+                local_db_name=local_db_name,
+                local_db_path=LOCAL_DB_PATH,
+                keyword_boost=keyword_boost,
+                reranker_type=reranker_type,
+            )
+
+            auto_prefix = _generate_local_output_prefix(local_db_name, num_embeddings, keyword_boost, reranker_type)
+            if OUTPUT_PREFIX_BASE:
+                output_prefix = f"{OUTPUT_PREFIX_BASE}_{auto_prefix}"
+            else:
+                output_prefix = auto_prefix
+
+            output_dir = os.path.join(LOCAL_OUTPUT_PARENT, output_prefix)
+
+            print(f"  Local DB: {local_db_name}")
+            print(f"  Keyword boost: {keyword_boost}")
+            print(f"  Reranker: {reranker_type or '(none)'}")
+
         os.makedirs(output_dir, exist_ok=True)
-
-        print(f"  VS ID: {vs_id}")
-        print(f"  Chunk index: {chunk_index_path or '(none)'}")
         print(f"  Output: {output_dir}")
         if peripherals_to_run == [None]:
             print("  Peripherals: (all)")
@@ -603,14 +696,12 @@ def main():
                 writer.writerows(combined_fact_errors)
 
             # One summary row per config (aggregated across peripherals)
-            all_results.append({
+            result_row = {
                 "config": output_prefix,
+                "backend": backend,
                 "peripheral_count": len(per_peripheral),
                 "peripherals": ",".join(sorted(per_peripheral.keys())),
-                "vs_type": vs_type,
                 "embeddings": num_embeddings,
-                "pages_after": pages_after,
-                "table_pages_only_expansion": table_pages_only,
                 "registers_found": registers_found_sum,
                 "total_registers": total_registers_sum,
                 "correct": correct_sum,
@@ -618,7 +709,16 @@ def main():
                 "missing": missing_sum,
                 "total_facts": total_facts_sum,
                 "accuracy": combined_accuracy,
-            })
+            }
+            if backend == "openai":
+                result_row["vs_type"] = cfg["vs_type"]
+                result_row["pages_after"] = cfg["pages_after"]
+                result_row["table_pages_only_expansion"] = cfg["table_pages_only"]
+            elif backend == "local":
+                result_row["local_db_name"] = cfg["local_db_name"]
+                result_row["keyword_boost"] = cfg["keyword_boost"]
+                result_row["reranker_type"] = cfg["reranker_type"]
+            all_results.append(result_row)
 
     # Print summary table
     print(f"\n{'='*70}")
@@ -635,16 +735,40 @@ def main():
                 print(f"{r['config']:<30} {r['registers_found']:>3}/{r['total_registers']:<2} {r['correct']:>8} {r['wrong']:>6} {r['missing']:>8} {r['accuracy']:>9.1f}%")
         print(f"{'-'*70}")
 
-        # Save summary CSV
-        summary_csv = os.path.join(OUTPUT_PARENT, "sweep_results.csv")
-        with open(summary_csv, 'w', newline='') as f:
-            # Don't include nested detailed fields in sweep summary.
-            summary_fieldnames = [k for k in all_results[0].keys() if k not in ("register_results", "fact_errors")]
-            writer = csv.DictWriter(f, fieldnames=summary_fieldnames)
+        # Save summary CSV - collect all unique field names across results
+        all_fieldnames = []
+        seen = set()
+        for row in all_results:
+            for k in row.keys():
+                if k not in seen and k not in ("register_results", "fact_errors"):
+                    all_fieldnames.append(k)
+                    seen.add(k)
+
+        # Save per-backend and combined summary CSVs
+        summary_csvs = []
+
+        # Save combined summary to the first output parent that has results
+        combined_csv = os.path.join(OUTPUT_PARENT, "sweep_results.csv")
+        with open(combined_csv, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=all_fieldnames, extrasaction='ignore')
             writer.writeheader()
             for row in all_results:
-                writer.writerow({k: row.get(k) for k in summary_fieldnames})
-        print(f"\nSummary saved to: {summary_csv}")
+                writer.writerow({k: row.get(k, "") for k in all_fieldnames})
+        summary_csvs.append(combined_csv)
+
+        # Also save local-only summary if there are local results
+        local_results = [r for r in all_results if r.get("backend") == "local"]
+        if local_results and LOCAL_OUTPUT_PARENT != OUTPUT_PARENT:
+            local_csv = os.path.join(LOCAL_OUTPUT_PARENT, "sweep_results.csv")
+            with open(local_csv, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=all_fieldnames, extrasaction='ignore')
+                writer.writeheader()
+                for row in local_results:
+                    writer.writerow({k: row.get(k, "") for k in all_fieldnames})
+            summary_csvs.append(local_csv)
+
+        for csv_path in summary_csvs:
+            print(f"\nSummary saved to: {csv_path}")
 
     print()
 
