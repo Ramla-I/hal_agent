@@ -215,6 +215,7 @@ agent_output_updated/
 
 # Generated local artifacts (do not commit)
 .matplotlib/
+databases/
 chunked_datasheets/
 optimization_generator/.mplconfig/
 optimization_generator/experiments/

@@ -135,13 +135,22 @@ def _generate_output_prefix(vs_type: str, num_embeddings: int, pages_after: int,
     return "_".join(parts)
 
 
-def _generate_local_output_prefix(db_name: str, num_embeddings: int, keyword_boost: bool, reranker_type: str) -> str:
+def _generate_local_output_prefix(
+    db_name: str, num_embeddings: int, keyword_boost: bool, reranker_type: str,
+    metadata_filter: bool = False, pages_after: int = 0, table_pages_only: bool = False,
+) -> str:
     """Generate a descriptive output folder name for local vector DB configuration."""
     parts = [f"local_{db_name}", f"emb{num_embeddings}"]
     if keyword_boost:
         parts.append("kb")
     if reranker_type:
         parts.append(f"rr{reranker_type}")
+    if metadata_filter:
+        parts.append("mf")
+    if pages_after > 0:
+        parts.append(f"pa{pages_after}")
+    if table_pages_only:
+        parts.append("tpo")
     return "_".join(parts)
 
 
@@ -220,6 +229,10 @@ def run_comparison(
 
     # Compare outputs (present registers only)
     correct, wrong, missing = compare_outputs(verified_facts, all_generator_facts, registers_found)
+    # Compare outputs (all registers — treats not-found registers as fully missing)
+    correct_all, wrong_all, missing_all = compare_outputs(
+        verified_facts, all_generator_facts, set(register_pairs),
+    )
 
     # Per-register breakdown + errors (compact)
     register_results: List[Dict] = []
@@ -294,18 +307,37 @@ def run_comparison(
             "accuracy": acc_r,
         })
 
-    # Calculate metrics
-    total_facts = len(correct) + len(wrong) + len(missing)
-    accuracy = (len(correct) / total_facts * 100) if total_facts > 0 else 0
+    # Found-register metrics (only facts belonging to registers the generator produced)
+    found_total = len(correct) + len(wrong) + len(missing)
+    found_accuracy = (len(correct) / found_total * 100) if found_total > 0 else 0
+
+    # Complete metrics (all verified facts, including those from not-found registers)
+    complete_total = len(correct_all) + len(wrong_all) + len(missing_all)
+    complete_accuracy = (len(correct_all) / complete_total * 100) if complete_total > 0 else 0
+
+    # Coverage: what fraction of total verified facts come from found registers
+    coverage = (found_total / complete_total * 100) if complete_total > 0 else 0
 
     return {
         'registers_found': len(registers_found),
         'total_registers': len(register_pairs),
+        # Found-register metrics
         'correct': len(correct),
         'wrong': len(wrong),
         'missing': len(missing),
-        'total_facts': total_facts,
-        'accuracy': accuracy,
+        'total_facts': found_total,
+        'found_accuracy': found_accuracy,
+        # Complete metrics (all registers)
+        'correct_all': len(correct_all),
+        'wrong_all': len(wrong_all),
+        'missing_all': len(missing_all),
+        'total_facts_all': complete_total,
+        'complete_accuracy': complete_accuracy,
+        # Coverage
+        'coverage': coverage,
+        # Legacy alias for backward compatibility
+        'accuracy': found_accuracy,
+        # Details
         'register_results': register_results,
         'fact_errors': fact_errors,
     }
@@ -359,8 +391,13 @@ def main():
     LOCAL_DB_NAMES = ["rm0041_md"]              # ChromaDB database names to sweep
     LOCAL_EMBEDDING_COUNTS = [1, 2]          # n_results values to sweep for local DB
     KEYWORD_BOOST_VALUES = [False, True]        # Keyword boost on/off
-    RERANKER_TYPES = ["", "local"]              # "" = no reranker, "local" = FlashRank
-    LOCAL_DB_PATH = ""                          # Override databases directory (default: vector_db/databases/)
+    RERANKER_TYPES = [""]                       # "" = no reranker, "local" = FlashRank
+    LOCAL_DB_PATH = ""                          # Override databases directory (default: databases/)
+    # Enriched local DB features
+    LOCAL_METADATA_FILTER = [True]              # Filter by register name in metadata
+    LOCAL_PAGES_AFTER = [0, 1]              # Chunk expansion pages (0 = disabled)
+    LOCAL_TABLE_PAGES_ONLY = [True]            # Only expand table-containing pages
+    LOCAL_CHUNK_INDEX_PATH = "chunked_datasheets/stm/rm0041/chunks/local/chunks_index.csv"
 
     # Output
     # OpenAI experiments go to verified_peripherals_v2/, local to local_vector_db_v1/
@@ -420,13 +457,19 @@ def main():
             for num_embeddings in LOCAL_EMBEDDING_COUNTS:
                 for kb in KEYWORD_BOOST_VALUES:
                     for rt in RERANKER_TYPES:
-                        configs.append({
-                            "backend": "local",
-                            "local_db_name": local_db,
-                            "num_embeddings": num_embeddings,
-                            "keyword_boost": kb,
-                            "reranker_type": rt,
-                        })
+                        for mf in LOCAL_METADATA_FILTER:
+                            for pa in LOCAL_PAGES_AFTER:
+                                for tpo in LOCAL_TABLE_PAGES_ONLY:
+                                    configs.append({
+                                        "backend": "local",
+                                        "local_db_name": local_db,
+                                        "num_embeddings": num_embeddings,
+                                        "keyword_boost": kb,
+                                        "reranker_type": rt,
+                                        "metadata_filter": mf,
+                                        "pages_after": pa,
+                                        "table_pages_only": tpo,
+                                    })
 
     openai_count = sum(1 for c in configs if c["backend"] == "openai")
     local_count = sum(1 for c in configs if c["backend"] == "local")
@@ -451,6 +494,9 @@ def main():
         print(f"  Local embedding counts: {LOCAL_EMBEDDING_COUNTS}")
         print(f"  Keyword boost: {KEYWORD_BOOST_VALUES}")
         print(f"  Reranker types: {RERANKER_TYPES}")
+        print(f"  Metadata filter: {LOCAL_METADATA_FILTER}")
+        print(f"  Pages after: {LOCAL_PAGES_AFTER}")
+        print(f"  Table pages only: {LOCAL_TABLE_PAGES_ONLY}")
     print(f"{'='*70}\n")
 
     client = config.client_groq if CLIENT == "groq" else config.client_openai
@@ -518,8 +564,11 @@ def main():
             local_db_name = cfg["local_db_name"]
             keyword_boost = cfg["keyword_boost"]
             reranker_type = cfg["reranker_type"]
+            metadata_filter = cfg.get("metadata_filter", False)
+            pages_after = cfg.get("pages_after", 0)
+            table_pages_only = cfg.get("table_pages_only", False)
 
-            print(f"\n[{run_idx}/{total_runs}] Running: backend=local, db={local_db_name}, embeddings={num_embeddings}, keyword_boost={keyword_boost}, reranker={reranker_type or '(none)'}")
+            print(f"\n[{run_idx}/{total_runs}] Running: backend=local, db={local_db_name}, emb={num_embeddings}, kb={keyword_boost}, mf={metadata_filter}, pa={pages_after}")
 
             context_retrieval_parameters = ContextRetrievalParameters(
                 context_retrieval_method=ContextRetrievalMethod.LOCAL_VECTOR_DB,
@@ -536,9 +585,17 @@ def main():
                 local_db_path=LOCAL_DB_PATH,
                 keyword_boost=keyword_boost,
                 reranker_type=reranker_type,
+                metadata_filter_enabled=metadata_filter,
+                chunk_expansion_enabled=pages_after > 0,
+                pages_after=pages_after,
+                chunk_index_path=LOCAL_CHUNK_INDEX_PATH if pages_after > 0 else "",
+                expand_table_pages_only=table_pages_only,
             )
 
-            auto_prefix = _generate_local_output_prefix(local_db_name, num_embeddings, keyword_boost, reranker_type)
+            auto_prefix = _generate_local_output_prefix(
+                local_db_name, num_embeddings, keyword_boost, reranker_type,
+                metadata_filter, pages_after, table_pages_only,
+            )
             if OUTPUT_PREFIX_BASE:
                 output_prefix = f"{OUTPUT_PREFIX_BASE}_{auto_prefix}"
             else:
@@ -547,7 +604,8 @@ def main():
             output_dir = os.path.join(LOCAL_OUTPUT_PARENT, output_prefix)
 
             print(f"  Local DB: {local_db_name}")
-            print(f"  Keyword boost: {keyword_boost}")
+            print(f"  Keyword boost: {keyword_boost}, Metadata filter: {metadata_filter}")
+            print(f"  Pages after: {pages_after}, Table pages only: {table_pages_only}")
             print(f"  Reranker: {reranker_type or '(none)'}")
 
         os.makedirs(output_dir, exist_ok=True)
@@ -600,6 +658,10 @@ def main():
             wrong_sum = 0
             missing_sum = 0
             total_facts_sum = 0
+            correct_all_sum = 0
+            wrong_all_sum = 0
+            missing_all_sum = 0
+            total_facts_all_sum = 0
             registers_found_sum = 0
             total_registers_sum = 0
 
@@ -619,17 +681,27 @@ def main():
                     "wrong": comparison.get("wrong"),
                     "missing": comparison.get("missing"),
                     "total_facts": comparison.get("total_facts"),
-                    "accuracy": comparison.get("accuracy"),
+                    "found_accuracy": comparison.get("found_accuracy"),
+                    "correct_all": comparison.get("correct_all"),
+                    "wrong_all": comparison.get("wrong_all"),
+                    "missing_all": comparison.get("missing_all"),
+                    "total_facts_all": comparison.get("total_facts_all"),
+                    "complete_accuracy": comparison.get("complete_accuracy"),
+                    "coverage": comparison.get("coverage"),
                 }
 
-                print(f"  Results ({peripheral_name}): {comparison['correct']}/{comparison['total_facts']} correct ({comparison['accuracy']:.1f}% accuracy)")
-                print(f"                    {comparison['registers_found']}/{comparison['total_registers']} registers found")
-                print(f"                    {comparison['wrong']} wrong, {comparison['missing']} missing")
+                print(f"  Results ({peripheral_name}): {comparison['correct']}/{comparison['total_facts']} correct ({comparison['found_accuracy']:.1f}% found acc)")
+                print(f"                    {comparison['registers_found']}/{comparison['total_registers']} registers found, {comparison['coverage']:.1f}% coverage")
+                print(f"                    {comparison['complete_accuracy']:.1f}% complete acc, {comparison['wrong']} wrong, {comparison['missing']} missing")
 
                 correct_sum += int(comparison.get("correct") or 0)
                 wrong_sum += int(comparison.get("wrong") or 0)
                 missing_sum += int(comparison.get("missing") or 0)
                 total_facts_sum += int(comparison.get("total_facts") or 0)
+                correct_all_sum += int(comparison.get("correct_all") or 0)
+                wrong_all_sum += int(comparison.get("wrong_all") or 0)
+                missing_all_sum += int(comparison.get("missing_all") or 0)
+                total_facts_all_sum += int(comparison.get("total_facts_all") or 0)
                 registers_found_sum += int(comparison.get("registers_found") or 0)
                 total_registers_sum += int(comparison.get("total_registers") or 0)
 
@@ -637,7 +709,9 @@ def main():
                 combined_fact_errors.extend(comparison.get("fact_errors", []))
 
             # Save combined comparison outputs (single file each)
-            combined_accuracy = (correct_sum / total_facts_sum * 100.0) if total_facts_sum > 0 else None
+            combined_found_accuracy = (correct_sum / total_facts_sum * 100.0) if total_facts_sum > 0 else None
+            combined_complete_accuracy = (correct_all_sum / total_facts_all_sum * 100.0) if total_facts_all_sum > 0 else None
+            combined_coverage = (total_facts_sum / total_facts_all_sum * 100.0) if total_facts_all_sum > 0 else None
             combined = {
                 "peripheral_count": len(per_peripheral),
                 "peripherals": sorted(per_peripheral.keys()),
@@ -648,7 +722,15 @@ def main():
                 "wrong": wrong_sum,
                 "missing": missing_sum,
                 "total_facts": total_facts_sum,
-                "accuracy": combined_accuracy,
+                "found_accuracy": combined_found_accuracy,
+                "correct_all": correct_all_sum,
+                "wrong_all": wrong_all_sum,
+                "missing_all": missing_all_sum,
+                "total_facts_all": total_facts_all_sum,
+                "complete_accuracy": combined_complete_accuracy,
+                "coverage": combined_coverage,
+                # Legacy alias
+                "accuracy": combined_found_accuracy,
                 "details": {
                     # Filenames are relative to `info/`
                     "register_results_csv": "comparison_register_results.csv",
@@ -708,7 +790,13 @@ def main():
                 "wrong": wrong_sum,
                 "missing": missing_sum,
                 "total_facts": total_facts_sum,
-                "accuracy": combined_accuracy,
+                "found_accuracy": combined_found_accuracy,
+                "correct_all": correct_all_sum,
+                "wrong_all": wrong_all_sum,
+                "missing_all": missing_all_sum,
+                "total_facts_all": total_facts_all_sum,
+                "complete_accuracy": combined_complete_accuracy,
+                "coverage": combined_coverage,
             }
             if backend == "openai":
                 result_row["vs_type"] = cfg["vs_type"]
@@ -718,6 +806,9 @@ def main():
                 result_row["local_db_name"] = cfg["local_db_name"]
                 result_row["keyword_boost"] = cfg["keyword_boost"]
                 result_row["reranker_type"] = cfg["reranker_type"]
+                result_row["metadata_filter"] = cfg.get("metadata_filter", False)
+                result_row["pages_after"] = cfg.get("pages_after", 0)
+                result_row["table_pages_only"] = cfg.get("table_pages_only", False)
             all_results.append(result_row)
 
     # Print summary table
@@ -727,13 +818,13 @@ def main():
 
     if all_results and not SKIP_COMPARISON:
         print(f"\nRESULTS SUMMARY:")
-        print(f"{'-'*70}")
-        print(f"{'Config':<30} {'Regs':>6} {'Correct':>8} {'Wrong':>6} {'Missing':>8} {'Accuracy':>10}")
-        print(f"{'-'*70}")
+        print(f"{'-'*100}")
+        print(f"{'Config':<30} {'Regs':>6} {'Correct':>8} {'Wrong':>6} {'Missing':>8} {'Found%':>8} {'Complete%':>10} {'Coverage%':>10}")
+        print(f"{'-'*100}")
         for r in all_results:
-            if 'accuracy' in r:
-                print(f"{r['config']:<30} {r['registers_found']:>3}/{r['total_registers']:<2} {r['correct']:>8} {r['wrong']:>6} {r['missing']:>8} {r['accuracy']:>9.1f}%")
-        print(f"{'-'*70}")
+            if 'found_accuracy' in r:
+                print(f"{r['config']:<30} {r['registers_found']:>3}/{r['total_registers']:<2} {r['correct']:>8} {r['wrong']:>6} {r['missing']:>8} {r['found_accuracy']:>7.1f}% {r['complete_accuracy']:>9.1f}% {r['coverage']:>9.1f}%")
+        print(f"{'-'*100}")
 
         # Save summary CSV - collect all unique field names across results
         all_fieldnames = []

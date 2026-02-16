@@ -9,33 +9,15 @@ Usage:
 """
 
 import argparse
-import importlib
 import os
 import sys
 from pathlib import Path
 
-_VECTOR_DB_PATH = str(Path(__file__).resolve().parent.parent.parent / "vector_db")
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-
-def _import_vector_db(db_path: str = ""):
-    saved_config = sys.modules.pop("config", None)
-    for name in ["config", "vector_store", "embeddings", "chunking", "reranker"]:
-        sys.modules.pop(name, None)
-
-    original_path = sys.path.copy()
-    try:
-        sys.path.insert(0, _VECTOR_DB_PATH)
-        vdb_config = importlib.import_module("config")
-        vector_store = importlib.import_module("vector_store")
-        if db_path:
-            vdb_config.DATABASES_DIR = Path(db_path)
-        vdb_config.EMBEDDING_PROVIDER = "local"
-        return vdb_config, vector_store
-    finally:
-        sys.path = original_path
-        sys.modules.pop("config", None)
-        if saved_config is not None:
-            sys.modules["config"] = saved_config
+from context_retrieval.vector_db import config as vdb_config
+from context_retrieval.vector_db.vector_store import VectorStore
 
 
 def main():
@@ -52,8 +34,11 @@ def main():
     else:
         indices = [int(args.index)]
 
-    vdb_config, vector_store_mod = _import_vector_db(args.db_path)
-    store = vector_store_mod.VectorStore(args.db_name)
+    if args.db_path:
+        vdb_config.DATABASES_DIR = Path(args.db_path)
+    vdb_config.EMBEDDING_PROVIDER = "local"
+
+    store = VectorStore(args.db_name)
     total = store.collection.count()
     print(f"Database: {args.db_name} ({total} chunks)\n")
 

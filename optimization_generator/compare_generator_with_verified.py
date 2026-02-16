@@ -686,6 +686,9 @@ def main():
                         "generated_value": "",
                     })
 
+        # Coverage: what fraction of total facts come from found registers
+        coverage = (total_facts_for_present_registers / total_facts_all_registers * 100) if total_facts_all_registers > 0 else 0
+
         results.append({
             'directory': dir_name,
             'registers_found': len(registers_found),
@@ -694,12 +697,13 @@ def main():
             'wrong': num_wrong,
             'missing': num_missing,
             'total_facts': total_facts_for_present_registers,
-            'accuracy': accuracy,
+            'found_accuracy': accuracy,
             'correct_all': num_correct_all,
             'wrong_all': num_wrong_all,
             'missing_all': num_missing_all,
             'total_facts_all': total_facts_all_registers,
-            'accuracy_all': accuracy_all,
+            'complete_accuracy': accuracy_all,
+            'coverage': coverage,
         })
 
     df = pd.DataFrame(results)

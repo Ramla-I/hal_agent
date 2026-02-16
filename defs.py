@@ -51,6 +51,7 @@ class ContextRetrievalParameters(BaseModel):
     keyword_boost: bool = True  # Apply keyword boost after search
     reranker_type: str = ""  # "", "local" (FlashRank), "cohere", "bge"
     local_embedding_provider: str = "local"  # "local" (FastEmbed) or "openai"
+    metadata_filter_enabled: bool = True  # Filter chunks by register name in metadata before search
 
 class CoverageImproverOutput(BaseModel):
     context_retrieval_parameters: ContextRetrievalParameters

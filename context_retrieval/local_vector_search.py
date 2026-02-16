@@ -1,86 +1,51 @@
 """
-Local vector database search using ChromaDB (via ../vector_db project).
+Local vector database search using ChromaDB (via context_retrieval.vector_db package).
 
-Wraps vector_db's VectorStore API to match hal_agent's retrieve_context() interface,
+Wraps VectorStore API to match hal_agent's retrieve_context() interface,
 returning (formatted_xml_string, embedding_ids_list).
+
+Features:
+- Metadata filtering: narrows search to chunks mentioning the target register
+- Chunk expansion: appends contiguous page chunks after initial results
+- Keyword boost: reorders results by exact keyword match
+- Reranking: optional FlashRank/Cohere/BGE reranking
 """
 
 import os
-import sys
-import importlib
+import re
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
+
 from utils.timing import timed_operation
+from context_retrieval.vector_db import config as vdb_config
+from context_retrieval.vector_db.vector_store import VectorStore
+from context_retrieval.vector_db.reranker import get_reranker
 
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(parent_dir)
-
-# Path to the vector_db project (sibling directory)
-_VECTOR_DB_PATH = str(Path(__file__).resolve().parent.parent.parent / "vector_db")
-
-# Cached module references (loaded once via importlib)
-_vector_store_mod = None
-_reranker_mod = None
-_vdb_config_mod = None
 
 # Cached VectorStore instances: cache_key -> VectorStore
 _store_cache: Dict[str, Any] = {}
 
 
-def _ensure_vector_db_imports():
-    """Import vector_db modules using importlib to avoid config.py name collision.
-
-    Temporarily swaps sys.modules['config'] so that vector_db's internal
-    `import config` resolves to vector_db/config.py instead of hal_agent/config.py.
-    """
-    global _vector_store_mod, _reranker_mod, _vdb_config_mod
-    if _vector_store_mod is not None:
-        return
-
-    if not os.path.isdir(_VECTOR_DB_PATH):
-        raise ImportError(
-            f"vector_db project not found at {_VECTOR_DB_PATH}. "
-            f"Expected it as a sibling directory to hal_agent."
-        )
-
-    # Save and remove hal_agent's config from sys.modules
-    saved_config = sys.modules.pop("config", None)
-    vdb_module_names = ["config", "vector_store", "embeddings", "chunking", "reranker"]
-    saved_modules = {name: sys.modules.pop(name, None) for name in vdb_module_names}
-
-    original_path = sys.path.copy()
-    try:
-        sys.path.insert(0, _VECTOR_DB_PATH)
-        _vdb_config_mod = importlib.import_module("config")
-        _vector_store_mod = importlib.import_module("vector_store")
-        _reranker_mod = importlib.import_module("reranker")
-    finally:
-        sys.path = original_path
-        # Remove vector_db's config from sys.modules to prevent collisions,
-        # then restore hal_agent's config if it was previously imported
-        sys.modules.pop("config", None)
-        if saved_config is not None:
-            sys.modules["config"] = saved_config
-
-
-def _get_store(db_name: str, db_path: str = "", embedding_provider: str = "local") -> Any:
+def _get_store(db_name: str, db_path: str = "", embedding_provider: str = "local") -> VectorStore:
     """Get or create a cached VectorStore instance."""
-    _ensure_vector_db_imports()
-
     cache_key = f"{db_name}:{db_path}:{embedding_provider}"
     if cache_key not in _store_cache:
         if db_path:
-            _vdb_config_mod.DATABASES_DIR = Path(db_path)
-        # Override embedding provider (vector_db's .env may default to "openai")
-        _vdb_config_mod.EMBEDDING_PROVIDER = embedding_provider
+            vdb_config.DATABASES_DIR = Path(db_path)
+        vdb_config.EMBEDDING_PROVIDER = embedding_provider
 
-        store = _vector_store_mod.VectorStore(db_name)
+        store = VectorStore(db_name)
         _store_cache[cache_key] = store
     return _store_cache[cache_key]
 
 
-def format_local_results(results: List[Dict[str, Any]]) -> str:
-    """Format local search results in XML <sources> format matching semantic_search.py output."""
+def format_local_results(results: List[Dict[str, Any]], expansion_chunks: Optional[List[Dict[str, Any]]] = None) -> str:
+    """Format local search results in XML <sources> format matching semantic_search.py output.
+
+    Args:
+        results: Primary search results
+        expansion_chunks: Optional expansion chunks from contiguous pages
+    """
     if not results:
         return ""
 
@@ -90,11 +55,25 @@ def format_local_results(results: List[Dict[str, Any]]) -> str:
         section = result["metadata"].get("section", "")
         score = result.get("score", 0)
         text = result["text"]
+        page = result["metadata"].get("page_number", 0)
         formatted_parts.append(
-            f"<result source='{source}' section='{section}' rank='{i}' score='{score:.3f}'>"
+            f"<result source='{source}' section='{section}' rank='{i}' score='{score:.3f}' page='{page}'>"
             f"<content>{text}</content>"
             f"</result>"
         )
+
+    # Append expansion chunks
+    if expansion_chunks:
+        for chunk in expansion_chunks:
+            chunk_id = chunk.get("chunk_id", "unknown")
+            page = chunk.get("page_number", 0)
+            text = chunk.get("text", "")
+            formatted_parts.append(
+                f"<result source='expansion' chunk_id='{chunk_id}' page='{page}' expansion='true'>"
+                f"<content>{text}</content>"
+                f"</result>"
+            )
+
     return f"<sources>{''.join(formatted_parts)}</sources>"
 
 
@@ -106,11 +85,80 @@ def extract_local_embedding_ids(results: List[Dict[str, Any]]) -> List[Dict]:
             "source": result["metadata"].get("source", ""),
             "section": result["metadata"].get("section", ""),
             "chunk_index": result["metadata"].get("chunk_index", -1),
+            "page_number": result["metadata"].get("page_number", 0),
             "rank": i,
             "score": float(result.get("score", 0)),
             "keyword_boost": float(result.get("keyword_boost", 0)),
         })
     return embedding_ids
+
+
+def _build_register_filter(register_name: str) -> Optional[Dict[str, Any]]:
+    """Build a ChromaDB where clause for register metadata filtering.
+
+    registers_mentioned is stored as a list of register names in ChromaDB.
+    $contains on list metadata checks for exact element membership.
+    """
+    if not register_name:
+        return None
+    return {"registers_mentioned": {"$contains": register_name}}
+
+
+def _expand_chunks(
+    results: List[Dict[str, Any]],
+    chunk_index_path: str,
+    pages_after: int,
+    table_pages_only: bool,
+) -> List[Dict[str, Any]]:
+    """Expand search results with chunks from contiguous pages.
+
+    Args:
+        results: Primary search results with page_number in metadata
+        chunk_index_path: Path to chunks_index.csv
+        pages_after: Number of pages to expand after each result's page
+        table_pages_only: Only expand pages containing tables
+
+    Returns:
+        List of expansion chunk dicts with chunk_id, page_number, text
+    """
+    from context_retrieval.chunk_index import get_chunk_index
+
+    try:
+        chunk_index = get_chunk_index(chunk_index_path)
+    except FileNotFoundError:
+        return []
+
+    # Collect pages from results
+    result_pages = set()
+    for result in results:
+        page = result["metadata"].get("page_number", 0)
+        if page > 0:
+            result_pages.add(page)
+
+    # Get expansion pages
+    expansion_pages = set()
+    for page in result_pages:
+        contiguous = chunk_index.get_contiguous_pages(page, pages_after, table_pages_only)
+        expansion_pages.update(contiguous)
+
+    # Remove pages already covered by primary results
+    expansion_pages -= result_pages
+
+    if not expansion_pages:
+        return []
+
+    # Read expansion chunk content
+    expansion_chunks = []
+    for chunk_info in chunk_index.get_chunks_for_pages(sorted(expansion_pages)):
+        text = chunk_index.read_chunk_content(chunk_info)
+        if text:
+            expansion_chunks.append({
+                "chunk_id": chunk_info["chunk_id"],
+                "page_number": chunk_info["page_number"],
+                "text": text,
+            })
+
+    return expansion_chunks
 
 
 def search_local_vector_db(
@@ -122,6 +170,10 @@ def search_local_vector_db(
     score_threshold: float = 0.0,
     db_path: str = "",
     embedding_provider: str = "local",
+    register_filter: str = "",
+    chunk_index_path: str = "",
+    pages_after: int = 0,
+    table_pages_only: bool = False,
 ) -> Tuple[Optional[str], List[Dict]]:
     """
     Search local ChromaDB and return results in hal_agent's (formatted_text, embedding_ids) format.
@@ -135,30 +187,36 @@ def search_local_vector_db(
         score_threshold: Minimum score threshold for results
         db_path: Override path to databases directory
         embedding_provider: "local" (FastEmbed) or "openai" - must match ingestion
+        register_filter: Register name for metadata filtering (e.g., "FSMC_BTR1")
+        chunk_index_path: Path to chunks_index.csv for chunk expansion
+        pages_after: Number of pages to expand after each result
+        table_pages_only: Only expand pages containing tables
 
     Returns:
         Tuple of (formatted_xml_string, embedding_ids_list)
         Returns (None, []) if no results found
     """
-    _ensure_vector_db_imports()
-
     store = _get_store(db_name, db_path, embedding_provider)
 
-    # Expand candidate pool only for reranking (not for keyword boost).
-    # Keyword boost should only reorder within the top-N semantically relevant
-    # results, not pull in lower-ranked chunks that happen to mention the term.
+    # Expand candidate pool only for reranking (not for keyword boost)
     do_rerank = bool(reranker_type)
     fetch_k = n_results * 5 if do_rerank else n_results
 
     with timed_operation("vector_store_search"):
-        results = store.search(query, n_results=fetch_k)
+        # Try metadata-filtered search first
+        where_clause = _build_register_filter(register_filter)
+        results = store.search(query, n_results=fetch_k, where=where_clause)
+
+        # Fallback: if filtered search returns nothing, retry without filter
+        if not results and where_clause is not None:
+            results = store.search(query, n_results=fetch_k)
 
         if not results:
             return None, []
 
         # Apply reranking if requested
         if do_rerank:
-            reranker = _reranker_mod.get_reranker(reranker_type)
+            reranker = get_reranker(reranker_type)
             results = reranker.rerank(query, results, top_n=fetch_k)
 
         # Apply keyword boost
@@ -175,7 +233,12 @@ def search_local_vector_db(
     if not results:
         return None, []
 
-    formatted_text = format_local_results(results)
+    # Chunk expansion
+    expansion_chunks = None
+    if chunk_index_path and pages_after > 0:
+        expansion_chunks = _expand_chunks(results, chunk_index_path, pages_after, table_pages_only)
+
+    formatted_text = format_local_results(results, expansion_chunks)
     embedding_ids = extract_local_embedding_ids(results)
 
     return formatted_text, embedding_ids

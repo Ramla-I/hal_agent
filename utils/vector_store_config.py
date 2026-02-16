@@ -24,6 +24,7 @@ class VectorStoreInfo:
     chunk_index_path: Optional[str] = None
     local_path: Optional[str] = None
     local_db_name: Optional[str] = None  # ChromaDB database name for local vector DB
+    embedding_provider: Optional[str] = None  # "local" (FastEmbed) or "openai"
 
     @property
     def is_uploaded(self) -> bool:
@@ -113,6 +114,7 @@ def load_vector_stores(device_dir: str) -> DeviceVectorStores:
             chunk_index_path=info.get("chunk_index_path"),
             local_path=info.get("local_path"),
             local_db_name=info.get("local_db_name"),
+            embedding_provider=info.get("embedding_provider"),
         )
 
     return DeviceVectorStores(
@@ -161,6 +163,8 @@ def save_vector_stores(device_dir: str, config: DeviceVectorStores) -> str:
             vs_data["local_path"] = vs.local_path
         if vs.local_db_name:
             vs_data["local_db_name"] = vs.local_db_name
+        if vs.embedding_provider:
+            vs_data["embedding_provider"] = vs.embedding_provider
 
         data["vector_stores"][name] = vs_data
 

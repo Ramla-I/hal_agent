@@ -48,6 +48,7 @@ class RunConfig:
     embeddings: Optional[int] = None
     pages_after: Optional[int] = None
     table_pages_only_expansion: Optional[bool] = None
+    metadata_filter: Optional[bool] = None
     config_name: Optional[str] = None
 
 
@@ -108,24 +109,26 @@ def _parse_run_config_from_name(run_name: str, run_dir: Path) -> RunConfig:
 
     If parsing fails, config fields remain None.
     """
-    # Pattern for local vector DB runs: local_{db_name}_emb{N}[_kb][_rr{type}]
+    # Pattern for local vector DB runs: local_{db_name}_emb{N}[_kb][_rr{type}][_mf][_pa{N}][_tpo]
     local_pattern = re.compile(
-        r"^local_(?P<db_name>.+?)_emb(?P<embeddings>\d+)(?P<kb>_kb)?(?:_rr(?P<reranker>\w+))?$"
+        r"^local_(?P<db_name>.+?)_emb(?P<embeddings>\d+)(?P<kb>_kb)?(?:_rr(?P<reranker>\w+))?(?P<mf>_mf)?(?:_pa(?P<pages_after>\d+))?(?P<tpo>_tpo)?$"
     )
     m_local = local_pattern.match(run_name)
     if m_local:
         db_name = m_local.group("db_name")
         embeddings = int(m_local.group("embeddings"))
-        kb = bool(m_local.group("kb"))
-        reranker = m_local.group("reranker") or ""
+        metadata_filter = bool(m_local.group("mf"))
+        pages_after = int(m_local.group("pages_after")) if m_local.group("pages_after") is not None else None
+        table_pages_only = bool(m_local.group("tpo"))
         return RunConfig(
             run_name=run_name,
             run_dir=run_dir,
             peripheral=None,
             vs_type=f"local_{db_name}",
             embeddings=embeddings,
-            pages_after=None,
-            table_pages_only_expansion=None,
+            pages_after=pages_after,
+            table_pages_only_expansion=table_pages_only,
+            metadata_filter=metadata_filter,
             config_name=run_name,
         )
 
@@ -306,10 +309,17 @@ def _derive_accuracy_from_register_results(df: pd.DataFrame) -> Dict[str, Any]:
     if df is None or df.empty:
         return {
             "accuracy": None,
+            "found_accuracy": None,
+            "complete_accuracy": None,
+            "coverage": None,
             "correct": None,
             "wrong": None,
             "missing": None,
             "total_facts": None,
+            "correct_all": None,
+            "wrong_all": None,
+            "missing_all": None,
+            "total_facts_all": None,
             "registers_found": None,
             "total_registers": None,
         }
@@ -317,18 +327,40 @@ def _derive_accuracy_from_register_results(df: pd.DataFrame) -> Dict[str, Any]:
     total_registers = int(len(df))
     registers_found = int(df["register_found"].fillna(False).astype(bool).sum()) if "register_found" in df.columns else None
 
-    correct = int(df["correct"].fillna(0).sum()) if "correct" in df.columns else None
-    wrong = int(df["wrong"].fillna(0).sum()) if "wrong" in df.columns else None
-    missing = int(df["missing"].fillna(0).sum()) if "missing" in df.columns else None
-    total_facts = int(df["total_facts"].fillna(0).sum()) if "total_facts" in df.columns else None
-    accuracy = (correct / total_facts * 100.0) if (correct is not None and total_facts) else None
+    # All registers
+    correct_all = int(df["correct"].fillna(0).sum()) if "correct" in df.columns else None
+    wrong_all = int(df["wrong"].fillna(0).sum()) if "wrong" in df.columns else None
+    missing_all = int(df["missing"].fillna(0).sum()) if "missing" in df.columns else None
+    total_facts_all = int(df["total_facts"].fillna(0).sum()) if "total_facts" in df.columns else None
+    complete_accuracy = (correct_all / total_facts_all * 100.0) if (correct_all is not None and total_facts_all) else None
+
+    # Found registers only
+    if "register_found" in df.columns:
+        found_df = df[df["register_found"].fillna(False).astype(bool)]
+    else:
+        found_df = df
+    correct = int(found_df["correct"].fillna(0).sum()) if "correct" in found_df.columns else correct_all
+    wrong = int(found_df["wrong"].fillna(0).sum()) if "wrong" in found_df.columns else wrong_all
+    missing = int(found_df["missing"].fillna(0).sum()) if "missing" in found_df.columns else missing_all
+    total_facts = int(found_df["total_facts"].fillna(0).sum()) if "total_facts" in found_df.columns else total_facts_all
+    found_accuracy = (correct / total_facts * 100.0) if (correct is not None and total_facts) else None
+
+    # Coverage: fraction of total facts that come from found registers
+    coverage = (total_facts / total_facts_all * 100.0) if (total_facts is not None and total_facts_all) else None
 
     return {
-        "accuracy": accuracy,
+        "accuracy": found_accuracy,
+        "found_accuracy": found_accuracy,
+        "complete_accuracy": complete_accuracy,
+        "coverage": coverage,
         "correct": correct,
         "wrong": wrong,
         "missing": missing,
         "total_facts": total_facts,
+        "correct_all": correct_all,
+        "wrong_all": wrong_all,
+        "missing_all": missing_all,
+        "total_facts_all": total_facts_all,
         "registers_found": registers_found,
         "total_registers": total_registers,
     }
@@ -519,10 +551,19 @@ def _write_text_report(df_runs: pd.DataFrame, out_path: Path) -> None:
         extra = ""
         if "peripheral_count" in r.index:
             extra = f" | periph={int(r.get('peripheral_count') or 0)}"
+        # Show all three metrics when available
+        found_acc = r.get("found_accuracy") if "found_accuracy" in r.index and pd.notna(r.get("found_accuracy")) else r.get("accuracy")
+        complete_acc = r.get("complete_accuracy") if "complete_accuracy" in r.index else None
+        coverage = r.get("coverage") if "coverage" in r.index else None
+        acc_str = f"found={float(found_acc):.1f}%"
+        if complete_acc is not None and pd.notna(complete_acc):
+            acc_str += f" complete={float(complete_acc):.1f}%"
+        if coverage is not None and pd.notna(coverage):
+            acc_str += f" cov={float(coverage):.1f}%"
         return (
-            f"{label}{extra} | acc={float(r.get('accuracy')):.2f}% | "
+            f"{label}{extra} | {acc_str} | "
             f"tokens={float(tokens):.0f} | time={float(time_s):.2f}s | "
-            f"vs={short_name(r.get('vs_type'))} emb={r.get('embeddings')} pages={r.get('pages_after')} to={r.get('table_pages_only_expansion')}"
+            f"vs={short_name(r.get('vs_type'))} emb={r.get('embeddings')} pages={r.get('pages_after')} to={r.get('table_pages_only_expansion')} mf={r.get('metadata_filter')}"
         )
 
     lines.append("Top 10 by accuracy (tie-break: fewer tokens, then faster):")
@@ -608,7 +649,7 @@ def main() -> None:
     # =========================
     # EDIT THESE VARIABLES
     # =========================
-    RUNS_ROOT = "optimization_generator/experiments/local_vector_db_v1"
+    RUNS_ROOT = "optimization_generator/experiments/local_vector_db_v2_800_tokens"
     OUTPUT_DIR: Optional[str] = None  # default: f"{RUNS_ROOT}/analysis"
     TITLE_PREFIX = None  # e.g. "AFIO peripheral sweep"
     MIN_ACCURACY: Optional[float] = None          # e.g. 95.0
@@ -658,6 +699,7 @@ def main() -> None:
             "embeddings": cfg.embeddings,
             "pages_after": cfg.pages_after,
             "table_pages_only_expansion": cfg.table_pages_only_expansion,
+            "metadata_filter": cfg.metadata_filter,
             "config_name": cfg.config_name,
             "config_label": short_name(cfg.config_name),
         }
@@ -684,6 +726,8 @@ def main() -> None:
         combined = _load_json(d / "info" / "comparison_results.json") or _load_json(d / "comparison_results.json")
         if isinstance(combined, dict) and "peripheral_count" in combined and "peripherals" in combined:
             combined_used = True
+            # Read found_accuracy if present, fall back to legacy "accuracy"
+            found_acc = combined.get("found_accuracy") if combined.get("found_accuracy") is not None else combined.get("accuracy")
             row.update(
                 {
                     "peripheral_count": combined.get("peripheral_count"),
@@ -694,9 +738,38 @@ def main() -> None:
                     "wrong": combined.get("wrong"),
                     "missing": combined.get("missing"),
                     "total_facts": combined.get("total_facts"),
-                    "accuracy": combined.get("accuracy"),
+                    "found_accuracy": found_acc,
+                    "correct_all": combined.get("correct_all"),
+                    "wrong_all": combined.get("wrong_all"),
+                    "missing_all": combined.get("missing_all"),
+                    "total_facts_all": combined.get("total_facts_all"),
+                    "complete_accuracy": combined.get("complete_accuracy"),
+                    "coverage": combined.get("coverage"),
+                    # Legacy alias so existing plots/reports still work
+                    "accuracy": found_acc,
                 }
             )
+            # Derive complete_accuracy/coverage from register CSV if JSON doesn't have them
+            if row.get("complete_accuracy") is None or row.get("coverage") is None:
+                _reg_df_for_derive = _first_df(
+                    _read_csv(d / "info" / "comparison_register_results.csv"),
+                    _read_csv(d / "comparison_register_results.csv"),
+                )
+                if _reg_df_for_derive is not None and not _reg_df_for_derive.empty:
+                    derived = _derive_accuracy_from_register_results(_reg_df_for_derive)
+                    if row.get("complete_accuracy") is None:
+                        row["complete_accuracy"] = derived.get("complete_accuracy")
+                    if row.get("coverage") is None:
+                        row["coverage"] = derived.get("coverage")
+                    if row.get("correct_all") is None:
+                        row["correct_all"] = derived.get("correct_all")
+                    if row.get("wrong_all") is None:
+                        row["wrong_all"] = derived.get("wrong_all")
+                    if row.get("missing_all") is None:
+                        row["missing_all"] = derived.get("missing_all")
+                    if row.get("total_facts_all") is None:
+                        row["total_facts_all"] = derived.get("total_facts_all")
+
             # Convenience means
             if row.get("peripheral_count"):
                 pc = float(row["peripheral_count"])
@@ -721,6 +794,7 @@ def main() -> None:
                             "embeddings": cfg.embeddings,
                             "pages_after": cfg.pages_after,
                             "table_pages_only_expansion": cfg.table_pages_only_expansion,
+                            "metadata_filter": cfg.metadata_filter,
                             "peripheral": rr.get("peripheral"),
                             "register": rr.get("register"),
                             "register_found": rr.get("register_found"),
@@ -747,6 +821,7 @@ def main() -> None:
                             "embeddings": cfg.embeddings,
                             "pages_after": cfg.pages_after,
                             "table_pages_only_expansion": cfg.table_pages_only_expansion,
+                            "metadata_filter": cfg.metadata_filter,
                             "error_type": er.get("error_type"),
                             "peripheral": er.get("peripheral"),
                             "register": er.get("register"),
@@ -775,7 +850,15 @@ def main() -> None:
             total_facts_sum = sum(int(c.get("total_facts") or 0) for _, c in periph_comparisons)
             registers_found_sum = sum(int(c.get("registers_found") or 0) for _, c in periph_comparisons)
             total_registers_sum = sum(int(c.get("total_registers") or 0) for _, c in periph_comparisons)
-            accuracy = (correct_sum / total_facts_sum * 100.0) if total_facts_sum > 0 else None
+            found_accuracy = (correct_sum / total_facts_sum * 100.0) if total_facts_sum > 0 else None
+
+            # Complete metrics (from per-peripheral data if available)
+            correct_all_sum = sum(int(c.get("correct_all") or c.get("correct") or 0) for _, c in periph_comparisons)
+            wrong_all_sum = sum(int(c.get("wrong_all") or c.get("wrong") or 0) for _, c in periph_comparisons)
+            missing_all_sum = sum(int(c.get("missing_all") or c.get("missing") or 0) for _, c in periph_comparisons)
+            total_facts_all_sum = sum(int(c.get("total_facts_all") or c.get("total_facts") or 0) for _, c in periph_comparisons)
+            complete_accuracy = (correct_all_sum / total_facts_all_sum * 100.0) if total_facts_all_sum > 0 else None
+            coverage = (total_facts_sum / total_facts_all_sum * 100.0) if total_facts_all_sum > 0 else None
 
             row.update(
                 {
@@ -787,7 +870,14 @@ def main() -> None:
                     "wrong": wrong_sum,
                     "missing": missing_sum,
                     "total_facts": total_facts_sum,
-                    "accuracy": accuracy,
+                    "found_accuracy": found_accuracy,
+                    "correct_all": correct_all_sum,
+                    "wrong_all": wrong_all_sum,
+                    "missing_all": missing_all_sum,
+                    "total_facts_all": total_facts_all_sum,
+                    "complete_accuracy": complete_accuracy,
+                    "coverage": coverage,
+                    "accuracy": found_accuracy,
                 }
             )
             # Convenience means for comparing configs across different peripheral counts.
@@ -853,6 +943,7 @@ def main() -> None:
         elif not combined_used:
             comparison = _load_json(d / "comparison_results.json") or _load_json(d / "info" / "comparison_results.json")
             if isinstance(comparison, dict):
+                found_acc = comparison.get("found_accuracy") if comparison.get("found_accuracy") is not None else comparison.get("accuracy")
                 row.update(
                     {
                         "registers_found": comparison.get("registers_found"),
@@ -861,7 +952,14 @@ def main() -> None:
                         "wrong": comparison.get("wrong"),
                         "missing": comparison.get("missing"),
                         "total_facts": comparison.get("total_facts"),
-                        "accuracy": comparison.get("accuracy"),
+                        "found_accuracy": found_acc,
+                        "correct_all": comparison.get("correct_all"),
+                        "wrong_all": comparison.get("wrong_all"),
+                        "missing_all": comparison.get("missing_all"),
+                        "total_facts_all": comparison.get("total_facts_all"),
+                        "complete_accuracy": comparison.get("complete_accuracy"),
+                        "coverage": comparison.get("coverage"),
+                        "accuracy": found_acc,
                     }
                 )
             else:
@@ -888,6 +986,7 @@ def main() -> None:
                             "embeddings": cfg.embeddings,
                             "pages_after": cfg.pages_after,
                             "table_pages_only_expansion": cfg.table_pages_only_expansion,
+                            "metadata_filter": cfg.metadata_filter,
                             "peripheral": rr.get("peripheral"),
                             "register": rr.get("register"),
                             "register_found": rr.get("register_found"),
@@ -915,6 +1014,7 @@ def main() -> None:
                             "embeddings": cfg.embeddings,
                             "pages_after": cfg.pages_after,
                             "table_pages_only_expansion": cfg.table_pages_only_expansion,
+                            "metadata_filter": cfg.metadata_filter,
                             "error_type": er.get("error_type"),
                             "peripheral": er.get("peripheral"),
                             "register": er.get("register"),

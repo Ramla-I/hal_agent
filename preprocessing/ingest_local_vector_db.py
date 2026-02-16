@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 """
-Ingest a device datasheet into a local ChromaDB vector database.
+Ingest a device datasheet into a local ChromaDB vector database with enriched metadata.
 
-Uses the vector_db project's TextProcessor (for markdown) or PDFProcessor (for PDF)
-to chunk the document, then stores it in ChromaDB with local or OpenAI embeddings.
+Uses context_retrieval.vector_db (self-contained package) for chunking and embedding.
+Produces:
+- ChromaDB database with enriched metadata (page_number, has_tables, registers_mentioned)
+- Chunk text files in chunked_datasheets/{mfg}/{device}/chunks/local/
+- chunks_index.csv for chunk expansion compatibility
+- metadata.json for table-aware expansion
+- Auto-registers in devices/{mfg}/{device}/vector_stores.json
 
 Usage:
     python preprocessing/ingest_local_vector_db.py rm0041 --format md
-    python preprocessing/ingest_local_vector_db.py rm0041 --format pdf
-    python preprocessing/ingest_local_vector_db.py rm0041 --format md --db-path ./local_databases
     python preprocessing/ingest_local_vector_db.py rm0041 --format md --embedding-provider openai
+    python preprocessing/ingest_local_vector_db.py rm0041 --format md --db-path ./local_databases
 """
 
 import argparse
-import importlib
+import csv
+import json
 import os
 import sys
 from pathlib import Path
@@ -22,47 +27,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import config as hal_config
-
-_VECTOR_DB_PATH = str(Path(__file__).resolve().parent.parent.parent / "vector_db")
-
-
-def _import_vector_db_modules(embedding_provider: str = "local", db_path: str = ""):
-    """Import vector_db modules with optional config overrides.
-
-    Temporarily swaps sys.modules['config'] so that vector_db's internal
-    `import config` resolves to vector_db/config.py instead of hal_agent/config.py.
-    """
-    # Save and remove hal_agent's config from sys.modules so vector_db gets its own
-    saved_config = sys.modules.pop("config", None)
-    # Also save any vector_db modules that may have been previously loaded
-    vdb_module_names = ["config", "vector_store", "text_processor", "pdf_processor",
-                        "embeddings", "chunking", "reranker"]
-    saved_modules = {name: sys.modules.pop(name, None) for name in vdb_module_names}
-
-    original_path = sys.path.copy()
-    try:
-        sys.path.insert(0, _VECTOR_DB_PATH)
-
-        vdb_config = importlib.import_module("config")
-
-        # Override config before other modules load
-        if db_path:
-            vdb_config.DATABASES_DIR = Path(db_path)
-        if embedding_provider:
-            vdb_config.EMBEDDING_PROVIDER = embedding_provider
-
-        vector_store = importlib.import_module("vector_store")
-        text_processor = importlib.import_module("text_processor")
-        pdf_processor = importlib.import_module("pdf_processor")
-
-        return vdb_config, vector_store, text_processor, pdf_processor
-    finally:
-        sys.path = original_path
-        # Remove vector_db's config from sys.modules to prevent collisions,
-        # then restore hal_agent's config if it was previously imported
-        sys.modules.pop("config", None)
-        if saved_config is not None:
-            sys.modules["config"] = saved_config
+from context_retrieval.vector_db import config as vdb_config
+from context_retrieval.vector_db.text_processor import TextProcessor
+from context_retrieval.vector_db.vector_store import VectorStore, database_exists, create_database
+from context_retrieval.vector_db.chunking import count_tokens
+from utils.vector_store_config import load_vector_stores, save_vector_stores, VectorStoreInfo
 
 
 def ingest_device(
@@ -72,7 +41,7 @@ def ingest_device(
     embedding_provider: str = "local",
     db_name_override: str = "",
 ):
-    """Ingest a device datasheet into local ChromaDB.
+    """Ingest a device datasheet into local ChromaDB with enriched metadata.
 
     Args:
         device_name: Device identifier (e.g., "rm0041")
@@ -84,8 +53,10 @@ def ingest_device(
     Returns:
         0 on success, 1 on error
     """
-    vdb_config, vector_store_mod, text_processor_mod, pdf_processor_mod = \
-        _import_vector_db_modules(embedding_provider, db_path)
+    # Override config before creating any stores
+    if db_path:
+        vdb_config.DATABASES_DIR = Path(db_path)
+    vdb_config.EMBEDDING_PROVIDER = embedding_provider
 
     # Find the device directory
     ctx = next((c for c in hal_config.user_contexts if c.device_name == device_name), None)
@@ -97,59 +68,156 @@ def ingest_device(
     device_dir = Path(f"devices/{manufacturer}/{device_name}")
     db_name = db_name_override or f"{device_name}_{format}"
 
-    # Determine source file and process
+    # Determine source file
     if format == "md":
         source_file = device_dir / f"{device_name}.md"
-        if not source_file.exists():
-            print(f"Error: Markdown file not found: {source_file}")
-            return 1
-        print(f"Processing markdown: {source_file}")
-        processor = text_processor_mod.TextProcessor()
-        chunks = processor.process_file(source_file, extra_metadata={"device": device_name})
     elif format == "pdf":
-        source_file = device_dir / f"{device_name}.pdf"
-        if not source_file.exists():
-            print(f"Error: PDF file not found: {source_file}")
-            return 1
-        print(f"Processing PDF: {source_file}")
-        processor = pdf_processor_mod.PDFProcessor()
-        chunks = processor.process_pdf(source_file, extra_metadata={"device": device_name})
+        print("Error: PDF format not yet supported for enriched ingestion. Use --format md.")
+        return 1
     else:
-        print(f"Error: Unsupported format '{format}'. Use 'md' or 'pdf'.")
+        print(f"Error: Unsupported format '{format}'. Use 'md'.")
         return 1
 
-    print(f"Generated {len(chunks)} chunks")
+    if not source_file.exists():
+        print(f"Error: Source file not found: {source_file}")
+        return 1
 
-    # Create database and ingest
+    print(f"Processing: {source_file}")
+    print(f"Embedding provider: {embedding_provider}")
+
+    # Process file with enriched TextProcessor
+    processor = TextProcessor()
+    chunks = processor.process_file(source_file, extra_metadata={"device": device_name})
+    print(f"Generated {len(chunks)} chunks with enriched metadata")
+
+    # --- Save chunk files + chunks_index.csv + metadata.json ---
+    chunks_dir = Path(f"chunked_datasheets/{manufacturer}/{device_name}/chunks/local")
+    chunks_dir.mkdir(parents=True, exist_ok=True)
+
+    csv_rows = []
+    metadata_dict = {}
+
+    # Track chunks per page for total_chunks_on_page
+    page_chunk_counts = {}
+    for chunk in chunks:
+        page = chunk["metadata"].get("page_number", 0)
+        page_chunk_counts[page] = page_chunk_counts.get(page, 0) + 1
+
+    # Track chunk index per page for naming
+    page_chunk_indices = {}
+
+    for chunk in chunks:
+        page = chunk["metadata"].get("page_number", 0)
+        page_chunk_indices[page] = page_chunk_indices.get(page, 0) + 1
+        chunk_on_page = page_chunk_indices[page]
+
+        chunk_id = f"{device_name}_p{page:03d}_c{chunk_on_page:02d}"
+        chunk_file = chunks_dir / f"{chunk_id}.txt"
+
+        # Write chunk text file
+        chunk_file.write_text(chunk["text"], encoding="utf-8")
+
+        # Build CSV row
+        token_count = count_tokens(chunk["text"])
+        csv_rows.append({
+            "chunk_id": chunk_id,
+            "file_id": "",  # No OpenAI file ID for local
+            "file_path": str(chunk_file),
+            "page_number": page,
+            "chunk_index": chunk_on_page,
+            "total_chunks_on_page": page_chunk_counts.get(page, 0),
+            "token_count": token_count,
+            "datasheet": device_name,
+        })
+
+        # Build metadata entry
+        registers_list = chunk["metadata"].get("registers_mentioned", [])
+        metadata_dict[chunk_id] = {
+            "has_tables": chunk["metadata"].get("has_tables", False),
+            "registers_mentioned": registers_list,
+            "section": chunk["metadata"].get("section", ""),
+            "page_number": page,
+            "token_count": token_count,
+        }
+
+    # Write chunks_index.csv
+    csv_path = chunks_dir / "chunks_index.csv"
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=[
+            "chunk_id", "file_id", "file_path", "page_number",
+            "chunk_index", "total_chunks_on_page", "token_count", "datasheet"
+        ])
+        writer.writeheader()
+        writer.writerows(csv_rows)
+
+    print(f"Saved {len(csv_rows)} chunk files to {chunks_dir}")
+    print(f"Saved chunks_index.csv: {csv_path}")
+
+    # Write metadata.json
+    metadata_path = chunks_dir / "metadata.json"
+    with open(metadata_path, "w", encoding="utf-8") as f:
+        json.dump(metadata_dict, f, indent=2)
+    print(f"Saved metadata.json: {metadata_path}")
+
+    # --- Ingest into ChromaDB ---
     vdb_config.ensure_databases_dir()
-    if not vector_store_mod.database_exists(db_name):
-        vector_store_mod.create_database(db_name)
+    if not database_exists(db_name):
+        create_database(db_name)
         print(f"Created database: {db_name}")
     else:
         print(f"Database '{db_name}' already exists")
 
-    store = vector_store_mod.VectorStore(db_name)
+    store = VectorStore(db_name)
     existing = store.collection.count()
     if existing > 0:
         print(f"Database already has {existing} chunks. Skipping ingestion.")
         print(f"To re-ingest, delete the database first: "
               f"rm -rf {vdb_config.get_db_path(db_name)}")
+    else:
+        def progress(batch_num, total_batches):
+            print(f"\r  Embedding batch {batch_num}/{total_batches}...", end="", flush=True)
+
+        added = store.add_documents(chunks, progress_callback=progress)
+        print(f"\nIngested {added} chunks into database '{db_name}'")
+
+    print(f"Database path: {vdb_config.get_db_path(db_name)}")
+
+    # --- Register in vector_stores.json ---
+    try:
+        vs_config = load_vector_stores(str(device_dir))
+    except FileNotFoundError:
+        print(f"Warning: vector_stores.json not found in {device_dir}, skipping registration")
         return 0
 
-    def progress(batch_num, total_batches):
-        print(f"\r  Embedding batch {batch_num}/{total_batches}...", end="", flush=True)
+    entry_name = f"local_{format}"
+    # Compute relative path from device_dir to chunks_dir
+    chunks_dir_abs = chunks_dir.resolve()
+    device_dir_abs = device_dir.resolve()
+    try:
+        rel_path = os.path.relpath(chunks_dir_abs, device_dir_abs)
+    except ValueError:
+        rel_path = str(chunks_dir_abs)
 
-    added = store.add_documents(chunks, progress_callback=progress)
-    print(f"\nIngested {added} chunks into database '{db_name}'")
-    print(f"Database path: {vdb_config.get_db_path(db_name)}")
-    print(f"Embedding provider: {embedding_provider}")
+    rel_csv = os.path.join(rel_path, "chunks_index.csv")
+
+    vs_config.vector_stores[entry_name] = VectorStoreInfo(
+        name=entry_name,
+        vs_id=None,
+        description=f"Local ChromaDB with enriched metadata (page numbers, registers, tables)",
+        local_db_name=db_name,
+        local_path=rel_path,
+        chunk_index_path=rel_csv,
+        embedding_provider=embedding_provider,
+    )
+    save_vector_stores(str(device_dir), vs_config)
+    print(f"Registered '{entry_name}' in {device_dir}/vector_stores.json")
 
     return 0
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Ingest device datasheet into local ChromaDB vector database"
+        description="Ingest device datasheet into local ChromaDB with enriched metadata"
     )
     parser.add_argument("device_name", help="Device name (e.g., rm0041)")
     parser.add_argument(

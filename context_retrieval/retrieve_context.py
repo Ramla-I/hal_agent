@@ -99,11 +99,15 @@ def retrieve_context(
             query=query,
             db_name=context_retrieval_parameters.local_db_name,
             n_results=context_retrieval_parameters.number_embeddings,
-            keyword_boost=context_retrieval_parameters.keyword_boost,
+            keyword_boost=context_retrieval_parameters.keyword_boost and context_retrieval_parameters.number_embeddings > 1,
             reranker_type=context_retrieval_parameters.reranker_type,
             score_threshold=context_retrieval_parameters.score_threshold,
             db_path=context_retrieval_parameters.local_db_path,
             embedding_provider=context_retrieval_parameters.local_embedding_provider,
+            register_filter=f"{peripheral_name}_{register_name}" if context_retrieval_parameters.metadata_filter_enabled else "",
+            chunk_index_path=context_retrieval_parameters.chunk_index_path if context_retrieval_parameters.chunk_expansion_enabled else "",
+            pages_after=context_retrieval_parameters.pages_after,
+            table_pages_only=context_retrieval_parameters.expand_table_pages_only,
         )
 
     elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.REGEX:

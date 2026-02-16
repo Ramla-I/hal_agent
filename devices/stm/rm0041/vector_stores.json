@@ -5,15 +5,11 @@
     "openai_auto": {
       "vs_id": "vs_6892501067b08191ac63cc6de06ee629",
       "description": "OpenAI auto-chunked full PDF",
-      "file_id": "file-MHtC1XNEQDa2X8jNEjfk1b",
-      "created_at": null,
-      "file_count": null,
-      "chunk_index_path": null
+      "file_id": "file-MHtC1XNEQDa2X8jNEjfk1b"
     },
     "text_chunks": {
       "vs_id": "vs_69739f0610d8819183584c2d343e88a6",
       "description": "Manual text chunks (800 tokens, 100 overlap)",
-      "file_id": null,
       "created_at": "2025-01-23",
       "file_count": 821,
       "chunk_index_path": "../../../chunked_datasheets/stm/rm0041/chunks/text/chunks_index.csv"
@@ -21,7 +17,6 @@
     "md_chunks": {
       "vs_id": "vs_6973a4df01bc81919940212995712255",
       "description": "Manual markdown chunks (800 tokens, 100 overlap)",
-      "file_id": null,
       "created_at": "2025-01-23",
       "file_count": 1033,
       "chunk_index_path": "../../../chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv"
@@ -29,11 +24,18 @@
     "md_enriched": {
       "vs_id": "vs_6977b8e021f4819193431da11fd05f1c",
       "description": "Markdown chunks with embedded metadata headers",
-      "file_id": null,
       "created_at": "2025-01-26",
       "file_count": 1033,
-      "local_path": "../../../chunked_datasheets/stm/rm0041/chunks/md",
-      "chunk_index_path": "../../../chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv"
+      "chunk_index_path": "../../../chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv",
+      "local_path": "../../../chunked_datasheets/stm/rm0041/chunks/md"
+    },
+    "local_md": {
+      "vs_id": null,
+      "description": "Local ChromaDB with enriched metadata (page numbers, registers, tables)",
+      "chunk_index_path": "../../../chunked_datasheets/stm/rm0041/chunks/local/chunks_index.csv",
+      "local_path": "../../../chunked_datasheets/stm/rm0041/chunks/local",
+      "local_db_name": "rm0041_md",
+      "embedding_provider": "local"
     }
   },
   "default": "md_chunks"
