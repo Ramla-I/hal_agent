@@ -649,7 +649,7 @@ def main() -> None:
     # =========================
     # EDIT THESE VARIABLES
     # =========================
-    RUNS_ROOT = "optimization_generator/experiments/local_vector_db_v2_800_tokens"
+    RUNS_ROOT = "optimization_generator/experiments/local_vector_db_v4"
     OUTPUT_DIR: Optional[str] = None  # default: f"{RUNS_ROOT}/analysis"
     TITLE_PREFIX = None  # e.g. "AFIO peripheral sweep"
     MIN_ACCURACY: Optional[float] = None          # e.g. 95.0

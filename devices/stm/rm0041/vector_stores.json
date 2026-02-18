@@ -36,6 +36,22 @@
       "local_path": "../../../chunked_datasheets/stm/rm0041/chunks/local",
       "local_db_name": "rm0041_md",
       "embedding_provider": "local"
+    },
+    "local_md_chunks": {
+      "vs_id": null,
+      "description": "Local ChromaDB from pre-existing md chunks (1033 chunks)",
+      "chunk_index_path": "../../../chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv",
+      "local_path": "../../../chunked_datasheets/stm/rm0041/chunks/md",
+      "local_db_name": "rm0041_md_chunks",
+      "embedding_provider": "local"
+    },
+    "local_md_chunks_v2": {
+      "vs_id": null,
+      "description": "Local ChromaDB from pre-existing md chunks (1033 chunks)",
+      "chunk_index_path": "../../../chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv",
+      "local_path": "../../../chunked_datasheets/stm/rm0041/chunks/md",
+      "local_db_name": "rm0041_md_chunks_v2",
+      "embedding_provider": "local"
     }
   },
   "default": "md_chunks"

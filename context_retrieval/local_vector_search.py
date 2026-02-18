@@ -93,15 +93,15 @@ def extract_local_embedding_ids(results: List[Dict[str, Any]]) -> List[Dict]:
     return embedding_ids
 
 
-def _build_register_filter(register_name: str) -> Optional[Dict[str, Any]]:
+def _build_register_filter(register_name: str) -> tuple[Optional[Dict[str, Any]], None]:
     """Build a ChromaDB where clause for register metadata filtering.
 
-    registers_mentioned is stored as a list of register names in ChromaDB.
-    $contains on list metadata checks for exact element membership.
+    Registers are stored as individual boolean metadata fields (reg_AFIO_MAPR: True)
+    during ingestion. Uses ChromaDB where clause with exact match on the boolean field.
     """
     if not register_name:
-        return None
-    return {"registers_mentioned": {"$contains": register_name}}
+        return None, None
+    return {f"reg_{register_name.upper()}": True}, None
 
 
 def _expand_chunks(
@@ -203,12 +203,24 @@ def search_local_vector_db(
     fetch_k = n_results * 5 if do_rerank else n_results
 
     with timed_operation("vector_store_search"):
-        # Try metadata-filtered search first
-        where_clause = _build_register_filter(register_filter)
-        results = store.search(query, n_results=fetch_k, where=where_clause)
+        # Tiered filtering: metadata → where_document → unfiltered
+        # 1. Metadata filter (most precise): reg_REGISTER_NAME boolean field
+        # 2. Document text filter (broader): $contains on chunk text
+        # 3. Unfiltered (last resort)
+        where_clause, _ = _build_register_filter(register_filter)
+        reg_upper = register_filter.upper() if register_filter else ""
 
-        # Fallback: if filtered search returns nothing, retry without filter
-        if not results and where_clause is not None:
+        results = None
+        if where_clause is not None:
+            results = store.search(query, n_results=fetch_k, where=where_clause)
+
+        # Fallback to where_document if metadata filter returns nothing
+        if not results and reg_upper:
+            results = store.search(query, n_results=fetch_k,
+                                   where_document={"$contains": reg_upper})
+
+        # Fallback to unfiltered if both filters return nothing
+        if not results:
             results = store.search(query, n_results=fetch_k)
 
         if not results:
@@ -218,6 +230,24 @@ def search_local_vector_db(
         if do_rerank:
             reranker = get_reranker(reranker_type)
             results = reranker.rerank(query, results, top_n=fetch_k)
+
+            # Quality fallback: if filtered results rerank poorly, try
+            # where_document then unfiltered, picking the best scoring set
+            if where_clause is not None and results and results[0]["score"] < 0.7:
+                # Try where_document as middle ground
+                doc_results = store.search(query, n_results=fetch_k,
+                                           where_document={"$contains": reg_upper}) if reg_upper else []
+                if doc_results:
+                    doc_results = reranker.rerank(query, doc_results, top_n=fetch_k)
+                    if doc_results[0]["score"] > results[0]["score"]:
+                        results = doc_results
+
+                # Try unfiltered as last resort
+                if results[0]["score"] < 0.7:
+                    unfiltered = store.search(query, n_results=fetch_k)
+                    unfiltered = reranker.rerank(query, unfiltered, top_n=fetch_k)
+                    if unfiltered and unfiltered[0]["score"] > results[0]["score"]:
+                        results = unfiltered
 
         # Apply keyword boost
         if keyword_boost:

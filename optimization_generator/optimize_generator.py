@@ -388,21 +388,21 @@ def main():
 
     # Local vector DB sweep parameters
     USE_LOCAL_VECTOR_DB = True                 # Set to True to include local vector DB configs in sweep
-    LOCAL_DB_NAMES = ["rm0041_md"]              # ChromaDB database names to sweep
-    LOCAL_EMBEDDING_COUNTS = [1, 2]          # n_results values to sweep for local DB
-    KEYWORD_BOOST_VALUES = [False, True]        # Keyword boost on/off
-    RERANKER_TYPES = [""]                       # "" = no reranker, "local" = FlashRank
+    LOCAL_DB_NAMES = ["rm0041_md_chunks_v2"]        # ChromaDB database names to sweep
+    LOCAL_EMBEDDING_COUNTS = [2]          # n_results values to sweep for local DB
+    KEYWORD_BOOST_VALUES = [False]        # Keyword boost on/off
+    RERANKER_TYPES = ["local"]                  # "" = no reranker, "local" = FlashRank
     LOCAL_DB_PATH = ""                          # Override databases directory (default: databases/)
     # Enriched local DB features
-    LOCAL_METADATA_FILTER = [True]              # Filter by register name in metadata
-    LOCAL_PAGES_AFTER = [0, 1]              # Chunk expansion pages (0 = disabled)
-    LOCAL_TABLE_PAGES_ONLY = [True]            # Only expand table-containing pages
-    LOCAL_CHUNK_INDEX_PATH = "chunked_datasheets/stm/rm0041/chunks/local/chunks_index.csv"
+    LOCAL_METADATA_FILTER = [True]               # Filter by register name in metadata
+    LOCAL_PAGES_AFTER = [0]              # Chunk expansion pages (0 = disabled)
+    LOCAL_TABLE_PAGES_ONLY = [False]             # Only expand table-containing pages
+    LOCAL_CHUNK_INDEX_PATH = "chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv"
 
     # Output
     # OpenAI experiments go to verified_peripherals_v2/, local to local_vector_db_v1/
     OUTPUT_PARENT = "optimization_generator/experiments/verified_peripherals_v2"
-    LOCAL_OUTPUT_PARENT = "optimization_generator/experiments/local_vector_db_v2"
+    LOCAL_OUTPUT_PARENT = "optimization_generator/experiments/local_vector_db_v7_meta_filter"
     OUTPUT_PREFIX_BASE: Optional[str] = None   # e.g. "my_sweep"; if set, each config becomes "<base>_<auto>"
 
     # Verified comparison
@@ -470,6 +470,8 @@ def main():
                                         "pages_after": pa,
                                         "table_pages_only": tpo,
                                     })
+
+    # No filtering needed - single config
 
     openai_count = sum(1 for c in configs if c["backend"] == "openai")
     local_count = sum(1 for c in configs if c["backend"] == "local")

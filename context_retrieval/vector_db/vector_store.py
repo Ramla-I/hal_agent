@@ -84,6 +84,7 @@ class VectorStore:
         query: str,
         n_results: int = None,
         where: Optional[Dict[str, Any]] = None,
+        where_document: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         """Search for similar documents using cosine similarity."""
         if n_results is None:
@@ -95,6 +96,7 @@ class VectorStore:
             query_embeddings=[query_embedding],
             n_results=n_results,
             where=where,
+            where_document=where_document,
             include=["documents", "metadatas", "distances"],
         )
 
