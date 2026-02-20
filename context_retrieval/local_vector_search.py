@@ -263,10 +263,16 @@ def search_local_vector_db(
     if not results:
         return None, []
 
-    # Chunk expansion
+    # Chunk expansion — only expand results that lack table content.
+    # Register definitions always include bit field tables; a chunk without
+    # a table likely has a split definition (header in one chunk, bit fields
+    # on the next page). We expand only those chunks, leaving table-containing
+    # chunks untouched to avoid adding noise.
     expansion_chunks = None
     if chunk_index_path and pages_after > 0:
-        expansion_chunks = _expand_chunks(results, chunk_index_path, pages_after, table_pages_only)
+        no_table_results = [r for r in results if not r["metadata"].get("has_tables", False)]
+        if no_table_results:
+            expansion_chunks = _expand_chunks(no_table_results, chunk_index_path, pages_after, table_pages_only)
 
     formatted_text = format_local_results(results, expansion_chunks)
     embedding_ids = extract_local_embedding_ids(results)
