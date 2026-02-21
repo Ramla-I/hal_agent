@@ -44,12 +44,11 @@ from optimization_generator.compare_generator_with_verified import (
 
 # Hardcoded defaults to keep the CLI small. If you want to tune these later,
 # change them here (single source of truth for experiment runs).
-DEFAULT_CONTEXT_METHOD = ContextRetrievalMethod.SEMANTIC_SEARCH
+DEFAULT_CONTEXT_METHOD = ContextRetrievalMethod.OPENAI_FILE_SEARCH
 DEFAULT_PAGES_AFTER_KEYWORD = 2
 DEFAULT_REMOVE_TABLES = False
 DEFAULT_RE_RANKING = True
 DEFAULT_SCORE_THRESHOLD = 0.25
-DEFAULT_QUERY_REWRITE = False
 
 # Mapping from CLI short names to vector_stores.json keys
 VS_TYPE_MAPPING = {
@@ -541,10 +540,8 @@ def main():
                 number_embeddings=num_embeddings,
                 re_ranking=DEFAULT_RE_RANKING,
                 score_threshold=DEFAULT_SCORE_THRESHOLD,
-                query_rewrite=DEFAULT_QUERY_REWRITE,
                 vs_id=vs_id,
                 regex="",
-                other="",
                 chunk_expansion_enabled=chunk_expansion_enabled,
                 pages_after=pages_after,
                 chunk_index_path=chunk_index_path,
@@ -579,10 +576,8 @@ def main():
                 number_embeddings=num_embeddings,
                 re_ranking=False,
                 score_threshold=DEFAULT_SCORE_THRESHOLD,
-                query_rewrite=DEFAULT_QUERY_REWRITE,
                 vs_id="",
                 regex="",
-                other="",
                 local_db_name=local_db_name,
                 local_db_path=LOCAL_DB_PATH,
                 keyword_boost=keyword_boost,

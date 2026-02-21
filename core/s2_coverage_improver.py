@@ -9,7 +9,7 @@ from defs import CoverageImproverOutput, ContextRetrievalParameters, CoverageInf
 from prompts import coverage_improver as prompts
 from utils.parse_output import get_json_block_from_response, get_reasoning_from_response
 from utils.result_saver import ResultSaver, UsageStats
-from context_retrieval.semantic_search import search_vector_store, format_results
+from context_retrieval.search import search_context
 from scripts.limit_context import truncate_message_by_tokens
 from groq import Groq
 from openai import OpenAI
@@ -18,13 +18,12 @@ from openai import OpenAI
 logger = setup_logger(__name__)
 
 def run_coverage_improver(
-    client: Groq|OpenAI, 
-    model_name: str, 
-    coverage_info: CoverageInfo, 
-    context_retrieval_parameters: ContextRetrievalParameters, 
-    output_dir: str, 
-    vs_id: str, 
-    reasoning_effort: str | None = None, 
+    client: Groq|OpenAI,
+    model_name: str,
+    coverage_info: CoverageInfo,
+    context_retrieval_parameters: ContextRetrievalParameters,
+    output_dir: str,
+    reasoning_effort: str | None = None,
     generator_truncated_at_any_register: bool = False
 ):
     logger.info(f"Running coverage improver for {model_name}")
@@ -39,8 +38,9 @@ def run_coverage_improver(
 
     # Create file search query and perform file search
     query = prompts.create_coverage_improver_file_search_query(coverage_info, context_retrieval_parameters)
-    file_search = search_vector_store(query, vs_id, 4, True, 0.25)
-    file_search = format_results(file_search)
+    file_search, _ = search_context(query, context_retrieval_parameters)
+    if file_search is None:
+        file_search = ""
     
     # Build input list for responses API
     input_list = [
@@ -116,8 +116,6 @@ if __name__ == "__main__":
     reasoning_effort = config.COVERAGE_IMPROVER_REASONING_EFFORT
     client = client_openai
     
-    # Use config values for test of RM0041
-    vs_id = config.CONTEXT_RETRIEVAL_PARAMETERS.vs_id
     output_dir = os.path.join(config.OUTPUT_DIR, "coverage_improver_test")
     os.makedirs(output_dir, exist_ok=True)
     
@@ -150,7 +148,6 @@ if __name__ == "__main__":
             coverage_info=coverage_info,
             context_retrieval_parameters=context_retrieval_parameters,
             output_dir=output_dir,
-            vs_id=vs_id,
             reasoning_effort=reasoning_effort
         )
         print(f"Test completed successfully!")

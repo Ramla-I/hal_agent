@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class Manufacturer(Enum):
     INTEL = "Intel"
@@ -10,7 +10,7 @@ class Manufacturer(Enum):
 
 class ContextRetrievalMethod(Enum):
     KEYWORD_SEARCH = "keyword_search"
-    SEMANTIC_SEARCH = "semantic_search"
+    OPENAI_FILE_SEARCH = "openai_file_search"
     LOCAL_VECTOR_DB = "local_vector_db"
     REGEX = "regex"
 
@@ -30,16 +30,16 @@ class CoverageInfo(BaseModel):
 
 
 class ContextRetrievalParameters(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     context_retrieval_method: ContextRetrievalMethod
     pages_after_keyword: int
     remove_tables: bool
     number_embeddings: int
     re_ranking: bool
     score_threshold: float
-    query_rewrite: bool
     vs_id: str
     regex: str
-    other: str
     # Contiguous chunk expansion parameters
     chunk_expansion_enabled: bool = True  # Enable contiguous chunk expansion after semantic search
     pages_after: int = 2  # Number of pages to expand after each retrieved chunk

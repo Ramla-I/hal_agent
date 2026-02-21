@@ -21,7 +21,8 @@ from prompts.validator import (
     create_batched_validator_file_search_query,
     create_batched_validator_user_prompt
 )
-from context_retrieval.semantic_search import search_vector_store, format_results
+from context_retrieval.search import search_context
+from defs import ContextRetrievalParameters, ContextRetrievalMethod
 from utils.result_saver import ResultSaver, UsageStats
 from utils.timing import timed_operation, get_timing_stats
 import tiktoken
@@ -88,13 +89,13 @@ def _save_accuracy_metrics(saver: ResultSaver, accuracy_csv_name: str, model_nam
         accuracy_csv_name
     )
 
-def run_validator(client: OpenAI|Groq, model_name: str, test_set_path: str, output_dir: str, vs_id: str, reasoning_effort: str | None = None, num_embeddings: int = 4):
+def run_validator(client: OpenAI|Groq, model_name: str, test_set_path: str, output_dir: str, context_retrieval_parameters: ContextRetrievalParameters, reasoning_effort: str | None = None, num_embeddings: int = 4):
     """
     Run the validator sequentially over a test set and write outputs.
 
     Assumptions:
     - test_set_path CSV has columns: peripheral, register, field_name, key, correct_value, is_correct.
-    - vs_id points to a valid vector store; embeddings count is supported by search.
+    - context_retrieval_parameters is configured with a valid backend (OpenAI or local).
     - output_dir exists or is creatable by ResultSaver.
 
     Inputs:
@@ -102,7 +103,7 @@ def run_validator(client: OpenAI|Groq, model_name: str, test_set_path: str, outp
     - model_name: Model identifier used in filenames and API calls.
     - test_set_path: Path to test or hold set CSV.
     - output_dir: Directory to write output artifacts.
-    - vs_id: Vector store ID for retrieval.
+    - context_retrieval_parameters: Context retrieval configuration.
     - reasoning_effort: Optional reasoning effort parameter for supported models.
     - num_embeddings: Number of embeddings to retrieve per search.
 
@@ -155,9 +156,12 @@ def run_validator(client: OpenAI|Groq, model_name: str, test_set_path: str, outp
         ]
         
         query = create_validator_file_search_query(peripheral_name, register_name, field_name, key, value)
-        file_search_results = search_vector_store(query, vs_id, num_embeddings, True, 0.25)
-        embeddings_returned = len(file_search_results.data)
-        file_search = format_results(file_search_results)
+        # Override number_embeddings for this search
+        params = context_retrieval_parameters.model_copy(update={"number_embeddings": num_embeddings})
+        file_search, embedding_ids = search_context(query, params)
+        embeddings_returned = len(embedding_ids)
+        if file_search is None:
+            file_search = ""
 
         # Count tokens in file search results
         file_search_tokens = _count_tokens(file_search)
@@ -312,7 +316,7 @@ def process_single_batch(
     batch_registers: list,
     batch_rows: list,
     batch_id: str,
-    vs_id: str,
+    context_retrieval_parameters: ContextRetrievalParameters,
     num_embeddings: int,
     reasoning_effort: str | None,
     saver: 'ResultSaver',
@@ -330,7 +334,7 @@ def process_single_batch(
     - The model returns JSON compatible with get_json_block_from_response().
 
     Inputs:
-    - client/model_name/vs_id/num_embeddings/reasoning_effort: model + retrieval config.
+    - client/model_name/context_retrieval_parameters/num_embeddings/reasoning_effort: model + retrieval config.
     - batch_registers/batch_rows/batch_id: data to validate and identifier for outputs.
     - saver/output_csv_name/reasoning_txt_name/usage_csv_name: output controls.
 
@@ -349,9 +353,11 @@ def process_single_batch(
             for peripheral_name, register_name in batch_registers
         ]
         combined_query = "\n".join(combined_query_parts)
-        file_search = search_vector_store(combined_query, vs_id, num_embeddings, True, 0.25)
-        embeddings_returned = len(file_search.data)
-        combined_file_search = format_results(file_search)
+        params = context_retrieval_parameters.model_copy(update={"number_embeddings": num_embeddings})
+        combined_file_search, embedding_ids = search_context(combined_query, params)
+        embeddings_returned = len(embedding_ids)
+        if combined_file_search is None:
+            combined_file_search = ""
 
         # Count tokens
         file_search_tokens = _count_tokens(combined_file_search)
@@ -434,12 +440,12 @@ def process_single_batch(
             # Process sub-batches recursively
             tp1, fp1, tn1, fn1, err1, ctx1 = process_single_batch(
                 client, model_name, batch1_registers, batch1_rows, f"{batch_id}_part1",
-                vs_id, num_embeddings, reasoning_effort, saver,
+                context_retrieval_parameters, num_embeddings, reasoning_effort, saver,
                 output_csv_name, reasoning_txt_name, usage_csv_name
             )
             tp2, fp2, tn2, fn2, err2, ctx2 = process_single_batch(
                 client, model_name, batch2_registers, batch2_rows, f"{batch_id}_part2",
-                vs_id, num_embeddings, reasoning_effort, saver,
+                context_retrieval_parameters, num_embeddings, reasoning_effort, saver,
                 output_csv_name, reasoning_txt_name, usage_csv_name
             )
 
@@ -528,7 +534,7 @@ def process_single_batch(
     return (total_true_positives, total_false_positives, total_true_negatives, total_false_negatives, output_errors, context_too_large)
 
 
-def run_validator_batched(client: OpenAI|Groq, model_name: str, test_set_path: str, output_dir: str, vs_id: str, reasoning_effort: str | None = None, num_embeddings: int = 4, batch_size: int | None = None):
+def run_validator_batched(client: OpenAI|Groq, model_name: str, test_set_path: str, output_dir: str, context_retrieval_parameters: ContextRetrievalParameters, reasoning_effort: str | None = None, num_embeddings: int = 4, batch_size: int | None = None):
     """
     Run validator with batching for verified datasets.
 
@@ -537,7 +543,7 @@ def run_validator_batched(client: OpenAI|Groq, model_name: str, test_set_path: s
         model_name: Model name to use
         test_set_path: Path to test set CSV
         output_dir: Output directory for results
-        vs_id: Vector store ID
+        context_retrieval_parameters: Context retrieval configuration
         reasoning_effort: Reasoning effort parameter (optional)
         num_embeddings: Number of embeddings to retrieve
         batch_size: Target batch size (number of registers per batch).
@@ -597,7 +603,7 @@ def run_validator_batched(client: OpenAI|Groq, model_name: str, test_set_path: s
         # Process the batch (with automatic splitting if context limit is hit)
         tp, fp, tn, fn, errors, context_too_large = process_single_batch(
             client, model_name, batch_registers, batch_rows, batch_id,
-            vs_id, num_embeddings, reasoning_effort, saver,
+            context_retrieval_parameters, num_embeddings, reasoning_effort, saver,
             output_csv_name, reasoning_txt_name, usage_csv_name
         )
 
@@ -654,7 +660,16 @@ if __name__ == "__main__":
     DATASET = "test"  # "test" or "hold"
     RUN_ALL_CONFIGS = True  # Set to False to run single configuration
 
-    vs_id = "vs_6892501067b08191ac63cc6de06ee629"
+    context_retrieval_parameters = ContextRetrievalParameters(
+        context_retrieval_method=ContextRetrievalMethod.OPENAI_FILE_SEARCH,
+        pages_after_keyword=0,
+        remove_tables=False,
+        number_embeddings=4,
+        re_ranking=True,
+        score_threshold=0.25,
+        vs_id="vs_6892501067b08191ac63cc6de06ee629",
+        regex="",
+    )
     device = "stm-rm0041"
     experiment_name = "batch_sizes_embeddings"
 
@@ -704,9 +719,9 @@ if __name__ == "__main__":
 
             # Run validator
             if mode == "batched":
-                run_validator_batched(clients[id], model_names[id], input_test_set_path, output_dir, vs_id, reasoning_efforts[id], num_emb, batch_size)
+                run_validator_batched(clients[id], model_names[id], input_test_set_path, output_dir, context_retrieval_parameters, reasoning_efforts[id], num_emb, batch_size)
             else:
-                run_validator(clients[id], model_names[id], input_test_set_path, output_dir, vs_id, reasoning_efforts[id], num_emb)
+                run_validator(clients[id], model_names[id], input_test_set_path, output_dir, context_retrieval_parameters, reasoning_efforts[id], num_emb)
 
             # Get timing stats
             stats = timing.get_all_stats()
@@ -849,9 +864,9 @@ if __name__ == "__main__":
 
         # Run validator
         if MODE == "batched":
-            run_validator_batched(clients[id], model_names[id], input_test_set_path, output_dir, vs_id, reasoning_efforts[id], NUM_EMBEDDINGS)
+            run_validator_batched(clients[id], model_names[id], input_test_set_path, output_dir, context_retrieval_parameters, reasoning_efforts[id], NUM_EMBEDDINGS)
         else:
-            run_validator(clients[id], model_names[id], input_test_set_path, output_dir, vs_id, reasoning_efforts[id], NUM_EMBEDDINGS)
+            run_validator(clients[id], model_names[id], input_test_set_path, output_dir, context_retrieval_parameters, reasoning_efforts[id], NUM_EMBEDDINGS)
 
         # Print timing summary
         print(f"\n{'='*80}")

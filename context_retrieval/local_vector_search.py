@@ -2,7 +2,8 @@
 Local vector database search using ChromaDB (via context_retrieval.vector_db package).
 
 Wraps VectorStore API to match hal_agent's retrieve_context() interface,
-returning (formatted_xml_string, embedding_ids_list).
+returning (formatted_xml_string, embedding_ids_list), matching the format of
+openai_file_search.py.
 
 Features:
 - Metadata filtering: narrows search to chunks mentioning the target register
@@ -40,7 +41,7 @@ def _get_store(db_name: str, db_path: str = "", embedding_provider: str = "local
 
 
 def format_local_results(results: List[Dict[str, Any]], expansion_chunks: Optional[List[Dict[str, Any]]] = None) -> str:
-    """Format local search results in XML <sources> format matching semantic_search.py output.
+    """Format local search results in XML <sources> format matching openai_file_search.py output.
 
     Args:
         results: Primary search results

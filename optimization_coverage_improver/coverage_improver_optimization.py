@@ -27,6 +27,7 @@ from config import client_openai, client_groq
 from groq import Groq
 from openai import OpenAI
 from core.s4_validator import build_invariants_from_agent_output, run_validator
+from defs import ContextRetrievalParameters
 
 def resolve_repo_root() -> str:
     """Return absolute path to the repository root."""
@@ -110,7 +111,7 @@ async def main() -> None:
             model_name=validator_model_name,
             invariants=invariants,
             output_dir=validator_output_dir,
-            vs_id=device_ctx.vs_id,
+            context_retrieval_parameters=context_retrieval_parameters,
             reasoning_effort=validator_reasoning_effort
         )
         print("Coverage improver iteration: ", i)
@@ -130,13 +131,12 @@ async def main() -> None:
         coverage_improver_output_dir = os.path.join(agent_output_folder, "coverage_improver")
         os.makedirs(coverage_improver_output_dir, exist_ok=True)
         run_coverage_improver(
-            coverage_improver_client, 
-            coverage_improver_model_name, 
-            coverage_info, 
-            context_retrieval_parameters, 
-            coverage_improver_output_dir, 
-            device_ctx.vs_id, 
-            coverage_improver_reasoning_effort, 
+            coverage_improver_client,
+            coverage_improver_model_name,
+            coverage_info,
+            context_retrieval_parameters,
+            coverage_improver_output_dir,
+            coverage_improver_reasoning_effort,
             generator_truncated_at_any_register
         )
        

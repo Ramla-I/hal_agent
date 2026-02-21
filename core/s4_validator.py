@@ -12,7 +12,7 @@ from utils.parse_output import get_json_block_from_response
 from utils.utils import get_model_string
 from groq import Groq
 from openai import OpenAI
-from defs import UserContext, RegisterList, Manufacturer, RegisterNameList, RegisterInfo,  EnumValue, BitNumber, BitField
+from defs import UserContext, RegisterList, Manufacturer, RegisterNameList, RegisterInfo, EnumValue, BitNumber, BitField, ContextRetrievalParameters
 from prompts.validator import (
     create_validator_system_prompt,
     create_validator_file_search_query,
@@ -21,7 +21,7 @@ from prompts.validator import (
     create_batched_validator_file_search_query,
     create_batched_validator_user_prompt
 )
-from context_retrieval.semantic_search import search_vector_store, format_results
+from context_retrieval.search import search_context
 from utils.result_saver import ResultSaver, UsageStats
 from utils.utils import setup_logger
 from utils.timing import timed_operation
@@ -136,7 +136,7 @@ def run_validator(
     model_name: str,
     invariants,
     output_dir: str,
-    vs_id: str,
+    context_retrieval_parameters: ContextRetrievalParameters,
     reasoning_effort: str | None = None
 ):
     """
@@ -153,7 +153,7 @@ def run_validator(
                 'key': str,
                 'value': str
         output_dir: Path to directory for storing output
-        vs_id: Vector store ID for semantic search
+        context_retrieval_parameters: Context retrieval configuration
         reasoning_effort: (Optional) string indicating effort for LLM reasoning
 
     Returns:
@@ -222,8 +222,9 @@ def run_validator(
         ]
         
         query = create_validator_file_search_query(peripheral_name, register_name, field_name, key, value)
-        file_search = search_vector_store(query, vs_id, 4, True, 0.25)
-        file_search = format_results(file_search)
+        file_search, _ = search_context(query, context_retrieval_parameters)
+        if file_search is None:
+            file_search = ""
 
         # Count tokens in file search results
         try:
@@ -311,7 +312,7 @@ def run_validator_batched(
     model_name: str,
     invariants,
     output_dir: str,
-    vs_id: str,
+    context_retrieval_parameters: ContextRetrievalParameters,
     reasoning_effort: str | None = None
 ):
     """
@@ -323,7 +324,7 @@ def run_validator_batched(
         model_name: The name of the model to use
         invariants: List of invariant dicts to validate
         output_dir: Path to directory for storing output
-        vs_id: Vector store ID for semantic search
+        context_retrieval_parameters: Context retrieval configuration
         reasoning_effort: (Optional) string indicating effort for LLM reasoning
 
     Returns:
@@ -356,8 +357,9 @@ def run_validator_batched(
 
         # Single file search for the entire register
         query = create_batched_validator_file_search_query(peripheral_name, register_name)
-        file_search = search_vector_store(query, vs_id, 4, True, 0.25)
-        file_search = format_results(file_search)
+        file_search, _ = search_context(query, context_retrieval_parameters)
+        if file_search is None:
+            file_search = ""
 
         # Count tokens in file search results
         try:
@@ -384,9 +386,17 @@ def run_validator_batched(
                     {
                         "type": "input_text",
                         "text": create_batched_validator_user_prompt(
-                            peripheral_name,
-                            register_name,
-                            batch_invariants,
+                            [(peripheral_name, register_name)],
+                            [
+                                {
+                                    'peripheral': inv['peripheral_name'],
+                                    'register': inv['register_name'],
+                                    'field_name': inv['field_name'],
+                                    'key': inv['key'],
+                                    'value': inv['value'],
+                                }
+                                for inv in batch_invariants
+                            ],
                             file_search
                         )
                     }
@@ -476,13 +486,23 @@ def run_validator_batched(
 
 if __name__ == "__main__":
     from utils.timing import get_timing_stats
+    from defs import ContextRetrievalMethod
     import sys
 
     # Configuration
     model_name = "gpt-oss-120b"
     client = client_groq
     reasoning_effort = None
-    vs_id = "vs_6892501067b08191ac63cc6de06ee629"
+    context_retrieval_parameters = ContextRetrievalParameters(
+        context_retrieval_method=ContextRetrievalMethod.OPENAI_FILE_SEARCH,
+        pages_after_keyword=0,
+        remove_tables=False,
+        number_embeddings=4,
+        re_ranking=True,
+        score_threshold=0.25,
+        vs_id="vs_6892501067b08191ac63cc6de06ee629",
+        regex="",
+    )
 
     # Use agent output from specified directory
     agent_output_dir = "agent_output/stm/rm0041/20"
@@ -519,7 +539,7 @@ if __name__ == "__main__":
             model_name=model_name,
             invariants=input_invariants,
             output_dir=output_dir,
-            vs_id=vs_id,
+            context_retrieval_parameters=context_retrieval_parameters,
             reasoning_effort=reasoning_effort
         )
     else:
@@ -528,7 +548,7 @@ if __name__ == "__main__":
             model_name=model_name,
             invariants=input_invariants,
             output_dir=output_dir,
-            vs_id=vs_id,
+            context_retrieval_parameters=context_retrieval_parameters,
             reasoning_effort=reasoning_effort
         )
 

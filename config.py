@@ -16,9 +16,6 @@ DEVICE_NAME = "rm0041"
 # Tiktoken encoding for chunking
 TIKTOKEN_ENCODING = "o200k_harmony"
 
-# Query rewrite flag - set to False to disable query rewriting
-QUERY_REWRITE = False
-
 CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
     context_retrieval_method=ContextRetrievalMethod.KEYWORD_SEARCH,
     pages_after_keyword=2,
@@ -26,41 +23,14 @@ CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
     number_embeddings=16,
     re_ranking=True,
     score_threshold=0.25,
-    query_rewrite=True,
     vs_id="",
     regex="",
-    other="",
     # Contiguous chunk expansion (for semantic search)
     chunk_expansion_enabled=True,
     pages_after=2,
     chunk_index_path=""
 )
 
-# CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
-#     context_retrieval_method=ContextRetrievalMethod.KEYWORD_SEARCH, 
-#     pages_after_keyword=12, 
-#     remove_tables=False, 
-#     number_embeddings=40, 
-#     re_ranking=True,
-#     score_threshold=0.15,
-#     query_rewrite=False,
-#     vs_id="vs_6892501067b08191ac63cc6de06ee629",
-#     regex="", 
-#     other=""
-# )
-# {
-#   "context_retrieval_parameters": {
-#     "context_retrieval_method": "keyword_search",
-#     "pages_after_keyword": 12,
-#     "remove_tables": false,
-#     "number_embeddings": 40,
-#     "re_ranking": true,
-#     "score_threshold": 0.15,
-#     "query_rewrite": false,
-#     "vs_id": "vs_6892501067b08191ac63cc6de06ee629",
-#     "regex": "",
-#     "other": ""
-#   },
 # Local Vector DB example (ChromaDB + FastEmbed, free and offline):
 # CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
 #     context_retrieval_method=ContextRetrievalMethod.LOCAL_VECTOR_DB,
@@ -69,10 +39,8 @@ CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
 #     number_embeddings=5,
 #     re_ranking=False,
 #     score_threshold=0.0,
-#     query_rewrite=False,
 #     vs_id="",
 #     regex="",
-#     other="",
 #     local_db_name="rm0041_md",     # ChromaDB database name
 #     keyword_boost=True,             # Hybrid semantic + keyword matching
 #     reranker_type="local",          # FlashRank local reranker ("", "local", "cohere", "bge")

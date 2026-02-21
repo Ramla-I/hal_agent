@@ -60,7 +60,6 @@ python3 core/s0_run_full_analysis.py
 # Run individual stages
 python3 core/s1a_generator.py                    # Generate register info from datasheet
 python3 core/s2_coverage_improver.py             # Improve coverage based on SVD comparison
-python3 core/s3_query_rewriter.py                # Rewrite queries for better context retrieval
 python3 core/s4_validator.py                     # Validate extracted information
 python3 core/s5_analyzer.py                      # Analyze differences
 ```
@@ -96,11 +95,10 @@ All pipeline configuration is centralized in `config.py`:
 - `COVERAGE_IMPROVER_MODEL_NAME`: Model for coverage improvement
 - `VALIDATOR_MODEL_NAME`: Model for validation
 - `CONTEXT_RETRIEVAL_PARAMETERS`: Controls how context is retrieved from datasheets
-  - `context_retrieval_method`: "keyword_search", "semantic_search", or "regex"
+  - `context_retrieval_method`: "keyword_search", "openai_file_search", "local_vector_db", or "regex"
   - `pages_after_keyword`: Pages to include after keyword match
   - `number_embeddings`: Number of embedding results for semantic search
   - `re_ranking`: Enable/disable re-ranking of search results
-  - `query_rewrite`: Enable/disable query rewriting (calls s3_query_rewriter.py)
   - `vs_id`: Vector store ID for the device datasheet
 - `user_contexts`: List of device configurations with run numbers, file IDs, and vector store IDs
 
@@ -135,12 +133,6 @@ The main pipeline orchestrates a feedback loop:
 - Uses reasoning to suggest improved context retrieval parameters
 - Output: `coverage_improver_output.json` with updated parameters + `coverage_info.json`
 
-**Query Rewriter (s3_query_rewriter.py)**
-- Rewrites search queries to improve context retrieval quality
-- Called by context retrieval system when `query_rewrite=True` in `CONTEXT_RETRIEVAL_PARAMETERS`
-- Uses LLM to reformulate queries for better semantic search results
-- Output: Rewritten queries in `agent_output_dir/query_rewrite/`
-
 **Validator (s4_validator.py)**
 - Builds invariants from agent output (address offsets, reset values, bit ranges, etc.)
 - Uses an LLM agent with file search to classify each invariant as true/false based on the datasheet
@@ -157,8 +149,10 @@ The main pipeline orchestrates a feedback loop:
 
 Located in `context_retrieval/`:
 - **keyword_search.py**: Searches for register/peripheral names in markdown sections
-- **semantic_search.py**: Uses OpenAI vector store for semantic retrieval
-- **retrieve_context.py**: Main interface that dispatches to appropriate retrieval method and optionally calls query rewriter (s3_query_rewriter.py) when enabled
+- **openai_file_search.py**: Uses OpenAI vector store for semantic retrieval
+- **local_vector_search.py**: Uses local ChromaDB for semantic retrieval (free, offline)
+- **search.py**: Unified search function (`search_context()`) for both OpenAI and local backends
+- **retrieve_context.py**: Main interface that dispatches to keyword search or delegates to `search.py` for semantic search
 
 ### Agent Tools
 
@@ -183,7 +177,6 @@ Located in `prompts/`:
 - **register_info_stm.py**: Generator system/user prompts for STM devices
 - **coverage_improver.py**: Coverage improver prompts and query generation
 - **validator.py**: Validator prompts for invariant checking
-- **query_rewriter.py**: Query rewriting prompts
 - **examples.py**: Few-shot examples for register extraction
 
 ## Performance Testing and Optimization
@@ -225,9 +218,6 @@ agent_output/{manufacturer}/{device_name}/{run_number}/
 │   ├── coverage_info.json
 │   ├── reasoning.txt
 │   └── usage.csv
-├── query_rewrite/
-│   ├── query_rewrite.txt          # Rewritten queries
-│   └── usage.csv                  # Token usage for query rewriting
 └── validator/
     ├── classification.csv
     ├── output.txt
@@ -265,6 +255,9 @@ The following files are no longer used in the current pipeline:
 
 - **preprocessing/split_datasheet.py**: Previously used to split STM datasheets into sections. No longer required in current workflow.
 - **core/s1b_generator_dependencies.py**: Legacy generator flow that handled register dependencies. Not used by `core/s0_run_full_analysis.py`. Use `core/s1a_generator.py` instead.
+- **core/s3_query_rewriter.py**: Removed — query rewrite feature was never enabled in practice.
+- **prompts/query_rewriter.py**: Removed — prompts for the deleted query rewriter.
+- **context_retrieval/search_cache.py**: Removed — was never imported anywhere.
 
 ## Important Notes
 
@@ -273,5 +266,5 @@ The following files are no longer used in the current pipeline:
 - Context truncation is handled in `scripts/limit_context.py` based on model limits
 - The generator uses function calling to request additional context during extraction
 - Coverage improver adjusts retrieval parameters between iterations to improve results
-- Query rewriter (s3_query_rewriter.py) is invoked by the context retrieval system when `query_rewrite=True`
+- All search-based components (validator, coverage improver) use `search_context()` from `context_retrieval/search.py`
 - ResultSaver class provides standardized output formatting across all components
