@@ -54,11 +54,14 @@ def format_local_results(results: List[Dict[str, Any]], expansion_chunks: Option
     for i, result in enumerate(results):
         source = result["metadata"].get("source", "unknown")
         section = result["metadata"].get("section", "")
+        peripheral = result["metadata"].get("peripheral", "")
+        chunk_type = result["metadata"].get("chunk_type", "")
         score = result.get("score", 0)
         text = result["text"]
         page = result["metadata"].get("page_number", 0)
         formatted_parts.append(
-            f"<result source='{source}' section='{section}' rank='{i}' score='{score:.3f}' page='{page}'>"
+            f"<result source='{source}' section='{section}' peripheral='{peripheral}' "
+            f"chunk_type='{chunk_type}' rank='{i}' score='{score:.3f}' page='{page}'>"
             f"<content>{text}</content>"
             f"</result>"
         )
@@ -85,6 +88,9 @@ def extract_local_embedding_ids(results: List[Dict[str, Any]]) -> List[Dict]:
         embedding_ids.append({
             "source": result["metadata"].get("source", ""),
             "section": result["metadata"].get("section", ""),
+            "peripheral": result["metadata"].get("peripheral", ""),
+            "chunk_type": result["metadata"].get("chunk_type", ""),
+            "importance": result["metadata"].get("importance", ""),
             "chunk_index": result["metadata"].get("chunk_index", -1),
             "page_number": result["metadata"].get("page_number", 0),
             "rank": i,

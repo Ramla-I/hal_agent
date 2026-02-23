@@ -25,10 +25,14 @@ hal_agent/
 ├── docs/                       # Documentation files
 ├── agent_tools/                # Utilities for agents (SVD parsing, PDF ops, etc.)
 ├── context_retrieval/          # Context retrieval system
+│   ├── preprocessing/         # Chunking, enrichment, and vector store ingestion
+│   │   ├── pipeline.py        # Unified pipeline (p1+p2+p3 + backend upload)
+│   │   ├── ingest_local_vector_db.py  # Local ChromaDB ingestion
+│   │   └── p1_*, p2_*, p3_*   # Individual preprocessing stages
+│   └── vector_db/             # Local ChromaDB package
 ├── prompts/                    # LLM prompts for each component
 ├── utils/                      # General utilities
 ├── devices/                    # Device datasheets and SVD files
-├── preprocessing/              # Vector store creation
 ├── scripts/                    # Helper scripts
 └── verified_datasheet/         # Verified ground truth data
 ```
@@ -79,11 +83,17 @@ python3 optimization/analyze_generator_errors.py             # Detailed generato
 ### Preprocessing
 
 ```bash
-# Recommended: chunk + enrich + upload + update devices/.../vector_stores.json
-python3 preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --embed-metadata
+# Recommended: chunk + enrich + upload to OpenAI + update devices/.../vector_stores.json
+python3 context_retrieval/preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --embed-metadata
+
+# Upload to local ChromaDB instead of OpenAI (free, offline)
+python3 context_retrieval/preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --embed-metadata --backend local
+
+# Chunk + enrich only (no upload)
+python3 context_retrieval/preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --backend none
 
 # Legacy (raw PDF upload, no chunking/enrichment)
-python3 preprocessing/create_vector_store_openai.py
+python3 context_retrieval/preprocessing/old/create_vector_store_openai.py
 ```
 
 ## Configuration
@@ -244,16 +254,16 @@ Key Pydantic models:
 ## Adding a New Device
 
 1. Add datasheet PDF and SVD files to `devices/{manufacturer}/{device_name}/`
-2. Create vector store: `python3 preprocessing/create_vector_store_openai.py`
+2. Create vector store: `python3 context_retrieval/preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --embed-metadata`
 3. Add device entry to `config.user_contexts` with manufacturer, run number, and IDs
 4. Update `config.DEVICE_NAME` to target the new device
-5. Run `python3 s0_run_full_analysis.py`
+5. Run `python3 core/s0_run_full_analysis.py`
 
 ## Deprecated/Unused Files
 
 The following files are no longer used in the current pipeline:
 
-- **preprocessing/split_datasheet.py**: Previously used to split STM datasheets into sections. No longer required in current workflow.
+- **context_retrieval/preprocessing/old/create_vector_store_openai.py**: Legacy raw-PDF vector store creation. Only used by `s0_run_full_analysis.py` for backward compat.
 - **core/s1b_generator_dependencies.py**: Legacy generator flow that handled register dependencies. Not used by `core/s0_run_full_analysis.py`. Use `core/s1a_generator.py` instead.
 - **core/s3_query_rewriter.py**: Removed — query rewrite feature was never enabled in practice.
 - **prompts/query_rewriter.py**: Removed — prompts for the deleted query rewriter.

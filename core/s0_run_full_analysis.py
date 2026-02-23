@@ -14,7 +14,7 @@ from s5_analyzer import run_analyzer
 from scripts.s4_generate_diff_table import generate_diff_table
 from scripts.s5_compare_diff_with_verified_output import compare_diff_with_verified_datasheet
 from scripts.update_config import update_user_context
-from preprocessing.create_vector_store_openai import create_vector_store
+from context_retrieval.preprocessing.old.create_vector_store_openai import create_vector_store
 from scripts.calculate_generator_coverage import calculate_generator_coverage
 from s2_coverage_improver import run_coverage_improver
 from s4_validator import build_invariants_from_agent_output, run_validator

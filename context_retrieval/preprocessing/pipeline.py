@@ -11,27 +11,27 @@ This script consolidates the preprocessing workflow into a single command:
 6. Update device's vector_stores.json configuration
 
 Usage:
-    # Basic usage - chunk, enrich, and upload
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041
+    # Basic usage - chunk, enrich, and upload to OpenAI
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041
+
+    # Upload to local ChromaDB instead of OpenAI
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
+        --backend local --format markdown --embed-metadata
 
     # With custom output directory
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
         --output-dir chunked_datasheets/stm/rm0041/chunks
 
     # With metadata embedding and markdown format
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
         --embed-metadata --format markdown
 
-    # With a named vector store entry (saved to vector_stores.json)
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
-        --store-name md_enriched --format markdown --embed-metadata
-
     # Skip upload (for testing)
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
-        --skip-upload
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
+        --backend none
 
     # Dry run - show what would be done
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \
         --dry-run
 
 Output:
@@ -59,8 +59,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from utils.utils import setup_logger
 from utils.vector_store_config import (
@@ -82,7 +82,7 @@ def run_chunking(
     format: str
 ) -> list:
     """Run the PDF chunking step."""
-    from preprocessing.p1_chunk_pdf_to_files import extract_and_chunk_pdf
+    from context_retrieval.preprocessing.p1_chunk_pdf_to_files import extract_and_chunk_pdf
 
     logger.info(f"Step 1: Chunking PDF ({format} format)")
     logger.info(f"  Input: {pdf_path}")
@@ -109,7 +109,7 @@ def run_enrichment(
     use_llm: bool = False
 ) -> dict:
     """Run the metadata enrichment step."""
-    from preprocessing.p2_enrich_chunk_metadata import enrich_chunk_directory, generate_metadata_summary
+    from context_retrieval.preprocessing.p2_enrich_chunk_metadata import enrich_chunk_directory, generate_metadata_summary
 
     logger.info("Step 2: Enriching chunk metadata")
     logger.info(f"  Chunks: {chunks_dir}")
@@ -144,7 +144,7 @@ def run_augmentation(
     Args:
         include_fields: which metadata fields to embed (see p3_augment_chunks_with_metadata.PRESETS).
     """
-    from preprocessing.p3_augment_chunks_with_metadata import augment_chunk_directory
+    from context_retrieval.preprocessing.p3_augment_chunks_with_metadata import augment_chunk_directory
 
     logger.info("Step 3: Augmenting chunks with embedded metadata")
     logger.info(f"  Chunks: {chunks_dir}")
@@ -179,7 +179,7 @@ def run_upload(
     chunk_overlap_tokens: int
 ) -> tuple:
     """Run the vector store upload step."""
-    from preprocessing.vector_store_uploader import (
+    from context_retrieval.preprocessing.vector_store_uploader import (
         create_vector_store_with_enriched_chunks,
         save_upload_summary,
     )
@@ -306,26 +306,84 @@ def update_device_vector_stores(
     return config_path
 
 
+def run_local_ingestion(
+    chunks_dir: str,
+    metadata_dir: str,
+    device_name: str,
+    device_dir: str,
+    db_name: str = "",
+    db_path: str = "",
+    embedding_provider: str = "local",
+    entry_name: str = "",
+) -> int:
+    """Ingest chunks into local ChromaDB using ingest_from_chunks_dir().
+
+    Args:
+        chunks_dir: Directory containing chunk .txt files (may be augmented dir)
+        metadata_dir: Directory containing metadata.json (always the base chunks dir)
+        device_name: Device identifier (e.g., "rm0041")
+        device_dir: Device directory for vector_stores.json registration
+        db_name: ChromaDB database name
+        db_path: Override databases directory path
+        embedding_provider: "local" (FastEmbed) or "openai"
+        entry_name: Name for vector_stores.json entry
+
+    Returns:
+        0 on success, 1 on error
+    """
+    from context_retrieval.preprocessing.ingest_local_vector_db import ingest_from_chunks_dir
+
+    logger.info("Step: Ingesting into local ChromaDB")
+    logger.info(f"  Chunks: {chunks_dir}")
+    logger.info(f"  Metadata: {metadata_dir}")
+    logger.info(f"  DB name: {db_name}")
+    logger.info(f"  Embedding: {embedding_provider}")
+
+    # ingest_from_chunks_dir reads metadata.json from the chunks_dir argument.
+    # If chunks are augmented (different dir), we need metadata.json in the
+    # upload dir. Copy it there if missing.
+    import shutil
+    meta_src = os.path.join(metadata_dir, "metadata.json")
+    meta_dst = os.path.join(chunks_dir, "metadata.json")
+    if chunks_dir != metadata_dir and os.path.exists(meta_src) and not os.path.exists(meta_dst):
+        shutil.copy2(meta_src, meta_dst)
+
+    # Same for chunks_index.csv
+    csv_src = os.path.join(metadata_dir, "chunks_index.csv")
+    csv_dst = os.path.join(chunks_dir, "chunks_index.csv")
+    if chunks_dir != metadata_dir and os.path.exists(csv_src) and not os.path.exists(csv_dst):
+        shutil.copy2(csv_src, csv_dst)
+
+    return ingest_from_chunks_dir(
+        device_name=device_name,
+        chunks_dir=chunks_dir,
+        db_name=db_name,
+        db_path=db_path,
+        embedding_provider=embedding_provider,
+        entry_name=entry_name,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Unified preprocessing pipeline for datasheet chunking and vector store creation",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    # Basic usage
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041
+    # Basic usage (OpenAI backend)
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041
+
+    # Local ChromaDB backend
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \\
+        --backend local --format markdown --embed-metadata
 
     # With markdown format and embedded metadata
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \\
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \\
         --format markdown --embed-metadata
 
-    # Custom output directory
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \\
-        --output-dir chunked_datasheets/stm/rm0041/chunks
-
     # Skip upload for testing
-    python preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \\
-        --skip-upload
+    python context_retrieval/preprocessing/pipeline.py devices/stm/rm0041/rm0041.pdf rm0041 \\
+        --backend none
         """
     )
 
@@ -412,12 +470,20 @@ Examples:
         help="List available augmentation fields and presets, then exit",
     )
 
-    # Upload options
+    # Backend options
+    parser.add_argument(
+        "--backend",
+        choices=["openai", "local", "none"],
+        default="openai",
+        help="Upload backend: openai (vector store API), local (ChromaDB), none (skip upload) (default: openai)"
+    )
     parser.add_argument(
         "--skip-upload",
         action="store_true",
-        help="Skip vector store upload (for testing)"
+        help="Equivalent to --backend none"
     )
+
+    # OpenAI backend options
     parser.add_argument(
         "--chunking-strategy",
         choices=["auto", "static"],
@@ -437,6 +503,24 @@ Examples:
         help="Overlap tokens for OpenAI (default: 0)"
     )
 
+    # Local backend options
+    parser.add_argument(
+        "--db-name",
+        default="",
+        help="ChromaDB database name (default: {datasheet_name}_md_chunks)"
+    )
+    parser.add_argument(
+        "--db-path",
+        default="",
+        help="Override ChromaDB databases directory path"
+    )
+    parser.add_argument(
+        "--embedding-provider",
+        choices=["local", "openai"],
+        default="local",
+        help="Embedding provider for local backend: local (FastEmbed, free) or openai (default: local)"
+    )
+
     # Control options
     parser.add_argument(
         "--dry-run",
@@ -453,7 +537,7 @@ Examples:
 
     # Handle --list-augment-fields
     if args.list_augment_fields:
-        from preprocessing.p3_augment_chunks_with_metadata import ALL_FIELDS, PRESETS
+        from context_retrieval.preprocessing.p3_augment_chunks_with_metadata import ALL_FIELDS, PRESETS
         print("Available augmentation fields:")
         for f in ALL_FIELDS:
             print(f"  - {f}")
@@ -461,6 +545,11 @@ Examples:
         for name, fields in PRESETS.items():
             print(f"  {name}: {', '.join(fields) if fields else '(empty)'}")
         return 0
+
+    # Resolve backend: --skip-upload is equivalent to --backend none
+    backend = args.backend
+    if args.skip_upload:
+        backend = "none"
 
     # Validate inputs
     if not os.path.exists(args.pdf_path):
@@ -507,10 +596,14 @@ Examples:
     print(f"Format: {args.format}")
     print(f"Chunk tokens: {args.max_tokens} (overlap: {args.overlap_tokens})")
     print(f"Embed metadata: {args.embed_metadata}")
-    print(f"Skip upload: {args.skip_upload}")
-    if not args.skip_upload:
+    print(f"Backend: {backend}")
+    if backend == "openai":
         print(f"Store name: {store_name}")
         print(f"Vector store name: {vector_store_name}")
+    elif backend == "local":
+        db_name = args.db_name or f"{args.datasheet_name}_md_chunks"
+        print(f"Local DB name: {db_name}")
+        print(f"Embedding provider: {args.embedding_provider}")
     print("=" * 70)
 
     if args.dry_run:
@@ -519,8 +612,12 @@ Examples:
         print(f"  2. Enrich metadata (metadata.json in {chunks_dir})")
         if args.embed_metadata:
             print(f"  3. Augment chunks to {augmented_dir}")
-        if not args.skip_upload:
-            print(f"  {3 if not args.embed_metadata else 4}. Upload to vector store: {vector_store_name}")
+        if backend == "openai":
+            step = 3 if not args.embed_metadata else 4
+            print(f"  {step}. Upload to OpenAI vector store: {vector_store_name}")
+        elif backend == "local":
+            step = 3 if not args.embed_metadata else 4
+            print(f"  {step}. Ingest into local ChromaDB: {db_name}")
         return 0
 
     # Step 1: Chunk PDF
@@ -547,7 +644,7 @@ Examples:
     upload_chunks_dir = chunks_dir
     if args.embed_metadata:
         # Build include_fields from preset +/- include/exclude
-        from preprocessing.p3_augment_chunks_with_metadata import PRESETS
+        from context_retrieval.preprocessing.p3_augment_chunks_with_metadata import PRESETS
         include_fields = list(PRESETS[args.augment_preset])
         if args.augment_include:
             for f in args.augment_include:
@@ -566,12 +663,12 @@ Examples:
         )
         upload_chunks_dir = augmented_dir
 
-    # Step 4: Upload to vector store
+    # Step 4: Upload / ingest
     vector_store_id = None
     chunk_index_path = ""
     vector_stores_json_path = None
 
-    if not args.skip_upload:
+    if backend == "openai":
         print("\n" + "-" * 70)
         vector_store_id, file_infos, upload_summary_path = run_upload(
             upload_chunks_dir,
@@ -626,6 +723,23 @@ Examples:
             local_path=rel_local_path
         )
 
+    elif backend == "local":
+        print("\n" + "-" * 70)
+        db_name = args.db_name or f"{args.datasheet_name}_md_chunks"
+        result = run_local_ingestion(
+            chunks_dir=upload_chunks_dir,
+            metadata_dir=metadata_dir,
+            device_name=args.datasheet_name,
+            device_dir=device_dir,
+            db_name=db_name,
+            db_path=args.db_path,
+            embedding_provider=args.embedding_provider,
+            entry_name=args.store_name or f"local_{format_subdir}_chunks",
+        )
+        if result != 0:
+            print("Error: Local ingestion failed")
+            return result
+
     # Summary
     print("\n" + "=" * 70)
     print("PIPELINE COMPLETE")
@@ -634,7 +748,7 @@ Examples:
     print(f"Metadata enriched: {len(enriched_metadata)}")
     if args.embed_metadata:
         print(f"Augmented chunks: {augmented_dir}")
-    if vector_store_id:
+    if backend == "openai" and vector_store_id:
         print(f"\nVector Store ID: {vector_store_id}")
         print(f"Store name: {store_name}")
         print(f"Chunk index: {chunk_index_path}")
@@ -645,6 +759,10 @@ Examples:
         print(f"  from utils.vector_store_config import get_vector_stores")
         print(f"  config = get_vector_stores('{device_dir}')")
         print(f"  vs_id = config.get_vs_id('{store_name}')")
+    elif backend == "local":
+        db_name = args.db_name or f"{args.datasheet_name}_md_chunks"
+        print(f"\nLocal ChromaDB: {db_name}")
+        print(f"Embedding provider: {args.embedding_provider}")
     print("=" * 70)
 
     return 0
