@@ -14,7 +14,7 @@ After each run, it automatically compares the output against a verified datashee
 Usage:
     Edit the variables at the top of `main()` and run:
 
-        python3 optimization_generator/optimize_generator.py
+        python3 optimize_retrieval/run_sweep.py
 """
 
 import csv
@@ -35,7 +35,7 @@ from core.s1a_generator import run_generator
 from utils.timing import get_timing_stats
 from utils.vector_store_config import get_vector_stores
 from utils.generator_facts import extract_facts_from_generator_output
-from optimization_generator.compare_generator_with_verified import (
+from optimize_retrieval.compare_generator_with_verified import (
     load_verified_datasheet,
     load_generator_output,
     compare_outputs,
@@ -356,14 +356,6 @@ def main():
         "afio",
         "bkp",
         "cec",
-        "crc",
-        "dac",
-        "exti",
-        "flash",
-        "fsmc",
-        "iwdg",
-        "pwr",
-        "rcc",
     ]
     REGISTERS: Optional[List[str]] = None      # e.g. ["evcr", "mapr"]; None = all registers for the peripheral
     SVD = getattr(config, "SVD", "stm32f100")
@@ -394,14 +386,14 @@ def main():
     LOCAL_DB_PATH = ""                          # Override databases directory (default: databases/)
     # Enriched local DB features
     LOCAL_METADATA_FILTER = [True]               # Filter by register name in metadata
-    LOCAL_PAGES_AFTER = [0]              # Chunk expansion pages (0 = disabled)
+    LOCAL_PAGES_AFTER = [1]              # Chunk expansion pages (0 = disabled)
     LOCAL_TABLE_PAGES_ONLY = [False]             # Only expand table-containing pages
     LOCAL_CHUNK_INDEX_PATH = "chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv"
 
     # Output
     # OpenAI experiments go to verified_peripherals_v2/, local to local_vector_db_v1/
-    OUTPUT_PARENT = "optimization_generator/experiments/verified_peripherals_v2"
-    LOCAL_OUTPUT_PARENT = "optimization_generator/experiments/local_vector_db_v7_meta_filter"
+    OUTPUT_PARENT = "optimize_retrieval/experiments/verified_peripherals_v2"
+    LOCAL_OUTPUT_PARENT = "optimize_retrieval/experiments/post_process_validation_d2_run2"
     OUTPUT_PREFIX_BASE: Optional[str] = None   # e.g. "my_sweep"; if set, each config becomes "<base>_<auto>"
 
     # Verified comparison

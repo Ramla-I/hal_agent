@@ -247,5 +247,5 @@ def run_generator(
 if __name__ == "__main__":
     raise SystemExit(
         "This module no longer provides a CLI/test harness. "
-        "Use optimization_generator/optimize_generator.py instead."
+        "Use optimize_retrieval/run_sweep.py instead."
     )

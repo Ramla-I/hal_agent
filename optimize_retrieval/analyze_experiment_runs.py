@@ -8,10 +8,10 @@ and generates a few high-signal plots.
 
 No CLI args by design. Edit variables at the top of `main()` and run:
 
-    python3 optimization_generator/analyze_experiment_runs.py
+    python3 optimize_retrieval/analyze_experiment_runs.py
 
 Optional: you can also pass filtering thresholds without editing the file:
-    python3 optimization_generator/analyze_experiment_runs.py --min-accuracy 95 --max-timing 5 --max-usage 7000
+    python3 optimize_retrieval/analyze_experiment_runs.py --min-accuracy 95 --max-timing 5 --max-usage 7000
 """
 
 from __future__ import annotations
@@ -649,7 +649,7 @@ def main() -> None:
     # =========================
     # EDIT THESE VARIABLES
     # =========================
-    RUNS_ROOT = "optimization_generator/experiments/local_vector_db_v4"
+    RUNS_ROOT = "optimize_retrieval/experiments/local_vector_db_v4"
     OUTPUT_DIR: Optional[str] = None  # default: f"{RUNS_ROOT}/analysis"
     TITLE_PREFIX = None  # e.g. "AFIO peripheral sweep"
     MIN_ACCURACY: Optional[float] = None          # e.g. 95.0
