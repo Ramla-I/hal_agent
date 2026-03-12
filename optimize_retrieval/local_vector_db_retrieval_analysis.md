@@ -211,7 +211,7 @@ All experiments use the same 11 peripherals (afio, bkp, cec, crc, dac, exti, fla
 | Quality fallback          | None                                               |
 
 
-**Results directory:** `local_vector_db_v5_reranker/local_rm0041_md_chunks_emb2_rrlocal_mf/`
+**Results directory:** `A_reranker_broken_filter/local_rm0041_md_chunks_emb2_rrlocal_mf/`
 
 **Results:**
 
@@ -264,7 +264,7 @@ All experiments use the same 11 peripherals (afio, bkp, cec, crc, dac, exti, fla
 | Quality fallback          | None                                               |
 
 
-**Results directory:** `local_vector_db_v5_reranker/local_rm0041_md_chunks_emb2_rrlocal_mf_pa2/`
+**Results directory:** `A_reranker_broken_filter/local_rm0041_md_chunks_emb2_rrlocal_mf_pa2/`
 
 **Results:**
 
@@ -301,7 +301,7 @@ All experiments use the same 11 peripherals (afio, bkp, cec, crc, dac, exti, fla
 | Quality fallback          | None                                    |
 
 
-**Results directory:** `local_vector_db_v5_reranker/local_rm0041_md_chunks_emb2_kb_rrlocal_pa2/`
+**Results directory:** `A_reranker_broken_filter/local_rm0041_md_chunks_emb2_kb_rrlocal_pa2/`
 
 **Results:**
 
@@ -338,7 +338,7 @@ All experiments use the same 11 peripherals (afio, bkp, cec, crc, dac, exti, fla
 | Quality fallback          | None                                               |
 
 
-**Results directory:** `local_vector_db_v5_reranker/local_rm0041_md_chunks_emb1_rrlocal_mf_pa1_tpo/`
+**Results directory:** `A_reranker_broken_filter/local_rm0041_md_chunks_emb1_rrlocal_mf_pa1_tpo/`
 
 **Results:**
 
@@ -383,7 +383,7 @@ All experiments use the same 11 peripherals (afio, bkp, cec, crc, dac, exti, fla
 | Quality fallback          | None (only 0-result fallback to unfiltered)           |
 
 
-**Results directory:** `local_vector_db_v6_fixed_filter/local_rm0041_md_chunks_emb2_rrlocal_mf/` (first run, before fallback was added)
+**Results directory:** `B_document_text_filter/local_rm0041_md_chunks_emb2_rrlocal_mf/` (first run, before fallback was added)
 
 **Results:**
 
@@ -437,7 +437,7 @@ All experiments use the same 11 peripherals (afio, bkp, cec, crc, dac, exti, fla
 | Quality fallback          | Reranker score < 0.7 → retry unfiltered, pick best    |
 
 
-**Results directory:** `local_vector_db_v6_fixed_filter/local_rm0041_md_chunks_emb2_rrlocal_mf/` (second run, with fallback)
+**Results directory:** `B_document_text_filter/local_rm0041_md_chunks_emb2_rrlocal_mf/` (second run, with fallback)
 
 **Results:**
 
@@ -498,7 +498,7 @@ All experiments use the same 11 peripherals (afio, bkp, cec, crc, dac, exti, fla
 | Quality fallback          | None (only 0-result fallback to unfiltered)       |
 
 
-**Results directory:** `local_vector_db_v7_meta_filter/local_rm0041_md_chunks_v2_emb2_rrlocal_mf/` (first run, no fallback)
+**Results directory:** `C_metadata_boolean_filter/local_rm0041_md_chunks_v2_emb2_rrlocal_mf/` (first run, no fallback)
 
 **Results:**
 
@@ -552,7 +552,7 @@ All experiments use the same 11 peripherals (afio, bkp, cec, crc, dac, exti, fla
 | Quality fallback          | Reranker score < 0.7 → retry unfiltered, pick best |
 
 
-**Results directory:** `local_vector_db_v7_meta_filter/local_rm0041_md_chunks_v2_emb2_rrlocal_mf/` (second run, with fallback)
+**Results directory:** `C_metadata_boolean_filter/local_rm0041_md_chunks_v2_emb2_rrlocal_mf/` (second run, with fallback)
 
 **Results:**
 
@@ -606,7 +606,7 @@ All experiments use the same 11 peripherals (afio, bkp, cec, crc, dac, exti, fla
 | Quality fallback          | Reranker score < 0.7 → try `where_document`, then unfiltered, pick best |
 
 
-**Results directory:** `local_vector_db_v7_meta_filter/local_rm0041_md_chunks_v2_emb2_rrlocal_mf/` (third run, tiered fallback)
+**Results directory:** `C_metadata_boolean_filter/local_rm0041_md_chunks_v2_emb2_rrlocal_mf/` (third run, tiered fallback)
 
 **Results:**
 
@@ -635,7 +635,7 @@ Results identical to C2. The `where_document` middle tier was effectively redund
 
 **Configuration:** C2 + `pages_after=1`, expansion applied to all results unconditionally.
 
-**Results directory:** `local_vector_db_v7_meta_filter/local_rm0041_md_chunks_v2_emb2_rrlocal_mf_pa1_unconditional/`
+**Results directory:** `D_conditional_page_expansion/local_rm0041_md_chunks_v2_emb2_rrlocal_mf_pa1_unconditional/`
 
 **Results:**
 
@@ -679,7 +679,7 @@ if no_table_results:
 
 **Why per-result matters:** With `n_results=2`, the FlashRank reranker strongly prefers table-containing chunks (bit field tables are highly relevant to register queries). In practice, 78 of 97 registers have *both* top-2 results containing tables. Only 19 registers have one result without a table — these are the only cases where expansion fires. An earlier "all-or-nothing" approach (expand only if *no* results have tables) never triggered at all.
 
-**Results directory:** `local_vector_db_v7_meta_filter/local_rm0041_md_chunks_v2_emb2_rrlocal_mf_pa1/`
+**Results directory:** `D_conditional_page_expansion/local_rm0041_md_chunks_v2_emb2_rrlocal_mf_pa1/`
 
 **Results:**
 
@@ -843,7 +843,7 @@ Our best configuration — metadata boolean filtering with FlashRank reranking, 
 
 ---
 
-## 5. OpenAI File Search Baseline (verified_peripherals_v2)
+## 5. OpenAI File Search Baseline (openai_file_search_baseline)
 
 This section presents results from the **OpenAI file search API**, which serves as a baseline for comparison against the local ChromaDB approach. All 16 configurations use OpenAI's hosted retrieval infrastructure with no local embedding or reranking.
 
@@ -903,7 +903,7 @@ Sorted by complete accuracy (descending):
 
 #### #1: md_enriched_emb2_pages1_tableonly (60.71% complete accuracy)
 
-**Results directory:** `verified_peripherals_v2/md_enriched_emb2_pages1_tableonly/`
+**Results directory:** `openai_file_search_baseline/md_enriched_emb2_pages1_tableonly/`
 
 
 | Peripheral | Regs found | Accuracy | Correct | Wrong | Missing |
@@ -926,7 +926,7 @@ Sorted by complete accuracy (descending):
 
 #### #2: md_emb2_pages1_tableonly (94.29% found accuracy, 51.86% complete accuracy)
 
-**Results directory:** `verified_peripherals_v2/md_emb2_pages1_tableonly/`
+**Results directory:** `openai_file_search_baseline/md_emb2_pages1_tableonly/`
 
 
 | Peripheral | Regs found | Accuracy | Correct | Wrong | Missing |
@@ -949,7 +949,7 @@ Sorted by complete accuracy (descending):
 
 #### #3: md_enriched_emb1_pages1 (94.17% found accuracy, 45.23% complete accuracy)
 
-**Results directory:** `verified_peripherals_v2/md_enriched_emb1_pages1/`
+**Results directory:** `openai_file_search_baseline/md_enriched_emb1_pages1/`
 
 
 | Peripheral | Regs found | Accuracy | Correct | Wrong | Missing |
@@ -1138,7 +1138,7 @@ RERANKER_TYPES = ["local"]
 LOCAL_METADATA_FILTER = [True]
 LOCAL_PAGES_AFTER = [0]
 LOCAL_TABLE_PAGES_ONLY = [False]
-LOCAL_OUTPUT_PARENT = "optimize_retrieval/experiments/local_vector_db_v7_meta_filter"
+LOCAL_OUTPUT_PARENT = "optimize_retrieval/experiments/D_conditional_page_expansion"
 ```
 
 ```bash

@@ -28,10 +28,10 @@ from typing import List, Dict, Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import config
-from defs import ContextRetrievalParameters, ContextRetrievalMethod, Manufacturer
+from defs import ContextRetrievalParameters, ContextRetrievalMethod, Manufacturer, BatchedRetrievalStrategy
 from agent_tools.tools import all_svd_file_paths
 from agent_tools.svd_parsing import get_register_names_for_peripheral
-from core.s1a_generator import run_generator
+from core.s1a_generator import run_generator, run_generator_batched
 from utils.timing import get_timing_stats
 from utils.vector_store_config import get_vector_stores
 from utils.generator_facts import extract_facts_from_generator_output
@@ -50,11 +50,19 @@ DEFAULT_REMOVE_TABLES = False
 DEFAULT_RE_RANKING = True
 DEFAULT_SCORE_THRESHOLD = 0.25
 
+# Short labels for batched retrieval strategies (used in output folder names)
+STRATEGY_LABELS = {
+    BatchedRetrievalStrategy.COMBINED_WITH_FILTER: "sA",
+    BatchedRetrievalStrategy.COMBINED_NO_FILTER: "sB",
+    BatchedRetrievalStrategy.PER_REGISTER: "sC",
+    BatchedRetrievalStrategy.PER_REGISTER_TRIMMED: "sD",
+}
+
 # Mapping from CLI short names to vector_stores.json keys
 VS_TYPE_MAPPING = {
-    "text": "text_chunks",
-    "md": "md_chunks",
-    "md_enriched": "md_enriched",
+    "text": "openai_text_chunks",
+    "md": "openai_md_chunks",
+    "md_enriched": "openai_md_enriched",
 }
 
 
@@ -92,7 +100,7 @@ def _resolve_vs_info(device_dir: str, vs_type: Optional[str], vs_id: Optional[st
     if vs_type:
         store_key = VS_TYPE_MAPPING.get(vs_type, vs_type)
     else:
-        store_key = vs_config.default or "md_chunks"
+        store_key = vs_config.default or "openai_md_chunks"
 
     resolved_vs_id = vs_config.get_vs_id(store_key)
     if not resolved_vs_id:
@@ -137,6 +145,7 @@ def _generate_output_prefix(vs_type: str, num_embeddings: int, pages_after: int,
 def _generate_local_output_prefix(
     db_name: str, num_embeddings: int, keyword_boost: bool, reranker_type: str,
     metadata_filter: bool = False, pages_after: int = 0, table_pages_only: bool = False,
+    batched_strategy: str = "", max_fields_per_batch: int = 0,
 ) -> str:
     """Generate a descriptive output folder name for local vector DB configuration."""
     parts = [f"local_{db_name}", f"emb{num_embeddings}"]
@@ -150,6 +159,10 @@ def _generate_local_output_prefix(
         parts.append(f"pa{pages_after}")
     if table_pages_only:
         parts.append("tpo")
+    if batched_strategy:
+        parts.append(batched_strategy)
+    if max_fields_per_batch > 0:
+        parts.append(f"mfpb{max_fields_per_batch}")
     return "_".join(parts)
 
 
@@ -185,6 +198,13 @@ def _get_verified_csv_path(device_dir: str, svd: str, peripheral: Optional[str] 
         return full_csv
 
     return None
+
+
+def _get_verified_registers(verified_csv: str, peripheral: str) -> List[str]:
+    """Extract register names for a peripheral from the verified CSV."""
+    verified_facts = load_verified_datasheet(verified_csv, peripheral_filter=peripheral)
+    regs = sorted({r for (p, r, f, k) in verified_facts.keys()})
+    return regs
 
 
 def run_comparison(
@@ -356,6 +376,14 @@ def main():
         "afio",
         "bkp",
         "cec",
+        "crc",
+        "dac",
+        "exti",
+        "flash",
+        "fsmc",
+        "iwdg",
+        "pwr",
+        "rcc",
     ]
     REGISTERS: Optional[List[str]] = None      # e.g. ["evcr", "mapr"]; None = all registers for the peripheral
     SVD = getattr(config, "SVD", "stm32f100")
@@ -379,7 +407,7 @@ def main():
 
     # Local vector DB sweep parameters
     USE_LOCAL_VECTOR_DB = True                 # Set to True to include local vector DB configs in sweep
-    LOCAL_DB_NAMES = ["rm0041_md_chunks_v2"]        # ChromaDB database names to sweep
+    LOCAL_DB_NAMES = ["rm0041_md_chunks"]        # ChromaDB database names to sweep
     LOCAL_EMBEDDING_COUNTS = [2]          # n_results values to sweep for local DB
     KEYWORD_BOOST_VALUES = [False]        # Keyword boost on/off
     RERANKER_TYPES = ["local"]                  # "" = no reranker, "local" = FlashRank
@@ -390,10 +418,17 @@ def main():
     LOCAL_TABLE_PAGES_ONLY = [False]             # Only expand table-containing pages
     LOCAL_CHUNK_INDEX_PATH = "chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv"
 
+    # Batched generator settings
+    USE_BATCHED_GENERATOR = True              # True = use run_generator_batched(), False = run_generator()
+    MAX_FIELDS_PER_BATCH = 50                 # Adaptive batching: max SVD fields per batch (lower → more batches, higher accuracy for complex peripherals)
+    BATCHED_STRATEGIES = [                    # Only relevant when USE_BATCHED_GENERATOR=True
+        BatchedRetrievalStrategy.PER_REGISTER_TRIMMED,  # sD: per-register queries, trimmed to n_embeddings each (D2-identical)
+    ]
+
     # Output
-    # OpenAI experiments go to verified_peripherals_v2/, local to local_vector_db_v1/
-    OUTPUT_PARENT = "optimize_retrieval/experiments/verified_peripherals_v2"
-    LOCAL_OUTPUT_PARENT = "optimize_retrieval/experiments/post_process_validation_d2_run2"
+    # OpenAI experiments go to openai_file_search_baseline/, local to post_batched_strategy_sweep/
+    OUTPUT_PARENT = "optimize_retrieval/experiments/openai_file_search_baseline"
+    LOCAL_OUTPUT_PARENT = "optimize_retrieval/experiments/post_batched_strategy_sweep"
     OUTPUT_PREFIX_BASE: Optional[str] = None   # e.g. "my_sweep"; if set, each config becomes "<base>_<auto>"
 
     # Verified comparison
@@ -444,23 +479,29 @@ def main():
     # Local vector DB configs (if enabled)
     if USE_LOCAL_VECTOR_DB:
         os.makedirs(LOCAL_OUTPUT_PARENT, exist_ok=True)
-        for local_db in LOCAL_DB_NAMES:
-            for num_embeddings in LOCAL_EMBEDDING_COUNTS:
-                for kb in KEYWORD_BOOST_VALUES:
-                    for rt in RERANKER_TYPES:
-                        for mf in LOCAL_METADATA_FILTER:
-                            for pa in LOCAL_PAGES_AFTER:
-                                for tpo in LOCAL_TABLE_PAGES_ONLY:
-                                    configs.append({
-                                        "backend": "local",
-                                        "local_db_name": local_db,
-                                        "num_embeddings": num_embeddings,
-                                        "keyword_boost": kb,
-                                        "reranker_type": rt,
-                                        "metadata_filter": mf,
-                                        "pages_after": pa,
-                                        "table_pages_only": tpo,
-                                    })
+        # When batched generator is enabled, wrap configs in a strategy loop
+        strategies_to_sweep = BATCHED_STRATEGIES if USE_BATCHED_GENERATOR else [None]
+        for strategy in strategies_to_sweep:
+            for local_db in LOCAL_DB_NAMES:
+                for num_embeddings in LOCAL_EMBEDDING_COUNTS:
+                    for kb in KEYWORD_BOOST_VALUES:
+                        for rt in RERANKER_TYPES:
+                            for mf in LOCAL_METADATA_FILTER:
+                                for pa in LOCAL_PAGES_AFTER:
+                                    for tpo in LOCAL_TABLE_PAGES_ONLY:
+                                        cfg_entry = {
+                                            "backend": "local",
+                                            "local_db_name": local_db,
+                                            "num_embeddings": num_embeddings,
+                                            "keyword_boost": kb,
+                                            "reranker_type": rt,
+                                            "metadata_filter": mf,
+                                            "pages_after": pa,
+                                            "table_pages_only": tpo,
+                                        }
+                                        if strategy is not None:
+                                            cfg_entry["batched_strategy"] = strategy
+                                        configs.append(cfg_entry)
 
     # No filtering needed - single config
 
@@ -490,6 +531,10 @@ def main():
         print(f"  Metadata filter: {LOCAL_METADATA_FILTER}")
         print(f"  Pages after: {LOCAL_PAGES_AFTER}")
         print(f"  Table pages only: {LOCAL_TABLE_PAGES_ONLY}")
+    if USE_BATCHED_GENERATOR:
+        print(f"  Batched generator: ENABLED")
+        print(f"  Max fields per batch: {MAX_FIELDS_PER_BATCH}")
+        print(f"  Batched strategies: {[STRATEGY_LABELS[s] for s in BATCHED_STRATEGIES]}")
     print(f"{'='*70}\n")
 
     client = config.client_groq if CLIENT == "groq" else config.client_openai
@@ -558,8 +603,11 @@ def main():
             metadata_filter = cfg.get("metadata_filter", False)
             pages_after = cfg.get("pages_after", 0)
             table_pages_only = cfg.get("table_pages_only", False)
+            batched_strategy = cfg.get("batched_strategy")  # None when not batched
 
-            print(f"\n[{run_idx}/{total_runs}] Running: backend=local, db={local_db_name}, emb={num_embeddings}, kb={keyword_boost}, mf={metadata_filter}, pa={pages_after}")
+            strategy_label = STRATEGY_LABELS.get(batched_strategy, "") if batched_strategy else ""
+            print(f"\n[{run_idx}/{total_runs}] Running: backend=local, db={local_db_name}, emb={num_embeddings}, kb={keyword_boost}, mf={metadata_filter}, pa={pages_after}"
+                  + (f", strategy={strategy_label}" if strategy_label else ""))
 
             context_retrieval_parameters = ContextRetrievalParameters(
                 context_retrieval_method=ContextRetrievalMethod.LOCAL_VECTOR_DB,
@@ -579,11 +627,14 @@ def main():
                 pages_after=pages_after,
                 chunk_index_path=LOCAL_CHUNK_INDEX_PATH if pages_after > 0 else "",
                 expand_table_pages_only=table_pages_only,
+                **({"batched_retrieval_strategy": batched_strategy} if batched_strategy else {}),
             )
 
             auto_prefix = _generate_local_output_prefix(
                 local_db_name, num_embeddings, keyword_boost, reranker_type,
                 metadata_filter, pages_after, table_pages_only,
+                batched_strategy=strategy_label,
+                max_fields_per_batch=MAX_FIELDS_PER_BATCH if USE_BATCHED_GENERATOR else 0,
             )
             if OUTPUT_PREFIX_BASE:
                 output_prefix = f"{OUTPUT_PREFIX_BASE}_{auto_prefix}"
@@ -596,6 +647,8 @@ def main():
             print(f"  Keyword boost: {keyword_boost}, Metadata filter: {metadata_filter}")
             print(f"  Pages after: {pages_after}, Table pages only: {table_pages_only}")
             print(f"  Reranker: {reranker_type or '(none)'}")
+            if strategy_label:
+                print(f"  Batched strategy: {strategy_label} ({batched_strategy.value})")
 
         os.makedirs(output_dir, exist_ok=True)
         print(f"  Output: {output_dir}")
@@ -607,17 +660,29 @@ def main():
         # Reset timing stats per run
         timing.reset()
 
-        # Build dict for all peripherals (or None to run all)
+        # Build dict for all peripherals — prefer verified CSV registers over SVD
+        # to avoid wasting LLM calls on registers we can't evaluate (e.g. BKP_DR21..DR42)
         peripherals_registers_dict = None
         if peripherals_to_run != [None]:
-            svd_file_paths = all_svd_file_paths(device_dir)
             peripherals_registers_dict = {}
             for p in peripherals_to_run:
                 if p is None:
                     continue
-                peripherals_registers_dict[p] = list(REGISTERS) if REGISTERS else get_register_names_for_peripheral(svd_file_paths, p)
+                if REGISTERS:
+                    peripherals_registers_dict[p] = list(REGISTERS)
+                else:
+                    verified_csv = VERIFIED_CSV_OVERRIDE or _get_verified_csv_path(device_dir, SVD, p)
+                    if verified_csv:
+                        verified_regs = _get_verified_registers(verified_csv, p)
+                        if verified_regs:
+                            peripherals_registers_dict[p] = verified_regs
+                            continue
+                    # Fall back to SVD if no verified CSV
+                    svd_file_paths = all_svd_file_paths(device_dir)
+                    peripherals_registers_dict[p] = get_register_names_for_peripheral(svd_file_paths, p)
 
-        run_generator(
+        generator_fn = run_generator_batched if USE_BATCHED_GENERATOR else run_generator
+        generator_kwargs = dict(
             client=client,
             model_name=MODEL_NAME,
             device_name=DEVICE_NAME,
@@ -628,6 +693,9 @@ def main():
             manufacturer=manufacturer,
             peripherals_registers_dict=peripherals_registers_dict,
         )
+        if USE_BATCHED_GENERATOR:
+            generator_kwargs["max_fields_per_batch"] = MAX_FIELDS_PER_BATCH
+        generator_fn(**generator_kwargs)
 
         info_dir = os.path.join(output_dir, "info")
         os.makedirs(info_dir, exist_ok=True)
@@ -798,6 +866,8 @@ def main():
                 result_row["metadata_filter"] = cfg.get("metadata_filter", False)
                 result_row["pages_after"] = cfg.get("pages_after", 0)
                 result_row["table_pages_only"] = cfg.get("table_pages_only", False)
+                bs = cfg.get("batched_strategy")
+                result_row["batched_strategy"] = STRATEGY_LABELS.get(bs, "") if bs else ""
             all_results.append(result_row)
 
     # Print summary table

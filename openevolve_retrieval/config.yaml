@@ -1,0 +1,101 @@
+# OpenEvolve configuration for datasheet retrieval pipeline evolution
+#
+# Goal: Discover optimal preprocessing, query construction, and post-processing
+# strategies for retrieving hardware register information from chunked datasheets.
+
+max_iterations: 50
+checkpoint_interval: 10
+
+# LLM configuration (for evolving code, not for the generator)
+llm:
+  api_key: "${GEMINI_API_KEY}"
+  primary_model: "gemini-2.5-flash"
+  primary_model_weight: 1.0
+  secondary_model: "gemini-2.5-flash"
+  secondary_model_weight: 0.0
+  api_base: "https://generativelanguage.googleapis.com/v1beta/openai/"
+  temperature: 0.7
+  max_tokens: 16000
+  timeout: 120
+
+# System message guiding the LLM on what/how to evolve
+prompt:
+  system_message: |
+    You are an expert in information retrieval for technical documents. You are
+    optimizing a retrieval pipeline that searches a ChromaDB vector database of
+    chunked hardware datasheet pages to find relevant context for microcontroller
+    register queries.
+
+    The pipeline has three evolvable functions:
+
+    1. process_chunks(raw_chunks) — Preprocesses ~1033 raw markdown chunks before
+       indexing. Each chunk has: text, page_number, chunk_index, chunk_id, token_count.
+       You can modify text (add metadata headers, extract key terms), attach metadata
+       (register names, section info, has_tables, peripheral name), filter chunks,
+       split or merge chunks.
+
+    2. build_query(peripheral_name, register_name) — Constructs the search query.
+       You can decompose into multiple queries, add context, use register naming
+       patterns.
+
+    3. search_and_format(collection, query, embedding_fn, peripheral_name,
+       register_name, all_processed_chunks) — Searches ChromaDB and returns
+       formatted context. You can use metadata filtering (where clauses), run
+       multiple queries, rerank results, expand with adjacent chunks, order by
+       page number, control how many results to retrieve.
+
+    The datasheet chunks are markdown-formatted pages from an STM32 reference manual.
+    Register definitions typically contain:
+    - Register name abbreviation (e.g., AFIO_EVCR)
+    - Address offset (hex, e.g., 0x00)
+    - Reset value (hex)
+    - Bit field tables with field names, bit positions, access types
+    - Enumerated values for fields
+
+    Key patterns in the data:
+    - Register names follow the pattern PERIPHERAL_REGISTER (e.g., AFIO_MAPR, CRC_DR)
+    - Tables with bit fields are critical for accuracy
+    - Register definitions often span 1-2 pages
+    - Chunks without tables may need expansion to adjacent pages with tables
+
+    ChromaDB API available:
+    - collection.query(query_embeddings=[emb], n_results=N, where={...},
+      where_document={...}, include=["documents","metadatas","distances"])
+    - where: metadata filters like {"has_tables": True}, {"page_number": {"$gte": 10}}
+    - where_document: text filters like {"$contains": "AFIO_EVCR"}
+    - embedding_fn(["text"]) returns list of embedding vectors
+
+    Strategies to explore:
+    - Add register name headers to chunk text before embedding for better retrieval
+    - Extract and store section hierarchy as metadata
+    - Use multiple queries: one for register definition, one for bit fields
+    - Filter by register name in text ($contains) then fall back to unfiltered
+    - Retrieve more results and rerank by keyword presence
+    - Expand non-table results with adjacent page chunks that have tables
+    - Sort final results by page_number for coherent reading order
+
+# MAP-Elites database configuration
+database:
+  population_size: 40
+  archive_size: 15
+  num_islands: 3
+  elite_selection_ratio: 0.2
+  exploitation_ratio: 0.7
+  similarity_threshold: 0.99
+
+  # Feature dimensions for diversity
+  # Dimension 1: average context length (short vs comprehensive)
+  # Dimension 2: retrieval time (fast vs thorough)
+  feature_dimensions:
+    - "avg_context_length"
+    - "retrieval_time"
+
+# Evaluator configuration
+evaluator:
+  timeout: 900       # 15 minutes — 66 registers × ~5s/LLM call + DB build overhead
+  cascade_evaluation: false  # We handle cascade internally in evaluate()
+  parallel_evaluations: 1    # Sequential — each eval uses Groq rate limits
+
+# Evolution settings
+diff_based_evolution: true
+max_code_length: 25000
