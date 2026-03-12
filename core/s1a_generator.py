@@ -3,7 +3,7 @@ import json
 from typing import Optional, Dict, List
 from defs import ContextRetrievalParameters, Manufacturer, ContextRetrievalMethod
 from agent_tools.tools import all_svd_file_paths, calculate_address_offset
-from agent_tools.svd_parsing import get_peripheral_names, get_register_names_for_peripheral
+from agent_tools.svd_parsing import get_peripheral_names, get_register_names_for_peripheral, get_field_counts_for_peripheral
 from prompts.register_info_stm import create_register_info_stm_system_prompt, create_register_info_stm_user_prompt
 from utils.parse_output import get_json_block_from_response, get_reasoning_from_response
 from utils.function_call_handler import create_default_handler
@@ -240,6 +240,370 @@ def run_generator(
 
             if json_data:
                 saver_output.save_json(json_data, output_filename)
+
+    return truncated_at_any_register
+
+
+def chunk_registers(registers: list[str], max_size: int = 15) -> list[list[str]]:
+    """Split a list of register names into batches of at most *max_size*."""
+    if not registers:
+        return [[]]  # one empty batch → triggers discovery mode
+    return [registers[i : i + max_size] for i in range(0, len(registers), max_size)]
+
+
+def chunk_registers_adaptive(
+    registers: list[str],
+    field_counts: dict[str, int],
+    max_fields_per_batch: int,
+    max_registers_per_batch: int = 15,
+    default_field_count: int = 5,
+) -> list[list[str]]:
+    """Split registers into batches that keep total estimated fields under a cap.
+
+    Each register's field count is looked up in *field_counts* (from SVD).
+    Registers not found there get *default_field_count* as a conservative estimate.
+
+    A register is added to the current batch if doing so keeps the batch's
+    total fields <= *max_fields_per_batch* **and** the batch size <=
+    *max_registers_per_batch*.  Otherwise a new batch is started.  A single
+    register always gets its own batch even if it exceeds the field cap.
+    """
+    if not registers:
+        return [[]]  # one empty batch → discovery mode
+
+    batches: list[list[str]] = []
+    current_batch: list[str] = []
+    current_fields = 0
+
+    for reg in registers:
+        reg_fields = field_counts.get(reg, default_field_count)
+        would_exceed_fields = current_batch and (current_fields + reg_fields > max_fields_per_batch)
+        would_exceed_regs = current_batch and (len(current_batch) >= max_registers_per_batch)
+
+        if would_exceed_fields or would_exceed_regs:
+            batches.append(current_batch)
+            current_batch = []
+            current_fields = 0
+
+        current_batch.append(reg)
+        current_fields += reg_fields
+
+    if current_batch:
+        batches.append(current_batch)
+
+    return batches
+
+
+def run_generator_batched(
+    client: OpenAI | Groq,
+    model_name: str,
+    device_name: str,
+    run_number: int,
+    device_dir: str,
+    agent_output_dir: str,
+    context_retrieval_parameters: ContextRetrievalParameters,
+    manufacturer: Manufacturer,
+    peripherals_registers_dict: Optional[Dict[str, List[str]]] = None,
+    max_registers_per_batch: int = 15,
+    max_fields_per_batch: int = 50,
+    include_reasoning: bool = True,
+    skip_function_followup: bool = False,
+    system_prompt_override: Optional[str] = None,
+) -> bool:
+    """Per-peripheral batched generator — one LLM call per batch of registers.
+
+    Output files are identical to ``run_generator()`` (one JSON per register),
+    so downstream pipeline steps are fully compatible.
+    """
+    from prompts.register_info_stm import (
+        create_register_info_stm_system_prompt_batched,
+        create_register_info_stm_user_prompt_batched,
+    )
+    from utils.parse_output import get_json_array_from_response
+    from context_retrieval.retrieve_context import retrieve_context_for_peripheral
+
+    logger.info(
+        "Running batched generator for device %s with run number %s",
+        device_name, run_number,
+    )
+
+    run_number = str(run_number)
+    truncated_at_any_register = False
+
+    saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
+    saver_output = ResultSaver(agent_output_dir)
+
+    saver_info.save_text(f"MODEL: {model_name}\nMODE: batched\n", "summary.txt")
+
+    function_handler = create_default_handler()
+    if system_prompt_override is not None:
+        system_prompt = system_prompt_override
+    else:
+        system_prompt = create_register_info_stm_system_prompt_batched(include_reasoning=include_reasoning)
+
+    # ---- Build peripheral→registers mapping ----
+    svd_file_paths = all_svd_file_paths(device_dir)
+    if peripherals_registers_dict is None:
+        peripheral_names = get_peripheral_names(svd_file_paths)
+        register_names_to_process: Dict[str, List[str]] = {}
+        for pname in peripheral_names:
+            register_names_to_process[pname] = get_register_names_for_peripheral(
+                svd_file_paths, pname,
+            )
+        logger.info("Found registers for %d peripherals", len(register_names_to_process))
+    else:
+        register_names_to_process = peripherals_registers_dict
+        logger.info("Using provided dict with %d peripherals", len(register_names_to_process))
+
+    # ---- Main loop ----
+    for peripheral_name, all_registers in register_names_to_process.items():
+        # Determine which registers still need processing
+        remaining = [
+            r for r in all_registers
+            if not os.path.exists(os.path.join(agent_output_dir, f"{peripheral_name}_{r}"))
+        ]
+
+        # Derived peripherals (0 SVD registers) → discovery mode
+        if not all_registers:
+            batches = [[]]  # single empty batch
+        elif not remaining:
+            continue  # all registers already done
+        else:
+            # Adaptive batching: use SVD field counts to limit output complexity
+            try:
+                field_counts = get_field_counts_for_peripheral(svd_file_paths, peripheral_name)
+            except ValueError:
+                field_counts = {}
+            batches = chunk_registers_adaptive(
+                remaining, field_counts, max_fields_per_batch, max_registers_per_batch,
+            )
+            total_fields = sum(field_counts.get(r, 5) for r in remaining)
+            batch_fields = [
+                sum(field_counts.get(r, 5) for r in b) for b in batches
+            ]
+            logger.info(
+                "Batch plan for %s: %d regs (%d fields) → %d batches, fields per batch: %s",
+                peripheral_name, len(remaining), total_fields, len(batches), batch_fields,
+            )
+
+        for batch in batches:
+            batch_label = (
+                f"{peripheral_name} ({len(batch)} regs)" if batch
+                else f"{peripheral_name} (discovery)"
+            )
+            logger.info("Processing batch: %s", batch_label)
+
+            usage = []
+
+            # 1. Retrieve context for the batch
+            datasheet_pages, embedding_ids = retrieve_context_for_peripheral(
+                context_retrieval_parameters,
+                device_name,
+                device_dir,
+                peripheral_name,
+                batch,
+                manufacturer,
+                agent_output_dir,
+            )
+            if datasheet_pages is None:
+                logger.warning("No context found for %s — skipping batch", batch_label)
+                continue
+
+            # Save embedding IDs
+            if embedding_ids:
+                embedding_info = {
+                    "peripheral": peripheral_name,
+                    "registers": batch,
+                    "num_embeddings": context_retrieval_parameters.number_embeddings,
+                    "embedding_ids": embedding_ids,
+                }
+                saver_info.append_text(
+                    json.dumps(embedding_info) + "\n",
+                    "embedding_ids.jsonl",
+                )
+
+            # Count tokens in context
+            try:
+                encoding = tiktoken.get_encoding("cl100k_base")
+                file_search_tokens = len(encoding.encode(datasheet_pages))
+            except Exception as e:
+                logger.warning("Could not count file search tokens: %s", e)
+                file_search_tokens = 0
+
+            # 2. Build batched prompt
+            input_list = [
+                {
+                    "role": "developer",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": create_register_info_stm_user_prompt_batched(
+                        peripheral_name, batch, datasheet_pages,
+                    ),
+                },
+            ]
+            truncated, input_list = truncate_message_by_tokens(input_list, model_name)
+            truncated_at_any_register = truncated_at_any_register or truncated
+            if truncated:
+                logger.info("Truncated input for batch %s", batch_label)
+
+            # Estimate output budget: tokens/register + reasoning overhead
+            from utils.models import model_costs
+            per_register_tokens = 2000 if include_reasoning else 1500
+            batch_output_estimate = max(len(batch), 1) * per_register_tokens + 2000
+            model_max = model_costs.get(model_name, {}).get("max_output_tokens", 65536)
+            max_output_tokens = min(batch_output_estimate, model_max)
+
+            # 3. LLM call
+            with timed_operation("generator_llm_call"):
+                response = client.responses.create(
+                    model=get_model_string(model_name),
+                    input=input_list,
+                    tool_choice="none",
+                    truncation="auto",
+                    max_output_tokens=max_output_tokens,
+                )
+
+            if response.output_text:
+                input_list.append({
+                    "role": "assistant",
+                    "content": response.output_text,
+                })
+
+            reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
+            usage.append(response.usage)
+
+            # 4. Process function calls
+            function_results = function_handler.process_function_calls(rest_of_response)
+            if function_results:
+                for result in function_results:
+                    logger.debug("FUNCTION CALL: %s - Success: %s", result.function_name, result.success)
+                    if not result.success:
+                        logger.error("Error in function call for batch %s: %s", batch_label, result.error_message)
+
+                if not skip_function_followup:
+                    # Original behavior: send results back to LLM for a second call
+                    for result in function_results:
+                        input_list.append({
+                            "role": "user",
+                            "content": result.message,
+                        })
+
+                    truncated, input_list = truncate_message_by_tokens(input_list, model_name)
+                    truncated_at_any_register = truncated_at_any_register or truncated
+
+                    with timed_operation("generator_llm_call"):
+                        response = client.responses.create(
+                            model=get_model_string(model_name),
+                            input=input_list,
+                            tool_choice="none",
+                            truncation="auto",
+                            max_output_tokens=max_output_tokens,
+                        )
+                    reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
+                    usage.append(response.usage)
+                else:
+                    # Skip follow-up: execute function calls locally and patch
+                    # the JSON with correct computed offsets instead of making
+                    # a second LLM call.
+                    logger.info(
+                        "Skipping function follow-up for %s (%d calls executed locally)",
+                        batch_label, len(function_results),
+                    )
+
+            # 5. Parse JSON array
+            json_array = get_json_array_from_response(rest_of_response)
+
+            # 5b. Patch address_offset values from function call results
+            if skip_function_followup and function_results and json_array:
+                import re
+                from utils.parse_output import get_function_calls_from_response as _get_fn_calls
+                fn_text = _get_fn_calls(rest_of_response)
+                if fn_text:
+                    try:
+                        fn_data = json.loads(fn_text)
+                        fn_calls_raw = fn_data.get("function_calls", fn_data if isinstance(fn_data, list) else [])
+                    except (json.JSONDecodeError, AttributeError):
+                        fn_calls_raw = []
+
+                    # Build mapping: register_number → computed offset
+                    offset_by_regnum: dict[int, str] = {}
+                    for fc_raw, fc_result in zip(fn_calls_raw, function_results):
+                        if fc_result.success and isinstance(fc_raw, dict):
+                            params = fc_raw.get("parameters", {})
+                            reg_num = params.get("register_number")
+                            if reg_num is not None:
+                                offset_by_regnum[int(reg_num)] = fc_result.result
+
+                    # Patch JSON entries whose trailing number matches
+                    if offset_by_regnum:
+                        for item in json_array:
+                            rn = item.get("register_name", "")
+                            m = re.search(r"(\d+)$", rn)
+                            if m:
+                                reg_num = int(m.group(1))
+                                if reg_num in offset_by_regnum:
+                                    computed = offset_by_regnum[reg_num]
+                                    current = item.get("address_offset")
+                                    if current != computed:
+                                        logger.info(
+                                            "Patching %s address_offset: %s → %s",
+                                            rn, current, computed,
+                                        )
+                                        item["address_offset"] = computed
+
+            # 6. Save individual register files
+            if json_array:
+                for item in json_array:
+                    reg_name = item.pop("register_name", None)
+                    if not reg_name:
+                        continue
+                    # Strip peripheral prefix if present (e.g. "BKP_DR1" → "DR1")
+                    if reg_name.upper().startswith(f"{peripheral_name.upper()}_"):
+                        short_name = reg_name[len(peripheral_name) + 1 :]
+                    else:
+                        short_name = reg_name
+                    # Check that at least one meaningful field is present
+                    has_data = any(
+                        item.get(k) is not None
+                        for k in ("address_offset", "reset_value", "size", "subfields")
+                    )
+                    if has_data:
+                        output_filename = f"{peripheral_name}_{short_name}"
+                        saver_output.save_json(item, output_filename)
+            else:
+                logger.warning("No JSON array parsed for batch %s", batch_label)
+
+            # 7. Save usage & reasoning
+            total_input_tokens = sum(u.input_tokens for u in usage)
+            total_cached_tokens = sum(u.input_tokens_details.cached_tokens for u in usage)
+            total_output_tokens = sum(u.output_tokens for u in usage)
+            total_reasoning_tokens = sum(u.output_tokens_details.reasoning_tokens for u in usage)
+            total_total_tokens = sum(u.total_tokens for u in usage)
+            usage_stats = UsageStats(
+                model_name=model_name,
+                input_tokens=total_input_tokens,
+                cached_tokens=total_cached_tokens,
+                output_tokens=total_output_tokens,
+                reasoning_tokens=total_reasoning_tokens,
+                total_tokens=total_total_tokens,
+                file_search_tokens=file_search_tokens,
+            )
+            batch_register_names = ", ".join(batch) if batch else "(discovery)"
+            saver_info.save_usage_stats(
+                usage_stats,
+                "usage.csv",
+                additional_fields={
+                    "peripheral_name": peripheral_name,
+                    "register_name": batch_register_names,
+                },
+            )
+            saver_info.save_reasoning(
+                reasoning,
+                "reasoning.txt",
+                prefix=f"---{peripheral_name}---",
+            )
 
     return truncated_at_any_register
 

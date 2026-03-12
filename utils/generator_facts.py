@@ -158,7 +158,7 @@ def extract_facts_from_generator_output(output_json, peripheral, register, inclu
             facts[fact_key] = str(output_json[key])
 
     # Field-level facts (handle both 'subfields' and 'fields' key)
-    fields_list = output_json.get('subfields', output_json.get('fields', []))
+    fields_list = output_json.get('subfields', output_json.get('fields', [])) or []
 
     for field in fields_list:
         # Get field name (handle both 'name' and 'field_name')

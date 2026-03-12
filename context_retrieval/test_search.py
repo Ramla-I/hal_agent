@@ -59,13 +59,13 @@ DEFAULT_VS_ID = "vs_6892501067b08191ac63cc6de06ee629"
 DEFAULT_NUM_EMBEDDINGS = 5
 
 # Local vector DB defaults (rm0041)
-DEFAULT_LOCAL_DB_NAME = "rm0041_md"
+DEFAULT_LOCAL_DB_NAME = "rm0041_md_chunks"
 DEFAULT_LOCAL_DB_PATH = ""
 DEFAULT_RERANKER = "local"
 DEFAULT_EMBEDDING_PROVIDER = "local"
 DEFAULT_CHUNK_INDEX_PATH = os.path.join(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
-    "chunked_datasheets", "stm", "rm0041", "chunks", "local", "chunks_index.csv"
+    "chunked_datasheets", "stm", "rm0041", "chunks", "md", "chunks_index.csv"
 )
 
 # Keyword search / retrieve_context defaults

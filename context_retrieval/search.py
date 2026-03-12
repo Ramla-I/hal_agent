@@ -31,7 +31,7 @@ from context_retrieval.post_processing import SearchResult, post_process
 def search_context(
     query: str,
     context_retrieval_parameters: ContextRetrievalParameters,
-    register_filter: str = "",
+    register_filter: "str | list[str]" = "",
 ) -> Tuple[Optional[str], list]:
     """
     Run a semantic search against the configured backend and return formatted results.
@@ -39,8 +39,9 @@ def search_context(
     Args:
         query: The search query string.
         context_retrieval_parameters: Retrieval configuration (method, vs_id, etc.).
-        register_filter: Register name for metadata filtering in local vector DB
-                         (e.g. "FSMC_BTR1"). Ignored for OpenAI file search.
+        register_filter: Register name (or list of names) for metadata filtering
+                         in local vector DB (e.g. "FSMC_BTR1" or
+                         ["FSMC_BTR1", "FSMC_BTR2"]). Ignored for OpenAI file search.
 
     Returns:
         (formatted_text, embedding_ids) — same shape as retrieve_context().
@@ -67,6 +68,33 @@ def search_context(
         raise ValueError(f"Unknown context retrieval method: {method}")
 
     return post_process(results, context_retrieval_parameters, query)
+
+
+def search_context_raw(
+    query: str,
+    context_retrieval_parameters: ContextRetrievalParameters,
+    register_filter: "str | list[str]" = "",
+) -> List[SearchResult]:
+    """Like search_context() but returns raw SearchResult list (no post-processing).
+
+    Useful when callers need to union results across multiple queries before
+    applying a single post_process() pass.
+    """
+    method = context_retrieval_parameters.context_retrieval_method
+
+    if method == ContextRetrievalMethod.OPENAI_FILE_SEARCH:
+        return _search_openai(query, context_retrieval_parameters)
+
+    elif method == ContextRetrievalMethod.LOCAL_VECTOR_DB:
+        return _search_local(query, context_retrieval_parameters, register_filter)
+
+    elif method in (ContextRetrievalMethod.KEYWORD_SEARCH, ContextRetrievalMethod.REGEX):
+        raise ValueError(
+            f"search_context_raw() does not support {method.value}. "
+            "Use retrieve_context() for keyword/regex retrieval."
+        )
+    else:
+        raise ValueError(f"Unknown context retrieval method: {method}")
 
 
 def _search_openai(
@@ -96,7 +124,7 @@ def _search_openai(
 def _search_local(
     query: str,
     params: ContextRetrievalParameters,
-    register_filter: str = "",
+    register_filter: "str | list[str]" = "",
 ) -> List[SearchResult]:
     """Local ChromaDB vector search → normalized SearchResult list."""
     num = max(1, params.number_embeddings)

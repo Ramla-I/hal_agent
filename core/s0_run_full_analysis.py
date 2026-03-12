@@ -1,212 +1,754 @@
 #!/usr/bin/env python3
+"""
+Multi-device pipeline for extracting hardware register information from datasheets.
+
+Steps:
+  1. Preprocess — chunk + enrich + ingest into local ChromaDB (skips if DB exists)
+  2. Generator — extract register info from datasheet using LLMs
+  3. Coverage Improver — iteratively improve coverage based on SVD comparison
+  4. Validator — validate extracted info against the datasheet
+  5. Evaluation — compare with SVD files, run analyzer, generate diff tables
+
+Usage:
+    # Run all steps for all configured devices
+    python core/s0_run_full_analysis.py
+
+    # Single device, skip preprocessing
+    python core/s0_run_full_analysis.py --devices rm0041 --skip-preprocessing
+
+    # Multiple devices in parallel
+    python core/s0_run_full_analysis.py --devices rm0041 rm0008 --max-workers 2
+
+    # Skip expensive steps
+    python core/s0_run_full_analysis.py --devices rm0041 --coverage-improver-iterations 0 --skip-validator
+"""
+
+import argparse
+import asyncio
+import csv
+import glob
+import json
 import os
 import sys
-import subprocess
-import glob
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from typing import Optional
+
+# Ensure repo root and core/ are both on sys.path so that
+# `import config`, `from scripts.X import ...`, and sibling
+# `from s1a_generator import ...` all resolve correctly.
+_CORE_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_CORE_DIR)
+for _p in (_REPO_ROOT, _CORE_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 import config
-import asyncio
-import json
-import csv
-
-from s1a_generator import run_generator
-from scripts.s2_compare_agent_output_with_svd import compare_agent_output_with_svd
-from s5_analyzer import run_analyzer
-from scripts.s4_generate_diff_table import generate_diff_table
-from scripts.s5_compare_diff_with_verified_output import compare_diff_with_verified_datasheet
-from scripts.update_config import update_user_context
-from context_retrieval.preprocessing.old.create_vector_store_openai import create_vector_store
-from scripts.calculate_generator_coverage import calculate_generator_coverage
-from s2_coverage_improver import run_coverage_improver
-from s4_validator import build_invariants_from_agent_output, run_validator
-from defs import CoverageImproverOutput
 from config import client_openai, client_groq
+from defs import (
+    ContextRetrievalMethod,
+    ContextRetrievalParameters,
+    CoverageImproverOutput,
+    UserContext,
+)
+from groq import Groq
+from openai import OpenAI
 
-def resolve_repo_root() -> str:
-    """Return absolute path to the repository root."""
-    return os.path.abspath(os.path.join(os.path.dirname(__file__)))
+# Lazy imports for heavy modules — only loaded when actually needed.
+# Generator, coverage improver, validator, analyzer, and evaluation scripts
+# are imported inside the functions that use them.
 
-def determine_client(model_name: str) -> Groq|OpenAI:
+
+# ---------------------------------------------------------------------------
+# Dataclasses
+# ---------------------------------------------------------------------------
+
+@dataclass
+class DevicePaths:
+    """All resolved filesystem paths for a device pipeline run."""
+    device_name: str
+    manufacturer: str  # lowercase, e.g. "stm"
+    run_number: int
+
+    device_dir: str      # devices/{mfg}/{device}/
+    svd_dir: str         # devices/{mfg}/{device}/svd/
+    pdf_path: str        # devices/{mfg}/{device}/{device}.pdf
+
+    agent_output_dir: str   # agent_output/{mfg}/{device}/{run}/
+    results_dir: str        # evaluation/{mfg}/{device}/{run}/
+    verified_dir: str       # verified_datasheet/
+
+
+@dataclass
+class DeviceResult:
+    """Summary of pipeline results for one device."""
+    device_name: str
+    success: bool = True
+    error: str = ""
+
+    # Step 1 — preprocessing
+    preprocessing_done: bool = False
+    chunks_created: int = 0
+
+    # Step 2 — generator
+    generator_done: bool = False
+    truncated: bool = False
+
+    # Step 3 — coverage improver
+    coverage_iterations: int = 0
+    final_run_number: int = 0
+
+    # Step 4 — validator
+    validator_done: bool = False
+    true_count: int = 0
+    false_count: int = 0
+
+    # Step 5 — evaluation
+    evaluation_done: bool = False
+    svd_files_compared: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def determine_client(model_name: str) -> Groq | OpenAI:
+    """Route to Groq or OpenAI based on model name."""
     return client_groq if model_name == "gpt-oss-120b" else client_openai
 
-async def main() -> None:
-    repo_root = resolve_repo_root()
-    sys.path.insert(0, repo_root)
 
-    device_name = config.DEVICE_NAME
-    context_retrieval_parameters = config.CONTEXT_RETRIEVAL_PARAMETERS
-    # Generator settings
-    generator_model_name = config.GENERATOR_MODEL_NAME
-    generator_client = determine_client(generator_model_name)
-    # Coverage improver settings
-    coverage_improver_model_name = config.COVERAGE_IMPROVER_MODEL_NAME
-    coverage_improver_client = determine_client(coverage_improver_model_name)
-    coverage_improver_reasoning_effort = config.COVERAGE_IMPROVER_REASONING_EFFORT
-    coverage_improver_iterations = config.COVERAGE_IMPROVER_ITERATIONS
-    # Validator settings
-    validator_model_name = config.VALIDATOR_MODEL_NAME
-    validator_client = determine_client(validator_model_name)
-    validator_reasoning_effort = config.VALIDATOR_REASONING_EFFORT
-    # Analyzer settings
-    analyzer = config.RUN_ANALYZER
+def resolve_next_run_number(repo_root: str, ctx: UserContext) -> int:
+    """Scan agent_output/{mfg}/{device}/ and return max existing + 1."""
+    output_base = os.path.join(
+        repo_root,
+        config.OUTPUT_DIR,
+        ctx.manufacturer.value.lower(),
+        ctx.device_name,
+    )
+    if not os.path.isdir(output_base):
+        return 1
+    existing = [
+        int(d)
+        for d in os.listdir(output_base)
+        if d.isdigit() and os.path.isdir(os.path.join(output_base, d))
+    ]
+    return max(existing) + 1 if existing else 1
 
-    # Find run number for the current device in config.user_contexts
-    run_number = None
-    device_ctx = None
-    for ctx in getattr(config, "user_contexts", []):
-        if getattr(ctx, "device_name", None) == device_name:
-            device_ctx = ctx
-            run_number = str(getattr(ctx, "run"))
-            break
-    if run_number is None:
-        raise RuntimeError(f"Run number not found for device '{device_name}' in config.user_contexts")
 
-    # Build absolute paths
-    device_directory = os.path.join(repo_root, config.DEVICE_DIRECTORY, device_ctx.manufacturer.value.lower(), device_ctx.device_name)
-    svd_dir = os.path.join(device_directory, "svd")
-    agent_output_folder = os.path.join(repo_root, config.OUTPUT_DIR, device_ctx.manufacturer.value.lower(), device_name, run_number)
-    results_directory = os.path.join(repo_root, config.RESULTS_DIR, device_ctx.manufacturer.value.lower(), device_name, run_number)
-    verified_datasheet_directory = os.path.join(repo_root, "verified_datasheet")
+def resolve_device_paths(
+    ctx: UserContext,
+    repo_root: str,
+    run_number: int,
+) -> DevicePaths:
+    """Build a DevicePaths dataclass from UserContext and run number. No I/O."""
+    mfg = ctx.manufacturer.value.lower()
+    device_dir = os.path.join(repo_root, config.DEVICE_DIRECTORY, mfg, ctx.device_name)
+    return DevicePaths(
+        device_name=ctx.device_name,
+        manufacturer=mfg,
+        run_number=run_number,
+        device_dir=device_dir,
+        svd_dir=os.path.join(device_dir, "svd"),
+        pdf_path=os.path.join(device_dir, f"{ctx.device_name}.pdf"),
+        agent_output_dir=os.path.join(repo_root, config.OUTPUT_DIR, mfg, ctx.device_name, str(run_number)),
+        results_dir=os.path.join(repo_root, config.RESULTS_DIR, mfg, ctx.device_name, str(run_number)),
+        verified_dir=os.path.join(repo_root, "verified_datasheet"),
+    )
 
-    # Update the context_retrieval_parameters with the vs_id from the device_ctx
-    if device_ctx.vs_id != "":
-        context_retrieval_parameters.vs_id = device_ctx.vs_id
+
+def build_context_retrieval_params(
+    device_dir: str,
+    device_ctx: UserContext,
+) -> ContextRetrievalParameters:
+    """Resolve ContextRetrievalParameters for a device.
+
+    Priority:
+      1. vector_stores.json → local DB entry → LOCAL_VECTOR_DB params
+      2. vector_stores.json → OpenAI entry → OPENAI_FILE_SEARCH params
+      3. UserContext.vs_id → OPENAI_FILE_SEARCH params
+      4. Fallback → KEYWORD_SEARCH params
+    """
+    from utils.vector_store_config import get_vector_stores
+
+    try:
+        vs_config = get_vector_stores(device_dir, use_cache=False)
+    except FileNotFoundError:
+        vs_config = None
+
+    # 1. Check for local vector DB in vector_stores.json (prefer default entry)
+    if vs_config:
+        # Check default entry first, then iterate remaining
+        check_order = []
+        if vs_config.default:
+            check_order.append(vs_config.default)
+        for name in vs_config.list_all():
+            if name not in check_order:
+                check_order.append(name)
+
+        for name in check_order:
+            vs_info = vs_config.get(name)
+            if vs_info and vs_info.is_local and vs_info.local_db_name:
+                chunk_index_path = vs_config.get_chunk_index_path(name) or ""
+                return ContextRetrievalParameters(
+                    context_retrieval_method=ContextRetrievalMethod.LOCAL_VECTOR_DB,
+                    pages_after_keyword=0,
+                    remove_tables=False,
+                    number_embeddings=config.CONTEXT_RETRIEVAL_PARAMETERS.number_embeddings,
+                    re_ranking=config.CONTEXT_RETRIEVAL_PARAMETERS.re_ranking,
+                    score_threshold=config.CONTEXT_RETRIEVAL_PARAMETERS.score_threshold,
+                    vs_id="",
+                    regex="",
+                    local_db_name=vs_info.local_db_name,
+                    local_db_path="",  # use default databases/ directory
+                    chunk_index_path=chunk_index_path,
+                    chunk_expansion_enabled=config.CONTEXT_RETRIEVAL_PARAMETERS.chunk_expansion_enabled,
+                    pages_after=config.CONTEXT_RETRIEVAL_PARAMETERS.pages_after,
+                    keyword_boost=config.CONTEXT_RETRIEVAL_PARAMETERS.keyword_boost,
+                    reranker_type=config.CONTEXT_RETRIEVAL_PARAMETERS.reranker_type,
+                    metadata_filter_enabled=config.CONTEXT_RETRIEVAL_PARAMETERS.metadata_filter_enabled,
+                )
+
+        # 2. Check for OpenAI vector store entry
+        default_vs = vs_config.get_default()
+        if default_vs and default_vs.vs_id:
+            chunk_index_path = vs_config.get_chunk_index_path(vs_config.default) or ""
+            return ContextRetrievalParameters(
+                context_retrieval_method=ContextRetrievalMethod.OPENAI_FILE_SEARCH,
+                pages_after_keyword=config.CONTEXT_RETRIEVAL_PARAMETERS.pages_after_keyword,
+                remove_tables=config.CONTEXT_RETRIEVAL_PARAMETERS.remove_tables,
+                number_embeddings=config.CONTEXT_RETRIEVAL_PARAMETERS.number_embeddings,
+                re_ranking=config.CONTEXT_RETRIEVAL_PARAMETERS.re_ranking,
+                score_threshold=config.CONTEXT_RETRIEVAL_PARAMETERS.score_threshold,
+                vs_id=default_vs.vs_id,
+                regex="",
+                chunk_index_path=chunk_index_path,
+                chunk_expansion_enabled=config.CONTEXT_RETRIEVAL_PARAMETERS.chunk_expansion_enabled,
+                pages_after=config.CONTEXT_RETRIEVAL_PARAMETERS.pages_after,
+            )
+
+    # 3. Fallback to UserContext.vs_id
+    if device_ctx.vs_id:
+        return ContextRetrievalParameters(
+            context_retrieval_method=ContextRetrievalMethod.OPENAI_FILE_SEARCH,
+            pages_after_keyword=config.CONTEXT_RETRIEVAL_PARAMETERS.pages_after_keyword,
+            remove_tables=config.CONTEXT_RETRIEVAL_PARAMETERS.remove_tables,
+            number_embeddings=config.CONTEXT_RETRIEVAL_PARAMETERS.number_embeddings,
+            re_ranking=config.CONTEXT_RETRIEVAL_PARAMETERS.re_ranking,
+            score_threshold=config.CONTEXT_RETRIEVAL_PARAMETERS.score_threshold,
+            vs_id=device_ctx.vs_id,
+            regex="",
+            chunk_expansion_enabled=config.CONTEXT_RETRIEVAL_PARAMETERS.chunk_expansion_enabled,
+            pages_after=config.CONTEXT_RETRIEVAL_PARAMETERS.pages_after,
+        )
+
+    # 4. Last resort: keyword search
+    return ContextRetrievalParameters(
+        context_retrieval_method=ContextRetrievalMethod.KEYWORD_SEARCH,
+        pages_after_keyword=config.CONTEXT_RETRIEVAL_PARAMETERS.pages_after_keyword,
+        remove_tables=config.CONTEXT_RETRIEVAL_PARAMETERS.remove_tables,
+        number_embeddings=config.CONTEXT_RETRIEVAL_PARAMETERS.number_embeddings,
+        re_ranking=config.CONTEXT_RETRIEVAL_PARAMETERS.re_ranking,
+        score_threshold=config.CONTEXT_RETRIEVAL_PARAMETERS.score_threshold,
+        vs_id="",
+        regex="",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Step 1: Preprocessing
+# ---------------------------------------------------------------------------
+
+def preprocess_device(
+    paths: DevicePaths,
+    fmt: str = "markdown",
+    embed_metadata: bool = True,
+    max_tokens: int = 800,
+    overlap_tokens: int = 100,
+) -> tuple[bool, int]:
+    """Chunk + enrich + augment + ingest into local ChromaDB.
+
+    Returns (done, chunks_created). Skips if the DB already exists.
+    """
+    from context_retrieval.preprocessing.pipeline import (
+        run_chunking,
+        run_enrichment,
+        run_augmentation,
+        run_local_ingestion,
+    )
+
+    db_name = f"{paths.device_name}_md_chunks"
+
+    # Check if DB already exists (lazy import to avoid pulling in chromadb early)
+    try:
+        from context_retrieval.vector_db.vector_store import database_exists
+        if database_exists(db_name):
+            print(f"  [preprocessing] Local DB '{db_name}' already exists — skipping")
+            return True, 0
+    except Exception:
+        pass  # vector_db not available; proceed with ingestion
+
+    if not os.path.exists(paths.pdf_path):
+        print(f"  [preprocessing] PDF not found: {paths.pdf_path} — skipping")
+        return False, 0
+
+    format_subdir = "md" if fmt == "markdown" else "text"
+    base_output_dir = os.path.join(paths.device_dir, "chunks")
+    chunks_dir = os.path.join(base_output_dir, format_subdir)
+    metadata_dir = chunks_dir
+    file_extension = ".txt"
+
+    # Step 1: Chunk
+    chunk_metadata = run_chunking(
+        paths.pdf_path, chunks_dir, paths.device_name,
+        max_tokens, overlap_tokens, fmt,
+    )
+
+    # Step 2: Enrich
+    run_enrichment(chunks_dir, metadata_dir, file_extension)
+
+    # Step 3: Augment (optional)
+    upload_dir = chunks_dir
+    if embed_metadata:
+        augmented_dir = os.path.join(base_output_dir, f"{format_subdir}_enriched")
+        run_augmentation(chunks_dir, metadata_dir, augmented_dir, file_extension)
+        upload_dir = augmented_dir
+
+    # Step 4: Ingest into local ChromaDB
+    result = run_local_ingestion(
+        chunks_dir=upload_dir,
+        metadata_dir=metadata_dir,
+        device_name=paths.device_name,
+        device_dir=paths.device_dir,
+        db_name=db_name,
+        embedding_provider="local",
+        entry_name=f"local_{format_subdir}_chunks",
+    )
+    if result != 0:
+        print(f"  [preprocessing] Local ingestion failed for {paths.device_name}")
+        return False, 0
+
+    return True, len(chunk_metadata)
+
+
+# ---------------------------------------------------------------------------
+# Steps 2-5: Per-device pipeline
+# ---------------------------------------------------------------------------
+
+def run_pipeline_for_device(
+    ctx: UserContext,
+    args: argparse.Namespace,
+    repo_root: str,
+) -> DeviceResult:
+    """Execute the full pipeline (steps 2-5) for a single device."""
+    from s1a_generator import run_generator, run_generator_batched
+    from s2_coverage_improver import run_coverage_improver
+    from s4_validator import build_invariants_from_agent_output, run_validator, run_validator_batched
+    from s5_analyzer import run_analyzer
+    from scripts.s2_compare_agent_output_with_svd import compare_agent_output_with_svd
+    from scripts.s4_generate_diff_table import generate_diff_table
+    from scripts.s5_compare_diff_with_verified_output import compare_diff_with_verified_datasheet
+    from scripts.calculate_generator_coverage import calculate_generator_coverage
+
+    result = DeviceResult(device_name=ctx.device_name)
+
+    try:
+        run_number = resolve_next_run_number(repo_root, ctx)
+        paths = resolve_device_paths(ctx, repo_root, run_number)
+        result.final_run_number = run_number
+
+        # Resolve context retrieval parameters
+        cr_params = build_context_retrieval_params(paths.device_dir, ctx)
+
+        # Read settings from args (with config.py defaults)
+        generator_model = args.generator_model or config.GENERATOR_MODEL_NAME
+        ci_model = args.coverage_improver_model or config.COVERAGE_IMPROVER_MODEL_NAME
+        validator_model = args.validator_model or config.VALIDATOR_MODEL_NAME
+        ci_iterations = args.coverage_improver_iterations
+        ci_reasoning = config.COVERAGE_IMPROVER_REASONING_EFFORT
+        validator_reasoning = config.VALIDATOR_REASONING_EFFORT
+        run_analyzer_flag = args.run_analyzer
+
+        generator_client = determine_client(generator_model)
+        ci_client = determine_client(ci_model)
+        validator_client = determine_client(validator_model)
+
+        print(f"\n{'='*70}")
+        print(f"DEVICE: {ctx.device_name} (run {run_number})")
+        print(f"{'='*70}")
+        print(f"  Context retrieval: {cr_params.context_retrieval_method.value}")
+        print(f"  Generator model:   {generator_model}")
+        print(f"  CI iterations:     {ci_iterations}")
+        print(f"  Validator model:   {validator_model}")
+        print(f"  Output dir:        {paths.agent_output_dir}")
+
+        # -- Step 1: Preprocessing --
+        if not args.skip_preprocessing:
+            print(f"\n--- Step 1: Preprocessing ---")
+            done, chunks = preprocess_device(
+                paths,
+                fmt=args.format,
+                embed_metadata=args.embed_metadata,
+            )
+            result.preprocessing_done = done
+            result.chunks_created = chunks
+            # Refresh cr_params after preprocessing (new DB may have been created)
+            if done:
+                cr_params = build_context_retrieval_params(paths.device_dir, ctx)
+
+        # -- Step 2: Generator --
+        generator_fn = run_generator_batched if args.generator_batched else run_generator
+        gen_mode = "batched" if args.generator_batched else "per-register"
+        print(f"\n--- Step 2: Generator [{gen_mode}] (run {paths.run_number}) ---")
+        truncated = generator_fn(
+            client=generator_client,
+            model_name=generator_model,
+            device_name=ctx.device_name,
+            run_number=paths.run_number,
+            device_dir=paths.device_dir,
+            agent_output_dir=paths.agent_output_dir,
+            context_retrieval_parameters=cr_params,
+            manufacturer=ctx.manufacturer,
+            peripherals_registers_dict=None,
+        )
+        result.generator_done = True
+        result.truncated = truncated
+
+        # -- Step 3: Coverage Improver (optional) --
+        if ci_iterations > 0:
+            svd_files = sorted(glob.glob(os.path.join(paths.svd_dir, "*.svd")))
+            if not svd_files:
+                print(f"  No SVD files in {paths.svd_dir} — skipping coverage improver")
+            else:
+                svd_path = svd_files[0]  # Use first SVD for coverage calculation
+                current_cr_params = cr_params
+                current_output_dir = paths.agent_output_dir
+                current_run = paths.run_number
+                current_truncated = truncated
+
+                for i in range(ci_iterations):
+                    print(f"\n--- Step 3: Coverage Improver (iteration {i+1}/{ci_iterations}) ---")
+                    coverage_info = calculate_generator_coverage(svd_path, current_output_dir)
+
+                    ci_output_dir = os.path.join(current_output_dir, "coverage_improver")
+                    os.makedirs(ci_output_dir, exist_ok=True)
+                    run_coverage_improver(
+                        ci_client,
+                        ci_model,
+                        coverage_info,
+                        current_cr_params,
+                        ci_output_dir,
+                        ci_reasoning,
+                        current_truncated,
+                    )
+
+                    ci_output = CoverageImproverOutput.model_validate_json(
+                        open(os.path.join(ci_output_dir, "coverage_improver_output.json")).read()
+                    )
+
+                    result.coverage_iterations = i + 1
+
+                    if ci_output.stop_improving:
+                        print(f"  Coverage improver signaled stop at iteration {i+1}")
+                        break
+
+                    # Prepare next iteration: update params, increment run, re-run generator
+                    current_cr_params = ci_output.context_retrieval_parameters
+                    # Preserve vector store ID (model may have changed it)
+                    if cr_params.context_retrieval_method == ContextRetrievalMethod.OPENAI_FILE_SEARCH:
+                        current_cr_params.vs_id = cr_params.vs_id
+                    if cr_params.context_retrieval_method == ContextRetrievalMethod.LOCAL_VECTOR_DB:
+                        current_cr_params.local_db_name = cr_params.local_db_name
+
+                    current_run += 1
+                    new_paths = resolve_device_paths(ctx, repo_root, current_run)
+                    current_output_dir = new_paths.agent_output_dir
+
+                    print(f"\n--- Step 2: Generator [{gen_mode}] (run {current_run}, after CI iteration {i+1}) ---")
+                    current_truncated = generator_fn(
+                        client=generator_client,
+                        model_name=generator_model,
+                        device_name=ctx.device_name,
+                        run_number=current_run,
+                        device_dir=paths.device_dir,
+                        agent_output_dir=current_output_dir,
+                        context_retrieval_parameters=current_cr_params,
+                        manufacturer=ctx.manufacturer,
+                        peripherals_registers_dict=None,
+                    )
+
+                # Update paths to the final run for subsequent steps
+                paths = resolve_device_paths(ctx, repo_root, current_run)
+                result.final_run_number = current_run
+                result.truncated = current_truncated
+
+        # -- Step 4: Validator (optional) --
+        if not args.skip_validator:
+            print(f"\n--- Step 4: Validator ---")
+            invariants = build_invariants_from_agent_output(paths.agent_output_dir)
+            validator_output_dir = os.path.join(paths.agent_output_dir, "validator")
+            os.makedirs(validator_output_dir, exist_ok=True)
+
+            validator_fn = run_validator_batched if args.validator_batched else run_validator
+            true_count, false_count = validator_fn(
+                client=validator_client,
+                model_name=validator_model,
+                invariants=invariants,
+                output_dir=validator_output_dir,
+                context_retrieval_parameters=cr_params,
+                reasoning_effort=validator_reasoning,
+            )
+            result.validator_done = True
+            result.true_count = true_count
+            result.false_count = false_count
+            print(f"  Validator: {true_count} true, {false_count} false")
+
+        # -- Step 5: Evaluation (optional) --
+        if not args.skip_evaluation:
+            print(f"\n--- Step 5: Evaluation ---")
+            svd_files = sorted(glob.glob(os.path.join(paths.svd_dir, "*.svd")))
+            if not svd_files:
+                print(f"  No SVD files in {paths.svd_dir} — skipping evaluation")
+            else:
+                # 5a. Compare agent output with SVD
+                for svd_path in svd_files:
+                    svd_base = os.path.splitext(os.path.basename(svd_path))[0]
+                    custom_results_dir = os.path.join(paths.results_dir, svd_base)
+                    os.makedirs(custom_results_dir, exist_ok=True)
+                    print(f"  Comparing with SVD: {svd_base}")
+                    compare_agent_output_with_svd(svd_path, paths.agent_output_dir, custom_results_dir)
+                    result.svd_files_compared += 1
+
+                # 5b. Analyzer (optional)
+                if run_analyzer_flag:
+                    analyzer_model = args.generator_model or config.GENERATOR_MODEL_NAME
+                    for svd_path in svd_files:
+                        svd_base = os.path.splitext(os.path.basename(svd_path))[0]
+                        register_diff_csv = os.path.join(paths.results_dir, svd_base, "register_diff.csv")
+                        if not os.path.exists(register_diff_csv):
+                            continue
+                        analyzer_output_dir = os.path.join(paths.agent_output_dir, "analyzer_iteration")
+                        os.makedirs(analyzer_output_dir, exist_ok=True)
+                        print(f"  Running analyzer for: {svd_base}")
+                        asyncio.run(run_analyzer(analyzer_model, svd_base, register_diff_csv, analyzer_output_dir))
+
+                        # Filter register_diff.csv to keep only actual bugs
+                        analyzer_output_path = os.path.join(analyzer_output_dir, svd_base)
+                        if os.path.exists(analyzer_output_path):
+                            analyzer_diff_csv = register_diff_csv.replace(".csv", "_analyzer.csv")
+                            with open(analyzer_output_path, "r") as f:
+                                ids = json.load(f)["bugs"]
+                            with open(register_diff_csv, "r") as inf, open(analyzer_diff_csv, "w", newline="") as outf:
+                                reader = csv.reader(inf)
+                                writer = csv.writer(outf)
+                                writer.writerow(next(reader))  # header
+                                for row in reader:
+                                    if row and (int(row[0]) in ids or row[3] == "fields"):
+                                        writer.writerow(row)
+
+                # 5c. Generate diff tables
+                for svd_path in svd_files:
+                    svd_base = os.path.splitext(os.path.basename(svd_path))[0]
+                    custom_results_dir = os.path.join(paths.results_dir, svd_base)
+                    generate_diff_table(custom_results_dir, run_analyzer_flag)
+
+                # 5d. Compare with verified datasheet
+                for svd_path in svd_files:
+                    svd_base = os.path.splitext(os.path.basename(svd_path))[0]
+                    custom_results_dir = os.path.join(paths.results_dir, svd_base)
+                    verified_csv = os.path.join(paths.verified_dir, f"{ctx.device_name}_{svd_base}.csv")
+                    if not os.path.exists(verified_csv):
+                        print(f"  Verified CSV not found for {svd_base}")
+                        continue
+                    register_diff_csv = os.path.join(custom_results_dir, "register_diff.csv")
+                    register_diff_verified_csv = os.path.join(custom_results_dir, "register_diff_verified.csv")
+                    compare_diff_with_verified_datasheet(register_diff_csv, verified_csv, register_diff_verified_csv)
+
+                    field_diff_csv = os.path.join(custom_results_dir, "field_diff.csv")
+                    field_diff_verified_csv = os.path.join(custom_results_dir, "field_diff_verified.csv")
+                    compare_diff_with_verified_datasheet(field_diff_csv, verified_csv, field_diff_verified_csv)
+
+                result.evaluation_done = True
+
+    except Exception as e:
+        result.success = False
+        result.error = str(e)
+        import traceback
+        traceback.print_exc()
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Multi-device pipeline for hardware register extraction from datasheets",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    # Device selection
+    parser.add_argument(
+        "--devices", nargs="+", metavar="DEVICE",
+        help="Device names to process (default: all in config.user_contexts)",
+    )
+
+    # Step control
+    parser.add_argument(
+        "--skip-preprocessing", action="store_true",
+        help="Skip local vector store creation (Step 1)",
+    )
+    parser.add_argument(
+        "--coverage-improver-iterations", type=int,
+        default=config.COVERAGE_IMPROVER_ITERATIONS,
+        help=f"Number of coverage improver iterations; 0 = skip (default: {config.COVERAGE_IMPROVER_ITERATIONS})",
+    )
+    parser.add_argument(
+        "--skip-validator", action="store_true",
+        help="Skip validation step (Step 4)",
+    )
+    parser.add_argument(
+        "--skip-evaluation", action="store_true",
+        help="Skip SVD comparison and diff tables (Step 5)",
+    )
+    parser.add_argument(
+        "--run-analyzer", action="store_true",
+        default=config.RUN_ANALYZER,
+        help=f"Run analyzer on diffs (default: {config.RUN_ANALYZER})",
+    )
+    parser.add_argument(
+        "--generator-batched", action="store_true",
+        default=config.GENERATOR_BATCHED,
+        help="Use per-peripheral batched generator (fewer LLM calls)",
+    )
+    parser.add_argument(
+        "--validator-batched", action="store_true",
+        help="Use batched validator (groups invariants by register)",
+    )
+
+    # Model overrides
+    parser.add_argument(
+        "--generator-model", metavar="MODEL",
+        help=f"Override generator model (default: {config.GENERATOR_MODEL_NAME})",
+    )
+    parser.add_argument(
+        "--coverage-improver-model", metavar="MODEL",
+        help=f"Override coverage improver model (default: {config.COVERAGE_IMPROVER_MODEL_NAME})",
+    )
+    parser.add_argument(
+        "--validator-model", metavar="MODEL",
+        help=f"Override validator model (default: {config.VALIDATOR_MODEL_NAME})",
+    )
+
+    # Parallelism
+    parser.add_argument(
+        "--max-workers", type=int, default=1,
+        help="Number of devices to process in parallel (default: 1)",
+    )
+
+    # Preprocessing options
+    parser.add_argument(
+        "--format", choices=["text", "markdown"], default="markdown",
+        help="Chunk format for preprocessing (default: markdown)",
+    )
+    parser.add_argument(
+        "--embed-metadata", action="store_true", default=True,
+        help="Embed metadata in chunks during preprocessing (default: True)",
+    )
+    parser.add_argument(
+        "--no-embed-metadata", action="store_false", dest="embed_metadata",
+        help="Do not embed metadata in chunks during preprocessing",
+    )
+
+    return parser.parse_args()
+
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+
+def _print_summary(results: list[DeviceResult]) -> None:
+    """Print a summary table of pipeline results."""
+    print(f"\n{'='*70}")
+    print("PIPELINE SUMMARY")
+    print(f"{'='*70}")
+
+    # Header
+    print(f"{'Device':<12} {'Status':<8} {'Run':<5} {'Preproc':<8} {'Gen':<5} "
+          f"{'CI':<4} {'Val':<10} {'Eval':<6} {'Error'}")
+    print("-" * 90)
+
+    for r in results:
+        status = "OK" if r.success else "FAIL"
+        preproc = "done" if r.preprocessing_done else "-"
+        gen = "yes" if r.generator_done else "-"
+        ci = str(r.coverage_iterations) if r.coverage_iterations > 0 else "-"
+        val = f"{r.true_count}T/{r.false_count}F" if r.validator_done else "-"
+        evl = str(r.svd_files_compared) if r.evaluation_done else "-"
+        err = r.error[:30] if r.error else ""
+        print(f"{r.device_name:<12} {status:<8} {r.final_run_number:<5} {preproc:<8} {gen:<5} "
+              f"{ci:<4} {val:<10} {evl:<6} {err}")
+
+    print(f"{'='*70}")
+    ok = sum(1 for r in results if r.success)
+    print(f"Total: {ok}/{len(results)} succeeded")
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    args = parse_args()
+
+    # Select devices
+    all_contexts = config.user_contexts
+    if args.devices:
+        selected = []
+        device_set = set(d.lower() for d in args.devices)
+        for ctx in all_contexts:
+            if ctx.device_name.lower() in device_set:
+                selected.append(ctx)
+                device_set.discard(ctx.device_name.lower())
+        if device_set:
+            print(f"Warning: devices not found in config.user_contexts: {device_set}")
+        if not selected:
+            print("Error: no matching devices found")
+            sys.exit(1)
     else:
-        pdf_path = os.path.join(device_directory, f"{device_name}.pdf")
-        vs_id, file_id = create_vector_store(pdf_path, device_name)
-        device_ctx.vs_id = vs_id
-        device_ctx.file_id = file_id
-        update_user_context(device_ctx)
+        selected = list(all_contexts)
 
-    for i in range(coverage_improver_iterations):
-        # ---- (S1) Run generator agent ----
-        generator_truncated_at_any_register = run_generator(
-            client=generator_client, 
-            model_name=generator_model_name, 
-            device_name=device_name, 
-            run_number=run_number, 
-            device_dir=device_directory, 
-            agent_output_dir=agent_output_folder, 
-            context_retrieval_parameters=context_retrieval_parameters, 
-            manufacturer=device_ctx.manufacturer,
-            peripherals_registers_dict=None
-        )
+    print(f"Processing {len(selected)} device(s): {[c.device_name for c in selected]}")
 
-        # Run the validator on the agent output
-        invariants = build_invariants_from_agent_output(agent_output_folder)
-        validator_output_dir = os.path.join(agent_output_folder, "validator")
-        os.makedirs(validator_output_dir, exist_ok=True)
-        true_count, false_count = run_validator(
-            client=validator_client,
-            model_name=validator_model_name,
-            invariants=invariants,
-            output_dir=validator_output_dir,
-            context_retrieval_parameters=context_retrieval_parameters,
-            reasoning_effort=validator_reasoning_effort
-        )
-        print("Coverage improver iteration: ", i)
-        print("Coverage improver model: ", coverage_improver_model_name)
-        print(f"True count: {true_count}, False count: {false_count}")
-        
-        # ---- (S2) Feeedback Loop with Coverage Improver ----
-        # Get the coverage of the agent output
-        svd_files = sorted([f for f in glob.glob(os.path.join(svd_dir, "*.svd"))])
-        if not svd_files:
-            raise RuntimeError(f"No svd files found in {svd_dir}")
-        svd_path = svd_files[0]
-        coverage_info = calculate_generator_coverage(svd_path, agent_output_folder)
-       
-        # Call coverage improver with information about the coverage, context retrieval parameters, 
-        coverage_improver_output_dir = os.path.join(agent_output_folder, "coverage_improver")
-        os.makedirs(coverage_improver_output_dir, exist_ok=True)
-        run_coverage_improver(
-            coverage_improver_client,
-            coverage_improver_model_name,
-            coverage_info,
-            context_retrieval_parameters,
-            coverage_improver_output_dir,
-            coverage_improver_reasoning_effort,
-            generator_truncated_at_any_register
-        )
-       
-        # Output should be an updated context retrieval parameters and reasoning.
-        coverage_improver_output = CoverageImproverOutput.model_validate_json(open(os.path.join(coverage_improver_output_dir, "coverage_improver_output.json")).read())
-        stop_improving = coverage_improver_output.stop_improving
-        if stop_improving:
-            break
-        context_retrieval_parameters = coverage_improver_output.context_retrieval_parameters
-        context_retrieval_parameters.vs_id = device_ctx.vs_id # just to make sure model didn't change it
-       
-        # update the run number and corresponding directories
-        run_number = str(int(run_number) + 1)
-        device_ctx.run = run_number
-        update_user_context(device_ctx)
-        agent_output_folder = os.path.join(repo_root, config.OUTPUT_DIR, device_ctx.manufacturer.value.lower(), device_name, run_number)
-        results_directory = os.path.join(repo_root, config.RESULTS_DIR, device_ctx.manufacturer.value.lower(), device_name, run_number)
+    results: list[DeviceResult] = []
 
-    exit()
-    # ---- (S2) Compare agent output with SVD for each SVD file ----
-    svd_files = sorted([f for f in glob.glob(os.path.join(svd_dir, "*.svd"))])
-    if not svd_files:
-        raise RuntimeError(f"No svd files found in {svd_dir}")
+    if args.max_workers <= 1:
+        # Sequential execution
+        for ctx in selected:
+            result = run_pipeline_for_device(ctx, args, _REPO_ROOT)
+            results.append(result)
+    else:
+        # Parallel execution across devices
+        with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
+            futures = {
+                executor.submit(run_pipeline_for_device, ctx, args, _REPO_ROOT): ctx
+                for ctx in selected
+            }
+            for future in as_completed(futures):
+                ctx = futures[future]
+                try:
+                    result = future.result()
+                except Exception as e:
+                    result = DeviceResult(
+                        device_name=ctx.device_name,
+                        success=False,
+                        error=str(e),
+                    )
+                results.append(result)
 
-    for svd_path in svd_files:
-        svd_file_base = os.path.splitext(os.path.basename(svd_path))[0]
-        custom_results_dir = os.path.join(results_directory, svd_file_base)
-        os.makedirs(custom_results_dir, exist_ok=True)
-        print(f"Comparing agent output with SVD for: {svd_file_base}")
-        compare_agent_output_with_svd(svd_path, agent_output_folder, custom_results_dir)
-
-    # ---- (S3) Run the analyzer agent on the results ----
-    if analyzer:
-        for svd_path in svd_files:
-            svd_file_base = os.path.splitext(os.path.basename(svd_path))[0]
-            register_diff_csv_path = os.path.join(results_directory, svd_file_base, "register_diff.csv")
-            analyzer_output_dir = os.path.join(agent_output_folder, "analyzer_iteration")
-            os.makedirs(analyzer_output_dir, exist_ok=True)
-            print(f"Running analyzer for: {svd_file_base}")
-            await run_analyzer(model_name, svd_file_base, register_diff_csv_path, analyzer_output_dir)
-            
-            # Filter the register_diff.csv file to only include the rows that are in the analyzer output
-            analyzer_output_path = os.path.join(analyzer_output_dir, f"{svd_file_base}")
-            analyzer_register_diff_csv_path = register_diff_csv_path.replace('.csv', '_analyzer.csv')
-            with open(analyzer_output_path, 'r') as f:
-                ids = json.load(f)['bugs']
-                # Now filter rows from register_diff.csv to register_diff_analyzer.csv
-                with open(register_diff_csv_path, 'r') as inf, open(analyzer_register_diff_csv_path, 'w') as outf:
-                    reader = csv.reader(inf)
-                    writer = csv.writer(outf)
-                    input_header = next(reader)
-                    writer.writerow(input_header)
-                    for row in reader:
-                        if row and (int(row[0]) in ids or row[3] == 'fields'):
-                            writer.writerow(row)
-
-    # ---- (S4) Generate the diff table ----
-    for svd_path in svd_files:
-        svd_file_base = os.path.splitext(os.path.basename(svd_path))[0]
-        custom_results_dir = os.path.join(results_directory, svd_file_base)
-        generate_diff_table(custom_results_dir, analyzer)
-
-    # ---- (S5) Compare the diff table with the verified output ----
-    for svd_path in svd_files:
-        svd_file_base = os.path.splitext(os.path.basename(svd_path))[0]
-        custom_results_dir = os.path.join(results_directory, svd_file_base)
-
-        verified_csv_path = os.path.join(verified_datasheet_directory, f"{device_name}_{svd_file_base}.csv")
-        if not os.path.exists(verified_csv_path):
-            print(f"Verified CSV not found for {svd_file_base}")
-            continue
-        # Compare the register diff with the verified output
-        register_diff_csv_path = os.path.join(custom_results_dir, "register_diff.csv")
-        register_diff_verified_csv_path = os.path.join(custom_results_dir, "register_diff_verified.csv")
-        compare_diff_with_verified_datasheet(register_diff_csv_path, verified_csv_path, register_diff_verified_csv_path)
-        # Additionally, run compare_diff_with_verified_output.py with 'field_diff.csv' instead of 'register_diff.csv'
-        field_diff_csv_path = os.path.join(custom_results_dir, "field_diff.csv")
-        field_diff_verified_csv_path = os.path.join(custom_results_dir, "field_diff_verified.csv")
-        compare_diff_with_verified_datasheet(field_diff_csv_path, verified_csv_path, field_diff_verified_csv_path)
+    _print_summary(results)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
-
-
+    main()

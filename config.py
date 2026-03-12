@@ -17,37 +17,44 @@ DEVICE_NAME = "rm0041"
 TIKTOKEN_ENCODING = "o200k_harmony"
 
 CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
-    context_retrieval_method=ContextRetrievalMethod.KEYWORD_SEARCH,
-    pages_after_keyword=2,
-    remove_tables=True,
-    number_embeddings=16,
-    re_ranking=True,
-    score_threshold=0.25,
+    context_retrieval_method=ContextRetrievalMethod.LOCAL_VECTOR_DB,
+    pages_after_keyword=0,
+    remove_tables=False,
+    number_embeddings=2,
+    re_ranking=False,
+    score_threshold=0.0,
     vs_id="",
     regex="",
     # Contiguous chunk expansion (for semantic search)
     chunk_expansion_enabled=True,
-    pages_after=2,
-    chunk_index_path=""
+    pages_after=1,
+    chunk_index_path="chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv",
+    expand_table_pages_only=False,
+    # Local vector DB parameters (D2 experiment — best found accuracy)
+    local_db_name="rm0041_md_chunks",
+    keyword_boost=False,
+    reranker_type="local",
+    metadata_filter_enabled=True,
 )
 
-# Local Vector DB example (ChromaDB + FastEmbed, free and offline):
+# Keyword search alternative:
 # CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
-#     context_retrieval_method=ContextRetrievalMethod.LOCAL_VECTOR_DB,
-#     pages_after_keyword=0,
-#     remove_tables=False,
-#     number_embeddings=5,
-#     re_ranking=False,
-#     score_threshold=0.0,
+#     context_retrieval_method=ContextRetrievalMethod.KEYWORD_SEARCH,
+#     pages_after_keyword=2,
+#     remove_tables=True,
+#     number_embeddings=16,
+#     re_ranking=True,
+#     score_threshold=0.25,
 #     vs_id="",
 #     regex="",
-#     local_db_name="rm0041_md",     # ChromaDB database name
-#     keyword_boost=True,             # Hybrid semantic + keyword matching
-#     reranker_type="local",          # FlashRank local reranker ("", "local", "cohere", "bge")
+#     chunk_expansion_enabled=True,
+#     pages_after=2,
+#     chunk_index_path=""
 # )
 
 # MODEL_NAME = "gpt-4o"
 GENERATOR_MODEL_NAME = "gpt-oss-120b"
+GENERATOR_BATCHED = False  # Use per-peripheral batched generator (fewer LLM calls)
 GENERATOR_ITER = 1 # Number of iterations for the generator agent
 
 COVERAGE_IMPROVER_MODEL_NAME = "gpt-5.2"

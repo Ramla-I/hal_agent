@@ -14,6 +14,12 @@ class ContextRetrievalMethod(Enum):
     LOCAL_VECTOR_DB = "local_vector_db"
     REGEX = "regex"
 
+class BatchedRetrievalStrategy(Enum):
+    PER_REGISTER = "per_register"                 # Option C: per-register queries, no trim (full union)
+    PER_REGISTER_TRIMMED = "per_register_trimmed"  # Option D: per-register queries, trimmed to n_embeddings each (identical to unbatched)
+    COMBINED_WITH_FILTER = "combined_with_filter"  # Option A: single combined query + $or metadata filter + reranker
+    COMBINED_NO_FILTER = "combined_no_filter"      # Option B: single combined query + reranker only (no metadata filter)
+
 class CoverageInfo(BaseModel):
     peripheral_coverage: float
     register_coverage: float
@@ -52,6 +58,7 @@ class ContextRetrievalParameters(BaseModel):
     reranker_type: str = ""  # "", "local" (FlashRank), "cohere", "bge"
     local_embedding_provider: str = "local"  # "local" (FastEmbed) or "openai"
     metadata_filter_enabled: bool = True  # Filter chunks by register name in metadata before search
+    batched_retrieval_strategy: BatchedRetrievalStrategy = BatchedRetrievalStrategy.PER_REGISTER
 
 class CoverageImproverOutput(BaseModel):
     context_retrieval_parameters: ContextRetrievalParameters
@@ -115,7 +122,7 @@ class BitField(BaseModel):
     description: str
     access: str
     bit_number: BitNumber
-    enumerated_values: list[EnumValue]
+    enumerated_values: list[EnumValue] = []
 
 class RegisterInfo(BaseModel):
     datasheet_register_abbreviation: str

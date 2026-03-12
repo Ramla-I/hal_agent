@@ -270,3 +270,481 @@ stm_datasheet_example = """
     }
     ```
 """
+
+
+stm_datasheet_batched_example = """
+--- BATCHED EXAMPLE ---
+# INPUT
+
+## PERIPHERAL NAME
+    Peripheral name: BKP
+
+## REGISTERS TO EXTRACT
+    - BKP_DR1
+    - BKP_DR2
+    - BKP_CR
+    - BKP_CSR
+    - BKP_DR35
+
+## DATASHEET INPUT
+    **6.4.1** **Backup data registers (BKP_DRx)**
+    **(x = 1..10)**
+
+    Address offset: 0x04 + (x - 1) * 0x04, x = 1..10
+
+    Reset value: 0x0000 0000
+
+    |15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0|
+    |---|
+    |D[15:0]|
+    |rw|
+
+    Bits 15:0 **D[15:0]**: Backup data
+    These bits can be written by the application and are only cleared by a tamper event or a Backup domain reset.
+
+    **6.4.4** **Backup control register (BKP_CR)**
+
+    Address offset: 0x30
+
+    Reset value: 0x0000 0000
+
+    |15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0|
+    |---|---|
+    |Reserved|TPE|
+    |Reserved|rw|
+
+    Bit 0 **TPE**: TAMPER pin enable
+    0: The TAMPER pin is free for GPIO alternate function
+    1: Enables the tamper detection on the TAMPER pin
+
+    **6.4.5** **Backup control/status register (BKP_CSR)**
+
+    Address offset: 0x34
+
+    Reset value: 0x0000 0000
+
+    |15 14 13 12 11 10|9|8|7 6 5 4 3|2|1|0|
+    |---|---|---|---|---|---|---|
+    |Reserved|TIF|TEF|Reserved|TPIE|CTI|CTE|
+    |Reserved|r|r|Reserved|rw|w|w|
+
+    Bit 9 **TIF**: Tamper interrupt flag
+    This bit is set by hardware when a tamper event is detected and the TPIE bit is set.
+    It is cleared by writing 1 to the CTI bit.
+    1: A tamper interrupt occurred
+
+    Bit 8 **TEF**: Tamper event flag
+    This bit is set by hardware when a tamper event is detected.
+    It is cleared by writing 1 to the CTE bit.
+    1: A tamper event has been detected
+
+    Bit 2 **TPIE**: TAMPER pin interrupt enable
+    0: Tamper interrupt disabled
+    1: Tamper interrupt enabled (the TIF bit will set an interrupt)
+
+    Bit 1 **CTI**: Clear tamper interrupt
+    0: No effect
+    1: Clear the tamper interrupt and the TIF tamper interrupt flag
+
+    Bit 0 **CTE**: Clear tamper event
+    0: No effect
+    1: Reset the TEF tamper event flag (and the tamper detector)
+
+# OUTPUT
+    I need to extract information for 5 registers: BKP_DR1, BKP_DR2, BKP_CR, BKP_CSR, and BKP_DR35.
+
+    **BKP_DR1**: The datasheet shows BKP_DRx where x = 1..10. Since x=1 is within the range, BKP_DR1 is valid.
+    The address offset is a formula: 0x04 + (x-1)*0x04. I need to use calculate_address_offset for x=1.
+    Reset value is 0x00000000. Size is 16 bits. It has one subfield D[15:0] that is read-write.
+
+    **BKP_DR2**: Same register family BKP_DRx, x=2 is within range. I need calculate_address_offset for x=2.
+    Reset value is 0x00000000. Size is 16 bits. Same subfield D[15:0] that is read-write.
+
+    **BKP_CR**: The datasheet shows BKP_CR at offset 0x30. Reset value is 0x00000000. Size is 16 bits.
+    It has one subfield TPE at bit 0 that is read-write.
+
+    **BKP_CSR**: The datasheet shows BKP_CSR at offset 0x34. Reset value is 0x00000000. Size is 16 bits.
+    It has 5 subfields: TIF (bit 9, read-only), TEF (bit 8, read-only), TPIE (bit 2, read-write),
+    CTI (bit 1, write-only), CTE (bit 0, write-only). I must include all 5 subfields.
+
+    **BKP_DR35**: The datasheet shows BKP_DRx only for x = 1..10, and even with the extended range
+    (DR11..DR42), there is no DR35 in the range visible here. No information found.
+
+    ```function_call
+    { "function_calls": [
+        {
+            "name": "calculate_address_offset",
+            "parameters": {
+                "base_address_in_hex": "0x04",
+                "start_register_number": 1,
+                "register_number": 1,
+                "register_size_in_bytes": 4
+            }
+        },
+        {
+            "name": "calculate_address_offset",
+            "parameters": {
+                "base_address_in_hex": "0x04",
+                "start_register_number": 1,
+                "register_number": 2,
+                "register_size_in_bytes": 4
+            }
+        }
+    ]}
+    ```
+
+    ```json
+    [
+        {
+            "register_name": "BKP_DR1",
+            "datasheet_register_abbreviation": "BKP_DR1",
+            "address_offset": "0x04",
+            "reset_value": "0x00000000",
+            "size": 16,
+            "subfields": [
+                {
+                    "name": "D",
+                    "description": "Backup data",
+                    "access": "read-write",
+                    "bit_number": {
+                        "start_bit": 0,
+                        "end_bit": 15
+                    }
+                }
+            ],
+            "access_constraints": []
+        },
+        {
+            "register_name": "BKP_DR2",
+            "datasheet_register_abbreviation": "BKP_DR2",
+            "address_offset": "0x08",
+            "reset_value": "0x00000000",
+            "size": 16,
+            "subfields": [
+                {
+                    "name": "D",
+                    "description": "Backup data",
+                    "access": "read-write",
+                    "bit_number": {
+                        "start_bit": 0,
+                        "end_bit": 15
+                    }
+                }
+            ],
+            "access_constraints": []
+        },
+        {
+            "register_name": "BKP_CR",
+            "datasheet_register_abbreviation": "BKP_CR",
+            "address_offset": "0x30",
+            "reset_value": "0x00000000",
+            "size": 16,
+            "subfields": [
+                {
+                    "name": "TPE",
+                    "description": "TAMPER pin enable",
+                    "access": "read-write",
+                    "bit_number": {
+                        "start_bit": 0,
+                        "end_bit": 0
+                    }
+                }
+            ],
+            "access_constraints": []
+        },
+        {
+            "register_name": "BKP_CSR",
+            "datasheet_register_abbreviation": "BKP_CSR",
+            "address_offset": "0x34",
+            "reset_value": "0x00000000",
+            "size": 16,
+            "subfields": [
+                {
+                    "name": "CTE",
+                    "description": "Clear tamper event",
+                    "access": "write-only",
+                    "bit_number": {
+                        "start_bit": 0,
+                        "end_bit": 0
+                    }
+                },
+                {
+                    "name": "CTI",
+                    "description": "Clear tamper interrupt",
+                    "access": "write-only",
+                    "bit_number": {
+                        "start_bit": 1,
+                        "end_bit": 1
+                    }
+                },
+                {
+                    "name": "TPIE",
+                    "description": "TAMPER pin interrupt enable",
+                    "access": "read-write",
+                    "bit_number": {
+                        "start_bit": 2,
+                        "end_bit": 2
+                    }
+                },
+                {
+                    "name": "TEF",
+                    "description": "Tamper event flag",
+                    "access": "read-only",
+                    "bit_number": {
+                        "start_bit": 8,
+                        "end_bit": 8
+                    }
+                },
+                {
+                    "name": "TIF",
+                    "description": "Tamper interrupt flag",
+                    "access": "read-only",
+                    "bit_number": {
+                        "start_bit": 9,
+                        "end_bit": 9
+                    }
+                }
+            ],
+            "access_constraints": []
+        },
+        {
+            "register_name": "BKP_DR35",
+            "datasheet_register_abbreviation": null,
+            "address_offset": null,
+            "reset_value": null,
+            "size": null,
+            "subfields": null,
+            "access_constraints": null
+        }
+    ]
+    ```
+"""
+
+stm_datasheet_batched_example_no_reasoning = """
+--- BATCHED EXAMPLE ---
+# INPUT
+
+## PERIPHERAL NAME
+    Peripheral name: BKP
+
+## REGISTERS TO EXTRACT
+    - BKP_DR1
+    - BKP_DR2
+    - BKP_CR
+    - BKP_CSR
+    - BKP_DR35
+
+## DATASHEET INPUT
+    **6.4.1** **Backup data registers (BKP_DRx)**
+    **(x = 1..10)**
+
+    Address offset: 0x04 + (x - 1) * 0x04, x = 1..10
+
+    Reset value: 0x0000 0000
+
+    |15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0|
+    |---|
+    |D[15:0]|
+    |rw|
+
+    Bits 15:0 **D[15:0]**: Backup data
+    These bits can be written by the application and are only cleared by a tamper event or a Backup domain reset.
+
+    **6.4.4** **Backup control register (BKP_CR)**
+
+    Address offset: 0x30
+
+    Reset value: 0x0000 0000
+
+    |15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0|
+    |---|---|
+    |Reserved|TPE|
+    |Reserved|rw|
+
+    Bit 0 **TPE**: TAMPER pin enable
+    0: The TAMPER pin is free for GPIO alternate function
+    1: Enables the tamper detection on the TAMPER pin
+
+    **6.4.5** **Backup control/status register (BKP_CSR)**
+
+    Address offset: 0x34
+
+    Reset value: 0x0000 0000
+
+    |15 14 13 12 11 10|9|8|7 6 5 4 3|2|1|0|
+    |---|---|---|---|---|---|---|
+    |Reserved|TIF|TEF|Reserved|TPIE|CTI|CTE|
+    |Reserved|r|r|Reserved|rw|w|w|
+
+    Bit 9 **TIF**: Tamper interrupt flag
+    This bit is set by hardware when a tamper event is detected and the TPIE bit is set.
+    It is cleared by writing 1 to the CTI bit.
+    1: A tamper interrupt occurred
+
+    Bit 8 **TEF**: Tamper event flag
+    This bit is set by hardware when a tamper event is detected.
+    It is cleared by writing 1 to the CTE bit.
+    1: A tamper event has been detected
+
+    Bit 2 **TPIE**: TAMPER pin interrupt enable
+    0: Tamper interrupt disabled
+    1: Tamper interrupt enabled (the TIF bit will set an interrupt)
+
+    Bit 1 **CTI**: Clear tamper interrupt
+    0: No effect
+    1: Clear the tamper interrupt and the TIF tamper interrupt flag
+
+    Bit 0 **CTE**: Clear tamper event
+    0: No effect
+    1: Reset the TEF tamper event flag (and the tamper detector)
+
+# OUTPUT
+    ```function_call
+    { "function_calls": [
+        {
+            "name": "calculate_address_offset",
+            "parameters": {
+                "base_address_in_hex": "0x04",
+                "start_register_number": 1,
+                "register_number": 1,
+                "register_size_in_bytes": 4
+            }
+        },
+        {
+            "name": "calculate_address_offset",
+            "parameters": {
+                "base_address_in_hex": "0x04",
+                "start_register_number": 1,
+                "register_number": 2,
+                "register_size_in_bytes": 4
+            }
+        }
+    ]}
+    ```
+
+    ```json
+    [
+        {
+            "register_name": "BKP_DR1",
+            "datasheet_register_abbreviation": "BKP_DR1",
+            "address_offset": "0x04",
+            "reset_value": "0x00000000",
+            "size": 16,
+            "subfields": [
+                {
+                    "name": "D",
+                    "description": "Backup data",
+                    "access": "read-write",
+                    "bit_number": {
+                        "start_bit": 0,
+                        "end_bit": 15
+                    }
+                }
+            ],
+            "access_constraints": []
+        },
+        {
+            "register_name": "BKP_DR2",
+            "datasheet_register_abbreviation": "BKP_DR2",
+            "address_offset": "0x08",
+            "reset_value": "0x00000000",
+            "size": 16,
+            "subfields": [
+                {
+                    "name": "D",
+                    "description": "Backup data",
+                    "access": "read-write",
+                    "bit_number": {
+                        "start_bit": 0,
+                        "end_bit": 15
+                    }
+                }
+            ],
+            "access_constraints": []
+        },
+        {
+            "register_name": "BKP_CR",
+            "datasheet_register_abbreviation": "BKP_CR",
+            "address_offset": "0x30",
+            "reset_value": "0x00000000",
+            "size": 16,
+            "subfields": [
+                {
+                    "name": "TPE",
+                    "description": "TAMPER pin enable",
+                    "access": "read-write",
+                    "bit_number": {
+                        "start_bit": 0,
+                        "end_bit": 0
+                    }
+                }
+            ],
+            "access_constraints": []
+        },
+        {
+            "register_name": "BKP_CSR",
+            "datasheet_register_abbreviation": "BKP_CSR",
+            "address_offset": "0x34",
+            "reset_value": "0x00000000",
+            "size": 16,
+            "subfields": [
+                {
+                    "name": "CTE",
+                    "description": "Clear tamper event",
+                    "access": "write-only",
+                    "bit_number": {
+                        "start_bit": 0,
+                        "end_bit": 0
+                    }
+                },
+                {
+                    "name": "CTI",
+                    "description": "Clear tamper interrupt",
+                    "access": "write-only",
+                    "bit_number": {
+                        "start_bit": 1,
+                        "end_bit": 1
+                    }
+                },
+                {
+                    "name": "TPIE",
+                    "description": "TAMPER pin interrupt enable",
+                    "access": "read-write",
+                    "bit_number": {
+                        "start_bit": 2,
+                        "end_bit": 2
+                    }
+                },
+                {
+                    "name": "TEF",
+                    "description": "Tamper event flag",
+                    "access": "read-only",
+                    "bit_number": {
+                        "start_bit": 8,
+                        "end_bit": 8
+                    }
+                },
+                {
+                    "name": "TIF",
+                    "description": "Tamper interrupt flag",
+                    "access": "read-only",
+                    "bit_number": {
+                        "start_bit": 9,
+                        "end_bit": 9
+                    }
+                }
+            ],
+            "access_constraints": []
+        },
+        {
+            "register_name": "BKP_DR35",
+            "datasheet_register_abbreviation": null,
+            "address_offset": null,
+            "reset_value": null,
+            "size": null,
+            "subfields": null,
+            "access_constraints": null
+        }
+    ]
+    ```
+"""

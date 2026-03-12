@@ -33,15 +33,31 @@ def _get_store(db_name: str, db_path: str = "", embedding_provider: str = "local
     return _store_cache[cache_key]
 
 
-def _build_register_filter(register_name: str) -> tuple[Optional[Dict[str, Any]], None]:
+def _build_register_filter(register_names: "str | list[str]") -> tuple[Optional[Dict[str, Any]], None]:
     """Build a ChromaDB where clause for register metadata filtering.
 
     Registers are stored as individual boolean metadata fields (reg_AFIO_MAPR: True)
     during ingestion. Uses ChromaDB where clause with exact match on the boolean field.
+
+    Accepts a single register name or a list of register names. When multiple names
+    are provided, produces a ``$or`` clause so chunks matching *any* register are
+    returned. Falls back to unfiltered search if the list exceeds 10 items (ChromaDB
+    practical limit for ``$or`` clauses).
     """
-    if not register_name:
+    if not register_names:
         return None, None
-    return {f"reg_{register_name.upper()}": True}, None
+    if isinstance(register_names, str):
+        register_names = [register_names]
+    register_names = [n for n in register_names if n]  # drop empty strings
+    if not register_names:
+        return None, None
+    if len(register_names) == 1:
+        return {f"reg_{register_names[0].upper()}": True}, None
+    if len(register_names) > 10:
+        # Too many clauses for ChromaDB $or — fall through to unfiltered search
+        return None, None
+    clauses = [{f"reg_{name.upper()}": True} for name in register_names]
+    return {"$or": clauses}, None
 
 
 def normalize_local_results(results: List[Dict[str, Any]]) -> List[SearchResult]:
@@ -84,13 +100,16 @@ def search_local_raw(
     reranker_type: str = "",
     db_path: str = "",
     embedding_provider: str = "local",
-    register_filter: str = "",
+    register_filter: "str | list[str]" = "",
 ) -> List[Dict[str, Any]]:
     """Run tiered filtering + optional reranking on local ChromaDB.
 
     Returns the raw result dicts (text, metadata, score) WITHOUT keyword boost,
     score threshold, trim, expansion, or formatting. Those are handled by the
     shared post_process() pipeline.
+
+    ``register_filter`` may be a single register name string or a list of
+    register name strings (for batched / multi-register queries).
     """
     store = _get_store(db_name, db_path, embedding_provider)
 
@@ -99,7 +118,12 @@ def search_local_raw(
 
     with timed_operation("vector_store_search"):
         where_clause, _ = _build_register_filter(register_filter)
-        reg_upper = register_filter.upper() if register_filter else ""
+
+        # Build a $contains fallback string from the filter(s)
+        if isinstance(register_filter, list):
+            reg_upper = register_filter[0].upper() if register_filter else ""
+        else:
+            reg_upper = register_filter.upper() if register_filter else ""
 
         results = None
         if where_clause is not None:
