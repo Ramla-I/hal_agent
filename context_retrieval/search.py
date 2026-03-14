@@ -137,6 +137,7 @@ def _search_local(
         db_path=params.local_db_path,
         embedding_provider=params.local_embedding_provider,
         register_filter=register_filter if params.metadata_filter_enabled else "",
+        fetch_k_multiplier=params.fetch_k_multiplier,
     )
 
     return normalize_local_results(raw)

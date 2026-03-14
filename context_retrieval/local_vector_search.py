@@ -101,6 +101,7 @@ def search_local_raw(
     db_path: str = "",
     embedding_provider: str = "local",
     register_filter: "str | list[str]" = "",
+    fetch_k_multiplier: int = 5,
 ) -> List[Dict[str, Any]]:
     """Run tiered filtering + optional reranking on local ChromaDB.
 
@@ -114,7 +115,7 @@ def search_local_raw(
     store = _get_store(db_name, db_path, embedding_provider)
 
     do_rerank = bool(reranker_type)
-    fetch_k = n_results * 5 if do_rerank else n_results
+    fetch_k = n_results * fetch_k_multiplier if do_rerank else n_results
 
     with timed_operation("vector_store_search"):
         where_clause, _ = _build_register_filter(register_filter)

@@ -12,6 +12,7 @@ class ContextRetrievalMethod(Enum):
     KEYWORD_SEARCH = "keyword_search"
     OPENAI_FILE_SEARCH = "openai_file_search"
     LOCAL_VECTOR_DB = "local_vector_db"
+    OPENEVOLVE = "openevolve"
     REGEX = "regex"
 
 class BatchedRetrievalStrategy(Enum):
@@ -58,6 +59,8 @@ class ContextRetrievalParameters(BaseModel):
     reranker_type: str = ""  # "", "local" (FlashRank), "cohere", "bge"
     local_embedding_provider: str = "local"  # "local" (FastEmbed) or "openai"
     metadata_filter_enabled: bool = True  # Filter chunks by register name in metadata before search
+    fetch_k_multiplier: int = 5  # Candidate pool multiplier for reranking (fetch_k = n_results * multiplier)
+    neighbor_expansion_enabled: bool = False  # Bidirectional same-page chunk neighbor expansion
     batched_retrieval_strategy: BatchedRetrievalStrategy = BatchedRetrievalStrategy.PER_REGISTER
 
 class CoverageImproverOutput(BaseModel):

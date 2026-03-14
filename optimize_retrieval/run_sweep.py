@@ -146,6 +146,7 @@ def _generate_local_output_prefix(
     db_name: str, num_embeddings: int, keyword_boost: bool, reranker_type: str,
     metadata_filter: bool = False, pages_after: int = 0, table_pages_only: bool = False,
     batched_strategy: str = "", max_fields_per_batch: int = 0,
+    fetch_k_multiplier: int = 5, neighbor_expansion: bool = False,
 ) -> str:
     """Generate a descriptive output folder name for local vector DB configuration."""
     parts = [f"local_{db_name}", f"emb{num_embeddings}"]
@@ -159,6 +160,10 @@ def _generate_local_output_prefix(
         parts.append(f"pa{pages_after}")
     if table_pages_only:
         parts.append("tpo")
+    if fetch_k_multiplier != 5:
+        parts.append(f"fk{fetch_k_multiplier}")
+    if neighbor_expansion:
+        parts.append("ne")
     if batched_strategy:
         parts.append(batched_strategy)
     if max_fields_per_batch > 0:
@@ -406,20 +411,26 @@ def main():
     CHUNK_INDEX_PATH_OVERRIDE: Optional[str] = None
 
     # Local vector DB sweep parameters
-    USE_LOCAL_VECTOR_DB = True                 # Set to True to include local vector DB configs in sweep
+    USE_LOCAL_VECTOR_DB = False                # Skip — already have E1 batched results
     LOCAL_DB_NAMES = ["rm0041_md_chunks"]        # ChromaDB database names to sweep
-    LOCAL_EMBEDDING_COUNTS = [2]          # n_results values to sweep for local DB
+    LOCAL_EMBEDDING_COUNTS = [4]                  # E1 winner: emb4+ne
     KEYWORD_BOOST_VALUES = [False]        # Keyword boost on/off
     RERANKER_TYPES = ["local"]                  # "" = no reranker, "local" = FlashRank
     LOCAL_DB_PATH = ""                          # Override databases directory (default: databases/)
     # Enriched local DB features
     LOCAL_METADATA_FILTER = [True]               # Filter by register name in metadata
-    LOCAL_PAGES_AFTER = [1]              # Chunk expansion pages (0 = disabled)
+    LOCAL_PAGES_AFTER = [0]                       # E1 winner: no page expansion
     LOCAL_TABLE_PAGES_ONLY = [False]             # Only expand table-containing pages
     LOCAL_CHUNK_INDEX_PATH = "chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv"
+    LOCAL_FETCH_K_MULTIPLIER = [5]               # Candidate pool multiplier for reranking
+    LOCAL_NEIGHBOR_EXPANSION = [True]             # E1 winner: neighbor expansion on
+
+    # OpenEvolve retrieval
+    USE_OPENEVOLVE = True                         # Include OE retrieval config
+    OE_OUTPUT_PARENT = "optimize_retrieval/experiments/oe_batched"
 
     # Batched generator settings
-    USE_BATCHED_GENERATOR = True              # True = use run_generator_batched(), False = run_generator()
+    USE_BATCHED_GENERATOR = True
     MAX_FIELDS_PER_BATCH = 50                 # Adaptive batching: max SVD fields per batch (lower → more batches, higher accuracy for complex peripherals)
     BATCHED_STRATEGIES = [                    # Only relevant when USE_BATCHED_GENERATOR=True
         BatchedRetrievalStrategy.PER_REGISTER_TRIMMED,  # sD: per-register queries, trimmed to n_embeddings each (D2-identical)
@@ -428,7 +439,7 @@ def main():
     # Output
     # OpenAI experiments go to openai_file_search_baseline/, local to post_batched_strategy_sweep/
     OUTPUT_PARENT = "optimize_retrieval/experiments/openai_file_search_baseline"
-    LOCAL_OUTPUT_PARENT = "optimize_retrieval/experiments/post_batched_strategy_sweep"
+    LOCAL_OUTPUT_PARENT = "optimize_retrieval/experiments/e1_vs_oe_batched"
     OUTPUT_PREFIX_BASE: Optional[str] = None   # e.g. "my_sweep"; if set, each config becomes "<base>_<auto>"
 
     # Verified comparison
@@ -489,24 +500,32 @@ def main():
                             for mf in LOCAL_METADATA_FILTER:
                                 for pa in LOCAL_PAGES_AFTER:
                                     for tpo in LOCAL_TABLE_PAGES_ONLY:
-                                        cfg_entry = {
-                                            "backend": "local",
-                                            "local_db_name": local_db,
-                                            "num_embeddings": num_embeddings,
-                                            "keyword_boost": kb,
-                                            "reranker_type": rt,
-                                            "metadata_filter": mf,
-                                            "pages_after": pa,
-                                            "table_pages_only": tpo,
-                                        }
-                                        if strategy is not None:
-                                            cfg_entry["batched_strategy"] = strategy
-                                        configs.append(cfg_entry)
+                                        for fkm in LOCAL_FETCH_K_MULTIPLIER:
+                                            for ne in LOCAL_NEIGHBOR_EXPANSION:
+                                                cfg_entry = {
+                                                    "backend": "local",
+                                                    "local_db_name": local_db,
+                                                    "num_embeddings": num_embeddings,
+                                                    "keyword_boost": kb,
+                                                    "reranker_type": rt,
+                                                    "metadata_filter": mf,
+                                                    "pages_after": pa,
+                                                    "table_pages_only": tpo,
+                                                    "fetch_k_multiplier": fkm,
+                                                    "neighbor_expansion": ne,
+                                                }
+                                                if strategy is not None:
+                                                    cfg_entry["batched_strategy"] = strategy
+                                                configs.append(cfg_entry)
 
-    # No filtering needed - single config
+    # OpenEvolve retrieval configs
+    if USE_OPENEVOLVE:
+        os.makedirs(OE_OUTPUT_PARENT, exist_ok=True)
+        configs.append({"backend": "openevolve"})
 
     openai_count = sum(1 for c in configs if c["backend"] == "openai")
     local_count = sum(1 for c in configs if c["backend"] == "local")
+    oe_count = sum(1 for c in configs if c["backend"] == "openevolve")
 
     print(f"\n{'='*70}")
     print(f"GENERATOR EXPERIMENT SWEEP")
@@ -516,7 +535,7 @@ def main():
         print("Peripherals: (all)")
     else:
         print(f"Peripherals: {peripherals_to_run}")
-    print(f"Configurations to run: {len(configs)} ({openai_count} OpenAI, {local_count} local)")
+    print(f"Configurations to run: {len(configs)} ({openai_count} OpenAI, {local_count} local, {oe_count} OE)")
     if openai_count > 0:
         print(f"  OpenAI VS types: {vs_types}")
         print(f"  OpenAI embedding counts: {embedding_counts}")
@@ -531,6 +550,8 @@ def main():
         print(f"  Metadata filter: {LOCAL_METADATA_FILTER}")
         print(f"  Pages after: {LOCAL_PAGES_AFTER}")
         print(f"  Table pages only: {LOCAL_TABLE_PAGES_ONLY}")
+        print(f"  Fetch K multiplier: {LOCAL_FETCH_K_MULTIPLIER}")
+        print(f"  Neighbor expansion: {LOCAL_NEIGHBOR_EXPANSION}")
     if USE_BATCHED_GENERATOR:
         print(f"  Batched generator: ENABLED")
         print(f"  Max fields per batch: {MAX_FIELDS_PER_BATCH}")
@@ -551,7 +572,7 @@ def main():
     for cfg in configs:
         run_idx += 1
         backend = cfg["backend"]
-        num_embeddings = cfg["num_embeddings"]
+        num_embeddings = cfg.get("num_embeddings", 0)
 
         if backend == "openai":
             vs_type = cfg["vs_type"]
@@ -605,9 +626,15 @@ def main():
             table_pages_only = cfg.get("table_pages_only", False)
             batched_strategy = cfg.get("batched_strategy")  # None when not batched
 
+            fetch_k_multiplier = cfg.get("fetch_k_multiplier", 5)
+            neighbor_expansion = cfg.get("neighbor_expansion", False)
             strategy_label = STRATEGY_LABELS.get(batched_strategy, "") if batched_strategy else ""
-            print(f"\n[{run_idx}/{total_runs}] Running: backend=local, db={local_db_name}, emb={num_embeddings}, kb={keyword_boost}, mf={metadata_filter}, pa={pages_after}"
+            print(f"\n[{run_idx}/{total_runs}] Running: backend=local, db={local_db_name}, emb={num_embeddings}, kb={keyword_boost}, mf={metadata_filter}, pa={pages_after}, ne={neighbor_expansion}"
+                  + (f", fkm={fetch_k_multiplier}" if fetch_k_multiplier != 5 else "")
                   + (f", strategy={strategy_label}" if strategy_label else ""))
+
+            # Chunk index needed for page expansion OR neighbor expansion
+            needs_chunk_index = pages_after > 0 or neighbor_expansion
 
             context_retrieval_parameters = ContextRetrievalParameters(
                 context_retrieval_method=ContextRetrievalMethod.LOCAL_VECTOR_DB,
@@ -625,8 +652,10 @@ def main():
                 metadata_filter_enabled=metadata_filter,
                 chunk_expansion_enabled=pages_after > 0,
                 pages_after=pages_after,
-                chunk_index_path=LOCAL_CHUNK_INDEX_PATH if pages_after > 0 else "",
+                chunk_index_path=LOCAL_CHUNK_INDEX_PATH if needs_chunk_index else "",
                 expand_table_pages_only=table_pages_only,
+                fetch_k_multiplier=fetch_k_multiplier,
+                neighbor_expansion_enabled=neighbor_expansion,
                 **({"batched_retrieval_strategy": batched_strategy} if batched_strategy else {}),
             )
 
@@ -635,6 +664,8 @@ def main():
                 metadata_filter, pages_after, table_pages_only,
                 batched_strategy=strategy_label,
                 max_fields_per_batch=MAX_FIELDS_PER_BATCH if USE_BATCHED_GENERATOR else 0,
+                fetch_k_multiplier=fetch_k_multiplier,
+                neighbor_expansion=neighbor_expansion,
             )
             if OUTPUT_PREFIX_BASE:
                 output_prefix = f"{OUTPUT_PREFIX_BASE}_{auto_prefix}"
@@ -647,8 +678,34 @@ def main():
             print(f"  Keyword boost: {keyword_boost}, Metadata filter: {metadata_filter}")
             print(f"  Pages after: {pages_after}, Table pages only: {table_pages_only}")
             print(f"  Reranker: {reranker_type or '(none)'}")
+            if fetch_k_multiplier != 5:
+                print(f"  Fetch K multiplier: {fetch_k_multiplier}")
+            if neighbor_expansion:
+                print(f"  Neighbor expansion: {neighbor_expansion}")
             if strategy_label:
                 print(f"  Batched strategy: {strategy_label} ({batched_strategy.value})")
+
+        elif backend == "openevolve":
+            print(f"\n[{run_idx}/{total_runs}] Running: backend=openevolve")
+
+            context_retrieval_parameters = ContextRetrievalParameters(
+                context_retrieval_method=ContextRetrievalMethod.OPENEVOLVE,
+                pages_after_keyword=0,
+                remove_tables=False,
+                number_embeddings=6,  # OE retrieves 6 results internally
+                re_ranking=False,
+                score_threshold=0,
+                vs_id="",
+                regex="",
+            )
+
+            oe_prefix = "openevolve"
+            if USE_BATCHED_GENERATOR:
+                oe_prefix += f"_batched_mfpb{MAX_FIELDS_PER_BATCH}"
+            else:
+                oe_prefix += "_unbatched"
+            output_prefix = oe_prefix
+            output_dir = os.path.join(OE_OUTPUT_PARENT, output_prefix)
 
         os.makedirs(output_dir, exist_ok=True)
         print(f"  Output: {output_dir}")
@@ -866,6 +923,8 @@ def main():
                 result_row["metadata_filter"] = cfg.get("metadata_filter", False)
                 result_row["pages_after"] = cfg.get("pages_after", 0)
                 result_row["table_pages_only"] = cfg.get("table_pages_only", False)
+                result_row["fetch_k_multiplier"] = cfg.get("fetch_k_multiplier", 5)
+                result_row["neighbor_expansion"] = cfg.get("neighbor_expansion", False)
                 bs = cfg.get("batched_strategy")
                 result_row["batched_strategy"] = STRATEGY_LABELS.get(bs, "") if bs else ""
             all_results.append(result_row)

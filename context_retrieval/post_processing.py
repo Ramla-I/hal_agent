@@ -172,6 +172,102 @@ def _expand_results(
 
 
 # ---------------------------------------------------------------------------
+# 3b. Neighbor expansion (bidirectional same-page chunks)
+# ---------------------------------------------------------------------------
+
+def _extract_register_name(query: str) -> str:
+    """Extract PERIPHERAL_REGISTER name from query string.
+
+    Queries typically look like:
+      'PERIPHERAL_REGISTER register definition bit fields ...'
+    The register name is the first UPPER_CASE compound term.
+    """
+    match = re.search(r'\b([A-Z]{2,}[0-9]*_[A-Z0-9_]+)\b', query)
+    return match.group(1) if match else ""
+
+
+def _expand_neighbors(
+    results: List[SearchResult],
+    params: ContextRetrievalParameters,
+    register_name: str = "",
+) -> List[SearchResult]:
+    """Expand each primary result with its same-page neighbor chunks (chunk_index +/- 1).
+
+    Only adds a neighbor if it contains the register name (case-insensitive) OR
+    has tables — OE-style relevance filter to avoid pulling in unrelated content.
+
+    Args:
+        results: Primary search results (already trimmed).
+        params: Retrieval parameters (needs chunk_index_path).
+        register_name: Register name for relevance filtering (e.g. "AFIO_MAPR").
+
+    Returns:
+        List of neighbor expansion SearchResults with is_expansion=True.
+    """
+    if not params.chunk_index_path:
+        return []
+
+    from context_retrieval.chunk_index import get_chunk_index
+
+    try:
+        chunk_index = get_chunk_index(params.chunk_index_path)
+    except FileNotFoundError:
+        return []
+
+    existing_ids = {r.chunk_id for r in results if r.chunk_id}
+    reg_upper = register_name.upper() if register_name else ""
+
+    expansion: List[SearchResult] = []
+
+    for result in results:
+        page = result.page_number
+        ci = result.metadata.get("chunk_index", -1)
+        if page <= 0 or ci < 0:
+            continue
+
+        page_chunks = chunk_index.page_to_chunks.get(page, [])
+        if not page_chunks:
+            continue
+
+        for delta in (-1, 1):
+            neighbor_ci = ci + delta
+            neighbor_info = next((c for c in page_chunks if c["chunk_index"] == neighbor_ci), None)
+            if neighbor_info is None:
+                continue
+
+            cid = neighbor_info["chunk_id"]
+            if cid in existing_ids:
+                continue
+
+            text = chunk_index.read_chunk_content(neighbor_info)
+            if not text:
+                continue
+
+            # Relevance filter: must contain register name or have tables
+            has_tables = chunk_index.chunk_has_tables(cid)
+            if not has_tables and reg_upper:
+                if reg_upper not in text.upper():
+                    continue
+            elif not has_tables and not reg_upper:
+                # No relevance signal available — skip
+                continue
+
+            existing_ids.add(cid)
+            expansion.append(SearchResult(
+                text=text,
+                score=0.0,
+                page_number=neighbor_info.get("page_number", 0),
+                chunk_id=cid,
+                source="neighbor_expansion",
+                has_tables=has_tables,
+                is_expansion=True,
+            ))
+
+    logger.info(f"Neighbor expansion added {len(expansion)} chunks")
+    return expansion
+
+
+# ---------------------------------------------------------------------------
 # 4. Remove markdown tables
 # ---------------------------------------------------------------------------
 
@@ -318,10 +414,19 @@ def post_process(
     if not results:
         return None, []
 
-    # 4. Chunk expansion
+    # 4. Chunk expansion (page-level, forward)
     expansion_results: List[SearchResult] = []
     if params.chunk_expansion_enabled:
         expansion_results = _expand_results(results, params)
+
+    # 4b. Neighbor expansion (same-page, bidirectional)
+    if params.neighbor_expansion_enabled:
+        reg_name = _extract_register_name(query)
+        neighbor_results = _expand_neighbors(results, params, register_name=reg_name)
+        # Deduplicate against page-level expansion
+        existing_ids = {r.chunk_id for r in expansion_results if r.chunk_id}
+        neighbor_results = [r for r in neighbor_results if r.chunk_id not in existing_ids]
+        expansion_results.extend(neighbor_results)
 
     # 5. Remove tables (applies to both primary and expansion results)
     if params.remove_tables:

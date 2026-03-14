@@ -14,6 +14,16 @@ from context_retrieval.post_processing import post_process
 from agent_tools.pdf_ops import extract_pages_from_pdf
 from agent_tools.md_ops import remove_markdown_tables
 
+def _resolve_oe_chunks(device_dir: str, device_name: str) -> tuple[str, str]:
+    """Resolve chunks directory and index CSV for OpenEvolve retrieval."""
+    # Extract manufacturer from device_dir (e.g. "devices/stm/rm0041" → "stm")
+    parts = device_dir.rstrip("/").split("/")
+    mfr = parts[-2] if len(parts) >= 2 else "stm"
+    chunks_dir = os.path.join("chunked_datasheets", mfr, device_name, "chunks", "md")
+    chunks_index_csv = os.path.join(chunks_dir, "chunks_index.csv")
+    return chunks_dir, chunks_index_csv
+
+
 def retrieve_context(
     context_retrieval_parameters: ContextRetrievalParameters,
     device_name: str, 
@@ -51,12 +61,22 @@ def retrieve_context(
             register_filter=f"{peripheral_name}_{register_name}",
         )
 
+    elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.OPENEVOLVE:
+        from context_retrieval.openevolve_search import search_openevolve
+        chunks_dir, chunks_index_csv = _resolve_oe_chunks(device_dir, device_name)
+        context = search_openevolve(peripheral_name, register_name, chunks_dir, chunks_index_csv)
+        if not context:
+            return None, []
+        # Wrap in XML to match pipeline format
+        formatted = f"<sources><result source='openevolve'><content>{context}</content></result></sources>"
+        return formatted, []
+
     elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.REGEX:
         print(f"Retrieving context from regex for {device_name} {peripheral_name} {register_name}")
         return None, []
 
     else:
-        raise ValueError(f"Context retrieval method {context_retrieval_parameters.context_retrieval_method} not supported") 
+        raise ValueError(f"Context retrieval method {context_retrieval_parameters.context_retrieval_method} not supported")
 
 def retrieve_context_for_peripheral(
     context_retrieval_parameters: ContextRetrievalParameters,
@@ -149,6 +169,13 @@ def retrieve_context_for_peripheral(
                 f"definitions, offsets, reset values, sizes, and subfield information."
             )
             return search_context(query, context_retrieval_parameters, register_filter=[])
+
+    elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.OPENEVOLVE:
+        from context_retrieval.openevolve_search import search_openevolve_for_peripheral
+        chunks_dir, chunks_index_csv = _resolve_oe_chunks(device_dir, device_name)
+        return search_openevolve_for_peripheral(
+            peripheral_name, register_names, chunks_dir, chunks_index_csv,
+        )
 
     elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.REGEX:
         print(f"Retrieving context from regex for {device_name} {peripheral_name}")
