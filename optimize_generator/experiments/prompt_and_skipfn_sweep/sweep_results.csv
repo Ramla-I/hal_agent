@@ -1,0 +1,2 @@
+config,max_fields_per_batch,max_registers_per_batch,include_reasoning,skip_function_followup,prompt_style,num_embeddings,pages_after,found_accuracy,complete_accuracy,coverage,registers_found,total_registers,correct,wrong,missing,total_input,total_cached,total_output,total_reasoning,total_total,context_tokens,llm_time,search_time,total_time,wall_time,llm_calls,tokens_per_register,time_per_register
+mfpb30_mrpb10_skipfn_minimal,30,10,True,True,minimal,2,1,87.07,74.35,85.39,84,97,1313,45,150,144914,33792,94714,37929,239628,92318,252.77,175.56,428.34,433.14,31,2013.7,3.64

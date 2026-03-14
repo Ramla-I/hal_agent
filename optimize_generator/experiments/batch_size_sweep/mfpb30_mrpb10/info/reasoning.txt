@@ -1,0 +1,348 @@
+---afio---
+The datasheet sections provide explicit definitions for all requested AFIO registers.  
+- Each register’s address offset and reset value are given directly, so no address‑calculation function is needed.  
+- All registers are 32‑bit wide and accessed as words.  
+- The bit‑field tables list every sub‑field (including reserved bits) together with their access type; these are reproduced verbatim.  
+- A common access constraint is stated: **the AFIO clock must be enabled (RCC_APB2ENR.AFIOEN set) before any read or write of AFIO_EVCR, AFIO_MAPR2, or any AFIO_EXTICR x register**. This constraint is captured for each register.
+
+---afio---
+The datasheet provides explicit information for the two requested registers:
+
+* **AFIO_MAPR** – address offset 0x04, reset 0x0000 0000, 32‑bit wide. All bit fields are listed in the tables, including reserved bits and the write‑only SWJ_CFG field.  
+* **AFIO_EXTICR1** – address offset 0x08, reset 0x0000, 32‑bit wide. Bits 31‑16 are reserved, and bits 15‑0 contain four 4‑bit EXTI mapping fields.
+
+Both registers share the same access pre‑condition: the AFIO peripheral clock must be enabled (RCC_APB2ENR AFIOEN = set) before any read or write. This is captured as an access constraint.
+
+No address‑offset calculations are needed because the offsets are given directly.
+
+---bkp---
+The datasheet defines backup data registers **BKP_DRx** for x = 1 .. 20.  
+Thus only the requested registers bkp_dr7, bkp_dr8, bkp_dr9, bkp_dr18 and bkp_dr19 have documented information; the others (bkp_dr24, bkp_dr27, bkp_dr32, bkp_dr34, bkp_dr41) are outside the defined range and no data is available.
+
+All **BKP_DRx** registers are 16‑bit wide, reset to 0x00000000 and contain a single read‑write field **D[15:0]** (bits 15 down to 0).  
+
+The address offsets are given as two contiguous blocks:
+- 0x04 – 0x28 for x = 1 .. 10 (step 0x04)  
+- 0x40 – 0x64 for x = 11 .. 20 (step 0x04)  
+
+The exact offsets for the registers we need were calculated with the `calculate_address_offset` tool, yielding:
+- BKP_DR7 → 0x1C  
+- BKP_DR8 → 0x20  
+- BKP_DR9 → 0x24  
+- BKP_DR18 → 0x5C  
+- BKP_DR19 → 0x60  
+
+A safety constraint appears in the **BKP_CSR** description: a write to any **BKP_DRx** must not occur while the **TEF** bit (bit 8) of **BKP_CSR** is set, otherwise the data is not stored. This is captured as a precondition for write operations to the data registers.
+
+---bkp---
+The datasheet specifies backup data registers **BKP_DRx** for x = 1 .. 20.  
+- Offsets 0x04‑0x28 (step 0x04) cover x = 1‑10.  
+- Offsets 0x40‑0x64 (step 0x04) cover x = 11‑20.  
+
+Thus only **bkp_dr10**, **bkp_dr13**, and **bkp_dr15** are defined in the provided range; the other data‑register requests fall outside the documented range and have no information.  
+
+The **BKP_RTCCR** register is explicitly described with offset 0x2C, reset value 0x00000000, size 16 bits and the fields Reserved [15:10] (read‑only), ASOS [9] (read‑write), ASOE [8] (read‑write), CCO [7] (read‑write), CAL [6:0] (read‑write). No access constraints are mentioned for any of the registers.
+
+The address offsets for the three valid data registers were calculated with `calculate_address_offset`:
+
+---bkp---
+**Reasoning**  
+The datasheet defines backup data registers **BKP_DRx** for x = 1 .. 20.  
+All such registers share:  
+
+* Reset value = `0x00000000`  
+* Size = 16 bits  
+* One read‑write subfield **D[15:0]** (“Backup data”)  
+
+Address offsets are given as two ranges and were computed with the `calculate_address_offset` tool:
+
+* **BKP_DR1** → 0x04  
+* **BKP_DR6** → 0x18  
+* **BKP_DR14** → 0x4C  
+* **BKP_DR20** → 0x64  
+
+The remaining requested registers (`bkp_dr29`, `bkp_dr36`, `bkp_dr22`, `bkp_dr35`, `bkp_dr40`, `bkp_dr23`) are outside the documented range, so no information is available and their fields are set to null. No explicit access‑order constraints are mentioned for any of the registers.
+
+---bkp---
+The datasheet specifies **BKP_DRx** registers for x = 1 .. 20.  
+Offsets are in two blocks:
+
+* 0x04 to 0x28 (step 0x04) for x = 1‑10 → offsets 0x04, 0x08, 0x0C, 0x10, 0x14 …  
+* 0x40 to 0x64 (step 0x04) for x = 11‑20 → offsets 0x40, 0x44, 0x48 …  
+
+Using the provided `calculate_address_offset` calls we obtained the exact offsets for the requested registers that exist in the range (x = 2, 4, 5, 11, 12).  
+Registers **bkp_dr25**, **bkp_dr33**, **bkp_dr37** are outside the documented range and therefore have no information.
+
+All sub‑fields described in the datasheet are listed, and the explicit access constraints that appear in the text are captured:
+
+* **BKP_DRx** writes are ignored while **TEF** in **BKP_CSR** is set.  
+* **TPAL** in **BKP_CR** should only be modified when **TPE** is cleared.  
+* **TPIE** in **BKP_CSR** can be set only when **TPE** in **BKP_CR** is set.
+
+No additional function calls are required.
+
+---bkp---
+The datasheet specifies backup data registers **BKP_DRx** for x = 1 .. 20.  
+Their address offsets are defined in two contiguous blocks:
+
+* x = 1‑10 → 0x04 + (x‑1)·0x04  
+* x = 11‑20 → 0x40 + (x‑11)·0x04  
+
+All registers have a reset value of 0x00000000, are 16 bits wide, and consist of a single read‑write field **D[15:0]** covering bits 15‑0. No access constraints are mentioned.
+
+Using the `calculate_address_offset` tool we obtained the exact offsets for the requested registers that fall within the documented range:
+
+* **bkp_dr3** → offset 0x0C  
+* **bkp_dr16** → offset 0x54  
+* **bkp_dr17** → offset 0x58  
+
+Registers **bkp_dr28** and **bkp_dr42** are outside the defined range (x > 20), so no information is available for them.
+
+---cec---
+The HDMI‑CEC peripheral registers are described explicitly in the provided excerpts. All registers are 32‑bit wide and are accessed either as half‑words or words. The address offsets, reset values, sub‑fields, and the one explicit access constraint (clearing REOM only after RBTF is set) are taken directly from the datasheet. No address‑calculation functions are needed because every offset is given explicitly.
+
+---crc---
+The datasheet sections for the CRC peripheral provide explicit information for each of the three requested registers:
+
+* **CRC_DR** – offset 0x00, reset 0xFFFFFFFF, 32‑bit wide, with a single read‑write data field covering bits 31:0.  
+* **CRC_IDR** – offset 0x04, reset 0x00000000, 32‑bit wide, composed of a reserved region (bits 31:8, read‑only) and an 8‑bit general‑purpose data field (bits 7:0, read‑write).  
+* **CRC_CR** – offset 0x08, reset 0x00000000, 32‑bit wide, containing reserved bits 31:1 (read‑only) and a RESET bit 0 that is write‑only and clears itself automatically.
+
+No address calculations are required because the offsets are given directly, so no function calls are needed. The datasheet does not list any explicit ordering or pre‑/post‑conditions beyond the self‑clearing nature of the RESET bit, which is captured as the access type of that field.
+
+---dac---
+**Reasoning**  
+The provided datasheet chunks describe all the requested DAC registers. Each chunk gives the register’s address offset, reset value, and a bit‑field table that defines the subfields, their bit positions, descriptions and access types.  
+
+For every register I extracted:
+* **Abbreviation** – the exact name used in the datasheet (e.g., DAC_CR).  
+* **Address offset** – taken directly from the “Address offset:” line.  
+* **Reset value** – taken from the “Reset value:” line.  
+* **Size** – the peripheral registers are accessed as 32‑bit words, so size = 32 bits.  
+* **Subfields** – every field shown in the bit‑field tables is listed, including reserved bits. For each subfield I recorded its name, description, access (read‑only, write‑only, read‑write) and start/end bit numbers.  
+* **Access constraints** – the datasheet only mentions the automatic hardware clearing of the SWTRIGR bits, which is a behavior, not a safety constraint, so no explicit access‑constraint objects are needed.
+
+All information is present directly in the excerpts; no address calculations are required, so no function calls are needed.
+
+---dac---
+The datasheet excerpts provide explicit information for three of the requested registers:
+
+* **DAC_DHR8R1** – address offset 0x10, reset value 0x00000000, 32‑bit size, and a single writable field DACC1DHR[7:0] occupying bits 7‑0.  
+* **DAC_DHR12L1** – address offset 0x0C, reset value 0x00000000, 32‑bit size, and a writable field DACC1DHR[11:0] occupying bits 15‑4.  
+* **DAC_DHR12LD** – address offset 0x24 and reset value 0x00000000 are given, but the excerpt does not contain the detailed field description, so subfield information cannot be extracted.
+
+No subfield or other details are present for **DAC_DOR2** in the supplied chunks, therefore all fields for this register are left null.
+
+No explicit access‑constraint sentences are found for any of the registers, so the `access_constraints` arrays are empty.
+
+---exti---
+The datasheet excerpt contains a dedicated section for **EXTI_FTSR** (Falling trigger selection register).  
+It directly provides the address offset (`0x0C`), the reset value (`0x0000 0000`), and a 32‑bit layout where bits 0‑17 are named **TR0…TR17** and are marked as read‑write. Bits 31‑18 are reserved. No additional ordering or state constraints are mentioned, so the `access_constraints` array stays empty. No address‑offset calculation is needed because the offset is explicitly given.
+
+---exti---
+The datasheet fragment provides a clear definition of the **EXTI_PR** (Pending register).  
+- The address offset is explicitly given as 0x14.  
+- The reset value is stated as “undefined”, so no concrete reset value can be recorded.  
+- The register is 32 bits wide, with individual pending bits **PR0 … PR17** described; the remaining bits are marked Reserved.  
+- Each pending bit can be read to determine the pending status and cleared by writing a 1, which matches the typical “read‑clear/write‑1” behavior. This is represented as a read‑write access in the required schema.  
+- No explicit ordering or safety constraints are mentioned in the excerpt, so the `access_constraints` list is empty.  
+- No address calculation is needed because the offset is directly supplied.
+
+No function calls are required.
+
+---exti---
+The datasheet provides a clear description of the **EXTI_IMR** register.  
+- Its address offset and reset value are given directly (0x00 and 0x0000 0000).  
+- The register is 32 bits wide and is accessed as a 32‑bit word.  
+- Bits 31‑18 are reserved and must stay at the reset value; this is treated as a read‑only reserved field.  
+- Bits 0‑17 are individual mask bits **MR0 … MR17**, each read‑write and described as “Interrupt mask on line x”.  
+- The only explicit access constraint is the requirement that the reserved bits remain cleared (0) for any write operation.
+
+No address‑calculation is needed, so no function calls are required.
+
+---exti---
+The datasheet provides a clear description of the **EXTI_EMR** (Event mask register).  
+From the excerpt we can extract:
+
+* **Address offset** – `0x04`  
+* **Reset value** – `0x0000 0000`  
+* **Size** – the peripheral is accessed by 32‑bit words → 32 bits.  
+* **Subfields** – bits 31‑18 are reserved (must stay 0) and bits 0‑17 are the event‑mask bits `MR0 … MR17`, each read‑write.  
+* **Access constraint** – the reserved bits must remain at their reset value (0) for any write access; this is explicitly stated in the datasheet.
+
+No additional constraints are mentioned.
+
+No address‑offset calculation is required because the offset is given directly.
+
+---exti---
+The datasheet fragment provides a clear definition for the **EXTI_RTSR** (Rising trigger selection register).  
+- The address offset and reset value are given explicitly.  
+- The register width is 32 bits (bits 31 … 0 are described).  
+- Subfields are listed: a reserved field covering bits 31‑18 and individual **TRx** bits (TR17 down to TR0) that are read‑write.  
+- No explicit ordering or safety constraints are mentioned, so the `access_constraints` list is empty.  
+No address‑offset calculation is required because the offset is directly specified.
+
+---exti---
+**Reasoning**  
+The provided datasheet excerpt contains a section titled **“Software interrupt event register (EXTI_SWIER)”**. From this section we can extract:
+
+* **Address offset** – explicitly given as `0x10`.  
+* **Reset value** – explicitly given as `0x0000 0000`.  
+* **Register size** – the register is shown with bits 31 … 0, therefore it is a 32‑bit register.  
+* **Sub‑fields** – the tables list:
+  * Bits **31 … 18** are marked **Reserved** (read‑only).  
+  * Bits **17 … 0** are individual **SWIER** bits (one per line). All are shown with `rw` access, so each is read‑write.  
+* **Access constraints** – the excerpt does not contain any sentences that impose ordering, pre‑conditions or post‑conditions for accessing this register, so no constraints are recorded.
+
+Using this information we construct the required JSON object. No address‑calculation function is needed because the offset is directly provided.
+
+---flash---
+The provided excerpts only contain the description of the **FLASH_ACR** (Flash access control register).  
+No information about the other requested registers (flash_optkeyr, flash_ar, flash_obr, flash_sr, flash_cr, flash_wrpr, flash_keyr) appears in the supplied chunks, so their entries will have all fields set to null.
+
+For **FLASH_ACR** we extracted:
+- address offset 0x00
+- reset value 0x00000000
+- register size 32 bits
+- sub‑fields: the reserved bits (31‑4 and 2‑0) and the **HLFCYA** bit (bit 3, read‑write)
+- no explicit access constraints are mentioned.
+
+No address‑offset calculations are required, so no function calls are needed.
+
+---fsmc---
+The datasheet excerpts describe the FSMC timing registers.  
+
+* **fsmc_btr3** – This is the third BTR register (x = 3). Using the offset formula  
+   Address = 0x04 + 8·(x‑1) and the supplied `calculate_address_offset` call gives **0x14**.  
+   Reset value is **0x0FFFFFFF** and the register is 32 bits wide. All bit fields are listed in the table, with bits 31‑30 reserved (must stay at reset). No explicit access‑ordering constraints are mentioned.  
+
+* **fsmc_bwtr2** – This is the second BWTR register (x = 2). Using the formula  
+   Address = 0x104 + 8·(x‑1) and the supplied `calculate_address_offset` call gives **0x10C**.  
+   Reset value is **0x0FFFFFFF**, size 32 bits, and the sub‑fields are taken from the BWTR table. Bits 31‑30 are reserved. No explicit access constraints are described.  
+
+* **fsmc_bcr4** – No information about this register appears in the provided excerpts, so all fields are left null.
+
+No additional function calls are required because the address offsets have already been computed.
+
+---fsmc---
+The datasheet gives a formula for the address offsets of the FSMC_BTRx registers and a concrete offset for FSMC_BCR3.  
+- For **FSMC_BTR1** (`x = 1`) the formula `0x04 + 8·(x‑1)` yields offset **0x04**.  
+- For **FSMC_BTR4** (`x = 4`) the same formula yields offset **0x1C**.  
+These offsets were obtained with the provided `calculate_address_offset` function.  
+
+The reset value for all BTR registers is `0x0FFF FFFF`. No reset value is supplied for FSMC_BCR3 in the excerpt, so it is left null.  
+
+All sub‑fields that appear in the BTR description are listed, with their bit positions and access type (rw for defined fields, read‑only for reserved bits).  
+For FSMC_BCR3 the register‑map table lists each bit; each field is extracted with its bit position(s) and marked as read‑write, while reserved bits are read‑only.  
+
+No explicit access‑constraints are present in the supplied text, so the `access_constraints` arrays are empty.
+
+---fsmc---
+The datasheet provides a formula for the address of the FSMC chip‑select control registers (FSMC_BCRx):
+
+---fsmc---
+**Reasoning**  
+The FSMC peripheral defines two families of timing registers:
+
+* **FSMC_BTRx** – chip‑select timing registers (x = 1..4).  
+  Address offset formula: 0x04 + 8·(x‑1).  
+  Using the provided `calculate_address_offset` result for x = 2 gives **0xC**.
+
+* **FSMC_BWTRx** – write‑timing registers (x = 1..4).  
+  Address offset formula: 0x104 + 8·(x‑1).  
+  The function‑call results give offsets **0x104**, **0x114**, and **0x11C** for x = 1, 3, 4 respectively.
+
+All four registers reset to **0x0FFFFFFF**, are 32 bits wide, and contain the same set of fields as described in the extracted datasheet snippets. No explicit access‑ordering constraints are mentioned, so the `access_constraints` arrays are empty.
+
+The final JSON contains a complete entry for each requested register, with all sub‑fields enumerated, their bit positions, descriptions, and access types.
+
+---iwdg---
+The datasheet snippets contain a full register map for the Independent watchdog (IWDG).  
+For each of the requested registers we can extract:
+
+* **Abbreviation** – the name used in the table (IWDG_KR, IWDG_PR, IWDG_RLR, IWDG_SR).  
+* **Address offset** – explicitly given (0x00, 0x04, 0x08, 0x0C).  
+* **Reset value** – shown in the “Reset value” rows of the table.  
+* **Size** – all registers are 32‑bit wide.  
+* **Sub‑fields** – the tables list the functional bits and the reserved bits; each distinct range is represented as a subfield with its bit numbers, a short description, and the access type (read‑only for reserved bits, read‑write for normal fields, write‑only for the key field).  
+* **Access constraints** – the text in §18.3.2 states that writes to IWDG_PR and IWDG_RLR are protected.  
+  * Before writing either PR or RLR the key register must have been written with the unlock code 0x5555.  
+  * In addition, the status bits PVU (for PR) and RVU (for RLR) must be **cleared** before the write.  
+These constraints are recorded as separate constraint objects, each containing the required pre‑conditions, severity, and the original wording from the datasheet.
+
+No address‑offset formulas are needed, so no function calls are required.
+
+---pwr---
+The datasheet provides detailed information for the **PWR_CSR** register, including its address offset, reset value, size, sub‑fields and notes that the **SBF** and **WUF** bits are cleared by writing the **CSBF** and **CWUF** bits respectively in the **PWR_CR** register.  
+The register map table lists the fields of **PWR_CR** (DBP, PLS[2:0], PVDE, CSBF, CWUF, PDDS, LPDS) and shows that **PWR_CR** resides at offset 0x00. No explicit reset value or field‑access description is given for **PWR_CR**, so those items are left null.
+
+No address‑offset calculations are required because the offsets are directly stated.
+
+---rcc---
+The provided datasheet excerpts contain full descriptions for the two requested RCC registers.
+
+**rcc_cfgr2**  
+- The register is named **RCC_CFGR2** in the datasheet.  
+- Its address offset is given directly as `0x2C`.  
+- Reset value is `0x0000 0000`.  
+- It is a 32‑bit register (word‑access).  
+- Only bits 3:0 are defined as the field **PREDIV1[3:0]**, which selects the PREDIV1 division factor and is read‑write. All higher bits are reserved.  
+- The text states that these bits may be written only when the PLL is disabled; however, because the required pre‑condition refers to a PLL‑status bit that is not present in the extracted snippets, no explicit constraint can be expressed in the required schema, so the `access_constraints` list is left empty.
+
+**rcc_apb2enr**  
+- The register is named **RCC_APB2ENR** in the datasheet.  
+- Its address offset is `0x18`.  
+- Reset value is `0x0000 0000`.  
+- It is also a 32‑bit register with word, half‑word and byte access.  
+- The register contains many enable bits for APB2 peripherals; each is listed with its bit position, a short description, and read‑write access. Reserved bits are omitted as they do not constitute functional subfields.  
+- No specific access ordering constraints are mentioned for this register, so `access_constraints` is empty.
+
+No address calculations are required because both offsets are given explicitly.
+
+---rcc---
+The datasheet chunk for the Reset and Clock Control (RCC) peripheral contains a detailed description of the APB1 peripheral clock enable register (RCC_APB1ENR).  
+From the text we obtain:
+
+* **Address offset** – explicitly given as `0x1C`.  
+* **Reset value** – explicitly given as `0x0000 0000`.  
+* **Size** – the register is accessed as a word, indicating a 32‑bit size.  
+* **Sub‑fields** – the two tables enumerate every bit that can be set/cleared. For each bit we extract the field name, a short description (taken from the surrounding text or inferred from the field name), and the access type (`read‑write`). Reserved bits are omitted because they are not usable sub‑fields.  
+* **Access constraints** – the only constraints mentioned in the excerpt refer to generic wait‑state handling and the fact that a peripheral’s registers return `0x0` when its clock is disabled. No explicit constraint is stated for writing or reading RCC_APB1ENR itself, so the constraints list is left empty.
+
+No address‑calculation formula is needed, therefore no function calls are required.
+
+---rcc---
+The datasheet provides explicit information for the three requested RCC registers.
+
+**rcc_cr** – called **RCC_CR** in the datasheet.  
+* Offset 0x00, reset value 0x0000XX83, 32‑bit word.  
+* All bits are described, including reserved fields, so every bit range is listed as a sub‑field.  
+* A write constraint is mentioned: “The HSEBYP bit can be written only if the HSE oscillator is disabled.” → HSEBYP write requires HSEON = cleared.
+
+**rcc_cfgr** – called **RCC_CFGR**.  
+* Offset 0x04, reset value 0x00000000, 32‑bit word.  
+* Complete bit‑field table is given; every field (including reserved) is recorded.  
+* Constraint: “These bits can be written only when PLL is disabled.” → PLLMUL write requires PLLON = cleared.
+
+**rcc_bdcr** – called **RCC_BDCR**.  
+* Offset 0x20, reset value 0x00000000, 32‑bit word.  
+* All fields are listed, plus the note that LSEON, LSEBYP, RTCSEL and RTCEN are write‑protected and need the DBP bit in **PWR_CR** to be set before they can be modified.  
+* Additional constraint: “LSEBYP can be written only when the external 32 kHz oscillator is disabled.” → LSEBYP write requires LSEON = cleared.
+
+No address‑offset calculations are required because the offsets are given directly.
+
+---rcc---
+The provided chunks contain information about the APB2 peripheral clock enable register (RCC_APB2ENR) and the backup domain control register (RCC_BDCR), but they do not include any description of the AHB peripheral clock enable register (RCC_AHBENR) nor the APB2 peripheral reset register (RCC_APB2RSTR). Since no address, reset value, size, subfields, or access constraints are found for the requested registers, those fields are left null.
+
+---rcc---
+The provided datasheet excerpts contain information about the RCC_BDCR (Backup domain control register) and RCC_CFGR2 (Clock configuration register2). There is no mention of a register named **RCC_CIR** (Clock interrupt register) in the supplied pages, so no address offset, reset value, size, subfields, or access constraints can be extracted for this register.
+
+---rcc---
+The datasheet excerpts provided contain details for the registers **RCC_APB1ENR** (APB1 peripheral clock enable register) and **RCC_CFGR2** (clock configuration register2).  
+The requested register **rcc_apb1rstr** (APB1 peripheral reset register) is not described in any of the supplied chunks, so none of the required fields (address offset, reset value, size, subfields, access constraints) can be extracted.
+
+No calculations or additional function calls are needed.
+
+---rcc---
+The provided excerpts contain detailed information about the Backup domain control register (RCC_BDCR) and a partial RCC register map, but there is no description, address offset, reset value, size, sub‑fields, or access constraints for the **RCC_CSR** register. Since no data about this register can be extracted from the given datasheet sections, the output entry for `rcc_csr` must contain only the register name with all other fields set to `null`.
+

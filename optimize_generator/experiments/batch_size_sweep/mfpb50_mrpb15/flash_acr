@@ -1,0 +1,36 @@
+{
+  "datasheet_register_abbreviation": "FLASH_ACR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved31_4",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "HLFCYA",
+      "description": "Flash half cycle access enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "Reserved2_0",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 2
+      }
+    }
+  ],
+  "access_constraints": []
+}

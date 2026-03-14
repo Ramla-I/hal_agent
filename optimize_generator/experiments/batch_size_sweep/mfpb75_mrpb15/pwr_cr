@@ -1,0 +1,109 @@
+{
+  "datasheet_register_abbreviation": "PWR_CR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DBP",
+      "description": "Disable backup domain write protection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "PLS",
+      "description": "PVD level selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "PVDE",
+      "description": "Power voltage detector enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "CSBF",
+      "description": "Clear standby flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "CWUF",
+      "description": "Clear wakeup flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "PDDS",
+      "description": "Power down in Deep‑Sleep mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "LPDS",
+      "description": "Low‑power deep‑sleep",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "PWR_CR",
+      "target_fields": [
+        "CSBF"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "PWR_CSR",
+          "field_name": "SBF",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "SBF flag remains set if CSBF is not written.",
+      "datasheet_text": "SBF is cleared only by a POR/PDR or by setting the CSBF bit in the Power control register (PWR_CR)."
+    },
+    {
+      "target_register": "PWR_CR",
+      "target_fields": [
+        "CWUF"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "PWR_CSR",
+          "field_name": "WUF",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "WUF flag remains set if CWUF is not written.",
+      "datasheet_text": "WUF is cleared by hardware, by a system reset or by setting the CWUF bit in the Power control register (PWR_CR)."
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "datasheet_register_abbreviation": "CEC_CFGR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved, must be kept cleared",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "BPEM",
+      "description": "Bit period error mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "BTEM",
+      "description": "Bit timing error mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "IE",
+      "description": "Interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "PE",
+      "description": "Peripheral enable (set by software, cleared by hardware when CEC is idle)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

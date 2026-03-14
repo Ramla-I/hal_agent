@@ -1,0 +1,29 @@
+model_name,input_tokens,cached_tokens,output_tokens,reasoning_tokens,total_tokens,file_search_tokens,peripheral_name,register_name
+gpt-oss-120b,9087,0,2458,825,11545,4852,afio,"exticr4, exticr2, exticr3, exticr1, mapr2"
+gpt-oss-120b,7377,0,4512,2987,11889,3183,afio,"mapr, evcr"
+gpt-oss-120b,16701,0,7202,2511,23903,2577,bkp,"rtccr, dr24, dr40, dr31, dr34, dr14, dr23, dr35, dr13, dr10, dr12, dr17, dr2, dr15, dr19"
+gpt-oss-120b,21556,4096,6742,1284,28298,4841,bkp,"dr41, dr39, dr30, dr5, dr6, dr9, dr11, dr21, dr7, dr4, dr27, dr33, dr8, dr29, dr16"
+gpt-oss-120b,21191,0,8074,2305,29265,4699,bkp,"dr1, dr38, dr25, dr18, dr20, dr3, dr28, dr26, dr42, dr22, dr37, dr32, csr, cr, dr36"
+gpt-oss-120b,9797,0,5640,3103,15437,5571,cec,"txd, rxd, pres, csr, cfgr, esr, oar"
+gpt-oss-120b,6207,4096,2712,1660,8919,2002,crc,"cr, dr, idr"
+gpt-oss-120b,13236,0,3518,1328,16754,8931,dac,"dhr12r2, dhr12l1, dor1, dhr12l2, dhr8r2, dhr12r1, dhr8r1, swtrigr, dor2, sr, dhr12ld, dhr12rd, dhr8rd"
+gpt-oss-120b,5554,4096,2970,1818,8524,1371,dac,cr
+gpt-oss-120b,5793,4096,2194,697,7987,1609,exti,imr
+gpt-oss-120b,5933,0,2224,995,8157,1749,exti,rtsr
+gpt-oss-120b,5125,0,2067,625,7192,942,exti,emr
+gpt-oss-120b,5930,0,1901,643,7831,1746,exti,pr
+gpt-oss-120b,5932,4096,2146,836,8078,1748,exti,ftsr
+gpt-oss-120b,5932,0,2166,920,8098,1747,exti,swier
+gpt-oss-120b,8817,0,1338,610,10155,4581,flash,"obr, ar, keyr, optkeyr, acr, sr, wrpr, cr"
+gpt-oss-120b,13348,0,5794,3218,19142,1747,fsmc,"bcr4, bwtr4, btr4"
+gpt-oss-120b,16739,4096,5300,1864,22039,3160,fsmc,"btr2, bcr2, btr1"
+gpt-oss-120b,16498,0,9285,4168,25783,2604,fsmc,"btr3, bwtr2, bwtr3, bwtr1"
+gpt-oss-120b,17607,8192,6794,2317,24401,3403,fsmc,"bcr1, bcr3"
+gpt-oss-120b,6780,4096,3469,1646,10249,2571,iwdg,"kr, sr, rlr, pr"
+gpt-oss-120b,6538,4096,2268,1071,8806,2333,pwr,"cr, csr"
+gpt-oss-120b,7415,4096,2724,1452,10139,3208,rcc,"apb2rstr, ahbenr, bdcr, cfgr2"
+gpt-oss-120b,5548,4096,291,125,5839,1364,rcc,cir
+gpt-oss-120b,5494,0,3821,1849,9315,1306,rcc,apb1enr
+gpt-oss-120b,5444,4096,2278,1015,7722,1264,rcc,apb2enr
+gpt-oss-120b,5562,4096,409,201,5971,1376,rcc,apb1rstr
+gpt-oss-120b,8180,4096,4227,2381,12407,3966,rcc,"csr, cr, cfgr"

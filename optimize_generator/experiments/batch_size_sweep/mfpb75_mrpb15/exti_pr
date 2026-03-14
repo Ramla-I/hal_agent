@@ -1,0 +1,180 @@
+{
+  "datasheet_register_abbreviation": "EXTI_PR",
+  "address_offset": "0x14",
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved, must be kept at reset value (0)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "PR0",
+      "description": "Pending bit for line 0",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "PR1",
+      "description": "Pending bit for line 1",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "PR2",
+      "description": "Pending bit for line 2",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "PR3",
+      "description": "Pending bit for line 3",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "PR4",
+      "description": "Pending bit for line 4",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "PR5",
+      "description": "Pending bit for line 5",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "PR6",
+      "description": "Pending bit for line 6",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "PR7",
+      "description": "Pending bit for line 7",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "PR8",
+      "description": "Pending bit for line 8",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "PR9",
+      "description": "Pending bit for line 9",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "PR10",
+      "description": "Pending bit for line 10",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "PR11",
+      "description": "Pending bit for line 11",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "PR12",
+      "description": "Pending bit for line 12",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "PR13",
+      "description": "Pending bit for line 13",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "PR14",
+      "description": "Pending bit for line 14",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "PR15",
+      "description": "Pending bit for line 15",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "PR16",
+      "description": "Pending bit for line 16",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "PR17",
+      "description": "Pending bit for line 17",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    }
+  ],
+  "access_constraints": []
+}

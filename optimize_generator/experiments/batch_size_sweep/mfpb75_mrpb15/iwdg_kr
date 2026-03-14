@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "IWDG_KR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "KEY",
+      "description": "Key register – write specific keys (0xAAAA, 0x5555, etc.) to control the watchdog",
+      "access": null,
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints": []
+}

@@ -1,0 +1,36 @@
+{
+  "datasheet_register_abbreviation": "DAC_DHR8RD",
+  "address_offset": "0x28",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved31_16",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "DACC2DHR[7:0]",
+      "description": "DAC channel2 8‑bit right‑aligned data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "DACC1DHR[7:0]",
+      "description": "DAC channel1 8‑bit right‑aligned data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints": []
+}

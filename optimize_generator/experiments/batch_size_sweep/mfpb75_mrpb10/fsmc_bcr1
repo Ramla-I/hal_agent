@@ -1,0 +1,144 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BCR1",
+  "address_offset": "0x0",
+  "reset_value": "0x000030DB",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CBURSTRW",
+      "description": "Write burst enable. Enables synchronous burst protocol for PSRAM writes.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      }
+    },
+    {
+      "name": "CPSIZE[2:0]",
+      "description": "CRAM page size for Cellular RAM 1.5.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "ASYNCWAIT",
+      "description": "Wait signal during asynchronous transfers.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "EXTMOD",
+      "description": "Extended mode – when set, BTR register is partitioned for read/write.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "WAITEN",
+      "description": "Wait enable.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "WREN",
+      "description": "Write enable.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "WAITCFG",
+      "description": "Wait configuration.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "WRAPMOD",
+      "description": "Wrap mode.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "WAITPOL",
+      "description": "Wait polarity.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "BURSTEN",
+      "description": "Burst enable for asynchronous reads.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "FACCEN",
+      "description": "FIFO access enable.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "MWID[1:0]",
+      "description": "Memory data bus width.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "MTYP[1:0]",
+      "description": "Memory type.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "MUXEN",
+      "description": "Multiplexed mode enable.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "MBKEN",
+      "description": "Memory bank enable.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

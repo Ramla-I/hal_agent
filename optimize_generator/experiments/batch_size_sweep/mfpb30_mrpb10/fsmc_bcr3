@@ -1,0 +1,162 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BCR3",
+  "address_offset": "0x0010",
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MBKEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "MUXEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "MTYP[1:0]",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "MWID[1:0]",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "FACCEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "Reserved",
+      "description": "",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "BURSTEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "WAITPOL",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "WRAPMOD",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "WAITCFG",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "WREN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "WAITEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "EXTMOD",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "ASYNCWAIT",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "CPSIZE[2:0]",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "CBURSTRW",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      }
+    },
+    {
+      "name": "Reserved",
+      "description": "",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints": []
+}

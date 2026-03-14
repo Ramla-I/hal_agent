@@ -1,0 +1,72 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BTR4",
+  "address_offset": "0x1C",
+  "reset_value": "0x0FFFFFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ACCMOD[1:0]",
+      "description": "Access mode – taken into account only when EXTMOD=1.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 28
+      }
+    },
+    {
+      "name": "DATLAT[3:0]",
+      "description": "Data latency.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 24
+      }
+    },
+    {
+      "name": "CLKDIV[3:0]",
+      "description": "Clock divide.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 20
+      }
+    },
+    {
+      "name": "BUSTURN[3:0]",
+      "description": "Bus turnaround phase duration.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "DATAST[7:0]",
+      "description": "Data setup time.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "ADDHLD[3:0]",
+      "description": "Address hold time.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "ADDSET[3:0]",
+      "description": "Address setup time.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

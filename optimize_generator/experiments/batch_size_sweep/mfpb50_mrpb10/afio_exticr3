@@ -1,0 +1,54 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR3",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "EXTI11",
+      "description": "EXTI11 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "EXTI10",
+      "description": "EXTI10 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "EXTI9",
+      "description": "EXTI9 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "EXTI8",
+      "description": "EXTI8 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

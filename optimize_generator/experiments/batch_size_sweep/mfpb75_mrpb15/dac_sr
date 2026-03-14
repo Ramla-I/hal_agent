@@ -1,0 +1,54 @@
+{
+  "datasheet_register_abbreviation": "DAC_SR",
+  "address_offset": "0x34",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "RESERVED31_30",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "DMAUDR2",
+      "description": "DAC channel2 DMA underrun flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      }
+    },
+    {
+      "name": "RESERVED28_14",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 28
+      }
+    },
+    {
+      "name": "DMAUDR1",
+      "description": "DAC channel1 DMA underrun flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "RESERVED12_0",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 12
+      }
+    }
+  ],
+  "access_constraints": []
+}

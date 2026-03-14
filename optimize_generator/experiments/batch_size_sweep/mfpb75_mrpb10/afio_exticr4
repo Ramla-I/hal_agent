@@ -1,0 +1,54 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR4",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "EXTI15[3:0]",
+      "description": "EXTI15 configuration. Selects source input for EXTI15.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "EXTI14[3:0]",
+      "description": "EXTI14 configuration. Selects source input for EXTI14.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "EXTI13[3:0]",
+      "description": "EXTI13 configuration. Selects source input for EXTI13.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "EXTI12[3:0]",
+      "description": "EXTI12 configuration. Selects source input for EXTI12.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    }
+  ],
+  "access_constraints": []
+}

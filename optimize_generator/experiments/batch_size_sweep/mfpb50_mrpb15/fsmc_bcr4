@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BCR4",
+  "address_offset": null,
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MUXEN",
+      "description": "Value to set 0x0",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "MBKEN",
+      "description": "Value to set 0x1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

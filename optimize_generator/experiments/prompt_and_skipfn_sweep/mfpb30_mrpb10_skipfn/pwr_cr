@@ -1,0 +1,109 @@
+{
+  "datasheet_register_abbreviation": "PWR_CR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DBP",
+      "description": "",
+      "access": null,
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "PLS",
+      "description": "",
+      "access": null,
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "PVDE",
+      "description": "",
+      "access": null,
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "CSBF",
+      "description": "",
+      "access": null,
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "CWUF",
+      "description": "",
+      "access": null,
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "PDDS",
+      "description": "",
+      "access": null,
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "LPDS",
+      "description": "",
+      "access": null,
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "PWR_CR",
+      "target_fields": [
+        "CSBF"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "PWR_CSR",
+          "field_name": "SBF",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "Clears the Standby flag (SBF) in PWR_CSR",
+      "datasheet_text": "SBF ... cleared only by a POR/PDR ... or by setting the CSBF bit in the Power control register (PWR_CR)"
+    },
+    {
+      "target_register": "PWR_CR",
+      "target_fields": [
+        "CWUF"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "PWR_CSR",
+          "field_name": "WUF",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "Clears the Wakeup flag (WUF) in PWR_CSR",
+      "datasheet_text": "WUF ... cleared by hardware, by a system reset or by setting the CWUF bit in the Power control register (PWR_CR)"
+    }
+  ]
+}

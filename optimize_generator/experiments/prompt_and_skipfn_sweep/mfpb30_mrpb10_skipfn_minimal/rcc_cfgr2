@@ -1,0 +1,118 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR2",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PREDIV1",
+      "description": "PREDIV1 division factor",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0x0",
+          "name": "Div1"
+        },
+        {
+          "value": "0x1",
+          "name": "Div2"
+        },
+        {
+          "value": "0x2",
+          "name": "Div3"
+        },
+        {
+          "value": "0x3",
+          "name": "Div4"
+        },
+        {
+          "value": "0x4",
+          "name": "Div5"
+        },
+        {
+          "value": "0x5",
+          "name": "Div6"
+        },
+        {
+          "value": "0x6",
+          "name": "Div7"
+        },
+        {
+          "value": "0x7",
+          "name": "Div8"
+        },
+        {
+          "value": "0x8",
+          "name": "Div9"
+        },
+        {
+          "value": "0x9",
+          "name": "Div10"
+        },
+        {
+          "value": "0xA",
+          "name": "Div11"
+        },
+        {
+          "value": "0xB",
+          "name": "Div12"
+        },
+        {
+          "value": "0xC",
+          "name": "Div13"
+        },
+        {
+          "value": "0xD",
+          "name": "Div14"
+        },
+        {
+          "value": "0xE",
+          "name": "Div15"
+        },
+        {
+          "value": "0xF",
+          "name": "Div16"
+        }
+      ]
+    },
+    {
+      "name": "Reserved",
+      "description": "Bits 31:4 Reserved, always read as 0",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 31
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "RCC_CFGR",
+      "target_fields": [
+        "PLLXTPRE (bit 17)"
+      ],
+      "target_operation": "modify",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "RCC_CFGR2",
+          "field_name": "PREDIV1[0]",
+          "required_state": "mirrored to RCC_CFGR.PLLXTPRE"
+        },
+        {
+          "register_name": "RCC_CFGR",
+          "field_name": "PLLXTPRE (bit 17)",
+          "required_state": "mirrored to RCC_CFGR2.PREDIV1[0]"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "Changing one bit updates the other; software must keep them consistent.",
+      "datasheet_text": "Bit 0 is the same as bit 17 in the RCC_CFGR register, so modifying bit 17 in the RCC_CFGR register changes bit 0 accordingly."
+    }
+  ]
+}

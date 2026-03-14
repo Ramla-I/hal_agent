@@ -1,0 +1,56 @@
+{
+  "datasheet_register_abbreviation": "CRC_CR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "RESET",
+      "description": "Resets the CRC calculation unit and sets the data register to 0xFFFFFFFF",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "crc_cr",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Writing to reserved bits may cause undefined behavior.",
+      "datasheet_text": "Bits 31:1 Reserved, must be kept at reset value."
+    },
+    {
+      "target_register": "crc_cr",
+      "target_fields": [
+        "RESET"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "crc_cr",
+          "field_name": "RESET",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "RESET bit is automatically cleared by hardware after being set.",
+      "datasheet_text": "This bit can only be set, it is automatically cleared by hardware."
+    }
+  ]
+}

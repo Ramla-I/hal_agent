@@ -1,0 +1,329 @@
+{
+  "datasheet_register_abbreviation": "EXTI_RTSR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "TR0",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR1",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR2",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR3",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR4",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR5",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR6",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR7",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR8",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR9",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR10",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR11",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR12",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR13",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR14",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR15",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR16",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR17",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR18",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR19",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR20",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR21",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 21
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR22",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR23",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR24",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR25",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR26",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR27",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR28",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR29",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR30",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 30
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TR31",
+      "description": null,
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 31
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": []
+}

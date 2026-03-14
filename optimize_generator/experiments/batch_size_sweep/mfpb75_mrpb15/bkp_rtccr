@@ -1,0 +1,73 @@
+{
+  "datasheet_register_abbreviation": "BKP_RTCCR",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "ASOS",
+      "description": "Alarm or second output selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "ASOE",
+      "description": "Alarm or second output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "CCO",
+      "description": "Calibration output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "CAL",
+      "description": "Calibration value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 6
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "BKP_RTCCR",
+      "target_fields": [
+        "ASOS"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "BKP_RTCCR",
+          "field_name": "ASOE",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "warning",
+      "consequence": "ASOS has no effect unless ASOE is set",
+      "datasheet_text": "When the ASOE bit is set, the ASOS bit can be used to select whether the signal output on the TAMPER pin is the RTC Second pulse signal or the Alarm pulse signal"
+    }
+  ]
+}

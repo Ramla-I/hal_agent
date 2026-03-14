@@ -1,0 +1,46 @@
+{
+  "datasheet_register_abbreviation": "CRC_CR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved bits, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "RESET",
+      "description": "Resets the CRC calculation unit and sets the data register to 0xFFFFFFFF",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "CRC_CR",
+      "target_fields": [
+        "RESET"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "CRC_CR",
+          "field_name": "RESET",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "If the RESET bit is not cleared, software may assume the unit is still in reset state.",
+      "datasheet_text": "This bit can only be set, it is automatically cleared by hardware."
+    }
+  ]
+}

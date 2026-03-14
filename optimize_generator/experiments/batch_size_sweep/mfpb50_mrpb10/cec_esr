@@ -1,0 +1,119 @@
+{
+  "datasheet_register_abbreviation": "CEC_ESR",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "TBTFE",
+      "description": "Tx block transfer finished error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "LINE",
+      "description": "Line error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "ACKE",
+      "description": "Block acknowledge error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "SBE",
+      "description": "Start bit error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "RTBFE",
+      "description": "Rx block transfer finished error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "BPE",
+      "description": "Bit period error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "BTE",
+      "description": "Bit timing error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "CEC_ESR",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "CEC_ESR",
+          "field_name": "TBTFE",
+          "required_state": "cleared"
+        },
+        {
+          "register_name": "CEC_ESR",
+          "field_name": "LINE",
+          "required_state": "cleared"
+        },
+        {
+          "register_name": "CEC_ESR",
+          "field_name": "ACKE",
+          "required_state": "cleared"
+        },
+        {
+          "register_name": "CEC_ESR",
+          "field_name": "SBE",
+          "required_state": "cleared"
+        },
+        {
+          "register_name": "CEC_ESR",
+          "field_name": "RTBFE",
+          "required_state": "cleared"
+        },
+        {
+          "register_name": "CEC_ESR",
+          "field_name": "BPE",
+          "required_state": "cleared"
+        },
+        {
+          "register_name": "CEC_ESR",
+          "field_name": "BTE",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "Error flags remain set if the TX error flag (TERR) is not cleared.",
+      "datasheet_text": "These bits are cleared by software when clearing the TX error flag (TERR) of the CEC_CSR register."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "CEC_TXD",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "TXD",
+      "description": "Tx Data register",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints": []
+}

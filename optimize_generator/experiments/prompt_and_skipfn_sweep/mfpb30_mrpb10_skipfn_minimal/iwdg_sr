@@ -1,0 +1,29 @@
+{
+  "datasheet_register_abbreviation": "IWDG_SR",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PVU",
+      "description": "Prescaler Value Update flag – indicates a write operation to IWDG_PR is ongoing",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "RVU",
+      "description": "Reload Value Update flag – indicates a write operation to IWDG_RLR is ongoing",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": []
+}

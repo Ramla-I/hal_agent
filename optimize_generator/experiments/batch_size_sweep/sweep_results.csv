@@ -1,0 +1,4 @@
+config,max_fields_per_batch,max_registers_per_batch,include_reasoning,num_embeddings,pages_after,found_accuracy,complete_accuracy,coverage,registers_found,total_registers,correct,wrong,missing,total_input,total_cached,total_output,total_reasoning,total_total,context_tokens,llm_time,search_time,total_time,wall_time,llm_calls,tokens_per_register,time_per_register
+mfpb30_mrpb10,30,10,True,2,1,95.41,78.94,82.73,83,97,1394,34,33,306133,161536,107715,45375,413848,91193,289.02,156.02,445.04,449.77,31,3477.7,3.78
+mfpb50_mrpb10,50,10,True,2,1,89.18,71.4,80.07,82,97,1261,15,138,249378,125440,89954,39080,339332,81906,232.28,161.75,394.03,398.56,22,2851.5,3.35
+mfpb75_mrpb10,75,10,True,2,1,92.84,79.28,85.39,84,97,1400,31,77,232484,126976,95808,37380,328292,79539,257.59,165.28,422.87,427.4,19,2758.8,3.59

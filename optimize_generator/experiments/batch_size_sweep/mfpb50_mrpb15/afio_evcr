@@ -1,0 +1,36 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EVCR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EVOE",
+      "description": "Event output enable – when set the EVENTOUT signal is connected to the I/O selected by PORT[2:0] and PIN[3:0].",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "PORT[2:0]",
+      "description": "Port selection for EVENTOUT (PA, PB, PC, PD, PE, PF, PG).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "PIN[3:0]",
+      "description": "Pin selection for EVENTOUT (Px0‑Px15).",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    }
+  ],
+  "access_constraints": []
+}

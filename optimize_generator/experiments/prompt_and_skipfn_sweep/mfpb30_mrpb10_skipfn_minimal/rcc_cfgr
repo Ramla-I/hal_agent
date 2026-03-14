@@ -1,0 +1,223 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved, always read as 0",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 27
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "MCO",
+      "description": "Microcontroller clock output",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 24
+      },
+      "enumerated_values": [
+        {
+          "value": "0b000",
+          "name": "NoClock"
+        },
+        {
+          "value": "0b001",
+          "name": "NoClock"
+        },
+        {
+          "value": "0b010",
+          "name": "NoClock"
+        },
+        {
+          "value": "0b011",
+          "name": "NoClock"
+        },
+        {
+          "value": "0b100",
+          "name": "SYSCLK"
+        },
+        {
+          "value": "0b101",
+          "name": "HSI"
+        },
+        {
+          "value": "0b110",
+          "name": "HSE"
+        },
+        {
+          "value": "0b111",
+          "name": "PLL/2"
+        }
+      ]
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved, always read as 0",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 22
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PLLMUL",
+      "description": "PLL multiplication factor (writeable only when PLL is disabled)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 18
+      },
+      "enumerated_values": [
+        {
+          "value": "0b0000",
+          "name": "x2"
+        },
+        {
+          "value": "0b0001",
+          "name": "x3"
+        },
+        {
+          "value": "0b0010",
+          "name": "x4"
+        },
+        {
+          "value": "0b0011",
+          "name": "x5"
+        },
+        {
+          "value": "0b0100",
+          "name": "x6"
+        },
+        {
+          "value": "0b0101",
+          "name": "x7"
+        },
+        {
+          "value": "0b0110",
+          "name": "x8"
+        },
+        {
+          "value": "0b0111",
+          "name": "x9"
+        },
+        {
+          "value": "0b1000",
+          "name": "x10"
+        },
+        {
+          "value": "0b1001",
+          "name": "x11"
+        },
+        {
+          "value": "0b1010",
+          "name": "x12"
+        },
+        {
+          "value": "0b1011",
+          "name": "x13"
+        },
+        {
+          "value": "0b1100",
+          "name": "x14"
+        },
+        {
+          "value": "0b1101",
+          "name": "x15"
+        },
+        {
+          "value": "0b1110",
+          "name": "x16"
+        }
+      ]
+    },
+    {
+      "name": "PLLXTPRE",
+      "description": "PLL entry clock source pre‑divider",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PLLSRC",
+      "description": "PLL clock source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "ADC_PRE",
+      "description": "ADC prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 14
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PPRE2",
+      "description": "APB high‑speed prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "PPRE1",
+      "description": "APB low‑speed prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "HPRE",
+      "description": "AHB prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 4
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "SWS",
+      "description": "System clock switch status",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "SW",
+      "description": "System clock switch",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": []
+}

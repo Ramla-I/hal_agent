@@ -1,0 +1,82 @@
+{
+  "datasheet_register_abbreviation": "PWR_CSR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EWUP",
+      "description": "Enable WKUP pin",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "PVDO",
+      "description": "PVD output",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "SBF",
+      "description": "Standby flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "WUF",
+      "description": "Wakeup flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "PWR_CSR",
+      "target_fields": [
+        "SBF"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "PWR_CSR",
+          "field_name": "SBF",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "Standby flag (SBF) is cleared after setting CSBF in PWR_CR.",
+      "datasheet_text": "SBF is cleared only by a POR/PDR or by setting the CSBF bit in the Power control register (PWR_CR)."
+    },
+    {
+      "target_register": "PWR_CSR",
+      "target_fields": [
+        "WUF"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "PWR_CSR",
+          "field_name": "WUF",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "Wakeup flag (WUF) is cleared after setting CWUF in PWR_CR.",
+      "datasheet_text": "WUF is cleared by hardware, by a system reset or by setting the CWUF bit in the Power control register (PWR_CR)."
+    }
+  ]
+}

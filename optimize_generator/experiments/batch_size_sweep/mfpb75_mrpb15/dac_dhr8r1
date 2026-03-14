@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "DAC_DHR8R1",
+  "address_offset": "0x10",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "RESERVED31_8",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "DACC1DHR",
+      "description": "DAC channel1 8‑bit right‑aligned data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints": []
+}

@@ -1,0 +1,62 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR1",
+  "address_offset": "0x08",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EXTI0[3:0]",
+      "description": "EXTI0 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "EXTI1[3:0]",
+      "description": "EXTI1 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "EXTI2[3:0]",
+      "description": "EXTI2 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "EXTI3[3:0]",
+      "description": "EXTI3 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 12
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "afio_exticr1",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Register access is ignored or may cause a bus fault if the AFIO clock is not enabled",
+      "datasheet_text": "To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    }
+  ]
+}

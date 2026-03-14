@@ -1,0 +1,37 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR2",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PREDIV1[3:0]",
+      "description": "PREDIV1 division factor",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "RCC_CFGR2",
+      "target_fields": [
+        "PREDIV1[3:0]"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "RCC_CR",
+          "field_name": "PLLON",
+          "required_state": "cleared"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Write is ignored if PLL is enabled",
+      "datasheet_text": "These bits can be written only when the PLL is disabled."
+    }
+  ]
+}

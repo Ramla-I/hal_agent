@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BCR1",
+  "address_offset": "0x0000",
+  "reset_value": "0x000030DB",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MUXEN",
+      "description": "MUX enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "MBKEN",
+      "description": "Memory bank enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

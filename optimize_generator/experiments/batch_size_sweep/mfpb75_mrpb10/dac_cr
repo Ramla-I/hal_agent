@@ -1,0 +1,171 @@
+{
+  "datasheet_register_abbreviation": "DAC_CR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved31_30",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "DMAUDRIE2",
+      "description": "DAC channel2 DMA underrun interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      }
+    },
+    {
+      "name": "DMAEN2",
+      "description": "DAC channel2 DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      }
+    },
+    {
+      "name": "MAMP2[3:0]",
+      "description": "DAC channel2 mask/amplitude selector",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 27
+      }
+    },
+    {
+      "name": "WAVE2[1:0]",
+      "description": "DAC channel2 wave generation selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 23
+      }
+    },
+    {
+      "name": "TSEL2[2:0]",
+      "description": "DAC channel2 trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 21
+      }
+    },
+    {
+      "name": "TEN2",
+      "description": "DAC channel2 trigger enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "BOFF2",
+      "description": "DAC channel2 output buffer disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "EN2",
+      "description": "DAC channel2 enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "Reserved15_14",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "DMAUDRIE1",
+      "description": "DAC channel1 DMA underrun interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "DMAEN1",
+      "description": "DAC channel1 DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "MAMP1[3:0]",
+      "description": "DAC channel1 mask/amplitude selector",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "WAVE1[1:0]",
+      "description": "DAC channel1 wave generation selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "TSEL1[2:0]",
+      "description": "DAC channel1 trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "TEN1",
+      "description": "DAC channel1 trigger enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "BOFF1",
+      "description": "DAC channel1 output buffer disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "EN1",
+      "description": "DAC channel1 enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

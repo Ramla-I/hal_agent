@@ -1,0 +1,91 @@
+{
+  "datasheet_register_abbreviation": "BKP_CSR",
+  "address_offset": "0x34",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "CTE",
+      "description": "Clear tamper event",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CTI",
+      "description": "Clear tamper interrupt",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "TPIE",
+      "description": "TAMPER pin interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "TEF",
+      "description": "Tamper event flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "TIF",
+      "description": "Tamper interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "BKP_CSR",
+      "target_fields": [
+        "CTI"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "BKP_CSR",
+          "field_name": "TIF",
+          "required_state": "cleared"
+        }
+      ],
+      "severity": "warning",
+      "consequence": "TIF flag is cleared after writing 1 to CTI.",
+      "datasheet_text": "It is cleared by writing 1 to the CTI bit (also clears the interrupt)."
+    },
+    {
+      "target_register": "BKP_CSR",
+      "target_fields": [
+        "TPIE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "BKP_CR",
+          "field_name": "TPE",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "warning",
+      "consequence": "TPIE may be set only when the TPE bit is set.",
+      "datasheet_text": "the TPE bit must also be set in the BKP_CR register"
+    }
+  ]
+}

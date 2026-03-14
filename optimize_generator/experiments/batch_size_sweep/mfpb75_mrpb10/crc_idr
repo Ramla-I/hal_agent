@@ -1,0 +1,46 @@
+{
+  "datasheet_register_abbreviation": "CRC_IDR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "IDR",
+      "description": "General‑purpose 8‑bit data register bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "CRC_IDR",
+      "target_fields": [
+        "Reserved"
+      ],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "register_name": "CRC_IDR",
+          "field_name": "Reserved",
+          "required_state": "equals:0"
+        }
+      ],
+      "severity": "error",
+      "consequence": "Reserved bits must remain zero; writing non‑zero may cause undefined behavior.",
+      "datasheet_text": "Bits 31:8 Reserved, must be kept at reset value."
+    }
+  ]
+}

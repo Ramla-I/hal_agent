@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "CEC_PRES",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved, must be kept cleared",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "PRESC[13:0]",
+      "description": "Prescaler counter value (software programmed to obtain 50 µs time base)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

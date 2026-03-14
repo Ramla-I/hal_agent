@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "CRC_DR",
+  "address_offset": "0x00",
+  "reset_value": "0xFFFFFFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DR",
+      "description": "Data register bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints": []
+}

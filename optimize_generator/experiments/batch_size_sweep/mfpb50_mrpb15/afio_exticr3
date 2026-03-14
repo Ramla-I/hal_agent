@@ -1,0 +1,45 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR3",
+  "address_offset": "0x10",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EXTI8[3:0]",
+      "description": "EXTI8 configuration – selects source input for EXTI8 external interrupt.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "EXTI9[3:0]",
+      "description": "EXTI9 configuration – selects source input for EXTI9 external interrupt.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "EXTI10[3:0]",
+      "description": "EXTI10 configuration – selects source input for EXTI10 external interrupt.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "EXTI11[3:0]",
+      "description": "EXTI11 configuration – selects source input for EXTI11 external interrupt.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints": []
+}

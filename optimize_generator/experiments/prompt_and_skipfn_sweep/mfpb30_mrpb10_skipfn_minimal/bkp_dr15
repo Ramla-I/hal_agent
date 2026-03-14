@@ -1,0 +1,19 @@
+{
+  "datasheet_register_abbreviation": "BKP_DR15",
+  "address_offset": "0x50",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "D",
+      "description": "Backup data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": []
+}

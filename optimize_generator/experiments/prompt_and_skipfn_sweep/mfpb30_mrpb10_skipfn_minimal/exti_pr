@@ -1,0 +1,361 @@
+{
+  "datasheet_register_abbreviation": "EXTI_PR",
+  "address_offset": "0x14",
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PR0",
+      "description": "Pending bit for EXTI line 0",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR1",
+      "description": "Pending bit for EXTI line 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR2",
+      "description": "Pending bit for EXTI line 2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR3",
+      "description": "Pending bit for EXTI line 3",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR4",
+      "description": "Pending bit for EXTI line 4",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR5",
+      "description": "Pending bit for EXTI line 5",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR6",
+      "description": "Pending bit for EXTI line 6",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR7",
+      "description": "Pending bit for EXTI line 7",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR8",
+      "description": "Pending bit for EXTI line 8",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR9",
+      "description": "Pending bit for EXTI line 9",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR10",
+      "description": "Pending bit for EXTI line 10",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR11",
+      "description": "Pending bit for EXTI line 11",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR12",
+      "description": "Pending bit for EXTI line 12",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR13",
+      "description": "Pending bit for EXTI line 13",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR14",
+      "description": "Pending bit for EXTI line 14",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR15",
+      "description": "Pending bit for EXTI line 15",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR16",
+      "description": "Pending bit for EXTI line 16",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "PR17",
+      "description": "Pending bit for EXTI line 17",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NotPending"
+        },
+        {
+          "value": "1",
+          "name": "Pending"
+        }
+      ]
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 31
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": []
+}

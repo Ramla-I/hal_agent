@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "CEC_RXD",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "RXD",
+      "description": "Rx data register",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints": []
+}

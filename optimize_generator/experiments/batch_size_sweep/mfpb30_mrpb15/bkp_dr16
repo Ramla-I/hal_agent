@@ -1,0 +1,35 @@
+{
+  "datasheet_register_abbreviation": "BKP_DR16",
+  "address_offset": "0x54",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "D",
+      "description": "Backup data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "bkp_dr16",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "BKP_CSR",
+          "field_name": "TEF",
+          "required_state": "cleared"
+        }
+      ],
+      "postconditions": [],
+      "severity": "warning",
+      "consequence": "Write will not be stored",
+      "datasheet_text": "If a write to the BKP_DRx registers is performed while this bit (TEF) is set, the value will not be stored."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "datasheet_register_abbreviation": "DAC_DHR12L2",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DACC2DHR",
+      "description": "DAC channel2 12-bit left-aligned data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved bits, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved bits, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints": []
+}

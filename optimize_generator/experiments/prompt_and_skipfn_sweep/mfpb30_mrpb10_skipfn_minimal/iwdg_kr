@@ -1,0 +1,28 @@
+{
+  "datasheet_register_abbreviation": "IWDG_KR",
+  "address_offset": "0x00",
+  "reset_value": null,
+  "size": 32,
+  "subfields": [
+    {
+      "name": "KEY",
+      "description": "Key register – writing specific values triggers watchdog actions",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0x5555",
+          "name": "EnableAccess"
+        },
+        {
+          "value": "0xAAAA",
+          "name": "ReloadCounter"
+        }
+      ]
+    }
+  ],
+  "access_constraints": []
+}

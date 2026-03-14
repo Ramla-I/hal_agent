@@ -1,0 +1,38 @@
+{
+  "datasheet_register_abbreviation": "CRC_CR",
+  "address_offset": "0x08",
+  "reset_value": "0x0000 0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 31
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "RESET",
+      "description": "Resets the CRC calculation unit and sets the data register to 0xFFFF FFFF",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "NoReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
+      ]
+    }
+  ],
+  "access_constraints": []
+}

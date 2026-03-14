@@ -1,0 +1,125 @@
+{
+  "datasheet_register_abbreviation": "AFIO_MAPR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SWJ_CFG",
+      "description": "Serial wire JTAG configuration",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 26
+      }
+    },
+    {
+      "name": "PD01_REMAP",
+      "description": "Port D0/Port D1 mapping on OSC_IN/OSC_OUT",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "TIM4_REMAP",
+      "description": "TIM4 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "TIM3_REMAP",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "TIM2_REMAP",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "TIM1_REMAP",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "USART3_REMAP",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "USART2_REMAP",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "USART1_REMAP",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "I2C1_REMAP",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "SPI1_REMAP",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "AFIO_MAPR",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "RCC_APB2ENR",
+          "field_name": "AFIOEN",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Register access may fail if the AFIO clock is not enabled.",
+      "datasheet_text": "To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR)."
+    }
+  ]
+}

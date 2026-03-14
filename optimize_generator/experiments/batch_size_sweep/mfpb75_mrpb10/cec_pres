@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "CEC_PRES",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Bits 31:14 Reserved, must be kept cleared",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "PRESC",
+      "description": "Prescaler counter value (bits 13:0)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 13
+      }
+    }
+  ],
+  "access_constraints": []
+}

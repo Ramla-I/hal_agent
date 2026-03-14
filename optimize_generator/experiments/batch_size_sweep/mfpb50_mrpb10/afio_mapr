@@ -1,0 +1,135 @@
+{
+  "datasheet_register_abbreviation": "AFIO_MAPR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 27
+      }
+    },
+    {
+      "name": "SWJ_CFG",
+      "description": "Serial wire JTAG configuration",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 24
+      }
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "PD01_REMAP",
+      "description": "Port D0/Port D1 mapping on OSC_IN/OSC_OUT",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "TIM4_REMAP",
+      "description": "TIM4 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "TIM3_REMAP",
+      "description": "TIM3 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "TIM2_REMAP",
+      "description": "TIM2 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "TIM1_REMAP",
+      "description": "TIM1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "USART3_REMAP",
+      "description": "USART3 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "USART2_REMAP",
+      "description": "USART2 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "USART1_REMAP",
+      "description": "USART1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "I2C1_REMAP",
+      "description": "I2C1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "SPI1_REMAP",
+      "description": "SPI1 remapping",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

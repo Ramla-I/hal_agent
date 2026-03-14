@@ -1,0 +1,104 @@
+{
+  "datasheet_register_abbreviation": "RCC_BDCR",
+  "address_offset": "0x20",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "BDRST",
+      "description": "Backup domain software reset",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "RTCEN",
+      "description": "RTC clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "RTCSEL[1:0]",
+      "description": "RTC clock source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "LSEBYP",
+      "description": "External low-speed oscillator bypass",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "LSERDY",
+      "description": "LSE oscillator ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "LSEON",
+      "description": "LSE oscillator enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "RCC_BDCR",
+      "target_fields": [
+        "BDRST",
+        "RTCEN",
+        "RTCSEL[1:0]",
+        "LSEBYP",
+        "LSEON"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "PWR_CR",
+          "field_name": "DBP",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Writes are ignored; the bits remain unchanged",
+      "datasheet_text": "LSEON, LSEBYP, RTCSEL and RTCEN bits of the Backup domain control register (RCC_BDCR) are write‑protected and the DBP bit in the Power control register (PWR_CR) has to be set before these can be modified."
+    },
+    {
+      "target_register": "RCC_BDCR",
+      "target_fields": [
+        "LSEBYP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "RCC_BDCR",
+          "field_name": "LSEON",
+          "required_state": "cleared"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Writing LSEBYP while LSEON is set is ignored",
+      "datasheet_text": "LSEBYP can be written only when the external 32 kHz oscillator is disabled."
+    }
+  ]
+}

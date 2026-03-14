@@ -1,0 +1,46 @@
+{
+  "datasheet_register_abbreviation": "BKP_CR",
+  "address_offset": "0x30",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TPAL",
+      "description": "TAMPER pin active level",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "TPE",
+      "description": "TAMPER pin enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "BKP_CR",
+      "target_fields": [
+        "TPAL"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "BKP_CR",
+          "field_name": "TPE",
+          "required_state": "cleared"
+        }
+      ],
+      "postconditions": [],
+      "severity": "warning",
+      "consequence": "Potential spurious tamper event if TPAL cleared while TPE set",
+      "datasheet_text": "It is recommended to change the TPAL bit only when the TPE bit is reset."
+    }
+  ]
+}

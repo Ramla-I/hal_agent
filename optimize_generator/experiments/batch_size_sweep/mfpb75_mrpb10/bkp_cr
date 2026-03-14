@@ -1,0 +1,46 @@
+{
+  "datasheet_register_abbreviation": "BKP_CR",
+  "address_offset": "0x30",
+  "reset_value": "0x00000000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "TPAL",
+      "description": "TAMPER pin active level",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "TPE",
+      "description": "TAMPER pin enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "bkp_cr",
+      "target_fields": [
+        "TPAL"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "bkp_cr",
+          "field_name": "TPE",
+          "required_state": "cleared"
+        }
+      ],
+      "postconditions": [],
+      "severity": "warning",
+      "consequence": "resetting both TPAL and TPE together can generate a spurious tamper event",
+      "datasheet_text": "Setting the TPAL and TPE bits at the same time is always safe, however resetting both at the same time can generate a spurious Tamper event. For this reason it is recommended to change the TPAL bit only when the TPE bit is reset."
+    }
+  ]
+}

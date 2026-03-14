@@ -1,0 +1,38 @@
+{
+  "datasheet_register_abbreviation": "DAC_DOR1",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DACC1DOR",
+      "description": "DAC channel1 data output",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "Reserved",
+      "description": "Reserved bits, must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "DAC_DOR1",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Write attempts have no effect; the register is read‑only.",
+      "datasheet_text": "The DAC_DORx cannot be written directly and any data transfer to the DAC channelx must be performed by loading the DAC_DHRx register."
+    }
+  ]
+}

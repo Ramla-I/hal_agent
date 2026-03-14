@@ -1,0 +1,45 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR4",
+  "address_offset": "0x14",
+  "reset_value": "0x0000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EXTI12",
+      "description": "EXTERNAL interrupt 12 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "EXTI13",
+      "description": "EXTERNAL interrupt 13 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "EXTI14",
+      "description": "EXTERNAL interrupt 14 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "EXTI15",
+      "description": "EXTERNAL interrupt 15 source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints": []
+}

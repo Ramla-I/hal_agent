@@ -1,0 +1,28 @@
+{
+  "peripherals": [
+    "afio",
+    "bkp",
+    "cec",
+    "crc",
+    "dac",
+    "exti",
+    "flash",
+    "fsmc",
+    "iwdg",
+    "pwr",
+    "rcc"
+  ],
+  "registers_found": 84,
+  "total_registers": 97,
+  "correct": 1381,
+  "wrong": 39,
+  "missing": 88,
+  "total_facts": 1508,
+  "found_accuracy": 91.57824933687002,
+  "correct_all": 1381,
+  "wrong_all": 39,
+  "missing_all": 346,
+  "total_facts_all": 1766,
+  "complete_accuracy": 78.19932049830125,
+  "coverage": 85.3907134767837
+}

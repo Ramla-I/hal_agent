@@ -1,0 +1,118 @@
+{
+  "datasheet_register_abbreviation": "RCC_CR",
+  "address_offset": "0x00",
+  "reset_value": "0x0000 XX83 where X is undefined",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PLLON",
+      "description": "PLL enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      }
+    },
+    {
+      "name": "PLLRDY",
+      "description": "PLL clock ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      }
+    },
+    {
+      "name": "CSSON",
+      "description": "Clock security system enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      }
+    },
+    {
+      "name": "HSEBYP",
+      "description": "External high-speed clock bypass",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "HSERDY",
+      "description": "External high-speed clock ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "HSEON",
+      "description": "External high-speed clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "HSICAL",
+      "description": "HSI calibration value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "HSITRIM",
+      "description": "HSI trimming value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "HSIRDY",
+      "description": "HSI ready flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "HSION",
+      "description": "HSI enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "RCC_CR",
+      "target_fields": [
+        "HSEBYP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "RCC_CR",
+          "field_name": "HSEON",
+          "required_state": "cleared"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "HSEBYP write is ignored if HSEON is set.",
+      "datasheet_text": "The HSEBYP bit can be written only if the HSE oscillator is disabled."
+    }
+  ]
+}

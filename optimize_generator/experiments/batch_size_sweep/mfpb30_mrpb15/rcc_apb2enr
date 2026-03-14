@@ -1,0 +1,189 @@
+{
+  "datasheet_register_abbreviation": "RCC_APB2ENR",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "RESERVED31_19",
+      "description": "Reserved, always read as 0",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "TIM17EN",
+      "description": "TIM17 Timer clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "TIM16EN",
+      "description": "TIM16 Timer clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "TIM15EN",
+      "description": "TIM15 Timer clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "RESERVED15",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "USART1EN",
+      "description": "USART1 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "RESERVED13",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "SPI1EN",
+      "description": "SPI1 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "TIM1EN",
+      "description": "TIM1 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "RESERVED10",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "ADC1EN",
+      "description": "ADC1 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "IOPGEN",
+      "description": "IOPG clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "IOPFEN",
+      "description": "IOPF clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "IOPEEN",
+      "description": "IOPE clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "IOPDEN",
+      "description": "IOPD clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "IOPCEN",
+      "description": "IOPC clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "IOPBEN",
+      "description": "IOPB clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "IOPAEN",
+      "description": "IOPA clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "RESERVED1",
+      "description": "Reserved",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "AFIOEN",
+      "description": "AFIO clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints": []
+}

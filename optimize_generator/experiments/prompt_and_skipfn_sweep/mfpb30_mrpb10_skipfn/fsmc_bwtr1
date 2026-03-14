@@ -1,0 +1,63 @@
+{
+  "datasheet_register_abbreviation": "FSMC_BWTR1",
+  "address_offset": "0x104",
+  "reset_value": "0x0FFFFFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "Reserved",
+      "description": "Must be kept at reset value",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 30,
+        "end_bit": 31
+      }
+    },
+    {
+      "name": "ACCMOD[2:0]",
+      "description": "Access mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 29
+      }
+    },
+    {
+      "name": "BUSTURN[3:0]",
+      "description": "Bus turnaround phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 19
+      }
+    },
+    {
+      "name": "DATAST[7:0]",
+      "description": "Data-phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "ADDHLD[3:0]",
+      "description": "Address hold phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "ADDSET[3:0]",
+      "description": "Address setup phase duration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    }
+  ],
+  "access_constraints": []
+}
