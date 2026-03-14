@@ -1,0 +1,224 @@
+[
+  {
+    "name": "best_iter18",
+    "path": "/Users/ramla/Projects/hal_agent/openevolve_retrieval/output_rm0041/best/best_program.py",
+    "registers_found": 95,
+    "total_registers": 97,
+    "correct": 1410,
+    "wrong": 44,
+    "missing": 188,
+    "total_facts": 1642,
+    "not_found_facts": 124,
+    "total_facts_all": 1766,
+    "found_accuracy": 85.87,
+    "complete_accuracy": 79.84,
+    "fact_coverage": 92.98,
+    "db_build_time": 218.3,
+    "total_time": 618.9,
+    "usage": {
+      "input_tokens": 594013,
+      "output_tokens": 125111,
+      "total_tokens": 719124
+    },
+    "per_peripheral": {
+      "afio": {
+        "registers_found": 7,
+        "total_registers": 7,
+        "correct": 95,
+        "wrong": 1,
+        "missing": 51,
+        "total_facts": 147,
+        "not_found_facts": 0,
+        "total_facts_all": 147,
+        "found_accuracy": 64.63,
+        "complete_accuracy": 64.63,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 42938,
+          "output_tokens": 11412,
+          "total_tokens": 54350
+        }
+      },
+      "bkp": {
+        "registers_found": 23,
+        "total_registers": 23,
+        "correct": 137,
+        "wrong": 5,
+        "missing": 0,
+        "total_facts": 142,
+        "not_found_facts": 0,
+        "total_facts_all": 142,
+        "found_accuracy": 96.48,
+        "complete_accuracy": 96.48,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 141959,
+          "output_tokens": 19842,
+          "total_tokens": 161801
+        }
+      },
+      "cec": {
+        "registers_found": 7,
+        "total_registers": 7,
+        "correct": 84,
+        "wrong": 3,
+        "missing": 3,
+        "total_facts": 90,
+        "not_found_facts": 0,
+        "total_facts_all": 90,
+        "found_accuracy": 93.33,
+        "complete_accuracy": 93.33,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 42841,
+          "output_tokens": 8226,
+          "total_tokens": 51067
+        }
+      },
+      "crc": {
+        "registers_found": 3,
+        "total_registers": 3,
+        "correct": 17,
+        "wrong": 1,
+        "missing": 0,
+        "total_facts": 18,
+        "not_found_facts": 0,
+        "total_facts_all": 18,
+        "found_accuracy": 94.44,
+        "complete_accuracy": 94.44,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 16504,
+          "output_tokens": 2632,
+          "total_tokens": 19136
+        }
+      },
+      "dac": {
+        "registers_found": 13,
+        "total_registers": 14,
+        "correct": 81,
+        "wrong": 6,
+        "missing": 6,
+        "total_facts": 93,
+        "not_found_facts": 51,
+        "total_facts_all": 144,
+        "found_accuracy": 87.1,
+        "complete_accuracy": 56.25,
+        "fact_coverage": 64.58,
+        "usage": {
+          "input_tokens": 92411,
+          "output_tokens": 12649,
+          "total_tokens": 105060
+        }
+      },
+      "exti": {
+        "registers_found": 6,
+        "total_registers": 6,
+        "correct": 241,
+        "wrong": 2,
+        "missing": 99,
+        "total_facts": 342,
+        "not_found_facts": 0,
+        "total_facts_all": 342,
+        "found_accuracy": 70.47,
+        "complete_accuracy": 70.47,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 38829,
+          "output_tokens": 12000,
+          "total_tokens": 50829
+        }
+      },
+      "flash": {
+        "registers_found": 8,
+        "total_registers": 8,
+        "correct": 19,
+        "wrong": 5,
+        "missing": 8,
+        "total_facts": 32,
+        "not_found_facts": 0,
+        "total_facts_all": 32,
+        "found_accuracy": 59.38,
+        "complete_accuracy": 59.38,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 49198,
+          "output_tokens": 4207,
+          "total_tokens": 53405
+        }
+      },
+      "fsmc": {
+        "registers_found": 12,
+        "total_registers": 12,
+        "correct": 321,
+        "wrong": 7,
+        "missing": 21,
+        "total_facts": 349,
+        "not_found_facts": 0,
+        "total_facts_all": 349,
+        "found_accuracy": 91.98,
+        "complete_accuracy": 91.98,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 73995,
+          "output_tokens": 21807,
+          "total_tokens": 95802
+        }
+      },
+      "iwdg": {
+        "registers_found": 4,
+        "total_registers": 4,
+        "correct": 27,
+        "wrong": 0,
+        "missing": 0,
+        "total_facts": 27,
+        "not_found_facts": 0,
+        "total_facts_all": 27,
+        "found_accuracy": 100.0,
+        "complete_accuracy": 100.0,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 23858,
+          "output_tokens": 4968,
+          "total_tokens": 28826
+        }
+      },
+      "pwr": {
+        "registers_found": 2,
+        "total_registers": 2,
+        "correct": 39,
+        "wrong": 0,
+        "missing": 0,
+        "total_facts": 39,
+        "not_found_facts": 0,
+        "total_facts_all": 39,
+        "found_accuracy": 100.0,
+        "complete_accuracy": 100.0,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 10672,
+          "output_tokens": 3138,
+          "total_tokens": 13810
+        }
+      },
+      "rcc": {
+        "registers_found": 10,
+        "total_registers": 11,
+        "correct": 349,
+        "wrong": 14,
+        "missing": 0,
+        "total_facts": 363,
+        "not_found_facts": 73,
+        "total_facts_all": 436,
+        "found_accuracy": 96.14,
+        "complete_accuracy": 80.05,
+        "fact_coverage": 83.26,
+        "usage": {
+          "input_tokens": 60808,
+          "output_tokens": 24230,
+          "total_tokens": 85038
+        }
+      }
+    }
+  }
+]
