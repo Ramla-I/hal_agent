@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-hal_agent is an AI-powered tool for extracting hardware register information from device datasheets (primarily embedded systems like STM32 microcontrollers). It uses OpenAI's API and agents SDK to parse datasheets, identify register details, and map them to driver code for hardware abstraction layer (HAL) development.
+hal_agent is an AI-powered tool for extracting hardware register information from device datasheets (embedded systems such as STM32 and NXP Kinetis microcontrollers). It uses OpenAI's API and agents SDK to parse datasheets, identify register details, and map them to driver code for hardware abstraction layer (HAL) development.
 
 The project implements a multi-stage pipeline that:
 1. Generates register information from datasheets using LLMs
@@ -34,7 +34,16 @@ hal_agent/
 ├── utils/                      # General utilities
 ├── devices/                    # Device datasheets and SVD files
 ├── scripts/                    # Helper scripts
-└── verified_datasheet/         # Verified ground truth data
+├── verified_datasheet/         # Verified ground truth data
+├── openevolve_retrieval/       # OpenEvolve evolutionary retrieval optimization
+│   ├── initial_program.py     # Evolvable retrieval program
+│   ├── evaluator*.py          # Fitness functions (per device)
+│   ├── config*.yaml           # OpenEvolve configs (per device)
+│   └── output_*/              # Evolution outputs (best programs, checkpoints, logs)
+└── optimize_retrieval/         # Manual retrieval optimization & analysis
+    ├── run_sweep.py           # Parameter sweep experiments
+    ├── plot_*.py              # Visualization scripts
+    └── *.md                   # Analysis reports
 ```
 
 ## Key Commands

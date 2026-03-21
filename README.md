@@ -1,22 +1,51 @@
 # hal_agent
-hal_agent is an AI-powered tool designed to extract, interpret, and summarize hardware register information from device datasheets, with a focus on embedded systems (e.g., STM32 microcontrollers). It leverages OpenAI's agents SDK to automate the process of parsing datasheets, identifying register details, and mapping them to driver code, streamlining hardware abstraction layer (HAL) development and documentation. 
+
+hal_agent is an AI-powered tool for extracting hardware register information from device datasheets (embedded systems such as STM32 and NXP Kinetis microcontrollers). It uses OpenAI's API and agents SDK to parse datasheets, identify register details, and map them to driver code for hardware abstraction layer (HAL) development.
+
+## Pipeline Overview
+
+The project implements a multi-stage pipeline:
+
+1. **Generator (S1)** — Extracts register info from datasheets using LLMs (supports single-register and batched modes)
+2. **Coverage Improver (S2)** — Iteratively adjusts context retrieval parameters based on SVD comparison
+3. **Validator (S4)** — Classifies extracted invariants against the datasheet using an LLM agent
+4. **Analyzer (S5)** — Filters irrelevant differences between agent output and SVD files
 
 ## Prerequisites
-1. Install OpenAI agents-SDK (https://openai.github.io/openai-agents-python/quickstart/)
-2. Set an OpenAI API key (https://platform.openai.com/docs/quickstart#create-and-export-an-api-key)
 
-## Parameters
-1. Preprocessing - In config.py, you can change the way the agent retrieves context from the datasheet by setting the CURRENT_PREPROCESSING_METHOD parameter.
+```bash
+# Python virtual environment
+source .venv/bin/activate
 
-## Testing with an Existing Device
-1. register_info_agent.py contains the most recent version of the agent
-2. Set the device name in config.py for the device you want to run the agent for. (Currently only STM devices)
-3. Run `python3 register_info_agent.py`
+# Required API keys
+export OPENAI_API_KEY="your-key-here"
+export GROQ_API_KEY="your-key-here"  # if using Groq models
+```
 
+## Quick Start
+
+```bash
+# Preprocess a device datasheet (chunk + enrich + ingest)
+python3 context_retrieval/preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --embed-metadata --backend local
+
+# Run the full analysis pipeline
+python3 core/s0_run_full_analysis.py
+
+# Or run individual stages
+python3 core/s1a_generator.py          # Generator
+python3 core/s2_coverage_improver.py   # Coverage improver
+python3 core/s4_validator.py           # Validator
+python3 core/s5_analyzer.py            # Analyzer
+```
 
 ## Adding a New Device
-1. Add the reference manual and svd files to the devices folder, right now the copy_files script in stm32-rs project does that
-2. Add the device to the config.py file (init/update_config.py)
-3. Run the preprocessing steps to generate a vector store (preprocessing/create_vector_store.py) -- TODO: automatically update config.py
-4. Split the datasheet if STM ref manual (preprocessing/split_datasheet.py) - TODO: make it so that the split can occur the first time the fn is called
-5. Make sure the entry in config has all the up to date information
+
+1. Add datasheet PDF and SVD files to `devices/{manufacturer}/{device_name}/`
+2. Create vector store: `python3 context_retrieval/preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --embed-metadata`
+3. Add device entry to `config.user_contexts` with manufacturer, run number, and IDs
+4. Update `config.DEVICE_NAME` to target the new device
+5. Run `python3 core/s0_run_full_analysis.py`
+
+## Documentation
+
+See [CLAUDE.md](CLAUDE.md) for detailed architecture, configuration, data models, and directory structure documentation.
