@@ -1,0 +1,242 @@
+[
+  {
+    "name": "best_stm",
+    "path": "/Users/ramla/Projects/hal_agent/openevolve_retrieval/output_rm0041/best/best_program.py",
+    "registers_found": 80,
+    "total_registers": 87,
+    "correct": 645,
+    "wrong": 107,
+    "missing": 663,
+    "total_facts": 1415,
+    "not_found_facts": 109,
+    "total_facts_all": 1524,
+    "found_accuracy": 45.58,
+    "complete_accuracy": 42.32,
+    "fact_coverage": 92.85,
+    "db_build_time": 141.9,
+    "total_time": 561.0,
+    "usage": {
+      "input_tokens": 463537,
+      "output_tokens": 101958,
+      "total_tokens": 565495
+    },
+    "per_peripheral": {
+      "acmp0": {
+        "registers_found": 4,
+        "total_registers": 4,
+        "correct": 21,
+        "wrong": 3,
+        "missing": 27,
+        "total_facts": 51,
+        "not_found_facts": 0,
+        "total_facts_all": 51,
+        "found_accuracy": 41.18,
+        "complete_accuracy": 41.18,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 22765,
+          "output_tokens": 3890,
+          "total_tokens": 26655
+        }
+      },
+      "acmp1": {
+        "registers_found": 4,
+        "total_registers": 4,
+        "correct": 46,
+        "wrong": 5,
+        "missing": 0,
+        "total_facts": 51,
+        "not_found_facts": 0,
+        "total_facts_all": 51,
+        "found_accuracy": 90.2,
+        "complete_accuracy": 90.2,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 22442,
+          "output_tokens": 4562,
+          "total_tokens": 27004
+        }
+      },
+      "adc": {
+        "registers_found": 8,
+        "total_registers": 8,
+        "correct": 77,
+        "wrong": 7,
+        "missing": 15,
+        "total_facts": 99,
+        "not_found_facts": 0,
+        "total_facts_all": 99,
+        "found_accuracy": 77.78,
+        "complete_accuracy": 77.78,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 40896,
+          "output_tokens": 11569,
+          "total_tokens": 52465
+        }
+      },
+      "crc": {
+        "registers_found": 3,
+        "total_registers": 3,
+        "correct": 38,
+        "wrong": 4,
+        "missing": 0,
+        "total_facts": 42,
+        "not_found_facts": 0,
+        "total_facts_all": 42,
+        "found_accuracy": 90.48,
+        "complete_accuracy": 90.48,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 17141,
+          "output_tokens": 5231,
+          "total_tokens": 22372
+        }
+      },
+      "ftm0": {
+        "registers_found": 22,
+        "total_registers": 24,
+        "correct": 179,
+        "wrong": 34,
+        "missing": 348,
+        "total_facts": 561,
+        "not_found_facts": 27,
+        "total_facts_all": 588,
+        "found_accuracy": 31.91,
+        "complete_accuracy": 30.44,
+        "fact_coverage": 95.41,
+        "usage": {
+          "input_tokens": 133733,
+          "output_tokens": 26290,
+          "total_tokens": 160023
+        }
+      },
+      "ftm2": {
+        "registers_found": 20,
+        "total_registers": 24,
+        "correct": 197,
+        "wrong": 37,
+        "missing": 273,
+        "total_facts": 507,
+        "not_found_facts": 81,
+        "total_facts_all": 588,
+        "found_accuracy": 38.86,
+        "complete_accuracy": 33.5,
+        "fact_coverage": 86.22,
+        "usage": {
+          "input_tokens": 121861,
+          "output_tokens": 24780,
+          "total_tokens": 146641
+        }
+      },
+      "ftmre": {
+        "registers_found": 9,
+        "total_registers": 9,
+        "correct": 81,
+        "wrong": 12,
+        "missing": 0,
+        "total_facts": 93,
+        "not_found_facts": 0,
+        "total_facts_all": 93,
+        "found_accuracy": 87.1,
+        "complete_accuracy": 87.1,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 44528,
+          "output_tokens": 13383,
+          "total_tokens": 57911
+        }
+      },
+      "kbi0": {
+        "registers_found": 3,
+        "total_registers": 3,
+        "correct": 2,
+        "wrong": 1,
+        "missing": 0,
+        "total_facts": 3,
+        "not_found_facts": 0,
+        "total_facts_all": 3,
+        "found_accuracy": 66.67,
+        "complete_accuracy": 66.67,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 17890,
+          "output_tokens": 2996,
+          "total_tokens": 20886
+        }
+      },
+      "kbi1": {
+        "registers_found": 3,
+        "total_registers": 3,
+        "correct": 2,
+        "wrong": 2,
+        "missing": 0,
+        "total_facts": 4,
+        "not_found_facts": 0,
+        "total_facts_all": 4,
+        "found_accuracy": 50.0,
+        "complete_accuracy": 50.0,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 17896,
+          "output_tokens": 3653,
+          "total_tokens": 21549
+        }
+      },
+      "mcm": {
+        "registers_found": 1,
+        "total_registers": 1,
+        "correct": 0,
+        "wrong": 1,
+        "missing": 0,
+        "total_facts": 1,
+        "not_found_facts": 0,
+        "total_facts_all": 1,
+        "found_accuracy": 0.0,
+        "complete_accuracy": 0.0,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 4580,
+          "output_tokens": 917,
+          "total_tokens": 5497
+        }
+      },
+      "port": {
+        "registers_found": 1,
+        "total_registers": 1,
+        "correct": 1,
+        "wrong": 0,
+        "missing": 0,
+        "total_facts": 1,
+        "not_found_facts": 0,
+        "total_facts_all": 1,
+        "found_accuracy": 100.0,
+        "complete_accuracy": 100.0,
+        "fact_coverage": 100.0,
+        "usage": {
+          "input_tokens": 6229,
+          "output_tokens": 1548,
+          "total_tokens": 7777
+        }
+      },
+      "sim": {
+        "registers_found": 2,
+        "total_registers": 3,
+        "correct": 1,
+        "wrong": 1,
+        "missing": 0,
+        "total_facts": 2,
+        "not_found_facts": 1,
+        "total_facts_all": 3,
+        "found_accuracy": 50.0,
+        "complete_accuracy": 33.33,
+        "fact_coverage": 66.67,
+        "usage": {
+          "input_tokens": 13576,
+          "output_tokens": 3139,
+          "total_tokens": 16715
+        }
+      }
+    }
+  }
+]

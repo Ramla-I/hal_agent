@@ -1,0 +1,27 @@
+{
+  "id": "eea04b2a-efc3-41f6-b3af-b407c96feae0",
+  "generation": 4,
+  "iteration": 48,
+  "timestamp": 1773521661.202634,
+  "parent_id": "6254015c-df4d-4c0e-a1ec-1fe446a66acc",
+  "metrics": {
+    "combined_score": 0.8087719298245614,
+    "found_accuracy": 0.8745519713261649,
+    "found_correct": 244,
+    "found_wrong": 27,
+    "found_missing": 8,
+    "found_total": 279,
+    "complete_accuracy": 0.856140350877193,
+    "complete_total": 285,
+    "registers_found": 23,
+    "total_registers": 24,
+    "fact_coverage": 0.9789473684210527,
+    "avg_context_length": 9034.375,
+    "retrieval_time": 0.5246474742889404,
+    "db_build_time": 0.8047339916229248,
+    "generator_time": 84.3595199584961,
+    "total_time": 85.80582070350647
+  },
+  "language": "python",
+  "saved_at": 1773521827.937407
+}
