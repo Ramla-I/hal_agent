@@ -146,8 +146,8 @@ E1 splits the difference — better coverage than D2 (+8pp), better found accura
 
 Batching multiple registers per LLM call reduces token cost by sharing system prompts and context. All configs use D2 retrieval on STM RM0041.
 
-**Sweep results:** `../optimize_generator/experiments/batch_size_sweep/sweep_results.csv`
-**Additional mrpb15 results:** `../optimize_generator/experiments/batch_size_sweep/mfpb{30,50,75}_mrpb15/info/`
+**Sweep results:** `../optimization/generator/experiments/batch_size_sweep/sweep_results.csv`
+**Additional mrpb15 results:** `../optimization/generator/experiments/batch_size_sweep/mfpb{30,50,75}_mrpb15/info/`
 **Unbatched baseline:** D2 (830,634 tokens, 96 LLM calls)
 
 | Config | Regs/Call | LLM Calls | Tokens | vs Unbatched | Found Acc | Complete Acc | Coverage |
@@ -325,8 +325,8 @@ Generates one figure:
 All figures saved to `../openevolve_retrieval/`.
 
 ```bash
-source .venv/bin/activate && python3 optimize_retrieval/plot_cross_manufacturer.py
-source .venv/bin/activate && python3 optimize_retrieval/plot_batched_generator.py
+source .venv/bin/activate && python3 optimization/retrieval/plot_cross_manufacturer.py
+source .venv/bin/activate && python3 optimization/retrieval/plot_batched_generator.py
 ```
 
 ---
@@ -356,9 +356,9 @@ source .venv/bin/activate && python3 optimize_retrieval/plot_batched_generator.p
 |-----------|------|
 | OE-STM on STM (full) | `openevolve_retrieval/output_rm0041/full_eval_results.json` |
 | OE-STM on NXP (full) | `openevolve_retrieval/output_ke04/full_eval_results.json` |
-| D2 on STM | `optimize_retrieval/experiments/D_conditional_page_expansion/local_rm0041_md_chunks_v2_emb2_rrlocal_mf_pa1/info/` |
-| E1 sweep | `optimize_retrieval/experiments/e1_precision_coverage/sweep_results.csv` |
-| Batch size sweep | `optimize_generator/experiments/batch_size_sweep/sweep_results.csv` |
+| D2 on STM | `optimization/retrieval/experiments/D_conditional_page_expansion/local_rm0041_md_chunks_v2_emb2_rrlocal_mf_pa1/info/` |
+| E1 sweep | `optimization/retrieval/experiments/e1_precision_coverage/sweep_results.csv` |
+| Batch size sweep | `optimization/generator/experiments/batch_size_sweep/sweep_results.csv` |
 | KE04 evolution logs | `openevolve_retrieval/output_ke04/logs/` |
 | KE04 evolution checkpoints | `openevolve_retrieval/output_ke04/checkpoints/` |
 
@@ -366,7 +366,7 @@ source .venv/bin/activate && python3 optimize_retrieval/plot_batched_generator.p
 
 | Script | Purpose |
 |--------|---------|
-| `optimize_retrieval/plot_cross_manufacturer.py` | Generate cross-manufacturer comparison figures + tables |
-| `optimize_retrieval/plot_batched_generator.py` | Generate batched generator efficiency figure + table |
+| `optimization/retrieval/plot_cross_manufacturer.py` | Generate cross-manufacturer comparison figures + tables |
+| `optimization/retrieval/plot_batched_generator.py` | Generate batched generator efficiency figure + table |
 | `openevolve_retrieval/full_eval_ke04.py` | Full evaluation runner for NXP KE04 |
 | `openevolve_retrieval/evaluator_ke04.py` | OpenEvolve evaluator for NXP KE04 |

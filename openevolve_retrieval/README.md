@@ -80,7 +80,7 @@ Scores each evolved program by running the full pipeline end-to-end:
 - Generator prompts from `prompts/register_info_stm.py`
 - Output parsing from `utils/parse_output.py`
 - Fact extraction from `utils/generator_facts.py`
-- Comparison logic from `optimize_retrieval/compare_generator_with_verified.py`
+- Comparison logic from `optimization/retrieval/compare_generator_with_verified.py`
 
 ### 3. `config.yaml` — OpenEvolve Configuration
 
@@ -120,9 +120,9 @@ print(f'Best score: {result.best_score}')
 "
 ```
 
-## Relationship to `optimize_retrieval/`
+## Relationship to `optimization/retrieval/`
 
-The `optimize_retrieval/` folder contains a **manual** parameter sweep (`run_sweep.py`) that varies `number_embeddings` and `pages_after_keyword` across fixed values. The `openevolve_retrieval/` approach is fundamentally different — it evolves the actual retrieval *code* (preprocessing, query construction, and post-processing) rather than just tuning numeric parameters. The evaluator reuses `optimize_retrieval/compare_generator_with_verified.py` for the comparison logic.
+The `optimization/retrieval/` folder contains a **manual** parameter sweep (`run_sweep.py`) that varies `number_embeddings` and `pages_after_keyword` across fixed values. The `openevolve_retrieval/` approach is fundamentally different — it evolves the actual retrieval *code* (preprocessing, query construction, and post-processing) rather than just tuning numeric parameters. The evaluator reuses `optimization/retrieval/compare_generator_with_verified.py` for the comparison logic.
 
 ## Next Steps
 

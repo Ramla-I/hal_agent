@@ -611,5 +611,5 @@ def run_generator_batched(
 if __name__ == "__main__":
     raise SystemExit(
         "This module no longer provides a CLI/test harness. "
-        "Use optimize_retrieval/run_sweep.py instead."
+        "Use optimization/retrieval/run_sweep.py instead."
     )

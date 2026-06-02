@@ -3,21 +3,21 @@
 Compare generator outputs from different embedding configurations against verified datasheet.
 
 Usage:
-    python3 optimization/compare_generator_with_verified.py -v VERIFIED_CSV GENERATOR_DIR [GENERATOR_DIR ...]
+    python3 optimization/common/compare_generator_with_verified.py -v VERIFIED_CSV GENERATOR_DIR [GENERATOR_DIR ...]
 
 Examples:
     # Compare single generator run
-    python3 optimization/compare_generator_with_verified.py \\
+    python3 optimization/common/compare_generator_with_verified.py \\
         -v verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv \\
         agent_output/stm/rm0041/run_1/
 
     # Compare multiple runs
-    python3 optimization/compare_generator_with_verified.py \\
+    python3 optimization/common/compare_generator_with_verified.py \\
         -v verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv \\
         agent_output/stm/rm0041/run_1/ agent_output/stm/rm0041/run_2/
 
     # Filter by peripheral
-    python3 optimization/compare_generator_with_verified.py \\
+    python3 optimization/common/compare_generator_with_verified.py \\
         -v verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv \\
         -p afio agent_output/stm/rm0041/run_1/
 """
@@ -25,8 +25,8 @@ import os
 import sys
 from pathlib import Path
 
-# Add parent directory to path to access project root
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add project root to path (file lives at optimization/common/X.py)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import argparse
 import json

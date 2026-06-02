@@ -40,7 +40,7 @@ from prompts.register_info_stm import (
 )
 from utils.parse_output import get_json_block_from_response, get_reasoning_from_response
 from utils.generator_facts import extract_facts_from_generator_output
-from optimize_retrieval.compare_generator_with_verified import (
+from optimization.common.compare_generator_with_verified import (
     load_verified_datasheet,
     compare_outputs,
     normalize_value,

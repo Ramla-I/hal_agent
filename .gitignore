@@ -217,8 +217,9 @@ agent_output_updated/
 .matplotlib/
 databases/
 chunked_datasheets/
-optimize_retrieval/.mplconfig/
-optimize_retrieval/experiments/
+optimization/retrieval/.mplconfig/
+optimization/retrieval/experiments/
+optimization/generator/experiments/
 
 # Preprocessing scratch/output folders
 preprocessing/datasheet_metadata_single_pass/

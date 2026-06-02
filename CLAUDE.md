@@ -18,6 +18,12 @@ The project implements a multi-stage pipeline that:
 hal_agent/
 ├── core/                       # Main pipeline scripts (s0-s5)
 ├── optimization/               # Optimization experiments & analysis scripts
+│   ├── common/                # Shared sweep harness + comparison helpers
+│   ├── retrieval/             # Manual retrieval sweep + analysis + reports
+│   │   ├── run_sweep.py       # Parameter sweep experiments
+│   │   ├── plot_*.py          # Visualization scripts
+│   │   └── reports/*.md       # Analysis reports
+│   ├── generator/             # Generator sweep (batching, prompting) + plots
 │   ├── test_outputs/          # Test results (gitignored, see STRUCTURE.md)
 │   ├── s*a_*.py               # Optimization experiment scripts
 │   ├── compare_*.py           # Analysis scripts
@@ -35,15 +41,11 @@ hal_agent/
 ├── devices/                    # Device datasheets and SVD files
 ├── scripts/                    # Helper scripts
 ├── verified_datasheet/         # Verified ground truth data
-├── openevolve_retrieval/       # OpenEvolve evolutionary retrieval optimization
-│   ├── initial_program.py     # Evolvable retrieval program
-│   ├── evaluator*.py          # Fitness functions (per device)
-│   ├── config*.yaml           # OpenEvolve configs (per device)
-│   └── output_*/              # Evolution outputs (best programs, checkpoints, logs)
-└── optimize_retrieval/         # Manual retrieval optimization & analysis
-    ├── run_sweep.py           # Parameter sweep experiments
-    ├── plot_*.py              # Visualization scripts
-    └── *.md                   # Analysis reports
+└── openevolve_retrieval/       # OpenEvolve evolutionary retrieval optimization
+    ├── initial_program.py     # Evolvable retrieval program
+    ├── evaluator*.py          # Fitness functions (per device)
+    ├── config*.yaml           # OpenEvolve configs (per device)
+    └── output_*/              # Evolution outputs (best programs, checkpoints, logs)
 ```
 
 ## Key Commands

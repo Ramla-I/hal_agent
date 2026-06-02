@@ -5,7 +5,7 @@ Generate batched generator efficiency figure.
 Shows how increasing batch size reduces token cost while maintaining accuracy.
 
 Usage:
-    source .venv/bin/activate && python3 optimize_retrieval/plot_batched_generator.py
+    source .venv/bin/activate && python3 optimization/generator/plot_batched_generator.py
 """
 
 import os

@@ -14,7 +14,7 @@ After each run, it automatically compares the output against a verified datashee
 Usage:
     Edit the variables at the top of `main()` and run:
 
-        python3 optimize_retrieval/run_sweep.py
+        python3 optimization/retrieval/run_sweep.py
 """
 
 import csv
@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import config
 from defs import ContextRetrievalParameters, ContextRetrievalMethod, Manufacturer, BatchedRetrievalStrategy
@@ -34,11 +34,11 @@ from agent_tools.svd_parsing import get_register_names_for_peripheral
 from core.s1a_generator import run_generator, run_generator_batched
 from utils.timing import get_timing_stats
 from utils.vector_store_config import get_vector_stores
-from utils.generator_facts import extract_facts_from_generator_output
-from optimize_retrieval.compare_generator_with_verified import (
-    load_verified_datasheet,
-    load_generator_output,
-    compare_outputs,
+from optimization.common.sweep_harness import (
+    get_user_context,
+    get_verified_csv_path,
+    get_verified_registers,
+    run_comparison,
 )
 
 
@@ -64,10 +64,6 @@ VS_TYPE_MAPPING = {
     "md": "openai_md_chunks",
     "md_enriched": "openai_md_enriched",
 }
-
-
-def _get_user_context(device_name: str):
-    return next((ctx for ctx in config.user_contexts if ctx.device_name == device_name), None)
 
 
 def _resolve_vs_info(device_dir: str, vs_type: Optional[str], vs_id: Optional[str]) -> tuple[str, str]:
@@ -171,202 +167,6 @@ def _generate_local_output_prefix(
     return "_".join(parts)
 
 
-def _get_verified_csv_path(device_dir: str, svd: str, peripheral: Optional[str] = None) -> Optional[str]:
-    """
-    Find the verified datasheet CSV for a device.
-
-    Looks for files matching patterns:
-    - verified_datasheet/{mfr}/{device}/{device}_{svd}_full.csv
-    - verified_datasheet/{mfr}/{device}/{device}_{svd}_{peripheral}.csv
-    """
-    # Extract manufacturer and device name from device_dir
-    # e.g., "devices/stm/rm0041" -> mfr="stm", device="rm0041"
-    parts = device_dir.rstrip('/').split('/')
-    if len(parts) >= 2:
-        device_name = parts[-1]
-        mfr = parts[-2]
-    else:
-        return None
-
-    # Look for verified CSV files
-    verified_base = f"verified_datasheet/{mfr}/{device_name}"
-
-    # Try peripheral-specific if requested
-    if peripheral:
-        peripheral_csv = os.path.join(verified_base, f"{device_name}_{svd}_{peripheral}.csv")
-        if os.path.exists(peripheral_csv):
-            return peripheral_csv
-
-    # Try full CSV
-    full_csv = os.path.join(verified_base, f"{device_name}_{svd}_full.csv")
-    if os.path.exists(full_csv):
-        return full_csv
-
-    return None
-
-
-def _get_verified_registers(verified_csv: str, peripheral: str) -> List[str]:
-    """Extract register names for a peripheral from the verified CSV."""
-    verified_facts = load_verified_datasheet(verified_csv, peripheral_filter=peripheral)
-    regs = sorted({r for (p, r, f, k) in verified_facts.keys()})
-    return regs
-
-
-def run_comparison(
-    output_dir: str,
-    verified_csv: str,
-    peripheral_filter: str = None
-) -> Dict:
-    """
-    Compare generator output against verified datasheet and return accuracy metrics.
-
-    Args:
-        output_dir: Directory containing generator outputs
-        verified_csv: Path to verified datasheet CSV
-        peripheral_filter: Optional peripheral to filter by
-
-    Returns:
-        Dict with accuracy metrics plus compact detailed outputs:
-        - registers_found, total_registers, correct, wrong, missing, total_facts, accuracy
-        - register_results: List[Dict] (one row per verified register)
-        - fact_errors: List[Dict] (one row per wrong/missing fact)
-    """
-    # Load verified facts
-    verified_facts = load_verified_datasheet(verified_csv, peripheral_filter=peripheral_filter)
-
-    # Get list of (peripheral, register) pairs to check
-    register_pairs = set()
-    for (p, r, f, k) in verified_facts.keys():
-        register_pairs.add((p, r))
-    register_pairs = sorted(register_pairs)
-
-    # Collect all facts from generator output
-    all_generator_facts = {}
-    registers_found = set()
-
-    for peripheral, register in register_pairs:
-        output_json = load_generator_output(output_dir, peripheral, register)
-        if output_json:
-            registers_found.add((peripheral, register))
-            facts = extract_facts_from_generator_output(output_json, peripheral, register)
-            all_generator_facts.update(facts)
-
-    # Compare outputs (present registers only)
-    correct, wrong, missing = compare_outputs(verified_facts, all_generator_facts, registers_found)
-    # Compare outputs (all registers — treats not-found registers as fully missing)
-    correct_all, wrong_all, missing_all = compare_outputs(
-        verified_facts, all_generator_facts, set(register_pairs),
-    )
-
-    # Per-register breakdown + errors (compact)
-    register_results: List[Dict] = []
-    fact_errors: List[Dict] = []
-
-    for peripheral, register in register_pairs:
-        verified_reg_facts = {
-            k: v for k, v in verified_facts.items()
-            if k[0] == peripheral and k[1] == register
-        }
-        total_verified_reg_facts = len(verified_reg_facts)
-        found = (peripheral, register) in registers_found
-
-        if found:
-            c_r, w_r, m_r = compare_outputs(
-                verified_reg_facts,
-                all_generator_facts,
-                {(peripheral, register)},
-            )
-            correct_r = len(c_r)
-            wrong_r = len(w_r)
-            missing_r = len(m_r)
-
-            for w_item in w_r:
-                fact = w_item["fact"]
-                fact_errors.append({
-                    "error_type": "wrong",
-                    "peripheral": fact[0],
-                    "register": fact[1],
-                    "field_name": fact[2],
-                    "key": fact[3],
-                    "correct_value": w_item["correct"],
-                    "generated_value": w_item["generated"],
-                })
-            for m_item in m_r:
-                fact = m_item["fact"]
-                fact_errors.append({
-                    "error_type": "missing",
-                    "peripheral": fact[0],
-                    "register": fact[1],
-                    "field_name": fact[2],
-                    "key": fact[3],
-                    "correct_value": m_item["correct_value"],
-                    "generated_value": "",
-                })
-        else:
-            correct_r = 0
-            wrong_r = 0
-            missing_r = total_verified_reg_facts
-            for fact_key, correct_value in verified_reg_facts.items():
-                fact_errors.append({
-                    "error_type": "missing",
-                    "peripheral": fact_key[0],
-                    "register": fact_key[1],
-                    "field_name": fact_key[2],
-                    "key": fact_key[3],
-                    "correct_value": correct_value,
-                    "generated_value": "",
-                })
-
-        total_r = correct_r + wrong_r + missing_r
-        acc_r = (correct_r / total_r * 100) if total_r > 0 else 0
-
-        register_results.append({
-            "peripheral": peripheral,
-            "register": register,
-            "register_found": found,
-            "correct": correct_r,
-            "wrong": wrong_r,
-            "missing": missing_r,
-            "total_facts": total_r,
-            "accuracy": acc_r,
-        })
-
-    # Found-register metrics (only facts belonging to registers the generator produced)
-    found_total = len(correct) + len(wrong) + len(missing)
-    found_accuracy = (len(correct) / found_total * 100) if found_total > 0 else 0
-
-    # Complete metrics (all verified facts, including those from not-found registers)
-    complete_total = len(correct_all) + len(wrong_all) + len(missing_all)
-    complete_accuracy = (len(correct_all) / complete_total * 100) if complete_total > 0 else 0
-
-    # Coverage: what fraction of total verified facts come from found registers
-    coverage = (found_total / complete_total * 100) if complete_total > 0 else 0
-
-    return {
-        'registers_found': len(registers_found),
-        'total_registers': len(register_pairs),
-        # Found-register metrics
-        'correct': len(correct),
-        'wrong': len(wrong),
-        'missing': len(missing),
-        'total_facts': found_total,
-        'found_accuracy': found_accuracy,
-        # Complete metrics (all registers)
-        'correct_all': len(correct_all),
-        'wrong_all': len(wrong_all),
-        'missing_all': len(missing_all),
-        'total_facts_all': complete_total,
-        'complete_accuracy': complete_accuracy,
-        # Coverage
-        'coverage': coverage,
-        # Legacy alias for backward compatibility
-        'accuracy': found_accuracy,
-        # Details
-        'register_results': register_results,
-        'fact_errors': fact_errors,
-    }
-
-
 def main():
     # =========================
     # EDIT THESE VARIABLES
@@ -427,7 +227,7 @@ def main():
 
     # OpenEvolve retrieval
     USE_OPENEVOLVE = True                         # Include OE retrieval config
-    OE_OUTPUT_PARENT = "optimize_retrieval/experiments/oe_batched"
+    OE_OUTPUT_PARENT = "optimization/retrieval/experiments/oe_batched"
 
     # Batched generator settings
     USE_BATCHED_GENERATOR = True
@@ -438,8 +238,8 @@ def main():
 
     # Output
     # OpenAI experiments go to openai_file_search_baseline/, local to post_batched_strategy_sweep/
-    OUTPUT_PARENT = "optimize_retrieval/experiments/openai_file_search_baseline"
-    LOCAL_OUTPUT_PARENT = "optimize_retrieval/experiments/e1_vs_oe_batched"
+    OUTPUT_PARENT = "optimization/retrieval/experiments/openai_file_search_baseline"
+    LOCAL_OUTPUT_PARENT = "optimization/retrieval/experiments/e1_vs_oe_batched"
     OUTPUT_PREFIX_BASE: Optional[str] = None   # e.g. "my_sweep"; if set, each config becomes "<base>_<auto>"
 
     # Verified comparison
@@ -447,7 +247,7 @@ def main():
     VERIFIED_CSV_OVERRIDE: Optional[str] = None
     # =========================
 
-    ctx = _get_user_context(DEVICE_NAME)
+    ctx = get_user_context(DEVICE_NAME)
     manufacturer = (ctx.manufacturer if ctx else Manufacturer.STM)
     device_dir = f"devices/{manufacturer.value.lower()}/{DEVICE_NAME}"
 
@@ -728,9 +528,9 @@ def main():
                 if REGISTERS:
                     peripherals_registers_dict[p] = list(REGISTERS)
                 else:
-                    verified_csv = VERIFIED_CSV_OVERRIDE or _get_verified_csv_path(device_dir, SVD, p)
+                    verified_csv = VERIFIED_CSV_OVERRIDE or get_verified_csv_path(device_dir, SVD, p)
                     if verified_csv:
-                        verified_regs = _get_verified_registers(verified_csv, p)
+                        verified_regs = get_verified_registers(verified_csv, p)
                         if verified_regs:
                             peripherals_registers_dict[p] = verified_regs
                             continue
@@ -780,7 +580,7 @@ def main():
             total_registers_sum = 0
 
             for peripheral_name in compare_peripherals:
-                verified_csv = VERIFIED_CSV_OVERRIDE or _get_verified_csv_path(device_dir, SVD, peripheral_name)
+                verified_csv = VERIFIED_CSV_OVERRIDE or get_verified_csv_path(device_dir, SVD, peripheral_name)
                 if not verified_csv:
                     print(f"  Warning: No verified CSV found for peripheral={peripheral_name}; skipping comparison.")
                     continue

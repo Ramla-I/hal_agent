@@ -9,7 +9,7 @@ Outputs a sweep_results.csv summary and per-config comparison files.
 Usage:
     Edit the CONFIGURATION BLOCK below and run:
 
-        python3 optimize_generator/optimize_generator.py
+        python3 optimization/generator/optimize_generator.py
 """
 
 import csv
@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import config
 from defs import (
@@ -34,7 +34,7 @@ from defs import (
 from agent_tools.tools import all_svd_file_paths
 from agent_tools.svd_parsing import get_register_names_for_peripheral
 from core.s1a_generator import run_generator_batched
-from optimize_retrieval.run_sweep import run_comparison, _get_verified_csv_path
+from optimization.common.sweep_harness import run_comparison, get_verified_csv_path
 from utils.timing import get_timing_stats
 
 
@@ -212,7 +212,7 @@ def main():
     total_registers = sum(len(v) for v in peripherals_registers_dict.values())
 
     configs = _build_config_matrix()
-    experiment_dir = os.path.join("optimize_generator", "experiments", EXPERIMENT_NAME)
+    experiment_dir = os.path.join("optimization", "generator", "experiments", EXPERIMENT_NAME)
     os.makedirs(experiment_dir, exist_ok=True)
 
     print(f"\n{'='*70}")
@@ -284,7 +284,7 @@ def main():
         combined_fact_errors: List[Dict] = []
 
         for peripheral_name in PERIPHERALS_TO_RUN:
-            verified_csv = _get_verified_csv_path(device_dir, SVD, peripheral_name)
+            verified_csv = get_verified_csv_path(device_dir, SVD, peripheral_name)
             if not verified_csv:
                 print(f"  Warning: No verified CSV for {peripheral_name}; skipping comparison.")
                 continue

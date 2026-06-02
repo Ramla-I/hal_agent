@@ -9,7 +9,7 @@ Produces two figures:
 Also prints summary tables to stdout.
 
 Usage:
-    source .venv/bin/activate && python3 optimize_retrieval/plot_cross_manufacturer.py
+    source .venv/bin/activate && python3 optimization/retrieval/plot_cross_manufacturer.py
 """
 
 import json
