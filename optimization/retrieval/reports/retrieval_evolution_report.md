@@ -322,7 +322,7 @@ Generates one figure:
 
 3. **`fig_batched_generator.png`** — Dual-axis bar+line chart showing token cost (bars) and accuracy/coverage (lines) across batch configurations. Demonstrates that batching reduces cost 50–65% while maintaining or improving accuracy.
 
-All figures saved to `../openevolve_retrieval/`.
+All figures saved to `../../../openevolve_retrieval/figures/`.
 
 ```bash
 source .venv/bin/activate && python3 optimization/retrieval/plot_cross_manufacturer.py

@@ -2,11 +2,11 @@
 """
 Full evaluation of OpenEvolve checkpoint programs against ALL 11 verified peripherals.
 
-Mirrors the evaluation pattern from evaluator.py but runs on the complete test set
+Mirrors the evaluation pattern from evaluator_rm0041.py but runs on the complete test set
 (afio, bkp, cec, crc, dac, exti, flash, fsmc, iwdg, pwr, rcc — 97 registers).
 
 Usage:
-    source .venv/bin/activate && python3 openevolve_retrieval/full_eval.py
+    source .venv/bin/activate && python3 openevolve_retrieval/full_eval_rm0041.py
 """
 
 import csv

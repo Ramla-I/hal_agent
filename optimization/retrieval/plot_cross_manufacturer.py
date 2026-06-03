@@ -112,7 +112,7 @@ COLORS_BY_KEY = {
     ("OE-Evolved (KE04)", "NXP"): COLOR_OE_KE04,
 }
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "openevolve_retrieval")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "openevolve_retrieval", "figures")
 
 
 # ---------------------------------------------------------------------------
