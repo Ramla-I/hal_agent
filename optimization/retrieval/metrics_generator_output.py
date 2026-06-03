@@ -8,10 +8,10 @@ and generates a few high-signal plots.
 
 No CLI args by design. Edit variables at the top of `main()` and run:
 
-    python3 optimization/retrieval/analyze_experiment_runs.py
+    python3 optimization/retrieval/metrics_generator_output.py
 
 Optional: you can also pass filtering thresholds without editing the file:
-    python3 optimization/retrieval/analyze_experiment_runs.py --min-accuracy 95 --max-timing 5 --max-usage 7000
+    python3 optimization/retrieval/metrics_generator_output.py --min-accuracy 95 --max-timing 5 --max-usage 7000
 """
 
 from __future__ import annotations
@@ -247,6 +247,21 @@ def _first_df(*candidates: Optional[pd.DataFrame]) -> Optional[pd.DataFrame]:
         if df is not None:
             return df
     return None
+
+
+def _read_run_csv(d: Path, filename: str) -> Optional[pd.DataFrame]:
+    """Read a per-run CSV from `d/info/filename`, falling back to `d/filename`.
+
+    The current sweep writes everything under `info/`, but older experiment
+    dirs sometimes put files in the run root. This helper hides the dual
+    lookup so call sites don't have to repeat it.
+    """
+    return _first_df(_read_csv(d / "info" / filename), _read_csv(d / filename))
+
+
+def _load_run_json(d: Path, filename: str) -> Optional[Dict[str, Any]]:
+    """Read a per-run JSON from `d/info/filename`, falling back to `d/filename`."""
+    return _load_json(d / "info" / filename) or _load_json(d / filename)
 
 
 def _summarize_usage(df: pd.DataFrame) -> Dict[str, Any]:
@@ -712,7 +727,7 @@ def main() -> None:
             row.update(_summarize_usage(pd.DataFrame()))
 
         # Timing (prefer info/ folder)
-        timing = _load_json(d / "info" / "timing_stats.json") or _load_json(d / "timing_stats.json") or {}
+        timing = _load_run_json(d, "timing_stats.json") or {}
         row.update(_summarize_timing(timing))
 
         # Accuracy + per-register + errors
@@ -723,7 +738,7 @@ def main() -> None:
 
         # Prefer new combined comparison file if present.
         combined_used = False
-        combined = _load_json(d / "info" / "comparison_results.json") or _load_json(d / "comparison_results.json")
+        combined = _load_run_json(d, "comparison_results.json")
         if isinstance(combined, dict) and "peripheral_count" in combined and "peripherals" in combined:
             combined_used = True
             # Read found_accuracy if present, fall back to legacy "accuracy"
@@ -751,10 +766,7 @@ def main() -> None:
             )
             # Derive complete_accuracy/coverage from register CSV if JSON doesn't have them
             if row.get("complete_accuracy") is None or row.get("coverage") is None:
-                _reg_df_for_derive = _first_df(
-                    _read_csv(d / "info" / "comparison_register_results.csv"),
-                    _read_csv(d / "comparison_register_results.csv"),
-                )
+                _reg_df_for_derive = _read_run_csv(d, "comparison_register_results.csv")
                 if _reg_df_for_derive is not None and not _reg_df_for_derive.empty:
                     derived = _derive_accuracy_from_register_results(_reg_df_for_derive)
                     if row.get("complete_accuracy") is None:
@@ -779,10 +791,7 @@ def main() -> None:
                     row["timing_total_time_mean"] = float(row["timing_total_time_sum"]) / pc
 
             # Details
-            reg_df = _first_df(
-                _read_csv(d / "info" / "comparison_register_results.csv"),
-                _read_csv(d / "comparison_register_results.csv"),
-            )
+            reg_df = _read_run_csv(d, "comparison_register_results.csv")
             if reg_df is not None and not reg_df.empty:
                 for _, rr in reg_df.iterrows():
                     register_rows.append(
@@ -806,10 +815,7 @@ def main() -> None:
                         }
                     )
 
-            err_df = _first_df(
-                _read_csv(d / "info" / "comparison_fact_errors.csv"),
-                _read_csv(d / "comparison_fact_errors.csv"),
-            )
+            err_df = _read_run_csv(d, "comparison_fact_errors.csv")
             if err_df is not None and not err_df.empty:
                 for _, er in err_df.iterrows():
                     error_rows.append(
@@ -832,7 +838,16 @@ def main() -> None:
                         }
                     )
         else:
-            # Multi-peripheral legacy layout: comparison_results_<peripheral>.json
+            # ----------------------------------------------------------------
+            # LEGACY READER — pre-2026 layout, one JSON per peripheral.
+            #   Files: comparison_results_<peripheral>.json (plus matching
+            #          comparison_register_results_<p>.csv / comparison_fact_errors_<p>.csv)
+            # Current run_sweep.py writes ONE combined comparison_results.json
+            # per config (handled in the `if combined_used` branch above), so
+            # this block only triggers on old experiment outputs.
+            # Known surviving instances: optimization/retrieval/experiments/openai_file_search_baseline/*/info/peripheral_comparisons/
+            # TODO: remove this block once those dirs are migrated or archived.
+            # ----------------------------------------------------------------
             legacy_candidates: List[Path] = []
             legacy_candidates.extend(sorted(d.glob("comparison_results_*.json")))
             legacy_candidates.extend(sorted((d / "info" / "peripheral_comparisons").glob("comparison_results_*.json")))
@@ -941,7 +956,7 @@ def main() -> None:
                             }
                         )
         elif not combined_used:
-            comparison = _load_json(d / "comparison_results.json") or _load_json(d / "info" / "comparison_results.json")
+            comparison = _load_run_json(d, "comparison_results.json")
             if isinstance(comparison, dict):
                 found_acc = comparison.get("found_accuracy") if comparison.get("found_accuracy") is not None else comparison.get("accuracy")
                 row.update(
@@ -964,17 +979,11 @@ def main() -> None:
                 )
             else:
                 # Try to derive from register-level CSV if JSON is missing.
-                reg_df = _first_df(
-                    _read_csv(d / "comparison_register_results.csv"),
-                    _read_csv(d / "info" / "comparison_register_results.csv"),
-                )
+                reg_df = _read_run_csv(d, "comparison_register_results.csv")
                 row.update(_derive_accuracy_from_register_results(reg_df if reg_df is not None else pd.DataFrame()))
 
             # Register-level table (if present)
-            reg_df = _first_df(
-                _read_csv(d / "comparison_register_results.csv"),
-                _read_csv(d / "info" / "comparison_register_results.csv"),
-            )
+            reg_df = _read_run_csv(d, "comparison_register_results.csv")
             if reg_df is not None and not reg_df.empty:
                 for _, rr in reg_df.iterrows():
                     register_rows.append(
@@ -999,10 +1008,7 @@ def main() -> None:
                     )
 
             # Fact-level errors (if present)
-            err_df = _first_df(
-                _read_csv(d / "comparison_fact_errors.csv"),
-                _read_csv(d / "info" / "comparison_fact_errors.csv"),
-            )
+            err_df = _read_run_csv(d, "comparison_fact_errors.csv")
             if err_df is not None and not err_df.empty:
                 for _, er in err_df.iterrows():
                     error_rows.append(

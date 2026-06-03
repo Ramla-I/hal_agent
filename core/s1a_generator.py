@@ -309,11 +309,16 @@ def run_generator_batched(
     include_reasoning: bool = True,
     skip_function_followup: bool = False,
     system_prompt_override: Optional[str] = None,
+    retrieval_only: bool = False,
 ) -> bool:
     """Per-peripheral batched generator — one LLM call per batch of registers.
 
     Output files are identical to ``run_generator()`` (one JSON per register),
     so downstream pipeline steps are fully compatible.
+
+    When ``retrieval_only=True``, runs only the retrieval step per batch (writing
+    ``embedding_ids.jsonl``) and skips the LLM call + output parsing. Useful for
+    cheap retrieval-only sweeps that pair with retrieval IR metrics.
     """
     from prompts.register_info_stm import (
         create_register_info_stm_system_prompt_batched,
@@ -421,6 +426,10 @@ def run_generator_batched(
                     json.dumps(embedding_info) + "\n",
                     "embedding_ids.jsonl",
                 )
+
+            if retrieval_only:
+                # Retrieval-only mode: skip LLM + output parsing for this batch.
+                continue
 
             # Count tokens in context
             try:

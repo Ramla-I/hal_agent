@@ -64,12 +64,12 @@ def retrieve_context(
     elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.OPENEVOLVE:
         from context_retrieval.openevolve_search import search_openevolve
         chunks_dir, chunks_index_csv = _resolve_oe_chunks(device_dir, device_name)
-        context = search_openevolve(peripheral_name, register_name, chunks_dir, chunks_index_csv)
+        context, embedding_ids = search_openevolve(peripheral_name, register_name, chunks_dir, chunks_index_csv)
         if not context:
             return None, []
         # Wrap in XML to match pipeline format
         formatted = f"<sources><result source='openevolve'><content>{context}</content></result></sources>"
-        return formatted, []
+        return formatted, embedding_ids
 
     elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.REGEX:
         print(f"Retrieving context from regex for {device_name} {peripheral_name} {register_name}")

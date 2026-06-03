@@ -40,14 +40,22 @@ from optimization.common.sweep_harness import (
     get_verified_registers,
     run_comparison,
 )
+from optimization.retrieval.metrics_retrieval import (
+    DEFAULT_K_CUTOFFS,
+    load_db_labels,
+    measure_run,
+)
 
 
 # Hardcoded defaults to keep the CLI small. If you want to tune these later,
 # change them here (single source of truth for experiment runs).
-DEFAULT_CONTEXT_METHOD = ContextRetrievalMethod.OPENAI_FILE_SEARCH
-DEFAULT_PAGES_AFTER_KEYWORD = 2
-DEFAULT_REMOVE_TABLES = False
-DEFAULT_RE_RANKING = True
+# The OPENAI_DEFAULT_* values only apply to the OpenAI vector-store backend
+# branch below; the local and OpenEvolve backends ignore them. DEFAULT_SCORE_THRESHOLD
+# is shared by both the OpenAI and local branches.
+OPENAI_DEFAULT_CONTEXT_METHOD = ContextRetrievalMethod.OPENAI_FILE_SEARCH
+OPENAI_DEFAULT_PAGES_AFTER_KEYWORD = 2
+OPENAI_DEFAULT_REMOVE_TABLES = False
+OPENAI_DEFAULT_RE_RANKING = True
 DEFAULT_SCORE_THRESHOLD = 0.25
 
 # Short labels for batched retrieval strategies (used in output folder names)
@@ -236,15 +244,22 @@ def main():
         BatchedRetrievalStrategy.PER_REGISTER_TRIMMED,  # sD: per-register queries, trimmed to n_embeddings each (D2-identical)
     ]
 
-    # Output
-    # OpenAI experiments go to openai_file_search_baseline/, local to post_batched_strategy_sweep/
-    OUTPUT_PARENT = "optimization/retrieval/experiments/openai_file_search_baseline"
+    # Output — one parent directory per backend. Per-config subdirs land inside the
+    # parent matching that config's backend. The combined `sweep_results.csv` is written
+    # to the first backend-parent that actually produced rows (see end of main()).
+    OPENAI_OUTPUT_PARENT = "optimization/retrieval/experiments/openai_file_search_baseline"
     LOCAL_OUTPUT_PARENT = "optimization/retrieval/experiments/e1_vs_oe_batched"
     OUTPUT_PREFIX_BASE: Optional[str] = None   # e.g. "my_sweep"; if set, each config becomes "<base>_<auto>"
 
-    # Verified comparison
+    # Verified comparison (generator side)
     SKIP_COMPARISON = False
     VERIFIED_CSV_OVERRIDE: Optional[str] = None
+
+    # Generator vs retrieval-only mode
+    RUN_GENERATOR = True                              # False → skip LLM, only run retrieval + retrieval-quality metrics
+    RUN_RETRIEVAL_METRICS = True                      # Compute recall@k / MRR / hit@k per config and join into sweep_results.csv
+    RETRIEVAL_QUALITY_LABEL_DB_NAME = "rm0041_md_chunks"   # ChromaDB collection providing reg_* ground-truth labels
+    RETRIEVAL_QUALITY_K_CUTOFFS = DEFAULT_K_CUTOFFS   # k values at which to compute recall@k / precision@k / hit@k
     # =========================
 
     ctx = get_user_context(DEVICE_NAME)
@@ -268,7 +283,7 @@ def main():
 
     timing = get_timing_stats()
     if USE_OPENAI_VECTOR_STORE:
-        os.makedirs(OUTPUT_PARENT, exist_ok=True)
+        os.makedirs(OPENAI_OUTPUT_PARENT, exist_ok=True)
 
     # Build configuration matrix - each entry is a dict with all config
     configs = []
@@ -360,6 +375,18 @@ def main():
 
     client = config.client_groq if CLIENT == "groq" else config.client_openai
 
+    # Load ground-truth chunk labels once (cheap; ChromaDB metadata read).
+    # Cached for the duration of the sweep — every config's IR metrics use these.
+    sources_for_reg = None
+    if RUN_RETRIEVAL_METRICS:
+        print(f"Loading retrieval-quality ground-truth labels from ChromaDB '{RETRIEVAL_QUALITY_LABEL_DB_NAME}'...")
+        try:
+            sources_for_reg, _ = load_db_labels(RETRIEVAL_QUALITY_LABEL_DB_NAME, "")
+            print(f"  {len(sources_for_reg)} unique reg_* labels")
+        except Exception as e:
+            print(f"  WARN: could not load labels ({e}); retrieval-quality metrics will be skipped this sweep")
+            sources_for_reg = None
+
     # Collect results for summary
     all_results = []
 
@@ -392,11 +419,11 @@ def main():
                 chunk_index_path = CHUNK_INDEX_PATH_OVERRIDE
 
             context_retrieval_parameters = ContextRetrievalParameters(
-                context_retrieval_method=DEFAULT_CONTEXT_METHOD,
-                pages_after_keyword=DEFAULT_PAGES_AFTER_KEYWORD,
-                remove_tables=DEFAULT_REMOVE_TABLES,
+                context_retrieval_method=OPENAI_DEFAULT_CONTEXT_METHOD,
+                pages_after_keyword=OPENAI_DEFAULT_PAGES_AFTER_KEYWORD,
+                remove_tables=OPENAI_DEFAULT_REMOVE_TABLES,
                 number_embeddings=num_embeddings,
-                re_ranking=DEFAULT_RE_RANKING,
+                re_ranking=OPENAI_DEFAULT_RE_RANKING,
                 score_threshold=DEFAULT_SCORE_THRESHOLD,
                 vs_id=vs_id,
                 regex="",
@@ -412,7 +439,7 @@ def main():
             else:
                 output_prefix = auto_prefix
 
-            output_dir = os.path.join(OUTPUT_PARENT, output_prefix)
+            output_dir = os.path.join(OPENAI_OUTPUT_PARENT, output_prefix)
 
             print(f"  VS ID: {vs_id}")
             print(f"  Chunk index: {chunk_index_path or '(none)'}")
@@ -552,6 +579,11 @@ def main():
         )
         if USE_BATCHED_GENERATOR:
             generator_kwargs["max_fields_per_batch"] = MAX_FIELDS_PER_BATCH
+            if not RUN_GENERATOR:
+                # Retrieval-only mode: write embedding_ids.jsonl per batch but skip the LLM call.
+                generator_kwargs["retrieval_only"] = True
+        elif not RUN_GENERATOR:
+            print("  WARN: RUN_GENERATOR=False is only supported with USE_BATCHED_GENERATOR=True; running generator anyway")
         generator_fn(**generator_kwargs)
 
         info_dir = os.path.join(output_dir, "info")
@@ -559,7 +591,7 @@ def main():
         timing.save_to_file(os.path.join(info_dir, "timing_stats.json"))
 
         # Run comparison across peripherals and write ONE combined set of files per configuration directory.
-        if not SKIP_COMPARISON:
+        if RUN_GENERATOR and not SKIP_COMPARISON:
             compare_peripherals = [p for p in peripherals_to_run if p is not None] if peripherals_to_run != [None] else []
             if peripherals_to_run == [None]:
                 print("  Warning: comparison requires explicit peripheral list; set PERIPHERALS_TO_RUN or PERIPHERAL.")
@@ -691,13 +723,10 @@ def main():
                 writer.writeheader()
                 writer.writerows(combined_fact_errors)
 
-            # One summary row per config (aggregated across peripherals)
-            result_row = {
-                "config": output_prefix,
-                "backend": backend,
+            # Generator-side summary columns (populated this block only when generator ran)
+            generator_cols = {
                 "peripheral_count": len(per_peripheral),
                 "peripherals": ",".join(sorted(per_peripheral.keys())),
-                "embeddings": num_embeddings,
                 "registers_found": registers_found_sum,
                 "total_registers": total_registers_sum,
                 "correct": correct_sum,
@@ -712,37 +741,111 @@ def main():
                 "complete_accuracy": combined_complete_accuracy,
                 "coverage": combined_coverage,
             }
-            if backend == "openai":
-                result_row["vs_type"] = cfg["vs_type"]
-                result_row["pages_after"] = cfg["pages_after"]
-                result_row["table_pages_only_expansion"] = cfg["table_pages_only"]
-            elif backend == "local":
-                result_row["local_db_name"] = cfg["local_db_name"]
-                result_row["keyword_boost"] = cfg["keyword_boost"]
-                result_row["reranker_type"] = cfg["reranker_type"]
-                result_row["metadata_filter"] = cfg.get("metadata_filter", False)
-                result_row["pages_after"] = cfg.get("pages_after", 0)
-                result_row["table_pages_only"] = cfg.get("table_pages_only", False)
-                result_row["fetch_k_multiplier"] = cfg.get("fetch_k_multiplier", 5)
-                result_row["neighbor_expansion"] = cfg.get("neighbor_expansion", False)
-                bs = cfg.get("batched_strategy")
-                result_row["batched_strategy"] = STRATEGY_LABELS.get(bs, "") if bs else ""
-            all_results.append(result_row)
+        else:
+            generator_cols = {}
+
+        # Build the per-config row once, outside the comparison block, so retrieval-only
+        # runs (RUN_GENERATOR=False or SKIP_COMPARISON=True) still produce a row with
+        # backend params + IR metrics.
+        result_row = {
+            "config": output_prefix,
+            "backend": backend,
+            "embeddings": num_embeddings,
+            **generator_cols,
+        }
+        if backend == "openai":
+            result_row["vs_type"] = cfg["vs_type"]
+            result_row["pages_after"] = cfg["pages_after"]
+            result_row["table_pages_only_expansion"] = cfg["table_pages_only"]
+        elif backend == "local":
+            result_row["local_db_name"] = cfg["local_db_name"]
+            result_row["keyword_boost"] = cfg["keyword_boost"]
+            result_row["reranker_type"] = cfg["reranker_type"]
+            result_row["metadata_filter"] = cfg.get("metadata_filter", False)
+            result_row["pages_after"] = cfg.get("pages_after", 0)
+            result_row["table_pages_only"] = cfg.get("table_pages_only", False)
+            result_row["fetch_k_multiplier"] = cfg.get("fetch_k_multiplier", 5)
+            result_row["neighbor_expansion"] = cfg.get("neighbor_expansion", False)
+            bs = cfg.get("batched_strategy")
+            result_row["batched_strategy"] = STRATEGY_LABELS.get(bs, "") if bs else ""
+
+        # Retrieval-quality metrics — joined into the same row.
+        # Writes <output_dir>/info/retrieval_quality.json as a side effect of measure_run.
+        if RUN_RETRIEVAL_METRICS and sources_for_reg:
+            try:
+                quality = measure_run(Path(output_dir), sources_for_reg, RETRIEVAL_QUALITY_K_CUTOFFS)
+                # Persist the full per-query JSON for later analysis.
+                with open(os.path.join(info_dir, "retrieval_quality.json"), "w") as f:
+                    json.dump(quality, f, indent=2)
+                # Flatten overall metrics into the result row with a `retrieval_quality_` prefix.
+                for k, v in quality["overall"].items():
+                    result_row[f"retrieval_quality_{k}"] = v
+                result_row["retrieval_quality_measurable"] = quality["queries"]["measurable"]
+                result_row["retrieval_quality_unmeasurable"] = quality["queries"]["unmeasurable"]
+                result_row["retrieval_quality_rank_meaning"] = (
+                    "document_order"
+                    if quality["rank_meaning_breakdown"].get("document_order", 0) > 0
+                    else "relevance"
+                )
+            except FileNotFoundError:
+                # No embedding_ids.jsonl (e.g. OpenAI file_search doesn't emit one).
+                pass
+
+        all_results.append(result_row)
 
     # Print summary table
     print(f"\n{'='*70}")
     print(f"SWEEP COMPLETE: {len(configs)} configurations")
     print(f"{'='*70}")
 
-    if all_results and not SKIP_COMPARISON:
+    if all_results:
+        # Detect which metric families are populated. Either or both may be present:
+        # - generator-side: comparison ran (RUN_GENERATOR=True and SKIP_COMPARISON=False)
+        # - retrieval-side: retrieval-quality metrics ran (RUN_RETRIEVAL_METRICS=True with labels loaded)
+        has_generator = any("found_accuracy" in r for r in all_results)
+        has_retrieval = any(
+            any(k.startswith("retrieval_quality_recall@") for k in r.keys())
+            for r in all_results
+        )
+
         print(f"\nRESULTS SUMMARY:")
-        print(f"{'-'*100}")
-        print(f"{'Config':<30} {'Regs':>6} {'Correct':>8} {'Wrong':>6} {'Missing':>8} {'Found%':>8} {'Complete%':>10} {'Coverage%':>10}")
-        print(f"{'-'*100}")
-        for r in all_results:
-            if 'found_accuracy' in r:
-                print(f"{r['config']:<30} {r['registers_found']:>3}/{r['total_registers']:<2} {r['correct']:>8} {r['wrong']:>6} {r['missing']:>8} {r['found_accuracy']:>7.1f}% {r['complete_accuracy']:>9.1f}% {r['coverage']:>9.1f}%")
-        print(f"{'-'*100}")
+
+        if has_generator:
+            print(f"{'-'*100}")
+            print(f"{'Config':<30} {'Regs':>6} {'Correct':>8} {'Wrong':>6} {'Missing':>8} {'Found%':>8} {'Complete%':>10} {'Coverage%':>10}")
+            print(f"{'-'*100}")
+            for r in all_results:
+                if "found_accuracy" in r:
+                    print(f"{r['config']:<30} {r['registers_found']:>3}/{r['total_registers']:<2} {r['correct']:>8} {r['wrong']:>6} {r['missing']:>8} {r['found_accuracy']:>7.1f}% {r['complete_accuracy']:>9.1f}% {r['coverage']:>9.1f}%")
+            print(f"{'-'*100}")
+
+        if has_retrieval:
+            # Pick a k cutoff to show in the print summary. Prefer 5; fall back to the
+            # middle of whatever was configured. The CSV contains all k values regardless.
+            display_k = 5 if 5 in RETRIEVAL_QUALITY_K_CUTOFFS else RETRIEVAL_QUALITY_K_CUTOFFS[len(RETRIEVAL_QUALITY_K_CUTOFFS) // 2]
+            recall_col = f"retrieval_quality_recall@{display_k}"
+            hit_col = f"retrieval_quality_hit@{display_k}"
+            if has_generator:
+                print()  # blank separator between the two tables
+            print(f"RETRIEVAL QUALITY (k={display_k}):")
+            print(f"{'-'*100}")
+            print(f"{'Config':<30} {'Measurable':>11} {'recall@'+str(display_k):>10} {'hit@'+str(display_k):>8} {'MRR':>8} {'Rank':>16}")
+            print(f"{'-'*100}")
+            for r in all_results:
+                if recall_col not in r:
+                    continue
+                mrr = r.get("retrieval_quality_mrr")
+                mrr_str = f"{mrr:.3f}" if mrr is not None else "  N/A"
+                rank_meaning = r.get("retrieval_quality_rank_meaning", "?")
+                measurable = r.get("retrieval_quality_measurable", 0)
+                unmeasurable = r.get("retrieval_quality_unmeasurable", 0)
+                print(
+                    f"{r['config']:<30} "
+                    f"{measurable:>4}/{measurable + unmeasurable:<6} "
+                    f"{r[recall_col]:>10.3f} {r[hit_col]:>8.3f} {mrr_str:>8} "
+                    f"{rank_meaning:>16}"
+                )
+            print(f"{'-'*100}")
 
         # Save summary CSV - collect all unique field names across results
         all_fieldnames = []
@@ -756,8 +859,24 @@ def main():
         # Save per-backend and combined summary CSVs
         summary_csvs = []
 
-        # Save combined summary to the first output parent that has results
-        combined_csv = os.path.join(OUTPUT_PARENT, "sweep_results.csv")
+        # Save the combined summary to the first backend-parent that produced rows.
+        # If multiple backends ran, the combined CSV lands in whichever parent owns the
+        # first row's backend (typically the most-frequent backend in the sweep).
+        backend_to_parent = {
+            "openai": OPENAI_OUTPUT_PARENT,
+            "local": LOCAL_OUTPUT_PARENT,
+            "openevolve": OE_OUTPUT_PARENT,
+        }
+        primary_parent = None
+        for r in all_results:
+            cand = backend_to_parent.get(r.get("backend"))
+            if cand:
+                primary_parent = cand
+                break
+        if primary_parent is None:
+            primary_parent = OPENAI_OUTPUT_PARENT  # fallback (no rows is already short-circuited)
+        os.makedirs(primary_parent, exist_ok=True)
+        combined_csv = os.path.join(primary_parent, "sweep_results.csv")
         with open(combined_csv, 'w', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=all_fieldnames, extrasaction='ignore')
             writer.writeheader()
@@ -767,7 +886,7 @@ def main():
 
         # Also save local-only summary if there are local results
         local_results = [r for r in all_results if r.get("backend") == "local"]
-        if local_results and LOCAL_OUTPUT_PARENT != OUTPUT_PARENT:
+        if local_results and LOCAL_OUTPUT_PARENT != primary_parent:
             local_csv = os.path.join(LOCAL_OUTPUT_PARENT, "sweep_results.csv")
             with open(local_csv, 'w', newline='') as f:
                 writer = csv.DictWriter(f, fieldnames=all_fieldnames, extrasaction='ignore')

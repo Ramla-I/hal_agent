@@ -21,11 +21,20 @@ import matplotlib.ticker as mtick
 import numpy as np
 
 # ---------------------------------------------------------------------------
-# Data
+# Data (FROZEN SNAPSHOT — last refreshed 2026-03-21; commit fae5ef9)
 # ---------------------------------------------------------------------------
-
-# Each entry: (label, target, complete_acc, found_acc, coverage, regs_found,
-#              regs_total, correct, wrong, missing, total_tokens)
+# These numbers are copied from per-config artifacts; they DO NOT auto-refresh
+# when sweeps are rerun. If you re-evolve OE programs, re-tune D2, or change
+# the batched generator, you must update these literals by hand.
+#
+# Sources:
+#   - D2 hand-tuned: optimization/retrieval/reports/retrieval_evolution_report.md
+#     (section: "D2 vs OpenEvolve comparison")
+#   - OE-Evolved (STM/NXP): openevolve_retrieval/output_<dev>/full_eval_results.json
+#
+# Schema for each entry: dict with keys
+#   label, evolved_for, tested_on, complete_acc, found_acc, coverage,
+#   regs_found, regs_total, correct, wrong, missing, total_tokens
 
 RESULTS = [
     # D2 hand-tuned on STM (from d2_vs_openevolve_comparison.md)

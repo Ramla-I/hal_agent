@@ -6,8 +6,8 @@ Shows which chunks were retrieved for each (peripheral, register) query,
 highlighting differences between the two runs.
 
 Usage:
-    python3 optimization/retrieval/compare_embeddings.py FILE_A FILE_B --top 2
-    python3 optimization/retrieval/compare_embeddings.py FILE_A FILE_B --top 1 --only-diffs
+    python3 optimization/retrieval/diff_retrieval_embeddings.py FILE_A FILE_B --top 2
+    python3 optimization/retrieval/diff_retrieval_embeddings.py FILE_A FILE_B --top 1 --only-diffs
 """
 
 from __future__ import annotations
@@ -58,7 +58,7 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  python3 optimization/retrieval/compare_embeddings.py \\\n"
+            "  python3 optimization/retrieval/diff_retrieval_embeddings.py \\\n"
             "    experiments/afio_peripheral/md_emb2_pages0/info/embedding_ids.jsonl \\\n"
             "    experiments/afio_peripheral/md_enriched_emb2_pages0/info/embedding_ids.jsonl \\\n"
             "    --top 2\n"

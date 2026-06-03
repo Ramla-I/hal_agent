@@ -14,7 +14,7 @@ The OE program uses:
 import os
 import importlib.util
 import sys
-from typing import Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from utils.utils import setup_logger
 
@@ -66,23 +66,95 @@ def _ensure_database(chunks_dir: str, chunks_index_csv: str):
     logger.info("OE database ready")
 
 
+def _extract_embedding_ids(
+    formatted: str,
+    processed_chunks: List[Dict[str, Any]],
+    chunks_dir: str = "",
+) -> List[Dict[str, Any]]:
+    """Parse a `[Page N]\\n{doc}` block string and recover one embedding_ids
+    record per block by matching `doc` against the cached processed chunks.
+
+    The chunk_id stored in each processed chunk's metadata is the original
+    `chunked_datasheets/.../rm0041_pNNN_cNN.txt` source path, which is the
+    same identifier the persistent local DB uses as `source`. That makes OE
+    runs scoreable against the same per-chunk `reg_*` ground truth.
+
+    Caveat: OE sorts its formatted output by page number, not retrieval
+    relevance (see best_program.py:search_and_format). So the `rank` field
+    we emit reflects document order, not score order — MRR computed from this
+    is misleading; recall@k / precision@k / hit@k (set-membership) are valid.
+    """
+    if not formatted:
+        return []
+
+    text_to_meta: Dict[str, Dict[str, Any]] = {}
+    for pc in processed_chunks:
+        key = pc.get("text", "").strip()
+        if key:
+            text_to_meta[key] = pc.get("metadata", {})
+
+    out: List[Dict[str, Any]] = []
+    rank = 0
+    for block in formatted.split("\n\n---\n\n"):
+        block = block.strip()
+        if not block.startswith("[Page "):
+            continue
+        try:
+            first_newline = block.index("\n")
+        except ValueError:
+            continue
+        doc_text = block[first_newline + 1:].strip()
+        meta = text_to_meta.get(doc_text)
+        if meta is None:
+            continue
+        bare_chunk_id = meta.get("chunk_id", "")
+        if not bare_chunk_id:
+            continue
+        # OE stores chunk_id as the bare stem ("rm0041_p048_c01"); the persistent
+        # local DB uses the full source path ("chunked_datasheets/.../rm0041_p048_c01.txt").
+        # Emit the full-path form so OE records can be cross-referenced against the
+        # persistent DB's `reg_*` ground truth for retrieval-quality scoring.
+        full_source = (
+            f"{chunks_dir.rstrip('/')}/{bare_chunk_id}.txt"
+            if chunks_dir else bare_chunk_id
+        )
+        out.append({
+            "rank": rank,
+            "score": None,  # OE doesn't expose its rerank score outside the evolve block
+            "source": full_source,
+            "chunk_id": full_source,
+            "page_number": meta.get("page_number", 0),
+            "chunk_index": meta.get("chunk_index", 0),
+            "rank_meaning": "document_order",
+        })
+        rank += 1
+    return out
+
+
 def search_openevolve(
     peripheral_name: str,
     register_name: str,
     chunks_dir: str,
     chunks_index_csv: str,
-) -> str:
+) -> Tuple[str, List[Dict[str, Any]]]:
     """Retrieve context for a single register using OE's evolved retrieval.
 
-    Returns formatted context string (same format OE uses: [Page N] blocks).
+    Returns:
+        (formatted, embedding_ids) — formatted is OE's `[Page N]` block string;
+        embedding_ids is a list of dicts compatible with the standard
+        `info/embedding_ids.jsonl` schema (see _extract_embedding_ids).
     """
     _ensure_database(chunks_dir, chunks_index_csv)
     mod = _load_oe_module()
 
-    return mod.run_retrieval(
+    formatted = mod.run_retrieval(
         peripheral_name, register_name,
         _oe_collection, _oe_processed_chunks,
     )
+    embedding_ids = _extract_embedding_ids(
+        formatted or "", _oe_processed_chunks or [], chunks_dir,
+    )
+    return formatted, embedding_ids
 
 
 def search_openevolve_for_peripheral(
@@ -105,6 +177,8 @@ def search_openevolve_for_peripheral(
 
     seen_blocks: set[str] = set()
     all_blocks: list[tuple[int, str]] = []  # (page_number, block_text)
+    seen_chunk_ids: set[str] = set()
+    embedding_ids: List[Dict[str, Any]] = []
 
     for reg in register_names:
         context = mod.run_retrieval(
@@ -113,6 +187,17 @@ def search_openevolve_for_peripheral(
         )
         if not context:
             continue
+
+        # Capture per-register embedding_ids and union across registers.
+        # Each register's call retrieves chunks for that register; we record
+        # the union (deduped by chunk_id) so the JSONL row reflects what the
+        # generator actually sees for the batch.
+        for item in _extract_embedding_ids(context, _oe_processed_chunks or [], chunks_dir):
+            cid = item["chunk_id"]
+            if cid in seen_chunk_ids:
+                continue
+            seen_chunk_ids.add(cid)
+            embedding_ids.append({**item, "rank": len(embedding_ids)})
 
         # Parse OE's format: "[Page N]\n..." blocks separated by "\n\n---\n\n"
         for block in context.split("\n\n---\n\n"):
@@ -146,4 +231,4 @@ def search_openevolve_for_peripheral(
                      f"<content>{block}</content></result>")
 
     formatted = f"<sources>{''.join(parts)}</sources>"
-    return formatted, []
+    return formatted, embedding_ids
