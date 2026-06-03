@@ -325,8 +325,8 @@ Generates one figure:
 All figures saved to `../../../openevolve_retrieval/figures/`.
 
 ```bash
-source .venv/bin/activate && python3 optimization/retrieval/plot_cross_manufacturer.py
-source .venv/bin/activate && python3 optimization/retrieval/plot_batched_generator.py
+source .venv/bin/activate && python3 openevolve_retrieval/plot_cross_manufacturer.py
+source .venv/bin/activate && python3 optimization/generator/plot_batched_generator.py
 ```
 
 ---
@@ -366,7 +366,7 @@ source .venv/bin/activate && python3 optimization/retrieval/plot_batched_generat
 
 | Script | Purpose |
 |--------|---------|
-| `optimization/retrieval/plot_cross_manufacturer.py` | Generate cross-manufacturer comparison figures + tables |
-| `optimization/retrieval/plot_batched_generator.py` | Generate batched generator efficiency figure + table |
+| `openevolve_retrieval/plot_cross_manufacturer.py` | Generate cross-manufacturer comparison figures + tables |
+| `optimization/generator/plot_batched_generator.py` | Generate batched generator efficiency figure + table |
 | `openevolve_retrieval/full_eval_ke04.py` | Full evaluation runner for NXP KE04 |
 | `openevolve_retrieval/evaluator_ke04.py` | OpenEvolve evaluator for NXP KE04 |

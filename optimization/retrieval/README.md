@@ -88,7 +88,6 @@ optimization/retrieval/
 ├── metrics_generator_output.py     # accuracy/coverage/complete_acc from comparison_results.json + plots
 ├── diff_retrieval_embeddings.py               # pairwise diff of two runs' retrieved chunk IDs
 ├── metrics_retrieval.py            # recall@k / precision@k / MRR / hit@k per run (no generator)
-├── plot_cross_manufacturer.py      # STM vs NXP figures
 ├── reports/                        # written-up analyses (markdown)
 ├── experiments/                    # gitignored — sweep outputs land here
 └── __pycache__/

@@ -65,7 +65,8 @@ openevolve_retrieval/
 ├── output_ke04/                    # NXP evolution output (same shape)
 │   └── ...
 │
-└── figures/                        # PNGs produced by optimization/retrieval/plot_cross_manufacturer.py
+├── plot_cross_manufacturer.py      # generate STM-vs-NXP comparison figures from full_eval_results.json
+└── figures/                        # PNGs produced by plot_cross_manufacturer.py
 ```
 
 ## How it fits together

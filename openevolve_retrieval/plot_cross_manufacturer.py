@@ -9,7 +9,7 @@ Produces two figures:
 Also prints summary tables to stdout.
 
 Usage:
-    source .venv/bin/activate && python3 optimization/retrieval/plot_cross_manufacturer.py
+    source .venv/bin/activate && python3 openevolve_retrieval/plot_cross_manufacturer.py
 """
 
 import json
@@ -112,7 +112,7 @@ COLORS_BY_KEY = {
     ("OE-Evolved (KE04)", "NXP"): COLOR_OE_KE04,
 }
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "openevolve_retrieval", "figures")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "figures")
 
 
 # ---------------------------------------------------------------------------
