@@ -32,7 +32,7 @@ The best configuration from the manual parameter sweep (documented in `local_vec
 Best program from 18 iterations of OpenEvolve evolutionary optimization on RM0041. Originally evaluated on 7 peripherals during evolution; full 11-peripheral evaluation run on 2026-03-12.
 
 **Program:** `../openevolve_retrieval/output_rm0041/best/best_program.py`
-**Full eval results:** `../openevolve_retrieval/output_rm0041/full_eval_results.json`
+**Full eval results (historical, raw OE):** `../openevolve_retrieval/output_rm0041/full_eval_results_unbatched.json`
 **Evolution logs:** `../openevolve_retrieval/output_rm0041/logs/`
 
 | Parameter | Value |
@@ -52,7 +52,7 @@ Best program from 18 iterations of OpenEvolve evolutionary optimization on RM004
 Best program from 50 iterations of OpenEvolve evolutionary optimization on KE04. Evaluated on 10 peripherals during evolution; full 25-peripheral evaluation run on 2026-03-19.
 
 **Program:** `../openevolve_retrieval/output_ke04/best/best_program.py`
-**Full eval results:** `../openevolve_retrieval/output_ke04/full_eval_results.json`
+**Full eval results (historical, raw OE):** `../openevolve_retrieval/output_ke04/full_eval_results_ke04_program_unbatched.json`
 **Evolution logs:** `../openevolve_retrieval/output_ke04/logs/`
 **Evaluator:** `../openevolve_retrieval/evaluator_ke04.py`
 **Config:** `../openevolve_retrieval/config_ke04.yaml`
@@ -172,9 +172,9 @@ The critical question: do retrieval algorithms evolved for one manufacturer's da
 
 **NXP KE04 verified data:** `verified_datasheet/nxp/ke04/mke04z4/ke04_mke04z4_full.csv` (87 matchable registers across 12 peripherals)
 **NXP KE04 chunks:** `chunked_datasheets/nxp/ke04/chunks/md/` (743 chunks from 647 pages)
-**Full eval script:** `../openevolve_retrieval/full_eval_ke04.py`
-**OE-STM on NXP results:** `../openevolve_retrieval/output_ke04/full_eval_results.json` (best_stm entry)
-**OE-KE04 on NXP results:** from earlier full_eval_ke04.py run (best_ke04: 1094 correct, 92 wrong, 271 missing)
+**Full eval path:** `optimization/retrieval/run_sweep.py` (DEVICE="ke04", USE_OPENEVOLVE=True). Historical raw-OE numbers below are from the now-deleted `full_eval_ke04.py`.
+**OE-STM on NXP results (historical, raw OE):** `../openevolve_retrieval/output_ke04/full_eval_results_unbatched.json` (best_stm entry)
+**OE-KE04 on NXP results (historical, raw OE):** `../openevolve_retrieval/output_ke04/full_eval_results_ke04_program_unbatched.json` (best_ke04 entry, re-run 2026-06-04: 1092 correct, 112 wrong, 71.7% complete acc — matches the prior 71.8% within LLM noise)
 
 ### 5.1 Overall Cross-Manufacturer Results
 
@@ -354,8 +354,9 @@ source .venv/bin/activate && python3 optimization/generator/plot_batched_generat
 
 | Evaluation | Path |
 |-----------|------|
-| OE-STM on STM (full) | `openevolve_retrieval/output_rm0041/full_eval_results.json` |
-| OE-STM on NXP (full) | `openevolve_retrieval/output_ke04/full_eval_results.json` |
+| OE-STM on STM (full, historical raw OE) | `openevolve_retrieval/output_rm0041/full_eval_results_unbatched.json` |
+| OE-STM on NXP (full, historical raw OE) | `openevolve_retrieval/output_ke04/full_eval_results_unbatched.json` |
+| OE-KE04 on NXP (full, historical raw OE) | `openevolve_retrieval/output_ke04/full_eval_results_ke04_program_unbatched.json` |
 | D2 on STM | `optimization/retrieval/experiments/D_conditional_page_expansion/local_rm0041_md_chunks_v2_emb2_rrlocal_mf_pa1/info/` |
 | E1 sweep | `optimization/retrieval/experiments/e1_precision_coverage/sweep_results.csv` |
 | Batch size sweep | `optimization/generator/experiments/batch_size_sweep/sweep_results.csv` |
@@ -366,7 +367,7 @@ source .venv/bin/activate && python3 optimization/generator/plot_batched_generat
 
 | Script | Purpose |
 |--------|---------|
-| `openevolve_retrieval/plot_cross_manufacturer.py` | Generate cross-manufacturer comparison figures + tables |
+| `openevolve_retrieval/plot_cross_manufacturer.py` | Generate cross-manufacturer comparison figures + tables (frozen snapshot data) |
 | `optimization/generator/plot_batched_generator.py` | Generate batched generator efficiency figure + table |
-| `openevolve_retrieval/full_eval_ke04.py` | Full evaluation runner for NXP KE04 |
+| `optimization/retrieval/run_sweep.py` | Full evaluation runner for any retrieval backend (OE / local / OpenAI VS) on any device preset |
 | `openevolve_retrieval/evaluator_ke04.py` | OpenEvolve evaluator for NXP KE04 |

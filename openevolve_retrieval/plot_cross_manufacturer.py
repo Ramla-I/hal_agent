@@ -30,7 +30,13 @@ import numpy as np
 # Sources:
 #   - D2 hand-tuned: optimization/retrieval/reports/retrieval_evolution_report.md
 #     (section: "D2 vs OpenEvolve comparison")
-#   - OE-Evolved (STM/NXP): openevolve_retrieval/output_<dev>/full_eval_results.json
+#   - OE-Evolved (STM/NXP), historical raw-OE numbers (snapshot date below):
+#       openevolve_retrieval/output_rm0041/full_eval_results_unbatched.json
+#       openevolve_retrieval/output_ke04/full_eval_results_unbatched.json              (best_stm on NXP)
+#       openevolve_retrieval/output_ke04/full_eval_results_ke04_program_unbatched.json (best_ke04 on NXP)
+#   - For up-to-date numbers via the current per-page XML path, re-run
+#       optimization/retrieval/run_sweep.py with USE_OPENEVOLVE=True
+#     and read optimization/retrieval/experiments/oe_batched/sweep_results.csv.
 #
 # Schema for each entry: dict with keys
 #   label, evolved_for, tested_on, complete_acc, found_acc, coverage,
@@ -52,7 +58,7 @@ RESULTS = [
         "missing": 450,
         "total_tokens": 830_634,
     },
-    # OE-STM on STM (from full_eval_results.json)
+    # OE-STM on STM (historical raw-OE, output_rm0041/full_eval_results_unbatched.json)
     {
         "label": "OE-Evolved (STM)",
         "evolved_for": "STM",
@@ -67,7 +73,7 @@ RESULTS = [
         "missing": 188,
         "total_tokens": 719_124,
     },
-    # OE-STM on NXP (from full_eval_ke04.py run)
+    # OE-STM on NXP (historical raw-OE, output_ke04/full_eval_results_unbatched.json — best_stm entry)
     {
         "label": "OE-Evolved (STM)",
         "evolved_for": "STM",
@@ -82,7 +88,7 @@ RESULTS = [
         "missing": 663,
         "total_tokens": 565_495,
     },
-    # OE-KE04 on NXP (from full_eval_ke04.py run)
+    # OE-KE04 on NXP (historical raw-OE, output_ke04/full_eval_results_ke04_program_unbatched.json)
     {
         "label": "OE-Evolved (KE04)",
         "evolved_for": "NXP",

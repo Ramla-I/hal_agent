@@ -27,16 +27,27 @@ under their respective `output_<device>/best/` directories.
 
 
 Scores above are from each evaluator's own test set during evolution
-(7 STM peripherals, 10 KE04 peripherals). Full evaluations against the
-complete verified datasheet are saved at:
+(7 STM peripherals, 10 KE04 peripherals). Historical full evaluations
+against the complete verified datasheet — produced by the now-deleted
+`full_eval_*.py` scripts, which passed raw OE output to the generator
+without the canonical `<sources>` XML envelope — are preserved at:
 
-- `output_rm0041/full_eval_results.json` — STM-evolved on STM full eval:
+- `output_rm0041/full_eval_results_unbatched.json` — STM-evolved on STM:
 95/97 registers, 1410/1642 correct facts, 85.9% found accuracy
-- `output_ke04/full_eval_results.json` — **STM-evolved tested on NXP** (cross-manufacturer transfer):
-80/87 registers, 645/1415 correct facts, 45.6% found accuracy
+- `output_ke04/full_eval_results_unbatched.json` — **STM-evolved tested on NXP**
+(cross-manufacturer transfer): 80/87 registers, 645/1415 correct facts, 45.6% found accuracy
+- `output_ke04/full_eval_results_ke04_program_unbatched.json` — **KE04-evolved
+on NXP**: 80/87 registers, 1092/1524 correct facts, 71.7% complete accuracy
 
-The cross-manufacturer drop (−40pp accuracy) is the main motivation for
-evolving a separate KE04 program; the per-manufacturer evolution closes the gap.
+The cross-manufacturer drop (−29pp complete accuracy: 71.7% → 42.3%) is
+the main motivation for evolving a separate KE04 program; the
+per-manufacturer evolution closes the gap.
+
+Going forward, full evaluations run through `optimization/retrieval/run_sweep.py`
+with `USE_OPENEVOLVE=True` — see "Running a full evaluation" below. The new
+path uses per-page XML wrapping (the canonical format every backend emits),
+which scores higher on the same data (~+5pp complete accuracy vs the old raw
+path) and is what the production pipeline actually delivers to the generator.
 
 See `optimization/retrieval/reports/retrieval_evolution_report.md` for the
 written-up analysis with figures (rendered to `figures/`).
@@ -51,8 +62,6 @@ openevolve_retrieval/
 │
 ├── evaluator_rm0041.py             # fitness function (STM RM0041) used during evolution
 ├── evaluator_ke04.py               # fitness function (NXP KE04)
-├── full_eval_rm0041.py             # standalone full-evaluation harness (STM) — runs a saved best program on ALL verified peripherals
-├── full_eval_ke04.py               # standalone full-evaluation harness (NXP)
 │
 ├── config_rm0041.yaml              # OpenEvolve config (STM)
 ├── config_ke04.yaml                # OpenEvolve config (NXP)
@@ -62,14 +71,20 @@ openevolve_retrieval/
 │   ├── best/best_program_info.json # its score + per-feature metrics
 │   ├── checkpoints/                # intermediate evolution checkpoints
 │   ├── logs/                       # per-iteration evolution logs
-│   └── full_eval_results.json      # output of full_eval_rm0041.py on this best program
+│   └── full_eval_results_unbatched.json  # frozen historical full-eval (raw OE → LLM)
 │
 ├── output_ke04/                    # NXP evolution output (same shape)
-│   └── ...
+│   ├── full_eval_results_unbatched.json              # frozen: best_stm on NXP
+│   └── full_eval_results_ke04_program_unbatched.json # frozen: best_ke04 on NXP
 │
-├── plot_cross_manufacturer.py      # generate STM-vs-NXP comparison figures from full_eval_results.json
+├── plot_cross_manufacturer.py      # STM-vs-NXP comparison figures (frozen snapshot data)
 └── figures/                        # PNGs produced by plot_cross_manufacturer.py
 ```
+
+> Full evaluations now run through `optimization/retrieval/run_sweep.py` with
+> `USE_OPENEVOLVE=True` — see "Running a full evaluation" below. The
+> `full_eval_results_*_unbatched.json` files are preserved as historical
+> baselines from before the consolidation.
 
 ## How it fits together
 
@@ -97,9 +112,10 @@ openevolve_retrieval/
 Or, separately, for a post-hoc full evaluation:
 
 ```
-full_eval_<device>.py  →  loads output_<device>/best/best_program.py
-                      →  runs the generator on ALL verified peripherals
-                      →  writes output_<device>/full_eval_results.json
+optimization/retrieval/run_sweep.py  →  loads output_<device>/best/best_program.py
+   (USE_OPENEVOLVE=True, DEVICE=...)  →  runs the generator on the preset peripheral list
+                                     →  writes optimization/retrieval/experiments/oe_batched/
+                                            openevolve_<device>_<mode>_mfpb<N>/info/
 ```
 
 ## The three pieces of an OpenEvolve run
@@ -208,29 +224,49 @@ print(f'Best score: {result.best_score}')
 ## Running a full evaluation (post-hoc)
 
 Once `best_program.py` exists under `output_<device>/best/`, evaluate it
-against every verified peripheral (97 for STM, 161 for NXP):
+against every verified peripheral via the sweep:
 
 ```bash
 source .venv/bin/activate
-python3 openevolve_retrieval/full_eval_rm0041.py  # STM
-python3 openevolve_retrieval/full_eval_ke04.py    # NXP
+
+# Edit optimization/retrieval/run_sweep.py:
+#   DEVICE = "rm0041"  # or "ke04"
+#   USE_OPENAI_VECTOR_STORE = False
+#   USE_LOCAL_VECTOR_DB = False
+#   USE_OPENEVOLVE = True
+#   OE_PROGRAM_PATH = None    # auto-derives output_<DEVICE>/best/best_program.py
+#                             # set explicitly to evaluate a checkpoint or cross-device program
+#   USE_BATCHED_GENERATOR = True   # production default; set False to match old raw-call methodology
+
+python3 optimization/retrieval/run_sweep.py
 ```
 
-Writes `output_<device>/full_eval_results.json` next to the program. Useful
-for comparing the evolved program against hand-tuned baselines on the same
-full test set.
+Writes per-config outputs under
+`optimization/retrieval/experiments/oe_batched/openevolve_<device>_<mode>_mfpb<N>/info/`
+(`comparison_results.json`, `comparison_register_results.csv`,
+`comparison_fact_errors.csv`, `usage.csv`, `timing_stats.json`,
+`embedding_ids.jsonl`, `retrieval_quality.json`) and a top-level
+`sweep_results.csv` summarizing all configs in the run.
+
+Useful for comparing the evolved program against hand-tuned baselines on
+the same full test set — `sweep_results.csv` is one row per config
+(OE/local/OpenAI all comparable side by side).
 
 ## Using the evolved program in the pipeline
 
-The runtime side picks up `output_rm0041/best/best_program.py` via
+The runtime side picks up the evolved program via
 `context_retrieval/openevolve_search.py`, which loads it dynamically through
-`importlib`. The adapter wraps OE's `run_retrieval(peripheral, register)`
-calls and also emits `embedding_ids.jsonl` so the OE backend can be scored
-by `optimization/retrieval/metrics_retrieval.py` like any other backend.
+`importlib` and caches it per-path. The adapter wraps OE's
+`run_retrieval(peripheral, register)` calls into the canonical
+`<sources><result page='N' source='openevolve'>…</result></sources>` XML
+format (same shape that `post_processing.format_results` produces for every
+other backend) and emits `embedding_ids.jsonl` so the OE backend can be
+scored by `optimization/retrieval/metrics_retrieval.py` like any other
+backend.
 
-The adapter currently hardcodes the rm0041 path; for other devices you
-would either (a) add a separate adapter, or (b) make the adapter
-device-aware and select among `output_rm0041/` and `output_ke04/`.
+The program path is configurable via `ContextRetrievalParameters.oe_program_path`.
+`run_sweep.py` auto-derives it from `DEVICE` (→ `output_<device>/best/best_program.py`),
+so swapping devices or evaluating a specific checkpoint is one flag.
 
 ## Relationship to `optimization/retrieval/`
 
@@ -250,9 +286,6 @@ fact-matching.
 
 ## Caveats
 
-- The KE04 best program (`output_ke04/best/best_program.py`) is **not yet
-wired into `context_retrieval/openevolve_search.py`**, which hardcodes the
-rm0041 path. Run the NXP full eval via `full_eval_ke04.py` for now.
 - During evolution the page-sort applied inside the evolved
 `search_and_format()` means the final chunk order in the OE adapter
 reflects document order, not relevance order. This is recorded in
@@ -261,4 +294,10 @@ reflects document order, not relevance order. This is recorded in
 / hit@k stay valid as set-membership metrics).
 - The hardcoded ChromaDB metadata-key convention assumed by the labels DB
 (`reg_{PERIPHERAL}_{REGISTER}` booleans) is set at ingestion time, not enforced anywhere. If you re-ingest with different rules, the runtime retrieval still works but the metric_retrieval script will silently lose its ground truth.
+- Historical `full_eval_results_*_unbatched.json` files were produced by
+the now-deleted `full_eval_*.py` scripts, which passed raw OE output to
+the LLM without the canonical `<sources>` envelope. Numbers are ~5pp
+lower on complete accuracy than the current sweep path on the same
+program/device combination — the gap is the methodology change, not a
+program regression. Keep the files for historical reference only.
 

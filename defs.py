@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
 class Manufacturer(Enum):
@@ -62,6 +63,8 @@ class ContextRetrievalParameters(BaseModel):
     fetch_k_multiplier: int = 5  # Candidate pool multiplier for reranking (fetch_k = n_results * multiplier)
     neighbor_expansion_enabled: bool = False  # Bidirectional same-page chunk neighbor expansion
     batched_retrieval_strategy: BatchedRetrievalStrategy = BatchedRetrievalStrategy.PER_REGISTER
+    # OpenEvolve adapter (used when context_retrieval_method == OPENEVOLVE)
+    oe_program_path: Optional[str] = None  # Path to an evolved best_program.py; None falls back to the legacy hardcoded rm0041 path
 
 class CoverageImproverOutput(BaseModel):
     context_retrieval_parameters: ContextRetrievalParameters

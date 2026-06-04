@@ -64,11 +64,15 @@ def retrieve_context(
     elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.OPENEVOLVE:
         from context_retrieval.openevolve_search import search_openevolve
         chunks_dir, chunks_index_csv = _resolve_oe_chunks(device_dir, device_name)
-        context, embedding_ids = search_openevolve(peripheral_name, register_name, chunks_dir, chunks_index_csv)
-        if not context:
+        # search_openevolve returns the canonical <sources>...</sources> XML
+        # with one <result page='N'> per OE page block — same shape as the
+        # batched OE path and post_processing.format_results.
+        formatted, embedding_ids = search_openevolve(
+            peripheral_name, register_name, chunks_dir, chunks_index_csv,
+            program_path=context_retrieval_parameters.oe_program_path,
+        )
+        if not formatted:
             return None, []
-        # Wrap in XML to match pipeline format
-        formatted = f"<sources><result source='openevolve'><content>{context}</content></result></sources>"
         return formatted, embedding_ids
 
     elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.REGEX:
@@ -158,6 +162,7 @@ def retrieve_context_for_peripheral(
         chunks_dir, chunks_index_csv = _resolve_oe_chunks(device_dir, device_name)
         return search_openevolve_for_peripheral(
             peripheral_name, register_names, chunks_dir, chunks_index_csv,
+            program_path=context_retrieval_parameters.oe_program_path,
         )
 
     elif context_retrieval_parameters.context_retrieval_method == ContextRetrievalMethod.REGEX:

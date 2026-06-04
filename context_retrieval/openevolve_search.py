@@ -14,56 +14,77 @@ The OE program uses:
 import os
 import importlib.util
 import sys
+from types import ModuleType
 from typing import Any, Dict, List, Optional, Tuple
 
 from utils.utils import setup_logger
 
 logger = setup_logger(__name__)
 
-# Cache for the loaded module and its database
-_oe_module = None
-_oe_collection = None
-_oe_processed_chunks = None
+# Default OE program — used when callers don't pass an explicit program_path.
+# Kept so the runtime pipeline (which doesn't know about per-device OE programs)
+# still works without modification.
+_DEFAULT_PROGRAM_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), "..",
+    "openevolve_retrieval", "output_rm0041", "best", "best_program.py",
+))
+
+# Per-program cache: program_path → (module, collection, processed_chunks).
+# Sweeps that evaluate multiple evolved programs in one process reuse each
+# program's ephemeral ChromaDB across queries while keeping them isolated
+# from each other.
+_oe_cache: Dict[str, Tuple[ModuleType, Any, List[Dict[str, Any]]]] = {}
 
 
-def _load_oe_module():
-    """Load the best evolved program module."""
-    global _oe_module
+def _resolve_program_path(program_path: Optional[str]) -> str:
+    """Resolve to an absolute path, falling back to the legacy default."""
+    path = program_path or _DEFAULT_PROGRAM_PATH
+    path = os.path.abspath(path)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"OE program not found: {path}")
+    return path
 
-    if _oe_module is not None:
-        return _oe_module
 
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    program_path = os.path.join(
-        project_root, "openevolve_retrieval", "output_rm0041", "best", "best_program.py"
-    )
-
-    if not os.path.exists(program_path):
-        raise FileNotFoundError(f"OE best program not found: {program_path}")
+def _load_oe_module(program_path: Optional[str] = None) -> ModuleType:
+    """Load an evolved program module (cached per absolute path)."""
+    resolved = _resolve_program_path(program_path)
+    cached = _oe_cache.get(resolved)
+    if cached is not None:
+        return cached[0]
 
     # Ensure _shared_cache is importable (lives in openevolve_retrieval/)
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     oe_package_dir = os.path.join(project_root, "openevolve_retrieval")
     if oe_package_dir not in sys.path:
         sys.path.insert(0, oe_package_dir)
 
-    spec = importlib.util.spec_from_file_location("oe_best_program", program_path)
+    # Use a path-derived module name so importlib doesn't collide when several
+    # programs are loaded in the same process.
+    module_name = f"oe_program_{abs(hash(resolved))}"
+    spec = importlib.util.spec_from_file_location(module_name, resolved)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    _oe_module = mod
+    _oe_cache[resolved] = (mod, None, None)  # database fills in on first _ensure_database
     return mod
 
 
-def _ensure_database(chunks_dir: str, chunks_index_csv: str):
-    """Build the OE ephemeral database (cached after first call)."""
-    global _oe_collection, _oe_processed_chunks
+def _ensure_database(
+    chunks_dir: str,
+    chunks_index_csv: str,
+    program_path: Optional[str] = None,
+) -> Tuple[Any, List[Dict[str, Any]]]:
+    """Build the OE ephemeral database for `program_path` (cached after first call)."""
+    resolved = _resolve_program_path(program_path)
+    cached = _oe_cache.get(resolved)
+    if cached is not None and cached[1] is not None:
+        return cached[1], cached[2]
 
-    if _oe_collection is not None:
-        return
-
-    mod = _load_oe_module()
-    logger.info("Building OE ephemeral database...")
-    _oe_collection, _oe_processed_chunks = mod.setup_database(chunks_dir, chunks_index_csv)
+    mod = _load_oe_module(resolved)
+    logger.info(f"Building OE ephemeral database for {os.path.basename(resolved)}...")
+    collection, processed_chunks = mod.setup_database(chunks_dir, chunks_index_csv)
+    _oe_cache[resolved] = (mod, collection, processed_chunks)
     logger.info("OE database ready")
+    return collection, processed_chunks
 
 
 def _extract_embedding_ids(
@@ -131,30 +152,94 @@ def _extract_embedding_ids(
     return out
 
 
+def _parse_oe_page_blocks(
+    context: str,
+    seen_blocks: Optional[set] = None,
+) -> List[Tuple[int, str]]:
+    """Parse OE's `[Page N]\\n...\\n\\n---\\n\\n[Page M]\\n...` format into
+    a list of `(page_number, block_text)` tuples.
+
+    If `seen_blocks` is provided, it's a mutable set used to deduplicate
+    across multiple calls (needed by the batched code path which unions
+    blocks across registers). When None, no cross-call dedup happens.
+    """
+    if not context:
+        return []
+    blocks: List[Tuple[int, str]] = []
+    for block in context.split("\n\n---\n\n"):
+        block = block.strip()
+        if not block:
+            continue
+        if seen_blocks is not None:
+            if block in seen_blocks:
+                continue
+            seen_blocks.add(block)
+        page = 0
+        if block.startswith("[Page "):
+            try:
+                page = int(block.split("]")[0].replace("[Page ", ""))
+            except (ValueError, IndexError):
+                pass
+        blocks.append((page, block))
+    return blocks
+
+
+def _format_oe_blocks_as_xml(blocks: List[Tuple[int, str]]) -> Optional[str]:
+    """Sort `[(page, block_text), ...]` by page and wrap as per-page XML.
+
+    Produces the canonical `<sources><result page='N' source='openevolve' ...>
+    <content>{block}</content></result>...</sources>` format that the other
+    retrieval backends emit via `post_processing.format_results()`.
+
+    Returns None if `blocks` is empty.
+    """
+    if not blocks:
+        return None
+    sorted_blocks = sorted(blocks, key=lambda x: x[0])
+    parts = [
+        f"<result page='{page}' source='openevolve' expansion='false'>"
+        f"<content>{block}</content></result>"
+        for page, block in sorted_blocks
+    ]
+    return f"<sources>{''.join(parts)}</sources>"
+
+
 def search_openevolve(
     peripheral_name: str,
     register_name: str,
     chunks_dir: str,
     chunks_index_csv: str,
-) -> Tuple[str, List[Dict[str, Any]]]:
+    program_path: Optional[str] = None,
+) -> Tuple[Optional[str], List[Dict[str, Any]]]:
     """Retrieve context for a single register using OE's evolved retrieval.
 
+    Args:
+        program_path: Path to an evolved best_program.py. None falls back to
+            the legacy rm0041 default so the runtime pipeline still works.
+
     Returns:
-        (formatted, embedding_ids) — formatted is OE's `[Page N]` block string;
-        embedding_ids is a list of dicts compatible with the standard
+        (formatted, embedding_ids) — formatted is the canonical per-page
+        `<sources>...</sources>` XML (matches format_results from
+        post_processing.py and the batched OE path). embedding_ids is a
+        list of dicts compatible with the standard
         `info/embedding_ids.jsonl` schema (see _extract_embedding_ids).
     """
-    _ensure_database(chunks_dir, chunks_index_csv)
-    mod = _load_oe_module()
+    collection, processed_chunks = _ensure_database(
+        chunks_dir, chunks_index_csv, program_path,
+    )
+    mod = _load_oe_module(program_path)
 
-    formatted = mod.run_retrieval(
+    raw = mod.run_retrieval(
         peripheral_name, register_name,
-        _oe_collection, _oe_processed_chunks,
+        collection, processed_chunks,
     )
+    # embedding_ids extraction needs the raw OE block format — must happen
+    # before we wrap into XML.
     embedding_ids = _extract_embedding_ids(
-        formatted or "", _oe_processed_chunks or [], chunks_dir,
+        raw or "", processed_chunks or [], chunks_dir,
     )
-    return formatted, embedding_ids
+    blocks = _parse_oe_page_blocks(raw)
+    return _format_oe_blocks_as_xml(blocks), embedding_ids
 
 
 def search_openevolve_for_peripheral(
@@ -162,6 +247,7 @@ def search_openevolve_for_peripheral(
     register_names: list[str],
     chunks_dir: str,
     chunks_index_csv: str,
+    program_path: Optional[str] = None,
 ) -> Tuple[Optional[str], list]:
     """Retrieve context for a batch of registers using per-register OE retrieval.
 
@@ -169,11 +255,17 @@ def search_openevolve_for_peripheral(
     a single formatted context string. This matches the PER_REGISTER_TRIMMED
     strategy — each register gets its own retrieval, results are unioned.
 
+    Args:
+        program_path: Path to an evolved best_program.py. None falls back to
+            the legacy rm0041 default.
+
     Returns:
         (formatted_text, []) — same shape as retrieve_context_for_peripheral().
     """
-    _ensure_database(chunks_dir, chunks_index_csv)
-    mod = _load_oe_module()
+    collection, processed_chunks = _ensure_database(
+        chunks_dir, chunks_index_csv, program_path,
+    )
+    mod = _load_oe_module(program_path)
 
     seen_blocks: set[str] = set()
     all_blocks: list[tuple[int, str]] = []  # (page_number, block_text)
@@ -183,7 +275,7 @@ def search_openevolve_for_peripheral(
     for reg in register_names:
         context = mod.run_retrieval(
             peripheral_name, reg,
-            _oe_collection, _oe_processed_chunks,
+            collection, processed_chunks,
         )
         if not context:
             continue
@@ -192,43 +284,17 @@ def search_openevolve_for_peripheral(
         # Each register's call retrieves chunks for that register; we record
         # the union (deduped by chunk_id) so the JSONL row reflects what the
         # generator actually sees for the batch.
-        for item in _extract_embedding_ids(context, _oe_processed_chunks or [], chunks_dir):
+        for item in _extract_embedding_ids(context, processed_chunks or [], chunks_dir):
             cid = item["chunk_id"]
             if cid in seen_chunk_ids:
                 continue
             seen_chunk_ids.add(cid)
             embedding_ids.append({**item, "rank": len(embedding_ids)})
 
-        # Parse OE's format: "[Page N]\n..." blocks separated by "\n\n---\n\n"
-        for block in context.split("\n\n---\n\n"):
-            block = block.strip()
-            if not block:
-                continue
-            # Deduplicate by content
-            if block in seen_blocks:
-                continue
-            seen_blocks.add(block)
+        # Parse + dedup OE page blocks (shared with single-register path).
+        all_blocks.extend(_parse_oe_page_blocks(context, seen_blocks=seen_blocks))
 
-            # Extract page number for sorting
-            page = 0
-            if block.startswith("[Page "):
-                try:
-                    page = int(block.split("]")[0].replace("[Page ", ""))
-                except (ValueError, IndexError):
-                    pass
-            all_blocks.append((page, block))
-
-    if not all_blocks:
+    formatted = _format_oe_blocks_as_xml(all_blocks)
+    if formatted is None:
         return None, []
-
-    # Sort by page number for coherent reading order
-    all_blocks.sort(key=lambda x: x[0])
-
-    # Wrap in XML format to match the pipeline's expected output
-    parts = []
-    for page, block in all_blocks:
-        parts.append(f"<result page='{page}' source='openevolve' expansion='false'>"
-                     f"<content>{block}</content></result>")
-
-    formatted = f"<sources>{''.join(parts)}</sources>"
     return formatted, embedding_ids

@@ -73,6 +73,37 @@ VS_TYPE_MAPPING = {
     "md_enriched": "openai_md_enriched",
 }
 
+# Per-device presets — pick one with the `DEVICE` variable in main().
+# Each preset bundles the four values that must change together when
+# switching devices: SVD name, the peripheral list to sweep, the local
+# ChromaDB collection that holds the reg_* ground-truth labels, and the
+# chunks_index.csv used by local-backend page/neighbor expansion.
+#
+# To add a device: drop a new entry here. To override a single field for
+# one run: edit DEVICE_NAME/SVD/etc. directly in main() AFTER the preset
+# fields are unpacked.
+DEVICE_PRESETS: Dict[str, Dict[str, object]] = {
+    "rm0041": {
+        "svd": "stm32f100",
+        "peripherals_to_run": [
+            "afio", "bkp", "cec", "crc", "dac", "exti",
+            "flash", "fsmc", "iwdg", "pwr", "rcc",
+        ],
+        "retrieval_quality_label_db": "rm0041_md_chunks",
+        "local_chunk_index": "chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv",
+    },
+    "ke04": {
+        "svd": "mke04z4",
+        "peripherals_to_run": [
+            "acmp0", "acmp1", "adc", "crc", "ftm0", "ftm2", "ftmre", "gpioa",
+            "i2c0", "ics", "irq", "kbi0", "kbi1", "mcm", "osc", "pit", "pmc",
+            "port", "pwt", "rom", "rtc", "sim", "spi0", "uart0", "wdog",
+        ],
+        "retrieval_quality_label_db": "ke04_md_chunks",
+        "local_chunk_index": "chunked_datasheets/nxp/ke04/chunks/md/chunks_index.csv",
+    },
+}
+
 
 def _resolve_vs_info(device_dir: str, vs_type: Optional[str], vs_id: Optional[str]) -> tuple[str, str]:
     """
@@ -179,27 +210,23 @@ def main():
     # =========================
     # EDIT THESE VARIABLES
     # =========================
-    DEVICE_NAME = getattr(config, "DEVICE_NAME", "rm0041")
+    # Device selection — picks an entry from DEVICE_PRESETS at module scope.
+    # All other device-specific values (SVD, peripherals_to_run, label DB,
+    # local chunk index) come from the preset. Override individual fields
+    # below the unpack line if you need to deviate for a one-off run.
+    DEVICE = "rm0041"                          # "rm0041" or "ke04"
+
+    if DEVICE not in DEVICE_PRESETS:
+        raise ValueError(f"Unknown DEVICE={DEVICE!r}. Available: {list(DEVICE_PRESETS)}")
+    _preset = DEVICE_PRESETS[DEVICE]
+    DEVICE_NAME = DEVICE
+    SVD = _preset["svd"]
+
     # If you want to run a single peripheral, set PERIPHERAL.
-    # If you want to run multiple peripherals, set PERIPHERALS_TO_RUN and leave PERIPHERAL=None.
+    # If you want to run a subset of the preset list, override PERIPHERALS_TO_RUN below.
     PERIPHERAL: Optional[str] = None
-    # Peripherals that appear in the first 1500 rows of:
-    #   verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv
-    PERIPHERALS_TO_RUN: Optional[List[str]] = [
-        "afio",
-        "bkp",
-        "cec",
-        "crc",
-        "dac",
-        "exti",
-        "flash",
-        "fsmc",
-        "iwdg",
-        "pwr",
-        "rcc",
-    ]
+    PERIPHERALS_TO_RUN: Optional[List[str]] = list(_preset["peripherals_to_run"])
     REGISTERS: Optional[List[str]] = None      # e.g. ["evcr", "mapr"]; None = all registers for the peripheral
-    SVD = getattr(config, "SVD", "stm32f100")
 
     # Model/client
     CLIENT = "groq"                            # "openai" or "groq"
@@ -229,12 +256,16 @@ def main():
     LOCAL_METADATA_FILTER = [True]               # Filter by register name in metadata
     LOCAL_PAGES_AFTER = [0]                       # E1 winner: no page expansion
     LOCAL_TABLE_PAGES_ONLY = [False]             # Only expand table-containing pages
-    LOCAL_CHUNK_INDEX_PATH = "chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv"
+    LOCAL_CHUNK_INDEX_PATH = _preset["local_chunk_index"]
     LOCAL_FETCH_K_MULTIPLIER = [5]               # Candidate pool multiplier for reranking
     LOCAL_NEIGHBOR_EXPANSION = [True]             # E1 winner: neighbor expansion on
 
     # OpenEvolve retrieval
     USE_OPENEVOLVE = True                         # Include OE retrieval config
+    # Path to the evolved best_program.py. None auto-derives from DEVICE_NAME:
+    #   openevolve_retrieval/output_<DEVICE_NAME>/best/best_program.py
+    # Override to evaluate a specific checkpoint or a cross-device program.
+    OE_PROGRAM_PATH: Optional[str] = None
     OE_OUTPUT_PARENT = "optimization/retrieval/experiments/oe_batched"
 
     # Batched generator settings
@@ -258,7 +289,7 @@ def main():
     # Generator vs retrieval-only mode
     RUN_GENERATOR = True                              # False → skip LLM, only run retrieval + retrieval-quality metrics
     RUN_RETRIEVAL_METRICS = True                      # Compute recall@k / MRR / hit@k per config and join into sweep_results.csv
-    RETRIEVAL_QUALITY_LABEL_DB_NAME = "rm0041_md_chunks"   # ChromaDB collection providing reg_* ground-truth labels
+    RETRIEVAL_QUALITY_LABEL_DB_NAME = _preset["retrieval_quality_label_db"]   # ChromaDB collection providing reg_* ground-truth labels
     RETRIEVAL_QUALITY_K_CUTOFFS = DEFAULT_K_CUTOFFS   # k values at which to compute recall@k / precision@k / hit@k
     # =========================
 
@@ -336,7 +367,15 @@ def main():
     # OpenEvolve retrieval configs
     if USE_OPENEVOLVE:
         os.makedirs(OE_OUTPUT_PARENT, exist_ok=True)
-        configs.append({"backend": "openevolve"})
+        oe_program_path = OE_PROGRAM_PATH or os.path.join(
+            "openevolve_retrieval", f"output_{DEVICE_NAME}", "best", "best_program.py",
+        )
+        if not os.path.exists(oe_program_path):
+            raise FileNotFoundError(
+                f"OE program not found: {oe_program_path}. "
+                f"Either evolve one for device='{DEVICE_NAME}' or set OE_PROGRAM_PATH explicitly."
+            )
+        configs.append({"backend": "openevolve", "oe_program_path": oe_program_path})
 
     openai_count = sum(1 for c in configs if c["backend"] == "openai")
     local_count = sum(1 for c in configs if c["backend"] == "local")
@@ -513,7 +552,10 @@ def main():
                 print(f"  Batched strategy: {strategy_label} ({batched_strategy.value})")
 
         elif backend == "openevolve":
-            print(f"\n[{run_idx}/{total_runs}] Running: backend=openevolve")
+            cfg_oe_program_path = cfg["oe_program_path"]
+            # Label derived from the program's grandparent dir (e.g. "output_rm0041" → "rm0041").
+            oe_label = Path(cfg_oe_program_path).parts[-3].removeprefix("output_")
+            print(f"\n[{run_idx}/{total_runs}] Running: backend=openevolve, program={oe_label} ({cfg_oe_program_path})")
 
             context_retrieval_parameters = ContextRetrievalParameters(
                 context_retrieval_method=ContextRetrievalMethod.OPENEVOLVE,
@@ -524,9 +566,10 @@ def main():
                 score_threshold=0,
                 vs_id="",
                 regex="",
+                oe_program_path=cfg_oe_program_path,
             )
 
-            oe_prefix = "openevolve"
+            oe_prefix = f"openevolve_{oe_label}"
             if USE_BATCHED_GENERATOR:
                 oe_prefix += f"_batched_mfpb{MAX_FIELDS_PER_BATCH}"
             else:
@@ -757,6 +800,8 @@ def main():
             result_row["vs_type"] = cfg["vs_type"]
             result_row["pages_after"] = cfg["pages_after"]
             result_row["table_pages_only_expansion"] = cfg["table_pages_only"]
+        elif backend == "openevolve":
+            result_row["oe_program_path"] = cfg["oe_program_path"]
         elif backend == "local":
             result_row["local_db_name"] = cfg["local_db_name"]
             result_row["keyword_boost"] = cfg["keyword_boost"]
