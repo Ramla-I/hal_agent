@@ -19,19 +19,21 @@ the *code itself* for one of them.
 Two devices have been evolved separately. Both `best_program.py` files live
 under their respective `output_<device>/best/` directories.
 
-| Device | Iter | Combined score (during evolution) | Found accuracy | Coverage | Source |
-|---|---|---|---|---|---|
-| STM RM0041 | 18 | 0.873 | 89.8% | 100% (66/66 regs) | `output_rm0041/best/best_program_info.json` |
-| NXP KE04 | 48 | 0.809 | 87.5% | 97.9% (23/24 regs) | `output_ke04/best/best_program_info.json` |
+
+| Device     | Iter | Combined score (during evolution) | Found accuracy | Coverage           | Source                                      |
+| ---------- | ---- | --------------------------------- | -------------- | ------------------ | ------------------------------------------- |
+| STM RM0041 | 18   | 0.873                             | 89.8%          | 100% (66/66 regs)  | `output_rm0041/best/best_program_info.json` |
+| NXP KE04   | 48   | 0.809                             | 87.5%          | 97.9% (23/24 regs) | `output_ke04/best/best_program_info.json`   |
+
 
 Scores above are from each evaluator's own test set during evolution
 (7 STM peripherals, 10 KE04 peripherals). Full evaluations against the
 complete verified datasheet are saved at:
 
 - `output_rm0041/full_eval_results.json` — STM-evolved on STM full eval:
-  95/97 registers, 1410/1642 correct facts, 85.9% found accuracy
+95/97 registers, 1410/1642 correct facts, 85.9% found accuracy
 - `output_ke04/full_eval_results.json` — **STM-evolved tested on NXP** (cross-manufacturer transfer):
-  80/87 registers, 645/1415 correct facts, 45.6% found accuracy
+80/87 registers, 645/1415 correct facts, 45.6% found accuracy
 
 The cross-manufacturer drop (−40pp accuracy) is the main motivation for
 evolving a separate KE04 program; the per-manufacturer evolution closes the gap.
@@ -107,18 +109,19 @@ full_eval_<device>.py  →  loads output_<device>/best/best_program.py
 Contains three functions inside `# EVOLVE-BLOCK-START` / `# EVOLVE-BLOCK-END`
 markers that OpenEvolve is allowed to mutate:
 
-- **`process_chunks(raw_chunks)`** — preprocesses ~1033 raw markdown chunks
-  before indexing. Initial version detects tables (`has_tables` metadata)
-  and regex-extracts register-style names like `AFIO_MAPR`.
-- **`build_query(peripheral_name, register_name)`** — constructs the
-  semantic-search query string. Initial version is a natural-language
-  request mentioning offset, reset value, and field info.
-- **`search_and_format(collection, query, embedding_fn, …)`** — runs the
-  ChromaDB query, optional reranking/expansion, returns formatted context.
-  Initial version retrieves 5 results with a `$contains` filter and
-  unfiltered fallback.
+- `**process_chunks(raw_chunks)**` — preprocesses ~1033 raw markdown chunks
+before indexing. Initial version detects tables (`has_tables` metadata)
+and regex-extracts register-style names like `AFIO_MAPR`.
+- `**build_query(peripheral_name, register_name)**` — constructs the
+semantic-search query string. Initial version is a natural-language
+request mentioning offset, reset value, and field info.
+- `**search_and_format(collection, query, embedding_fn, …)**` — runs the
+ChromaDB query, optional reranking/expansion, returns formatted context.
+Initial version retrieves 5 results with a `$contains` filter and
+unfiltered fallback.
 
 Outside the evolve block (fixed scaffolding):
+
 - `load_raw_chunks()` reads chunks_index.csv + chunk text files
 - `build_ephemeral_store()` builds an in-memory ChromaDB collection
 - `setup_database()` / `run_retrieval()` are the entry points
@@ -126,13 +129,15 @@ Outside the evolve block (fixed scaffolding):
 ### 2. `evaluator_rm0041.py` (and `evaluator_ke04.py`) — the fitness function
 
 Two-stage cascade:
+
 - **Stage 1 (fast reject):** Run on 3 representative registers. If any returns no
-  context, score 0 and stop.
+context, score 0 and stop.
 - **Stage 2 (scoring):** Run on the full test set:
   - STM: 7 peripherals (afio, crc, exti, bkp, dac, pwr, rcc) — ~22 registers
   - NXP: 10 peripherals (irq, pmc, rtc, crc, acmp0, adc, uart0, wdog, ftmre, i2c0) — ~75 registers
 
 Per register:
+
 1. Retrieve context via the evolved pipeline
 2. Call the generator LLM (Groq `gpt-oss-120b`)
 3. Parse JSON, extract facts, compare to the verified CSV
@@ -142,6 +147,7 @@ facts penalized more heavily than missing ones. MAP-Elites feature dimensions:
 `avg_context_length` and `retrieval_time` (to keep the population diverse).
 
 **Dependencies:**
+
 - Generator prompts: `prompts/register_info_stm.py`
 - Output parsing: `utils/parse_output.py`
 - Fact extraction: `utils/generator_facts.py`
@@ -232,12 +238,12 @@ device-aware and select among `output_rm0041/` and `output_ke04/`.
 optimization layers:
 
 - `optimization/retrieval/run_sweep.py` varies **parameters** (number of
-  embeddings, reranker on/off, metadata filter, page expansion, batch
-  strategy, etc.) across all backends — including OpenEvolve. It tunes
-  knobs without touching code.
+embeddings, reranker on/off, metadata filter, page expansion, batch
+strategy, etc.) across all backends — including OpenEvolve. It tunes
+knobs without touching code.
 - `openevolve_retrieval/` evolves the **retrieval code itself**
-  (preprocessing, query construction, post-processing). The output of one
-  evolution run is then *consumed* as a single fixed backend by the sweep.
+(preprocessing, query construction, post-processing). The output of one
+evolution run is then *consumed* as a single fixed backend by the sweep.
 
 Both share `optimization/common/compare_generator_with_verified.py` for
 fact-matching.
@@ -245,16 +251,14 @@ fact-matching.
 ## Caveats
 
 - The KE04 best program (`output_ke04/best/best_program.py`) is **not yet
-  wired into `context_retrieval/openevolve_search.py`**, which hardcodes the
-  rm0041 path. Run the NXP full eval via `full_eval_ke04.py` for now.
+wired into `context_retrieval/openevolve_search.py`**, which hardcodes the
+rm0041 path. Run the NXP full eval via `full_eval_ke04.py` for now.
 - During evolution the page-sort applied inside the evolved
-  `search_and_format()` means the final chunk order in the OE adapter
-  reflects document order, not relevance order. This is recorded in
-  `embedding_ids.jsonl` as `rank_meaning: "document_order"` so
-  `metrics_retrieval.py` nulls out MRR / precision@k for OE rows (recall@k
-  / hit@k stay valid as set-membership metrics).
+`search_and_format()` means the final chunk order in the OE adapter
+reflects document order, not relevance order. This is recorded in
+`embedding_ids.jsonl` as `rank_meaning: "document_order"` so
+`metrics_retrieval.py` nulls out MRR / precision@k for OE rows (recall@k
+/ hit@k stay valid as set-membership metrics).
 - The hardcoded ChromaDB metadata-key convention assumed by the labels DB
-  (`reg_{PERIPHERAL}_{REGISTER}` booleans) is set at ingestion time, not
-  enforced anywhere. If you re-ingest with different rules, the runtime
-  retrieval still works but the IR metric script will silently lose its
-  ground truth.
+(`reg_{PERIPHERAL}_{REGISTER}` booleans) is set at ingestion time, not enforced anywhere. If you re-ingest with different rules, the runtime retrieval still works but the metric_retrieval script will silently lose its ground truth.
+

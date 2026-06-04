@@ -142,26 +142,9 @@ def retrieve_context_for_peripheral(
         ContextRetrievalMethod.LOCAL_VECTOR_DB,
     ):
         if register_names:
-            strategy = context_retrieval_parameters.batched_retrieval_strategy
-            if strategy == BatchedRetrievalStrategy.COMBINED_WITH_FILTER:
-                return _batched_combined(
-                    context_retrieval_parameters, peripheral_name, register_names,
-                    use_metadata_filter=True,
-                )
-            elif strategy == BatchedRetrievalStrategy.COMBINED_NO_FILTER:
-                return _batched_combined(
-                    context_retrieval_parameters, peripheral_name, register_names,
-                    use_metadata_filter=False,
-                )
-            elif strategy == BatchedRetrievalStrategy.PER_REGISTER_TRIMMED:
-                return _batched_per_register_trimmed(
-                    context_retrieval_parameters, peripheral_name, register_names,
-                )
-            else:
-                # PER_REGISTER (default) — full union, no trim
-                return _batched_per_register(
-                    context_retrieval_parameters, peripheral_name, register_names,
-                )
+            return _batched_retrieve(
+                context_retrieval_parameters, peripheral_name, register_names,
+            )
         else:
             # Discovery mode — single peripheral-level query
             query = (
@@ -187,130 +170,108 @@ def retrieve_context_for_peripheral(
         )
 
 
-def _batched_per_register(
+_PER_REGISTER_QUERY_TEMPLATE = (
+    "For the {peripheral}_{register} register, retrieve all "
+    "information about its offset, reset value, size, readonly "
+    "bits, writeonly bits, readwrite bits, and subfields."
+)
+_COMBINED_QUERY_TEMPLATE = (
+    "For the {peripheral} peripheral registers ({reg_list}), "
+    "retrieve all information about offsets, reset values, sizes, and subfields."
+)
+
+
+def _batched_retrieve(
     params: ContextRetrievalParameters,
     peripheral_name: str,
     register_names: list[str],
 ) -> tuple:
-    """Option C: per-register raw searches → union → single post_process pass.
+    """Batched semantic retrieval across multiple registers in one peripheral.
 
-    Each register gets its own query with number_embeddings results, same as
-    unbatched. Results are deduplicated and passed through without trimming.
+    Dispatches on ``params.batched_retrieval_strategy``:
+
+      ``COMBINED_WITH_FILTER`` (sA): one query covering all registers, with the
+          register-name list passed as a metadata filter
+          (``_build_register_filter()`` in local_vector_search gracefully
+          returns None for >10 registers, falling back to unfiltered).
+      ``COMBINED_NO_FILTER`` (sB): one combined query, no metadata filter.
+      ``PER_REGISTER`` (sC, default): one query per register, all raw results
+          unioned and deduped, sorted by score before post_process.
+      ``PER_REGISTER_TRIMMED`` (sD): one query per register, each result list
+          score-thresholded and trimmed to ``number_embeddings`` (matching the
+          unbatched code path), then unioned, deduped, and sorted by document
+          order; keyword boost is disabled in post_process so the document
+          order survives.
     """
+    strategy = params.batched_retrieval_strategy
+
+    if strategy in (
+        BatchedRetrievalStrategy.COMBINED_WITH_FILTER,
+        BatchedRetrievalStrategy.COMBINED_NO_FILTER,
+    ):
+        reg_list_str = ", ".join(f"{peripheral_name}_{r}" for r in register_names)
+        query = _COMBINED_QUERY_TEMPLATE.format(
+            peripheral=peripheral_name, reg_list=reg_list_str,
+        )
+        scaled_params = params.model_copy()
+        scaled_params.number_embeddings = min(max(2 * len(register_names), 4), 50)
+
+        register_filter = (
+            [f"{peripheral_name}_{reg}" for reg in register_names]
+            if strategy == BatchedRetrievalStrategy.COMBINED_WITH_FILTER
+            else []
+        )
+        raw_results = search_context_raw(
+            query, scaled_params, register_filter=register_filter,
+        )
+        if not raw_results:
+            return None, []
+        return post_process(raw_results, scaled_params, peripheral_name)
+
+    # Per-register modes
+    trim_per_register = (strategy == BatchedRetrievalStrategy.PER_REGISTER_TRIMMED)
+
     seen_chunks: set[str] = set()
-    all_raw: list = []
+    collected: list = []
 
     for reg in register_names:
-        query = (
-            f"For the {peripheral_name}_{reg} register, retrieve all "
-            f"information about its offset, reset value, size, readonly "
-            f"bits, writeonly bits, readwrite bits, and subfields."
+        query = _PER_REGISTER_QUERY_TEMPLATE.format(
+            peripheral=peripheral_name, register=reg,
         )
         reg_filter = f"{peripheral_name}_{reg}"
         raw_results = search_context_raw(
             query, params, register_filter=reg_filter,
         )
+
+        if trim_per_register:
+            # Apply score threshold + trim per register (matches the unbatched path).
+            raw_results = [r for r in raw_results if r.score >= params.score_threshold]
+            raw_results.sort(key=lambda r: r.score, reverse=True)
+            raw_results = raw_results[:max(1, params.number_embeddings)]
+
         for r in raw_results:
             chunk_key = r.text.strip()
             if chunk_key not in seen_chunks:
                 seen_chunks.add(chunk_key)
-                all_raw.append(r)
+                collected.append(r)
 
-    if not all_raw:
+    if not collected:
         return None, []
 
-    all_raw.sort(key=lambda r: r.score, reverse=True)
-    # Don't trim — pass all deduplicated results through so each register
-    # keeps its full number_embeddings worth of context (same as unbatched).
     scaled_params = params.model_copy()
-    scaled_params.number_embeddings = len(all_raw)
-    return post_process(all_raw, scaled_params, peripheral_name)
+    scaled_params.number_embeddings = len(collected)
 
-
-def _batched_per_register_trimmed(
-    params: ContextRetrievalParameters,
-    peripheral_name: str,
-    register_names: list[str],
-) -> tuple:
-    """Option D: per-register queries, each trimmed to number_embeddings
-    (identical retrieval to the unbatched path), then unioned, deduplicated,
-    sorted by page/chunk order, and post-processed once for expansion +
-    formatting.  The batched LLM call sees the same chunks each register
-    would get individually, presented in document reading order.
-    """
-    seen_chunks: set[str] = set()
-    all_trimmed: list = []
-
-    for reg in register_names:
-        query = (
-            f"For the {peripheral_name}_{reg} register, retrieve all "
-            f"information about its offset, reset value, size, readonly "
-            f"bits, writeonly bits, readwrite bits, and subfields."
-        )
-        reg_filter = f"{peripheral_name}_{reg}"
-        raw_results = search_context_raw(
-            query, params, register_filter=reg_filter,
-        )
-        # Apply score threshold + trim to number_embeddings (same as post_process)
-        raw_results = [r for r in raw_results if r.score >= params.score_threshold]
-        raw_results.sort(key=lambda r: r.score, reverse=True)
-        trimmed = raw_results[:max(1, params.number_embeddings)]
-
-        for r in trimmed:
-            chunk_key = r.text.strip()
-            if chunk_key not in seen_chunks:
-                seen_chunks.add(chunk_key)
-                all_trimmed.append(r)
-
-    if not all_trimmed:
-        return None, []
-
-    # Sort by page number then chunk index for coherent reading order
-    all_trimmed.sort(
-        key=lambda r: (r.page_number, r.metadata.get("chunk_index", 0)),
-    )
-
-    # Post-process once (expansion + formatting). Keyword boost and threshold
-    # are already applied; set number_embeddings = len so trim is a no-op.
-    scaled_params = params.model_copy()
-    scaled_params.number_embeddings = len(all_trimmed)
-    scaled_params.keyword_boost = False  # already handled above
-    return post_process(all_trimmed, scaled_params, peripheral_name)
-
-
-def _batched_combined(
-    params: ContextRetrievalParameters,
-    peripheral_name: str,
-    register_names: list[str],
-    use_metadata_filter: bool,
-) -> tuple:
-    """Options A/B: single combined query for all registers in a peripheral.
-
-    Args:
-        use_metadata_filter: If True (Option A), passes register names as metadata
-            filter. _build_register_filter() in local_vector_search gracefully
-            returns None for >10 registers. If False (Option B), passes empty filter.
-    """
-    reg_list_str = ", ".join(f"{peripheral_name}_{r}" for r in register_names)
-    query = (
-        f"For the {peripheral_name} peripheral registers ({reg_list_str}), "
-        f"retrieve all information about offsets, reset values, sizes, and subfields."
-    )
-
-    n_embeddings = max(2 * len(register_names), 4)
-    scaled_params = params.model_copy()
-    scaled_params.number_embeddings = min(n_embeddings, 50)
-
-    if use_metadata_filter:
-        register_filter = [f"{peripheral_name}_{reg}" for reg in register_names]
+    if trim_per_register:
+        # Sort by document order so the LLM sees chunks in reading order;
+        # disable keyword boost so post_process doesn't re-sort by score.
+        collected.sort(key=lambda r: (r.page_number, r.metadata.get("chunk_index", 0)))
+        scaled_params.keyword_boost = False
     else:
-        register_filter = []
+        # PER_REGISTER (default): pre-sort by score; post_process may re-sort
+        # again via keyword boost if enabled.
+        collected.sort(key=lambda r: r.score, reverse=True)
 
-    raw_results = search_context_raw(query, scaled_params, register_filter=register_filter)
-    if not raw_results:
-        return None, []
-
-    return post_process(raw_results, scaled_params, peripheral_name)
+    return post_process(collected, scaled_params, peripheral_name)
 
 
 if __name__ == "__main__":

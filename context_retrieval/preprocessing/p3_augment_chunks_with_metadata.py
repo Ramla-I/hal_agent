@@ -421,7 +421,7 @@ Examples:
     print(f"Preset: {args.preset}, fields: {include_fields}")
     print("\nNext steps:")
     print("1. Review augmented chunks to verify metadata quality")
-    print("2. Upload augmented chunks to vector store using p4_upload_chunks.py")
+    print("2. Upload augmented chunks via preprocessing/pipeline.py (which calls vector_store_uploader)")
     print("="*80)
 
     return 0

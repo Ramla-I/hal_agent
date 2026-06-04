@@ -17,7 +17,6 @@ chunk expansion.
 import csv
 import json
 import os
-import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Set
@@ -55,7 +54,6 @@ class ChunkIndex:
         self.csv_path = upload_summary_csv
         self.page_to_chunks: Dict[int, List[dict]] = defaultdict(list)
         self.chunk_id_to_info: Dict[str, dict] = {}
-        self.file_id_to_info: Dict[str, dict] = {}
         self._base_dir: Optional[str] = None
 
         # Table-aware expansion data
@@ -93,12 +91,9 @@ class ChunkIndex:
 
                 page = chunk_info['page_number']
                 chunk_id = chunk_info['chunk_id']
-                file_id = chunk_info['file_id']
 
                 self.page_to_chunks[page].append(chunk_info)
                 self.chunk_id_to_info[chunk_id] = chunk_info
-                if file_id:
-                    self.file_id_to_info[file_id] = chunk_info
 
         # Sort chunks within each page by chunk_index
         for page in self.page_to_chunks:
@@ -202,15 +197,6 @@ class ChunkIndex:
         """
         return self._chunk_has_tables.get(chunk_id, False)
 
-    def get_pages_with_tables(self) -> Set[int]:
-        """
-        Get all page numbers that have at least one chunk with tables.
-
-        Returns:
-            Set of page numbers with tables
-        """
-        return self._pages_with_tables.copy()
-
     @property
     def has_table_metadata(self) -> bool:
         """Check if table metadata was loaded successfully."""
@@ -219,10 +205,6 @@ class ChunkIndex:
     def get_chunk_by_id(self, chunk_id: str) -> Optional[dict]:
         """Get chunk info by chunk_id."""
         return self.chunk_id_to_info.get(chunk_id)
-
-    def get_chunk_by_file_id(self, file_id: str) -> Optional[dict]:
-        """Get chunk info by OpenAI file_id."""
-        return self.file_id_to_info.get(file_id)
 
     def read_chunk_content(self, chunk_info: dict) -> str:
         """
@@ -261,36 +243,6 @@ class ChunkIndex:
             logger.error(f"Error reading chunk file {full_path}: {e}")
             return ''
 
-    def extract_page_from_filename(self, filename: str) -> Optional[int]:
-        """
-        Extract page number from a chunk filename.
-
-        Args:
-            filename: Filename like 'rm0041_p187_c01.txt'
-
-        Returns:
-            Page number (e.g., 187) or None if not found
-        """
-        match = re.search(r'_p(\d+)_c\d+', filename)
-        if match:
-            return int(match.group(1))
-        return None
-
-    def extract_chunk_id_from_filename(self, filename: str) -> Optional[str]:
-        """
-        Extract chunk_id from a filename (strips extension).
-
-        Args:
-            filename: Filename like 'rm0041_p187_c01.txt'
-
-        Returns:
-            Chunk ID like 'rm0041_p187_c01'
-        """
-        # Remove extension and path
-        basename = os.path.basename(filename)
-        chunk_id = os.path.splitext(basename)[0]
-        return chunk_id if chunk_id in self.chunk_id_to_info else None
-
     @property
     def total_chunks(self) -> int:
         """Total number of chunks in the index."""
@@ -328,11 +280,6 @@ def get_chunk_index(upload_summary_csv: str) -> ChunkIndex:
         _chunk_index_cache[csv_path] = ChunkIndex(csv_path)
 
     return _chunk_index_cache[csv_path]
-
-
-def clear_chunk_index_cache():
-    """Clear the chunk index cache."""
-    _chunk_index_cache.clear()
 
 
 if __name__ == "__main__":

@@ -1,3 +1,15 @@
+"""
+LEGACY raw-PDF vector-store creator.
+
+Kept only because `optimization_coverage_improver/coverage_improver_optimization.py`
+still imports `create_vector_store` from this module. The current preprocessing
+pipeline (../pipeline.py + ../vector_store_uploader.py) replaces this entirely
+with chunk-level upload + metadata enrichment.
+
+TODO: once optimization_coverage_improver/ is migrated to the new pipeline
+(or deprecated), delete this file along with the `old/` directory.
+"""
+
 import requests
 from io import BytesIO
 from openai import OpenAI

@@ -1,12 +1,3 @@
-import os
-import sys
-
-# HACK, remove this once we have a proper package structure
-# Add the parent directory to sys.path
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(parent_dir)
-
-from config import client_openai
 from utils.utils import setup_logger
 from utils.timing import timed_operation
 from context_retrieval.chunk_index import ChunkIndex
@@ -15,7 +6,17 @@ from context_retrieval.post_processing import SearchResult
 # Set up logger for this module
 logger = setup_logger(__name__)
 
-client = client_openai
+
+def _get_client():
+    """Lazy-load the OpenAI client.
+
+    Importing config.client_openai at module load forces OPENAI_API_KEY to be
+    set even for retrieval modes that don't use OpenAI (e.g. local-only sweeps).
+    Defer the import to call time.
+    """
+    from config import client_openai
+    return client_openai
+
 
 # https://platform.openai.com/docs/guides/retrieval
 
@@ -31,7 +32,7 @@ def search_vector_store(query: str, vs_id: str, num_results: int, re_rank: bool,
         query = query[:4096]
 
     with timed_operation("vector_store_search"):
-        results = client.vector_stores.search(
+        results = _get_client().vector_stores.search(
             vector_store_id=vs_id,
             query=query,
             max_num_results=num_results,

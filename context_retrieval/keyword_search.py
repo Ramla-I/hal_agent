@@ -1,11 +1,5 @@
 import os
 import json
-import sys
-
-# HACK, remove this once we have a proper package structure
-# Add the parent directory to sys.path
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(parent_dir)
 
 from defs import Manufacturer
 from agent_tools.md_ops import find_pages_with_tables

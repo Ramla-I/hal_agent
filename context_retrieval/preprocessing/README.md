@@ -95,12 +95,15 @@ The pipeline performs these steps:
    - Makes metadata searchable by semantic search
    - Creates augmented copy of chunks
 
-4. **Upload to Vector Store** (`p4_upload_chunks.py`)
+4. **Upload to Vector Store** (`vector_store_uploader.py`, library — no standalone CLI)
    - Creates OpenAI vector store
    - Uploads chunks with attributes:
      - **basic** by default (from `chunks_index.csv`)
      - **enriched** when metadata.json is present
    - Saves `chunks_index.csv` with file_ids for retrieval expansion
+   - Invoked automatically by `pipeline.py`; for one-off use call
+     `create_vector_store_with_chunks(...)` or
+     `create_vector_store_with_enriched_chunks(...)` from Python.
 
 ## Command Reference (pipeline.py)
 
@@ -216,11 +219,20 @@ python preprocessing/p3_augment_chunks_with_metadata.py \
     chunked_datasheets/stm/rm0041/chunks/text \
     --output-dir chunked_datasheets/stm/rm0041/chunks/text_augmented
 
-# Step 4: Upload (metadata.json is auto-detected in chunks_dir)
-python preprocessing/p4_upload_chunks.py \
-    chunked_datasheets/stm/rm0041/chunks/text \
-    rm0041_enriched \
-    rm0041
+# Step 4: Upload — vector_store_uploader has NO standalone CLI.
+# Either run the full pipeline.py (which calls it internally),
+# or call the library function from Python:
+python -c "
+from context_retrieval.preprocessing.vector_store_uploader import (
+    create_vector_store_with_enriched_chunks,
+)
+vs_id, infos = create_vector_store_with_enriched_chunks(
+    chunks_dir='chunked_datasheets/stm/rm0041/chunks/text',
+    vector_store_name='rm0041_enriched',
+    datasheet_name='rm0041',
+)
+print(vs_id)
+"
 ```
 ## Legacy / Notes
 - `preprocessing/old/` contains legacy scripts that aren’t part of the current workflow and are intentionally not documented here.
