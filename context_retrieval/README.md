@@ -73,7 +73,7 @@ Two entry points, both returning `(formatted_xml, embedding_ids)`:
 | `regex` | Stub for future regex-based retrieval. Currently returns `None`. | Free | (not implemented) |
 
 Backend selection happens via `ContextRetrievalParameters.context_retrieval_method`
-(an enum from `defs.py`). The default depends on the experiment — `optimization/retrieval/run_sweep.py`
+(an enum from `defs.py`). The default depends on the experiment — `optimization/retrieval/evaluate_retrieval.py`
 is the canonical place to see what's currently in use.
 
 ## Layout

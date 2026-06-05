@@ -172,7 +172,7 @@ The critical question: do retrieval algorithms evolved for one manufacturer's da
 
 **NXP KE04 verified data:** `verified_datasheet/nxp/ke04/mke04z4/ke04_mke04z4_full.csv` (87 matchable registers across 12 peripherals)
 **NXP KE04 chunks:** `chunked_datasheets/nxp/ke04/chunks/md/` (743 chunks from 647 pages)
-**Full eval path:** `optimization/retrieval/run_sweep.py` (DEVICE="ke04", USE_OPENEVOLVE=True). Historical raw-OE numbers below are from the now-deleted `full_eval_ke04.py`.
+**Full eval path:** `optimization/retrieval/evaluate_retrieval.py` (DEVICE="ke04", USE_OPENEVOLVE=True). Historical raw-OE numbers below are from the now-deleted `full_eval_ke04.py`.
 **OE-STM on NXP results (historical, raw OE):** `../openevolve_retrieval/output_ke04/full_eval_results_unbatched.json` (best_stm entry)
 **OE-KE04 on NXP results (historical, raw OE):** `../openevolve_retrieval/output_ke04/full_eval_results_ke04_program_unbatched.json` (best_ke04 entry, re-run 2026-06-04: 1092 correct, 112 wrong, 71.7% complete acc — matches the prior 71.8% within LLM noise)
 
@@ -369,5 +369,5 @@ source .venv/bin/activate && python3 optimization/generator/plot_batched_generat
 |--------|---------|
 | `openevolve_retrieval/plot_cross_manufacturer.py` | Generate cross-manufacturer comparison figures + tables (frozen snapshot data) |
 | `optimization/generator/plot_batched_generator.py` | Generate batched generator efficiency figure + table |
-| `optimization/retrieval/run_sweep.py` | Full evaluation runner for any retrieval backend (OE / local / OpenAI VS) on any device preset |
+| `optimization/retrieval/evaluate_retrieval.py` | Full evaluation runner for any retrieval backend (OE / local / OpenAI VS) on any device preset |
 | `openevolve_retrieval/evaluator_ke04.py` | OpenEvolve evaluator for NXP KE04 |

@@ -43,7 +43,7 @@ The cross-manufacturer drop (−29pp complete accuracy: 71.7% → 42.3%) is
 the main motivation for evolving a separate KE04 program; the
 per-manufacturer evolution closes the gap.
 
-Going forward, full evaluations run through `optimization/retrieval/run_sweep.py`
+Going forward, full evaluations run through `optimization/retrieval/evaluate_retrieval.py`
 with `USE_OPENEVOLVE=True` — see "Running a full evaluation" below. The new
 path uses per-page XML wrapping (the canonical format every backend emits),
 which scores higher on the same data (~+5pp complete accuracy vs the old raw
@@ -81,7 +81,7 @@ openevolve_retrieval/
 └── figures/                        # PNGs produced by plot_cross_manufacturer.py
 ```
 
-> Full evaluations now run through `optimization/retrieval/run_sweep.py` with
+> Full evaluations now run through `optimization/retrieval/evaluate_retrieval.py` with
 > `USE_OPENEVOLVE=True` — see "Running a full evaluation" below. The
 > `full_eval_results_*_unbatched.json` files are preserved as historical
 > baselines from before the consolidation.
@@ -112,7 +112,7 @@ openevolve_retrieval/
 Or, separately, for a post-hoc full evaluation:
 
 ```
-optimization/retrieval/run_sweep.py  →  loads output_<device>/best/best_program.py
+optimization/retrieval/evaluate_retrieval.py  →  loads output_<device>/best/best_program.py
    (USE_OPENEVOLVE=True, DEVICE=...)  →  runs the generator on the preset peripheral list
                                      →  writes optimization/retrieval/experiments/oe_batched/
                                             openevolve_<device>_<mode>_mfpb<N>/info/
@@ -229,7 +229,7 @@ against every verified peripheral via the sweep:
 ```bash
 source .venv/bin/activate
 
-# Edit optimization/retrieval/run_sweep.py:
+# Edit optimization/retrieval/evaluate_retrieval.py:
 #   DEVICE = "rm0041"  # or "ke04"
 #   USE_OPENAI_VECTOR_STORE = False
 #   USE_LOCAL_VECTOR_DB = False
@@ -238,7 +238,7 @@ source .venv/bin/activate
 #                             # set explicitly to evaluate a checkpoint or cross-device program
 #   USE_BATCHED_GENERATOR = True   # production default; set False to match old raw-call methodology
 
-python3 optimization/retrieval/run_sweep.py
+python3 optimization/retrieval/evaluate_retrieval.py
 ```
 
 Writes per-config outputs under
@@ -265,7 +265,7 @@ scored by `optimization/retrieval/metrics_retrieval.py` like any other
 backend.
 
 The program path is configurable via `ContextRetrievalParameters.oe_program_path`.
-`run_sweep.py` auto-derives it from `DEVICE` (→ `output_<device>/best/best_program.py`),
+`evaluate_retrieval.py` auto-derives it from `DEVICE` (→ `output_<device>/best/best_program.py`),
 so swapping devices or evaluating a specific checkpoint is one flag.
 
 ## Relationship to `optimization/retrieval/`
@@ -273,7 +273,7 @@ so swapping devices or evaluating a specific checkpoint is one flag.
 `optimization/retrieval/` and `openevolve_retrieval/` are two orthogonal
 optimization layers:
 
-- `optimization/retrieval/run_sweep.py` varies **parameters** (number of
+- `optimization/retrieval/evaluate_retrieval.py` varies **parameters** (number of
 embeddings, reranker on/off, metadata filter, page expansion, batch
 strategy, etc.) across all backends — including OpenEvolve. It tunes
 knobs without touching code.

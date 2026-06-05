@@ -1126,7 +1126,7 @@ python preprocessing/ingest_local_vector_db.py rm0041 \
 
 ### Running Experiments
 
-Edit `optimization/retrieval/run_sweep.py` sweep parameters:
+Edit `optimization/retrieval/evaluate_retrieval.py` sweep parameters:
 
 ```python
 # For config C2 (metadata filter + reranker + quality fallback):
@@ -1142,7 +1142,7 @@ LOCAL_OUTPUT_PARENT = "optimization/retrieval/experiments/D_conditional_page_exp
 ```
 
 ```bash
-python optimization/retrieval/run_sweep.py
+python optimization/retrieval/evaluate_retrieval.py
 ```
 
 ### Key Files
@@ -1156,7 +1156,7 @@ python optimization/retrieval/run_sweep.py
 | `context_retrieval/vector_db/text_processor.py` | Chunking with register expansion and metadata enrichment       |
 | `context_retrieval/retrieve_context.py`         | Dispatch layer connecting generator to retrieval backends      |
 | `preprocessing/ingest_local_vector_db.py`       | Database ingestion with boolean register metadata              |
-| `optimization/retrieval/run_sweep.py`  | Experiment sweep runner                                        |
+| `optimization/retrieval/evaluate_retrieval.py`  | Experiment sweep runner                                        |
 | `defs.py`                                       | `ContextRetrievalParameters` data model                        |
 
 

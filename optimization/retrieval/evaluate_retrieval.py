@@ -14,7 +14,7 @@ After each run, it automatically compares the output against a verified datashee
 Usage:
     Edit the variables at the top of `main()` and run:
 
-        python3 optimization/retrieval/run_sweep.py
+        python3 optimization/retrieval/evaluate_retrieval.py
 """
 
 import csv
@@ -207,13 +207,15 @@ def _generate_local_output_prefix(
 
 
 def main():
-    # =========================
-    # EDIT THESE VARIABLES
-    # =========================
-    # Device selection — picks an entry from DEVICE_PRESETS at module scope.
-    # All other device-specific values (SVD, peripherals_to_run, label DB,
-    # local chunk index) come from the preset. Override individual fields
-    # below the unpack line if you need to deviate for a one-off run.
+    # =====================================================================
+    # SHARED PARAMETERS — apply to every backend, regardless of which
+    # retrieval method(s) are enabled below.
+    # =====================================================================
+
+    # --- Device ---
+    # Picks an entry from DEVICE_PRESETS (module scope). The preset supplies
+    # SVD, peripheral list, local chunk index, and retrieval-quality label DB.
+    # Override any unpacked field on the line below it for a one-off run.
     DEVICE = "rm0041"                          # "rm0041" or "ke04"
 
     if DEVICE not in DEVICE_PRESETS:
@@ -222,76 +224,80 @@ def main():
     DEVICE_NAME = DEVICE
     SVD = _preset["svd"]
 
-    # If you want to run a single peripheral, set PERIPHERAL.
-    # If you want to run a subset of the preset list, override PERIPHERALS_TO_RUN below.
+    # --- Peripherals / registers ---
+    # PERIPHERAL: run a single peripheral (leave None to use the list).
+    # PERIPHERALS_TO_RUN: defaults to the preset list; override for a subset.
     PERIPHERAL: Optional[str] = None
     PERIPHERALS_TO_RUN: Optional[List[str]] = list(_preset["peripherals_to_run"])
     REGISTERS: Optional[List[str]] = None      # e.g. ["evcr", "mapr"]; None = all registers for the peripheral
 
-    # Model/client
+    # --- Model / client ---
     CLIENT = "groq"                            # "openai" or "groq"
     MODEL_NAME = getattr(config, "GENERATOR_MODEL_NAME", "gpt-oss-120b")
     RUN_NUMBER = getattr(config, "GENERATOR_ITER", 1)
 
-    # Sweep parameters (OpenAI vector store)
-    USE_OPENAI_VECTOR_STORE = False             # Set to False to skip OpenAI vector store configs
-    VS_TYPES = ["md", "md_enriched"]               # ["text", "md", "md_enriched"]
-    EMBEDDING_COUNTS = [1, 2]                   # e.g. [4, 8, 16]
-    PAGES_AFTER_VALUES = [0, 1]                    # e.g. [1, 2, 3]
-    TABLE_PAGES_ONLY_EXPANSION_VALUES = [False, True]    # e.g. [False, True] to sweep both modes
+    # --- Generator mode (applies to every backend) ---
+    USE_BATCHED_GENERATOR = True               # batch multiple registers per LLM call
+    MAX_FIELDS_PER_BATCH = 50                  # adaptive batching: max SVD fields per batch (lower → more batches, higher accuracy for complex peripherals)
+    RUN_GENERATOR = True                       # False → skip the LLM, run retrieval + retrieval-quality metrics only
 
-    # Retrieval options (OpenAI)
-    CHUNK_EXPANSION_ENABLED = True
-    VS_ID_OVERRIDE: Optional[str] = None       # set to a vector-store ID to bypass vector_stores.json resolution
-    CHUNK_INDEX_PATH_OVERRIDE: Optional[str] = None
-
-    # Local vector DB sweep parameters
-    USE_LOCAL_VECTOR_DB = False                # Skip — already have E1 batched results
-    LOCAL_DB_NAMES = ["rm0041_md_chunks"]        # ChromaDB database names to sweep
-    LOCAL_EMBEDDING_COUNTS = [4]                  # E1 winner: emb4+ne
-    KEYWORD_BOOST_VALUES = [False]        # Keyword boost on/off
-    RERANKER_TYPES = ["local"]                  # "" = no reranker, "local" = FlashRank
-    LOCAL_DB_PATH = ""                          # Override databases directory (default: databases/)
-    # Enriched local DB features
-    LOCAL_METADATA_FILTER = [True]               # Filter by register name in metadata
-    LOCAL_PAGES_AFTER = [0]                       # E1 winner: no page expansion
-    LOCAL_TABLE_PAGES_ONLY = [False]             # Only expand table-containing pages
-    LOCAL_CHUNK_INDEX_PATH = _preset["local_chunk_index"]
-    LOCAL_FETCH_K_MULTIPLIER = [5]               # Candidate pool multiplier for reranking
-    LOCAL_NEIGHBOR_EXPANSION = [True]             # E1 winner: neighbor expansion on
-
-    # OpenEvolve retrieval
-    USE_OPENEVOLVE = True                         # Include OE retrieval config
-    # Path to the evolved best_program.py. None auto-derives from DEVICE_NAME:
-    #   openevolve_retrieval/output_<DEVICE_NAME>/best/best_program.py
-    # Override to evaluate a specific checkpoint or a cross-device program.
-    OE_PROGRAM_PATH: Optional[str] = None
-    OE_OUTPUT_PARENT = "optimization/retrieval/experiments/oe_batched"
-
-    # Batched generator settings
-    USE_BATCHED_GENERATOR = True
-    MAX_FIELDS_PER_BATCH = 50                 # Adaptive batching: max SVD fields per batch (lower → more batches, higher accuracy for complex peripherals)
-    BATCHED_STRATEGIES = [                    # Only relevant when USE_BATCHED_GENERATOR=True
-        BatchedRetrievalStrategy.PER_REGISTER_TRIMMED,  # sD: per-register queries, trimmed to n_embeddings each (D2-identical)
-    ]
-
-    # Output — one parent directory per backend. Per-config subdirs land inside the
-    # parent matching that config's backend. The combined `sweep_results.csv` is written
-    # to the first backend-parent that actually produced rows (see end of main()).
-    OPENAI_OUTPUT_PARENT = "optimization/retrieval/experiments/openai_file_search_baseline"
-    LOCAL_OUTPUT_PARENT = "optimization/retrieval/experiments/e1_vs_oe_batched"
-    OUTPUT_PREFIX_BASE: Optional[str] = None   # e.g. "my_sweep"; if set, each config becomes "<base>_<auto>"
-
-    # Verified comparison (generator side)
+    # --- Verified comparison (generator side) ---
     SKIP_COMPARISON = False
     VERIFIED_CSV_OVERRIDE: Optional[str] = None
 
-    # Generator vs retrieval-only mode
-    RUN_GENERATOR = True                              # False → skip LLM, only run retrieval + retrieval-quality metrics
-    RUN_RETRIEVAL_METRICS = True                      # Compute recall@k / MRR / hit@k per config and join into sweep_results.csv
+    # --- Retrieval-quality metrics (recall@k / MRR / hit@k) ---
+    RUN_RETRIEVAL_METRICS = True                       # compute per-config and join into sweep_results.csv
     RETRIEVAL_QUALITY_LABEL_DB_NAME = _preset["retrieval_quality_label_db"]   # ChromaDB collection providing reg_* ground-truth labels
-    RETRIEVAL_QUALITY_K_CUTOFFS = DEFAULT_K_CUTOFFS   # k values at which to compute recall@k / precision@k / hit@k
-    # =========================
+    RETRIEVAL_QUALITY_K_CUTOFFS = DEFAULT_K_CUTOFFS    # k values at which to compute recall@k / precision@k / hit@k
+
+    # --- Output naming ---
+    # Per-config subdirs land inside each backend's own OUTPUT_PARENT (set in
+    # the backend blocks below). The combined `sweep_results.csv` is written to
+    # the first backend-parent that produced rows (see end of main()).
+    OUTPUT_PREFIX_BASE: Optional[str] = None   # e.g. "my_sweep"; if set, each config becomes "<base>_<auto>"
+
+    # =====================================================================
+    # BACKEND SELECTION — enable one or more retrieval methods. The block
+    # under each toggle only takes effect when that backend is enabled.
+    # =====================================================================
+    USE_OPENAI_VECTOR_STORE = False            # OpenAI file_search vector store
+    USE_LOCAL_VECTOR_DB = False                # local ChromaDB (skip — already have E1 batched results)
+    USE_OPENEVOLVE = True                      # evolved retrieval program
+
+    # --- OpenAI vector store backend (only if USE_OPENAI_VECTOR_STORE) ---
+    OPENAI_OUTPUT_PARENT = "optimization/retrieval/experiments/openai_file_search_baseline"
+    VS_TYPES = ["md", "md_enriched"]                     # ["text", "md", "md_enriched"]
+    EMBEDDING_COUNTS = [1, 2]                            # e.g. [4, 8, 16]
+    PAGES_AFTER_VALUES = [0, 1]                          # e.g. [1, 2, 3]
+    TABLE_PAGES_ONLY_EXPANSION_VALUES = [False, True]    # sweep table-only expansion on/off
+    CHUNK_EXPANSION_ENABLED = True
+    VS_ID_OVERRIDE: Optional[str] = None                 # bypass vector_stores.json resolution
+    CHUNK_INDEX_PATH_OVERRIDE: Optional[str] = None
+
+    # --- Local vector DB backend (only if USE_LOCAL_VECTOR_DB) ---
+    LOCAL_OUTPUT_PARENT = "optimization/retrieval/experiments/e1_vs_oe_batched"
+    LOCAL_DB_NAMES = ["rm0041_md_chunks"]      # ChromaDB database names to sweep
+    LOCAL_EMBEDDING_COUNTS = [4]               # E1 winner: emb4+ne
+    KEYWORD_BOOST_VALUES = [False]             # keyword boost on/off
+    RERANKER_TYPES = ["local"]                 # "" = no reranker, "local" = FlashRank
+    LOCAL_DB_PATH = ""                         # override databases directory (default: databases/)
+    LOCAL_METADATA_FILTER = [True]             # filter by register name in metadata
+    LOCAL_PAGES_AFTER = [0]                    # E1 winner: no page expansion
+    LOCAL_TABLE_PAGES_ONLY = [False]           # only expand table-containing pages
+    LOCAL_CHUNK_INDEX_PATH = _preset["local_chunk_index"]
+    LOCAL_FETCH_K_MULTIPLIER = [5]             # candidate pool multiplier for reranking
+    LOCAL_NEIGHBOR_EXPANSION = [True]          # E1 winner: neighbor expansion on
+    BATCHED_STRATEGIES = [                     # swept only for local; needs USE_BATCHED_GENERATOR=True
+        BatchedRetrievalStrategy.PER_REGISTER_TRIMMED,  # sD: per-register queries, trimmed to n_embeddings each (D2-identical)
+    ]
+
+    # --- OpenEvolve backend (only if USE_OPENEVOLVE) ---
+    OE_OUTPUT_PARENT = "optimization/retrieval/experiments/oe_batched"
+    # Path to the evolved best_program.py. None auto-derives from DEVICE:
+    #   openevolve_retrieval/output_<DEVICE>/best/best_program.py
+    # Override to evaluate a specific checkpoint or a cross-device program.
+    OE_PROGRAM_PATH: Optional[str] = None
+    # =====================================================================
 
     ctx = get_user_context(DEVICE_NAME)
     manufacturer = (ctx.manufacturer if ctx else Manufacturer.STM)

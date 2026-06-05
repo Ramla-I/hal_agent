@@ -1,12 +1,12 @@
 # Retrieval Optimization
 
 This folder holds the **manual parameter sweep + analysis tools** for retrieval.
-`run_sweep.py` varies retrieval/generator parameters and reports both generator-output accuracy and direct retrieval-quality metrics (recall@k, precision@k, MRR, hit@k from retrieval literature — see `metrics_retrieval.py`) per config. `metrics_retrieval.py` and
+`evaluate_retrieval.py` varies retrieval/generator parameters and reports both generator-output accuracy and direct retrieval-quality metrics (recall@k, precision@k, MRR, hit@k from retrieval literature — see `metrics_retrieval.py`) per config. `metrics_retrieval.py` and
 `diff_retrieval_embeddings.py` are also usable standalone for post-hoc analysis of
 existing run dirs.
 
-The companion `openevolve_retrieval/` folder evolves the retrieval *code
-itself*; this folder tunes its *settings* and measures the result.
+The companion `openevolve_retrieval/` folder evolves the retrieval *code*  
+*itself*; this folder tunes its *settings* and measures the result. This is a manual optimization of the retrival algorithm. We have found what the parameters are and what their ideal value is.
 
 ## Purpose
 
@@ -18,8 +18,8 @@ backend** (`context_retrieval/`), which dispatches to one of:
 
 - `keyword_search` — section/page lookup by register name
 - `openai_file_search` — OpenAI vector-store semantic search
-- `local_vector_db` — local ChromaDB + FastEmbed + optional FlashRank reranker
-- `openevolve` — the evolved program in `openevolve_retrieval/`
+- `local_vector_db` — local ChromaDB + FastEmbed + optional FlashRank reranker (with manually discovered and post-processing parameters)
+- `openevolve` — the evolved program in `openevolve_retrieval/`  (with llm discovered parameters)
 
 Each backend exposes knobs: how many embeddings to retrieve, how aggressively
 to expand pages around a hit, whether to rerank, whether to filter by register
@@ -28,7 +28,7 @@ this sweep brute-forces it.
 
 ## How the sweep works
 
-`run_sweep.py` is the entry point. The script itself has no CLI flags — it's
+`evaluate_retrieval.py` is the entry point. The script itself has no CLI flags — it's
 configured by editing constants at the top of `main()`, because every sweep
 run is meant to be a self-documenting experiment whose config lives in
 source. (The analysis helpers, `metrics_retrieval.py`, `diff_retrieval_embeddings.py`,
@@ -72,7 +72,7 @@ config that surfaces the right page but in a noisier form can look like a
 regression because the generator is the only judge.
 
 For a direct retrieval-quality measurement that doesn't run the generator,
-`run_sweep.py` invokes `metrics_retrieval.py` per config and joins the
+`evaluate_retrieval.py` invokes `metrics_retrieval.py` per config and joins the
 results into `sweep_results.csv`. The metric uses each chunk's
 `reg_{PERIPHERAL}_{REGISTER}` boolean metadata as ground truth. See the
 "Comparison & retrieval metrics" section for the toggles and the
@@ -83,7 +83,7 @@ results into `sweep_results.csv`. The metric uses each chunk's
 ```
 optimization/retrieval/
 ├── README.md                       # this file
-├── run_sweep.py                    # the sweep entrypoint
+├── evaluate_retrieval.py                    # the sweep entrypoint
 ├── smoke_test.py                   # CRC smoke test (3 regs, end-to-end)
 ├── metrics_generator_output.py     # accuracy/coverage/complete_acc from comparison_results.json + plots
 ├── diff_retrieval_embeddings.py               # pairwise diff of two runs' retrieved chunk IDs
@@ -101,10 +101,10 @@ contains a `sweep_results.csv` summarizing its children.
 
 ```bash
 source .venv/bin/activate
-python3 optimization/retrieval/run_sweep.py
+python3 optimization/retrieval/evaluate_retrieval.py
 ```
 
-You will not pass flags. Open `run_sweep.py`, edit the variables inside
+You will not pass flags. Open `evaluate_retrieval.py`, edit the variables inside
 `main()` to describe the experiment, and run. The constants are grouped — see
 "Current default settings" below.
 
@@ -122,7 +122,7 @@ post-refactor sanity check.
 
 ## Current default settings
 
-These are the values currently committed in `run_sweep.py:main()`. To rerun
+These are the values currently committed in `evaluate_retrieval.py:main()`. To rerun
 the most recent experiment as-is, just execute the script.
 
 **Target**

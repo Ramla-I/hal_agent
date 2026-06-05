@@ -1,7 +1,7 @@
 """
 Shared sweep-harness helpers used by retrieval and generator optimization scripts.
 
-These functions used to live as private helpers inside `optimization/retrieval/run_sweep.py`
+These functions used to live as private helpers inside `optimization/retrieval/evaluate_retrieval.py`
 but are imported by `optimization/generator/optimize_generator.py` and by the smoke tests,
 so they belong in a shared module.
 """

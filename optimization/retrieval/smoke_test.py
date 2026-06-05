@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Smoke tests for the run_sweep retrieval-side pipeline.
+Smoke tests for the evaluate_retrieval retrieval-side pipeline.
 
 Three scenarios, all on CRC (3 registers, Groq gpt-oss-120b):
 
@@ -144,7 +144,7 @@ def test_smoke():
     """End-to-end: retrieve + LLM + comparison + retrieval-quality metrics."""
     _skip_if_missing_prereqs()
 
-    with tempfile.TemporaryDirectory(prefix="run_sweep_test_") as tmp_out:
+    with tempfile.TemporaryDirectory(prefix="evaluate_retrieval_test_") as tmp_out:
         run_generator_batched(
             client=config.client_groq,
             model_name="gpt-oss-120b",
@@ -186,7 +186,7 @@ def test_smoke():
         quality = _assert_retrieval_quality_pipeline(tmp_path)
 
         print(
-            f"\nrun_sweep smoke: {result['registers_found']}/{result['total_registers']} regs, "
+            f"\nevaluate_retrieval smoke: {result['registers_found']}/{result['total_registers']} regs, "
             f"{result['correct']}/{result['total_facts']} correct "
             f"({result['found_accuracy']:.1f}% found, {result['complete_accuracy']:.1f}% complete) | "
             f"retrieval recall@5={quality['overall']['recall@5']:.3f} "

@@ -842,7 +842,7 @@ def main() -> None:
             # LEGACY READER — pre-2026 layout, one JSON per peripheral.
             #   Files: comparison_results_<peripheral>.json (plus matching
             #          comparison_register_results_<p>.csv / comparison_fact_errors_<p>.csv)
-            # Current run_sweep.py writes ONE combined comparison_results.json
+            # Current evaluate_retrieval.py writes ONE combined comparison_results.json
             # per config (handled in the `if combined_used` branch above), so
             # this block only triggers on old experiment outputs.
             # Known surviving instances: optimization/retrieval/experiments/openai_file_search_baseline/*/info/peripheral_comparisons/

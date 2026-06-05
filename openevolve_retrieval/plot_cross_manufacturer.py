@@ -35,7 +35,7 @@ import numpy as np
 #       openevolve_retrieval/output_ke04/full_eval_results_unbatched.json              (best_stm on NXP)
 #       openevolve_retrieval/output_ke04/full_eval_results_ke04_program_unbatched.json (best_ke04 on NXP)
 #   - For up-to-date numbers via the current per-page XML path, re-run
-#       optimization/retrieval/run_sweep.py with USE_OPENEVOLVE=True
+#       optimization/retrieval/evaluate_retrieval.py with USE_OPENEVOLVE=True
 #     and read optimization/retrieval/experiments/oe_batched/sweep_results.csv.
 #
 # Schema for each entry: dict with keys

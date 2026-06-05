@@ -20,7 +20,7 @@ hal_agent/
 ├── optimization/               # Optimization experiments & analysis scripts
 │   ├── common/                # Shared sweep harness + comparison helpers
 │   ├── retrieval/             # Manual retrieval sweep + analysis + reports
-│   │   ├── run_sweep.py       # Parameter sweep experiments
+│   │   ├── evaluate_retrieval.py       # Parameter sweep experiments
 │   │   ├── plot_*.py          # Visualization scripts
 │   │   └── reports/*.md       # Analysis reports
 │   ├── generator/             # Generator sweep (batching, prompting) + plots
