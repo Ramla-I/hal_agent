@@ -76,7 +76,7 @@ VS_TYPE_MAPPING = {
 # Per-device presets — pick one with the `DEVICE` variable in main().
 # Each preset bundles the four values that must change together when
 # switching devices: SVD name, the peripheral list to sweep, the local
-# ChromaDB collection that holds the reg_* ground-truth labels, and the
+# ChromaDB collection that holds the reg_* relevance labels, and the
 # chunks_index.csv used by local-backend page/neighbor expansion.
 #
 # To add a device: drop a new entry here. To override a single field for
@@ -89,7 +89,7 @@ DEVICE_PRESETS: Dict[str, Dict[str, object]] = {
             "afio", "bkp", "cec", "crc", "dac", "exti",
             "flash", "fsmc", "iwdg", "pwr", "rcc",
         ],
-        "retrieval_quality_label_db": "rm0041_md_chunks",
+        "relevance_labels_db": "rm0041_md_chunks",
         "local_chunk_index": "chunked_datasheets/stm/rm0041/chunks/md/chunks_index.csv",
     },
     "ke04": {
@@ -99,7 +99,7 @@ DEVICE_PRESETS: Dict[str, Dict[str, object]] = {
             "i2c0", "ics", "irq", "kbi0", "kbi1", "mcm", "osc", "pit", "pmc",
             "port", "pwt", "rom", "rtc", "sim", "spi0", "uart0", "wdog",
         ],
-        "retrieval_quality_label_db": "ke04_md_chunks",
+        "relevance_labels_db": "ke04_md_chunks",
         "local_chunk_index": "chunked_datasheets/nxp/ke04/chunks/md/chunks_index.csv",
     },
 }
@@ -214,7 +214,7 @@ def main():
 
     # --- Device ---
     # Picks an entry from DEVICE_PRESETS (module scope). The preset supplies
-    # SVD, peripheral list, local chunk index, and retrieval-quality label DB.
+    # SVD, peripheral list, local chunk index, and relevance labels DB.
     # Override any unpacked field on the line below it for a one-off run.
     DEVICE = "rm0041"                          # "rm0041" or "ke04"
 
@@ -247,7 +247,7 @@ def main():
 
     # --- Retrieval-quality metrics (recall@k / MRR / hit@k) ---
     RUN_RETRIEVAL_METRICS = True                       # compute per-config and join into sweep_results.csv
-    RETRIEVAL_QUALITY_LABEL_DB_NAME = _preset["retrieval_quality_label_db"]   # ChromaDB collection providing reg_* ground-truth labels
+    RELEVANCE_LABELS_DB_NAME = _preset["relevance_labels_db"]   # ChromaDB collection whose reg_* flags are the relevance labels
     RETRIEVAL_QUALITY_K_CUTOFFS = DEFAULT_K_CUTOFFS    # k values at which to compute recall@k / precision@k / hit@k
 
     # --- Output naming ---
@@ -423,14 +423,16 @@ def main():
     # Load ground-truth chunk labels once (cheap; ChromaDB metadata read).
     # Cached for the duration of the sweep — every config's IR metrics use these.
     sources_for_reg = None
+    all_label_sources = None
     if RUN_RETRIEVAL_METRICS:
-        print(f"Loading retrieval-quality ground-truth labels from ChromaDB '{RETRIEVAL_QUALITY_LABEL_DB_NAME}'...")
+        print(f"Loading relevance labels from ChromaDB '{RELEVANCE_LABELS_DB_NAME}'...")
         try:
-            sources_for_reg, _ = load_db_labels(RETRIEVAL_QUALITY_LABEL_DB_NAME, "")
-            print(f"  {len(sources_for_reg)} unique reg_* labels")
+            sources_for_reg, _, all_label_sources = load_db_labels(RELEVANCE_LABELS_DB_NAME, "")
+            print(f"  {len(sources_for_reg)} unique reg_* labels, {len(all_label_sources)} chunk sources")
         except Exception as e:
             print(f"  WARN: could not load labels ({e}); retrieval-quality metrics will be skipped this sweep")
             sources_for_reg = None
+            all_label_sources = None
 
     # Collect results for summary
     all_results = []
@@ -824,7 +826,7 @@ def main():
         # Writes <output_dir>/info/retrieval_quality.json as a side effect of measure_run.
         if RUN_RETRIEVAL_METRICS and sources_for_reg:
             try:
-                quality = measure_run(Path(output_dir), sources_for_reg, RETRIEVAL_QUALITY_K_CUTOFFS)
+                quality = measure_run(Path(output_dir), sources_for_reg, RETRIEVAL_QUALITY_K_CUTOFFS, known_sources=all_label_sources)
                 # Persist the full per-query JSON for later analysis.
                 with open(os.path.join(info_dir, "retrieval_quality.json"), "w") as f:
                     json.dump(quality, f, indent=2)
@@ -871,30 +873,31 @@ def main():
             print(f"{'-'*100}")
 
         if has_retrieval:
-            # Pick a k cutoff to show in the print summary. Prefer 5; fall back to the
-            # middle of whatever was configured. The CSV contains all k values regardless.
-            display_k = 5 if 5 in RETRIEVAL_QUALITY_K_CUTOFFS else RETRIEVAL_QUALITY_K_CUTOFFS[len(RETRIEVAL_QUALITY_K_CUTOFFS) // 2]
-            recall_col = f"retrieval_quality_recall@{display_k}"
-            hit_col = f"retrieval_quality_hit@{display_k}"
+            # Report `@set` (the whole retrieved set) — always populated for
+            # measurable configs and order-independent, so it's comparable across
+            # backends including document-ordered OpenEvolve. Per-cutoff values
+            # are in the CSV / retrieval_quality.json.
+            def _f(v):
+                return f"{v:.3f}" if isinstance(v, (int, float)) else "N/A"
             if has_generator:
                 print()  # blank separator between the two tables
-            print(f"RETRIEVAL QUALITY (k={display_k}):")
+            print("RETRIEVAL QUALITY (@set = whole retrieved set):")
             print(f"{'-'*100}")
-            print(f"{'Config':<30} {'Measurable':>11} {'recall@'+str(display_k):>10} {'hit@'+str(display_k):>8} {'MRR':>8} {'Rank':>16}")
+            print(f"{'Config':<30} {'Measurable':>11} {'recall@set':>11} {'prec@set':>9} {'hit@set':>8} {'MRR':>8} {'Rank':>16}")
             print(f"{'-'*100}")
             for r in all_results:
-                if recall_col not in r:
+                if "retrieval_quality_recall@set" not in r:
                     continue
-                mrr = r.get("retrieval_quality_mrr")
-                mrr_str = f"{mrr:.3f}" if mrr is not None else "  N/A"
-                rank_meaning = r.get("retrieval_quality_rank_meaning", "?")
                 measurable = r.get("retrieval_quality_measurable", 0)
                 unmeasurable = r.get("retrieval_quality_unmeasurable", 0)
                 print(
                     f"{r['config']:<30} "
                     f"{measurable:>4}/{measurable + unmeasurable:<6} "
-                    f"{r[recall_col]:>10.3f} {r[hit_col]:>8.3f} {mrr_str:>8} "
-                    f"{rank_meaning:>16}"
+                    f"{_f(r.get('retrieval_quality_recall@set')):>11} "
+                    f"{_f(r.get('retrieval_quality_precision@set')):>9} "
+                    f"{_f(r.get('retrieval_quality_hit@set')):>8} "
+                    f"{_f(r.get('retrieval_quality_mrr')):>8} "
+                    f"{r.get('retrieval_quality_rank_meaning', '?'):>16}"
                 )
             print(f"{'-'*100}")
 

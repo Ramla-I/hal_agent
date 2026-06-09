@@ -290,9 +290,12 @@ fact-matching.
 `search_and_format()` means the final chunk order in the OE adapter
 reflects document order, not relevance order. This is recorded in
 `embedding_ids.jsonl` as `rank_meaning: "document_order"` so
-`metrics_retrieval.py` nulls out MRR / precision@k for OE rows (recall@k
-/ hit@k stay valid as set-membership metrics).
-- The hardcoded ChromaDB metadata-key convention assumed by the labels DB
+`metrics_retrieval.py` always nulls MRR for OE rows and nulls fixed-cutoff
+precision@k where `k < n_retrieved`. The `@set` metrics (k = retrieved-set
+size, i.e. the whole returned set) — `recall@set` / `precision@set` /
+`hit@set` — stay valid because top-k spans the entire set and is therefore
+order-independent; `@set` is where OE's meaningful precision is reported.
+- The hardcoded ChromaDB metadata-key convention assumed by the relevance labels DB
 (`reg_{PERIPHERAL}_{REGISTER}` booleans) is set at ingestion time, not enforced anywhere. If you re-ingest with different rules, the runtime retrieval still works but the metric_retrieval script will silently lose its ground truth.
 - Historical `full_eval_results_*_unbatched.json` files were produced by
 the now-deleted `full_eval_*.py` scripts, which passed raw OE output to

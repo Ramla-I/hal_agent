@@ -93,7 +93,7 @@ def _context_params() -> ContextRetrievalParameters:
         local_db_name=LOCAL_DB_NAME,
         local_db_path="",
         keyword_boost=False,
-        reranker_type="local",
+        reranker_type="",  # no reranker — keeps the smoke test hermetic (FlashRank pulls an external ONNX model)
         metadata_filter_enabled=True,
         chunk_expansion_enabled=False,
         pages_after=0,
@@ -126,17 +126,26 @@ def _assert_retrieval_quality_pipeline(run_dir: Path, expected_rank_meaning: str
 
     Returns the quality dict so callers can print summary numbers.
     """
-    sources_for_reg, _ = load_db_labels(LOCAL_DB_NAME, "")
+    sources_for_reg, _, all_sources = load_db_labels(LOCAL_DB_NAME, "")
     assert sources_for_reg, "no reg_* labels loaded from ChromaDB"
 
-    quality = measure_run(run_dir, sources_for_reg, [1, 5])
-    for key in ("queries", "overall", "per_peripheral", "per_query", "rank_meaning_breakdown"):
+    quality = measure_run(run_dir, sources_for_reg, [1, 5], known_sources=all_sources)
+    for key in ("queries", "overall", "per_peripheral", "per_query", "rank_meaning_breakdown", "unknown_chunk_sources"):
         assert key in quality, f"missing key {key} in retrieval-quality result"
     assert quality["queries"]["measurable"] >= 1, "no measurable queries"
+    # Guard ran and found no divergence — retrieved chunks all live in the labels DB.
+    assert quality["unknown_chunk_sources"]["checked"], "divergence guard did not run"
+    assert quality["unknown_chunk_sources"]["count"] == 0, (
+        f"retrieved chunks absent from labels DB: {quality['unknown_chunk_sources']['examples']}"
+    )
     assert quality["rank_meaning_breakdown"].get(expected_rank_meaning, 0) >= 1, (
         f"expected at least one {expected_rank_meaning!r}-ranked query, got "
         f"breakdown={quality['rank_meaning_breakdown']}"
     )
+    # @set (whole retrieved set) is order-independent, so it must be populated
+    # for every backend — including document-ordered OpenEvolve.
+    for key in ("recall@set", "precision@set", "hit@set"):
+        assert quality["overall"].get(key) is not None, f"{key} should be populated"
     return quality
 
 
@@ -189,8 +198,8 @@ def test_smoke():
             f"\nevaluate_retrieval smoke: {result['registers_found']}/{result['total_registers']} regs, "
             f"{result['correct']}/{result['total_facts']} correct "
             f"({result['found_accuracy']:.1f}% found, {result['complete_accuracy']:.1f}% complete) | "
-            f"retrieval recall@5={quality['overall']['recall@5']:.3f} "
-            f"hit@5={quality['overall']['hit@5']:.3f}"
+            f"retrieval recall@set={quality['overall']['recall@set']:.3f} "
+            f"hit@set={quality['overall']['hit@set']:.3f}"
         )
 
 
@@ -228,8 +237,8 @@ def test_smoke_retrieval_only():
 
         print(
             f"\nretrieval-only smoke: {quality['queries']['measurable']}/{quality['queries']['total']} "
-            f"measurable, recall@5={quality['overall']['recall@5']:.3f} "
-            f"hit@5={quality['overall']['hit@5']:.3f}"
+            f"measurable, recall@set={quality['overall']['recall@set']:.3f} "
+            f"hit@set={quality['overall']['hit@set']:.3f}"
         )
 
 
@@ -277,8 +286,9 @@ def test_smoke_openevolve():
             f"\nopenevolve smoke: {result['registers_found']}/{result['total_registers']} regs, "
             f"{result['correct']}/{result['total_facts']} correct "
             f"({result['found_accuracy']:.1f}% found, {result['complete_accuracy']:.1f}% complete) | "
-            f"retrieval recall@5={quality['overall']['recall@5']:.3f} "
-            f"hit@5={quality['overall']['hit@5']:.3f} (mrr=N/A, document_order)"
+            f"retrieval recall@set={quality['overall']['recall@set']:.3f} "
+            f"precision@set={quality['overall']['precision@set']:.3f} "
+            f"hit@set={quality['overall']['hit@set']:.3f} (mrr=N/A, document_order)"
         )
 
 

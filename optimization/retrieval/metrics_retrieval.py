@@ -4,20 +4,23 @@ Measure retrieval quality directly from a sweep run's embedding_ids.jsonl,
 without re-running the generator.
 
 For each `(peripheral, register)` query, the relevance label comes from the
-labels ChromaDB's boolean `reg_{PERIPHERAL}_{REGISTER}` metadata: a chunk is
-relevant iff that flag is True. The script computes recall@k, precision@k,
-MRR, and hit@k at several k cutoffs and aggregates them per peripheral and
-overall.
+relevance labels DB — a per-device ChromaDB collection whose boolean
+`reg_{PERIPHERAL}_{REGISTER}` metadata marks each chunk relevant iff that flag
+is True. The script computes recall@k, precision@k, MRR, and hit@k at several
+k cutoffs and aggregates them per peripheral and overall.
 
-Supported backends (those whose retrieved chunk_ids match the labels DB's
-`source` paths):
+Supported backends (those whose retrieved chunk_ids match the relevance labels
+DB's `source` paths):
   - `local_vector_db` — rank reflects retrieval relevance; all metrics
     meaningful.
   - `openevolve` — the evolved program sorts its final output by page
-    number, so each entry's `rank_meaning` is `"document_order"`. recall@k
-    and hit@k (set-membership at the cutoff) remain valid; MRR and
-    precision@k are nulled out for these queries since rank-0 reflects
-    lowest page number, not best relevance.
+    number, so each entry's `rank_meaning` is `"document_order"`. MRR is
+    always nulled (it depends on the first-relevant rank). precision@k is
+    nulled only for k < n_retrieved; at k >= n_retrieved the cutoff spans
+    the whole returned set, so top-k is order-independent and precision@k
+    is well-defined. recall@k / hit@k are reported at all k as
+    set-membership signals (for k < n_retrieved they carry the same
+    document-order caveat).
 
 OpenAI file_search runs are skipped because they don't emit chunk_ids that
 can be cross-referenced against the labels DB.
@@ -49,15 +52,6 @@ from context_retrieval.vector_db import config as vdb_config
 
 
 DEFAULT_K_CUTOFFS = [1, 5, 10]
-
-
-def _rank_dependent_metric_keys(k_cutoffs: List[int]) -> Set[str]:
-    """Metrics whose value depends on retrieval-relevance ranking, not just set membership.
-
-    These are nulled out for runs that log document-ordered chunks (e.g. OpenEvolve),
-    because the rank-0 position there reflects lowest page number, not best relevance.
-    """
-    return {"mrr"} | {f"precision@{k}" for k in k_cutoffs}
 
 
 def _load_embedding_ids(run_dir: Path) -> List[dict]:
@@ -124,11 +118,16 @@ def _expand_to_queries(records: List[dict]) -> List[dict]:
 
 def load_db_labels(
     db_name: str, db_path: str
-) -> Tuple[Dict[str, Set[str]], Dict[str, Set[str]]]:
-    """Return (sources_for_reg, regs_for_source).
+) -> Tuple[Dict[str, Set[str]], Dict[str, Set[str]], Set[str]]:
+    """Return (sources_for_reg, regs_for_source, all_sources).
 
     - sources_for_reg["AFIO_EXTICR4"] -> set of chunk source paths flagged True
     - regs_for_source["chunked_datasheets/.../p126_c01.txt"] -> set of "AFIO_EXTICR4" labels
+    - all_sources -> every chunk source path in the labels DB, regardless of
+      whether it carries any reg_* flag. This is the full chunk universe the
+      retrieved chunk_ids must live in; `measure_run` uses it to detect
+      retrieved sources that don't exist in the labels DB at all (a sign the
+      retrieval index and the labels DB have diverged — see that function).
     """
     if db_path:
         vdb_config.DATABASES_DIR = Path(db_path)
@@ -137,27 +136,40 @@ def load_db_labels(
 
     sources_for_reg: Dict[str, Set[str]] = defaultdict(set)
     regs_for_source: Dict[str, Set[str]] = defaultdict(set)
+    all_sources: Set[str] = set()
     for meta in raw["metadatas"]:
         src = meta.get("source", "")
         if not src:
             continue
+        all_sources.add(src)
         for k, v in meta.items():
             if not k.startswith("reg_") or v is not True:
                 continue
             label = k[len("reg_"):]
             sources_for_reg[label].add(src)
             regs_for_source[src].add(label)
-    return sources_for_reg, regs_for_source
+    return sources_for_reg, regs_for_source, all_sources
 
 
 def _metrics_for_query(
     ranked: List[str],
     relevant: Set[str],
     k_values: List[int],
-) -> Dict[str, float]:
-    """Compute recall@k, precision@k, hit@k for each k, and MRR. relevant must be non-empty."""
-    out: Dict[str, float] = {}
+) -> Dict[str, Optional[float]]:
+    """Compute MRR plus recall/precision/hit at each fixed cutoff and at `@set`.
+
+    `@set` evaluates at k = the retrieved-set size (`len(ranked)`): top-k is then
+    the *entire* returned set, so the three metrics are order-independent (valid
+    for document-ordered backends too) and precision is undiluted — it's the true
+    "of what was retrieved, how much is relevant". Fixed cutoffs `>= n_retrieved`
+    are reported as None: they're superseded by `@set` (recall/hit would just
+    equal `@set`, and precision would only be diluted by the larger denominator),
+    so the largest reported cutoff is always the retrieved-set size. relevant must
+    be non-empty.
+    """
+    out: Dict[str, Optional[float]] = {}
     n_rel = len(relevant)
+    n_ret = len(ranked)
 
     # MRR — rank of first relevant in ranked list
     mrr = 0.0
@@ -167,12 +179,27 @@ def _metrics_for_query(
             break
     out["mrr"] = mrr
 
-    for k in k_values:
+    def _at(k: int) -> Tuple[float, float, float]:
         topk = ranked[:k]
         n_hit = sum(1 for src in topk if src in relevant)
-        out[f"recall@{k}"] = n_hit / n_rel if n_rel > 0 else 0.0
-        out[f"precision@{k}"] = n_hit / k if k > 0 else 0.0
-        out[f"hit@{k}"] = 1.0 if n_hit > 0 else 0.0
+        recall = n_hit / n_rel if n_rel > 0 else 0.0
+        precision = n_hit / k if k > 0 else 0.0
+        hit = 1.0 if n_hit > 0 else 0.0
+        return recall, precision, hit
+
+    for k in k_values:
+        if k >= n_ret:
+            # Beyond the retrieved set — superseded by @set (the whole set).
+            out[f"recall@{k}"] = None
+            out[f"precision@{k}"] = None
+            out[f"hit@{k}"] = None
+            continue
+        r, p, h = _at(k)
+        out[f"recall@{k}"], out[f"precision@{k}"], out[f"hit@{k}"] = r, p, h
+
+    # @set — the entire retrieved set (k = n_retrieved); order-independent.
+    r, p, h = _at(n_ret)
+    out["recall@set"], out["precision@set"], out["hit@set"] = r, p, h
     return out
 
 
@@ -190,21 +217,48 @@ def _average(rows: Iterable[Dict[str, Optional[float]]], keys: List[str]) -> Dic
     return out
 
 
-def measure_run(run_dir: Path, sources_for_reg, k_cutoffs: List[int]) -> dict:
+def measure_run(
+    run_dir: Path,
+    sources_for_reg,
+    k_cutoffs: List[int],
+    known_sources: Optional[Set[str]] = None,
+) -> dict:
+    """Score a run's retrieved chunks against the labels DB's reg_* ground truth.
+
+    Args:
+        known_sources: the full set of chunk source paths in the labels DB (from
+            `load_db_labels`'s third return value). When provided, any retrieved
+            source path NOT in this set is counted as an "unknown chunk source"
+            — a signal that the retrieval index and the labels DB have diverged
+            (e.g. an OpenEvolve `process_chunks` that merged/split/renamed chunks,
+            so the emitted chunk_ids no longer line up with the labels corpus).
+            Set-membership metrics (recall@k / hit@k) silently undercount in that
+            case, so the count is surfaced in the result and as a stderr warning.
+            Pass None to skip the check.
+    """
     queries = _expand_to_queries(_load_embedding_ids(run_dir))
 
     # Pick k values: standard cutoffs + num_embeddings if not already in
     per_query: List[dict] = []
     unmeasurable: List[Tuple[str, str]] = []
+    unknown_sources: Set[str] = set()  # retrieved sources absent from the labels DB
 
-    # Metric keys we'll compute (consistent ordering)
+    # Metric keys we'll compute (consistent ordering). `@set` is the
+    # retrieved-set-size cutoff appended after the fixed cutoffs.
     metric_keys = ["mrr"]
     for k in k_cutoffs:
         metric_keys += [f"recall@{k}", f"precision@{k}", f"hit@{k}"]
-
-    rank_dep = _rank_dependent_metric_keys(k_cutoffs)
+    metric_keys += ["recall@set", "precision@set", "hit@set"]
 
     for q in queries:
+        # Divergence guard: flag retrieved sources that don't exist in the labels
+        # DB at all. Checked for every query (even unmeasurable ones) since a
+        # mismatched chunk_id space is independent of whether the register is labeled.
+        if known_sources is not None:
+            for src in q["ranked_sources"]:
+                if src and src not in known_sources:
+                    unknown_sources.add(src)
+
         peripheral = q["peripheral"]
         register = q["register"]
         label = f"{peripheral.upper()}_{register.upper()}"
@@ -213,10 +267,19 @@ def measure_run(run_dir: Path, sources_for_reg, k_cutoffs: List[int]) -> dict:
             unmeasurable.append((peripheral, register))
             continue
         metrics = _metrics_for_query(q["ranked_sources"], relevant, k_cutoffs)
-        # Null out rank-dependent metrics for document-ordered queries.
+        # Document order: list position is page number, not relevance. The `@set`
+        # metrics (k = n_retrieved, the whole set) are order-independent and stay
+        # valid — that's the meaningful precision/recall for these backends. Among
+        # the fixed cutoffs, precision@k for k < n_retrieved depends on the page
+        # order, so it's nulled; recall@k / hit@k are kept as set-membership
+        # signals (they carry the same caveat for k < n_retrieved — see README).
+        # MRR depends on the first-relevant *rank* at any k, so it's always nulled.
         if q["rank_meaning"] == "document_order":
-            for key in rank_dep:
-                metrics[key] = None
+            n_ret = len(q["ranked_sources"])
+            metrics["mrr"] = None
+            for k in k_cutoffs:
+                if k < n_ret:
+                    metrics[f"precision@{k}"] = None
         per_query.append({
             "peripheral": peripheral,
             "register": register,
@@ -245,6 +308,23 @@ def measure_run(run_dir: Path, sources_for_reg, k_cutoffs: List[int]) -> dict:
     for row in per_query:
         rank_breakdown[row["rank_meaning"]] = rank_breakdown.get(row["rank_meaning"], 0) + 1
 
+    # Divergence guard result. When the check ran (known_sources provided) and
+    # found retrieved sources absent from the labels DB, the recall@k / hit@k
+    # numbers below silently undercount — warn loudly rather than fail silently.
+    unknown_chunk_sources = {
+        "checked": known_sources is not None,
+        "count": len(unknown_sources),
+        "examples": sorted(unknown_sources)[:10],
+    }
+    if unknown_sources:
+        print(
+            f"WARNING [{Path(run_dir).name}]: {len(unknown_sources)} retrieved chunk "
+            f"source(s) are absent from the labels DB — retrieval index and labels "
+            f"corpus have diverged, so recall@k / hit@k undercount. "
+            f"Examples: {sorted(unknown_sources)[:3]}",
+            file=sys.stderr,
+        )
+
     return {
         "run_dir": str(run_dir),
         "queries": {
@@ -254,7 +334,7 @@ def measure_run(run_dir: Path, sources_for_reg, k_cutoffs: List[int]) -> dict:
             "unmeasurable_list": [f"{p}/{r}" for p, r in unmeasurable],
         },
         "rank_meaning_breakdown": rank_breakdown,
-        "rank_dependent_metrics": sorted(rank_dep),
+        "unknown_chunk_sources": unknown_chunk_sources,
         "k_cutoffs": k_cutoffs,
         "overall": overall,
         "per_peripheral": per_peripheral,
@@ -275,20 +355,29 @@ def _print_run_summary(result: dict) -> None:
     print(f"\n{name}")
     print(f"  measurable queries: {q['measurable']}/{q['total']}"
           + (f" (skipped: {q['unmeasurable']})" if q['unmeasurable'] else ""))
+    ucs = result.get("unknown_chunk_sources", {})
+    if ucs.get("count"):
+        print(f"  ⚠ {ucs['count']} retrieved chunk source(s) absent from labels DB "
+              f"(index/labels divergence — recall@k / hit@k undercount)")
     if breakdown.get("document_order", 0) > 0:
         n_rel = breakdown["relevance"]
         n_doc = breakdown["document_order"]
         if n_rel == 0:
-            note = "(rank-dependent metrics — MRR, precision@k — are N/A for all queries)"
+            note = ("(MRR is N/A for all queries; precision@k is N/A only where "
+                    "k < the retrieved-set size — at larger k the cutoff spans the whole set)")
         else:
-            note = (f"(MRR / precision@k below are aggregated over the {n_rel} "
-                    f"relevance-ranked queries only; recall@k / hit@k cover all {n_rel + n_doc})")
+            note = (f"(MRR below is aggregated over the {n_rel} relevance-ranked "
+                    f"queries only; recall@k / hit@k cover all {n_rel + n_doc}; "
+                    f"precision@k mixes both where k >= retrieved-set size)")
         print(f"  rank meaning: {n_rel} relevance-ranked, {n_doc} document-ordered\n"
               f"                {note}")
     print(f"  MRR: {_fmt(o['mrr'])}")
     for k in cutoffs:
-        print(f"  k={k:>2}: recall {_fmt(o[f'recall@{k}'])}  "
+        print(f"  k={str(k):>3}: recall {_fmt(o[f'recall@{k}'])}  "
               f"precision {_fmt(o[f'precision@{k}'])}  hit {_fmt(o[f'hit@{k}'])}")
+    # @set = k at the retrieved-set size (whole returned set; order-independent)
+    print(f"  k=set: recall {_fmt(o['recall@set'])}  "
+          f"precision {_fmt(o['precision@set'])}  hit {_fmt(o['hit@set'])}")
 
 
 def _write_summary_csv(results: List[dict], path: Path) -> None:
@@ -296,6 +385,7 @@ def _write_summary_csv(results: List[dict], path: Path) -> None:
     fields = ["config", "measurable", "total", "mrr"]
     for k in cutoffs:
         fields += [f"recall@{k}", f"precision@{k}", f"hit@{k}"]
+    fields += ["recall@set", "precision@set", "hit@set"]
 
     with path.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
@@ -324,15 +414,15 @@ def main() -> None:
     args = parser.parse_args()
 
     print(f"Loading labels from ChromaDB '{args.db_name}'...")
-    sources_for_reg, _ = load_db_labels(args.db_name, args.db_path)
-    print(f"  {len(sources_for_reg)} unique reg_* labels")
+    sources_for_reg, _, all_sources = load_db_labels(args.db_name, args.db_path)
+    print(f"  {len(sources_for_reg)} unique reg_* labels, {len(all_sources)} chunk sources")
 
     results: List[dict] = []
     for run_dir in args.run_dirs:
         if not (run_dir / "info" / "embedding_ids.jsonl").exists():
             print(f"SKIP {run_dir}: no info/embedding_ids.jsonl")
             continue
-        result = measure_run(run_dir, sources_for_reg, args.k)
+        result = measure_run(run_dir, sources_for_reg, args.k, known_sources=all_sources)
         out_path = run_dir / "info" / "retrieval_quality.json"
         with out_path.open("w") as f:
             json.dump(result, f, indent=2)
