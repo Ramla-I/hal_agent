@@ -32,7 +32,7 @@ Usage:
   # interactive (audit mode: SVD value shown as default; Preview opens + searches per register)
   python annotate.py --svd devices/stm/rm0041/svd/stm32f100.svd \
                      --pdf devices/stm/rm0041/rm0041.pdf \
-                     --out verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv
+                     --out verified_datasheet/stm/rm0041_stm32f100.csv
 
   # blind on a 15% sample (unanchored bias check)
   python annotate.py ... --blind-sample 0.15

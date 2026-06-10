@@ -55,7 +55,7 @@ CHUNKS_DIR = os.path.join(
 )
 CHUNKS_INDEX_CSV = os.path.join(CHUNKS_DIR, "chunks_index.csv")
 VERIFIED_CSV = os.path.join(
-    _PROJECT_ROOT, "verified_datasheet", "stm", "rm0041", "rm0041_stm32f100_full.csv"
+    _PROJECT_ROOT, "verified_datasheet", "stm", "rm0041_stm32f100.csv"
 )
 
 # Test peripherals — mix of easy and hard peripherals

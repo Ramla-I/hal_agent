@@ -40,7 +40,7 @@ Runs the generator end-to-end, then compares each extracted "fact" (an address o
 
 Every fact produced by the generator is scored *correct* (matches) or *wrong* (produced but disagrees); a third class, *missing*, is a fact in the verified datasheet the generator never produced.
 
-The verified datasheet is a hand-checked ground-truth CSV under `verified_datasheet/<mfr>/<device>/` (e.g. `verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv`). Each row is one fact keyed by `(peripheral, register, field_name, key)` — `key` names the kind of fact (`address_offset`, `reset_value`, `size`, `bit_offset`, `bit_width`, access type, …) and `field_name` is blank for register-level facts. The `correct_value` column is what each generated fact is graded against; `svd_value` and `agent_value` are kept alongside for provenance (the value pulled from the SVD file and the generator's own value).
+The verified datasheet is a hand-checked ground-truth CSV under `verified_datasheet/<mfr>/` (e.g. `verified_datasheet/stm/rm0041_stm32f100.csv`). Each row is one fact keyed by `(peripheral, register, field_name, key)` — `key` names the kind of fact (`address_offset`, `reset_value`, `size`, `bit_offset`, `bit_width`, access type, …) and `field_name` is blank for register-level facts. The `correct_value` column is what each generated fact is graded against; `svd_value` and `agent_value` are kept alongside for provenance (the value pulled from the SVD file and the generator's own value).
 
 The metrics computed by `optimization/common/sweep_harness.run_comparison` are:
 
@@ -58,7 +58,7 @@ The flow per configuration is:
 
 1. **Build `ContextRetrievalParameters`** from the swept variables (`number_embeddings`, `pages_after`, `reranker_type`, `metadata_filter_enabled`, `neighbor_expansion_enabled`, etc.).
 2. **Run the generator** (`run_generator_batched` by default) against the configured peripherals/registers. Each register hit calls retrieval → assembles context → calls the LLM → writes a JSON file under the run's output directory. Skipped if `RUN_GENERATOR=False` (retrieval still runs and `embedding_ids.jsonl` is still written).
-3. **Compare against the verified datasheet** via `optimization/common/sweep_harness.run_comparison`: load the verified CSV (`verified_datasheet/<mfr>/<device>/<device>_<svd>_full.csv`), extract facts from each generator output, score correct / wrong / missing per `(peripheral, register, field, key)`. Skipped when `RUN_GENERATOR=False` or `SKIP_COMPARISON=True`.
+3. **Compare against the verified datasheet** via `optimization/common/sweep_harness.run_comparison`: load the verified CSV (`verified_datasheet/<mfr>/<device>_<svd>.csv`), extract facts from each generator output, score correct / wrong / missing per `(peripheral, register, field, key)`. Skipped when `RUN_GENERATOR=False` or `SKIP_COMPARISON=True`.
 4. **Compute retrieval-quality metrics** via `metrics_retrieval.measure_run`: for each `(peripheral, register)` query in `embedding_ids.jsonl`, score the retrieved chunks against the labels DB's `reg_`* ground truth → recall@k, precision@k, MRR, hit@k. Skipped when `RUN_RETRIEVAL_METRICS=False`.
 5. **Write per-run artifacts** in `<output_dir>/info/`:
   - `comparison_results.json` — aggregated generator-output metrics (only if generator ran + comparison ran)

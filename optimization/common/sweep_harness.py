@@ -38,8 +38,8 @@ def get_verified_csv_path(device_dir: str, svd: str, peripheral: Optional[str] =
     Find the verified datasheet CSV for a device.
 
     Looks for files matching patterns:
-    - verified_datasheet/{mfr}/{device}/{device}_{svd}_full.csv
-    - verified_datasheet/{mfr}/{device}/{device}_{svd}_{peripheral}.csv
+    - verified_datasheet/{mfr}/{device}_{svd}.csv
+    - verified_datasheet/{mfr}/{device}_{svd}_{peripheral}.csv
     """
     parts = device_dir.rstrip("/").split("/")
     if len(parts) < 2:
@@ -47,14 +47,14 @@ def get_verified_csv_path(device_dir: str, svd: str, peripheral: Optional[str] =
     device_name = parts[-1]
     mfr = parts[-2]
 
-    verified_base = f"verified_datasheet/{mfr}/{device_name}"
+    verified_base = f"verified_datasheet/{mfr}"
 
     if peripheral:
         peripheral_csv = os.path.join(verified_base, f"{device_name}_{svd}_{peripheral}.csv")
         if os.path.exists(peripheral_csv):
             return peripheral_csv
 
-    full_csv = os.path.join(verified_base, f"{device_name}_{svd}_full.csv")
+    full_csv = os.path.join(verified_base, f"{device_name}_{svd}.csv")
     if os.path.exists(full_csv):
         return full_csv
 

@@ -55,7 +55,7 @@ CHUNKS_DIR = os.path.join(
 )
 CHUNKS_INDEX_CSV = os.path.join(CHUNKS_DIR, "chunks_index.csv")
 VERIFIED_CSV = os.path.join(
-    _PROJECT_ROOT, "verified_datasheet", "nxp", "ke04", "mke04z4", "ke04_mke04z4_full.csv"
+    _PROJECT_ROOT, "verified_datasheet", "nxp", "ke04_mke04z4.csv"
 )
 
 # 10 representative peripherals — mix of simple, medium, and complex

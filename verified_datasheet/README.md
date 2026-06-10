@@ -54,12 +54,11 @@ verified_datasheet/
 ├── correlate_digital_with_pdf_datasheet.py   # legacy/DEPRECATED — anchored, do not use (see below)
 ├── retrieve_checked_values_from_csv.py  # utility: extract only the checked (correct_value) rows
 ├── stm/
-│   └── rm0041/
-│       └── rm0041_stm32f100_full.csv    # one verified datasheet per device
+│   └── rm0041_stm32f100.csv             # one verified datasheet per device, directly under the vendor
 └── nxp/
-    └── ke04/ ...
+    └── ke04_mke04z4.csv
 ```
-Convention: one verified CSV per device at `{manufacturer}/{device}/{device}_{svd}_full.csv` — a single self-contained file, no sidecars.
+Convention: one verified CSV per device, directly under the vendor folder, at `{manufacturer}/{device}_{svd}.csv` — a single self-contained file, no sidecars.
 
 ## CSV schema
 
@@ -111,7 +110,7 @@ cd ~/Projects/hal_agent && source .venv/bin/activate
 python3 verified_datasheet/annotate.py \
   --svd devices/stm/rm0041/svd/stm32f100.svd \
   --pdf devices/stm/rm0041/rm0041.pdf \
-  --out verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv
+  --out verified_datasheet/stm/rm0041_stm32f100.csv
 ```
 
 The tool builds the SVD-keyed worklist (deduping `derivedFrom` peripherals), opens the full datasheet in **Preview** and drives its **Find** to jump to each register's name, and walks you cell by cell. Progress is saved after **every** entry and the run is fully **resumable** — rerun the same command to continue where you left off. A legacy CSV is upgraded to this format automatically the first time you resume it.
@@ -155,7 +154,7 @@ A new device needs only **two inputs** — its SVD and its datasheet PDF:
 python3 verified_datasheet/annotate.py \
   --svd devices/<mfg>/<dev>/svd/<dev>.svd \
   --pdf devices/<mfg>/<dev>/<dev>.pdf \
-  --out verified_datasheet/<mfg>/<dev>/<dev>_<svd>_full.csv
+  --out verified_datasheet/<mfg>/<dev>_<svd>.csv
 ```
 The worklist parser is vendor-general (verified on STM and NXP). Candidate pages are found by **searching the PDF directly** — no precomputed index to build per device. Without `--pdf` you navigate the PDF manually.
 

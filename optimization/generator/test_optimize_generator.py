@@ -51,7 +51,7 @@ SVD = "stm32f100"
 PERIPHERAL = "crc"
 LOCAL_DB_NAME = "rm0041_md_chunks"
 DEVICE_DIR = f"devices/stm/{DEVICE_NAME}"
-VERIFIED_CSV = f"verified_datasheet/stm/{DEVICE_NAME}/{DEVICE_NAME}_{SVD}_full.csv"
+VERIFIED_CSV = f"verified_datasheet/stm/{DEVICE_NAME}_{SVD}.csv"
 
 
 def _skip(msg: str):

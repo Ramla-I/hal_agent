@@ -54,7 +54,7 @@ SVD = "stm32f100"
 PERIPHERAL = "crc"
 LOCAL_DB_NAME = "rm0041_md_chunks"
 DEVICE_DIR = f"devices/stm/{DEVICE_NAME}"
-VERIFIED_CSV = f"verified_datasheet/stm/{DEVICE_NAME}/{DEVICE_NAME}_{SVD}_full.csv"
+VERIFIED_CSV = f"verified_datasheet/stm/{DEVICE_NAME}_{SVD}.csv"
 OE_PROGRAM_PATH = f"openevolve_retrieval/output_{DEVICE_NAME}/best/best_program.py"
 OE_CHUNKS_INDEX = f"chunked_datasheets/stm/{DEVICE_NAME}/chunks/md/chunks_index.csv"
 

@@ -159,7 +159,7 @@ def save_test_set(df, output_path):
 
 if __name__ == '__main__':
     # Example usage
-    csv_path = 'verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv'
+    csv_path = 'verified_datasheet/stm/rm0041_stm32f100.csv'
     result_df = create_test_set(csv_path, start_row=1000, end_row=1500, keep_percentage=60, incorrect_value_percentage=30, incorrect_name_percentage=10)
     print(f"\nTotal rows: {len(result_df)}")
     print(f"Rows with is_correct=True: {result_df['is_correct'].sum()}")

@@ -134,7 +134,7 @@ def main() -> None:
     parser.add_argument(
         "csv_path",
         type=str,
-        help="Path to input CSV (e.g. rm0041_stm32f100_full.csv).",
+        help="Path to input CSV (e.g. rm0041_stm32f100.csv).",
     )
     parser.add_argument(
         "pdf_path",

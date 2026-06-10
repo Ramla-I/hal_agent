@@ -76,7 +76,7 @@ Best program from 50 iterations of OpenEvolve evolutionary optimization on KE04.
 
 ## 2. STM RM0041 Results (11 peripherals, 97 registers)
 
-**Verified data:** `verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv` (1766 facts)
+**Verified data:** `verified_datasheet/stm/rm0041_stm32f100.csv` (1766 facts)
 
 | Metric | **D2** | **OE-STM** |
 |--------|--------|------------|
@@ -170,7 +170,7 @@ Batching multiple registers per LLM call reduces token cost by sharing system pr
 
 The critical question: do retrieval algorithms evolved for one manufacturer's datasheet transfer to another?
 
-**NXP KE04 verified data:** `verified_datasheet/nxp/ke04/mke04z4/ke04_mke04z4_full.csv` (87 matchable registers across 12 peripherals)
+**NXP KE04 verified data:** `verified_datasheet/nxp/ke04_mke04z4.csv` (87 matchable registers across 12 peripherals)
 **NXP KE04 chunks:** `chunked_datasheets/nxp/ke04/chunks/md/` (743 chunks from 647 pages)
 **Full eval path:** `optimization/retrieval/evaluate_retrieval.py` (DEVICE="ke04", USE_OPENEVOLVE=True). Historical raw-OE numbers below are from the now-deleted `full_eval_ke04.py`.
 **OE-STM on NXP results (historical, raw OE):** `../openevolve_retrieval/output_ke04/full_eval_results_unbatched.json` (best_stm entry)
@@ -337,8 +337,8 @@ source .venv/bin/activate && python3 optimization/generator/plot_batched_generat
 
 | Data | Path |
 |------|------|
-| STM verified facts | `verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv` |
-| NXP verified facts | `verified_datasheet/nxp/ke04/mke04z4/ke04_mke04z4_full.csv` |
+| STM verified facts | `verified_datasheet/stm/rm0041_stm32f100.csv` |
+| NXP verified facts | `verified_datasheet/nxp/ke04_mke04z4.csv` |
 | STM chunks | `chunked_datasheets/stm/rm0041/chunks/md/` (1033 chunks) |
 | NXP chunks | `chunked_datasheets/nxp/ke04/chunks/md/` (743 chunks) |
 

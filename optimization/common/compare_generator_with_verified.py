@@ -8,17 +8,17 @@ Usage:
 Examples:
     # Compare single generator run
     python3 optimization/common/compare_generator_with_verified.py \\
-        -v verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv \\
+        -v verified_datasheet/stm/rm0041_stm32f100.csv \\
         agent_output/stm/rm0041/run_1/
 
     # Compare multiple runs
     python3 optimization/common/compare_generator_with_verified.py \\
-        -v verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv \\
+        -v verified_datasheet/stm/rm0041_stm32f100.csv \\
         agent_output/stm/rm0041/run_1/ agent_output/stm/rm0041/run_2/
 
     # Filter by peripheral
     python3 optimization/common/compare_generator_with_verified.py \\
-        -v verified_datasheet/stm/rm0041/rm0041_stm32f100_full.csv \\
+        -v verified_datasheet/stm/rm0041_stm32f100.csv \\
         -p afio agent_output/stm/rm0041/run_1/
 """
 import os
