@@ -7,7 +7,7 @@ a Rust module that adds compile-time safety via witness tokens and
 constrained write methods alongside the existing svd2rust-generated code.
 
 Usage:
-    python applications/pac_codegen/rust_codegen.py applications/pac_codegen/constraints/stm32f405_i2c1.json \
+    python applications/pac_codegen/rust_codegen.py applications/pac_codegen/constraint_test/stm32f405_i2c1.json \
         --peripheral i2c1 --output applications/pac_codegen/generated/i2c1/constraints.rs
 """
 

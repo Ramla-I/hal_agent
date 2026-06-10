@@ -16,9 +16,8 @@ and reporting) is a separate sibling. See [`../README.md`](../README.md).
 applications/pac_codegen/
 ├── rust_codegen.py          Code generator: RegisterInfo JSON -> Rust constraint modules
 ├── collect_constraints.py   Bridge: generator run dir -> per-register constraints JSON
-├── constraints/             Example / collected constraints input (RegisterInfo JSON)
-│   └── stm32f405_i2c1.json
 ├── constraint_test/         Standalone Rust crate that compiles the generated, injected code
+│   ├── stm32f405_i2c1.json  Example constraint fixture (RegisterInfo JSON) — input to rust_codegen.py
 │   ├── src/main.rs          (a no_std compile test of the safe/unsafe access paths)
 │   ├── Cargo.toml
 │   ├── Cargo.lock
@@ -26,6 +25,7 @@ applications/pac_codegen/
 ├── vendored/                The two upstream PACs, registered as git submodules
 │   ├── stm32-rs/            (NOT checked in; fetch on demand — see below)
 │   └── stm32f4xx-hal/
+├── constraints/             Bridge output: collected constraints (created on demand)
 ├── generated/               Runtime codegen output (created on demand)
 └── README.md                (this file)
 ```
@@ -64,12 +64,12 @@ into a PAC:
 ```sh
 # Standalone module:
 python applications/pac_codegen/rust_codegen.py \
-    applications/pac_codegen/constraints/stm32f405_i2c1.json \
+    applications/pac_codegen/constraint_test/stm32f405_i2c1.json \
     --peripheral i2c1 --output applications/pac_codegen/generated/i2c1/constraints.rs
 
 # Inject into the (fetched) PAC and patch generic.rs:
 python applications/pac_codegen/rust_codegen.py \
-    applications/pac_codegen/constraints/stm32f405_i2c1.json \
+    applications/pac_codegen/constraint_test/stm32f405_i2c1.json \
     --peripheral i2c1 \
     --inject applications/pac_codegen/vendored/stm32-rs/stm32f4/src/stm32f405/mod.rs
 ```

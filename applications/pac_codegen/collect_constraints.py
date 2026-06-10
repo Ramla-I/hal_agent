@@ -8,12 +8,12 @@ single generator-output run directory (the layout produced by the pipeline,
 ``{peripheral}_{register}``), reads each register's ``access_constraints`` list,
 and writes per-register constraints files in the exact schema that
 ``applications/pac_codegen/rust_codegen.py`` consumes (a ``RegisterInfo`` JSON,
-matching the examples under ``applications/pac_codegen/constraints/``).
+matching the example fixture ``applications/pac_codegen/constraint_test/stm32f405_i2c1.json``).
 
 Each register file in a run directory is already a ``RegisterInfo`` JSON
 (``datasheet_register_abbreviation``, ``address_offset``, ``reset_value``,
 ``size``, ``subfields``, ``access_constraints``) -- the same schema as
-``applications/pac_codegen/constraints/stm32f405_i2c1.json``. This bridge simply selects the
+``applications/pac_codegen/constraint_test/stm32f405_i2c1.json``. This bridge simply selects the
 registers that carry one or more ``access_constraints`` and forwards them, one
 output file per register, ready to feed into the Rust code generator.
 
