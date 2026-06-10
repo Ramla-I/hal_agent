@@ -1,92 +1,27 @@
-# applications/ — PAC / linear-types tooling
+# applications/ — downstream consumers of validated invariants
 
-This directory holds the tooling that turns extracted register **access
-constraints** (dependency invariants from datasheets) into compile-time–safe
-Rust for STM32 Peripheral Access Crates (PACs). The design uses witness tokens /
-linear types: a constrained register write requires proof tokens that the
-hardware preconditions hold.
-
-## Layout (separation of concerns)
+This directory is organized **by application**: each subfolder is a
+self-contained consumer of the register invariants that the pipeline
+(extraction → validation) produces. The two arms of LIDAR map to the two ways an
+extracted invariant can be acted on, depending on whether an SVD can express it:
 
 ```
 applications/
-├── pac_codegen/          Code generator: RegisterInfo JSON -> Rust constraint modules
-│   └── rust_codegen.py
-├── constraints/          Example / collected constraints input (RegisterInfo JSON)
-│   └── stm32f405_i2c1.json
-├── constraint_test/      Standalone Rust crate that compiles the generated, injected code
-│   ├── src/main.rs       (a no_std compile test of the safe/unsafe access paths)
-│   ├── Cargo.toml
-│   ├── Cargo.lock
-│   └── .gitignore        (ignores /target build cache)
-├── vendored/             The two upstream PACs, registered as git submodules
-│   ├── stm32-rs/         (NOT checked in; fetch on demand — see below)
-│   └── stm32f4xx-hal/
-├── collect_constraints.py   Bridge: run dir -> per-register constraints JSON
-└── README.md             (this file)
+├── pac_codegen/     Enforcement arm — register DEPENDENCY / ordering invariants
+│                    (not expressible in an SVD) compiled into Rust PAC code with
+│                    linear types / typestate, so illegal access sequences fail to
+│                    compile. Validated by the Rust compiler + conformance tests.
+│
+└── bug_finding/     (planned) Reporting arm — register LAYOUT invariants
+                     (address offset, reset value, size, bit offset/width, access)
+                     diffed against the vendor SVD/PAC; discrepancies filed as
+                     upstream bug reports. Validated by upstream merges.
 ```
 
-Design docs live under [`../docs/pac/`](../docs/pac/):
-`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md` (the constraint grammar/design),
-`SVD2RUST_PAC_GUIDE.md`, and the phased change logs/plans
-(`PHASE2_CHANGES.md`, `PHASE3_CHANGES.md`, `PHASE4_PLAN.md`).
+Each application is built and run independently and keeps its own inputs,
+generated outputs, tooling, and (where relevant) vendored dependencies inside its
+own folder. See each subfolder's `README.md` for details.
 
-## Vendored PACs are git submodules
-
-The two PACs are pinned **submodules**, not vendored source — the ~1.5 GB of PAC
-code is *not* committed here; only commit pointers (gitlinks) are. Fetch them
-on demand:
-
-```sh
-git submodule update --init applications/vendored/stm32-rs
-git submodule update --init applications/vendored/stm32f4xx-hal
-```
-
-Pinned to the same commits the PAC fork used:
-`stm32-rs` @ `75790df` (v0.16.0) and `stm32f4xx-hal` @ `eca3bd5` (v0.23.0-7).
-
-`pac_codegen/rust_codegen.py` **patches** the checked-out `stm32-rs` PAC in
-place (it edits `generic.rs` to widen field visibility and add a
-`ConstrainedReg<REG>` wrapper, and injects a `pub mod constraints { … }` into the
-target peripheral's `mod.rs`). Run it against the submodule checkout after
-fetching; re-run `git submodule update` to discard the patches.
-
-## Generating constrained Rust
-
-`rust_codegen.py` reads a `RegisterInfo` JSON (shared schema from the repo-root
-`defs.py`) and emits a Rust constraints module — either standalone or injected
-into a PAC:
-
-```sh
-# Standalone module:
-python applications/pac_codegen/rust_codegen.py \
-    applications/constraints/stm32f405_i2c1.json \
-    --peripheral i2c1 --output applications/generated/i2c1/constraints.rs
-
-# Inject into the (fetched) PAC and patch generic.rs:
-python applications/pac_codegen/rust_codegen.py \
-    applications/constraints/stm32f405_i2c1.json \
-    --peripheral i2c1 \
-    --inject applications/vendored/stm32-rs/stm32f4/src/stm32f405/mod.rs
-```
-
-`constraint_test/` is a minimal `no_std` crate that compiles the injected PAC and
-exercises both the safe (token-bearing) and would-be-unsafe access paths, serving
-as a compile-time regression check.
-
-## The constraint-collection bridge
-
-`collect_constraints.py` establishes the datasheet → extraction → codegen data
-path. It scans a generator-output **run directory**
-(`agent_output/<mfg>/<device>/<run>/`, one file per register named
-`{peripheral}_{register}`), reads each register's `access_constraints`, and
-writes per-register `RegisterInfo` JSON files that `rust_codegen.py` consumes:
-
-```sh
-python applications/collect_constraints.py agent_output/stm/rm0041/24 \
-    --output-dir applications/constraints/rm0041_24
-```
-
-It only **collects and forwards** the dependency invariants. *Validating* them
-(consistency, satisfiability, datasheet fidelity) is later work (Phase 2/4); the
-pipeline validator in `core/s4_validator.py` is left untouched.
+The `bug_finding/` arm is not yet built (its differential oracle is later work);
+its register-layout diffing currently lives in the core pipeline and will be
+factored out into its own application here when that arm is implemented.

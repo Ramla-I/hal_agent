@@ -8,12 +8,12 @@ single generator-output run directory (the layout produced by the pipeline,
 ``{peripheral}_{register}``), reads each register's ``access_constraints`` list,
 and writes per-register constraints files in the exact schema that
 ``applications/pac_codegen/rust_codegen.py`` consumes (a ``RegisterInfo`` JSON,
-matching the examples under ``applications/constraints/``).
+matching the examples under ``applications/pac_codegen/constraints/``).
 
 Each register file in a run directory is already a ``RegisterInfo`` JSON
 (``datasheet_register_abbreviation``, ``address_offset``, ``reset_value``,
 ``size``, ``subfields``, ``access_constraints``) -- the same schema as
-``applications/constraints/stm32f405_i2c1.json``. This bridge simply selects the
+``applications/pac_codegen/constraints/stm32f405_i2c1.json``. This bridge simply selects the
 registers that carry one or more ``access_constraints`` and forwards them, one
 output file per register, ready to feed into the Rust code generator.
 
@@ -29,18 +29,18 @@ tracked under Phase 2/4 (see ``docs/pac/PHASE4_PLAN.md`` and
 ``core/s4_validator.py`` is intentionally left untouched.
 
 Usage (CLI):
-    python applications/collect_constraints.py agent_output/stm/rm0041/24 \
-        --output-dir applications/constraints/rm0041_24
+    python applications/pac_codegen/collect_constraints.py agent_output/stm/rm0041/24 \
+        --output-dir applications/pac_codegen/constraints/rm0041_24
 
     # Then generate Rust for one of the collected registers:
     python applications/pac_codegen/rust_codegen.py \
-        applications/constraints/rm0041_24/i2c1_cr1.json \
-        --peripheral i2c1 --output applications/generated/i2c1/constraints.rs
+        applications/pac_codegen/constraints/rm0041_24/i2c1_cr1.json \
+        --peripheral i2c1 --output applications/pac_codegen/generated/i2c1/constraints.rs
 
 Programmatic:
-    from applications.collect_constraints import collect_constraints
+    from applications.pac_codegen.collect_constraints import collect_constraints
     results = collect_constraints("agent_output/stm/rm0041/24",
-                                  output_dir="applications/constraints/rm0041_24")
+                                  output_dir="applications/pac_codegen/constraints/rm0041_24")
 """
 
 import argparse
@@ -50,9 +50,11 @@ from pathlib import Path
 from typing import Optional
 
 # Add the repo root to sys.path so we can import the shared defs.py.
-# This file lives at applications/collect_constraints.py, so the repo root is
-# two levels up.
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+# This file lives at applications/pac_codegen/collect_constraints.py, so the
+# repo root is three levels up.
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+# This application's own directory (applications/pac_codegen/).
+_APP_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(_REPO_ROOT))
 
 from defs import RegisterInfo  # noqa: E402  (path setup must precede import)
@@ -119,7 +121,7 @@ def collect_constraints(
     Args:
         run_dir: Path to a run directory, e.g. ``agent_output/stm/rm0041/24``.
         output_dir: Where to write the per-register constraints JSON files.
-            Defaults to ``applications/constraints/collected/<device>_<run>``
+            Defaults to ``applications/pac_codegen/constraints/collected/<device>_<run>``
             derived from the run directory.
         include_empty: If True, also forward registers whose
             ``access_constraints`` list is empty. Default False (constrained
@@ -140,8 +142,7 @@ def collect_constraints(
         device = run_path.parent.name
         run = run_path.name
         out_path = (
-            _REPO_ROOT / "applications" / "constraints" / "collected"
-            / f"{device}_{run}"
+            _APP_DIR / "constraints" / "collected" / f"{device}_{run}"
         )
 
     out_path.mkdir(parents=True, exist_ok=True)
@@ -199,7 +200,7 @@ def main() -> None:
         default=None,
         help=(
             "Where to write per-register constraints JSON. "
-            "Default: applications/constraints/collected/<device>_<run>"
+            "Default: applications/pac_codegen/constraints/collected/<device>_<run>"
         ),
     )
     parser.add_argument(

@@ -7,8 +7,8 @@ a Rust module that adds compile-time safety via witness tokens and
 constrained write methods alongside the existing svd2rust-generated code.
 
 Usage:
-    python applications/pac_codegen/rust_codegen.py applications/constraints/stm32f405_i2c1.json \
-        --peripheral i2c1 --output applications/generated/i2c1/constraints.rs
+    python applications/pac_codegen/rust_codegen.py applications/pac_codegen/constraints/stm32f405_i2c1.json \
+        --peripheral i2c1 --output applications/pac_codegen/generated/i2c1/constraints.rs
 """
 
 import argparse
@@ -492,7 +492,7 @@ def main():
     parser.add_argument(
         "--output",
         default=None,
-        help="Output .rs file path. Default: applications/generated/<peripheral>/constraints.rs",
+        help="Output .rs file path. Default: applications/pac_codegen/generated/<peripheral>/constraints.rs",
     )
     parser.add_argument(
         "--inject",
@@ -533,11 +533,11 @@ def main():
         if args.output:
             output_path = Path(args.output)
         else:
-            # Default into applications/generated/<peripheral>/constraints.rs.
-            # This file lives at applications/pac_codegen/, so applications/ is
-            # one level up.
+            # Default into applications/pac_codegen/generated/<peripheral>/constraints.rs,
+            # kept inside this application's own directory. This file lives at
+            # applications/pac_codegen/rust_codegen.py, so the app dir is one level up.
             output_path = (
-                Path(__file__).resolve().parent.parent
+                Path(__file__).resolve().parent
                 / "generated"
                 / args.peripheral
                 / "constraints.rs"
