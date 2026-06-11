@@ -25,7 +25,7 @@ them -- i.e. it does not check that the preconditions/postconditions are
 internally consistent, satisfiable, or faithful to the datasheet. Full constraint
 validation (and enforcement of dependency invariants end-to-end) is later work,
 tracked under Phase 2/4 (see ``docs/pac/PHASE4_PLAN.md`` and
-``docs/pac/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md``). The validator layout logic in
+``docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md``). The validator layout logic in
 ``core/s4_validator.py`` is intentionally left untouched.
 
 Usage (CLI):

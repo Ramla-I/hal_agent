@@ -30,9 +30,10 @@ applications/pac_codegen/
 └── README.md                (this file)
 ```
 
-Design docs live under [`../../docs/pac/`](../../docs/pac/):
-`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md` (the constraint grammar/design),
-`SVD2RUST_PAC_GUIDE.md`, and the phased change logs/plans
+The constraint grammar/design lives at
+[`../../docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](../../docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md).
+Other PAC design docs live under [`../../docs/pac/`](../../docs/pac/):
+`SVD2RUST_PAC_GUIDE.md` and the phased change logs/plans
 (`PHASE2_CHANGES.md`, `PHASE3_CHANGES.md`, `PHASE4_PLAN.md`).
 
 ## Vendored PACs are git submodules
