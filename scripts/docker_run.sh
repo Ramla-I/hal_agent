@@ -41,7 +41,7 @@ docker_run() {
   local interactive=()
   [[ -t 0 && -t 1 ]] && interactive=(-it)
 
-  exec docker run --rm "${interactive[@]}" \
+  exec docker run --rm ${interactive[@]+"${interactive[@]}"} \
     --env-file .env \
     -v "$REPO_ROOT":/app \
     -v "$REPO_ROOT/.docker_cache":/cache \
