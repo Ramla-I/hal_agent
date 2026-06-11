@@ -1,0 +1,6 @@
+[submodule "applications/pac_codegen/vendored/stm32-rs"]
+	path = applications/pac_codegen/vendored/stm32-rs
+	url = https://github.com/stm32-rs/stm32-rs.git
+[submodule "applications/pac_codegen/vendored/stm32f4xx-hal"]
+	path = applications/pac_codegen/vendored/stm32f4xx-hal
+	url = https://github.com/stm32-rs/stm32f4xx-hal.git
