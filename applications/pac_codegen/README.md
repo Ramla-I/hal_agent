@@ -96,3 +96,34 @@ python applications/pac_codegen/collect_constraints.py agent_output/stm/rm0041/2
 It only **collects and forwards** the dependency invariants. *Validating* them
 (consistency, satisfiability, datasheet fidelity) is later work (Phase 2/4); the
 pipeline validator in `core/s4_validator.py` is left untouched.
+
+## Testing
+
+`test_codegen.py` is the regression guard for the code generator. Run it
+directly or under pytest:
+
+```sh
+python applications/pac_codegen/test_codegen.py
+# or: pytest applications/pac_codegen/test_codegen.py
+```
+
+- **`test_codegen_matches_golden`** (always runs) regenerates the constraints
+  module from `constraint_test/stm32f405_i2c1.json` and diffs it against the
+  committed golden `constraint_test/i2c1_expected_constraints.rs`. Any change to
+  `rust_codegen.py`'s output fails this with a diff — if the change is intended,
+  refresh the golden (see its header for the one-line command).
+- **`test_constraint_test_compiles`** injects into the PAC and `cargo check`s the
+  `constraint_test` crate (legal, token-bearing paths) — it must pass.
+- **`test_unconstrained_write_fails_to_compile`** injects and `cargo check`s a
+  token-less `cr1().write(...)` — it must be **rejected with `E0061`**, proving
+  the constraint is enforced.
+
+The two `cargo check` tests **skip** (they do not fail) unless `cargo` is on
+PATH **and** a *generated* `stm32f4` PAC exists at
+`vendored/stm32-rs/stm32f4/src/`. The `stm32-rs` submodule ships SVDs and the
+build system but **not** the generated crate, so fetching the submodule alone is
+not enough — the PAC must be generated first (svd2rust). They use `cargo check`
+rather than `cargo build` because the constraint enforcement is a front-end type
+error; a full build would codegen the Cortex-M PAC for the host and fail for
+unrelated target reasons. Each test backs up, restores, and verifies the PAC
+(and its own `main.rs`) so a run leaves the tree untouched.
