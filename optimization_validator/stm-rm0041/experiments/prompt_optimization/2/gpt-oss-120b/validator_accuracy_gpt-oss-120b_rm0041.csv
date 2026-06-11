@@ -1,2 +1,0 @@
-model_name, true_positives, false_negatives, false_positives, true_negatives, accuracy, precision, recall, f1_score
-gpt-oss-120b, 559, 40, 16, 383, 0.9438877755511023, 0.9721739130434782, 0.9332220367278798, 0.9522998296422487

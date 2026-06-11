@@ -1,6 +1,0 @@
-configuration,embeddings,api_calls,llm_time_s,search_time_s,total_time_s,avg_llm_time_s,avg_search_time_s,speedup_vs_sequential,batch_size
-sequential,4,1000,1547.22,1428.15,2975.37,1.547,1.428,1.00x,
-batched,4,141,444.77,171.75,616.52,3.154,1.218,4.83x,by_register
-batched,8,141,428.15,201.91,630.06,3.036,1.432,4.72x,by_register
-batched,16,141,488.31,242.20,730.50,3.463,1.718,4.07x,by_register
-batched,16,37,942.86,414.08,1356.93,25.483,11.191,2.19x,20

@@ -1,7 +1,0 @@
-{
-  "datasheet_register_abbreviation": "FLASH_CR",
-  "address_offset": "0x10",
-  "reset_value": null,
-  "size": 32,
-  "subfields": []
-}

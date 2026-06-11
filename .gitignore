@@ -215,6 +215,7 @@ agent_output_updated/
 
 # Generated local artifacts (do not commit)
 .matplotlib/
+.docker_cache/
 databases/
 chunked_datasheets/
 optimization/retrieval/.mplconfig/
@@ -245,3 +246,12 @@ devices/**/*.svd
 
 # Coverage improver optimization
 coverage_improver_optimization/
+
+# Experiment run outputs / LLM output — kept locally, never committed.
+# Scripts, configs, READMEs and curated test-set CSVs in these trees stay tracked.
+optimization_coverage_improver/*/
+optimization_validator/**/experiments/
+optimization_validator/**/hold_set_results/
+analysis/*.csv
+plots/*.pdf
+plots/*.png

@@ -1,5 +1,0 @@
-model_name,input_tokens,input_tokens_cached,output_tokens,output_tokens_reasoning,total_tokens,cost
-gpt-5.2,4733092,1251840,140067,0,4873159,8.28
-gpt-oss-120b,4796513,1373952,366383,222038,5162896,0.84
-gpt-4.1-nano,4734319,0,368956,0,5103275,0.62
-gpt-5-nano,4733157,1324928,330252,209408,5063409,0.32
