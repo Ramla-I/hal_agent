@@ -55,8 +55,14 @@ case "$cmd" in
   preprocess)
     # preprocess <pdf_path> <device_name> [extra pipeline args]
     pdf="${1:?need <pdf_path>}"; dev="${2:?need <device_name>}"; shift 2 || true
+    # Write chunks under chunked_datasheets/<mfr>/<dev>/chunks (mirrors the PDF's
+    # path under devices/) so the chunk index lands where config.chunk_index_path
+    # expects it. The pipeline default ({pdf_dir}/chunks) would instead put it under
+    # devices/ and silently disable chunk expansion at retrieval time.
+    rel="${pdf#devices/}"
+    outdir="chunked_datasheets/$(dirname "$rel")/chunks"
     docker_run python context_retrieval/preprocessing/pipeline.py \
-      "$pdf" "$dev" --format markdown --embed-metadata --backend local "$@" ;;
+      "$pdf" "$dev" --output-dir "$outdir" --format markdown --embed-metadata --backend local "$@" ;;
   s0)         docker_run python core/s0_run_full_analysis.py "$@" ;;
   shell)      docker_run bash ;;
   run)        docker_run python "$@" ;;

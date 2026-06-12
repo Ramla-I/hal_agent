@@ -1,5 +1,6 @@
 """Embedding provider abstraction."""
 
+import os
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -78,7 +79,13 @@ class FastEmbedProvider(EmbeddingProvider):
             if progress_callback:
                 progress_callback(batch_num, total_batches)
 
-            batch_embeddings = list(self.model.embed(batch))
+            # parallel=1 keeps embedding in a single process. FastEmbed otherwise
+            # spawns one worker per CPU, each loading its own copy of the ONNX model,
+            # which OOM-kills memory-limited containers (e.g. an 8 GB Docker VM) after
+            # a few hundred chunks. onnxruntime still threads intra-op across cores, so
+            # this stays fast. Override with FASTEMBED_PARALLEL on high-RAM hosts.
+            parallel = int(os.getenv("FASTEMBED_PARALLEL", "1"))
+            batch_embeddings = list(self.model.embed(batch, parallel=parallel))
             all_embeddings.extend([emb.tolist() for emb in batch_embeddings])
 
         return all_embeddings

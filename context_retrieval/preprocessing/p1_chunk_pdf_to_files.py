@@ -98,28 +98,12 @@ def extract_text_markdown(pdf_path: str) -> dict[int, str]:
     Returns:
         Dictionary mapping page number (0-indexed) to page text in markdown
     """
-    # pymupdf4llm can convert entire document to markdown
-    # It processes page by page internally but returns concatenated result
-    md_text = pymupdf4llm.to_markdown(pdf_path)
-
-    # We need to split by pages - pymupdf4llm includes page markers
-    doc = pymupdf.open(pdf_path)
-    total_pages = len(doc)
-    doc.close()
-
-    # Split markdown by page markers (pymupdf4llm adds "-----" markers)
-    # For now, we'll process the whole document and split by page using pymupdf
-    # Then convert each page individually
-    doc = pymupdf.open(pdf_path)
-    pages = {}
-
-    for page_num in range(total_pages):
-        # Convert single page to markdown
-        page_md = pymupdf4llm.to_markdown(pdf_path, pages=[page_num])
-        pages[page_num] = page_md
-
-    doc.close()
-    return pages
+    # Single pass: page_chunks=True returns one dict per page (with its markdown
+    # under "text"), so the PDF is parsed once. The previous implementation called
+    # to_markdown() once per page, i.e. N+1 full-document parses for an N-page PDF
+    # (~710 parses for the 709-page rm0041 datasheet), which took ~50 min.
+    page_data = pymupdf4llm.to_markdown(pdf_path, page_chunks=True)
+    return {page_num: page.get("text", "") for page_num, page in enumerate(page_data)}
 
 
 def extract_and_chunk_pdf(
