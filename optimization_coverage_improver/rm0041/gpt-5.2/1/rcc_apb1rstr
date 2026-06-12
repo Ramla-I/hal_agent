@@ -1,7 +1,0 @@
-{
-  "datasheet_register_abbreviation": "RCC_APB1RSTR",
-  "address_offset": "0x88",
-  "reset_value": null,
-  "size": null,
-  "subfields": []
-}

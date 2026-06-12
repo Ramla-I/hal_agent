@@ -1,2 +1,0 @@
-MODEL: gpt-oss-120b
-MODE: batched

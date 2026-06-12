@@ -1,0 +1,19 @@
+# Keep the build context small — the repo is bind-mounted at run time anyway,
+# so the image only needs requirements.txt + source. Exclude heavy/local data.
+.git
+.venv
+__pycache__
+**/__pycache__
+*.pyc
+.docker_cache
+databases/
+chunked_datasheets/
+agent_output/
+agent_output_updated/
+evaluation/
+dist/
+devices/**/*.pdf
+devices/**/*.svd
+*.log
+.DS_Store
+.matplotlib/

@@ -1,2 +1,0 @@
-model_name, true_positives, false_negatives, false_positives, true_negatives, accuracy, precision, recall, f1_score
-gpt-5.2, 649, 51, 0, 300, 0.949, 1.0, 0.9271428571428572, 0.9621942179392143

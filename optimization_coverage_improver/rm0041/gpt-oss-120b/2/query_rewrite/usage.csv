@@ -1,2 +1,0 @@
-model_name,input_tokens,cached_tokens,output_tokens,reasoning_tokens,total_tokens,peripheral_name,register_name
-gpt-oss-120b,3942,512,510,234,4452,usart1,cr3

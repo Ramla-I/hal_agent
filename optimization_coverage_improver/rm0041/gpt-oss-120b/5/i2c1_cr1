@@ -1,7 +1,0 @@
-{
-  "datasheet_register_abbreviation": "I2C_CR1",
-  "address_offset": "0x00",
-  "reset_value": "0x0000",
-  "size": 16,
-  "subfields": []
-}

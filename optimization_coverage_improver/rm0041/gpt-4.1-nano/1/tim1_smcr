@@ -1,7 +1,0 @@
-{
-  "datasheet_register_abbreviation": "TIM1_SMCR",
-  "address_offset": null,
-  "reset_value": null,
-  "size": null,
-  "subfields": []
-}

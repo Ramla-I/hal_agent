@@ -1,6 +1,0 @@
-configuration,embeddings,api_calls,avg_file_search_tokens,avg_input_tokens,avg_total_tokens,total_file_search_tokens,total_input_tokens,batch_size
-sequential,4,1000,3212,5174,7456,3212000,5174000,
-batched,4,141,3212,4011,5753,453000,565551,by_register
-batched,8,141,6437,7241,10326,907617,1020981,by_register
-batched,16,141,12866,13661,19482,1814106,1926201,by_register
-batched,16,37,49006,50345,99351,1813222,1862765,20

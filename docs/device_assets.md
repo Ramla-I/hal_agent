@@ -77,10 +77,11 @@ python scripts/unpack_device_assets.py --verify-only
   sha256 changed since the last manifest. `--force` rebuilds everything.
 - **Idempotent restore:** `unpack` skips any asset already present with the correct
   sha256; `--force` re-extracts. It exits non-zero if anything is missing or mismatched.
-- **Already-tracked assets:** 174 PDFs + 26 SVDs were committed before the ignore rule
-  and still live in git history, so they'd survive a clone anyway. The archives include
-  them too (so each archive is a complete per-manufacturer set and the manifest covers
-  100% of `devices/`), which is harmless redundancy.
+- **No longer in the working tree of a clone:** 202 PDFs/SVDs were committed before the
+  ignore rule; they have since been untracked (`git rm --cached`), so a fresh clone gets
+  **none** of them and must restore from the release. (They still sit in old git *history*
+  until a future history rewrite, but no clone checks them out.) Each archive is a complete
+  per-manufacturer set and the manifest covers 100% of `devices/`.
 - **Determinism:** archives normalize mtime/uid/gid, so an unchanged manufacturer packs
   to byte-identical output across runs.
 - **Requirements:** `gh` (authenticated) for upload/download; PyMuPDF etc. are not

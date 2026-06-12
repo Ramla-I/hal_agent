@@ -1,7 +1,0 @@
-{
-  "datasheet_register_abbreviation": "FLASH_OPTKEYR",
-  "address_offset": "0x2008",
-  "reset_value": null,
-  "size": 32,
-  "subfields": []
-}

@@ -1,2 +1,0 @@
-model_name,input_tokens,cached_tokens,output_tokens,reasoning_tokens,total_tokens
-gpt-oss-120b,11954,0,639,266,12593
