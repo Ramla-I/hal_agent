@@ -46,6 +46,29 @@ class UsageStats:
             file_search_tokens=file_search_tokens
         )
 
+    @classmethod
+    def aggregate(cls, model_name: str, usages, file_search_tokens: int = 0) -> "UsageStats":
+        """Sum a sequence of raw API response usage objects into one UsageStats.
+
+        Reuses ``from_response_usage`` per item so the defensive token-detail
+        extraction stays in one place. Replaces the hand-rolled per-field
+        summing previously duplicated across the generator's two code paths.
+        """
+        total = cls(
+            model_name=model_name,
+            input_tokens=0, cached_tokens=0, output_tokens=0,
+            reasoning_tokens=0, total_tokens=0,
+            file_search_tokens=file_search_tokens,
+        )
+        for usage in usages:
+            s = cls.from_response_usage(model_name, usage)
+            total.input_tokens += s.input_tokens
+            total.cached_tokens += s.cached_tokens
+            total.output_tokens += s.output_tokens
+            total.reasoning_tokens += s.reasoning_tokens
+            total.total_tokens += s.total_tokens
+        return total
+
 
 class ResultSaver:
     """
@@ -167,18 +190,17 @@ class ResultSaver:
             fieldnames = list(row.keys())
         
         mode = 'w' if write_header else 'a'
-        
+
+        # Single open: write the header (if needed) and the row together. The
+        # previous two-open version reopened the file just to append the row,
+        # and the header branch truncated-then-reappended.
         with open(filepath, mode, newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             if write_header:
                 writer.writeheader()
                 self._csv_headers_written[filepath_str] = True
-        
-        # Append the row
-        with open(filepath, 'a', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writerow(row)
-        
+
         return filepath
     
     def save_csv_rows(
