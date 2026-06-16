@@ -1,0 +1,113 @@
+{
+  "_comment": "Device registry for config.user_contexts. Edit via scripts/update_config.py (robust JSON read-modify-write) or by hand. 'manufacturer' is a defs.Manufacturer enum NAME (INTEL/STM/NXP/TI). file_id/vs_id are OpenAI cloud IDs, only used by the OpenAI file-search retrieval path; local/openevolve retrieval ignores them.",
+  "devices": [
+    {
+      "device_name": "82579",
+      "manufacturer": "INTEL",
+      "peripheral_name": "",
+      "driver_path": "devices/82579/e1000_ebb2314.rs",
+      "run": 0,
+      "file_id": "file-Y42TiuVyte2z2TcbsXt9sv",
+      "vs_id": "vs_68924fa6726481918501140c8ac86afe"
+    },
+    {
+      "device_name": "82599",
+      "manufacturer": "INTEL",
+      "peripheral_name": "",
+      "driver_path": "devices/82599/ixgbe_4a124f4.rs",
+      "run": 0,
+      "file_id": "file-RdWHHvaJvfkRZ59zXGjVVS",
+      "vs_id": "vs_68924fdcb9cc8191809cacd7be13a9ea"
+    },
+    {
+      "device_name": "rm0008",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 2,
+      "file_id": "file-D98Cj39QhHMHNdXLNxewq7",
+      "vs_id": "vs_693a0971872881918852f40b15c29fa1"
+    },
+    {
+      "device_name": "rm0033",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "file-CmfGB6SWzkxDpHdXSGRWY7",
+      "vs_id": "vs_693a093c1ce48191a0bb9e6630f090b5"
+    },
+    {
+      "device_name": "rm0041",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 21,
+      "file_id": "file-MHtC1XNEQDa2X8jNEjfk1b",
+      "vs_id": "vs_6892501067b08191ac63cc6de06ee629"
+    },
+    {
+      "device_name": "rm0090",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 3,
+      "file_id": "file-CjEojSnvTNU3hpXQFG6DK5",
+      "vs_id": "vs_689f5188906c81919cebc07c132a8f46"
+    },
+    {
+      "device_name": "rm0091",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 2,
+      "file_id": "file-T2XMpz886q7hQNqaDhN7Fn",
+      "vs_id": "vs_689f52468484819182c9c3085572ce19"
+    },
+    {
+      "device_name": "rm0360",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "file-JT7wee34qTEUtugwxW2VAP",
+      "vs_id": "vs_689f52862f5881918366547ab0417608"
+    },
+    {
+      "device_name": "rm0490",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "file-RygxVqtujcgLnFBQGrQ1in",
+      "vs_id": "vs_689f52efc4bc8191afb9b4fb05c78f6c"
+    },
+    {
+      "device_name": "ke04",
+      "manufacturer": "NXP",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 3,
+      "file_id": "file-HXurUicV6dJUZqMjbKWRWk",
+      "vs_id": "vs_693b01dc21608191914afb688556c220"
+    },
+    {
+      "device_name": "s32k1xx",
+      "manufacturer": "NXP",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "msp430g2",
+      "manufacturer": "TI",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 2,
+      "file_id": "file-XbEecafgtidnALoE4qarHz",
+      "vs_id": "vs_693b0615f51481919e951ae03d5b471e"
+    }
+  ]
+}
