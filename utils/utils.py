@@ -9,6 +9,16 @@ def get_model_string(model_name: str) -> str:
     else:
         return model_name
 
+
+def count_tokens(text: str, encoding_name: str = "cl100k_base") -> int:
+    """Count tokens in *text* using tiktoken; returns 0 on any failure."""
+    try:
+        import tiktoken
+        return len(tiktoken.get_encoding(encoding_name).encode(text))
+    except Exception as e:
+        logging.getLogger(__name__).warning("Could not count tokens: %s", e)
+        return 0
+
 _DETAILED_FORMAT = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d:%(funcName)s] - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',

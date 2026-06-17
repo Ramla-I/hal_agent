@@ -1,20 +1,31 @@
 import os
+import re
 import json
 from typing import Optional, Dict, List
 from defs import ContextRetrievalParameters, Manufacturer, ContextRetrievalMethod
 from agent_tools.tools import all_svd_file_paths, calculate_address_offset
 from agent_tools.svd_parsing import get_peripheral_names, get_register_names_for_peripheral, get_field_counts_for_peripheral
-from prompts.register_info_stm import create_register_info_stm_system_prompt, create_register_info_stm_user_prompt
-from utils.parse_output import get_json_block_from_response, get_reasoning_from_response
+from prompts.register_info_stm import (
+    create_register_info_stm_system_prompt,
+    create_register_info_stm_user_prompt,
+    create_register_info_stm_system_prompt_batched,
+    create_register_info_stm_user_prompt_batched,
+)
+from utils.parse_output import (
+    get_json_block_from_response,
+    get_json_array_from_response,
+    get_reasoning_from_response,
+    get_function_calls_from_response,
+)
 from utils.function_call_handler import create_default_handler
-from utils.utils import get_model_string, setup_logger
+from utils.utils import get_model_string, setup_logger, count_tokens
+from utils.models import model_costs
 from utils.result_saver import ResultSaver, UsageStats
 from utils.timing import timed_operation
-from context_retrieval.retrieve_context import retrieve_context
+from context_retrieval.retrieve_context import retrieve_context, retrieve_context_for_peripheral
 from scripts.limit_context import truncate_message_by_tokens
 from groq import Groq
 from openai import OpenAI
-import tiktoken
 
 logger = setup_logger(__name__)
 def run_generator(
@@ -44,7 +55,6 @@ def run_generator(
     """
     logger.info(f"Running generator for device {device_name} with run number {run_number}")
 
-    run_number = str(run_number)
     truncated_at_any_register = False
 
     saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
@@ -104,13 +114,8 @@ def run_generator(
                 )
 
             # Count tokens in file search results
-            try:
-                encoding = tiktoken.get_encoding("cl100k_base")
-                file_search_tokens = len(encoding.encode(datasheet_pages))
-            except Exception as e:
-                logger.warning(f"Could not count file search tokens: {e}")
-                file_search_tokens = 0
-            
+            file_search_tokens = count_tokens(datasheet_pages)
+
             input_list = [
                 {
                     "role": "developer",
@@ -142,13 +147,7 @@ def run_generator(
                     "role": "assistant",
                     "content": response.output_text
                 })
-            
-            # logger.debug(f"Response")
-            # for el in response.output:
-            #     logger.debug(f"el: {el} \n\n")   
 
-            # input_list += [{"role": el.role, "content": el.content} for el in response.output if el.type == "message"]
-            
             reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
             json_block = get_json_block_from_response(rest_of_response)
             usage.append(response.usage)
@@ -196,20 +195,7 @@ def run_generator(
                 json_block = get_json_block_from_response(rest_of_response)
                 usage.append(response.usage)
 
-            total_input_tokens = sum(usage[i].input_tokens for i in range(len(usage)))
-            total_cached_tokens = sum(usage[i].input_tokens_details.cached_tokens for i in range(len(usage)))
-            total_output_tokens = sum(usage[i].output_tokens for i in range(len(usage)))
-            total_reasoning_tokens = sum(usage[i].output_tokens_details.reasoning_tokens for i in range(len(usage)))
-            total_total_tokens = sum(usage[i].total_tokens for i in range(len(usage)))
-            usage_stats = UsageStats(
-                model_name=model_name,
-                input_tokens=total_input_tokens,
-                cached_tokens=total_cached_tokens,
-                output_tokens=total_output_tokens,
-                reasoning_tokens=total_reasoning_tokens,
-                total_tokens=total_total_tokens,
-                file_search_tokens=file_search_tokens,
-            )
+            usage_stats = UsageStats.aggregate(model_name, usage, file_search_tokens)
             saver_info.save_usage_stats(
                 usage_stats,
                 "usage.csv",
@@ -222,6 +208,16 @@ def run_generator(
                 reasoning,
                 "reasoning.txt",
                 prefix=f"---{peripheral_name}_{register_name}---",
+            )
+            # Structured, per-register reasoning for clean downstream lookup
+            # (bug-finding uses this as datasheet evidence).
+            saver_info.append_text(
+                json.dumps({
+                    "peripheral": peripheral_name,
+                    "register": register_name,
+                    "reasoning": reasoning,
+                }) + "\n",
+                "reasoning.jsonl",
             )
 
             if json_block:
@@ -320,19 +316,11 @@ def run_generator_batched(
     ``embedding_ids.jsonl``) and skips the LLM call + output parsing. Useful for
     cheap retrieval-only sweeps that pair with retrieval IR metrics.
     """
-    from prompts.register_info_stm import (
-        create_register_info_stm_system_prompt_batched,
-        create_register_info_stm_user_prompt_batched,
-    )
-    from utils.parse_output import get_json_array_from_response
-    from context_retrieval.retrieve_context import retrieve_context_for_peripheral
-
     logger.info(
         "Running batched generator for device %s with run number %s",
         device_name, run_number,
     )
 
-    run_number = str(run_number)
     truncated_at_any_register = False
 
     saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
@@ -432,12 +420,7 @@ def run_generator_batched(
                 continue
 
             # Count tokens in context
-            try:
-                encoding = tiktoken.get_encoding("cl100k_base")
-                file_search_tokens = len(encoding.encode(datasheet_pages))
-            except Exception as e:
-                logger.warning("Could not count file search tokens: %s", e)
-                file_search_tokens = 0
+            file_search_tokens = count_tokens(datasheet_pages)
 
             # 2. Build batched prompt
             input_list = [
@@ -458,7 +441,6 @@ def run_generator_batched(
                 logger.info("Truncated input for batch %s", batch_label)
 
             # Estimate output budget: tokens/register + reasoning overhead
-            from utils.models import model_costs
             per_register_tokens = 2000 if include_reasoning else 1500
             batch_output_estimate = max(len(batch), 1) * per_register_tokens + 2000
             model_max = model_costs.get(model_name, {}).get("max_output_tokens", 65536)
@@ -526,9 +508,7 @@ def run_generator_batched(
 
             # 5b. Patch address_offset values from function call results
             if skip_function_followup and function_results and json_array:
-                import re
-                from utils.parse_output import get_function_calls_from_response as _get_fn_calls
-                fn_text = _get_fn_calls(rest_of_response)
+                fn_text = get_function_calls_from_response(rest_of_response)
                 if fn_text:
                     try:
                         fn_data = json.loads(fn_text)
@@ -585,20 +565,7 @@ def run_generator_batched(
                 logger.warning("No JSON array parsed for batch %s", batch_label)
 
             # 7. Save usage & reasoning
-            total_input_tokens = sum(u.input_tokens for u in usage)
-            total_cached_tokens = sum(u.input_tokens_details.cached_tokens for u in usage)
-            total_output_tokens = sum(u.output_tokens for u in usage)
-            total_reasoning_tokens = sum(u.output_tokens_details.reasoning_tokens for u in usage)
-            total_total_tokens = sum(u.total_tokens for u in usage)
-            usage_stats = UsageStats(
-                model_name=model_name,
-                input_tokens=total_input_tokens,
-                cached_tokens=total_cached_tokens,
-                output_tokens=total_output_tokens,
-                reasoning_tokens=total_reasoning_tokens,
-                total_tokens=total_total_tokens,
-                file_search_tokens=file_search_tokens,
-            )
+            usage_stats = UsageStats.aggregate(model_name, usage, file_search_tokens)
             batch_register_names = ", ".join(batch) if batch else "(discovery)"
             saver_info.save_usage_stats(
                 usage_stats,
@@ -612,6 +579,15 @@ def run_generator_batched(
                 reasoning,
                 "reasoning.txt",
                 prefix=f"---{peripheral_name}---",
+            )
+            # Structured reasoning (per batch / peripheral) for downstream lookup.
+            saver_info.append_text(
+                json.dumps({
+                    "peripheral": peripheral_name,
+                    "registers": batch,
+                    "reasoning": reasoning,
+                }) + "\n",
+                "reasoning.jsonl",
             )
 
     return truncated_at_any_register
