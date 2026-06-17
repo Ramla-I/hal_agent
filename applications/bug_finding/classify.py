@@ -24,7 +24,7 @@ from typing import Optional
 from groq import Groq
 from openai import OpenAI
 
-from utils.utils import get_model_string, setup_logger
+from utils.utils import get_model_string, setup_logger, responses_create_with_retry
 from utils.parse_output import get_json_block_from_response
 from utils.result_saver import ResultSaver, UsageStats
 from .models import Diff, Bug, BugClass
@@ -81,7 +81,8 @@ def run_analyzer(
         "Return the JSON object of real candidate bugs."
     )
 
-    response = client.responses.create(
+    response = responses_create_with_retry(
+        client,
         model=get_model_string(model_name),
         input=[
             {"role": "developer", "content": _SYSTEM_PROMPT},

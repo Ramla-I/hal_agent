@@ -18,7 +18,7 @@ from utils.parse_output import (
     get_function_calls_from_response,
 )
 from utils.function_call_handler import create_default_handler
-from utils.utils import get_model_string, setup_logger, count_tokens
+from utils.utils import get_model_string, setup_logger, count_tokens, responses_create_with_retry
 from utils.models import model_costs
 from utils.result_saver import ResultSaver, UsageStats
 from utils.timing import timed_operation
@@ -133,7 +133,7 @@ def run_generator(
                 logger.info(f"Truncated input list for {peripheral_name}_{register_name}")
 
             with timed_operation("generator_llm_call"):
-                response = client.responses.create(
+                response = responses_create_with_retry(client,
                     # messages=messages,
                     model=get_model_string(model_name),
                     input=input_list,
@@ -184,7 +184,7 @@ def run_generator(
 
                 # Get response after function calls
                 with timed_operation("generator_llm_call"):
-                    response = client.responses.create(
+                    response = responses_create_with_retry(client,
                         model=get_model_string(model_name),
                         input=input_list,
                         tool_choice = "none",
@@ -448,7 +448,7 @@ def run_generator_batched(
 
             # 3. LLM call
             with timed_operation("generator_llm_call"):
-                response = client.responses.create(
+                response = responses_create_with_retry(client,
                     model=get_model_string(model_name),
                     input=input_list,
                     tool_choice="none",
@@ -485,7 +485,7 @@ def run_generator_batched(
                     truncated_at_any_register = truncated_at_any_register or truncated
 
                     with timed_operation("generator_llm_call"):
-                        response = client.responses.create(
+                        response = responses_create_with_retry(client,
                             model=get_model_string(model_name),
                             input=input_list,
                             tool_choice="none",
