@@ -27,6 +27,7 @@ from openai import OpenAI
 from utils.utils import get_model_string, setup_logger, responses_create_with_retry
 from utils.parse_output import get_json_block_from_response
 from utils.result_saver import ResultSaver, UsageStats
+from utils.models import model_costs
 from .models import Diff, Bug, BugClass
 
 logger = setup_logger(__name__)
@@ -42,9 +43,9 @@ _SYSTEM_PROMPT = (
     "found (e.g. 'N/A', 'not found', 'not specified', 'unknown', empty), or when "
     "the two values are just different representations of the same thing. "
     "Return ONLY a JSON object in a ```json code block with this shape:\n"
-    '{"bugs": [{"id": <int>, "confidence": <float 0..1>, "reason": "<short>"}]}\n'
+    '{"bugs": [{"id": <int>, "confidence": <float 0..1>}]}\n'
     "Include only rows that are real candidate bugs. `confidence` is your "
-    "confidence that it is a genuine SVD bug."
+    "confidence that it is a genuine SVD bug. Do not add any other fields."
 )
 
 
@@ -81,6 +82,10 @@ def run_analyzer(
         "Return the JSON object of real candidate bugs."
     )
 
+    # Generous output budget: gpt-oss-120b is a reasoning model, so reasoning
+    # tokens share the budget with the JSON answer. Without a high cap the JSON
+    # can be truncated for SVDs with many candidates.
+    model_max = model_costs.get(model_name, {}).get("max_output_tokens", 32_768)
     response = responses_create_with_retry(
         client,
         model=get_model_string(model_name),
@@ -90,6 +95,7 @@ def run_analyzer(
         ],
         tool_choice="none",
         truncation="auto",
+        max_output_tokens=model_max,
     )
 
     saver.save_usage_stats(
@@ -126,10 +132,42 @@ def _parse_verdicts(output_text: str, svd_file_name: str) -> list[dict]:
     try:
         data = json.loads(block)
     except json.JSONDecodeError as e:
-        logger.error("Analyzer JSON parse failed for %s: %s", svd_file_name, e)
-        return []
+        # Truncated/malformed JSON — salvage the complete bug objects we can.
+        salvaged = _salvage_bug_objects(block)
+        logger.warning(
+            "Analyzer JSON parse failed for %s (%s); salvaged %d object(s)",
+            svd_file_name, e, len(salvaged),
+        )
+        return salvaged
     bugs = data.get("bugs", []) if isinstance(data, dict) else []
     return bugs if isinstance(bugs, list) else []
+
+
+def _salvage_bug_objects(block: str) -> list[dict]:
+    """Recover complete ``{...}`` entries from a truncated ``"bugs": [ ... ]`` array."""
+    start_array = block.find("[")
+    if start_array < 0:
+        return []
+    objects: list[dict] = []
+    depth = 0
+    obj_start: Optional[int] = None
+    for i in range(start_array, len(block)):
+        ch = block[i]
+        if ch == "{":
+            if depth == 0:
+                obj_start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and obj_start is not None:
+                try:
+                    obj = json.loads(block[obj_start:i + 1])
+                    if isinstance(obj, dict) and "id" in obj:
+                        objects.append(obj)
+                except json.JSONDecodeError:
+                    pass
+                obj_start = None
+    return objects
 
 
 # ---------------------------------------------------------------------------
