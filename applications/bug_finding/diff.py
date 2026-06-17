@@ -1,0 +1,263 @@
+"""In-memory diff between a ground-truth SVD and the generator's register output.
+
+Replaces ``scripts/s2_compare_agent_output_with_svd.py``: instead of writing
+``register_diff.csv`` / ``field_diff.csv`` / ``*_summary.csv``, this returns a
+``list[Diff]`` that downstream stages consume directly.
+
+A ``Diff`` is either:
+  * a **value mismatch** (``presence == BOTH``) — the register/field exists on
+    both sides but a value differs; these are the candidate SVD bugs; or
+  * a **coverage gap** (``SVD_ONLY`` / ``GENERATOR_ONLY``) — a peripheral,
+    register, or field present on only one side.
+
+Comparison semantics (offset/reset hex normalization, the size 16↔32 / size-0
+skips, the empty-generator-value skip, field bit_offset/bit_width) are preserved
+from the original script. Enumerated values are intentionally not diffed:
+verified datasheets are layout-only and enums are out of scope.
+"""
+from __future__ import annotations
+
+import json
+import os
+import xml.etree.ElementTree as ET
+from typing import Any, Optional
+
+from utils.generator_facts import convert_generator_register_to_svd_like
+from .models import Diff, Presence
+
+# Register-level attributes compared (in a stable order).
+_REGISTER_KEYS = ("address_offset", "reset_value", "size")
+_HEX_KEYS = ("address_offset", "reset_value")
+# Field-level attributes compared.
+_FIELD_KEYS = ("bit_offset", "bit_width")
+
+
+# ---------------------------------------------------------------------------
+# Value helpers
+# ---------------------------------------------------------------------------
+
+def _to_int_if_hex(value: Any) -> Any:
+    """Parse a ``0x...`` string to int; pass through anything else unchanged."""
+    if isinstance(value, str) and value.strip().startswith("0x"):
+        try:
+            return int(value.strip().replace(" ", ""), 16)
+        except ValueError:
+            return value
+    return value
+
+
+def _hex_display(value: Any) -> Optional[str]:
+    """Render an int as ``0xNN`` for display; stringify others; None stays None."""
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return f"0x{value:X}"
+    return str(value)
+
+
+def _stringify(value: Any) -> Optional[str]:
+    return None if value is None else str(value)
+
+
+# ---------------------------------------------------------------------------
+# Parsing
+# ---------------------------------------------------------------------------
+
+def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
+    """Parse an SVD file into ``{peripheral: {register: {...}}}`` (all lowercase).
+
+    Each register dict has ``address_offset`` (int), ``reset_value`` (int or ''),
+    ``size`` (int or None), and ``fields`` (list of ``{name, bit_offset,
+    bit_width, enumerated_values}``).
+    """
+    root = ET.parse(svd_path).getroot()
+    ns = root.tag.split("}")[0] + "}" if root.tag.startswith("{") else ""
+
+    peripherals: dict[str, dict[str, dict]] = {}
+    for p in root.findall(f".//{ns}peripheral"):
+        peripheral_name = p.find(f"{ns}name").text.strip().lower()
+        registers: dict[str, dict] = {}
+
+        registers_elem = p.find(f"{ns}registers")
+        if registers_elem is not None:
+            for reg in registers_elem.findall(f"{ns}register"):
+                reg_name = reg.find(f"{ns}name").text.strip().lower()
+                prefix = peripheral_name + "_"
+                if reg_name.startswith(prefix):
+                    reg_name = reg_name[len(prefix):]
+
+                address_offset = _to_int_if_hex(reg.find(f"{ns}addressOffset").text.strip())
+                reset_elem = reg.find(f"{ns}resetValue")
+                reset_value = _to_int_if_hex(reset_elem.text.strip()) if reset_elem is not None else ""
+                size_elem = reg.find(f"{ns}size")
+                size = int(size_elem.text.strip(), 0) if size_elem is not None else None
+
+                fields = []
+                fields_elem = reg.find(f"{ns}fields")
+                if fields_elem is not None:
+                    for field in fields_elem.findall(f"{ns}field"):
+                        enum_values = []
+                        enum_elem = field.find(f"{ns}enumeratedValues")
+                        if enum_elem is not None:
+                            for enum in enum_elem.findall(f"{ns}enumeratedValue"):
+                                if enum.find(f"{ns}value") is not None:
+                                    enum_values.append({
+                                        "name": enum.find(f"{ns}name").text.strip().lower(),
+                                        "value": enum.find(f"{ns}value").text.strip(),
+                                    })
+                        fields.append({
+                            "name": field.find(f"{ns}name").text.strip().lower(),
+                            "bit_offset": int(field.find(f"{ns}bitOffset").text.strip()),
+                            "bit_width": int(field.find(f"{ns}bitWidth").text.strip()),
+                            "enumerated_values": enum_values,
+                        })
+
+                registers[reg_name] = {
+                    "address_offset": address_offset,
+                    "reset_value": reset_value,
+                    "size": size,
+                    "fields": fields,
+                }
+        peripherals[peripheral_name] = registers
+    return peripherals
+
+
+def _split_peripheral_register(filename: str) -> Optional[tuple[str, str]]:
+    """Split a ``{peripheral}_{register}`` output filename on the first underscore.
+
+    Splitting on the first ``_`` (vs. the old ``split('_')[0]``/``[1]``) keeps
+    multi-token register names intact (e.g. ``GPIOA_AFRL`` → ``gpioa``/``afrl``),
+    matching how the SVD register names are stored.
+    """
+    peripheral, sep, register = filename.partition("_")
+    if not sep:
+        return None
+    return peripheral.lower(), register.lower()
+
+
+def load_generator_registers(agent_output_dir: str) -> dict[str, dict[str, dict]]:
+    """Load generator output into ``{peripheral: {register: svd_like_dict}}``.
+
+    Each register JSON (one file per ``{peripheral}_{register}``, no extension) is
+    converted to the SVD-like shape used by the comparison.
+    """
+    peripherals: dict[str, dict[str, dict]] = {}
+    for entry in os.listdir(agent_output_dir):
+        path = os.path.join(agent_output_dir, entry)
+        if os.path.isdir(path):
+            continue
+        split = _split_peripheral_register(entry)
+        if split is None:
+            continue
+        peripheral_name, register_name = split
+        with open(path, "r", encoding="utf-8") as f:
+            register_data = json.load(f)
+        svd_like = convert_generator_register_to_svd_like(
+            register_data, include_enums=True, default_zero=False,
+        )
+        peripherals.setdefault(peripheral_name, {})[register_name] = svd_like
+    return peripherals
+
+
+# ---------------------------------------------------------------------------
+# Comparison
+# ---------------------------------------------------------------------------
+
+def _skip_register_value(key: str, svd_value: Any, gen_value: Any) -> bool:
+    """Replicate the original script's skip rules for register-level values."""
+    if gen_value == "":
+        return True
+    if key == "size":
+        # 16/32-bit width is an accepted representational variation; size 0 means
+        # the generator didn't determine a size.
+        if {svd_value, gen_value} == {16, 32}:
+            return True
+        if gen_value == 0:
+            return True
+    return False
+
+
+def _compare_fields(peripheral: str, register: str,
+                    svd_fields: list[dict], gen_fields: list[dict]) -> list[Diff]:
+    diffs: list[Diff] = []
+    svd_by = {f["name"]: f for f in svd_fields}
+    gen_by = {f["name"]: f for f in gen_fields}
+    svd_names, gen_names = set(svd_by), set(gen_by)
+
+    for name in sorted(svd_names - gen_names):
+        diffs.append(Diff(peripheral=peripheral, register=register, field=name,
+                          key="field", presence=Presence.SVD_ONLY))
+    for name in sorted(gen_names - svd_names):
+        diffs.append(Diff(peripheral=peripheral, register=register, field=name,
+                          key="field", presence=Presence.GENERATOR_ONLY))
+
+    for name in sorted(svd_names & gen_names):
+        sf, gf = svd_by[name], gen_by[name]
+        for key in _FIELD_KEYS:
+            sv, gv = sf.get(key), gf.get(key)
+            if sv != gv:
+                diffs.append(Diff(
+                    peripheral=peripheral, register=register, field=name, key=key,
+                    svd_value=_stringify(sv), generator_value=_stringify(gv),
+                    presence=Presence.BOTH,
+                ))
+    return diffs
+
+
+def _compare_register(peripheral: str, register: str,
+                      svd_reg: dict, gen_reg: dict) -> list[Diff]:
+    diffs: list[Diff] = []
+    for key in _REGISTER_KEYS:
+        svd_value, gen_value = svd_reg.get(key), gen_reg.get(key)
+        if key in _HEX_KEYS:
+            svd_value, gen_value = _to_int_if_hex(svd_value), _to_int_if_hex(gen_value)
+        if _skip_register_value(key, svd_value, gen_value):
+            continue
+        if svd_value != gen_value:
+            if key in _HEX_KEYS:
+                svd_disp, gen_disp = _hex_display(svd_value), _hex_display(gen_value)
+            else:
+                svd_disp, gen_disp = _stringify(svd_value), _stringify(gen_value)
+            diffs.append(Diff(
+                peripheral=peripheral, register=register, key=key,
+                svd_value=svd_disp, generator_value=gen_disp, presence=Presence.BOTH,
+            ))
+    diffs.extend(_compare_fields(peripheral, register,
+                                 svd_reg.get("fields", []), gen_reg.get("fields", [])))
+    return diffs
+
+
+def compute_diffs(svd_peripherals: dict[str, dict[str, dict]],
+                  gen_peripherals: dict[str, dict[str, dict]]) -> list[Diff]:
+    """Compare parsed SVD vs generator registers and return all diffs."""
+    diffs: list[Diff] = []
+    svd_names, gen_names = set(svd_peripherals), set(gen_peripherals)
+
+    for name in sorted(svd_names - gen_names):
+        diffs.append(Diff(peripheral=name, register="", key="peripheral",
+                          presence=Presence.SVD_ONLY))
+    for name in sorted(gen_names - svd_names):
+        diffs.append(Diff(peripheral=name, register="", key="peripheral",
+                          presence=Presence.GENERATOR_ONLY))
+
+    for peripheral in sorted(svd_names & gen_names):
+        svd_regs, gen_regs = svd_peripherals[peripheral], gen_peripherals[peripheral]
+        svd_reg_names, gen_reg_names = set(svd_regs), set(gen_regs)
+
+        for reg in sorted(svd_reg_names - gen_reg_names):
+            diffs.append(Diff(peripheral=peripheral, register=reg, key="register",
+                              presence=Presence.SVD_ONLY))
+        for reg in sorted(gen_reg_names - svd_reg_names):
+            diffs.append(Diff(peripheral=peripheral, register=reg, key="register",
+                              presence=Presence.GENERATOR_ONLY))
+        for reg in sorted(svd_reg_names & gen_reg_names):
+            diffs.extend(_compare_register(peripheral, reg, svd_regs[reg], gen_regs[reg]))
+
+    return diffs
+
+
+def diff_generator_against_svd(svd_path: str, agent_output_dir: str) -> list[Diff]:
+    """Top-level convenience: parse both sides and return all diffs."""
+    svd = parse_svd_registers(svd_path)
+    gen = load_generator_registers(agent_output_dir)
+    return compute_diffs(svd, gen)
