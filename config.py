@@ -75,6 +75,8 @@ DEVICE_DIRECTORY = "devices"
 # Logging configuration
 LOG_LEVEL = "ERROR"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
 LOG_FILE = "hal_agent.log"  # Path to log file (relative to project root or absolute path)
+LOG_TO_CONSOLE = True  # Also emit logs to the console (env: HAL_AGENT_LOG_TO_CONSOLE)
+# Level can be overridden per-run via env HAL_AGENT_LOG_LEVEL (e.g. INFO for progress).
 
 # Device registry lives in config_devices.json (data, not source) so it can be
 # updated programmatically without rewriting this module — see scripts/update_config.py.
