@@ -114,8 +114,14 @@ def determine_client(model_name: str) -> Groq | OpenAI:
     return client_groq if model_name == "gpt-oss-120b" else client_openai
 
 
-def resolve_next_run_number(repo_root: str, ctx: UserContext) -> int:
-    """Scan agent_output/{mfg}/{device}/ and return max existing + 1."""
+def resolve_run_number(repo_root: str, ctx: UserContext, new_run: bool = False) -> int:
+    """Resolve the run number for a device under agent_output/{mfg}/{device}/.
+
+    Default is to **resume the latest existing run** (the generator skips
+    registers whose output already exists, so an interrupted run continues into
+    the same directory). With ``new_run=True`` a fresh run (max + 1) is started.
+    Returns 1 when no run exists yet.
+    """
     output_base = os.path.join(
         repo_root,
         config.OUTPUT_DIR,
@@ -129,7 +135,9 @@ def resolve_next_run_number(repo_root: str, ctx: UserContext) -> int:
         for d in os.listdir(output_base)
         if d.isdigit() and os.path.isdir(os.path.join(output_base, d))
     ]
-    return max(existing) + 1 if existing else 1
+    if not existing:
+        return 1
+    return max(existing) + 1 if new_run else max(existing)
 
 
 def resolve_device_paths(
@@ -394,7 +402,7 @@ def run_pipeline_for_device(
     result = DeviceResult(device_name=ctx.device_name)
 
     try:
-        run_number = resolve_next_run_number(repo_root, ctx)
+        run_number = resolve_run_number(repo_root, ctx, new_run=args.new_run)
         paths = resolve_device_paths(ctx, repo_root, run_number)
         result.final_run_number = run_number
 
@@ -617,6 +625,10 @@ def parse_args() -> argparse.Namespace:
         "--run-analyzer", action="store_true",
         default=config.RUN_ANALYZER,
         help=f"Run analyzer on diffs (default: {config.RUN_ANALYZER})",
+    )
+    parser.add_argument(
+        "--new-run", action="store_true",
+        help="Start a fresh run (max+1) instead of resuming the latest existing run",
     )
     parser.add_argument(
         "--retrieval", choices=["auto", "openevolve"], default="auto",
