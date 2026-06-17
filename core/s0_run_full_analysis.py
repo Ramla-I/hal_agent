@@ -24,10 +24,7 @@ Usage:
 """
 
 import argparse
-import asyncio
-import csv
 import glob
-import json
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -254,6 +251,54 @@ def build_context_retrieval_params(
     )
 
 
+def resolve_openevolve_program(device_name: str, repo_root: str) -> str:
+    """Path to the device's evolved OpenEvolve best_program.py.
+
+    Falls back to the rm0041 program when a device-specific evolution is absent
+    (per the Phase 1d plan: use the evolved STM retrieval, default rm0041).
+    """
+    device_specific = os.path.join(
+        repo_root, "openevolve_retrieval", f"output_{device_name}", "best", "best_program.py",
+    )
+    if os.path.exists(device_specific):
+        return device_specific
+    return os.path.join(
+        repo_root, "openevolve_retrieval", "output_rm0041", "best", "best_program.py",
+    )
+
+
+def apply_retrieval_override(
+    cr_params: ContextRetrievalParameters,
+    retrieval: str,
+    device_name: str,
+    repo_root: str,
+) -> ContextRetrievalParameters:
+    """Override auto-resolved retrieval params when an explicit method is requested.
+
+    ``auto`` (default) keeps whatever build_context_retrieval_params resolved
+    (local vector DB / OpenAI / keyword). ``openevolve`` switches to the evolved
+    STM retrieval program.
+    """
+    if retrieval in (None, "auto"):
+        return cr_params
+    if retrieval == "openevolve":
+        program = resolve_openevolve_program(device_name, repo_root)
+        if not os.path.exists(program):
+            raise FileNotFoundError(f"OpenEvolve program not found: {program}")
+        return ContextRetrievalParameters(
+            context_retrieval_method=ContextRetrievalMethod.OPENEVOLVE,
+            pages_after_keyword=0,
+            remove_tables=False,
+            number_embeddings=config.CONTEXT_RETRIEVAL_PARAMETERS.number_embeddings,
+            re_ranking=False,
+            score_threshold=0.0,
+            vs_id="",
+            regex="",
+            oe_program_path=program,
+        )
+    raise ValueError(f"Unsupported --retrieval value: {retrieval!r}")
+
+
 # ---------------------------------------------------------------------------
 # Step 1: Preprocessing
 # ---------------------------------------------------------------------------
@@ -343,11 +388,8 @@ def run_pipeline_for_device(
     from s1a_generator import run_generator, run_generator_batched
     from s2_coverage_improver import run_coverage_improver
     from s4_validator import build_invariants_from_agent_output, run_validator, run_validator_batched
-    from s5_analyzer import run_analyzer
-    from scripts.s2_compare_agent_output_with_svd import compare_agent_output_with_svd
-    from scripts.s4_generate_diff_table import generate_diff_table
-    from scripts.s5_compare_diff_with_verified_output import compare_diff_with_verified_datasheet
     from scripts.calculate_generator_coverage import calculate_generator_coverage
+    from applications.bug_finding.pipeline import run_bug_finding
 
     result = DeviceResult(device_name=ctx.device_name)
 
@@ -394,6 +436,11 @@ def run_pipeline_for_device(
             # Refresh cr_params after preprocessing (new DB may have been created)
             if done:
                 cr_params = build_context_retrieval_params(paths.device_dir, ctx)
+
+        # Apply explicit retrieval override (e.g. --retrieval openevolve) last, so
+        # it wins over the auto-resolved params above.
+        cr_params = apply_retrieval_override(cr_params, args.retrieval, ctx.device_name, repo_root)
+        print(f"  Retrieval (effective): {cr_params.context_retrieval_method.value}")
 
         # -- Step 2: Generator --
         generator_fn = run_generator_batched if args.generator_batched else run_generator
@@ -502,72 +549,26 @@ def run_pipeline_for_device(
             result.false_count = false_count
             print(f"  Validator: {true_count} true, {false_count} false")
 
-        # -- Step 5: Evaluation (optional) --
+        # -- Step 5: Bug finding (optional) --
         if not args.skip_evaluation:
-            print(f"\n--- Step 5: Evaluation ---")
-            svd_files = sorted(glob.glob(os.path.join(paths.svd_dir, "*.svd")))
-            if not svd_files:
-                print(f"  No SVD files in {paths.svd_dir} — skipping evaluation")
-            else:
-                # 5a. Compare agent output with SVD
-                for svd_path in svd_files:
-                    svd_base = os.path.splitext(os.path.basename(svd_path))[0]
-                    custom_results_dir = os.path.join(paths.results_dir, svd_base)
-                    os.makedirs(custom_results_dir, exist_ok=True)
-                    print(f"  Comparing with SVD: {svd_base}")
-                    compare_agent_output_with_svd(svd_path, paths.agent_output_dir, custom_results_dir)
-                    result.svd_files_compared += 1
-
-                # 5b. Analyzer (optional)
-                if run_analyzer_flag:
-                    analyzer_model = args.generator_model or config.GENERATOR_MODEL_NAME
-                    for svd_path in svd_files:
-                        svd_base = os.path.splitext(os.path.basename(svd_path))[0]
-                        register_diff_csv = os.path.join(paths.results_dir, svd_base, "register_diff.csv")
-                        if not os.path.exists(register_diff_csv):
-                            continue
-                        analyzer_output_dir = os.path.join(paths.agent_output_dir, "analyzer_iteration")
-                        os.makedirs(analyzer_output_dir, exist_ok=True)
-                        print(f"  Running analyzer for: {svd_base}")
-                        asyncio.run(run_analyzer(analyzer_model, svd_base, register_diff_csv, analyzer_output_dir))
-
-                        # Filter register_diff.csv to keep only actual bugs
-                        analyzer_output_path = os.path.join(analyzer_output_dir, svd_base)
-                        if os.path.exists(analyzer_output_path):
-                            analyzer_diff_csv = register_diff_csv.replace(".csv", "_analyzer.csv")
-                            with open(analyzer_output_path, "r") as f:
-                                ids = json.load(f)["bugs"]
-                            with open(register_diff_csv, "r") as inf, open(analyzer_diff_csv, "w", newline="") as outf:
-                                reader = csv.reader(inf)
-                                writer = csv.writer(outf)
-                                writer.writerow(next(reader))  # header
-                                for row in reader:
-                                    if row and (int(row[0]) in ids or row[3] == "fields"):
-                                        writer.writerow(row)
-
-                # 5c. Generate diff tables
-                for svd_path in svd_files:
-                    svd_base = os.path.splitext(os.path.basename(svd_path))[0]
-                    custom_results_dir = os.path.join(paths.results_dir, svd_base)
-                    generate_diff_table(custom_results_dir, run_analyzer_flag)
-
-                # 5d. Compare with verified datasheet
-                for svd_path in svd_files:
-                    svd_base = os.path.splitext(os.path.basename(svd_path))[0]
-                    custom_results_dir = os.path.join(paths.results_dir, svd_base)
-                    verified_csv = os.path.join(paths.verified_dir, f"{ctx.device_name}_{svd_base}.csv")
-                    if not os.path.exists(verified_csv):
-                        print(f"  Verified CSV not found for {svd_base}")
-                        continue
-                    register_diff_csv = os.path.join(custom_results_dir, "register_diff.csv")
-                    register_diff_verified_csv = os.path.join(custom_results_dir, "register_diff_verified.csv")
-                    compare_diff_with_verified_datasheet(register_diff_csv, verified_csv, register_diff_verified_csv)
-
-                    field_diff_csv = os.path.join(custom_results_dir, "field_diff.csv")
-                    field_diff_verified_csv = os.path.join(custom_results_dir, "field_diff_verified.csv")
-                    compare_diff_with_verified_datasheet(field_diff_csv, verified_csv, field_diff_verified_csv)
-
-                result.evaluation_done = True
+            print(f"\n--- Step 5: Bug finding ---")
+            analyzer_model = args.generator_model or config.GENERATOR_MODEL_NAME
+            analyzer_client = determine_client(analyzer_model)
+            bug_results = run_bug_finding(
+                client=analyzer_client,
+                model_name=analyzer_model,
+                svd_dir=paths.svd_dir,
+                agent_output_dir=paths.agent_output_dir,
+                results_dir=paths.results_dir,
+                run_analyzer_enabled=run_analyzer_flag,
+            )
+            result.svd_files_compared = len(bug_results)
+            result.evaluation_done = True
+            total_bugs = sum(len(bc.bugs) for classes in bug_results.values() for bc in classes)
+            print(f"  Bug finding: {len(bug_results)} SVD(s), {total_bugs} candidate bug(s)")
+            for svd_name, classes in bug_results.items():
+                n = sum(len(bc.bugs) for bc in classes)
+                print(f"    {svd_name}: {n} bug(s) in {len(classes)} class(es)")
 
     except Exception as e:
         result.success = False
@@ -616,6 +617,12 @@ def parse_args() -> argparse.Namespace:
         "--run-analyzer", action="store_true",
         default=config.RUN_ANALYZER,
         help=f"Run analyzer on diffs (default: {config.RUN_ANALYZER})",
+    )
+    parser.add_argument(
+        "--retrieval", choices=["auto", "openevolve"], default="auto",
+        help="Context retrieval method. 'auto' (default) resolves local/OpenAI/keyword "
+             "from the device's vector_stores.json; 'openevolve' uses the evolved STM "
+             "retrieval program (per-device, rm0041 fallback).",
     )
     parser.add_argument(
         "--generator-batched", action="store_true",
