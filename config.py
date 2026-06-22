@@ -4,13 +4,41 @@ import json
 import os
 from pathlib import Path
 
-client_groq = OpenAI(
-    api_key=os.environ.get("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
-)
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+
+
+def _load_groq_keys() -> list[str]:
+    """Groq API keys as a pool. Reads GROQ_API_KEYS (JSON array, also accepts
+    comma-separated); falls back to the single GROQ_API_KEY. Add keys from
+    DIFFERENT Groq accounts/orgs to multiply the effective rate limit — just
+    extend the array, no code change."""
+    raw = os.environ.get("GROQ_API_KEYS", "").strip()
+    keys: list[str] = []
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                keys = [str(k).strip() for k in parsed if str(k).strip()]
+        except json.JSONDecodeError:
+            keys = [k.strip() for k in raw.split(",") if k.strip()]
+    if not keys:
+        single = os.environ.get("GROQ_API_KEY")
+        if single:
+            keys = [single.strip()]
+    return keys
+
+
+GROQ_API_KEYS = _load_groq_keys()
+# One client per key — the call layer (utils/llm.py) round-robins across these.
+GROQ_CLIENTS = [OpenAI(api_key=k, base_url=GROQ_BASE_URL) for k in GROQ_API_KEYS]
 
 client_openai = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
+)
+
+# Backward-compat singleton (first key); prefer GROQ_CLIENTS via the call layer.
+client_groq = GROQ_CLIENTS[0] if GROQ_CLIENTS else OpenAI(
+    api_key=os.environ.get("GROQ_API_KEY"), base_url=GROQ_BASE_URL,
 )
 
 DEVICE_NAME = "rm0041"
@@ -53,6 +81,21 @@ CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
 #     pages_after=2,
 #     chunk_index_path=""
 # )
+
+# --- Model routing & per-stage model lists -------------------------------
+# Models that route to the Groq key pool; every other model routes to OpenAI.
+GROQ_MODELS = {"gpt-oss-120b"}
+
+# Ordered list of acceptable models per LLM stage: the call layer tries them in
+# order and overflows to the next when one is persistently rate-limited (e.g.
+# Groq TPM exhausted → fall back to a low-cost OpenAI model). EDIT THESE LISTS
+# to change what each stage runs and its fallbacks — no code change needed.
+STAGE_MODELS = {
+    "generator":         ["gpt-oss-120b", "gpt-5-nano"],
+    "analyzer":          ["gpt-5-nano"],
+    "coverage_improver": ["gpt-5.2"],
+    "validator":         ["gpt-oss-120b"],
+}
 
 # MODEL_NAME = "gpt-4o"
 GENERATOR_MODEL_NAME = "gpt-oss-120b"
