@@ -61,6 +61,7 @@ def run_generator(
     # single requested model (back-compat for callers that pin one model).
     gen_models = models or [model_name]
     truncated_at_any_register = False
+    failed_registers = 0
 
     saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
     saver_output = ResultSaver(agent_output_dir)
@@ -137,13 +138,20 @@ def run_generator(
             if truncated:
                 logger.info(f"Truncated input list for {peripheral_name}_{register_name}")
 
-            with timed_operation("generator_llm_call"):
-                response, used_model = call_llm(
-                    "generator", models=gen_models,
-                    input=input_list,
-                    tool_choice="none",
-                    truncation="auto",
-                )
+            try:
+                with timed_operation("generator_llm_call"):
+                    response, used_model = call_llm(
+                        "generator", models=gen_models,
+                        input=input_list,
+                        tool_choice="none",
+                        truncation="auto",
+                    )
+            except Exception as e:
+                # Isolate per register: a terminal failure (e.g. all models
+                # rate-limited) skips this register instead of aborting the device.
+                logger.error("Generator failed for %s_%s: %s", peripheral_name, register_name, e)
+                failed_registers += 1
+                continue
 
             if response.output_text:
                 input_list.append({
@@ -186,13 +194,18 @@ def run_generator(
                     logger.info(f"Truncated input list for {peripheral_name}_{register_name} after function calls")
 
                 # Get response after function calls
-                with timed_operation("generator_llm_call"):
-                    response, used_model = call_llm(
-                        "generator", models=gen_models,
-                        input=input_list,
-                        tool_choice="none",
-                        truncation="auto",
-                    )
+                try:
+                    with timed_operation("generator_llm_call"):
+                        response, used_model = call_llm(
+                            "generator", models=gen_models,
+                            input=input_list,
+                            tool_choice="none",
+                            truncation="auto",
+                        )
+                except Exception as e:
+                    logger.error("Generator follow-up failed for %s_%s: %s", peripheral_name, register_name, e)
+                    failed_registers += 1
+                    continue
                 reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
                 json_block = get_json_block_from_response(rest_of_response)
                 usage.append(response.usage)
@@ -239,6 +252,11 @@ def run_generator(
             if json_data:
                 saver_output.save_json(json_data, output_filename)
 
+    if failed_registers:
+        logger.error(
+            "Generator for %s: %d register(s) failed and were skipped (resume to retry)",
+            device_name, failed_registers,
+        )
     return truncated_at_any_register
 
 
@@ -326,6 +344,7 @@ def run_generator_batched(
 
     gen_models = models or [model_name]
     truncated_at_any_register = False
+    failed_batches = 0
 
     saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
     saver_output = ResultSaver(agent_output_dir)
@@ -451,14 +470,19 @@ def run_generator_batched(
             max_output_tokens = min(batch_output_estimate, model_max)
 
             # 3. LLM call
-            with timed_operation("generator_llm_call"):
-                response, used_model = call_llm(
-                    "generator", models=gen_models,
-                    input=input_list,
-                    tool_choice="none",
-                    truncation="auto",
-                    max_output_tokens=max_output_tokens,
-                )
+            try:
+                with timed_operation("generator_llm_call"):
+                    response, used_model = call_llm(
+                        "generator", models=gen_models,
+                        input=input_list,
+                        tool_choice="none",
+                        truncation="auto",
+                        max_output_tokens=max_output_tokens,
+                    )
+            except Exception as e:
+                logger.error("Generator failed for batch %s: %s", batch_label, e)
+                failed_batches += 1
+                continue
 
             if response.output_text:
                 input_list.append({
@@ -488,14 +512,19 @@ def run_generator_batched(
                     truncated, input_list = truncate_message_by_tokens(input_list, model_name)
                     truncated_at_any_register = truncated_at_any_register or truncated
 
-                    with timed_operation("generator_llm_call"):
-                        response, used_model = call_llm(
-                            "generator", models=gen_models,
-                            input=input_list,
-                            tool_choice="none",
-                            truncation="auto",
-                            max_output_tokens=max_output_tokens,
-                        )
+                    try:
+                        with timed_operation("generator_llm_call"):
+                            response, used_model = call_llm(
+                                "generator", models=gen_models,
+                                input=input_list,
+                                tool_choice="none",
+                                truncation="auto",
+                                max_output_tokens=max_output_tokens,
+                            )
+                    except Exception as e:
+                        logger.error("Generator follow-up failed for batch %s: %s", batch_label, e)
+                        failed_batches += 1
+                        continue
                     reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
                     usage.append(response.usage)
                 else:
@@ -594,6 +623,11 @@ def run_generator_batched(
                 "reasoning.jsonl",
             )
 
+    if failed_batches:
+        logger.error(
+            "Generator for %s: %d batch(es) failed and were skipped (resume to retry)",
+            device_name, failed_batches,
+        )
     return truncated_at_any_register
 
 
