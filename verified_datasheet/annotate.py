@@ -56,6 +56,20 @@ import sys
 import tempfile
 import xml.etree.ElementTree as ET
 
+# ---------------------------------------------------------------------------
+# Terminal colors (disabled when not a TTY, or when NO_COLOR is set)
+# ---------------------------------------------------------------------------
+_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
+def _c(code):
+    def wrap(s):
+        return f"\033[{code}m{s}\033[0m" if _COLOR else str(s)
+    return wrap
+REG_C   = _c("96")   # register / field — bright cyan
+KEY_C   = _c("93")   # invariant key — bright yellow
+SVD_C   = _c("92")   # SVD value — bright green
+DIM_C   = _c("2")    # counter / hint — dim
+BLIND_C = _c("95")   # blind banner — bright magenta
+
 REG_KEYS = ["address_offset", "reset_value", "size"]
 FIELD_KEYS = ["bit_offset", "bit_width", "access"]
 OUTPUT_FIELDS = [
@@ -448,6 +462,48 @@ def is_blind(cell, args, agent_vals):
 # Interactive loop
 # ---------------------------------------------------------------------------
 
+def print_command_key():
+    """The per-cell command legend, shown at session start and on `?`."""
+    print("Commands (per cell):")
+    print("  Enter    confirm the shown SVD value")
+    print("  <value>  type a different value (override; canonicalized)")
+    print("  f        re-run Preview's Find for this register (⌘G steps to next match)")
+    print("  a        mark datasheet-ambiguous")
+    print("  n        mark not-specified in the datasheet")
+    print("  s        skip (leave pending for later)")
+    print("  q        save and quit")
+    print("  ?        show this command key")
+    print("  (blind mode: SVD value hidden — Enter re-searches; type the value you read)")
+
+
+def plan_order(pending, spread):
+    """Order the pending cells for this session.
+
+    spread == 0 (default): worklist order — finish peripheral by peripheral.
+    spread == N > 0: round-robin across all peripherals, completing ONE WHOLE register per
+    peripheral per cycle, until at least N cells are planned. A partial session's verified
+    portion then touches every peripheral instead of only the first few, while each register
+    stays whole (one Preview jump, all its cells done together). The cap is honoured at the
+    register boundary — the plan may run a little past N rather than split a register.
+    """
+    if not spread:
+        return pending
+    from collections import OrderedDict
+    # bucket pending into register-chunks, preserving order, grouped by peripheral
+    buckets = OrderedDict()
+    for r in pending:
+        buckets.setdefault(r["peripheral"], OrderedDict()).setdefault(r["register"], []).append(r)
+    queues = OrderedDict((p, list(regs.values())) for p, regs in buckets.items())  # per-periph register-chunks
+    plan = []
+    while any(queues.values()) and len(plan) < spread:
+        for q in queues.values():
+            if q:
+                plan.extend(q.pop(0))      # take this peripheral's next WHOLE register
+                if len(plan) >= spread:
+                    break
+    return plan                            # whole registers only — never truncated mid-register
+
+
 def _marker_rows(derived_map):
     """One compact row per derivedFrom peripheral (never annotated). The diff expands it
     against the prototype's verified rows."""
@@ -483,9 +539,16 @@ def annotate(cells, derived_map, args):
     markers = _marker_rows(derived_map)   # appended at save time; not annotated
 
     pending = [r for r in rows if not r["status"]]
+    plan = plan_order(pending, args.spread)   # CLI presentation order only; file stays grouped
     print(f"\nWorklist: {len(rows)} cells across {len({(r['peripheral'], r['register']) for r in rows})} "
           f"registers (dedup hid {len(derived_map)} derived peripherals, kept as marker rows).")
-    print(f"Already done: {len(rows) - len(pending)}.  To annotate: {len(pending)}.\n? for help.")
+    print(f"Already done: {len(rows) - len(pending)}.  To annotate: {len(pending)}.")
+    if args.spread:
+        print(f"Spread mode: this session presents {len(plan)} cells round-robin across "
+              f"{len({r['peripheral'] for r in plan})} peripherals "
+              f"(of {len({r['peripheral'] for r in pending})} with pending cells); file order unchanged.")
+    print()
+    print_command_key()
 
     open_preview = bool(args.pdf) and not args.no_open
     if open_preview:
@@ -503,9 +566,7 @@ def annotate(cells, derived_map, args):
         save_atomic(args.out, rows + markers)
 
     last_register = None
-    for r in rows:
-        if r["status"]:
-            continue
+    for i, r in enumerate(plan, 1):
         pages = candidate_pages(args.pdf, r["peripheral"], r["register"])  # hint + provenance
         term = best_search_term(args.pdf, r["peripheral"], r["register"])
         blind = is_blind(r, args, agent_vals)
@@ -515,15 +576,15 @@ def annotate(cells, derived_map, args):
             preview_find(term)
         last_register = reg_id
 
-        idx = rows.index(r) + 1
-        label = f"{r['peripheral']}.{r['register']}" + (f".{r['field_name']}" if r["field_name"] else "")
+        label = REG_C(f"{r['peripheral']}.{r['register']}") + (
+            "." + REG_C(r["field_name"]) if r["field_name"] else "")
         hint = f"find: {term}" + (f" · pp.{','.join(map(str, pages[:6]))}" if pages else "")
         while True:
-            print(f"[{idx}/{len(rows)}]  {label}  :  {r['key']}   ({hint})")
+            print(f"{DIM_C(f'[{i}/{len(plan)}]')}  {label}  :  {KEY_C(r['key'])}   {DIM_C(f'({hint})')}")
             if blind:
-                prompt = "  BLIND — read the page, enter value> "
+                prompt = f"  {BLIND_C('BLIND')} — read the page, enter value> "
             else:
-                prompt = f"  SVD: {r['svd_value']!r}   [Enter=confirm / value / f a n s q] > "
+                prompt = f"  SVD: {SVD_C(repr(r['svd_value']))}   {DIM_C('[Enter=confirm / value / f a n s q]')} > "
             try:
                 ans = input(prompt)
             except (EOFError, KeyboardInterrupt):
@@ -531,6 +592,8 @@ def annotate(cells, derived_map, args):
                 _save(); return
             cmd = ans.strip()
 
+            if cmd == "?":                              # show the command key, re-prompt this cell
+                print_command_key(); continue
             if cmd == "f" or (cmd == "" and blind):     # re-search (blank-in-blind is not a value)
                 preview_find(term); continue
             if cmd == "q":
@@ -599,6 +662,9 @@ def main():
     ap.add_argument("--blind-sample", type=float, default=0.0, help="hide SVD value for a deterministic fraction (0..1)")
     ap.add_argument("--blind-disagreements", action="store_true", help="hide SVD value where the generator disagrees with the SVD")
     ap.add_argument("--no-open", action="store_true", help="do not open Preview / run searches")
+    ap.add_argument("--spread", type=int, default=0, metavar="N",
+                    help="annotate up to N pending cells this session, round-robin across ALL "
+                         "peripherals so a partial run touches every peripheral (breadth-first)")
     ap.add_argument("--stats", action="store_true", help="print worklist stats and exit (no annotation)")
     args = ap.parse_args()
 
