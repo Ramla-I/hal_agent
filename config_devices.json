@@ -108,6 +108,51 @@
       "run": 2,
       "file_id": "file-XbEecafgtidnALoE4qarHz",
       "vs_id": "vs_693b0615f51481919e951ae03d5b471e"
+    },
+    {
+      "device_name": "rm0313",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0316",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0368",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0451",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0505",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
     }
   ]
 }
