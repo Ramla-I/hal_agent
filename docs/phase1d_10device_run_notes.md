@@ -14,10 +14,33 @@ Excluded rm0041/rm0090 (reserved for 1b/eval).
 - Retry/backoff (`responses_create_with_retry`) active on generator + analyzer.
 
 ## Preprocessing (offline / CPU-bound, no API)
-_(filled in during the run)_
+7 devices, `--backend local`, 3 concurrent. All rc=0. Per-device wall time:
+rm0451 949s · rm0368 956s · rm0313 1140s · rm0505 1304s · rm0008 1352s · rm0316 1555s · rm0033 1638s.
+Total wall ~60 min (06:23→07:23 UTC). Fully offline (FastEmbed local; enrichment
+use_llm=False; no OpenAI upload on --backend local). Chunk counts 1036–1951.
+Observation: preprocessing dominated by PDF→markdown chunking + local embedding;
+this is the slow step, but it's embarrassingly parallel and API-free.
+
+Host: 192 CPU, 376 GB RAM — local resources are NOT the bottleneck.
+
+## Run topology decision (consequence of the OE-cache bug below)
+`--max-workers >1` is unsafe with `--retrieval openevolve`, and even sequential
+multi-device in one process is wrong, because the OE ephemeral DB is cached by
+program path only (all 10 devices share program output_rm0041). So this run uses
+**one device per Docker container, 10 containers in parallel** (process isolation
+→ correct per-device OE DB; 10 concurrent Groq request streams = the stress).
 
 ## Generation + analyzer (Groq — rate-limit surface)
 _(filled in during the run)_
+
+### HIGH — OpenEvolve DB cache ignores chunks_dir (correctness, multi-device)
+`context_retrieval/openevolve_search.py:_oe_cache` is keyed by resolved program
+path only; `_ensure_database` returns the cached collection whenever it exists,
+ignoring `chunks_dir`. Running multiple devices in one process with the same OE
+program (the rm0041 default for all STM) makes devices 2..N retrieve against the
+FIRST device's datasheet. Breaks s0 `--max-workers >1` AND sequential multi-device.
+Fix: key the cache by `(program_path, chunks_index_csv)` (or chunks_dir).
+Workaround used now: one device per process (separate containers).
 
 ## Issues log
 | Time (UTC) | Stage | Device | Issue | Notes |
