@@ -411,6 +411,10 @@ def run_pipeline_for_device(
 
         # Read settings from args (with config.py defaults)
         generator_model = args.generator_model or config.GENERATOR_MODEL_NAME
+        # Model list passed to the generator's call layer: an explicit
+        # --generator-model pins one model (no overflow); otherwise use the
+        # stage's ordered list (Groq primary, OpenAI overflow).
+        generator_models = [args.generator_model] if args.generator_model else config.STAGE_MODELS["generator"]
         ci_model = args.coverage_improver_model or config.COVERAGE_IMPROVER_MODEL_NAME
         validator_model = args.validator_model or config.VALIDATOR_MODEL_NAME
         ci_iterations = args.coverage_improver_iterations
@@ -464,6 +468,7 @@ def run_pipeline_for_device(
             context_retrieval_parameters=cr_params,
             manufacturer=ctx.manufacturer,
             peripherals_registers_dict=None,
+            models=generator_models,
         )
         result.generator_done = True
         result.truncated = truncated
@@ -529,6 +534,7 @@ def run_pipeline_for_device(
                         context_retrieval_parameters=current_cr_params,
                         manufacturer=ctx.manufacturer,
                         peripherals_registers_dict=None,
+                        models=generator_models,
                     )
 
                 # Update paths to the final run for subsequent steps
@@ -560,11 +566,7 @@ def run_pipeline_for_device(
         # -- Step 5: Bug finding (optional) --
         if not args.skip_evaluation:
             print(f"\n--- Step 5: Bug finding ---")
-            analyzer_model = args.generator_model or config.GENERATOR_MODEL_NAME
-            analyzer_client = determine_client(analyzer_model)
             bug_results = run_bug_finding(
-                client=analyzer_client,
-                model_name=analyzer_model,
                 svd_dir=paths.svd_dir,
                 agent_output_dir=paths.agent_output_dir,
                 results_dir=paths.results_dir,

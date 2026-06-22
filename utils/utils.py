@@ -1,6 +1,5 @@
 import logging
 import os
-import time
 from pathlib import Path
 
 
@@ -21,38 +20,6 @@ def count_tokens(text: str, encoding_name: str = "cl100k_base") -> int:
         return 0
 
 
-def responses_create_with_retry(client, *, max_retries: int = 6, base_delay: float = 2.0, **kwargs):
-    """Call ``client.responses.create(**kwargs)`` with exponential backoff.
-
-    Retries transient provider errors (over-capacity / rate-limit / connection /
-    timeout), which are common on long generator runs that make hundreds of calls.
-    Non-transient errors propagate immediately. The provider's 503 explicitly asks
-    callers to "back off exponentially".
-    """
-    from openai import (
-        APIConnectionError,
-        APITimeoutError,
-        InternalServerError,
-        RateLimitError,
-    )
-    transient = (InternalServerError, RateLimitError, APIConnectionError, APITimeoutError)
-    log = logging.getLogger(__name__)
-
-    last_error = None
-    for attempt in range(max_retries):
-        try:
-            return client.responses.create(**kwargs)
-        except transient as e:
-            last_error = e
-            if attempt == max_retries - 1:
-                break
-            delay = base_delay * (2 ** attempt)
-            log.warning(
-                "Transient API error (%s); retry %d/%d in %.1fs",
-                type(e).__name__, attempt + 1, max_retries, delay,
-            )
-            time.sleep(delay)
-    raise last_error
 
 _DETAILED_FORMAT = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d:%(funcName)s] - %(message)s',

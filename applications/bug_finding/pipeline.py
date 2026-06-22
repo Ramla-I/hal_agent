@@ -10,9 +10,6 @@ from __future__ import annotations
 import glob
 import os
 
-from groq import Groq
-from openai import OpenAI
-
 from utils.utils import setup_logger
 from .models import Bug, BugClass
 from .diff import diff_generator_against_svd
@@ -23,12 +20,11 @@ logger = setup_logger(__name__)
 
 
 def run_bug_finding(
-    client: OpenAI | Groq,
-    model_name: str,
     svd_dir: str,
     agent_output_dir: str,
     results_dir: str,
     run_analyzer_enabled: bool = True,
+    analyzer_models: list[str] | None = None,
 ) -> dict[str, list[BugClass]]:
     """Find SVD bugs for every SVD file in *svd_dir* against *agent_output_dir*.
 
@@ -36,9 +32,10 @@ def run_bug_finding(
     analyzer's usage/verdicts alongside) and returns ``{svd_name: [BugClass]}``.
 
     Args:
-        client/model_name: LLM client + model for the analyzer.
         run_analyzer_enabled: if False, skip the LLM filter and treat every
             value-mismatch diff as a (zero-confidence) candidate bug.
+        analyzer_models: model list for the analyzer (default
+            config.STAGE_MODELS["analyzer"]).
     """
     svd_files = sorted(glob.glob(os.path.join(svd_dir, "*.svd")))
     if not svd_files:
@@ -53,7 +50,7 @@ def run_bug_finding(
         diffs = diff_generator_against_svd(svd_path, agent_output_dir)
 
         if run_analyzer_enabled:
-            bugs = run_analyzer(client, model_name, svd_name, diffs, out_dir)
+            bugs = run_analyzer(svd_name, diffs, out_dir, models=analyzer_models)
         else:
             bugs = [Bug(diff=d) for d in diffs if d.is_value_mismatch]
 

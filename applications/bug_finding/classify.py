@@ -21,10 +21,9 @@ import json
 import os
 from typing import Optional
 
-from groq import Groq
-from openai import OpenAI
-
-from utils.utils import get_model_string, setup_logger, responses_create_with_retry
+import config
+from utils.utils import setup_logger
+from utils.llm import call_llm
 from utils.parse_output import get_json_block_from_response
 from utils.result_saver import ResultSaver, UsageStats
 from utils.models import model_costs
@@ -57,16 +56,16 @@ def _format_candidates(candidates: list[Diff]) -> str:
 
 
 def run_analyzer(
-    client: OpenAI | Groq,
-    model_name: str,
     svd_file_name: str,
     diffs: list[Diff],
     output_dir: str,
+    models: list[str] | None = None,
 ) -> list[Bug]:
     """Filter value-mismatch diffs to real SVD bugs via the analyzer LLM.
 
-    Returns a list of Bugs (diff + confidence); datasheet evidence is left empty
-    here and filled by ``attach_evidence``.
+    Uses the central call layer with ``models`` (default config.STAGE_MODELS
+    ["analyzer"], a low-cost OpenAI model off the Groq pool). Returns a list of
+    Bugs (diff + confidence); datasheet evidence is filled by ``attach_evidence``.
     """
     candidates = [d for d in diffs if d.is_value_mismatch]
     logger.info(
@@ -75,6 +74,7 @@ def run_analyzer(
     if not candidates:
         return []
 
+    model_list = models or config.STAGE_MODELS.get("analyzer")
     saver = ResultSaver(output_dir)
     user_prompt = (
         "Differences to analyze:\n"
@@ -82,13 +82,11 @@ def run_analyzer(
         "Return the JSON object of real candidate bugs."
     )
 
-    # Generous output budget: gpt-oss-120b is a reasoning model, so reasoning
-    # tokens share the budget with the JSON answer. Without a high cap the JSON
-    # can be truncated for SVDs with many candidates.
-    model_max = model_costs.get(model_name, {}).get("max_output_tokens", 32_768)
-    response = responses_create_with_retry(
-        client,
-        model=get_model_string(model_name),
+    # Generous output budget: reasoning models share the budget between reasoning
+    # and the JSON answer; without a high cap the JSON truncates for many candidates.
+    model_max = model_costs.get(model_list[0], {}).get("max_output_tokens", 32_768)
+    response, used_model = call_llm(
+        "analyzer", models=model_list,
         input=[
             {"role": "developer", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
@@ -99,7 +97,7 @@ def run_analyzer(
     )
 
     saver.save_usage_stats(
-        UsageStats.from_response_usage(model_name, response.usage),
+        UsageStats.from_response_usage(used_model, response.usage),
         "usage.csv",
         additional_fields={"svd_name": svd_file_name, "candidates": len(candidates)},
     )

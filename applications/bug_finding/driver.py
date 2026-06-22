@@ -18,7 +18,7 @@ if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
 import config
-from core.s0_run_full_analysis import determine_client, resolve_device_paths
+from core.s0_run_full_analysis import resolve_device_paths
 from applications.bug_finding.pipeline import run_bug_finding
 
 
@@ -44,11 +44,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Find SVD bugs from a generated run")
     parser.add_argument("--device", required=True, help="Device name (e.g. rm0091)")
     parser.add_argument("--run", type=int, help="Run number (default: latest existing)")
-    parser.add_argument("--model", default=config.GENERATOR_MODEL_NAME,
-                        help=f"Analyzer model (default: {config.GENERATOR_MODEL_NAME})")
+    parser.add_argument("--analyzer-models", default=None,
+                        help="Comma-separated analyzer model list "
+                             f"(default: {','.join(config.STAGE_MODELS['analyzer'])})")
     parser.add_argument("--no-analyzer", action="store_true",
                         help="Skip the analyzer; treat every value mismatch as a candidate bug")
     args = parser.parse_args()
+    analyzer_models = (
+        [m.strip() for m in args.analyzer_models.split(",") if m.strip()]
+        if args.analyzer_models else None
+    )
 
     ctx = _resolve_context(args.device)
     run_number = args.run or _latest_run(_REPO_ROOT, ctx)
@@ -62,15 +67,14 @@ def main() -> None:
     if not os.path.isdir(paths.agent_output_dir):
         raise SystemExit(f"Agent output dir missing: {paths.agent_output_dir}")
 
-    print(f"Bug finding: {args.device} (run {run_number}), analyzer={'off' if args.no_analyzer else args.model}")
-    client = determine_client(args.model)
+    analyzer_label = "off" if args.no_analyzer else ",".join(analyzer_models or config.STAGE_MODELS["analyzer"])
+    print(f"Bug finding: {args.device} (run {run_number}), analyzer={analyzer_label}")
     results = run_bug_finding(
-        client=client,
-        model_name=args.model,
         svd_dir=paths.svd_dir,
         agent_output_dir=paths.agent_output_dir,
         results_dir=paths.results_dir,
         run_analyzer_enabled=not args.no_analyzer,
+        analyzer_models=analyzer_models,
     )
 
     print(f"\n{'SVD':<16} {'bugs':>5} {'classes':>8}")

@@ -18,7 +18,8 @@ from utils.parse_output import (
     get_function_calls_from_response,
 )
 from utils.function_call_handler import create_default_handler
-from utils.utils import get_model_string, setup_logger, count_tokens, responses_create_with_retry
+from utils.utils import setup_logger, count_tokens
+from utils.llm import call_llm
 from utils.models import model_costs
 from utils.result_saver import ResultSaver, UsageStats
 from utils.timing import timed_operation
@@ -37,7 +38,8 @@ def run_generator(
     agent_output_dir: str,
     context_retrieval_parameters: ContextRetrievalParameters,
     manufacturer: Manufacturer,
-    peripherals_registers_dict: Optional[Dict[str, List[str]]] = None
+    peripherals_registers_dict: Optional[Dict[str, List[str]]] = None,
+    models: Optional[List[str]] = None,
 ) -> bool:
     """
     Runs the generator agent for a given device and run number.
@@ -55,6 +57,9 @@ def run_generator(
     """
     logger.info(f"Running generator for device {device_name} with run number {run_number}")
 
+    # Model list for the call layer: explicit `models` (with overflow) or just the
+    # single requested model (back-compat for callers that pin one model).
+    gen_models = models or [model_name]
     truncated_at_any_register = False
 
     saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
@@ -133,13 +138,11 @@ def run_generator(
                 logger.info(f"Truncated input list for {peripheral_name}_{register_name}")
 
             with timed_operation("generator_llm_call"):
-                response = responses_create_with_retry(client,
-                    # messages=messages,
-                    model=get_model_string(model_name),
+                response, used_model = call_llm(
+                    "generator", models=gen_models,
                     input=input_list,
-                    tool_choice = "none",
+                    tool_choice="none",
                     truncation="auto",
-                    # tools=tools,
                 )
 
             if response.output_text:
@@ -184,18 +187,17 @@ def run_generator(
 
                 # Get response after function calls
                 with timed_operation("generator_llm_call"):
-                    response = responses_create_with_retry(client,
-                        model=get_model_string(model_name),
+                    response, used_model = call_llm(
+                        "generator", models=gen_models,
                         input=input_list,
-                        tool_choice = "none",
+                        tool_choice="none",
                         truncation="auto",
-                        # tools=tools,
                     )
                 reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
                 json_block = get_json_block_from_response(rest_of_response)
                 usage.append(response.usage)
 
-            usage_stats = UsageStats.aggregate(model_name, usage, file_search_tokens)
+            usage_stats = UsageStats.aggregate(used_model, usage, file_search_tokens)
             saver_info.save_usage_stats(
                 usage_stats,
                 "usage.csv",
@@ -306,6 +308,7 @@ def run_generator_batched(
     skip_function_followup: bool = False,
     system_prompt_override: Optional[str] = None,
     retrieval_only: bool = False,
+    models: Optional[List[str]] = None,
 ) -> bool:
     """Per-peripheral batched generator — one LLM call per batch of registers.
 
@@ -321,6 +324,7 @@ def run_generator_batched(
         device_name, run_number,
     )
 
+    gen_models = models or [model_name]
     truncated_at_any_register = False
 
     saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
@@ -448,8 +452,8 @@ def run_generator_batched(
 
             # 3. LLM call
             with timed_operation("generator_llm_call"):
-                response = responses_create_with_retry(client,
-                    model=get_model_string(model_name),
+                response, used_model = call_llm(
+                    "generator", models=gen_models,
                     input=input_list,
                     tool_choice="none",
                     truncation="auto",
@@ -485,8 +489,8 @@ def run_generator_batched(
                     truncated_at_any_register = truncated_at_any_register or truncated
 
                     with timed_operation("generator_llm_call"):
-                        response = responses_create_with_retry(client,
-                            model=get_model_string(model_name),
+                        response, used_model = call_llm(
+                            "generator", models=gen_models,
                             input=input_list,
                             tool_choice="none",
                             truncation="auto",
@@ -565,7 +569,7 @@ def run_generator_batched(
                 logger.warning("No JSON array parsed for batch %s", batch_label)
 
             # 7. Save usage & reasoning
-            usage_stats = UsageStats.aggregate(model_name, usage, file_search_tokens)
+            usage_stats = UsageStats.aggregate(used_model, usage, file_search_tokens)
             batch_register_names = ", ".join(batch) if batch else "(discovery)"
             saver_info.save_usage_stats(
                 usage_stats,
