@@ -71,8 +71,103 @@ Produces:
 - `summary_timing.csv`
 
 ### `CREATE_TEST_SET.PY`
-Builds synthetic test sets by perturbing a verified CSV with incorrect values
-and/or incorrect names. Useful for controlled accuracy testing.
+Builds synthetic test sets by perturbing a verified CSV with **realistic** incorrect
+values and/or field names (see `corruption.py`). Useful for controlled accuracy
+testing. Rows with an empty `correct_value` are dropped (never human-confirmed).
+
+## VALIDATOR CROSS-VALIDATION (paper §"Benchmarking the Validator as a Noisy Labeler")
+
+Benchmark the Validator as a noisy binary labeler with k-fold cross-validation at
+(Peripheral, Register) granularity, then calibrate downstream measurements. The
+authoritative spec + full results + divergence log live in
+`docs/validator_paper_plan.md`; this is the operational summary.
+
+### Current design (pipeline)
+
+1. **Build benchmark** (`kfold.py`): load verified CSV, drop empty-`correct_value`
+   rows, corrupt 30% of invariants (replace, no true/corrupted pairs) with realistic
+   per-key errors (`corruption.py`: in-range bit fields, nibble-flip/neighbour hex,
+   size ∈ {8,16,32,64}, access swaps, real sibling names / one-edit typos), assign
+   whole (peripheral, register) groups to k folds (correlated invariants never straddle
+   train/held-out).
+2. **Retrieve** (`make_retriever` in `cross_validate.py`): default backend is the
+   **OpenEvolve evolved program** (`--retrieval openevolve`) — needs the device's
+   `chunked_datasheets/<mfr>/<dev>/chunks/md/` + Chroma DB (copy from main repo or
+   preprocess). `--retrieval openai` uses OpenAI file_search (weaker: no register
+   metadata filter).
+3. **Evaluate** (`evaluate_rows`): per register, **chunk invariants to ≤`--max-per-call`
+   (default 12) with split-and-retry** on JSON/truncation failure — prevents a large
+   register's response from overflowing the output-token limit and defaulting the whole
+   register to reject. The system prompt carries a **vendor access-notation legend**
+   (see below).
+4. **Cross-validate** (`cross_validate` + `cross_validate_mined`): the Validator is run
+   once per invariant (baseline); then per fold, **in-context examples are mined from
+   that fold's training-partition FP/FN** and the held-out fold is re-evaluated with the
+   augmented prompt (tuned). Decision threshold is also tuned per fold on training
+   scores. Per-fold confusion matrices aggregate → α, β, F1.
+5. **Calibrate** (`calibration.py`): π = (r̂−(1−β))/(α+β−1) (Rogan–Gladen) and
+   validated-set precision P(C=1|V=1) = α·π/r̂, with α+β>1 identifiability + clamp guards.
+   ⚠️ Within a single run π just recovers the benchmark's known prevalence (algebraic
+   identity) — it's informative only when benchmark-measured α/β are applied to a
+   *different* r̂ (see TODO).
+
+### Access-notation legend (vendor-extensible)
+
+Datasheets write access with vendor codes (`rc_w0`, `rw`, …); verified data uses
+canonical `read-write`/`read-only`/`write-only`. The map is a **plain data file** —
+`agent_tools/access_notations.json`, keyed by vendor — so adding a vendor is a JSON
+edit, no code change. `agent_tools/access_notation.py` builds the legend injected into
+the validator system prompt (batched + sequential, so production `s4` benefits too).
+Select with `--vendor <key>` (default `stm`; `none` disables).
+
+### Files
+- **`corruption.py`** — realistic per-key corruption + field-name corruption.
+- **`kfold.py`** — corrupted benchmark + (peripheral, register) group k-fold.
+- **`calibration.py`** — `ConfusionMatrix` + Rogan–Gladen `calibrate()`.
+- **`cross_validate.py`** — orchestrator (retrieval dispatch, chunked inference,
+  example mining, threshold tuning, calibration, outputs). `MODELS` list / `--model`.
+- **`tests/test_offline.py`** — offline unit tests (no network).
+
+### Run (in the project container)
+```bash
+scripts/docker_run.sh run -m optimization_validator.tests.test_offline                     # offline tests
+scripts/docker_run.sh run -m optimization_validator.cross_validate --smoke --model gpt-oss-120b   # tiny e2e
+scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.5 --k 5 \
+    --retrieval openevolve --vendor stm                                                    # full sweep (billable)
+```
+
+Outputs → `optimization_validator/<device>/cross_validation/<model|smoke>/` (gitignored):
+`judgments_<model>.csv` (per-row + reasoning + `reg_in_context`/`file_search_chars`
+coverage), `judgments_tuned_<model>.csv`, `error_analysis_<model>.csv` (FP/FN),
+`per_fold_<model>.csv`, `summary_<model>.{csv,json}` (baseline vs tuned),
+`prompts/` (the exact per-fold system prompt incl. legend + mined examples).
+
+### Results so far (rm0041, k=5, 2,459 invariants; OpenEvolve + chunked batching)
+| Model | F1 (tuned) | validated precision | raw sens. | β |
+|---|---|---|---|---|
+| gpt-oss-120b | 0.91 | 0.95 | 0.85 | 0.90 |
+| gpt-5.5 (+ access legend) | **0.975** | 0.96 | 0.98 | 0.90 |
+
+### OPEN TODOS
+- [ ] **Tune the number of mined in-context examples** (`max_per_class`, currently 6/class
+      → 12/fold). Sweep it and find where added examples stop improving F1 — each one
+      grows every system prompt (× every call), so the prompt shouldn't balloon. Measure
+      the accuracy-vs-prompt-size tradeoff and pick the smallest count that keeps the gain;
+      consider dropping near-duplicate / low-information examples.
+- [ ] **Fill in real NXP / TI access notations** in `agent_tools/access_notations.json`
+      (currently stubs) when ke04 / msp430g2 slices are benchmarked.
+- [ ] **Benchmark the held-out vendors** (NXP `ke04`, then TI) — verified slices exist;
+      tests whether rm0041 numbers transfer. Needs each device's chunks/Chroma + an
+      OpenEvolve program (or `--retrieval openai`).
+- [ ] **Genuine calibration test for π**: measure α/β on the 30% benchmark, apply to a
+      held-out slice with a *different* corruption rate (e.g. 50%), check π recovers
+      ~0.50. Only this exercises the correction (within-run π is an identity).
+- [ ] **Access FP tradeoff**: the legend lifts recall but accepts a few more corrupted
+      access values (gpt-5.5 β 0.909→0.897). Consider a stricter legend wording or a
+      specificity-aware threshold objective if precision matters more downstream.
+- [ ] **Field-table retrieval misses**: gpt-oss access FN are partly fields whose
+      bit-table isn't retrieved (legend can't help). Revisit retrieval granularity.
+- [ ] **Second-model cost**: gpt-5.5 sweep ≈ 15 min/run; budget before broad sweeps.
 
 ### `PLOT_EXPERIMENT_SCATTER.PY`
 Creates a scatter plot of total time vs F1 score, with point size proportional

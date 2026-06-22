@@ -5,8 +5,9 @@ def create_validator_file_search_query(peripheral_name: str, register_name: str,
     The given value of the key is {value}, but it could be different in the datasheet.
     """
 
-def create_validator_system_prompt() -> str:
-    return f"""
+def create_validator_system_prompt(access_legend: str = "") -> str:
+    legend_block = f"\n\n{access_legend}\n" if access_legend else ""
+    return f"""{legend_block}
     You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets. 
     You will need to validate facts about a register and return a confidence score indicating how confident you are in the fact being true.
 
@@ -224,9 +225,15 @@ def create_batched_validator_file_search_query(peripheral_name: str, register_na
     Include information about the register's address offset, reset value, size, and all its fields/subfields.
     """
 
-def create_batched_validator_system_prompt() -> str:
-    """System prompt for batched validation of multiple invariants across registers"""
-    return f"""
+def create_batched_validator_system_prompt(access_legend: str = "") -> str:
+    """System prompt for batched validation of multiple invariants across registers.
+
+    access_legend: optional vendor access-notation section (see
+    agent_tools.access_notation.access_legend) appended so the model treats datasheet
+    codes like `rc_w0` as the canonical `read-write` access type.
+    """
+    legend_block = f"\n\n{access_legend}\n" if access_legend else ""
+    return f"""{legend_block}
     You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets.
     You will need to validate multiple facts about one or more registers and return confidence scores for each.
 

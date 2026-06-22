@@ -1,170 +1,133 @@
-import pandas as pd
+"""Build synthetic Validator test sets by corrupting a verified datasheet.
+
+Corruptions are now *realistic* (paper section "Benchmarking the Validator as a Noisy
+Labeler"): wrong values are produced by the per-key strategies in `corruption.py`
+(in-range bit fields, nibble-flipped / neighbour hex, size in {8,16,32}, real sibling
+field names or one-edit typos) instead of the old uniform-random values
+(`bit_width=69`) and gibberish names (`vvayurpxfkp`), which the Validator could reject
+trivially and which therefore biased its measured specificity.
+
+Two entry points:
+  * create_test_set(...)            — legacy row-range API (kept for compatibility),
+                                       now backed by realistic corruption.
+  * make_benchmark_with_folds(...)  — preferred: a corrupted, (Peripheral, Register)-
+                                       folded benchmark for cross-validation
+                                       (see optimization_validator/kfold.py).
+
+Output columns match what run_validator / run_validator_batched expect:
+  peripheral, register, field_name, key, correct_value, is_correct
+plus corruption_type for error analysis.
+"""
+
+from __future__ import annotations
+
+import os
 import random
-import re
+import sys
+
+import pandas as pd
+
+# Allow `python optimization_validator/create_test_set.py` as well as package import.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from optimization_validator.corruption import (  # noqa: E402
+    build_register_contexts,
+    corrupt_field_name,
+    corrupt_value,
+)
+from optimization_validator.kfold import make_benchmark_with_folds  # noqa: E402  (re-exported)
+
+_OUTPUT_COLUMNS = ["peripheral", "register", "field_name", "key", "correct_value", "is_correct", "corruption_type"]
 
 
-def create_test_set(csv_file_path, start_row, end_row, keep_percentage, incorrect_value_percentage, incorrect_name_percentage=0):
-    """
-    Creates a test set from a CSV file with modified values for testing.
-    
+def create_test_set(
+    csv_file_path,
+    start_row,
+    end_row,
+    keep_percentage,
+    incorrect_value_percentage,
+    incorrect_name_percentage=0,
+    seed: int = 0,
+):
+    """Create a test set from a verified CSV with *realistic* corruptions.
+
     Args:
-        csv_file_path (str): Path to the input CSV file
-        start_row (int): Start row index
-        end_row (int): End row index
-        keep_percentage (float): Percentage of rows to keep unchanged (0-100)
-        incorrect_value_percentage (float): Percentage of rows to change (0-100)
-        incorrect_name_percentage (float): Percentage of rows to have incorrect peripheral/register/field_name (0-100)
-    
+        csv_file_path: Path to the verified datasheet CSV.
+        start_row, end_row: Row slice of the verified CSV to use.
+        keep_percentage: Percentage of rows left unchanged (correct positives).
+        incorrect_value_percentage: Percentage of rows whose value is corrupted.
+        incorrect_name_percentage: Percentage of rows whose field name is corrupted.
+        seed: RNG seed for reproducibility.
+
     Returns:
-        pd.DataFrame: DataFrame with columns: peripheral, register, field_name, key, 
-                     correct_value, and is_correct (True/False)
-    
-    Note:
-        keep_percentage + incorrect_value_percentage + incorrect_name_percentage should equal 100
+        DataFrame with columns peripheral, register, field_name, key, correct_value,
+        is_correct, corruption_type.
+
+    Note: keep + incorrect_value + incorrect_name should sum to ~100. Rows with an
+    empty correct_value are dropped (never human-verified, so not usable as ground
+    truth or as a corruption base).
     """
-    # Read the CSV file
-    df = pd.read_csv(csv_file_path)
-    
+    rng = random.Random(seed)
+
+    df = pd.read_csv(csv_file_path, dtype=str, keep_default_na=False)
     df = df.iloc[start_row:end_row].reset_index(drop=True)
-    
-    # Keep only the specified columns
-    columns_to_keep = ['peripheral', 'register', 'field_name', 'key', 'correct_value']
-    df = df[columns_to_keep].copy()
-    
-    # Calculate number of rows to change
-    total_rows = len(df)
-    num_to_change = int(total_rows * incorrect_value_percentage / 100)
-    num_incorrect_names = int(total_rows * incorrect_name_percentage / 100)
-    
-    # Initialize the is_correct column with True
-    df['is_correct'] = True
-    df['is_incorrect_name'] = False
-    
-    # Initialize list to track rows with incorrect names
-    incorrect_name_indices = []
-    
-    # Randomly select rows to have incorrect names (peripheral, register, field_name)
-    if num_incorrect_names > 0:
-        incorrect_name_indices = random.sample(range(total_rows), num_incorrect_names)
-        
-        for idx in incorrect_name_indices:
-            # Randomly pick one of peripheral, register, or field_name to replace with a random name
-            name_column = random.choice(['peripheral', 'register', 'field_name'])
-            df.loc[idx, name_column] = _generate_random_name()
-            df.loc[idx, 'is_correct'] = False
-            df.loc[idx, 'is_incorrect_name'] = True
-    
-    # Randomly select rows to change the value (excluding those already changed for names)
-    if num_to_change > 0:
-        # Get available indices (exclude those already changed for names)
-        available_indices = [i for i in range(total_rows) if i not in incorrect_name_indices]
-        # Sample from available indices, but don't exceed the number available
-        num_to_change_actual = min(num_to_change, len(available_indices))
-        if num_to_change_actual > 0:
-            change_indices = random.sample(available_indices, num_to_change_actual)
-            
-            for idx in change_indices:
-                # Change the correct_value randomly
-                original_value = df.loc[idx, 'correct_value']
-                new_value = _generate_random_value(original_value)
-                df.loc[idx, 'correct_value'] = new_value
-                df.loc[idx, 'is_correct'] = False
-    
-    return df
+    df = df[["peripheral", "register", "field_name", "key", "correct_value"]].copy()
+    df["correct_value"] = df["correct_value"].astype(str).str.strip()
+    df = df[df["correct_value"] != ""].reset_index(drop=True)
 
+    contexts = build_register_contexts(df)
 
-def _generate_random_name(length=None):
-    """
-    Generates a random name using a combination of letters.
-    
-    Args:
-        length (int, optional): Desired length of the name. If None, uses random length between 3-12.
-    
-    Returns:
-        str: A random string of letters
-    """
-    if length is None:
-        length = random.randint(3, 12)
-    
-    # Generate random combination of letters
-    letters = 'abcdefghijklmnopqrstuvwxyz'
-    return ''.join(random.choice(letters) for _ in range(length))
+    total = len(df)
+    num_names = int(total * incorrect_name_percentage / 100)
+    num_values = int(total * incorrect_value_percentage / 100)
 
+    df["is_correct"] = True
+    df["corruption_type"] = ""
 
-def _generate_random_value(original_value):
-    """
-    Generates a random value based on the type of the original value.
-    Ensures the new value is different from the original.
-    
-    Args:
-        original_value: The original value (can be string, int, hex string, etc.)
-    
-    Returns:
-        A randomly generated value of similar type that differs from the original
-    """
-    # Handle NaN or empty values
-    if pd.isna(original_value) or original_value == '':
-        return random.choice(['0', '0x0', '1', '0x1'])
-    
-    original_str = str(original_value).strip()
-    
-    # Check if it's a hex value (starts with 0x)
-    hex_pattern = re.compile(r'^0x[0-9a-fA-F]+$')
-    if hex_pattern.match(original_str):
-        # Extract the hex number
-        hex_num = int(original_str, 16)
-        # Generate a random hex value that's different from the original
-        # Keep it reasonable, within 0-0xFFFFFFFF
-        max_val = min(0xFFFFFFFF, max(0xFF, hex_num * 2 + 10))
-        while True:
-            random_hex = random.randint(0, max_val)
-            if random_hex != hex_num:
-                return f'0x{random_hex:X}'
-    
-    # Check for access types like 'read-only', 'write-only', or 'read-write'
-    if isinstance(original_value, str):
-        access_types = ["read-only", "write-only", "read-write", "reserved"]
-        if original_value in access_types:
-            # Choose a new (different) access type at random
-            access_options = [x for x in access_types if x != original_value]
-            return random.choice(access_options).lower()
+    # Field-name corruptions only apply to rows that actually have a field name.
+    field_row_indices = [i for i in range(total) if str(df.loc[i, "field_name"]).strip() != ""]
+    rng.shuffle(field_row_indices)
+    name_indices = set(field_row_indices[:num_names])
 
-    # Check if it's a decimal number
-    try:
-        num_value = int(original_str)
-        # Generate a random number that's different from the original
-        # Keep it reasonable
-        max_val = max(100, num_value * 2 + 10)
-        while True:
-            random_num = random.randint(0, max_val)
-            if random_num != num_value:
-                return str(random_num)
-    
-    except ValueError:
-        # If it's not a number, return a random string or number
-        return random.choice(['0', '1', '0x0', '0x1', str(random.randint(0, 100))])
+    for idx in name_indices:
+        ctx = contexts[(df.loc[idx, "peripheral"], df.loc[idx, "register"])]
+        df.loc[idx, "field_name"] = corrupt_field_name(str(df.loc[idx, "field_name"]), ctx, rng)
+        df.loc[idx, "is_correct"] = False
+        df.loc[idx, "corruption_type"] = "field_name"
+
+    available = [i for i in range(total) if i not in name_indices]
+    rng.shuffle(available)
+    value_indices = available[: min(num_values, len(available))]
+
+    for idx in value_indices:
+        ctx = contexts[(df.loc[idx, "peripheral"], df.loc[idx, "register"])]
+        field_name = str(df.loc[idx, "field_name"]).strip()
+        df.loc[idx, "correct_value"] = corrupt_value(
+            df.loc[idx, "key"], df.loc[idx, "correct_value"], ctx, field_name, rng
+        )
+        df.loc[idx, "is_correct"] = False
+        df.loc[idx, "corruption_type"] = "value"
+
+    return df[_OUTPUT_COLUMNS]
 
 
 def save_test_set(df, output_path):
-    """
-    Saves the test set DataFrame to a CSV file.
-    
-    Args:
-        df (pd.DataFrame): The test set DataFrame
-        output_path (str): Path where to save the CSV file
-    """
     df.to_csv(output_path, index=False)
     print(f"Test set saved to {output_path}")
 
 
-if __name__ == '__main__':
-    # Example usage
-    csv_path = 'verified_datasheet/stm/rm0041_stm32f100.csv'
-    result_df = create_test_set(csv_path, start_row=1000, end_row=1500, keep_percentage=60, incorrect_value_percentage=30, incorrect_name_percentage=10)
-    print(f"\nTotal rows: {len(result_df)}")
-    print(f"Rows with is_correct=True: {result_df['is_correct'].sum()}")
-    print(f"Rows with is_correct=False: {(~result_df['is_correct']).sum()}")
-    
-    # Uncomment to save the output
-    save_test_set(result_df, 'test_set_output.csv')
-
+if __name__ == "__main__":
+    csv_path = "verified_datasheet/stm/rm0041_stm32f100.csv"
+    result_df = create_test_set(
+        csv_path,
+        start_row=0,
+        end_row=10_000,
+        keep_percentage=70,
+        incorrect_value_percentage=20,
+        incorrect_name_percentage=10,
+        seed=0,
+    )
+    print(f"Total rows:        {len(result_df)}")
+    print(f"is_correct=True:   {int(result_df['is_correct'].sum())}")
+    print(f"is_correct=False:  {int((~result_df['is_correct']).sum())}")
+    print(result_df["corruption_type"].value_counts().to_dict())
