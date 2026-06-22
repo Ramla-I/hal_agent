@@ -67,6 +67,7 @@ Tall — one row per invariant cell — keyed by the **SVD's** `(peripheral, reg
 | column | meaning |
 |---|---|
 | `peripheral`, `register`, `field_name`, `key` | the SVD-keyed cell identity (`field_name` empty for register-level keys) |
+| `alt_name` | the field/register's name **as printed in the datasheet**, when it differs from the SVD's — e.g. SVD `bkp.dr1.d1` is just `D` in the datasheet (the SVD suffixed it to disambiguate per-register). Recorded for provenance only; the row stays keyed by the SVD name so the diff join is unaffected. Empty when the names match. |
 | `correct_value` | **the human-verified datasheet value** (canonical form); the column the diff pipeline reads |
 | `svd_value` | the value the SVD asserts (shown as the confirm-or-override default) |
 | `agent_value` | the generator's value — stored only to *target* blind annotation at disagreements; **never shown during annotation** |
@@ -124,6 +125,7 @@ The tool builds the SVD-keyed worklist (deduping `derivedFrom` peripherals), ope
 | `f` | re-run Preview's Find for this register (⌘G in Preview steps to the next match) |
 | `a` | mark `datasheet-ambiguous` |
 | `n` | mark `not-specified` in the datasheet |
+| `r` | record the datasheet's name for this field/register (alias) when it differs from the SVD's — applied to all cells of the field/register, into the `alt_name` column; the SVD key is kept, so you still enter the value afterward |
 | `s` | skip (leave pending for later) |
 | `q` | save and quit |
 

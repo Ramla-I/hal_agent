@@ -73,7 +73,7 @@ BLIND_C = _c("95")   # blind banner — bright magenta
 REG_KEYS = ["address_offset", "reset_value", "size"]
 FIELD_KEYS = ["bit_offset", "bit_width", "access"]
 OUTPUT_FIELDS = [
-    "peripheral", "register", "field_name", "key",
+    "peripheral", "register", "field_name", "alt_name", "key",
     "correct_value", "svd_value", "agent_value",
     "status", "page", "set_method", "derived_from",
 ]
@@ -470,38 +470,63 @@ def print_command_key():
     print("  f        re-run Preview's Find for this register (⌘G steps to next match)")
     print("  a        mark datasheet-ambiguous")
     print("  n        mark not-specified in the datasheet")
+    print("  r        record the datasheet's name for this field/register (alias; keeps SVD key)")
     print("  s        skip (leave pending for later)")
     print("  q        save and quit")
     print("  ?        show this command key")
     print("  (blind mode: SVD value hidden — Enter re-searches; type the value you read)")
 
 
-def plan_order(pending, spread):
-    """Order the pending cells for this session.
+def plan_order(rows, spread):
+    """Order this session's pending cells for presentation.
 
     spread == 0 (default): worklist order — finish peripheral by peripheral.
-    spread == N > 0: round-robin across all peripherals, completing ONE WHOLE register per
-    peripheral per cycle, until at least N cells are planned. A partial session's verified
-    portion then touches every peripheral instead of only the first few, while each register
-    stays whole (one Preview jump, all its cells done together). The cap is honoured at the
-    register boundary — the plan may run a little past N rather than split a register.
+    spread == N > 0: equalize-then-round-robin across peripherals, by COMPLETION PROPORTION,
+    completing ONE WHOLE register at a time, until at least N cells are planned.
+
+    Each step serves the peripheral with the LOWEST completion proportion (already-done +
+    planned-this-session, over its total cells) its next whole register. When proportions are
+    uneven this first lifts the laggards up to parity (a peripheral already further along is
+    not served until the others catch up to it); once even it naturally round-robins. So a
+    partial session leaves every peripheral at roughly the same completion, not just the first
+    few finished. Registers stay whole (one Preview jump); the cap is honoured at the register
+    boundary, so the plan may run a little past N rather than split a register.
     """
+    from collections import OrderedDict
+    pending = [r for r in rows if not r["status"]]
     if not spread:
         return pending
-    from collections import OrderedDict
-    # bucket pending into register-chunks, preserving order, grouped by peripheral
+
+    # per-peripheral totals and already-done counts (from the full worklist, in order)
+    total, done, order = OrderedDict(), {}, {}
+    for r in rows:
+        if not r["register"] or r["status"] == STATUS_DERIVED:
+            continue
+        p = r["peripheral"]
+        if p not in total:
+            total[p], done[p], order[p] = 0, 0, len(order)
+        total[p] += 1
+        if r["status"]:
+            done[p] += 1
+
+    # per-peripheral queues of pending register-chunks, in worklist order
     buckets = OrderedDict()
     for r in pending:
         buckets.setdefault(r["peripheral"], OrderedDict()).setdefault(r["register"], []).append(r)
-    queues = OrderedDict((p, list(regs.values())) for p, regs in buckets.items())  # per-periph register-chunks
+    queues = {p: list(regs.values()) for p, regs in buckets.items()}
+
+    planned = dict(done)                       # done count grows as we plan registers
     plan = []
-    while any(queues.values()) and len(plan) < spread:
-        for q in queues.values():
-            if q:
-                plan.extend(q.pop(0))      # take this peripheral's next WHOLE register
-                if len(plan) >= spread:
-                    break
-    return plan                            # whole registers only — never truncated mid-register
+    while len(plan) < spread:
+        cands = [p for p in queues if queues[p]]
+        if not cands:
+            break
+        # lowest completion proportion first; stable tie-break by worklist order (round-robin)
+        p = min(cands, key=lambda p: (planned[p] / total[p], order[p]))
+        chunk = queues[p].pop(0)               # this peripheral's next WHOLE register
+        plan.extend(chunk)
+        planned[p] += len(chunk)
+    return plan                                # whole registers only — never truncated mid-register
 
 
 def _marker_rows(derived_map):
@@ -529,6 +554,7 @@ def annotate(cells, derived_map, args):
         row.update({k: c[k] for k in ("peripheral", "register", "field_name", "key")})
         row["svd_value"] = c["svd_value"]
         row.setdefault("correct_value", "")
+        row.setdefault("alt_name", "")          # datasheet's name for this field/register, if it differs
         row.setdefault("status", "")
         row.setdefault("set_method", "")
         row.setdefault("page", "")
@@ -539,7 +565,7 @@ def annotate(cells, derived_map, args):
     markers = _marker_rows(derived_map)   # appended at save time; not annotated
 
     pending = [r for r in rows if not r["status"]]
-    plan = plan_order(pending, args.spread)   # CLI presentation order only; file stays grouped
+    plan = plan_order(rows, args.spread)      # CLI presentation order only; file stays grouped
     print(f"\nWorklist: {len(rows)} cells across {len({(r['peripheral'], r['register']) for r in rows})} "
           f"registers (dedup hid {len(derived_map)} derived peripherals, kept as marker rows).")
     print(f"Already done: {len(rows) - len(pending)}.  To annotate: {len(pending)}.")
@@ -580,11 +606,12 @@ def annotate(cells, derived_map, args):
             "." + REG_C(r["field_name"]) if r["field_name"] else "")
         hint = f"find: {term}" + (f" · pp.{','.join(map(str, pages[:6]))}" if pages else "")
         while True:
-            print(f"{DIM_C(f'[{i}/{len(plan)}]')}  {label}  :  {KEY_C(r['key'])}   {DIM_C(f'({hint})')}")
+            alias = f"  {DIM_C('datasheet name: ' + r['alt_name'])}" if r.get("alt_name") else ""
+            print(f"{DIM_C(f'[{i}/{len(plan)}]')}  {label}  :  {KEY_C(r['key'])}   {DIM_C(f'({hint})')}{alias}")
             if blind:
                 prompt = f"  {BLIND_C('BLIND')} — read the page, enter value> "
             else:
-                prompt = f"  SVD: {SVD_C(repr(r['svd_value']))}   {DIM_C('[Enter=confirm / value / f a n s q]')} > "
+                prompt = f"  SVD: {SVD_C(repr(r['svd_value']))}   {DIM_C('[Enter=confirm / value / f a n r s q]')} > "
             try:
                 ans = input(prompt)
             except (EOFError, KeyboardInterrupt):
@@ -594,6 +621,26 @@ def annotate(cells, derived_map, args):
 
             if cmd == "?":                              # show the command key, re-prompt this cell
                 print_command_key(); continue
+            if cmd == "r":                              # record the datasheet's alias for this field/register
+                what = f"{r['register']}.{r['field_name']}" if r["field_name"] else r["register"]
+                svd_name = r["field_name"] or r["register"]
+                cur = f" (currently {r['alt_name']!r})" if r.get("alt_name") else ""
+                try:
+                    alias = input(f"  datasheet's name for {what}{cur}, SVD says {svd_name!r}: ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    print(); alias = ""
+                if alias:
+                    sib = (r["peripheral"], r["register"], r["field_name"])  # all cells of this field/register
+                    n = 0
+                    for x in rows:
+                        if (x["peripheral"], x["register"], x["field_name"]) == sib:
+                            x["alt_name"] = alias
+                            n += 1
+                    _save()
+                    print(f"  recorded datasheet name {alias!r} for {what}  ({n} cells; SVD key unchanged)")
+                else:
+                    print("  (no alias entered — unchanged)")
+                continue
             if cmd == "f" or (cmd == "" and blind):     # re-search (blank-in-blind is not a value)
                 preview_find(term); continue
             if cmd == "q":
