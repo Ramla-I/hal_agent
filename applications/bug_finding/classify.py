@@ -46,25 +46,44 @@ def _as_int(value: Optional[str]) -> Optional[int]:
     return None
 
 
-def _scrambled_registers(diffs: list[Diff]) -> set[tuple[str, str]]:
-    """(peripheral, register) whose bit_offset diffs look like a whole-register
-    misparse: >=3 differing fields whose shifts are not all equal (a permutation,
-    not a uniform shift)."""
+# Min fields for a whole-register bit-layout signature to be trusted.
+_REGISTER_SHIFT_MIN_FIELDS = 3
+
+
+def _register_bit_shift_classes(diffs: list[Diff]) -> dict[tuple[str, str], str]:
+    """Classify each register's bit_offset diffs as a whole-register artifact:
+
+      'scrambled'     — >=3 fields whose shifts are NOT all equal (a permutation);
+      'uniform_shift' — >=3 fields ALL shifted by the same nonzero amount
+                        (off-by-one / table-misalignment, not isolated bugs).
+
+    Registers with fewer differing fields are left unclassified (real isolated
+    bugs look like one or two fields, so they stay candidates).
+    """
     by_reg: dict[tuple[str, str], list[int]] = {}
     for d in diffs:
         if d.key == "bit_offset":
             s, g = _as_int(d.svd_value), _as_int(d.generator_value)
             if s is not None and g is not None:
                 by_reg.setdefault((d.peripheral, d.register), []).append(g - s)
-    return {k for k, deltas in by_reg.items() if len(deltas) >= 3 and len(set(deltas)) > 1}
+    classes: dict[tuple[str, str], str] = {}
+    for key, deltas in by_reg.items():
+        if len(deltas) < _REGISTER_SHIFT_MIN_FIELDS:
+            continue
+        uniq = set(deltas)
+        if len(uniq) > 1:
+            classes[key] = "scrambled"
+        elif 0 not in uniq:
+            classes[key] = "uniform_shift"
+    return classes
 
 
-def mechanical_fp_reason(diff: Diff, scrambled: set[tuple[str, str]]) -> Optional[str]:
+def mechanical_fp_reason(diff: Diff, shift_classes: dict[tuple[str, str], str]) -> Optional[str]:
     """Reason string if *diff* is a clear generator false positive, else None.
 
     Deterministic signatures only (no LLM): not-found placeholders, absolute
     addresses where an offset is expected, ranges/formulas instead of a single
-    value, and whole-register scrambled bit layouts.
+    value, and whole-register bit layouts that are scrambled or uniformly shifted.
     """
     g = (diff.generator_value or "").strip()
     if g.lower() in _NOT_FOUND_TOKENS:
@@ -81,8 +100,12 @@ def mechanical_fp_reason(diff: Diff, scrambled: set[tuple[str, str]]) -> Optiona
     if diff.key in ("bit_offset", "bit_width"):
         if gi is None:
             return "bit value is a range/multi-value, not a single integer"
-        if diff.key == "bit_offset" and (diff.peripheral, diff.register) in scrambled:
-            return "whole-register bit layout misparse (fields scrambled)"
+        if diff.key == "bit_offset":
+            cls = shift_classes.get((diff.peripheral, diff.register))
+            if cls == "scrambled":
+                return "whole-register bit layout misparse (fields scrambled)"
+            if cls == "uniform_shift":
+                return "whole-register uniform bit shift (likely off-by-one)"
     return None
 
 
@@ -94,11 +117,11 @@ def split_mechanical_fps(diffs: list[Diff]) -> tuple[list[tuple[Diff, str]], lis
     FP rate stays visible rather than being silently dropped.
     """
     mism = [d for d in diffs if d.is_value_mismatch]
-    scrambled = _scrambled_registers(mism)
+    shift_classes = _register_bit_shift_classes(mism)
     fps: list[tuple[Diff, str]] = []
     candidates: list[Diff] = []
     for d in mism:
-        reason = mechanical_fp_reason(d, scrambled)
+        reason = mechanical_fp_reason(d, shift_classes)
         (fps.append((d, reason)) if reason else candidates.append(d))
     return fps, candidates
 
