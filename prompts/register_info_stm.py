@@ -13,6 +13,30 @@ INSTANCE_NAMING_NOTE = (
     "still applies to instance N — use it rather than reporting the info as missing."
 )
 
+# Discipline rules that target the most common structural extraction errors
+# (false positives observed in downstream SVD diffs).
+EXTRACTION_DISCIPLINE_NOTE = (
+    "EXTRACTION DISCIPLINE (avoid these common mistakes):\n"
+    "- address_offset is the offset RELATIVE TO THE PERIPHERAL BASE (the datasheet's "
+    "'Address offset:' line or the register map's 'Offset' column), NOT the absolute "
+    "memory address. If only an absolute address is shown (e.g. 0x4000XXXX, 0xA00..., "
+    "0xE00...), subtract the peripheral base. A register offset is small (typically "
+    "< 0x400); if your value has high bits set it is almost certainly wrong.\n"
+    "- For an indexed/array register, give ONE concrete hex offset for the specific "
+    "register requested (or the first element) — never a range ('0x04 to 0x28') or a "
+    "formula ('base + 8*(x-1)').\n"
+    "- Read each subfield's bit range from its row in the register bit-layout table. "
+    "Bit numbering is 0-indexed: 'Bit n' means start_bit = n (do NOT add 1). start_bit "
+    "is the LOWEST bit of the field. These tables are usually drawn MSB (bit 31) on the "
+    "LEFT and LSB (bit 0) on the RIGHT — map columns to bit numbers carefully and make "
+    "sure each field name lines up with its own bits; do not shuffle or reorder fields.\n"
+    "- bit_width = end_bit - start_bit + 1 from the datasheet's stated range; do NOT "
+    "round it to a data-type size (8/16/32) or the register size.\n"
+    "- If a value is NOT present in the provided datasheet context, output null for that "
+    "attribute. NEVER guess, and never substitute 0x0, an empty string, or 'N/A' for a "
+    "value you could not find."
+)
+
 def create_register_info_stm_system_prompt(function_calls_description: str | None = calculate_address_offset_fn_description, examples: str | None = stm_datasheet_example) -> str:
     if function_calls_description is None:
         function_calls_description = "No function calls provided"
@@ -28,6 +52,8 @@ def create_register_info_stm_system_prompt(function_calls_description: str | Non
     You will be asked to extract the information about a register.
 
     {INSTANCE_NAMING_NOTE}
+
+    {EXTRACTION_DISCIPLINE_NOTE}
 
     # OUTPUT INFORMATION
     You will need to extract the following information about the register:
@@ -196,6 +222,8 @@ def create_register_info_stm_system_prompt_batched(
     You will be asked to extract the information about each register.
 
     {INSTANCE_NAMING_NOTE}
+
+    {EXTRACTION_DISCIPLINE_NOTE}
 
     # OUTPUT INFORMATION
     For each register, you will need to extract the following information:
