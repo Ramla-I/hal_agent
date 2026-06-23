@@ -90,6 +90,17 @@ setting today; the improvements below let higher concurrency work via more keys 
 - I2 utils/llm.call_llm: key round-robin + retry honoring 429 retry-after + model
   overflow (Groq→OpenAI gpt-5-nano); analyzer routed to gpt-5-nano (off Groq).
 - I3 per-register/batch failure isolation (skip+continue, summary at end).
+- I4 OE ephemeral-DB cache keyed by (program, chunks) → s0 --max-workers correct.
+- I5 derivedFrom resolution (shared resolve_peripheral_registers) → derived
+  instances (i2c2, usart2..8, ...) now visible to generator + diff.
+- I6 generic-vs-instance handling: prompt note + generic-stem retrieval fallback.
+
+### Remaining / optional
+- A5 shared token-bucket limiter (sized to per-key TPM) for in-process concurrency
+  self-pacing — not yet built; current approach is key pool + overflow + low -P.
+- Re-run the 10 with the new path (multi-key + overflow + derivedFrom) to measure
+  throughput gain and the now-larger bug set from derived instances.
+- Paste 2 more Groq keys into .env GROQ_API_KEYS to realize ~3× TPM.
 
 ## Candidate code improvements
 
