@@ -77,6 +77,20 @@ Workaround used now: one device per process (separate containers).
 | Time (UTC) | Stage | Device | Issue | Notes |
 |------------|-------|--------|-------|-------|
 
+## Completion re-run (low concurrency) — confirms the TPM analysis
+Re-ran the 8 incomplete devices at **-P2** (2 concurrent): **8/8 OK** (vs 8 FAIL at
+-P10). Wall ~2h for 8 devices (TPM-bound regardless of worker count, as predicted).
+**All 10 devices now complete: 21 review CSVs, 1,497 candidate bug rows**
+(rm0490 513 across 6 SVDs, rm0008 285, rm0033 122, rm0316 116, rm0091 116, rm0313 101,
+rm0505 89, rm0451 80, rm0368 71, rm0360 4). Takeaway: low concurrency is the reliable
+setting today; the improvements below let higher concurrency work via more keys + overflow.
+
+## Implemented improvements (this session)
+- I1 config Groq key pool (GROQ_API_KEYS) + editable STAGE_MODELS per stage.
+- I2 utils/llm.call_llm: key round-robin + retry honoring 429 retry-after + model
+  overflow (Groq→OpenAI gpt-5-nano); analyzer routed to gpt-5-nano (off Groq).
+- I3 per-register/batch failure isolation (skip+continue, summary at end).
+
 ## Candidate code improvements
 
 ### HIGH — `derivedFrom` SVD instances silently dropped (recall)
