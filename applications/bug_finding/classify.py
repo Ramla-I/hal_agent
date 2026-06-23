@@ -104,18 +104,23 @@ def split_mechanical_fps(diffs: list[Diff]) -> tuple[list[tuple[Diff, str]], lis
 
 _SYSTEM_PROMPT = (
     "You are an expert embedded-systems engineer auditing an SVD file against a "
-    "device datasheet. You are given a numbered list of differences. For each row, "
-    "`svd_value` is what the SVD file says and `generator_value` is what another "
-    "agent extracted from the datasheet for the same attribute. "
-    "Decide which rows are REAL SVD bugs — i.e. the SVD value is wrong and the "
-    "datasheet-derived value is the correct one. "
-    "A row is NOT a bug when the generator_value indicates the information wasn't "
-    "found (e.g. 'N/A', 'not found', 'not specified', 'unknown', empty), or when "
-    "the two values are just different representations of the same thing. "
+    "device datasheet. For each numbered difference, `svd_value` is what the SVD "
+    "file says and `generator_value` is what an extracting agent read from the "
+    "datasheet. You are ALSO given that agent's per-register datasheet REASONING. "
+    "A row is a REAL SVD bug ONLY if the datasheet (as reflected in the reasoning) "
+    "clearly supports generator_value over svd_value. EXCLUDE a row when:\n"
+    "- the reasoning does not actually support generator_value, or is absent/uncertain;\n"
+    "- generator_value is a not-found placeholder (empty, 'N/A', 'not found', 'unknown');\n"
+    "- generator_value is an absolute address rather than a register offset;\n"
+    "- generator_value is a range, formula, or multiple values;\n"
+    "- many fields of the SAME register differ together — that is a likely whole-register "
+    "misparse, not many independent bugs, so exclude them.\n"
+    "Be conservative: structural values (address offsets, bit positions and widths) are "
+    "easy to mis-extract, so require clear datasheet support to keep a row. "
     "Return ONLY a JSON object in a ```json code block with this shape:\n"
     '{"bugs": [{"id": <int>, "confidence": <float 0..1>}]}\n'
-    "Include only rows that are real candidate bugs. `confidence` is your "
-    "confidence that it is a genuine SVD bug. Do not add any other fields."
+    "Include only rows that are real candidate bugs; `confidence` reflects how strongly "
+    "the datasheet supports the bug. Do not add other fields."
 )
 
 
@@ -126,17 +131,52 @@ def _format_candidates(candidates: list[Diff]) -> str:
     return "\n".join(lines)
 
 
+def _build_user_prompt(
+    candidates: list[Diff],
+    evidence_by_register: dict[tuple[str, str], str] | None,
+    evidence_by_peripheral: dict[str, str] | None,
+    max_evidence_chars: int = 500,
+) -> str:
+    """User prompt = per-register datasheet reasoning + the numbered diff table."""
+    by_reg = evidence_by_register or {}
+    by_per = evidence_by_peripheral or {}
+    blocks: list[str] = []
+    seen: set[tuple[str, str]] = set()
+    for d in candidates:
+        key = (d.peripheral, d.register)
+        if key in seen:
+            continue
+        seen.add(key)
+        ev = by_reg.get(key) or by_per.get(d.peripheral) or ""
+        ev = " ".join(ev.split())
+        if ev:
+            if len(ev) > max_evidence_chars:
+                ev = ev[:max_evidence_chars].rstrip() + " …"
+            blocks.append(f"[{d.peripheral}.{d.register}] {ev}")
+    evidence_section = "\n".join(blocks) if blocks else "(no datasheet reasoning available)"
+    return (
+        "Datasheet reasoning per register (from the extracting agent):\n"
+        f"{evidence_section}\n\n"
+        "Differences to analyze:\n"
+        f"{_format_candidates(candidates)}\n\n"
+        "Return the JSON object of real candidate bugs."
+    )
+
+
 def run_analyzer(
     svd_file_name: str,
     diffs: list[Diff],
     output_dir: str,
     models: list[str] | None = None,
+    evidence_by_register: dict[tuple[str, str], str] | None = None,
+    evidence_by_peripheral: dict[str, str] | None = None,
 ) -> list[Bug]:
     """Filter value-mismatch diffs to real SVD bugs via the analyzer LLM.
 
+    The analyzer is given the generator's per-register datasheet reasoning as
+    evidence so it can judge whether generator_value is actually supported.
     Uses the central call layer with ``models`` (default config.STAGE_MODELS
-    ["analyzer"], a low-cost OpenAI model off the Groq pool). Returns a list of
-    Bugs (diff + confidence); datasheet evidence is filled by ``attach_evidence``.
+    ["analyzer"]). Returns Bugs (diff + confidence).
     """
     candidates = [d for d in diffs if d.is_value_mismatch]
     logger.info(
@@ -147,11 +187,7 @@ def run_analyzer(
 
     model_list = models or config.STAGE_MODELS.get("analyzer")
     saver = ResultSaver(output_dir)
-    user_prompt = (
-        "Differences to analyze:\n"
-        f"{_format_candidates(candidates)}\n\n"
-        "Return the JSON object of real candidate bugs."
-    )
+    user_prompt = _build_user_prompt(candidates, evidence_by_register, evidence_by_peripheral)
 
     # Generous output budget: reasoning models share the budget between reasoning
     # and the JSON answer; without a high cap the JSON truncates for many candidates.
@@ -276,9 +312,13 @@ def load_generator_evidence(agent_output_dir: str) -> tuple[dict[tuple[str, str]
     return by_register, by_peripheral
 
 
-def attach_evidence(bugs: list[Bug], agent_output_dir: str, max_chars: int = 1500) -> list[Bug]:
-    """Fill each bug's ``datasheet_evidence`` from generator reasoning (in place)."""
-    by_register, by_peripheral = load_generator_evidence(agent_output_dir)
+def attach_evidence(
+    bugs: list[Bug],
+    by_register: dict[tuple[str, str], str],
+    by_peripheral: dict[str, str],
+    max_chars: int = 1500,
+) -> list[Bug]:
+    """Fill each bug's ``datasheet_evidence`` from preloaded generator reasoning maps."""
     if not by_register and not by_peripheral:
         return bugs
     for bug in bugs:

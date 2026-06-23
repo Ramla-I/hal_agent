@@ -13,7 +13,10 @@ import os
 from utils.utils import setup_logger
 from .models import Bug, BugClass, BugStatus
 from .diff import diff_generator_against_svd
-from .classify import run_analyzer, attach_evidence, classify_bug_classes, split_mechanical_fps
+from .classify import (
+    run_analyzer, attach_evidence, classify_bug_classes, split_mechanical_fps,
+    load_generator_evidence,
+)
 from .report import write_review_csv
 
 logger = setup_logger(__name__)
@@ -58,11 +61,16 @@ def run_bug_finding(
             for d, reason in fp_pairs
         ]
 
+        # Load generator reasoning once: as analyzer evidence AND for the CSV column.
+        ev_by_reg, ev_by_per = load_generator_evidence(agent_output_dir)
         if run_analyzer_enabled:
-            analyzer_bugs = run_analyzer(svd_name, candidates, out_dir, models=analyzer_models)
+            analyzer_bugs = run_analyzer(
+                svd_name, candidates, out_dir, models=analyzer_models,
+                evidence_by_register=ev_by_reg, evidence_by_peripheral=ev_by_per,
+            )
         else:
             analyzer_bugs = [Bug(diff=d) for d in candidates]
-        attach_evidence(analyzer_bugs, agent_output_dir)
+        attach_evidence(analyzer_bugs, ev_by_reg, ev_by_per)
 
         bugs = analyzer_bugs + fp_bugs
         bug_classes = classify_bug_classes(bugs, svd_name)
