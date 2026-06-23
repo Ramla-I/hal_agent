@@ -61,15 +61,14 @@ def run_bug_finding(
             for d, reason in fp_pairs
         ]
 
-        # Load generator reasoning once: as analyzer evidence AND for the CSV column.
-        ev_by_reg, ev_by_per = load_generator_evidence(agent_output_dir)
         if run_analyzer_enabled:
-            analyzer_bugs = run_analyzer(
-                svd_name, candidates, out_dir, models=analyzer_models,
-                evidence_by_register=ev_by_reg, evidence_by_peripheral=ev_by_per,
-            )
+            analyzer_bugs = run_analyzer(svd_name, candidates, out_dir, models=analyzer_models)
         else:
             analyzer_bugs = [Bug(diff=d) for d in candidates]
+        # Generator reasoning is attached to the CSV as evidence for the human
+        # reviewer (the analyzer itself stays context-free; the validator retrieves
+        # datasheet context downstream).
+        ev_by_reg, ev_by_per = load_generator_evidence(agent_output_dir)
         attach_evidence(analyzer_bugs, ev_by_reg, ev_by_per)
 
         bugs = analyzer_bugs + fp_bugs

@@ -103,24 +103,19 @@ def split_mechanical_fps(diffs: list[Diff]) -> tuple[list[tuple[Diff, str]], lis
     return fps, candidates
 
 _SYSTEM_PROMPT = (
-    "You are an expert embedded-systems engineer auditing an SVD file against a "
-    "device datasheet. For each numbered difference, `svd_value` is what the SVD "
-    "file says and `generator_value` is what an extracting agent read from the "
-    "datasheet. You are ALSO given that agent's per-register datasheet REASONING. "
-    "A row is a REAL SVD bug ONLY if the datasheet (as reflected in the reasoning) "
-    "clearly supports generator_value over svd_value. EXCLUDE a row when:\n"
-    "- the reasoning does not actually support generator_value, or is absent/uncertain;\n"
+    "You are an expert embedded-systems engineer screening differences between an SVD "
+    "file (`svd_value`) and a value another agent extracted from the datasheet "
+    "(`generator_value`). Your ONLY job is to drop rows that are clearly NOT real SVD "
+    "bugs; deeper datasheet verification happens in a later validation stage, so keep "
+    "every plausible value mismatch. Drop a row only when it is obviously not a bug:\n"
     "- generator_value is a not-found placeholder (empty, 'N/A', 'not found', 'unknown');\n"
-    "- generator_value is an absolute address rather than a register offset;\n"
-    "- generator_value is a range, formula, or multiple values;\n"
-    "- many fields of the SAME register differ together — that is a likely whole-register "
-    "misparse, not many independent bugs, so exclude them.\n"
-    "Be conservative: structural values (address offsets, bit positions and widths) are "
-    "easy to mis-extract, so require clear datasheet support to keep a row. "
+    "- the two values are the same thing in a different representation;\n"
+    "- generator_value is an absolute address, a range, or a formula rather than a value.\n"
+    "Do NOT try to determine which value is actually correct from memory. "
     "Return ONLY a JSON object in a ```json code block with this shape:\n"
     '{"bugs": [{"id": <int>, "confidence": <float 0..1>}]}\n'
-    "Include only rows that are real candidate bugs; `confidence` reflects how strongly "
-    "the datasheet supports the bug. Do not add other fields."
+    "Include the rows that remain plausible SVD bugs; `confidence` is how likely the "
+    "row is a genuine mismatch (not a representation artifact). Do not add other fields."
 )
 
 
@@ -131,52 +126,18 @@ def _format_candidates(candidates: list[Diff]) -> str:
     return "\n".join(lines)
 
 
-def _build_user_prompt(
-    candidates: list[Diff],
-    evidence_by_register: dict[tuple[str, str], str] | None,
-    evidence_by_peripheral: dict[str, str] | None,
-    max_evidence_chars: int = 500,
-) -> str:
-    """User prompt = per-register datasheet reasoning + the numbered diff table."""
-    by_reg = evidence_by_register or {}
-    by_per = evidence_by_peripheral or {}
-    blocks: list[str] = []
-    seen: set[tuple[str, str]] = set()
-    for d in candidates:
-        key = (d.peripheral, d.register)
-        if key in seen:
-            continue
-        seen.add(key)
-        ev = by_reg.get(key) or by_per.get(d.peripheral) or ""
-        ev = " ".join(ev.split())
-        if ev:
-            if len(ev) > max_evidence_chars:
-                ev = ev[:max_evidence_chars].rstrip() + " …"
-            blocks.append(f"[{d.peripheral}.{d.register}] {ev}")
-    evidence_section = "\n".join(blocks) if blocks else "(no datasheet reasoning available)"
-    return (
-        "Datasheet reasoning per register (from the extracting agent):\n"
-        f"{evidence_section}\n\n"
-        "Differences to analyze:\n"
-        f"{_format_candidates(candidates)}\n\n"
-        "Return the JSON object of real candidate bugs."
-    )
-
-
 def run_analyzer(
     svd_file_name: str,
     diffs: list[Diff],
     output_dir: str,
     models: list[str] | None = None,
-    evidence_by_register: dict[tuple[str, str], str] | None = None,
-    evidence_by_peripheral: dict[str, str] | None = None,
 ) -> list[Bug]:
-    """Filter value-mismatch diffs to real SVD bugs via the analyzer LLM.
+    """Screen value-mismatch diffs, dropping obvious non-bugs via the analyzer LLM.
 
-    The analyzer is given the generator's per-register datasheet reasoning as
-    evidence so it can judge whether generator_value is actually supported.
-    Uses the central call layer with ``models`` (default config.STAGE_MODELS
-    ["analyzer"]). Returns Bugs (diff + confidence).
+    Lightweight by design: it removes obvious junk (not-found placeholders,
+    representation differences) and keeps plausible mismatches. Datasheet-grounded
+    verification is the (separate) validator's job, not the analyzer's. Uses the
+    central call layer with ``models`` (default config.STAGE_MODELS["analyzer"]).
     """
     candidates = [d for d in diffs if d.is_value_mismatch]
     logger.info(
@@ -187,7 +148,11 @@ def run_analyzer(
 
     model_list = models or config.STAGE_MODELS.get("analyzer")
     saver = ResultSaver(output_dir)
-    user_prompt = _build_user_prompt(candidates, evidence_by_register, evidence_by_peripheral)
+    user_prompt = (
+        "Differences to screen:\n"
+        f"{_format_candidates(candidates)}\n\n"
+        "Return the JSON object of rows that remain plausible SVD bugs."
+    )
 
     # Generous output budget: reasoning models share the budget between reasoning
     # and the JSON answer; without a high cap the JSON truncates for many candidates.
