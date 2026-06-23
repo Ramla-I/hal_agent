@@ -22,6 +22,7 @@ import os
 import xml.etree.ElementTree as ET
 from typing import Any, Optional
 
+from agent_tools.svd_parsing import resolve_peripheral_registers
 from utils.generator_facts import convert_generator_register_to_svd_like
 from .models import Diff, Presence
 
@@ -73,12 +74,14 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
     root = ET.parse(svd_path).getroot()
     ns = root.tag.split("}")[0] + "}" if root.tag.startswith("{") else ""
 
+    # Resolve derivedFrom so derived instances (i2c2, usart2..8, ...) inherit the
+    # base peripheral's registers instead of parsing to zero.
+    resolved = resolve_peripheral_registers(root, ns)
+
     peripherals: dict[str, dict[str, dict]] = {}
-    for p in root.findall(f".//{ns}peripheral"):
-        peripheral_name = p.find(f"{ns}name").text.strip().lower()
+    for peripheral_name, registers_elem in resolved.items():
         registers: dict[str, dict] = {}
 
-        registers_elem = p.find(f"{ns}registers")
         if registers_elem is not None:
             for reg in registers_elem.findall(f"{ns}register"):
                 reg_name = reg.find(f"{ns}name").text.strip().lower()
