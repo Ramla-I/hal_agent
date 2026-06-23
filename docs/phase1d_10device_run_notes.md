@@ -95,7 +95,37 @@ setting today; the improvements below let higher concurrency work via more keys 
   instances (i2c2, usart2..8, ...) now visible to generator + diff.
 - I6 generic-vs-instance handling: prompt note + generic-stem retrieval fallback.
 
-### Remaining / optional
+## FP-reduction work (J1–J4) + measured re-run (rm0091)
+- J1 generator prompt: EXTRACTION_DISCIPLINE_NOTE (offset≠absolute, single-offset-not-range,
+  0-indexed/MSB-left bit reading, width=end-start+1, null-not-placeholder).
+- J2 deterministic pre-filter (`split_mechanical_fps`): not-found / absolute-address /
+  range-formula / whole-register-scramble → routed out of the analyzer, kept in the CSV
+  pre-marked `false_positive` with a reason.
+- J3 evidence-aware analyzer: feed the generator's per-register datasheet reasoning into the
+  analyzer prompt + FP-reject + conservative-on-structural rules.
+
+**Measured re-run** (driver on rm0091 run 2's EXISTING generation, analyzer=gpt-5-nano):
+| | BEFORE | AFTER |
+|---|---|---|
+| structural rows needing human review | 89 (75 bit_offset, 13 addr, 1 width) | **18 (all address_offset)** |
+| auto-FP pre-marked (no review) | 0 | 264 (201 not-found, 60 scrambled, 3 absolute) |
+| bit_offset/bit_width confirmed | 76 | **0** |
+
+Big precision win: structural review burden −80%; bit-field FPs → 0.
+
+**Limitation found (motivates next step):** of the 18 confirmed address_offset, `crc.init`
+(0xC→0x10, ×3 SVDs) looks like a genuine SVD bug, but the **15 DMA `ccr/cndtr` offsets are
+generator channel-offset miscalculations (FPs) that the analyzer still confirmed** — because
+the evidence it sees is the generator's OWN reasoning, which rationalizes the wrong value.
+→ Feeding generator reasoning catches "not-found"/unsupported cases but NOT confident generator
+miscalcs. The stronger fix is to give the analyzer INDEPENDENT datasheet retrieval (re-retrieve
+the register context) to verify against the raw datasheet, not the generator's narrative.
+
+Caveat: this is new-analysis on OLD generation (pre-J1 prompt, pre-derivedFrom). The 201
+not-found are largely derivedFrom instances the old generation never extracted. A clean A/B
+needs regenerating rm0091 with the new prompt — recommended next.
+
+## Remaining / optional
 - A5 shared token-bucket limiter (sized to per-key TPM) for in-process concurrency
   self-pacing — not yet built; current approach is key pool + overflow + low -P.
 - Re-run the 10 with the new path (multi-key + overflow + derivedFrom) to measure
