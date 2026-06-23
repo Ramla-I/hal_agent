@@ -100,9 +100,16 @@ class DeviceResult:
     true_count: int = 0
     false_count: int = 0
 
-    # Step 5 — evaluation
+    # Step 5 — evaluation / bug finding
     evaluation_done: bool = False
     svd_files_compared: int = 0
+    analyzer_used: bool = False
+    bug_candidates: int = 0
+    auto_fp: int = 0
+
+    # Run metadata (for the manifest)
+    retrieval_method: str = ""
+    generator_models: list = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -453,6 +460,8 @@ def run_pipeline_for_device(
         # it wins over the auto-resolved params above.
         cr_params = apply_retrieval_override(cr_params, args.retrieval, ctx.device_name, repo_root)
         print(f"  Retrieval (effective): {cr_params.context_retrieval_method.value}")
+        result.retrieval_method = cr_params.context_retrieval_method.value
+        result.generator_models = list(generator_models)
 
         # -- Step 2: Generator --
         generator_fn = run_generator_batched if args.generator_batched else run_generator
@@ -572,10 +581,15 @@ def run_pipeline_for_device(
                 results_dir=paths.results_dir,
                 run_analyzer_enabled=run_analyzer_flag,
             )
+            from applications.bug_finding.models import BugStatus
             result.svd_files_compared = len(bug_results)
             result.evaluation_done = True
-            total_bugs = sum(len(bc.bugs) for classes in bug_results.values() for bc in classes)
-            print(f"  Bug finding: {len(bug_results)} SVD(s), {total_bugs} candidate bug(s)")
+            result.analyzer_used = run_analyzer_flag
+            all_bugs = [b for classes in bug_results.values() for bc in classes for b in bc.bugs]
+            result.bug_candidates = sum(1 for b in all_bugs if b.status == BugStatus.PENDING)
+            result.auto_fp = sum(1 for b in all_bugs if b.status == BugStatus.FALSE_POSITIVE)
+            total_bugs = len(all_bugs)
+            print(f"  Bug finding: {len(bug_results)} SVD(s), {result.bug_candidates} candidate(s), {result.auto_fp} auto-FP")
             for svd_name, classes in bug_results.items():
                 n = sum(len(bc.bugs) for bc in classes)
                 print(f"    {svd_name}: {n} bug(s) in {len(classes)} class(es)")
@@ -586,7 +600,65 @@ def run_pipeline_for_device(
         import traceback
         traceback.print_exc()
 
+    _write_run_manifest(result, ctx, args, repo_root)
     return result
+
+
+def _count_generated_registers(output_dir: str) -> int:
+    """Count register JSON files (one per register) in a run's output dir."""
+    if not os.path.isdir(output_dir):
+        return 0
+    skip = {"info", "coverage_improver", "validator", "analyzer_iteration"}
+    return sum(
+        1 for e in os.listdir(output_dir)
+        if e != "run_manifest.json"
+        and e not in skip
+        and os.path.isfile(os.path.join(output_dir, e))
+    )
+
+
+def _write_run_manifest(result: "DeviceResult", ctx: UserContext, args: argparse.Namespace,
+                        repo_root: str) -> None:
+    """Persist a structured manifest for this run (best-effort; never raises)."""
+    try:
+        from datetime import datetime, timezone
+        from utils.run_manifest import RunManifest, save_run_manifest
+
+        run_number = result.final_run_number or 1
+        paths = resolve_device_paths(ctx, repo_root, run_number)
+        svd_files = sorted(
+            os.path.basename(p) for p in glob.glob(os.path.join(paths.svd_dir, "*.svd"))
+        )
+        registers = _count_generated_registers(paths.agent_output_dir)
+        manifest = RunManifest(
+            timestamp=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            device_name=ctx.device_name,
+            manufacturer=ctx.manufacturer.value,
+            datasheet=os.path.relpath(paths.pdf_path, repo_root),
+            svd_files=svd_files,
+            run_number=run_number,
+            output_dir=os.path.relpath(paths.agent_output_dir, repo_root),
+            results_dir=os.path.relpath(paths.results_dir, repo_root),
+            retrieval_method=result.retrieval_method,
+            generator_models=result.generator_models,
+            generator_batched=args.generator_batched,
+            coverage_improver_iterations=result.coverage_iterations,
+            analyzer_used=result.analyzer_used,
+            validator_used=result.validator_done,
+            validator_true=result.true_count,
+            validator_false=result.false_count,
+            registers_generated=registers,
+            svd_files_compared=result.svd_files_compared,
+            bug_candidates=result.bug_candidates,
+            auto_fp=result.auto_fp,
+            truncated=result.truncated,
+            success=result.success,
+            error=result.error,
+            valid=result.success and registers > 0,
+        )
+        save_run_manifest(manifest, paths.agent_output_dir)
+    except Exception as e:
+        print(f"  [manifest] could not write run manifest: {e}")
 
 
 # ---------------------------------------------------------------------------
