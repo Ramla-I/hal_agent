@@ -125,6 +125,7 @@ The tool builds the SVD-keyed worklist (deduping `derivedFrom` peripherals), ope
 | `f` | re-run Preview's Find for this register (⌘G in Preview steps to the next match) |
 | `a` | mark `datasheet-ambiguous` |
 | `n` | mark `not-specified` in the datasheet |
+| `pn` | mark the **whole peripheral** `not-specified` — all of its still-pending cells at once (after a `[y/N]` confirm). For a peripheral the datasheet mentions but doesn't detail (e.g. `NVIC`), so you don't have to step through every field |
 | `r` | record the datasheet's name for this field/register (alias) when it differs from the SVD's — applied to all cells of the field/register, into the `alt_name` column; the SVD key is kept, so you still enter the value afterward |
 | `s` | skip (leave pending for later) |
 | `q` | save and quit |

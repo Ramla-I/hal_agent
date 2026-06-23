@@ -470,6 +470,7 @@ def print_command_key():
     print("  f        re-run Preview's Find for this register (⌘G steps to next match)")
     print("  a        mark datasheet-ambiguous")
     print("  n        mark not-specified in the datasheet")
+    print("  pn       mark the WHOLE peripheral not-specified (all its pending cells; e.g. NVIC mentioned but not detailed)")
     print("  r        record the datasheet's name for this field/register (alias; keeps SVD key)")
     print("  s        skip (leave pending for later)")
     print("  q        save and quit")
@@ -593,6 +594,8 @@ def annotate(cells, derived_map, args):
 
     last_register = None
     for i, r in enumerate(plan, 1):
+        if r["status"]:        # a bulk op (pn) earlier this session already resolved this cell
+            continue
         pages = candidate_pages(args.pdf, r["peripheral"], r["register"])  # hint + provenance
         term = best_search_term(args.pdf, r["peripheral"], r["register"])
         blind = is_blind(r, args, agent_vals)
@@ -611,7 +614,7 @@ def annotate(cells, derived_map, args):
             if blind:
                 prompt = f"  {BLIND_C('BLIND')} — read the page, enter value> "
             else:
-                prompt = f"  SVD: {SVD_C(repr(r['svd_value']))}   {DIM_C('[Enter=confirm / value / f a n r s q]')} > "
+                prompt = f"  SVD: {SVD_C(repr(r['svd_value']))}   {DIM_C('[Enter=confirm / value / f a n pn r s q]')} > "
             try:
                 ans = input(prompt)
             except (EOFError, KeyboardInterrupt):
@@ -640,6 +643,23 @@ def annotate(cells, derived_map, args):
                     print(f"  recorded datasheet name {alias!r} for {what}  ({n} cells; SVD key unchanged)")
                 else:
                     print("  (no alias entered — unchanged)")
+                continue
+            if cmd == "pn":                             # bulk: whole peripheral not-specified
+                p = r["peripheral"]
+                targets = [x for x in rows if x["peripheral"] == p and not x["status"]]
+                try:
+                    ok = input(f"  mark all {len(targets)} pending cells of {REG_C(p.upper())} "
+                               f"as not-specified? [y/N] ").strip().lower()
+                except (EOFError, KeyboardInterrupt):
+                    print(); ok = ""
+                if ok == "y":
+                    method = "blind" if blind else "human-verified"
+                    for x in targets:
+                        x["status"], x["set_method"] = STATUS_NOTSPEC, method
+                    _save()
+                    print(f"  marked {len(targets)} cells of {p.upper()} not-specified.")
+                    break                                # this cell is resolved; loop-skip handles the rest
+                print("  (cancelled)")
                 continue
             if cmd == "f" or (cmd == "" and blind):     # re-search (blank-in-blind is not a value)
                 preview_find(term); continue
