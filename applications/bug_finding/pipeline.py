@@ -11,9 +11,9 @@ import glob
 import os
 
 from utils.utils import setup_logger
-from .models import Bug, BugClass
+from .models import Bug, BugClass, BugStatus
 from .diff import diff_generator_against_svd
-from .classify import run_analyzer, attach_evidence, classify_bug_classes
+from .classify import run_analyzer, attach_evidence, classify_bug_classes, split_mechanical_fps
 from .report import write_review_csv
 
 logger = setup_logger(__name__)
@@ -49,19 +49,29 @@ def run_bug_finding(
 
         diffs = diff_generator_against_svd(svd_path, agent_output_dir)
 
-        if run_analyzer_enabled:
-            bugs = run_analyzer(svd_name, diffs, out_dir, models=analyzer_models)
-        else:
-            bugs = [Bug(diff=d) for d in diffs if d.is_value_mismatch]
+        # Deterministic pre-filter: route clear generator FPs out of the analyzer,
+        # but keep them in the CSV pre-marked false_positive (so the FP rate stays
+        # visible) rather than silently dropping them.
+        fp_pairs, candidates = split_mechanical_fps(diffs)
+        fp_bugs = [
+            Bug(diff=d, status=BugStatus.FALSE_POSITIVE, datasheet_evidence=f"[auto-FP: {reason}]")
+            for d, reason in fp_pairs
+        ]
 
-        attach_evidence(bugs, agent_output_dir)
+        if run_analyzer_enabled:
+            analyzer_bugs = run_analyzer(svd_name, candidates, out_dir, models=analyzer_models)
+        else:
+            analyzer_bugs = [Bug(diff=d) for d in candidates]
+        attach_evidence(analyzer_bugs, agent_output_dir)
+
+        bugs = analyzer_bugs + fp_bugs
         bug_classes = classify_bug_classes(bugs, svd_name)
 
         review_path = os.path.join(out_dir, f"{svd_name}_review.csv")
         n_rows = write_review_csv(bug_classes, review_path)
         logger.info(
-            "Bug finding for %s: %d bugs in %d classes → %s",
-            svd_name, n_rows, len(bug_classes), review_path,
+            "Bug finding for %s: %d rows (%d analyzer-confirmed, %d auto-FP) in %d classes → %s",
+            svd_name, n_rows, len(analyzer_bugs), len(fp_bugs), len(bug_classes), review_path,
         )
         results[svd_name] = bug_classes
 

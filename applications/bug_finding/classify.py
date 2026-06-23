@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Optional
 
 import config
@@ -27,9 +28,79 @@ from utils.llm import call_llm
 from utils.parse_output import get_json_block_from_response
 from utils.result_saver import ResultSaver, UsageStats
 from utils.models import model_costs
-from .models import Diff, Bug, BugClass
+from .models import Diff, Bug, BugClass, BugStatus
 
 logger = setup_logger(__name__)
+
+# Register offsets within a peripheral are small; a larger value is an absolute address.
+_OFFSET_ABS_THRESHOLD = 0x1000
+_NOT_FOUND_TOKENS = {"", "n/a", "na", "none", "not found", "not specified", "unknown"}
+
+
+def _as_int(value: Optional[str]) -> Optional[int]:
+    v = (value or "").strip()
+    if re.fullmatch(r"0x[0-9a-fA-F]+", v):
+        return int(v, 16)
+    if re.fullmatch(r"-?\d+", v):
+        return int(v)
+    return None
+
+
+def _scrambled_registers(diffs: list[Diff]) -> set[tuple[str, str]]:
+    """(peripheral, register) whose bit_offset diffs look like a whole-register
+    misparse: >=3 differing fields whose shifts are not all equal (a permutation,
+    not a uniform shift)."""
+    by_reg: dict[tuple[str, str], list[int]] = {}
+    for d in diffs:
+        if d.key == "bit_offset":
+            s, g = _as_int(d.svd_value), _as_int(d.generator_value)
+            if s is not None and g is not None:
+                by_reg.setdefault((d.peripheral, d.register), []).append(g - s)
+    return {k for k, deltas in by_reg.items() if len(deltas) >= 3 and len(set(deltas)) > 1}
+
+
+def mechanical_fp_reason(diff: Diff, scrambled: set[tuple[str, str]]) -> Optional[str]:
+    """Reason string if *diff* is a clear generator false positive, else None.
+
+    Deterministic signatures only (no LLM): not-found placeholders, absolute
+    addresses where an offset is expected, ranges/formulas instead of a single
+    value, and whole-register scrambled bit layouts.
+    """
+    g = (diff.generator_value or "").strip()
+    if g.lower() in _NOT_FOUND_TOKENS:
+        return "generator value empty / not-found"
+    gi = _as_int(g)
+    if diff.key == "address_offset":
+        if "%" in diff.register:
+            return "array/template register reported as range/formula"
+        if gi is None:
+            return "address_offset is a range/formula, not a single offset"
+        if gi >= _OFFSET_ABS_THRESHOLD:
+            return "absolute address emitted instead of peripheral offset"
+        return None
+    if diff.key in ("bit_offset", "bit_width"):
+        if gi is None:
+            return "bit value is a range/multi-value, not a single integer"
+        if diff.key == "bit_offset" and (diff.peripheral, diff.register) in scrambled:
+            return "whole-register bit layout misparse (fields scrambled)"
+    return None
+
+
+def split_mechanical_fps(diffs: list[Diff]) -> tuple[list[tuple[Diff, str]], list[Diff]]:
+    """Split value-mismatch diffs into (fp_pairs, candidates).
+
+    fp_pairs are deterministic generator FPs (with a reason); candidates go to the
+    analyzer. Keeps the FPs (the caller records them pre-marked) so the generator's
+    FP rate stays visible rather than being silently dropped.
+    """
+    mism = [d for d in diffs if d.is_value_mismatch]
+    scrambled = _scrambled_registers(mism)
+    fps: list[tuple[Diff, str]] = []
+    candidates: list[Diff] = []
+    for d in mism:
+        reason = mechanical_fp_reason(d, scrambled)
+        (fps.append((d, reason)) if reason else candidates.append(d))
+    return fps, candidates
 
 _SYSTEM_PROMPT = (
     "You are an expert embedded-systems engineer auditing an SVD file against a "
