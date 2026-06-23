@@ -1,6 +1,18 @@
 from prompts.function_calls import calculate_address_offset_fn_description
 from prompts.examples import stm_datasheet_example
 
+# Shared note: SVD names are concrete instances (I2C2) but datasheets often
+# document a peripheral once under a generic name (I2Cx / I2C / instance 1).
+INSTANCE_NAMING_NOTE = (
+    "NOTE ON MULTI-INSTANCE PERIPHERALS: peripherals often have several numbered "
+    "instances (e.g. I2C1/I2C2, USART1..8, TIM2/TIM3) that share an IDENTICAL "
+    "register layout. The datasheet frequently documents them only ONCE under a "
+    "generic name (e.g. 'I2Cx', 'USARTx', or just 'I2C'), or under instance 1. If "
+    "you are asked about instance N (e.g. I2C2) but the datasheet section uses the "
+    "generic or instance-1 name, the layout (offsets, reset values, bit fields) "
+    "still applies to instance N — use it rather than reporting the info as missing."
+)
+
 def create_register_info_stm_system_prompt(function_calls_description: str | None = calculate_address_offset_fn_description, examples: str | None = stm_datasheet_example) -> str:
     if function_calls_description is None:
         function_calls_description = "No function calls provided"
@@ -11,9 +23,11 @@ def create_register_info_stm_system_prompt(function_calls_description: str | Non
     You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets. 
     
     # INPUT INFORMATION
-    You will be given the name of a register and the name of a peripheral it belongs to. 
+    You will be given the name of a register and the name of a peripheral it belongs to.
     You will also be given a section of a hardware datasheet in markdown format that could contain information about the register.
     You will be asked to extract the information about a register.
+
+    {INSTANCE_NAMING_NOTE}
 
     # OUTPUT INFORMATION
     You will need to extract the following information about the register:
@@ -180,6 +194,8 @@ def create_register_info_stm_system_prompt_batched(
     You will be given the name of a peripheral and a list of register names belonging to that peripheral.
     You will also be given a section of a hardware datasheet in markdown format that could contain information about these registers.
     You will be asked to extract the information about each register.
+
+    {INSTANCE_NAMING_NOTE}
 
     # OUTPUT INFORMATION
     For each register, you will need to extract the following information:

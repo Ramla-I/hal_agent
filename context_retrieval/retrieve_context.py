@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import sys
 
@@ -13,6 +14,17 @@ from context_retrieval.search import search_context, search_context_raw
 from context_retrieval.post_processing import post_process
 from agent_tools.pdf_ops import extract_pages_from_pdf
 from agent_tools.md_ops import remove_markdown_tables
+
+def generic_peripheral_stem(name: str) -> str | None:
+    """Strip a trailing instance number to the generic stem (i2c2 -> i2c,
+    usart8 -> usart, tim16 -> tim). Returns None when there's no trailing digit
+    or stripping leaves nothing. Lettered instances (GPIOA) are out of scope."""
+    m = re.match(r"^(.*?)(\d+)$", name)
+    if not m:
+        return None
+    stem = m.group(1)
+    return stem or None
+
 
 def _resolve_oe_chunks(device_dir: str, device_name: str) -> tuple[str, str]:
     """Resolve chunks directory and index CSV for OpenEvolve retrieval."""
@@ -39,7 +51,14 @@ def retrieve_context(
         if manufacturer == Manufacturer.TI:
             search_key = register_name
         keyword_entry = get_keyword_entry(keyword_info_path, search_key)
-    
+
+        # Fall back to the generic peripheral stem (i2c2_cr1 -> i2c_cr1) when the
+        # instance-specific key isn't documented (multi-instance peripherals).
+        if not keyword_entry and manufacturer != Manufacturer.TI:
+            stem = generic_peripheral_stem(peripheral_name)
+            if stem:
+                keyword_entry = get_keyword_entry(keyword_info_path, f"{stem}_{register_name}")
+
         if keyword_entry:
             pdf_path = os.path.join(device_dir, f"{device_name}.pdf")
             extended_pages = get_page_list_for_keyword_entry(pdf_path, keyword_entry, context_retrieval_parameters.pages_after_keyword)
@@ -55,6 +74,11 @@ def retrieve_context(
         ContextRetrievalMethod.LOCAL_VECTOR_DB,
     ):
         query = f"For the {peripheral_name}_{register_name} register, retrieve all information about its offset, reset value, size, readonly bits, writeonly bits, readwrite bits, and subfields."
+        # Hint the generic form so embeddings also match a generically-documented
+        # section (e.g. I2Cx_CR1 / I2C_CR1) for a numbered instance.
+        stem = generic_peripheral_stem(peripheral_name)
+        if stem and stem != peripheral_name:
+            query += f" This register may be documented generically as {stem}x_{register_name} or {stem}_{register_name}."
         return search_context(
             query,
             context_retrieval_parameters,
@@ -71,6 +95,14 @@ def retrieve_context(
             peripheral_name, register_name, chunks_dir, chunks_index_csv,
             program_path=context_retrieval_parameters.oe_program_path,
         )
+        # Fall back to the generic peripheral stem when the instance yields nothing.
+        if not formatted:
+            stem = generic_peripheral_stem(peripheral_name)
+            if stem and stem != peripheral_name:
+                formatted, embedding_ids = search_openevolve(
+                    stem, register_name, chunks_dir, chunks_index_csv,
+                    program_path=context_retrieval_parameters.oe_program_path,
+                )
         if not formatted:
             return None, []
         return formatted, embedding_ids
