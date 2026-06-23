@@ -84,14 +84,18 @@ CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
 
 # --- Model routing & per-stage model lists -------------------------------
 # Models that route to the Groq key pool; every other model routes to OpenAI.
-GROQ_MODELS = {"gpt-oss-120b"}
+# Groq TPM limits are PER-MODEL, so each Groq model here carries its own budget —
+# adding a second Groq model is an alternative to adding another API key.
+GROQ_MODELS = {"gpt-oss-120b", "llama-3.3-70b-versatile"}
 
 # Ordered list of acceptable models per LLM stage: the call layer tries them in
 # order and overflows to the next when one is persistently rate-limited (e.g.
-# Groq TPM exhausted → fall back to a low-cost OpenAI model). EDIT THESE LISTS
-# to change what each stage runs and its fallbacks — no code change needed.
+# Groq TPM exhausted → fall back to a second Groq model, then a low-cost OpenAI
+# model). EDIT THESE LISTS to change what each stage runs and its fallbacks.
+# Generator overflow: gpt-oss-120b (best quality) → llama-3.3-70b-versatile
+# (separate Groq TPM budget, slightly weaker on structure) → gpt-5-nano (OpenAI).
 STAGE_MODELS = {
-    "generator":         ["gpt-oss-120b", "gpt-5-nano"],
+    "generator":         ["gpt-oss-120b", "llama-3.3-70b-versatile", "gpt-5-nano"],
     "analyzer":          ["gpt-5-nano"],
     "coverage_improver": ["gpt-5.2"],
     "validator":         ["gpt-oss-120b"],
