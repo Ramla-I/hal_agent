@@ -29,11 +29,14 @@ _DEFAULT_PROGRAM_PATH = os.path.abspath(os.path.join(
     "openevolve_retrieval", "output_rm0041", "best", "best_program.py",
 ))
 
-# Per-program cache: program_path → (module, collection, processed_chunks).
-# Sweeps that evaluate multiple evolved programs in one process reuse each
-# program's ephemeral ChromaDB across queries while keeping them isolated
-# from each other.
-_oe_cache: Dict[str, Tuple[ModuleType, Any, List[Dict[str, Any]]]] = {}
+# Module cache: program_path → loaded module (the evolved program itself does not
+# depend on which datasheet's chunks are used).
+_module_cache: Dict[str, ModuleType] = {}
+# Ephemeral-DB cache keyed by (program_path, chunks_index_csv) so DIFFERENT
+# datasheets keep DISTINCT databases even under the same program. (Keying by
+# program alone made multi-device runs in one process retrieve against the first
+# device's chunks.)
+_db_cache: Dict[Tuple[str, str], Tuple[Any, List[Dict[str, Any]]]] = {}
 
 
 def _resolve_program_path(program_path: Optional[str]) -> str:
@@ -48,9 +51,9 @@ def _resolve_program_path(program_path: Optional[str]) -> str:
 def _load_oe_module(program_path: Optional[str] = None) -> ModuleType:
     """Load an evolved program module (cached per absolute path)."""
     resolved = _resolve_program_path(program_path)
-    cached = _oe_cache.get(resolved)
+    cached = _module_cache.get(resolved)
     if cached is not None:
-        return cached[0]
+        return cached
 
     # Ensure _shared_cache is importable (lives in openevolve_retrieval/)
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -64,7 +67,7 @@ def _load_oe_module(program_path: Optional[str] = None) -> ModuleType:
     spec = importlib.util.spec_from_file_location(module_name, resolved)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    _oe_cache[resolved] = (mod, None, None)  # database fills in on first _ensure_database
+    _module_cache[resolved] = mod
     return mod
 
 
@@ -73,16 +76,20 @@ def _ensure_database(
     chunks_index_csv: str,
     program_path: Optional[str] = None,
 ) -> Tuple[Any, List[Dict[str, Any]]]:
-    """Build the OE ephemeral database for `program_path` (cached after first call)."""
+    """Build the OE ephemeral database for (program, chunks) (cached after first call)."""
     resolved = _resolve_program_path(program_path)
-    cached = _oe_cache.get(resolved)
-    if cached is not None and cached[1] is not None:
-        return cached[1], cached[2]
+    key = (resolved, os.path.abspath(chunks_index_csv))
+    cached = _db_cache.get(key)
+    if cached is not None:
+        return cached
 
     mod = _load_oe_module(resolved)
-    logger.info(f"Building OE ephemeral database for {os.path.basename(resolved)}...")
+    logger.info(
+        f"Building OE ephemeral database for {os.path.basename(resolved)} "
+        f"+ {os.path.basename(chunks_index_csv)}..."
+    )
     collection, processed_chunks = mod.setup_database(chunks_dir, chunks_index_csv)
-    _oe_cache[resolved] = (mod, collection, processed_chunks)
+    _db_cache[key] = (collection, processed_chunks)
     logger.info("OE database ready")
     return collection, processed_chunks
 
