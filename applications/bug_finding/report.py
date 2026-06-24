@@ -103,6 +103,7 @@ def write_review_csv(bug_classes: list[BugClass], output_path: str) -> int:
 # Consolidated run-level file: one row per distinct bug (deduped across the RM's
 # SVDs), dropping per-SVD confidence in favour of which SVDs share the bug.
 CONSOLIDATED_REVIEW_FIELDS = [
+    "RM",
     "peripheral",
     "register",
     "field",
@@ -113,7 +114,11 @@ CONSOLIDATED_REVIEW_FIELDS = [
     "svd_count",
     "svd_files",
     "tp_fp",
+    "correct_value",  # reviewer-filled: the actual correct value (defaults to generator_value)
 ]
+
+# Reviewer-filled columns preserved across re-runs of the consolidated file.
+_CONSOLIDATED_PRESERVE_COLS = ("tp_fp", "correct_value")
 
 # A bug's identity for cross-SVD dedup (the discrepancy itself; no svd_file).
 _BUG_KEY_FIELDS = ("peripheral", "register", "field", "key", "svd_value", "generator_value")
@@ -123,16 +128,17 @@ def _bug_key(row: dict) -> tuple:
     return tuple(row.get(c, "") for c in _BUG_KEY_FIELDS)
 
 
-def _load_consolidated_tp_fp(output_path: str) -> dict[tuple, str]:
+def _load_consolidated_reviewer_cols(output_path: str) -> dict[tuple, dict]:
+    """Map row-identity -> {tp_fp, correct_value} from an existing consolidated file."""
     if not os.path.exists(output_path):
         return {}
-    preserved: dict[tuple, str] = {}
+    preserved: dict[tuple, dict] = {}
     try:
         with open(output_path, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
-                val = (row.get("tp_fp") or "").strip()
-                if val:
-                    preserved[_bug_key(row)] = val
+                vals = {c: (row.get(c) or "").strip() for c in _CONSOLIDATED_PRESERVE_COLS}
+                if any(vals.values()):
+                    preserved[_bug_key(row)] = vals
     except Exception:
         return {}
     return preserved
@@ -150,7 +156,7 @@ def write_consolidated_from_dir(results_run_dir: str) -> int:
     """
     device = os.path.basename(os.path.dirname(os.path.normpath(results_run_dir)))
     output_path = os.path.join(results_run_dir, f"{device}_review.csv")
-    preserved = _load_consolidated_tp_fp(output_path)
+    preserved = _load_consolidated_reviewer_cols(output_path)
 
     # Per-SVD CSVs live in {svd}/ subdirs; this glob excludes the root consolidated file.
     groups: dict[tuple, list[dict]] = {}
@@ -173,7 +179,9 @@ def write_consolidated_from_dir(results_run_dir: str) -> int:
             peripheral, register, field, dkey, svd_value, generator_value = key
             svds = sorted({m.get("svd_file", "") for m in members if m.get("svd_file")})
             all_fp = all(m.get("status") == "false_positive" for m in members)
+            kept = preserved.get(key, {})
             writer.writerow({
+                "RM": device,
                 "peripheral": peripheral,
                 "register": register,
                 "field": field,
@@ -183,6 +191,7 @@ def write_consolidated_from_dir(results_run_dir: str) -> int:
                 "status": "false_positive" if all_fp else "",
                 "svd_count": len(svds),
                 "svd_files": ";".join(svds),
-                "tp_fp": preserved.get(key, ""),
+                "tp_fp": kept.get("tp_fp", ""),
+                "correct_value": kept.get("correct_value", ""),
             })
     return len(order)
