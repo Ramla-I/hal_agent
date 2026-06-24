@@ -103,14 +103,12 @@ def write_review_csv(bug_classes: list[BugClass], output_path: str) -> int:
 # Consolidated run-level file: one row per distinct bug (deduped across the RM's
 # SVDs), dropping per-SVD confidence in favour of which SVDs share the bug.
 CONSOLIDATED_REVIEW_FIELDS = [
-    "bug_class_id",
     "peripheral",
     "register",
     "field",
     "key",
     "svd_value",
     "generator_value",
-    "proposed_svd_fix",
     "status",
     "svd_count",
     "svd_files",
@@ -176,14 +174,12 @@ def write_consolidated_from_dir(results_run_dir: str) -> int:
             svds = sorted({m.get("svd_file", "") for m in members if m.get("svd_file")})
             all_fp = all(m.get("status") == "false_positive" for m in members)
             writer.writerow({
-                "bug_class_id": f"{peripheral}:{dkey}",
                 "peripheral": peripheral,
                 "register": register,
                 "field": field,
                 "key": dkey,
                 "svd_value": svd_value,
                 "generator_value": generator_value,
-                "proposed_svd_fix": generator_value,
                 "status": "false_positive" if all_fp else "",
                 "svd_count": len(svds),
                 "svd_files": ";".join(svds),
