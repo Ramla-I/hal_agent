@@ -111,7 +111,6 @@ CONSOLIDATED_REVIEW_FIELDS = [
     "svd_value",
     "generator_value",
     "proposed_svd_fix",
-    "datasheet_evidence",
     "status",
     "svd_count",
     "svd_files",
@@ -176,7 +175,6 @@ def write_consolidated_from_dir(results_run_dir: str) -> int:
             peripheral, register, field, dkey, svd_value, generator_value = key
             svds = sorted({m.get("svd_file", "") for m in members if m.get("svd_file")})
             all_fp = all(m.get("status") == "false_positive" for m in members)
-            evidence = next((m.get("datasheet_evidence", "") for m in members if m.get("datasheet_evidence")), "")
             writer.writerow({
                 "bug_class_id": f"{peripheral}:{dkey}",
                 "peripheral": peripheral,
@@ -186,7 +184,6 @@ def write_consolidated_from_dir(results_run_dir: str) -> int:
                 "svd_value": svd_value,
                 "generator_value": generator_value,
                 "proposed_svd_fix": generator_value,
-                "datasheet_evidence": evidence,
                 "status": "false_positive" if all_fp else "",
                 "svd_count": len(svds),
                 "svd_files": ";".join(svds),
