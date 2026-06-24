@@ -25,6 +25,7 @@ REVIEW_CSV_FIELDS = [
     "datasheet_evidence",
     "confidence",
     "status",
+    "tp_fp",  # reviewer-filled ground-truth label: TP / FP (left blank for manual review)
 ]
 
 
@@ -61,6 +62,7 @@ def write_review_csv(bug_classes: list[BugClass], output_path: str) -> int:
                     "datasheet_evidence": _collapse(bug.datasheet_evidence),
                     "confidence": f"{bug.confidence:.2f}",
                     "status": bug.status.value,
+                    "tp_fp": "",  # reviewer fills this in
                 })
                 n_rows += 1
     return n_rows
