@@ -17,7 +17,7 @@ from .classify import (
     run_analyzer, attach_evidence, classify_bug_classes, split_mechanical_fps,
     load_generator_evidence,
 )
-from .report import write_review_csv, write_consolidated_review_csv
+from .report import write_review_csv, write_consolidated_from_dir
 
 logger = setup_logger(__name__)
 
@@ -87,10 +87,7 @@ def run_bug_finding(
     # (svd_files lists which share each bug; per-SVD confidence dropped). Reviewer
     # tp_fp labels are preserved across re-runs.
     if results:
-        device = os.path.basename(os.path.dirname(os.path.normpath(results_dir)))
-        all_classes = [bc for classes in results.values() for bc in classes]
-        consolidated_path = os.path.join(results_dir, f"{device}_review.csv")
-        n_total = write_consolidated_review_csv(all_classes, consolidated_path)
-        logger.info("Consolidated review for %s: %d deduped bugs → %s", device, n_total, consolidated_path)
+        n_total = write_consolidated_from_dir(results_dir)
+        logger.info("Consolidated review (deduped across SVDs): %d bugs → %s", n_total, results_dir)
 
     return results

@@ -8,9 +8,10 @@ value is wrong, the reviewer marks the row ``false_positive`` instead.
 from __future__ import annotations
 
 import csv
+import glob
 import os
 
-from .models import BugClass, BugStatus
+from .models import BugClass
 
 REVIEW_CSV_FIELDS = [
     "bug_class_id",
@@ -140,44 +141,43 @@ def _load_consolidated_tp_fp(output_path: str) -> dict[tuple, str]:
     return preserved
 
 
-def write_consolidated_review_csv(bug_classes: list[BugClass], output_path: str) -> int:
-    """Write the run-level review file: one row per distinct bug, deduped across
-    the RM's SVDs, with the sharing SVDs listed. Returns the number of rows.
+def write_consolidated_from_dir(results_run_dir: str) -> int:
+    """Build the run-level ``{device}_review.csv`` by deduping the per-SVD review
+    CSVs across the RM's SVDs. Reads already-written per-SVD results — no LLM — so
+    it can also backfill/regenerate the consolidated file standalone.
 
     Identical discrepancies across sibling SVDs collapse to one row (``svd_files``
     lists them); a register that genuinely differs between SVDs stays its own row.
-    Reviewer ``tp_fp`` labels are preserved across re-runs.
+    Per-SVD confidence is dropped; ``status`` is ``false_positive`` only if FP in
+    every SVD. Reviewer ``tp_fp`` labels are preserved across re-runs.
     """
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    device = os.path.basename(os.path.dirname(os.path.normpath(results_run_dir)))
+    output_path = os.path.join(results_run_dir, f"{device}_review.csv")
     preserved = _load_consolidated_tp_fp(output_path)
 
-    groups: dict[tuple, list[tuple[str, object]]] = {}
+    # Per-SVD CSVs live in {svd}/ subdirs; this glob excludes the root consolidated file.
+    groups: dict[tuple, list[dict]] = {}
     order: list[tuple] = []
-    for bug_class in bug_classes:
-        for bug in bug_class.bugs:
-            d = bug.diff
-            key = (
-                d.peripheral, d.register, d.field or "", d.key,
-                d.svd_value if d.svd_value is not None else "",
-                d.generator_value if d.generator_value is not None else "",
-            )
-            if key not in groups:
-                groups[key] = []
-                order.append(key)
-            groups[key].append((bug_class.svd_file, bug))
+    for csv_path in sorted(glob.glob(os.path.join(results_run_dir, "*", "*_review.csv"))):
+        with open(csv_path, newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                key = _bug_key(row)
+                if key not in groups:
+                    groups[key] = []
+                    order.append(key)
+                groups[key].append(row)
 
+    os.makedirs(results_run_dir, exist_ok=True)
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=CONSOLIDATED_REVIEW_FIELDS)
         writer.writeheader()
         for key in order:
             members = groups[key]
             peripheral, register, field, dkey, svd_value, generator_value = key
-            svds = sorted({svd for svd, _ in members})
-            # candidate if it survived analysis in ANY SVD; FP only if FP everywhere.
-            all_fp = all(bug.status == BugStatus.FALSE_POSITIVE for _, bug in members)
-            status = BugStatus.FALSE_POSITIVE.value if all_fp else ""
-            evidence = next((_collapse(b.datasheet_evidence) for _, b in members if b.datasheet_evidence), "")
-            row = {
+            svds = sorted({m.get("svd_file", "") for m in members if m.get("svd_file")})
+            all_fp = all(m.get("status") == "false_positive" for m in members)
+            evidence = next((m.get("datasheet_evidence", "") for m in members if m.get("datasheet_evidence")), "")
+            writer.writerow({
                 "bug_class_id": f"{peripheral}:{dkey}",
                 "peripheral": peripheral,
                 "register": register,
@@ -187,10 +187,9 @@ def write_consolidated_review_csv(bug_classes: list[BugClass], output_path: str)
                 "generator_value": generator_value,
                 "proposed_svd_fix": generator_value,
                 "datasheet_evidence": evidence,
-                "status": status,
+                "status": "false_positive" if all_fp else "",
                 "svd_count": len(svds),
                 "svd_files": ";".join(svds),
-                "tp_fp": preserved.get(key, ""),  # group key matches _BUG_KEY_FIELDS order
-            }
-            writer.writerow(row)
+                "tp_fp": preserved.get(key, ""),
+            })
     return len(order)
