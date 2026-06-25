@@ -15,6 +15,7 @@ import csv
 import glob
 import json
 import os
+import re
 
 CONSTRAINTS_REVIEW_FIELDS = [
     "RM",
@@ -36,6 +37,42 @@ _KEY_FIELDS = ("peripheral", "target_register", "target_operation",
                "target_fields", "preconditions", "postconditions")
 
 _SKIP_SUFFIXES = (".json", ".jsonl", ".csv", ".txt")
+
+# Rows are grouped/sorted by peripheral → target_register → target_operation (then
+# target_fields / pre / post for determinism) in *natural* order so numeric
+# suffixes read like a human (tim2 before tim10, adc1 before adc10).
+_NAT_RE = re.compile(r"(\d+)")
+
+
+def _nat_chunks(s: str) -> tuple:
+    return tuple((1, int(t)) if t.isdigit() else (0, t.lower())
+                 for t in _NAT_RE.split(s or "") if t)
+
+
+def _constraint_sort_key(key: tuple) -> tuple:
+    """Natural grouping order for a constraint key (= _KEY_FIELDS order)."""
+    peripheral, target_register, operation, target_fields, pre, post = key
+    return (_nat_chunks(peripheral), _nat_chunks(target_register), _nat_chunks(operation),
+            _nat_chunks(target_fields), pre or "", post or "")
+
+
+def resort_constraints_review_csv(path: str) -> int:
+    """Re-sort an existing constraints review CSV in place by the canonical
+    grouping, preserving the header and every cell (incl. reviewer tp_fp). A pure
+    reorder — safe to re-run and idempotent."""
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        fields = reader.fieldnames
+        rows = list(reader)
+    if not fields:
+        return 0
+    rows.sort(key=lambda r: _constraint_sort_key(
+        tuple(r.get(c, "") for c in _KEY_FIELDS)))
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    return len(rows)
 
 
 def _split_peripheral_register(filename: str):
@@ -98,7 +135,6 @@ def write_constraints_review_csv(agent_output_dir: str, output_path: str, rm: st
     pre/postconditions) across registers; preserves reviewer tp_fp labels.
     """
     groups: dict[tuple, dict] = {}
-    order: list[tuple] = []
     for peripheral, register, c in load_constraints(agent_output_dir):
         target_fields = ";".join(c.get("target_fields") or []) or "(whole register)"
         pre = _flatten_states(c.get("preconditions"))
@@ -107,7 +143,6 @@ def write_constraints_review_csv(agent_output_dir: str, output_path: str, rm: st
                target_fields, pre, post)
         if key not in groups:
             groups[key] = {"registers": set(), "severity": c.get("severity", "") or "", "text": ""}
-            order.append(key)
         g = groups[key]
         g["registers"].add(f"{peripheral}_{register}")
         if not g["text"] and c.get("datasheet_text"):
@@ -118,7 +153,7 @@ def write_constraints_review_csv(agent_output_dir: str, output_path: str, rm: st
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=CONSTRAINTS_REVIEW_FIELDS)
         writer.writeheader()
-        for key in order:
+        for key in sorted(groups, key=_constraint_sort_key):
             peripheral, target_register, operation, target_fields, pre, post = key
             g = groups[key]
             registers = sorted(g["registers"])
@@ -136,7 +171,7 @@ def write_constraints_review_csv(agent_output_dir: str, output_path: str, rm: st
                 "datasheet_text": g["text"][:500],
                 "tp_fp": preserved.get(key, ""),
             })
-    return len(order)
+    return len(groups)
 
 
 def main() -> None:
