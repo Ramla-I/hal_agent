@@ -142,7 +142,7 @@ Final tuned (mined examples + threshold): F1 **0.911**, α 0.872, β 0.901, vali
 
 ### Access-notation legend (vendor-extensible) — fixing the dominant residual error
 
-`access` was the top residual error for both models (notation mismatch: datasheet `rc_w0`/`rc_w1`/`rw` vs verified `read-write`). Fix: a vendor-keyed map (`agent_tools/access_notations.json`, edit-only — no code change to add a vendor) → `agent_tools/access_notation.py` builds a legend injected into the validator system prompt (both batched + sequential, so production `s4` benefits too). Selected via `--vendor` (default `stm`; `none` disables). Before/after, same benchmark:
+`access` was the top residual error for both models (notation mismatch: datasheet `rc_w0`/`rc_w1`/`rw` vs verified `read-write`). Fix: a vendor-keyed map (`optimization_validator/access_notations.json`, edit-only — no code change to add a vendor) → `optimization_validator/access_notation.py` builds a legend injected into the validator system prompt (both batched + sequential, so production `s4` benefits too). Selected via `--vendor` (default `stm`; `none` disables). Before/after, same benchmark:
 
 | Model | access FN | access FP | raw sens. | β | F1 (tuned) |
 |---|---|---|---|---|---|

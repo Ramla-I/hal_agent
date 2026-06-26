@@ -707,7 +707,7 @@ def main():
     ap.add_argument("--device-name", default="rm0041")
     ap.add_argument("--vendor", default="stm",
                     help="vendor key for the access-notation legend (see "
-                         "agent_tools/access_notations.json); '' or 'none' to disable")
+                         "optimization_validator/access_notations.json); '' or 'none' to disable")
     ap.add_argument("--max-per-call", type=int, default=DEFAULT_MAX_PER_CALL,
                     help="max invariants per LLM call; large registers are chunked + "
                          "split-retried on parse failure (default 12)")
@@ -729,7 +729,7 @@ def main():
     retrieve_fn = make_retriever(params, args.device_name, args.device_dir, Manufacturer.STM)
 
     # Vendor access-notation legend (maps datasheet codes like rc_w0 -> read-write).
-    from agent_tools.access_notation import access_legend as _access_legend
+    from optimization_validator.access_notation import access_legend as _access_legend
     vendor = "" if args.vendor.lower() in ("", "none") else args.vendor
     legend = _access_legend(vendor) if vendor else ""
     if legend:

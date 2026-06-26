@@ -229,7 +229,7 @@ def create_batched_validator_system_prompt(access_legend: str = "") -> str:
     """System prompt for batched validation of multiple invariants across registers.
 
     access_legend: optional vendor access-notation section (see
-    agent_tools.access_notation.access_legend) appended so the model treats datasheet
+    optimization_validator.access_notation.access_legend) appended so the model treats datasheet
     codes like `rc_w0` as the canonical `read-write` access type.
     """
     legend_block = f"\n\n{access_legend}\n" if access_legend else ""

@@ -115,8 +115,8 @@ authoritative spec + full results + divergence log live in
 
 Datasheets write access with vendor codes (`rc_w0`, `rw`, …); verified data uses
 canonical `read-write`/`read-only`/`write-only`. The map is a **plain data file** —
-`agent_tools/access_notations.json`, keyed by vendor — so adding a vendor is a JSON
-edit, no code change. `agent_tools/access_notation.py` builds the legend injected into
+`optimization_validator/access_notations.json`, keyed by vendor — so adding a vendor is a JSON
+edit, no code change. `optimization_validator/access_notation.py` builds the legend injected into
 the validator system prompt (batched + sequential, so production `s4` benefits too).
 Select with `--vendor <key>` (default `stm`; `none` disables).
 
@@ -154,7 +154,7 @@ coverage), `judgments_tuned_<model>.csv`, `error_analysis_<model>.csv` (FP/FN),
       grows every system prompt (× every call), so the prompt shouldn't balloon. Measure
       the accuracy-vs-prompt-size tradeoff and pick the smallest count that keeps the gain;
       consider dropping near-duplicate / low-information examples.
-- [ ] **Fill in real NXP / TI access notations** in `agent_tools/access_notations.json`
+- [ ] **Fill in real NXP / TI access notations** in `optimization_validator/access_notations.json`
       (currently stubs) when ke04 / msp430g2 slices are benchmarked.
 - [ ] **Benchmark the held-out vendors** (NXP `ke04`, then TI) — verified slices exist;
       tests whether rm0041 numbers transfer. Needs each device's chunks/Chroma + an
