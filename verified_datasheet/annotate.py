@@ -334,6 +334,29 @@ def load_existing(out_path):
     return rows
 
 
+def load_rows_ordered(out_path):
+    """Return all rows from an existing CSV in file order, normalized to OUTPUT_FIELDS.
+
+    Unlike load_existing (keyed by cell_id), this preserves the file verbatim: row
+    order, manually-renamed field_names, deletions, and any rows the user added. Once
+    the CSV exists it is the ground truth — the SVD is only used to seed it the first
+    time, so the worklist is rebuilt from the CSV, not re-derived from the SVD."""
+    rows = []
+    with open(out_path, newline="") as f:
+        for row in csv.DictReader(f):
+            row = {k: (row.get(k) or "") for k in OUTPUT_FIELDS} | {
+                "peripheral": (row.get("peripheral") or "").lower(),
+                "register": (row.get("register") or "").lower(),
+                "field_name": (row.get("field_name") or "").lower(),
+                "key": row.get("key") or "",
+            }
+            if row["correct_value"] and not row["status"]:
+                row["status"] = STATUS_VERIFIED
+                row["set_method"] = row.get("set_method") or "imported"
+            rows.append(row)
+    return rows
+
+
 def save_atomic(out_path, rows):
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(out_path) or ".", suffix=".tmp")
@@ -545,30 +568,29 @@ def _marker_rows(derived_map):
 
 def annotate(cells, derived_map, args):
     agent_vals = load_agent_values(args.agent_output)
-    existing = load_existing(args.out)
+    csv_exists = os.path.exists(args.out) and os.path.getsize(args.out) > 0
 
-    # Merge worklist with existing rows (preserve prior annotations; refresh svd_value).
-    rows = []
-    for c in cells:
-        cid = cell_id(c)
-        row = existing.get(cid, {}).copy()
-        row.update({k: c[k] for k in ("peripheral", "register", "field_name", "key")})
-        row["svd_value"] = c["svd_value"]
-        row.setdefault("correct_value", "")
-        row.setdefault("alt_name", "")          # datasheet's name for this field/register, if it differs
-        row.setdefault("status", "")
-        row.setdefault("set_method", "")
-        row.setdefault("page", "")
-        row["derived_from"] = ""               # real cells never carry derived_from
-        row["agent_value"] = row.get("agent_value", "")  # kept, never shown
-        rows.append(row)
-
-    markers = _marker_rows(derived_map)   # appended at save time; not annotated
+    if csv_exists:
+        # The CSV is the ground truth once it exists. Load it verbatim (order, renames,
+        # deletions, added rows preserved); do NOT re-derive the row set from the SVD.
+        all_rows = load_rows_ordered(args.out)
+        markers = [r for r in all_rows if r["status"] == STATUS_DERIVED]
+        rows = [r for r in all_rows if r["status"] != STATUS_DERIVED]
+    else:
+        # First run: seed the worklist from the SVD.
+        rows = []
+        for c in cells:
+            row = {k: "" for k in OUTPUT_FIELDS}
+            row.update({k: c[k] for k in ("peripheral", "register", "field_name", "key")})
+            row["svd_value"] = c["svd_value"]
+            rows.append(row)
+        markers = _marker_rows(derived_map)   # appended at save time; not annotated
 
     pending = [r for r in rows if not r["status"]]
     plan = plan_order(rows, args.spread)      # CLI presentation order only; file stays grouped
     print(f"\nWorklist: {len(rows)} cells across {len({(r['peripheral'], r['register']) for r in rows})} "
-          f"registers (dedup hid {len(derived_map)} derived peripherals, kept as marker rows).")
+          f"registers (dedup hid {len(markers)} derived peripherals, kept as marker rows)."
+          + ("  [source: existing CSV]" if csv_exists else "  [source: SVD — first run]"))
     print(f"Already done: {len(rows) - len(pending)}.  To annotate: {len(pending)}.")
     if args.spread:
         print(f"Spread mode: this session presents {len(plan)} cells round-robin across "
@@ -735,14 +757,19 @@ def main():
     ap.add_argument("--stats", action="store_true", help="print worklist stats and exit (no annotation)")
     args = ap.parse_args()
 
-    cells, derived_map = parse_svd_worklist(args.svd)
     if args.stats:
+        cells, derived_map = parse_svd_worklist(args.svd)
         stats(cells, derived_map, args)
         return
     if not args.out:
         ap.error("--out is required for annotation (use --stats for a dry run)")
     if not args.pdf and not args.no_open:
         print("(no --pdf given; Preview won't open and there's no register search. add --no-open to silence.)")
+    # The CSV is the ground truth once it exists; only parse the SVD to seed a new file.
+    if os.path.exists(args.out) and os.path.getsize(args.out) > 0:
+        cells, derived_map = [], {}
+    else:
+        cells, derived_map = parse_svd_worklist(args.svd)
     annotate(cells, derived_map, args)
 
 
