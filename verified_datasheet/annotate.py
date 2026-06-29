@@ -72,6 +72,7 @@ BLIND_C = _c("95")   # blind banner — bright magenta
 
 REG_KEYS = ["address_offset", "reset_value", "size"]
 FIELD_KEYS = ["bit_offset", "bit_width", "access"]
+PERIPH_KEY = "base_address"   # peripheral-scope invariant (register/field_name empty)
 OUTPUT_FIELDS = [
     "peripheral", "register", "field_name", "alt_name", "key",
     "correct_value", "svd_value", "agent_value",
@@ -136,10 +137,20 @@ def parse_svd_worklist(svd_path: str):
         pname = (_text(periph, "name") or "").lower()
         if not pname:
             continue
+        base = _text(periph, "baseAddress")
         derived = periph.get("derivedFrom")
         if derived:
-            derived_map[pname] = derived.lower()
-            continue  # dedup: annotate the prototype only
+            proto = derived.lower()
+            derived_map[pname] = proto
+            # A derived peripheral shares its prototype's register layout; only its base
+            # address differs, so that is the single cell we annotate for it.
+            cells.append(dict(peripheral=pname, register="", field_name="",
+                              key=PERIPH_KEY, svd_value=base or "", derived_from=proto))
+            continue
+
+        # base address is a peripheral-scope invariant for every peripheral
+        cells.append(dict(peripheral=pname, register="", field_name="",
+                          key=PERIPH_KEY, svd_value=base or "", derived_from=""))
 
         p_size = _text(periph, "size", dev_size)
         p_reset = _text(periph, "resetValue", dev_reset)
@@ -214,9 +225,15 @@ def _pdf_page_texts(pdf_path):
 def _search_terms(peripheral, register):
     """Datasheet identifiers to look for, most specific first. Handles indexed peripherals
     (TIM1 -> TIMx) because datasheets describe shared registers with a generic name."""
-    p, r = peripheral.upper(), register.upper()
+    p = peripheral.upper()
     px = re.sub(r"\d+$", "x", p)  # TIM1 -> TIMx, USART2 -> USARTx
     terms = []
+    if not register:                 # peripheral-scope cell (e.g. base_address): search the name
+        for t in (p, px):
+            if t and t not in terms:
+                terms.append(t)
+        return terms
+    r = register.upper()
     for t in (f"{p}_{r}", f"{px}_{r}", f"{p} {r}", f"{px} {r}", r):
         if t and t not in terms:
             terms.append(t)
@@ -289,7 +306,7 @@ def canonical(key, value):
     v = (value or "").strip()
     if v == "":
         return v
-    if key in ("address_offset", "reset_value"):
+    if key in ("address_offset", "reset_value", "base_address"):
         try:
             n = int(v, 0)
             return f"0x{n:x}"
@@ -331,6 +348,29 @@ def load_existing(out_path):
                 row["status"] = STATUS_VERIFIED
                 row["set_method"] = row.get("set_method") or "imported"
             rows[cell_id(row)] = row
+    return rows
+
+
+def load_rows_ordered(out_path):
+    """Return all rows from an existing CSV in file order, normalized to OUTPUT_FIELDS.
+
+    Unlike load_existing (keyed by cell_id), this preserves the file verbatim: row
+    order, manually-renamed field_names, deletions, and any rows the user added. Once
+    the CSV exists it is the ground truth — the SVD is only used to seed it the first
+    time, so the worklist is rebuilt from the CSV, not re-derived from the SVD."""
+    rows = []
+    with open(out_path, newline="") as f:
+        for row in csv.DictReader(f):
+            row = {k: (row.get(k) or "") for k in OUTPUT_FIELDS} | {
+                "peripheral": (row.get("peripheral") or "").lower(),
+                "register": (row.get("register") or "").lower(),
+                "field_name": (row.get("field_name") or "").lower(),
+                "key": row.get("key") or "",
+            }
+            if row["correct_value"] and not row["status"]:
+                row["status"] = STATUS_VERIFIED
+                row["set_method"] = row.get("set_method") or "imported"
+            rows.append(row)
     return rows
 
 
@@ -501,7 +541,7 @@ def plan_order(rows, spread):
     # per-peripheral totals and already-done counts (from the full worklist, in order)
     total, done, order = OrderedDict(), {}, {}
     for r in rows:
-        if not r["register"] or r["status"] == STATUS_DERIVED:
+        if r["status"] == STATUS_DERIVED:   # legacy marker rows are never annotated
             continue
         p = r["peripheral"]
         if p not in total:
@@ -530,45 +570,35 @@ def plan_order(rows, spread):
     return plan                                # whole registers only — never truncated mid-register
 
 
-def _marker_rows(derived_map):
-    """One compact row per derivedFrom peripheral (never annotated). The diff expands it
-    against the prototype's verified rows."""
-    out = []
-    for derived_p, proto_p in derived_map.items():
-        row = {k: "" for k in OUTPUT_FIELDS}
-        row["peripheral"] = derived_p
-        row["derived_from"] = proto_p
-        row["status"] = STATUS_DERIVED
-        out.append(row)
-    return out
-
-
 def annotate(cells, derived_map, args):
     agent_vals = load_agent_values(args.agent_output)
-    existing = load_existing(args.out)
+    csv_exists = os.path.exists(args.out) and os.path.getsize(args.out) > 0
 
-    # Merge worklist with existing rows (preserve prior annotations; refresh svd_value).
-    rows = []
-    for c in cells:
-        cid = cell_id(c)
-        row = existing.get(cid, {}).copy()
-        row.update({k: c[k] for k in ("peripheral", "register", "field_name", "key")})
-        row["svd_value"] = c["svd_value"]
-        row.setdefault("correct_value", "")
-        row.setdefault("alt_name", "")          # datasheet's name for this field/register, if it differs
-        row.setdefault("status", "")
-        row.setdefault("set_method", "")
-        row.setdefault("page", "")
-        row["derived_from"] = ""               # real cells never carry derived_from
-        row["agent_value"] = row.get("agent_value", "")  # kept, never shown
-        rows.append(row)
-
-    markers = _marker_rows(derived_map)   # appended at save time; not annotated
+    if csv_exists:
+        # The CSV is the ground truth once it exists. Load it verbatim (order, renames,
+        # deletions, added rows preserved); do NOT re-derive the row set from the SVD.
+        all_rows = load_rows_ordered(args.out)
+        markers = [r for r in all_rows if r["status"] == STATUS_DERIVED]
+        rows = [r for r in all_rows if r["status"] != STATUS_DERIVED]
+    else:
+        # First run: seed the worklist from the SVD.
+        rows = []
+        for c in cells:
+            row = {k: "" for k in OUTPUT_FIELDS}
+            row.update({k: c[k] for k in ("peripheral", "register", "field_name", "key")})
+            row["svd_value"] = c["svd_value"]
+            row["derived_from"] = c.get("derived_from", "")
+            rows.append(row)
+        markers = []   # derived peripherals are represented by their base_address cell
 
     pending = [r for r in rows if not r["status"]]
     plan = plan_order(rows, args.spread)      # CLI presentation order only; file stays grouped
-    print(f"\nWorklist: {len(rows)} cells across {len({(r['peripheral'], r['register']) for r in rows})} "
-          f"registers (dedup hid {len(derived_map)} derived peripherals, kept as marker rows).")
+    n_regs = len({(r["peripheral"], r["register"]) for r in rows if r["register"]})
+    n_base = sum(1 for r in rows if r["key"] == PERIPH_KEY)
+    n_derived = len({r["peripheral"] for r in rows if r.get("derived_from")}) + len(markers)
+    print(f"\nWorklist: {len(rows)} cells across {n_regs} registers + {n_base} peripheral base "
+          f"addresses ({n_derived} derived peripherals share a prototype's layout)."
+          + ("  [source: existing CSV]" if csv_exists else "  [source: SVD — first run]"))
     print(f"Already done: {len(rows) - len(pending)}.  To annotate: {len(pending)}.")
     if args.spread:
         print(f"Spread mode: this session presents {len(plan)} cells round-robin across "
@@ -605,8 +635,8 @@ def annotate(cells, derived_map, args):
             preview_find(term)
         last_register = reg_id
 
-        label = REG_C(f"{r['peripheral']}.{r['register']}") + (
-            "." + REG_C(r["field_name"]) if r["field_name"] else "")
+        # peripheral[.register[.field]] — register/field empty for a base_address cell
+        label = REG_C(".".join(p for p in (r["peripheral"], r["register"], r["field_name"]) if p))
         hint = f"find: {term}" + (f" · pp.{','.join(map(str, pages[:6]))}" if pages else "")
         while True:
             alias = f"  {DIM_C('datasheet name: ' + r['alt_name'])}" if r.get("alt_name") else ""
@@ -625,8 +655,8 @@ def annotate(cells, derived_map, args):
             if cmd == "?":                              # show the command key, re-prompt this cell
                 print_command_key(); continue
             if cmd == "r":                              # record the datasheet's alias for this field/register
-                what = f"{r['register']}.{r['field_name']}" if r["field_name"] else r["register"]
-                svd_name = r["field_name"] or r["register"]
+                what = f"{r['register']}.{r['field_name']}" if r["field_name"] else (r["register"] or r["peripheral"])
+                svd_name = r["field_name"] or r["register"] or r["peripheral"]
                 cur = f" (currently {r['alt_name']!r})" if r.get("alt_name") else ""
                 try:
                     alias = input(f"  datasheet's name for {what}{cur}, SVD says {svd_name!r}: ").strip()
@@ -694,7 +724,7 @@ def annotate(cells, derived_map, args):
 # ---------------------------------------------------------------------------
 
 def stats(cells, derived_map, args):
-    regs = {(c["peripheral"], c["register"]) for c in cells}
+    regs = {(c["peripheral"], c["register"]) for c in cells if c["register"]}
     if args.pdf:
         with_pages = sum(1 for (p, r) in regs if candidate_pages(args.pdf, p, r))
         page_hit = f"{with_pages}/{len(regs)} registers found in the PDF text (search-term hit)"
@@ -735,14 +765,19 @@ def main():
     ap.add_argument("--stats", action="store_true", help="print worklist stats and exit (no annotation)")
     args = ap.parse_args()
 
-    cells, derived_map = parse_svd_worklist(args.svd)
     if args.stats:
+        cells, derived_map = parse_svd_worklist(args.svd)
         stats(cells, derived_map, args)
         return
     if not args.out:
         ap.error("--out is required for annotation (use --stats for a dry run)")
     if not args.pdf and not args.no_open:
         print("(no --pdf given; Preview won't open and there's no register search. add --no-open to silence.)")
+    # The CSV is the ground truth once it exists; only parse the SVD to seed a new file.
+    if os.path.exists(args.out) and os.path.getsize(args.out) > 0:
+        cells, derived_map = [], {}
+    else:
+        cells, derived_map = parse_svd_worklist(args.svd)
     annotate(cells, derived_map, args)
 
 
