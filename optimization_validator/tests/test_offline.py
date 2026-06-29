@@ -154,6 +154,37 @@ def test_calibration():
     check(clamp2.pi is not None and 0.0 <= clamp2.pi <= 1.0, f"pi clamped into [0,1] (got {clamp2.pi}, raw {clamp2.pi_raw})")
 
 
+def test_expand_and_stratify():
+    print("\n== derived expansion + peripheral-stratified corruption ==")
+    from optimization_validator.kfold import build_corrupted_benchmark
+
+    compact = load_verified(VERIFIED, expand=False)
+    expanded = load_verified(VERIFIED, expand=True)
+    check(expanded["peripheral"].nunique() > compact["peripheral"].nunique(),
+          f"expansion adds peripherals ({compact['peripheral'].nunique()} -> "
+          f"{expanded['peripheral'].nunique()})")
+    check(len(expanded) > len(compact),
+          f"expansion adds rows ({len(compact)} -> {len(expanded)})")
+
+    # Stratified corruption: each peripheral with enough rows contributes negatives near
+    # the target fraction; the global fraction stays ~0.30.
+    bench = build_corrupted_benchmark(expanded, corruption_fraction=0.30, seed=2,
+                                      stratify_by="peripheral")
+    frac = (~bench["is_correct"]).mean()
+    check(abs(frac - 0.30) < 0.02, f"global corruption fraction ~0.30 (got {frac:.3f})")
+    per = bench.groupby("peripheral")["is_correct"].apply(lambda s: (~s).mean())
+    # Every peripheral with >=4 rows should get at least one negative (round(4*0.3)=1).
+    big = bench.groupby("peripheral").size()
+    big_periphs = big[big >= 4].index
+    covered = all(per[p] > 0 for p in big_periphs)
+    check(covered, f"every peripheral with >=4 rows has >=1 negative ({len(big_periphs)} periphs)")
+    check(per.max() <= 0.5, f"no peripheral is mostly negatives (max frac {per.max():.2f})")
+
+    # Global-uniform mode still available and unstratified.
+    uni = build_corrupted_benchmark(expanded, corruption_fraction=0.30, seed=2, stratify_by=None)
+    check(abs((~uni["is_correct"]).mean() - 0.30) < 0.02, "stratify_by=None keeps ~0.30 global")
+
+
 def test_alt_name():
     print("\n== alt_name plumbing + prompt ==")
     from optimization_validator.kfold import make_benchmark_with_folds
@@ -254,6 +285,7 @@ if __name__ == "__main__":
     test_field_name_corruption()
     test_folds()
     test_calibration()
+    test_expand_and_stratify()
     test_alt_name()
     test_operational_gate()
     print("\n" + ("=" * 50))

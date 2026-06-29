@@ -84,16 +84,23 @@ authoritative spec + full results + divergence log live in
 
 ### Current design (pipeline)
 
-1. **Build benchmark** (`kfold.py`): load verified CSV and keep only **ground-truth
-   rows** — `select_ground_truth` gates on `status == "verified"` (the schema from
-   `verified_datasheet/annotate.py`), which in one shot drops `derived` peripheral-
-   inheritance marker rows, `not-specified` / `datasheet-ambiguous` cells, and pending
-   (empty-status) rows. An unannotated slice (e.g. rm0394) raises a clear error here
-   rather than failing opaquely in k-fold. Then corrupt 30% of invariants (replace, no
-   true/corrupted pairs) with realistic per-key errors (`corruption.py`: in-range bit
-   fields, nibble-flip/neighbour hex, size ∈ {8,16,32,64}, access swaps, real sibling
-   names / one-edit typos), and assign whole (peripheral, register) groups to k folds
-   (correlated invariants never straddle train/held-out).
+1. **Build benchmark** (`kfold.py`): load verified CSV, then —
+   - **Expand `derivedFrom` peripherals** (`expand_derived_rows`, default on, mirrors
+     `verified_datasheet/expand_derived.py`): materialize the prototype's register/field
+     rows under every peripheral that derives from it (e.g. `gpiob..g` from `gpioa`), so
+     the benchmark covers **all** peripherals, not just the annotated prototypes. Runs
+     *before* the status gate (the `derived_from` markers it needs are not `verified`).
+     rm0041: 30 → 48 peripherals, 3,356 → 5,321 verified invariants.
+   - Keep only **ground-truth rows** — `select_ground_truth` gates on `status ==
+     "verified"`, dropping `not-specified` / `datasheet-ambiguous` / pending rows. An
+     unannotated slice (e.g. rm0394) raises a clear error here, not opaquely in k-fold.
+   - **Corrupt 30%** of invariants (replace, no true/corrupted pairs) with realistic
+     per-key errors (`corruption.py`: in-range bit fields, nibble-flip/neighbour hex,
+     size ∈ {8,16,32,64}, access swaps, real sibling names / one-edit typos),
+     **stratified by peripheral** (default) so the negative class spans every peripheral
+     proportionally rather than clustering from a global uniform draw.
+   - Assign whole **(peripheral, register)** groups to k folds (correlated invariants
+     never straddle train/held-out).
 2. **Retrieve** (`make_retriever` in `cross_validate.py`): default backend is the
    **OpenEvolve evolved program** (`--retrieval openevolve`) — needs the device's
    `chunked_datasheets/<mfr>/<dev>/chunks/md/` + Chroma DB (copy from main repo or

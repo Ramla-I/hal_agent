@@ -2,11 +2,14 @@
 granularity for Validator cross-validation.
 
 Paper protocol (section "Benchmarking the Validator as a Noisy Labeler"):
+  * First EXPAND derivedFrom peripherals (expand_derived_rows) so the benchmark covers
+    every peripheral, not just the annotated prototypes.
   * Construct k folds at the (Peripheral, Register) granularity — NOT the invariant
     row level — so correlated invariants from the same register never appear in both
     the training and held-out partitions.
   * Before splitting, corrupt 30% of invariants by modifying values or field names,
-    REPLACING the original with its corrupted version (no true/corrupted pairs).
+    REPLACING the original with its corrupted version (no true/corrupted pairs),
+    STRATIFIED by peripheral so the negative class spans all peripherals proportionally.
   * Every fold must contain both positive (correct) and negative (corrupted) cases.
 
 This module produces a single benchmark DataFrame with these added columns:
@@ -34,6 +37,80 @@ _BASE_COLUMNS = ["peripheral", "register", "field_name", "key", "correct_value"]
 # field/register name as printed in the datasheet when it differs from the SVD key; the
 # Validator can use it to avoid rejecting a correct fact on a pure name mismatch.
 _CARRIED_OPTIONAL = ["alt_name"]
+
+# Peripheral-scope invariant key (register/field_name empty); matches
+# verified_datasheet/annotate.PERIPH_KEY. Used to keep a derived peripheral's own
+# base_address row during expansion.
+_PERIPH_KEY = "base_address"
+
+
+def expand_derived_rows(df: pd.DataFrame) -> pd.DataFrame:
+    """Materialize `derivedFrom` peripherals in-memory (mirrors
+    verified_datasheet/expand_derived.py).
+
+    The verified CSV is compact: a peripheral that derives from another (e.g. GPIOB <-
+    GPIOA) carries only its own `base_address` row plus a `derived_from` marker and
+    inherits the prototype's register/field layout. This copies each prototype's
+    register/field rows under every peripheral that derives from it (keeping the derived
+    peripheral's own base_address), so the benchmark covers ALL peripherals, not just the
+    prototypes. Run on the RAW rows BEFORE the status gate, because the `derived_from`
+    markers it needs would otherwise be dropped (they are not `status=verified`).
+
+    Returns df unchanged when there is no `derived_from` column or no derived peripherals.
+    """
+    if "derived_from" not in df.columns:
+        return df
+    cols = list(df.columns)
+    rows = df.to_dict("records")
+
+    def periph(r):
+        return str(r.get("peripheral") or "").lower()
+
+    def is_layout(r):  # a register/field row (has a register), not a base/marker row
+        return bool(str(r.get("register") or "").strip())
+
+    def is_base(r):
+        return str(r.get("key") or "") == _PERIPH_KEY and not str(r.get("register") or "").strip()
+
+    proto_of = {}  # derived peripheral -> prototype it inherits from
+    for r in rows:
+        d = str(r.get("derived_from") or "").lower()
+        if d:
+            proto_of.setdefault(periph(r), d)
+    if not proto_of:
+        return df
+
+    layout, base_row = {}, {}
+    for r in rows:
+        if is_layout(r):
+            layout.setdefault(periph(r), []).append(r)
+        elif is_base(r):
+            base_row[periph(r)] = r
+
+    out, done, n_exp = [], set(), 0
+    for r in rows:
+        p = periph(r)
+        if p in proto_of:
+            if p in done:  # other compact rows for this derived peripheral (markers/dups)
+                continue
+            done.add(p)
+            proto = proto_of[p]
+            if p in base_row:  # keep the derived peripheral's own base address
+                out.append(base_row[p])
+            for lr in layout.get(proto, []):  # materialize the inherited layout
+                nr = {k: lr.get(k, "") for k in cols}
+                nr["peripheral"] = r.get("peripheral")  # under the derived peripheral's name
+                if "derived_from" in nr:
+                    nr["derived_from"] = proto
+                nr["set_method"] = "derived-expanded"
+                out.append(nr)
+                n_exp += 1
+            continue
+        out.append(r)
+
+    if n_exp:
+        print(f"[verified] expanded {len(proto_of)} derived peripherals (+{n_exp} rows)")
+    return pd.DataFrame(out, columns=cols)
 
 # In the verified-datasheet schema (verified_datasheet/annotate.py) a row is
 # authoritative ground truth only when its status is exactly this. Every other status
@@ -75,16 +152,22 @@ def select_ground_truth(df: pd.DataFrame, source: str = "") -> pd.DataFrame:
     return df
 
 
-def load_verified(csv_path: str) -> pd.DataFrame:
+def load_verified(csv_path: str, expand: bool = True) -> pd.DataFrame:
     """Load a verified datasheet, keep only ground-truth rows, return the base columns.
 
     See `select_ground_truth` for the row-selection contract (status gate + non-empty
     correct_value). Extra schema columns (alt_name, page, set_method, …) are ignored.
+
+    `expand` (default True): first materialize `derivedFrom` peripherals
+    (`expand_derived_rows`) so the benchmark covers every peripheral, not just the
+    annotated prototypes. Expansion runs before the status gate.
     """
     df = pd.read_csv(csv_path, dtype=str, keep_default_na=False)
     missing = [c for c in _BASE_COLUMNS if c not in df.columns]
     if missing:
         raise ValueError(f"{csv_path} missing required columns: {missing}")
+    if expand:
+        df = expand_derived_rows(df)
     df = select_ground_truth(df, source=os.path.basename(csv_path))
     keep = _BASE_COLUMNS + [c for c in _CARRIED_OPTIONAL if c in df.columns]
     out = df[keep].reset_index(drop=True)
@@ -99,21 +182,40 @@ def build_corrupted_benchmark(
     corruption_fraction: float = 0.30,
     seed: int = 0,
     name_corruption_prob: float = 0.30,
+    stratify_by: str = "peripheral",
 ) -> pd.DataFrame:
     """Corrupt `corruption_fraction` of invariant rows (replacing originals).
 
     Corruption is sampled at the row level (each row is one invariant) but uses
     per-register context so the wrong values stay realistic and in-range.
+
+    `stratify_by` (default "peripheral"): draw the corrupted (negative) rows
+    proportionally WITHIN each group of that column, so the test set's negatives span all
+    peripherals rather than clustering in a few from a single global uniform sample. Pass
+    None/"" for the old global-uniform sampling.
     """
     rng = random.Random(seed)
     contexts = build_register_contexts(df)
+    records = df.to_dict("records")
 
-    n = len(df)
-    n_corrupt = int(round(n * corruption_fraction))
-    corrupt_idx = set(rng.sample(range(n), n_corrupt)) if n_corrupt > 0 else set()
+    n = len(records)
+    if stratify_by and stratify_by in df.columns:
+        # Proportional sample within each stratum (e.g. each peripheral), so every
+        # peripheral contributes ~corruption_fraction negatives.
+        strata: dict = {}
+        for i, r in enumerate(records):
+            strata.setdefault(r[stratify_by], []).append(i)
+        corrupt_idx = set()
+        for _, idxs in strata.items():
+            k = int(round(len(idxs) * corruption_fraction))
+            if k > 0:
+                corrupt_idx.update(rng.sample(idxs, min(k, len(idxs))))
+    else:
+        n_corrupt = int(round(n * corruption_fraction))
+        corrupt_idx = set(rng.sample(range(n), n_corrupt)) if n_corrupt > 0 else set()
 
     rows = []
-    for i, row in enumerate(df.to_dict("records")):
+    for i, row in enumerate(records):
         ctx = contexts[(row["peripheral"], row["register"])]
         if i in corrupt_idx:
             new_row = corrupt_row(row, ctx, rng, name_corruption_prob=name_corruption_prob)
@@ -168,13 +270,21 @@ def make_benchmark_with_folds(
     corruption_fraction: float = 0.30,
     seed: int = 0,
     name_corruption_prob: float = 0.30,
+    expand: bool = True,
+    stratify_by: str = "peripheral",
 ) -> pd.DataFrame:
-    """Convenience: verified CSV -> corrupted, fold-assigned benchmark DataFrame."""
-    verified = load_verified(csv_path)
+    """Convenience: verified CSV -> corrupted, fold-assigned benchmark DataFrame.
+
+    `expand` materializes derivedFrom peripherals first (full peripheral coverage);
+    `stratify_by` spreads the corruptions across all peripherals (see the respective
+    functions).
+    """
+    verified = load_verified(csv_path, expand=expand)
     benchmark = build_corrupted_benchmark(
         verified,
         corruption_fraction=corruption_fraction,
         seed=seed,
         name_corruption_prob=name_corruption_prob,
+        stratify_by=stratify_by,
     )
     return assign_folds(benchmark, k=k, seed=seed)
