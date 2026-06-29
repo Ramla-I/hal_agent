@@ -210,6 +210,50 @@ catch-Y% curve), `calibration_<model>.csv` (confidence reliability bins).
 | gpt-oss-120b | 0.91 | 0.95 | 0.85 | 0.90 |
 | gpt-5.5 (+ access legend) | **0.975** | 0.96 | 0.98 | 0.90 |
 
+### EXPERIMENTS (validator paper)
+
+Status: ⬜ not started · 🟡 partial · ✅ done · 🔒 blocked. **★ = load-bearing for a paper claim.**
+
+**A. Headline metrics — the main result**
+- [ ] **★ A1. Per-vendor tuned metrics** — full k-fold after a tuning round on a
+      representative STM (rm0041, 5,321 invariants) and NXP (ke04, 1,952) → gate precision,
+      yield/recall, α, β, precision@k, calibration. STM runs now; **NXP 🔒 needs a retrieval
+      backend** (no OpenEvolve program for ke04 → evolve one or use `--retrieval openai`).
+- [ ] **A2. Cross-model** — gpt-oss-120b vs gpt-5.5 on both, so the headline isn't
+      model-specific. Runs now (STM).
+
+**B. Ablations that justify the design**
+- [ ] **B1. Tuning lift (baseline vs tuned)** — emitted automatically (baseline vs tuned in
+      `summary_*`); quantifies what in-context example mining buys.
+- [ ] **B2. `alt_name` on/off** (`--use-alt-name` / `--no-alt-name`) — lift vs specificity cost.
+- [ ] **B3. Access legend on/off** (`--vendor stm` / `none`) — re-measure on the merged slice.
+- [ ] **B4. Retrieval backend** — OpenEvolve vs OpenAI file_search; justifies the switch.
+- [ ] **B5. Number of mined examples** (`max_per_class` sweep) — find where added examples
+      stop helping vs prompt-size cost (sets the operating config; see TODO below).
+
+**C. Validity of the calibration — the scientific core**
+- [ ] **★ C1. Cross-distribution π test** — measure α/β at 30% corruption, apply to a slice
+      at a *different* rate (e.g. 50%), check π̂ recovers ~0.50. The only experiment that
+      exercises Rogan–Gladen (within-run π is an identity). Runs now.
+- [ ] **★ C2. Per-vendor transfer (amortization claim)** — calibrate/freeze on device 1,
+      apply to device 2 of the same vendor (rm0041→rm0090, ke04→s32k116); check precision/
+      yield holds. **🔒 second-device slices not annotated yet** (longest lead time).
+
+**D. External validation — strongest evidence, slow**
+- [ ] **D1. Validator-confirmed bugs vs upstream merges** (STM) — ties internal precision to
+      real external ground truth. Ongoing, not a one-shot run.
+
+**E. Characterization — cheap, high-value**
+- [ ] **E1. Per-invariant-class breakdown** — precision/recall per key (`address_offset`,
+      `reset_value`, `size`, `bit_offset`, `bit_width`, `access`); motivates per-class gating.
+      Mostly in `error_analysis_*.csv`, needs aggregation.
+- [ ] **E2. Seed variance / CIs** — multiple corruption seeds → confidence intervals on
+      α/β/precision for honest error bars.
+
+**Prereqs before the NXP run (A1):** a retrieval backend for ke04 (evolve an OpenEvolve
+program or accept `--retrieval openai`) and real NXP access notations in
+`access_notations.json` (currently stubs).
+
 ### OPEN TODOS
 - [ ] **Re-measure on the merged 3,356-row rm0041 slice** (see warning above) and refresh
       the results table; the prior numbers are on the smaller pre-merge slice.
