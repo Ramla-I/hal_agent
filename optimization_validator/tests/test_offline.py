@@ -13,11 +13,17 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import pandas as pd
+
 from optimization_validator.corruption import (
     ACCESS_VALUES, COMMON_SIZES, build_register_contexts, corrupt_row, corrupt_value, corrupt_field_name,
 )
 from optimization_validator.kfold import load_verified, build_corrupted_benchmark, assign_folds
 from optimization_validator.calibration import ConfusionMatrix, calibrate
+from optimization_validator.cross_validate import (
+    confusion_at, tune_threshold, tune_threshold_precision, make_tuner,
+    build_review_queue, precision_at_k_table, reliability_table,
+)
 
 VERIFIED = "verified_datasheet/stm/rm0041_stm32f100.csv"
 _HEX_RE = re.compile(r"^0x[0-9a-fA-F]+$")
@@ -148,11 +154,69 @@ def test_calibration():
     check(clamp2.pi is not None and 0.0 <= clamp2.pi <= 1.0, f"pi clamped into [0,1] (got {clamp2.pi}, raw {clamp2.pi_raw})")
 
 
+def test_operational_gate():
+    print("\n== operational gate / queue ==")
+    # Synthetic scored set: score increasing, with a couple of corrupted (False) rows
+    # mixed into the high-score region so precision < 1 unless the gate is raised.
+    # scores:   0.1 0.2 0.3 0.4 0.55 0.6 0.7 0.8 0.9 0.95
+    # gold(C=1): F   F   F   F    T    F   T   T   T   T     (a False at 0.6 to push tau up)
+    scores = [0.1, 0.2, 0.3, 0.4, 0.55, 0.6, 0.7, 0.8, 0.9, 0.95]
+    golds  = [False, False, False, False, True, False, True, True, True, True]
+
+    # F1 tuner vs precision tuner should generally differ here.
+    tau_f1 = tune_threshold(scores, golds)
+    tau_p = tune_threshold_precision(scores, golds, target_precision=1.0)
+    cm_p = confusion_at(scores, golds, tau_p)
+    check(cm_p.precision >= 1.0 - 1e-9, f"precision-gate hits target=1.0 (got {cm_p.precision:.3f}, tau={tau_p})")
+    # At target 1.0 the gate must exclude the False@0.6 -> tau > 0.6, keeping the 4 top Trues.
+    check(cm_p.tp == 4 and cm_p.fp == 0, f"precision-gate keeps the 4 clean trues (tp={cm_p.tp}, fp={cm_p.fp})")
+
+    # Yield-maximisation: a looser target should keep at least as many true positives.
+    tau_loose = tune_threshold_precision(scores, golds, target_precision=0.8)
+    cm_loose = confusion_at(scores, golds, tau_loose)
+    check(cm_loose.tp >= cm_p.tp, f"looser target yields >= recall ({cm_loose.tp} >= {cm_p.tp})")
+    check(make_tuner("f1")(scores, golds) == tau_f1, "make_tuner('f1') matches tune_threshold")
+
+    # Build a tuned_eval-like frame (one held-out pass): needs score, tau, is_correct,
+    # confidence_score + identity cols. Survivors = score >= tau.
+    tau = tau_p
+    df = pd.DataFrame({
+        "score": scores,
+        "confidence_score": scores,  # for V=1 survivors score==confidence
+        "is_true": [s >= 0.5 for s in scores],
+        "is_correct": golds,
+        "tau": [tau] * len(scores),
+        "fold": [0] * len(scores),
+        "peripheral": ["p"] * len(scores),
+        "register": [f"r{i}" for i in range(len(scores))],
+        "field_name": [""] * len(scores),
+        "key": ["address_offset"] * len(scores),
+        "correct_value": ["0x0"] * len(scores),
+        "corruption_type": ["" if g else "value" for g in golds],
+        "reasoning": [""] * len(scores),
+    })
+    queue = build_review_queue(df)
+    check((queue["score"] >= tau).all(), "review queue contains only gate survivors")
+    check(list(queue["score"]) == sorted(queue["score"], reverse=True),
+          "review queue ranked by score descending")
+    check(int(queue["is_correct"].sum()) == cm_p.tp, "queue true-bug count matches gate tp")
+
+    pk = precision_at_k_table(queue)
+    check(abs(float(pk.iloc[-1]["precision_at_k"]) - queue["is_correct"].mean()) < 1e-9,
+          "precision@100% equals overall queue precision")
+    check((pk["precision_at_k"] <= 1.0 + 1e-9).all() and (pk["precision_at_k"] >= -1e-9).all(),
+          "precision@k within [0,1]")
+
+    rel = reliability_table(queue, n_bins=10)
+    check(int(rel["n"].sum()) == len(queue), "reliability bins cover every survivor")
+
+
 if __name__ == "__main__":
     test_corruption_realism()
     test_field_name_corruption()
     test_folds()
     test_calibration()
+    test_operational_gate()
     print("\n" + ("=" * 50))
     if _failures:
         print(f"{len(_failures)} FAILURE(S):")

@@ -107,13 +107,25 @@ authoritative spec + full results + divergence log live in
 4. **Cross-validate** (`cross_validate` + `cross_validate_mined`): the Validator is run
    once per invariant (baseline); then per fold, **in-context examples are mined from
    that fold's training-partition FP/FN** and the held-out fold is re-evaluated with the
-   augmented prompt (tuned). Decision threshold is also tuned per fold on training
-   scores. Per-fold confusion matrices aggregate → α, β, F1.
-5. **Calibrate** (`calibration.py`): π = (r̂−(1−β))/(α+β−1) (Rogan–Gladen) and
+   augmented prompt (tuned). The **gate threshold** is tuned per fold on training scores.
+   Per-fold confusion matrices aggregate → α, β, F1.
+5. **Operational gate + ranked review queue** (the system this benchmark stands in for).
+   The pipeline's real use is: generator candidates → Validator → whatever it gates out
+   (V=0) is **dropped unseen**, and the survivors (V=1) are **ranked by confidence** for a
+   human to review top-down until labour runs out. So the gate threshold is tuned for a
+   **target precision** (`--objective precision --target-precision 0.95`, the default):
+   the lowest threshold whose training precision clears the target, **maximising yield
+   (recall)** under that constraint. (`--objective f1` restores max-F1.) Because V=0 is
+   dropped, a false negative is a *permanently lost bug*, so the harness reports both the
+   reviewed-pile **precision** and the kept-bug **yield/recall**, plus a **precision@k**
+   curve (front-loading quality) and a **calibration/reliability** table (mean confidence
+   vs empirical precision per bin → a principled review-depth stopping rule).
+6. **Calibrate** (`calibration.py`): π = (r̂−(1−β))/(α+β−1) (Rogan–Gladen) and
    validated-set precision P(C=1|V=1) = α·π/r̂, with α+β>1 identifiability + clamp guards.
    ⚠️ Within a single run π just recovers the benchmark's known prevalence (algebraic
    identity) — it's informative only when benchmark-measured α/β are applied to a
-   *different* r̂ (see TODO).
+   *different* r̂ (see TODO). Operationally (gate-and-review) π/count-correction is not on
+   the critical path; the gate precision + yield + ranking are the load-bearing numbers.
 
 ### Access-notation legend (vendor-extensible)
 
@@ -129,22 +141,29 @@ Select with `--vendor <key>` (default `stm`; `none` disables).
 - **`kfold.py`** — corrupted benchmark + (peripheral, register) group k-fold.
 - **`calibration.py`** — `ConfusionMatrix` + Rogan–Gladen `calibrate()`.
 - **`cross_validate.py`** — orchestrator (retrieval dispatch, chunked inference,
-  example mining, threshold tuning, calibration, outputs). `MODELS` list / `--model`.
-- **`tests/test_offline.py`** — offline unit tests (no network).
+  example mining, gate-threshold tuning, calibration, ranked review queue, outputs).
+  `make_tuner` (precision-target vs F1), `build_review_queue` / `precision_at_k_table` /
+  `reliability_table`. `MODELS` list / `--model`.
+- **`tests/test_offline.py`** — offline unit tests (no network), incl. the operational gate.
 
 ### Run (in the project container)
 ```bash
 scripts/docker_run.sh run -m optimization_validator.tests.test_offline                     # offline tests
 scripts/docker_run.sh run -m optimization_validator.cross_validate --smoke --model gpt-oss-120b   # tiny e2e
 scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.5 --k 5 \
-    --retrieval openevolve --vendor stm                                                    # full sweep (billable)
+    --retrieval openevolve --vendor stm \
+    --objective precision --target-precision 0.95                                          # full sweep (billable)
 ```
 
 Outputs → `optimization_validator/<device>/cross_validation/<model|smoke>/` (gitignored):
 `judgments_<model>.csv` (per-row + reasoning + `reg_in_context`/`file_search_chars`
 coverage), `judgments_tuned_<model>.csv`, `error_analysis_<model>.csv` (FP/FN),
-`per_fold_<model>.csv`, `summary_<model>.{csv,json}` (baseline vs tuned),
-`prompts/` (the exact per-fold system prompt incl. legend + mined examples).
+`per_fold_<model>.csv`, `summary_<model>.{csv,json}` (baseline vs tuned **+ an
+`operational` block**: gate precision, yield/recall, bugs dropped unseen, precision@top-decile),
+`prompts/` (the exact per-fold system prompt incl. legend + mined examples), and the
+**operational artifacts**: `review_queue_<model>.csv` (gate survivors, ranked by
+confidence — the reviewer-facing list), `precision_at_k_<model>.csv` (review-top-X% →
+catch-Y% curve), `calibration_<model>.csv` (confidence reliability bins).
 
 ### Results so far (rm0041, k=5; OpenEvolve + chunked batching)
 > ⚠️ Measured on the **pre-merge** rm0041 slice (~2,459 verified invariants). The merged
