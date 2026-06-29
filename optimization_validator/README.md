@@ -220,10 +220,12 @@ catch-Y% curve), `calibration_<model>.csv` (confidence reliability bins).
       thin (9 rows in rm0041) and the per-row hint is an oracle unless (c) the **generator
       emits the datasheet-printed name** in production, which would make the hint real —
       worth doing.
-- [ ] **Expand `derived` peripherals.** Verified CSVs dedup `derivedFrom` peripherals to a
-      single marker row (`status=derived`), so the benchmark currently covers only the
-      prototype (e.g. `gpioa`, not `gpiob..g`). The diff pipeline expands these; the
-      validator benchmark should too if we want per-peripheral coverage numbers.
+- [x] **Expand `derived` peripherals** — done (`expand_derived_rows`, default on): the
+      benchmark now materializes `derivedFrom` peripherals (rm0041: 30 → 48 peripherals,
+      3,356 → 5,321 invariants), matching what the generator actually extracts — it
+      processes `gpioa`, `gpiob`, … as separate tasks, so the validator validates each in
+      production. This is the representative population (no novel-family-generalization
+      caveat applies for the operational per-chip precision/yield estimate).
 - [ ] **Tune the number of mined in-context examples** (`max_per_class`, currently 6/class
       → 12/fold). Sweep it and find where added examples stop improving F1 — each one
       grows every system prompt (× every call), so the prompt shouldn't balloon. Measure
