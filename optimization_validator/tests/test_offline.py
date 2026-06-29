@@ -223,6 +223,57 @@ def test_alt_name():
           "system prompt omits name-aliasing guidance when disabled")
 
 
+def test_curated_examples():
+    print("\n== curated examples (render / load / export) ==")
+    import json, tempfile
+    from optimization_validator.cross_validate import (
+        render_curated_examples, load_curated_examples, export_curation_candidates,
+    )
+
+    curated = [
+        {"peripheral": "usart1", "register": "sr", "field_name": "ne", "key": "access",
+         "value": "read-write", "is_true": True,
+         "datasheet_excerpt": "NE: noise error flag, rc_w0 (read, clear by writing 0)",
+         "reasoning": "rc_w0 is readable and writable -> read-write"},
+        {"peripheral": "cec", "register": "cr", "field_name": "", "key": "size",
+         "value": "4", "is_true": False,
+         "datasheet_excerpt": "CEC_CR is a 32-bit register"},
+        {"peripheral": "x", "register": "y", "key": "size", "value": "8"},  # no excerpt -> skipped
+    ]
+    block = render_curated_examples(curated)
+    check("Datasheet:" in block, "rendered block includes the datasheet excerpt")
+    check("rc_w0" in block, "datasheet text is present in the block")
+    check(block.count("Example ") == 2, "uncurated entry (no excerpt) is skipped (2 of 3)")
+    check("TRUE — accept" in block and "FALSE — reject" in block, "both verdicts render")
+
+    # load round-trip
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as fh:
+        json.dump({"examples": curated}, fh)
+        path = fh.name
+    check(load_curated_examples(path) == block, "load_curated_examples matches render")
+    check(load_curated_examples(None) == "", "load with no path returns empty")
+
+    # export candidates from a synthetic eval (one FP, one FN)
+    ev = pd.DataFrame({
+        "peripheral": ["p", "p"], "register": ["r1", "r2"], "field_name": ["", ""],
+        "key": ["size", "size"], "correct_value": ["4", "32"], "original_value": ["32", "32"],
+        "is_correct": [False, True],   # FP row is corrupted (False), FN row is correct (True)
+        "is_true": [True, False],      # validator accepted the FP, rejected the FN
+    })
+    out = os.path.join(tempfile.gettempdir(), "cand_test.json")
+    n = export_curation_candidates(ev, out)
+    check(n == 2, f"exported both mistakes as candidates (got {n})")
+    with open(out) as fh:
+        payload = json.load(fh)
+    cands = payload["examples"]
+    check(all(c["datasheet_excerpt"] == "" for c in cands), "candidates have empty excerpt for the human")
+    check({c["mistake"] for c in cands} == {"false_positive", "false_negative"},
+          "candidates tagged FP and FN")
+    fp = [c for c in cands if c["mistake"] == "false_positive"][0]
+    check(fp["is_true"] is False, "FP candidate carries the correct label (False)")
+    check(fp["ground_truth_value"] == "32", "FP candidate shows the ground-truth value")
+
+
 def test_operational_gate():
     print("\n== operational gate / queue ==")
     # Synthetic scored set: score increasing, with a couple of corrupted (False) rows
@@ -287,6 +338,7 @@ if __name__ == "__main__":
     test_calibration()
     test_expand_and_stratify()
     test_alt_name()
+    test_curated_examples()
     test_operational_gate()
     print("\n" + ("=" * 50))
     if _failures:

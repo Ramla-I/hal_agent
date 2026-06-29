@@ -111,11 +111,16 @@ authoritative spec + full results + divergence log live in
    register's response from overflowing the output-token limit and defaulting the whole
    register to reject. The system prompt carries a **vendor access-notation legend**
    (see below).
-4. **Cross-validate** (`cross_validate` + `cross_validate_mined`): the Validator is run
-   once per invariant (baseline); then per fold, **in-context examples are mined from
-   that fold's training-partition FP/FN** and the held-out fold is re-evaluated with the
-   augmented prompt (tuned). The **gate threshold** is tuned per fold on training scores.
-   Per-fold confusion matrices aggregate → α, β, F1.
+4. **Cross-validate + curate** (`cross_validate`): **Pass 1 (baseline)** runs the
+   Validator once per invariant with the base prompt (which carries static hand-written
+   **reasoning examples**) and tunes the **gate threshold** per fold on training scores.
+   The Validator's mistakes are exported as **curation candidates**
+   (`curation_candidates_<model>.json`). **Pass 2 (curated, optional)** — *not* automatic
+   mining: a human curates those candidates **once per manufacturer**, supplying a
+   **datasheet excerpt + conclusion** for the instructive ones into a per-vendor JSON;
+   pass `--curated-examples <file>` and the Validator is re-run with those grounded
+   examples to measure the lift. Per-fold confusion matrices aggregate → α, β, F1
+   (reported baseline vs curated).
 5. **Operational gate + ranked review queue** (the system this benchmark stands in for).
    The pipeline's real use is: generator candidates → Validator → whatever it gates out
    (V=0) is **dropped unseen**, and the survivors (V=1) are **ranked by confidence** for a
@@ -177,29 +182,42 @@ fabricated name has no datasheet alias, and keeping it would leak the real name)
 - **`kfold.py`** — corrupted benchmark + (peripheral, register) group k-fold.
 - **`calibration.py`** — `ConfusionMatrix` + Rogan–Gladen `calibrate()`.
 - **`cross_validate.py`** — orchestrator (retrieval dispatch, chunked inference,
-  example mining, gate-threshold tuning, calibration, ranked review queue, outputs).
-  `make_tuner` (precision-target vs F1), `build_review_queue` / `precision_at_k_table` /
+  gate-threshold tuning, curated-example loading + candidate export, calibration, ranked
+  review queue, usage/cost, outputs). `make_tuner`, `render`/`load_curated_examples`,
+  `export_curation_candidates`, `build_review_queue` / `precision_at_k_table` /
   `reliability_table`. `MODELS` list / `--model`.
+- **`curated_examples/<vendor>.json`** — human-curated, datasheet-grounded examples for
+  pass 2 (created once per vendor from the exported candidates).
 - **`tests/test_offline.py`** — offline unit tests (no network), incl. the operational gate.
 
 ### Run (in the project container)
 ```bash
 scripts/docker_run.sh run -m optimization_validator.tests.test_offline                     # offline tests
 scripts/docker_run.sh run -m optimization_validator.cross_validate --smoke --model gpt-oss-120b   # tiny e2e
-scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.5 --k 5 \
-    --retrieval openevolve --vendor stm \
-    --objective precision --target-precision 0.95                                          # full sweep (billable)
-```
 
-Outputs → `optimization_validator/<device>/cross_validation/<model|smoke>/` (gitignored):
-`judgments_<model>.csv` (per-row + reasoning + `reg_in_context`/`file_search_chars`
-coverage), `judgments_tuned_<model>.csv`, `error_analysis_<model>.csv` (FP/FN),
-`per_fold_<model>.csv`, `summary_<model>.{csv,json}` (baseline vs tuned **+ an
-`operational` block**: gate precision, yield/recall, bugs dropped unseen, precision@top-decile),
-`prompts/` (the exact per-fold system prompt incl. legend + mined examples), and the
-**operational artifacts**: `review_queue_<model>.csv` (gate survivors, ranked by
-confidence — the reviewer-facing list), `precision_at_k_<model>.csv` (review-top-X% →
-catch-Y% curve), `calibration_<model>.csv` (confidence reliability bins).
+# Pass 1 (baseline) — also exports curation_candidates_<model>.json:
+scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.5 --k 5 \
+    --retrieval openevolve --vendor stm --objective precision --target-precision 0.95 \
+    --out-root optimization_validator/stmrm0041_run --price-in <$/1M> --price-out <$/1M>
+
+# [human] curate candidates -> optimization_validator/curated_examples/stm.json
+# Pass 2 (curated) — add the grounded examples, measure the lift:
+scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.5 --k 5 \
+    --retrieval openevolve --vendor stm --out-root optimization_validator/stmrm0041_run \
+    --curated-examples optimization_validator/curated_examples/stm.json
+```
+Token usage is always recorded; `--price-in/--price-out` (USD per 1M tokens) add a `$` estimate.
+
+Outputs → the `--out-root` dir, `<model|smoke>/` subfolder:
+`judgments_<model>.csv` (per-row + reasoning + tau + coverage), `judgments_baseline_<model>.csv`
+(when a curated pass ran), `curation_candidates_<model>.json` (FP/FN for a human to curate),
+`error_analysis_<model>.csv`, `per_fold_<model>.csv`, `summary_<model>.{csv,json}` (**baseline
+vs curated** + an `operational` block: gate precision, yield/recall, bugs dropped unseen,
+precision@top-decile + a `usage` block: tokens + `$`), `usage_<model>.csv` (per-call tokens),
+`prompts/` (base prompt + curated-examples block), and the **operational artifacts**:
+`review_queue_<model>.csv` (gate survivors ranked by confidence — the reviewer-facing list),
+`precision_at_k_<model>.csv` (review-top-X% → catch-Y% curve), `calibration_<model>.csv`
+(confidence reliability bins).
 
 ### Results so far (rm0041, k=5; OpenEvolve + chunked batching)
 > ⚠️ Measured on the **pre-merge** rm0041 slice (~2,459 verified invariants). The merged
@@ -223,13 +241,14 @@ Status: ⬜ not started · 🟡 partial · ✅ done · 🔒 blocked. **★ = loa
       model-specific. Runs now (STM).
 
 **B. Ablations that justify the design**
-- [ ] **B1. Tuning lift (baseline vs tuned)** — emitted automatically (baseline vs tuned in
-      `summary_*`); quantifies what in-context example mining buys.
+- [ ] **B1. Curation lift (baseline vs curated)** — emitted automatically when pass 2 runs
+      (`summary_*` has baseline vs curated); quantifies what the human-curated,
+      datasheet-grounded examples buy. Requires a `curated_examples/<vendor>.json`.
 - [ ] **B2. `alt_name` on/off** (`--use-alt-name` / `--no-alt-name`) — lift vs specificity cost.
 - [ ] **B3. Access legend on/off** (`--vendor stm` / `none`) — re-measure on the merged slice.
 - [ ] **B4. Retrieval backend** — OpenEvolve vs OpenAI file_search; justifies the switch.
-- [ ] **B5. Number of mined examples** (`max_per_class` sweep) — find where added examples
-      stop helping vs prompt-size cost (sets the operating config; see TODO below).
+- [ ] **B5. Number of curated examples** — vary how many curated, datasheet-grounded
+      examples go in the prompt; find where added examples stop helping vs prompt-size cost.
 
 **C. Validity of the calibration — the scientific core**
 - [ ] **★ C1. Cross-distribution π test** — measure α/β at 30% corruption, apply to a slice
@@ -270,11 +289,9 @@ program or accept `--retrieval openai`) and real NXP access notations in
       processes `gpioa`, `gpiob`, … as separate tasks, so the validator validates each in
       production. This is the representative population (no novel-family-generalization
       caveat applies for the operational per-chip precision/yield estimate).
-- [ ] **Tune the number of mined in-context examples** (`max_per_class`, currently 6/class
-      → 12/fold). Sweep it and find where added examples stop improving F1 — each one
-      grows every system prompt (× every call), so the prompt shouldn't balloon. Measure
-      the accuracy-vs-prompt-size tradeoff and pick the smallest count that keeps the gain;
-      consider dropping near-duplicate / low-information examples.
+- [ ] **Tune the number of curated examples** (see B5). Each grounded example (invariant +
+      datasheet excerpt + reasoning) is ~60–120 tokens × every call, so find the smallest
+      curated set that keeps the lift; drop near-duplicate / low-information examples.
 - [ ] **Fill in real NXP / TI access notations** in `optimization_validator/access_notations.json`
       (currently stubs) when ke04 / msp430g2 slices are benchmarked.
 - [ ] **Benchmark the held-out vendors** (NXP `ke04`, then TI) — verified slices exist;

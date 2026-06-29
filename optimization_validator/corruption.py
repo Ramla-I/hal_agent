@@ -320,6 +320,11 @@ def corrupt_row(row: dict, ctx: RegisterContext, rng, name_corruption_prob: floa
     field_name = row.get("field_name")
     field_name = "" if field_name is None or (isinstance(field_name, float) and pd.isna(field_name)) else str(field_name)
 
+    # Stash the ground truth (pre-corruption) so the curation-candidate export can show a
+    # human the correct value/name when they write the supporting datasheet excerpt.
+    out["original_value"] = row.get("correct_value")
+    out["original_field_name"] = field_name
+
     if field_name and rng.random() < name_corruption_prob:
         out["field_name"] = corrupt_field_name(field_name, ctx, rng)
         out["corruption_type"] = "field_name"

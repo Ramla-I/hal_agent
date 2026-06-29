@@ -303,6 +303,34 @@ def create_batched_validator_system_prompt(access_legend: str = "", name_aliasin
     - 0.7-0.85: Fairly confident (reasonable evidence)
     - 0.5-0.65: Uncertain (conflicting or ambiguous information)
     - 0.0: Cannot find any information about the register/field
+
+    # EXAMPLE (how to reason over a batch, then emit the array)
+    These show the kind of reasoning expected. The file search results are omitted here;
+    in a real call you have the datasheet text to ground each judgment.
+
+    Input invariants:
+      0. peripheral="GPIOA", register="GPIOA_OTYPER", field_name="", key="address_offset", value="0x04"
+      1. peripheral="BKP", register="BKP_DR23", field_name="", key="address_offset", value="0x6C"
+      2. peripheral="CEC", register="CEC_CR", field_name="", key="reset_value", value="0x443"
+      3. peripheral="CEC", register="CEC_CR", field_name="", key="size", value="4"
+      4. peripheral="FTM0", register="FTM0_C7SC", field_name="Xyfka", key="bit_offset", value="7"
+
+    Reasoning:
+      0. The datasheet lists GPIOA_OTYPER at address offset 0x04, matching the value. True, fully confident.
+      1. No BKP_DR23 register is described in the datasheet, so its offset cannot be confirmed. False, fully confident.
+      2. CEC_CR resets to 0xXXXXXXX3, where each X is any digit; 0x443 ends in 3 and fits that pattern. True.
+      3. CEC_CR is a 32-bit register, not 4 bits. False.
+      4. FTM0_C7SC exists, but it has no field named "Xyfka". False.
+
+    ```json
+    [
+        {{"invariant_index": 0, "is_true": true, "confidence_score": 1.0}},
+        {{"invariant_index": 1, "is_true": false, "confidence_score": 1.0}},
+        {{"invariant_index": 2, "is_true": true, "confidence_score": 0.95}},
+        {{"invariant_index": 3, "is_true": false, "confidence_score": 1.0}},
+        {{"invariant_index": 4, "is_true": false, "confidence_score": 1.0}}
+    ]
+    ```
     """
 
 def create_batched_validator_user_prompt(batch_registers: list, invariants: list, file_search_results: str) -> str:

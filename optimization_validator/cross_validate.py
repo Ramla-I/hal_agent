@@ -3,29 +3,32 @@ a Noisy Labeler").
 
 Protocol:
   1. Build a corrupted, (Peripheral, Register)-folded benchmark from a verified
-     datasheet (kfold.make_benchmark_with_folds): 30% of invariants are replaced by
-     realistic corruptions; folds group whole registers.
-  2. Run the Validator ONCE over every invariant in the benchmark (per-register
-     batched inference, reusing the project's prompt builders + semantic retrieval).
-     Each invariant is evaluated exactly once — as a member of its held-out fold.
-  3. k-fold: for each fold i, tune the gate threshold on the *training* partition (all
-     rows not in fold i, whose judgments we already have), then evaluate fold i at that
-     threshold to get a per-fold confusion matrix. The default objective is
-     OPERATIONAL: pick the lowest threshold whose training precision clears a target
-     (`--target-precision`, default 0.95), maximising yield (recall) under that
-     constraint. (`--objective f1` restores max-F1 tuning.)
-  4. Aggregate per-fold confusion matrices into the final Validator confusion matrix.
-     Operationally the two headline numbers are the gate's **precision** (average
-     quality of the pile a human reviews) and its **recall / yield** (fraction of real
-     bugs kept — the rest are dropped unseen, so this is a real cost). alpha/beta/F1 are
-     also reported.
-  5. Calibrate downstream measurements: pi (Rogan-Gladen) and validated-set precision
+     datasheet (kfold.make_benchmark_with_folds): derived peripherals expanded, 30% of
+     invariants replaced by realistic corruptions (peripheral-stratified); folds group
+     whole registers.
+  2. Pass 1 (baseline): run the Validator over every invariant with the base prompt
+     (which already carries static, hand-written reasoning examples), per-register
+     batched inference + semantic retrieval. Export the Validator's mistakes as CURATION
+     CANDIDATES for a human (export_curation_candidates).
+  3. Pass 2 (curated, optional): if a per-vendor curated-examples file is given
+     (--curated-examples), re-evaluate every invariant with those human-curated,
+     datasheet-grounded examples injected, to measure the lift. Curation is done once per
+     manufacturer (a human supplies the datasheet excerpt + conclusion for selected
+     candidates); there is NO automatic example mining.
+  4. k-fold: for each fold i, tune the gate threshold on the *training* partition, then
+     score fold i at that threshold. The default objective is OPERATIONAL: the lowest
+     threshold whose training precision clears a target (--target-precision, default
+     0.95), maximising yield (recall) under it (--objective f1 restores max-F1).
+  5. Aggregate per-fold confusion matrices. Headline numbers: the gate's **precision**
+     (quality of the reviewed pile) and **yield/recall** (fraction of real bugs kept —
+     the rest dropped unseen). Reported baseline vs curated to show the lift.
+  6. Calibrate downstream measurements: pi (Rogan-Gladen) and validated-set precision
      P(C=1|V=1) (calibration.calibrate).
 
 Operational model (the system this harness measures): the generator's candidate bugs go
 through the Validator; whatever it gates out (V=0) is **never reviewed**, and the
 survivors (V=1) are **ranked by confidence** so a human reviews the most-likely-true
-first and stops when labour runs out. This harness therefore also emits, from the tuned
+first and stops when labour runs out. This harness therefore also emits, from the
 held-out judgments, the artifacts that operation needs: a ranked **review queue**, a
 **precision@k** table (front-loading quality), and a **calibration/reliability** table
 (so the stopping depth is principled). Because the gate hard-drops V=0, a false negative
@@ -38,10 +41,10 @@ pseudo-probability that the invariant is correct — and threshold it for the ga
 gated-in (V=1) survivor at any threshold >= 0.5, score == confidence, so ranking the
 queue by score is ranking by the model's confidence.
 
-"Run across models" is the `MODELS` list in __main__. Per-fold prompt-wording and
-in-context-example tuning is human-driven and scaffolded via the FP/FN error-analysis
-CSV this harness writes; the automated per-fold tuning here is over the decision
-threshold (see Divergence log in docs/validator_paper_plan.md).
+"Run across models" is the `MODELS` list in __main__. In-context examples are
+human-curated once per manufacturer (scaffolded by the exported curation candidates +
+FP/FN error analysis); the only automated per-fold tuning here is the decision threshold
+(see Divergence log in docs/validator_paper_plan.md).
 """
 
 from __future__ import annotations
@@ -300,67 +303,108 @@ def evaluate_benchmark(
     access_legend: str = "",
     use_alt_name: bool = True,
     usage_sink: Optional[list] = None,
+    extra_system_text: str = "",
+    progress_label: str = "",
 ) -> pd.DataFrame:
-    """Baseline pass: run the Validator over every benchmark row with the base prompt."""
+    """Run the Validator over every benchmark row. `extra_system_text` (e.g. the curated
+    examples block) is appended to the system prompt for all rows."""
     df = benchmark.reset_index(drop=True).copy()
     df["row_id"] = df.index
     return evaluate_rows(df, model_name, retrieve_fn, reasoning_effort,
-                         progress=progress, max_per_call=max_per_call,
+                         extra_system_text=extra_system_text, progress=progress,
+                         progress_label=progress_label, max_per_call=max_per_call,
                          access_legend=access_legend, use_alt_name=use_alt_name,
                          usage_sink=usage_sink)
 
 
 # --------------------------------------------------------------------------- #
-# In-context example mining (per-fold tuning)
+# Curated in-context examples (human-in-the-loop, once per manufacturer)
 # --------------------------------------------------------------------------- #
+#
+# Tuning is NOT automatic example mining. Instead: a first (baseline) pass surfaces the
+# Validator's mistakes as CURATION CANDIDATES (export_curation_candidates); a human keeps
+# the instructive ones and supplies, for each, the supporting DATASHEET EXCERPT + the
+# correct conclusion (stored once per vendor in a JSON file); a second pass re-evaluates
+# with those curated examples injected into the prompt (render/load_curated_examples).
+# The datasheet excerpt is what teaches grounded reasoning, not just the verdict.
 
-def mine_examples(train_judged: pd.DataFrame, max_per_class: int = 6, seed: int = 0) -> str:
-    """Build a few-shot example block from the Validator's mistakes on TRAINING rows.
 
-    Mistakes (at the raw is_true judgment) are the corner cases the spec says to target:
-      * false positive  — judged true (accept) but actually corrupted  -> teach: reject
-      * false negative  — judged false (reject) but actually correct    -> teach: accept
-    We sample up to `max_per_class` of each, balanced, and render them with their
-    verified labels. Examples come only from the training partition (folds != held-out),
-    so the held-out fold is never used to tune itself.
-
-    Returns "" when there are no usable mistakes (the prompt is left unchanged).
-    """
-    import random as _random
-    rng = _random.Random(seed)
-
-    pred_accept = train_judged["is_true"].astype(bool)
-    gold = train_judged["is_correct"].astype(bool)
-    fps = train_judged[pred_accept & (~gold)]
-    fns = train_judged[(~pred_accept) & gold]
-
-    def _sample(frame):
-        recs = frame.to_dict("records")
-        rng.shuffle(recs)
-        return recs[:max_per_class]
-
-    chosen = [(r, False) for r in _sample(fps)] + [(r, True) for r in _sample(fns)]
-    if not chosen:
+def render_curated_examples(curated: list) -> str:
+    """Render human-curated examples (each invariant + datasheet excerpt + reasoning +
+    correct label) into a batched-prompt block. Entries missing a datasheet_excerpt are
+    skipped (still un-curated). Returns "" if none are usable."""
+    usable = [c for c in (curated or []) if isinstance(c, dict)
+              and str(c.get("datasheet_excerpt") or "").strip()]
+    if not usable:
         return ""
-    rng.shuffle(chosen)
-
     lines = [
-        "# ADDITIONAL CALIBRATION EXAMPLES",
-        "These are real invariants from OTHER registers in this datasheet, each with its",
-        "human-verified correct label. They were chosen because they are corner cases the",
-        "Validator has gotten wrong. Use them to calibrate your judgments.",
+        "# CURATED EXAMPLES (real cases with datasheet evidence)",
+        "Each example is a real invariant with the supporting datasheet text and the",
+        "human-verified conclusion. Reason the same way over the facts in this request.",
         "",
     ]
-    for i, (r, correct_is_true) in enumerate(chosen, 1):
-        field = r.get("field_name") or ""
-        verdict = "TRUE (the value matches the datasheet — accept)" if correct_is_true \
-            else "FALSE (the value does NOT match the datasheet — reject)"
+    for i, c in enumerate(usable, 1):
+        field = str(c.get("field_name") or "")
+        verdict = "TRUE — accept" if c.get("is_true") else "FALSE — reject"
         lines.append(
-            f'Example {i}: peripheral="{r["peripheral"]}", register="{r["register"]}", '
-            f'field_name="{field}", key="{r["key"]}", value="{r["correct_value"]}"'
+            f'Example {i}: peripheral="{c.get("peripheral", "")}", '
+            f'register="{c.get("register", "")}", field_name="{field}", '
+            f'key="{c.get("key", "")}", value="{c.get("value", "")}"'
         )
-        lines.append(f"  Correct label: {verdict}")
+        lines.append(f'  Datasheet: {str(c.get("datasheet_excerpt") or "").strip()}')
+        reasoning = str(c.get("reasoning") or "").strip()
+        if reasoning:
+            lines.append(f"  Reasoning: {reasoning}")
+        lines.append(f"  Conclusion: {verdict}")
     return "\n".join(lines)
+
+
+def load_curated_examples(path: Optional[str]) -> str:
+    """Load a per-vendor curated-examples JSON ({"examples": [...]} or a bare list) and
+    render it to a prompt block. Returns "" if path is empty/missing/uncurated."""
+    if not path or not os.path.exists(path):
+        return ""
+    with open(path, "r", encoding="utf-8") as fh:
+        data = json.load(fh)
+    curated = data.get("examples", []) if isinstance(data, dict) else data
+    return render_curated_examples(curated)
+
+
+def export_curation_candidates(eval_df: pd.DataFrame, path: str, max_per_class: int = 40) -> int:
+    """Write the Validator's mistakes (FP/FN at the raw is_true judgment) as a curation
+    template: each entry carries the invariant, the validator's wrong verdict, and the
+    GROUND-TRUTH label/value, with empty `datasheet_excerpt`/`reasoning` for a human to
+    fill (once per manufacturer). Returns the number of candidates written."""
+    ev = eval_df.copy()
+    pred_accept = ev["is_true"].astype(bool)
+    gold = ev["is_correct"].astype(bool)
+    fp = ev[pred_accept & (~gold)]
+    fn = ev[(~pred_accept) & gold]
+    cands = []
+    for kind, frame in (("false_positive", fp), ("false_negative", fn)):
+        for _, r in frame.head(max_per_class).iterrows():
+            cands.append({
+                "peripheral": r.get("peripheral", ""), "register": r.get("register", ""),
+                "field_name": r.get("field_name", "") or "", "key": r.get("key", ""),
+                "value": r.get("correct_value", ""),
+                "is_true": bool(r.get("is_correct")),          # the CORRECT label to teach
+                "ground_truth_value": r.get("original_value", r.get("correct_value", "")),
+                "validator_said": "accept(true)" if r.get("is_true") else "reject(false)",
+                "mistake": kind,
+                "datasheet_excerpt": "",   # <- human: paste the supporting datasheet text
+                "reasoning": "",           # <- human: why the conclusion holds
+            })
+    payload = {
+        "_comment": ("Curation template (once per vendor). Keep the instructive rows, fill "
+                     "datasheet_excerpt + reasoning, then pass --curated-examples <this file>. "
+                     "`is_true` is the correct label; rows with an empty datasheet_excerpt are "
+                     "ignored."),
+        "examples": cands,
+    }
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, indent=2)
+    return len(cands)
 
 
 # --------------------------------------------------------------------------- #
@@ -465,6 +509,8 @@ def cross_validate(evaluated: pd.DataFrame, k: int, tuner=None) -> dict:
     tuner = tuner or (lambda scores, golds: tune_threshold(scores, golds))
     fold_results: list[FoldResult] = []
     agg = ConfusionMatrix(0, 0, 0, 0)
+    ev = evaluated.copy()
+    ev["tau"] = float("nan")
     for f in range(k):
         train = evaluated[evaluated["fold"] != f]
         test = evaluated[evaluated["fold"] == f]
@@ -474,6 +520,7 @@ def cross_validate(evaluated: pd.DataFrame, k: int, tuner=None) -> dict:
         cm = confusion_at(list(test["score"]), list(test["is_correct"]), tau)
         fold_results.append(FoldResult(fold=f, tau=tau, cm=cm))
         agg = agg + cm
+        ev.loc[ev["fold"] == f, "tau"] = tau
 
     untuned = confusion_at(list(evaluated["score"]), list(evaluated["is_correct"]), 0.5)
     calib = calibrate(agg)
@@ -482,76 +529,7 @@ def cross_validate(evaluated: pd.DataFrame, k: int, tuner=None) -> dict:
         "aggregated": agg,
         "untuned_tau0.5": untuned,
         "calibration": calib,
-    }
-
-
-def cross_validate_mined(
-    baseline: pd.DataFrame,
-    model_name: str,
-    retrieve_fn,
-    k: int,
-    reasoning_effort: Optional[str],
-    max_per_class: int = 6,
-    seed: int = 0,
-    max_per_call: int = DEFAULT_MAX_PER_CALL,
-    access_legend: str = "",
-    tuner=None,
-    use_alt_name: bool = True,
-    usage_sink: Optional[list] = None,
-) -> dict:
-    """Per-fold tuning with mined in-context examples + decision threshold.
-
-    For each fold f: mine the Validator's mistakes on the TRAINING partition
-    (folds != f) from `baseline`, inject them as few-shot examples, RE-EVALUATE the
-    held-out fold f with the augmented prompt, and score it at a threshold tuned on the
-    baseline training scores. Both knobs (examples, threshold) are fit on training only.
-    `tuner` selects the gate threshold (defaults to max-F1; pass make_tuner for the
-    operational precision-targeted gate).
-
-    Returns a dict with per-fold results, the aggregated tuned confusion matrix, the
-    concatenated per-fold tuned judgments, and the calibration result.
-    """
-    tuner = tuner or (lambda scores, golds: tune_threshold(scores, golds))
-    fold_results: list[FoldResult] = []
-    agg = ConfusionMatrix(0, 0, 0, 0)
-    tuned_parts = []
-    fold_prompts = []  # the actual prompt version used for each held-out fold
-    base_system = create_batched_validator_system_prompt(access_legend, name_aliasing=use_alt_name)
-    for f in range(k):
-        train = baseline[baseline["fold"] != f]
-        test = baseline[baseline["fold"] == f]
-        if len(test) == 0:
-            continue
-        examples = mine_examples(train, max_per_class=max_per_class, seed=seed + f)
-        full_system = base_system + ("\n\n" + examples if examples else "")
-        n_ex = examples.count("Example ") if examples else 0
-        fold_prompts.append({
-            "fold": f, "n_mined_examples": n_ex,
-            "examples_block": examples, "full_system_prompt": full_system,
-        })
-        test2 = evaluate_rows(
-            test, model_name, retrieve_fn, reasoning_effort,
-            extra_system_text=examples, progress_label=f" fold{f}/tuned",
-            max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name,
-            usage_sink=usage_sink)
-        tau = tuner(list(train["score"]), list(train["is_correct"]))
-        cm = confusion_at(list(test2["score"]), list(test2["is_correct"]), tau)
-        fold_results.append(FoldResult(fold=f, tau=tau, cm=cm))
-        agg = agg + cm
-        part = test2.copy()
-        part["fold"] = f
-        part["tau"] = tau
-        part["n_mined_examples"] = n_ex
-        tuned_parts.append(part)
-
-    tuned_eval = pd.concat(tuned_parts, ignore_index=True) if tuned_parts else baseline.iloc[0:0].copy()
-    return {
-        "fold_results": fold_results,
-        "aggregated": agg,
-        "tuned_eval": tuned_eval,
-        "calibration": calibrate(agg),
-        "base_system_prompt": base_system,
-        "fold_prompts": fold_prompts,
+        "eval": ev,  # evaluated rows with each row's held-out fold tau attached
     }
 
 
@@ -638,45 +616,25 @@ def reliability_table(queue: pd.DataFrame, n_bins: int = 10) -> pd.DataFrame:
 # Output
 # --------------------------------------------------------------------------- #
 
-def _write_prompt_versions(out_dir: str, model_name: str, tuned_cv: dict) -> None:
-    """Save the base prompt and each fold's mined-example-augmented system prompt.
-
-    Layout under <out_dir>/prompts/:
-      baseline_system_prompt.txt        — the unmodified base prompt (all baseline calls)
-      fold{f}_system_prompt.txt         — full system prompt used for held-out fold f
-      fold{f}_examples.txt              — just the mined in-context examples block
-      prompt_versions_{model}.md        — index: per fold, # examples + the block inline
-    """
+def _write_prompt_versions(out_dir: str, model_name: str, base_system_prompt: str,
+                           curated_block: str) -> None:
+    """Persist the exact prompts used: the base system prompt (baseline pass) and the
+    curated-examples block appended for the curated pass (empty if none)."""
     pdir = os.path.join(out_dir, "prompts")
     os.makedirs(pdir, exist_ok=True)
-
-    base = tuned_cv.get("base_system_prompt", "")
-    with open(os.path.join(pdir, "baseline_system_prompt.txt"), "w") as fh:
-        fh.write(base)
-
-    md = [f"# Validator prompt versions — {model_name}", "",
-          "`baseline` uses the base system prompt below for every call. Each fold's",
-          "tuned pass appends in-context examples mined from that fold's TRAINING",
-          "partition (folds != held-out), so the held-out fold never tunes itself.", ""]
-    for fp in tuned_cv.get("fold_prompts", []):
-        f = fp["fold"]
-        with open(os.path.join(pdir, f"fold{f}_system_prompt.txt"), "w") as fh:
-            fh.write(fp["full_system_prompt"])
-        with open(os.path.join(pdir, f"fold{f}_examples.txt"), "w") as fh:
-            fh.write(fp["examples_block"] or "(no mistakes mined on training folds; base prompt used)")
-        md.append(f"## Fold {f} — {fp['n_mined_examples']} mined example(s)")
-        md.append("")
-        md.append("```")
-        md.append(fp["examples_block"] or "(no examples added; base prompt used)")
-        md.append("```")
-        md.append("")
-    md.append("## Base system prompt")
-    md.append("")
-    md.append("```")
-    md.append(base)
-    md.append("```")
+    with open(os.path.join(pdir, "base_system_prompt.txt"), "w") as fh:
+        fh.write(base_system_prompt)
+    with open(os.path.join(pdir, "curated_examples_block.txt"), "w") as fh:
+        fh.write(curated_block or "(no curated examples loaded; baseline only)")
     with open(os.path.join(pdir, f"prompt_versions_{model_name}.md"), "w") as fh:
-        fh.write("\n".join(md))
+        fh.write("\n".join([
+            f"# Validator prompt versions — {model_name}", "",
+            "The baseline pass uses the base system prompt (which already carries static",
+            "reasoning examples). The curated pass appends the human-curated examples",
+            "below (invariant + datasheet excerpt + conclusion), once per manufacturer.", "",
+            "## Curated examples block", "", "```", curated_block or "(none)", "```", "",
+            "## Base system prompt", "", "```", base_system_prompt, "```",
+        ]))
 
 
 # USD per 1M tokens (input, output). Best-effort defaults — VERIFY against current vendor
@@ -732,113 +690,110 @@ def _agg_summary_row(model_name: str, variant: str, cv: dict) -> dict:
     }
 
 
-def write_outputs(out_dir: str, model_name: str, baseline_eval: pd.DataFrame,
-                  baseline_cv: dict, tuned_cv: dict, operational_meta: Optional[dict] = None,
+def write_outputs(out_dir: str, model_name: str, baseline_cv: dict, curated_cv: dict,
+                  base_system_prompt: str = "", curated_block: str = "",
+                  operational_meta: Optional[dict] = None,
                   usage_rows: Optional[list] = None, price_in=None, price_out=None) -> None:
-    """Write baseline (threshold-only) and tuned (mined examples + threshold) results,
-    plus the operational artifacts (ranked review queue, precision@k, calibration) and
-    token-usage accounting.
+    """Write the cross-validation results + operational artifacts + usage accounting.
 
-    `tuned_cv` is the headline; `baseline_cv` is reported alongside to show the lift
-    from per-fold in-context example tuning. `operational_meta` (objective,
-    target_precision) is recorded in the summary for provenance. `usage_rows` is the
-    per-LLM-call token log; with `price_in`/`price_out` (USD per 1M tokens) it also
-    yields a $ cost estimate.
+    `curated_cv` is the headline (after curated examples); `baseline_cv` is reported
+    alongside to show the lift. When no curated examples were loaded, curated_cv ==
+    baseline_cv (lift 0). Each cv dict carries `eval` (rows with per-fold tau).
     """
     os.makedirs(out_dir, exist_ok=True)
+    curated = curated_cv is not baseline_cv
+    final_eval = curated_cv["eval"]
 
-    # Per-row judgments (auditable; includes reasoning). Baseline = pass 1 over all
-    # rows; tuned = per-fold pass 2 on the held-out folds with mined examples.
-    baseline_eval.to_csv(os.path.join(out_dir, f"judgments_{model_name}.csv"), index=False)
-    tuned_cv["tuned_eval"].to_csv(os.path.join(out_dir, f"judgments_tuned_{model_name}.csv"), index=False)
+    # Per-row judgments (auditable; includes reasoning + tau). Also the baseline eval when
+    # a curated pass changed it.
+    final_eval.to_csv(os.path.join(out_dir, f"judgments_{model_name}.csv"), index=False)
+    if curated:
+        baseline_cv["eval"].to_csv(os.path.join(out_dir, f"judgments_baseline_{model_name}.csv"), index=False)
 
-    # FP/FN error-analysis at tau=0.5 on the baseline — exactly the rows mining learns from.
-    ev = baseline_eval.copy()
-    ev["pred_v1"] = ev["score"] >= 0.5
-    fp_fn = ev[((ev["pred_v1"]) & (~ev["is_correct"])) | ((~ev["pred_v1"]) & (ev["is_correct"]))]
-    cols = ["peripheral", "register", "field_name", "alt_name", "key", "correct_value", "is_correct",
-            "corruption_type", "is_true", "confidence_score", "score", "reasoning"]
+    # FP/FN error-analysis on the baseline at the raw judgment — the curation candidates.
+    bev = baseline_cv["eval"].copy()
+    bev["pred_v1"] = bev["is_true"].astype(bool)
+    fp_fn = bev[((bev["pred_v1"]) & (~bev["is_correct"])) | ((~bev["pred_v1"]) & (bev["is_correct"]))]
+    cols = ["peripheral", "register", "field_name", "alt_name", "key", "correct_value",
+            "original_value", "is_correct", "corruption_type", "is_true", "confidence_score",
+            "score", "reasoning"]
     fp_fn[[c for c in cols if c in fp_fn.columns]].to_csv(
         os.path.join(out_dir, f"error_analysis_{model_name}.csv"), index=False)
 
-    # Per-fold confusion + thresholds, baseline vs tuned side by side.
+    # Per-fold confusion + thresholds, baseline vs curated side by side.
     per_fold_rows = []
     base_by_fold = {fr.fold: fr for fr in baseline_cv["fold_results"]}
-    for fr in tuned_cv["fold_results"]:
+    for fr in curated_cv["fold_results"]:
         b = base_by_fold.get(fr.fold)
         per_fold_rows.append({
             "fold": fr.fold, "tau": fr.tau,
-            "tuned_tp": fr.cm.tp, "tuned_fp": fr.cm.fp, "tuned_tn": fr.cm.tn, "tuned_fn": fr.cm.fn,
-            "tuned_f1": fr.cm.f1,
+            "tp": fr.cm.tp, "fp": fr.cm.fp, "tn": fr.cm.tn, "fn": fr.cm.fn,
+            "f1": fr.cm.f1, "precision": fr.cm.precision, "recall": fr.cm.recall,
             "baseline_f1": b.cm.f1 if b else None,
         })
     pd.DataFrame(per_fold_rows).to_csv(os.path.join(out_dir, f"per_fold_{model_name}.csv"), index=False)
 
-    # Operational artifacts (from the tuned held-out judgments): the ranked review queue
-    # a human consumes, its precision@k curve, and the confidence calibration table.
-    queue = build_review_queue(tuned_cv["tuned_eval"])
+    # Operational artifacts (from the final held-out judgments): ranked review queue,
+    # precision@k curve, confidence calibration table.
+    queue = build_review_queue(final_eval)
     queue_cols = [c for c in _QUEUE_COLS if c in queue.columns]
     queue[queue_cols].to_csv(os.path.join(out_dir, f"review_queue_{model_name}.csv"), index=False)
     pk = precision_at_k_table(queue)
     pk.to_csv(os.path.join(out_dir, f"precision_at_k_{model_name}.csv"), index=False)
     reliability_table(queue).to_csv(os.path.join(out_dir, f"calibration_{model_name}.csv"), index=False)
 
-    # Operational headline: the gate is what a human reviews; the dropped V=0 rows are
-    # gone unseen, so report both the reviewed-pile precision AND the kept-bug yield.
-    t_agg = tuned_cv["aggregated"]
-    total_true = int(tuned_cv["tuned_eval"]["is_correct"].sum()) if len(tuned_cv["tuned_eval"]) else 0
-    n_total = len(tuned_cv["tuned_eval"])
+    t_agg = curated_cv["aggregated"]
+    total_true = int(final_eval["is_correct"].sum()) if len(final_eval) else 0
+    n_total = len(final_eval)
     operational = {
         **(operational_meta or {}),
+        "curated_examples_used": bool(curated_block),
         "n_candidates": n_total,
         "n_reviewed": int(len(queue)),
         "n_dropped_unseen": int(n_total - len(queue)),
-        "gate_precision": t_agg.precision,          # avg quality of the reviewed pile
-        "yield_recall": t_agg.recall,               # fraction of real bugs kept (rest lost)
+        "gate_precision": t_agg.precision,
+        "yield_recall": t_agg.recall,
         "true_bugs_total": total_true,
         "true_bugs_kept": int(t_agg.tp),
         "true_bugs_dropped_unseen": int(t_agg.fn),
         "precision_at_top_decile": (float(pk.iloc[0]["precision_at_k"]) if len(pk) else float("nan")),
     }
 
-    # Token usage / cost: per-call log CSV + aggregated totals in the summary.
     usage_summary, udf = _summarize_usage(usage_rows or [], model_name=model_name,
                                           price_in=price_in, price_out=price_out)
     if len(udf):
         udf.to_csv(os.path.join(out_dir, f"usage_{model_name}.csv"), index=False)
 
-    # Aggregated confusion + calibration -> JSON + a 2-row summary CSV (baseline, tuned).
     summary = {
         "model": model_name,
         "operational": operational,
         "usage": usage_summary,
-        "baseline_threshold_only": {
+        "baseline": {
             "aggregated_confusion": baseline_cv["aggregated"].to_dict(),
             "calibration": baseline_cv["calibration"].to_dict(),
         },
-        "tuned_mined_examples": {
-            "aggregated_confusion": tuned_cv["aggregated"].to_dict(),
-            "calibration": tuned_cv["calibration"].to_dict(),
+        "curated": {
+            "aggregated_confusion": curated_cv["aggregated"].to_dict(),
+            "calibration": curated_cv["calibration"].to_dict(),
         },
     }
     with open(os.path.join(out_dir, f"summary_{model_name}.json"), "w") as fh:
         json.dump(summary, fh, indent=2)
 
     pd.DataFrame([
-        _agg_summary_row(model_name, "baseline_threshold_only", baseline_cv),
-        _agg_summary_row(model_name, "tuned_mined_examples", tuned_cv),
+        _agg_summary_row(model_name, "baseline", baseline_cv),
+        _agg_summary_row(model_name, "curated", curated_cv),
     ]).to_csv(os.path.join(out_dir, f"summary_{model_name}.csv"), index=False)
 
-    # Prompt versions: persist the exact system prompt used for each held-out fold so
-    # the in-context examples added by mining are fully auditable.
-    _write_prompt_versions(out_dir, model_name, tuned_cv)
+    _write_prompt_versions(out_dir, model_name, base_system_prompt, curated_block)
 
     b_agg = baseline_cv["aggregated"]
-    t_calib = tuned_cv["calibration"]
+    t_calib = curated_cv["calibration"]
     obj = operational.get("objective", "?")
     tgt = operational.get("target_precision")
     print(f"  wrote outputs to {out_dir}")
-    print(f"  baseline F1={b_agg.f1:.3f}  ->  tuned F1={t_agg.f1:.3f}  (lift {t_agg.f1 - b_agg.f1:+.3f})")
+    label = "curated" if curated else "baseline-only (no curated examples loaded)"
+    print(f"  baseline F1={b_agg.f1:.3f}  ->  {label} F1={t_agg.f1:.3f}  (lift {t_agg.f1 - b_agg.f1:+.3f})")
     print(f"  gate [{obj}{'' if tgt is None else f' target={tgt}'}]: "
           f"precision={t_agg.precision:.3f}  yield/recall={t_agg.recall:.3f}  "
           f"(reviewed {operational['n_reviewed']}/{n_total}, "
@@ -864,7 +819,6 @@ def run_model(
     seed: int = 0,
     reasoning_effort: Optional[str] = None,
     limit_registers: Optional[int] = None,
-    max_per_class: int = 6,
     max_per_call: int = DEFAULT_MAX_PER_CALL,
     access_legend: str = "",
     objective: str = "precision",
@@ -872,18 +826,19 @@ def run_model(
     use_alt_name: bool = True,
     price_in=None,
     price_out=None,
+    curated_examples_path: Optional[str] = None,
 ) -> dict:
     """End-to-end for one model.
 
-    Pass 1: evaluate every invariant with the base prompt (baseline).
-    Pass 2: per fold, mine training-fold mistakes -> few-shot examples -> re-evaluate
-    the held-out fold (tuned). Both passes are cross-validated (gate threshold tuned on
-    training); the tuned aggregate is the headline, baseline is reported for the lift.
+    Pass 1 (baseline): evaluate every invariant with the base prompt (which carries the
+    static reasoning examples). The Validator's mistakes are exported as CURATION
+    CANDIDATES for a human to turn into datasheet-grounded examples (once per vendor).
+    Pass 2 (curated): only if `curated_examples_path` is given — re-evaluate every
+    invariant with those curated examples injected, to measure the lift. Both passes are
+    cross-validated (gate threshold tuned per fold on training scores).
 
-    `objective`/`target_precision` choose the gate operating point: "precision"
-    (default) maximises yield at precision >= target; "f1" restores max-F1.
-
-    `retrieve_fn(peripheral, register) -> (text, ids)` is the retrieval backend.
+    `objective`/`target_precision` choose the gate operating point. `retrieve_fn` is the
+    retrieval backend.
     """
     tuner = make_tuner(objective, target_precision)
     usage_rows: list = []  # per-LLM-call token log, populated across both passes
@@ -901,7 +856,9 @@ def run_model(
           f"{benchmark[['peripheral','register']].drop_duplicates().shape[0]} registers, "
           f"{int(benchmark['is_correct'].sum())} correct / {int((~benchmark['is_correct']).sum())} corrupted")
 
-    print(f"[{model_name}] pass 1/2: baseline evaluation (base prompt)")
+    base_system = create_batched_validator_system_prompt(access_legend, name_aliasing=use_alt_name)
+
+    print(f"[{model_name}] pass 1: baseline evaluation (base prompt + static examples)")
     baseline_eval = evaluate_benchmark(
         benchmark, model_name, retrieve_fn, reasoning_effort=reasoning_effort,
         max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name,
@@ -912,19 +869,39 @@ def run_model(
     print(f"[{model_name}] retrieval coverage: register name present for {cov:.0%} of invariants; "
           f"{n_parse_err} rows with parse/retrieval errors")
 
-    print(f"[{model_name}] pass 2/2: per-fold tuning with mined in-context examples")
-    tuned_cv = cross_validate_mined(
-        baseline_eval, model_name, retrieve_fn, k=k, reasoning_effort=reasoning_effort,
-        max_per_class=max_per_class, seed=seed, max_per_call=max_per_call,
-        access_legend=access_legend, tuner=tuner, use_alt_name=use_alt_name,
-        usage_sink=usage_rows)
+    # Export curation candidates (the human seeds the per-vendor curated file from these).
+    os.makedirs(out_dir, exist_ok=True)
+    n_cand = export_curation_candidates(
+        baseline_cv["eval"], os.path.join(out_dir, f"curation_candidates_{model_name}.json"))
+    print(f"[{model_name}] exported {n_cand} curation candidates -> "
+          f"curation_candidates_{model_name}.json")
 
-    write_outputs(out_dir, model_name, baseline_eval, baseline_cv, tuned_cv,
+    # Pass 2 (curated): only if a curated-examples file is provided.
+    curated_block = load_curated_examples(curated_examples_path)
+    if curated_block:
+        n_ex = curated_block.count("Example ")
+        print(f"[{model_name}] pass 2: curated evaluation ({n_ex} examples from {curated_examples_path})")
+        curated_eval = evaluate_benchmark(
+            benchmark, model_name, retrieve_fn, reasoning_effort=reasoning_effort,
+            max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name,
+            usage_sink=usage_rows, extra_system_text=curated_block, progress_label=" curated")
+        curated_cv = cross_validate(curated_eval, k=k, tuner=tuner)
+    else:
+        if curated_examples_path:
+            print(f"[{model_name}] --curated-examples {curated_examples_path} has no usable "
+                  "examples (fill datasheet_excerpt); reporting baseline only")
+        else:
+            print(f"[{model_name}] no curated examples; reporting baseline only "
+                  "(fill the candidates file, then re-run with --curated-examples)")
+        curated_cv = baseline_cv
+
+    write_outputs(out_dir, model_name, baseline_cv, curated_cv,
+                  base_system_prompt=base_system, curated_block=curated_block,
                   operational_meta={"objective": objective, "target_precision": target_precision,
                                     "use_alt_name": use_alt_name, "seed": seed,
                                     "corruption_fraction": corruption_fraction},
                   usage_rows=usage_rows, price_in=price_in, price_out=price_out)
-    return {"baseline": baseline_cv, "tuned": tuned_cv}
+    return {"baseline": baseline_cv, "curated": curated_cv}
 
 
 # --------------------------------------------------------------------------- #
@@ -1033,6 +1010,10 @@ def main():
                          "always recorded regardless)")
     ap.add_argument("--price-out", type=float, default=None,
                     help="USD per 1M output tokens (for the cost estimate)")
+    ap.add_argument("--curated-examples", default=None,
+                    help="path to a per-vendor curated-examples JSON (datasheet-grounded "
+                         "examples) for the second pass; omit to run baseline-only and "
+                         "export curation candidates")
     ap.add_argument("--out-root", default=None,
                     help="output root (default optimization_validator/<device>/cross_validation)")
     args = ap.parse_args()
@@ -1071,7 +1052,8 @@ def main():
             limit_registers=args.smoke_registers, max_per_call=args.max_per_call,
             access_legend=legend, objective=args.objective,
             target_precision=args.target_precision, use_alt_name=args.use_alt_name,
-            price_in=args.price_in, price_out=args.price_out)
+            price_in=args.price_in, price_out=args.price_out,
+            curated_examples_path=args.curated_examples)
         return
 
     print(f"Running cross-validation for {len(models)} model(s): "
@@ -1084,7 +1066,8 @@ def main():
             reasoning_effort=cfg.get("reasoning_effort"), max_per_call=args.max_per_call,
             access_legend=legend, objective=args.objective,
             target_precision=args.target_precision, use_alt_name=args.use_alt_name,
-            price_in=args.price_in, price_out=args.price_out)
+            price_in=args.price_in, price_out=args.price_out,
+            curated_examples_path=args.curated_examples)
 
 
 if __name__ == "__main__":

@@ -223,6 +223,8 @@ def build_corrupted_benchmark(
             new_row = dict(row)
             new_row["is_correct"] = True
             new_row["corruption_type"] = ""
+            new_row["original_value"] = row.get("correct_value")
+            new_row["original_field_name"] = row.get("field_name")
         rows.append(new_row)
 
     out = pd.DataFrame(rows)

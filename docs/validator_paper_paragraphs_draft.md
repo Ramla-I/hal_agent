@@ -59,23 +59,32 @@ The validator is an LLM that reads an invariant together with datasheet context
 retrieved for its register and emits a binary judgment V ∈ {0,1} ("matches the
 datasheet") and a self-reported confidence c ∈ [0,1]; we collapse these into a single
 pseudo-score s = c if V=1 else 1−c, which we read as the validator's estimated
-probability that the invariant is correct. To tune and evaluate it without contamination,
-we draw on the labeled benchmark of Section 1—the expanded set of verified positives plus
-the peripheral-stratified corruptions—and we partition it into k=5 folds at the
-*(peripheral, register)* granularity so that correlated invariants from one register
-never straddle the train/test split. We tune two levers, and we fit both on the training
-folds alone. First, we **mine in-context examples**: for each held-out fold we collect
-the validator's mistakes on the remaining folds—false positives (accepted corruptions)
-and false negatives (rejected correct invariants)—and we append a balanced sample of
-them, with their verified labels, as few-shot exemplars to the system prompt, teaching
-the model the corner cases it gets wrong. Second, we **select the threshold**: we pick
-the decision threshold τ on the pseudo-score that, on the training folds, gives the
-lowest cutoff whose precision meets a target (95%), which maximizes recall subject to
-that precision constraint. Both levers are applied in a single round: we mine the
-exemplars once and choose τ with one exhaustive sweep of the training scores—which
-already explores the entire precision–recall curve—so there is no iterative threshold
-search. We then judge each held-out fold with its mined exemplars, score it at its
-trained τ, and rotate over all folds.
+probability that the invariant is correct. Its base prompt carries a small set of
+**hand-written reasoning exemplars** — worked cases (a confirmed offset, an absent
+register, a reset value matching an `0xXXXXXXX3` don't-care pattern, a size mismatch, an
+absent field) that show the *reasoning* expected, not just the verdict, written in the
+batched input→reasoning→JSON-array format the validator must produce. To tune and evaluate
+it without contamination, we draw on the labeled benchmark of Section 1—the expanded set
+of verified positives plus the peripheral-stratified corruptions—and we partition it into
+k=5 folds at the *(peripheral, register)* granularity so that correlated invariants from
+one register never straddle the train/test split.
+
+We tune two levers. First, the **decision threshold**: we pick τ on the pseudo-score that,
+on the training folds, gives the lowest cutoff whose precision meets a target (95%),
+maximizing recall subject to that constraint; one exhaustive sweep of the training scores
+explores the entire precision–recall curve, so there is no iterative search, and we tune τ
+per held-out fold. Second, **curated in-context examples**, added once per *manufacturer*
+rather than mined automatically. A first pass surfaces the validator's mistakes (false
+positives and false negatives) as **curation candidates**, each listing the invariant, the
+validator's wrong verdict, and the ground-truth value; a human selects the instructive
+ones and supplies, for each, the **supporting datasheet excerpt** and the correct
+conclusion. These curated examples—invariant *plus its datasheet evidence and reasoning*—
+are added to the prompt, and a second pass re-evaluates with them. Grounding each example
+in a real datasheet excerpt teaches the model *how* to reach the verdict, not merely what
+it is, and because a vendor's devices share documentation conventions the curation is
+**amortized across the manufacturer**: it is done once and reused for that vendor's other
+devices, so the extra human effort and the slower two-pass run are paid a single time per
+vendor. We report the validator both before and after curation to isolate its effect.
 
 ## 3. Reported metrics
 
@@ -163,13 +172,13 @@ the STM slice (`rm0041`, k = 5 folds, `[N_stm]` invariants, 30% peripheral-strat
 corruption) the tuned validator reaches a gate precision of `[P_stm]`% at a yield (recall)
 of `[Y_stm]`%, with sensitivity α = `[α_stm]` and specificity β = `[β_stm]`; on the NXP
 slice (`ke04`, `[N_nxp]` invariants) it reaches `[P_nxp]`% precision at `[Y_nxp]`% yield
-(α = `[α_nxp]`, β = `[β_nxp]`). **(B1)** The single round of in-context example mining
-moves the held-out operating point from `[base_metric]` to `[tuned_metric]` (Δ =
-`[+Δ_tune]`), and **(B2–B4)** the name-aliasing and access-notation handling each raise
-yield by `[+Δ_alt]` / `[+Δ_legend]` at a specificity cost of `[−Δ_alt]` / `[−Δ_legend]`,
-while OpenEvolve retrieval improves precision over file-search by `[+Δ_retr]`; **(B5)** the
-gain from added exemplars saturates at `[k_ex]` per class, after which prompt growth buys
-nothing. **(E1)** Broken down by invariant class, precision is highest on register-level
+(α = `[α_nxp]`, β = `[β_nxp]`). **(B1)** Curating `[n_curated]` datasheet-grounded
+examples for the vendor moves the held-out operating point from `[base_metric]` to
+`[tuned_metric]` (Δ = `[+Δ_tune]`), and **(B2–B4)** the name-aliasing and access-notation
+handling each raise yield by `[+Δ_alt]` / `[+Δ_legend]` at a specificity cost of
+`[−Δ_alt]` / `[−Δ_legend]`, while OpenEvolve retrieval improves precision over file-search
+by `[+Δ_retr]`; **(B5)** the gain saturates after `[n_curated]` curated examples, beyond
+which added prompt length buys nothing. **(E1)** Broken down by invariant class, precision is highest on register-level
 keys (`address_offset`, `reset_value`: `[P_addr]`%) and lowest on `[weak_key]`
 (`[P_weak]`%), which is what motivates per-class gating. **(A1, ranking)** Reviewing the
 top `[k_pct]`% of the confidence-ranked queue recovers `[recall_at_k]`% of the true facts
