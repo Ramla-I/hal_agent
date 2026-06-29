@@ -117,17 +117,24 @@ DEFAULT_MAX_PER_CALL = 12
 
 
 def _judge_chunk(client, model_name, system_text, peripheral, register, chunk,
-                 file_search, reasoning_effort) -> tuple[dict, bool]:
+                 file_search, reasoning_effort, use_alt_name: bool = True) -> tuple[dict, bool]:
     """One LLM call for `chunk` rows of a register. Returns ({row_id: Judgment}, ok).
 
     ok is False if the call errored, the JSON didn't parse, or it didn't return every
-    invariant's index — the caller then splits and retries.
+    invariant's index — the caller then splits and retries. When `use_alt_name` is set we
+    pass each row's `alt_name` (datasheet-printed name) so the prompt can surface it as
+    `datasheet_name`.
     """
     try:
-        invariants = [{
-            "field_name": r["field_name"], "key": r["key"], "value": r["correct_value"],
-            "peripheral": r["peripheral"], "register": r["register"],
-        } for r in chunk]
+        invariants = []
+        for r in chunk:
+            inv = {
+                "field_name": r["field_name"], "key": r["key"], "value": r["correct_value"],
+                "peripheral": r["peripheral"], "register": r["register"],
+            }
+            if use_alt_name and str(r.get("alt_name", "") or "").strip():
+                inv["alt_name"] = r["alt_name"]
+            invariants.append(inv)
         user_prompt = create_batched_validator_user_prompt(
             [(peripheral, register)], invariants, file_search)
         input_list = [
@@ -154,7 +161,7 @@ def _judge_chunk(client, model_name, system_text, peripheral, register, chunk,
 
 
 def _judge_register(client, model_name, system_text, peripheral, register, rows,
-                    file_search, reasoning_effort, max_per_call) -> dict:
+                    file_search, reasoning_effort, max_per_call, use_alt_name: bool = True) -> dict:
     """Judge all invariants of one register, chunked to <=max_per_call per call.
 
     On any call/parse/incompleteness failure, split the chunk in half and retry, down
@@ -165,7 +172,7 @@ def _judge_register(client, model_name, system_text, peripheral, register, rows,
 
     def _recurse(chunk):
         res, ok = _judge_chunk(client, model_name, system_text, peripheral, register,
-                               chunk, file_search, reasoning_effort)
+                               chunk, file_search, reasoning_effort, use_alt_name=use_alt_name)
         if ok:
             judgments.update(res)
             return
@@ -193,6 +200,7 @@ def evaluate_rows(
     progress_label: str = "",
     max_per_call: int = DEFAULT_MAX_PER_CALL,
     access_legend: str = "",
+    use_alt_name: bool = True,
 ) -> pd.DataFrame:
     """Run the Validator over the given rows (batched per register).
 
@@ -208,7 +216,7 @@ def evaluate_rows(
     """
     client = pick_client(model_name)
     df = rows_df.copy()
-    system_text = create_batched_validator_system_prompt(access_legend)
+    system_text = create_batched_validator_system_prompt(access_legend, name_aliasing=use_alt_name)
     if extra_system_text:
         system_text = system_text + "\n\n" + extra_system_text
 
@@ -239,7 +247,7 @@ def evaluate_rows(
         # Chunk + split-and-retry so a large register can't fail as one giant batch.
         judgments.update(_judge_register(
             client, model_name, system_text, peripheral, register, rows,
-            file_search, reasoning_effort, max_per_call))
+            file_search, reasoning_effort, max_per_call, use_alt_name=use_alt_name))
 
     df["is_true"] = df["row_id"].map(lambda i: judgments[i].is_true)
     df["confidence_score"] = df["row_id"].map(lambda i: judgments[i].confidence)
@@ -259,13 +267,14 @@ def evaluate_benchmark(
     progress: bool = True,
     max_per_call: int = DEFAULT_MAX_PER_CALL,
     access_legend: str = "",
+    use_alt_name: bool = True,
 ) -> pd.DataFrame:
     """Baseline pass: run the Validator over every benchmark row with the base prompt."""
     df = benchmark.reset_index(drop=True).copy()
     df["row_id"] = df.index
     return evaluate_rows(df, model_name, retrieve_fn, reasoning_effort,
                          progress=progress, max_per_call=max_per_call,
-                         access_legend=access_legend)
+                         access_legend=access_legend, use_alt_name=use_alt_name)
 
 
 # --------------------------------------------------------------------------- #
@@ -454,6 +463,7 @@ def cross_validate_mined(
     max_per_call: int = DEFAULT_MAX_PER_CALL,
     access_legend: str = "",
     tuner=None,
+    use_alt_name: bool = True,
 ) -> dict:
     """Per-fold tuning with mined in-context examples + decision threshold.
 
@@ -472,7 +482,7 @@ def cross_validate_mined(
     agg = ConfusionMatrix(0, 0, 0, 0)
     tuned_parts = []
     fold_prompts = []  # the actual prompt version used for each held-out fold
-    base_system = create_batched_validator_system_prompt(access_legend)
+    base_system = create_batched_validator_system_prompt(access_legend, name_aliasing=use_alt_name)
     for f in range(k):
         train = baseline[baseline["fold"] != f]
         test = baseline[baseline["fold"] == f]
@@ -488,7 +498,7 @@ def cross_validate_mined(
         test2 = evaluate_rows(
             test, model_name, retrieve_fn, reasoning_effort,
             extra_system_text=examples, progress_label=f" fold{f}/tuned",
-            max_per_call=max_per_call, access_legend=access_legend)
+            max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name)
         tau = tuner(list(train["score"]), list(train["is_correct"]))
         cm = confusion_at(list(test2["score"]), list(test2["is_correct"]), tau)
         fold_results.append(FoldResult(fold=f, tau=tau, cm=cm))
@@ -516,7 +526,7 @@ def cross_validate_mined(
 
 # Columns surfaced to a human reviewer in the ranked queue (identity + decision signal).
 _QUEUE_COLS = ["rank", "score", "confidence_score", "is_true", "is_correct",
-               "peripheral", "register", "field_name", "key", "correct_value",
+               "peripheral", "register", "field_name", "alt_name", "key", "correct_value",
                "corruption_type", "fold", "tau", "reasoning"]
 
 
@@ -668,7 +678,7 @@ def write_outputs(out_dir: str, model_name: str, baseline_eval: pd.DataFrame,
     ev = baseline_eval.copy()
     ev["pred_v1"] = ev["score"] >= 0.5
     fp_fn = ev[((ev["pred_v1"]) & (~ev["is_correct"])) | ((~ev["pred_v1"]) & (ev["is_correct"]))]
-    cols = ["peripheral", "register", "field_name", "key", "correct_value", "is_correct",
+    cols = ["peripheral", "register", "field_name", "alt_name", "key", "correct_value", "is_correct",
             "corruption_type", "is_true", "confidence_score", "score", "reasoning"]
     fp_fn[[c for c in cols if c in fp_fn.columns]].to_csv(
         os.path.join(out_dir, f"error_analysis_{model_name}.csv"), index=False)
@@ -769,6 +779,7 @@ def run_model(
     access_legend: str = "",
     objective: str = "precision",
     target_precision: float = 0.95,
+    use_alt_name: bool = True,
 ) -> dict:
     """End-to-end for one model.
 
@@ -800,7 +811,7 @@ def run_model(
     print(f"[{model_name}] pass 1/2: baseline evaluation (base prompt)")
     baseline_eval = evaluate_benchmark(
         benchmark, model_name, retrieve_fn, reasoning_effort=reasoning_effort,
-        max_per_call=max_per_call, access_legend=access_legend)
+        max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name)
     baseline_cv = cross_validate(baseline_eval, k=k, tuner=tuner)
     cov = baseline_eval["reg_in_context"].mean() if "reg_in_context" in baseline_eval else float("nan")
     n_parse_err = (baseline_eval["parse_error"].fillna("") != "").sum()
@@ -811,10 +822,11 @@ def run_model(
     tuned_cv = cross_validate_mined(
         baseline_eval, model_name, retrieve_fn, k=k, reasoning_effort=reasoning_effort,
         max_per_class=max_per_class, seed=seed, max_per_call=max_per_call,
-        access_legend=access_legend, tuner=tuner)
+        access_legend=access_legend, tuner=tuner, use_alt_name=use_alt_name)
 
     write_outputs(out_dir, model_name, baseline_eval, baseline_cv, tuned_cv,
-                  operational_meta={"objective": objective, "target_precision": target_precision})
+                  operational_meta={"objective": objective, "target_precision": target_precision,
+                                    "use_alt_name": use_alt_name})
     return {"baseline": baseline_cv, "tuned": tuned_cv}
 
 
@@ -910,6 +922,12 @@ def main():
                          "precision >= --target-precision; 'f1' restores max-F1 tuning")
     ap.add_argument("--target-precision", type=float, default=0.95,
                     help="target gate precision for --objective precision (default 0.95)")
+    ap.add_argument("--use-alt-name", dest="use_alt_name", action="store_true", default=True,
+                    help="use the verified datasheet's alt_name (datasheet-printed name) to "
+                         "reduce name-mismatch false negatives — adds a name-aliasing prompt "
+                         "rule + a per-row datasheet_name hint (default: on)")
+    ap.add_argument("--no-alt-name", dest="use_alt_name", action="store_false",
+                    help="ablation: disable alt_name handling (strict SVD-name matching)")
     ap.add_argument("--max-per-call", type=int, default=DEFAULT_MAX_PER_CALL,
                     help="max invariants per LLM call; large registers are chunked + "
                          "split-retried on parse failure (default 12)")
@@ -950,7 +968,7 @@ def main():
             reasoning_effort=models[0].get("reasoning_effort"),
             limit_registers=args.smoke_registers, max_per_call=args.max_per_call,
             access_legend=legend, objective=args.objective,
-            target_precision=args.target_precision)
+            target_precision=args.target_precision, use_alt_name=args.use_alt_name)
         return
 
     print(f"Running cross-validation for {len(models)} model(s): "
@@ -962,7 +980,7 @@ def main():
             k=args.k, corruption_fraction=args.corruption_fraction, seed=args.seed,
             reasoning_effort=cfg.get("reasoning_effort"), max_per_call=args.max_per_call,
             access_legend=legend, objective=args.objective,
-            target_precision=args.target_precision)
+            target_precision=args.target_precision, use_alt_name=args.use_alt_name)
 
 
 if __name__ == "__main__":

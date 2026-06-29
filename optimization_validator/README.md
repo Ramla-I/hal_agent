@@ -122,9 +122,19 @@ authoritative spec + full results + divergence log live in
    vs empirical precision per bin → a principled review-depth stopping rule).
 6. **Calibrate** (`calibration.py`): π = (r̂−(1−β))/(α+β−1) (Rogan–Gladen) and
    validated-set precision P(C=1|V=1) = α·π/r̂, with α+β>1 identifiability + clamp guards.
+   ⚠️ **π is a COUNT, not a SELECTOR.** π estimates *how many* of N candidates are real
+   bugs (≈ π·N) — the device-level prevalence. It does **not** tell you *which* candidates
+   they are, and "review the top π% by confidence" does **not** recover them: that only
+   works if the ranking is perfect. What you actually catch at a given review depth is the
+   **precision@k / recall@k curve** (`precision_at_k_*.csv`), driven by ranking quality —
+   not π. (π·N is a sensible *depth* to aim for — the point where precision@k = recall@k —
+   but completeness there is whatever recall@(π·N) the ranking achieves, not 100%.) So:
+   **ranking → the order you review; precision@k → what you catch at each depth; π → how
+   many exist (a claim/budget).**
    ⚠️ Within a single run π just recovers the benchmark's known prevalence (algebraic
    identity) — it's informative only when benchmark-measured α/β are applied to a
-   *different* r̂ (see TODO). Operationally (gate-and-review) π/count-correction is not on
+   *different* r̂ (see TODO), and even then it's an estimate with a confidence interval.
+   Operationally (gate-and-review) π/count-correction is not on
    the critical path; the gate precision + yield + ranking are the load-bearing numbers.
 
 ### Access-notation legend (vendor-extensible)
@@ -135,6 +145,25 @@ canonical `read-write`/`read-only`/`write-only`. The map is a **plain data file*
 edit, no code change. `optimization_validator/access_notation.py` builds the legend injected into
 the validator system prompt (batched + sequential, so production `s4` benefits too).
 Select with `--vendor <key>` (default `stm`; `none` disables).
+
+### Name aliasing (`alt_name`)
+
+The benchmark keys each invariant by the **SVD** name, but a datasheet often prints a
+field/register under a different name (the SVD adds a disambiguating suffix: SVD `D1` is
+just `D` in the datasheet). A strict validator then rejects a *correct* fact on a pure
+name mismatch — a false negative. Two-part handling, toggled by `--use-alt-name`
+(default on; `--no-alt-name` ablates):
+1. **General aliasing rule** (production-valid): the system prompt tells the model the
+   SVD name may differ from the datasheet's and to match on *structural* identity (bit
+   position / address), not an exact string.
+2. **Per-row hint**: the verified datasheet's `alt_name` column is surfaced to the model
+   as `datasheet_name` when present.
+⚠️ `alt_name` is recorded **only** in verified datasheets, so the per-row hint is a mild
+*oracle* — production has it only if the generator is extended to emit the datasheet's
+printed name. Ablate with `--no-alt-name` to measure the gap. Coverage is currently thin
+(rm0041: 9/3,356 rows carry an `alt_name`), so most of the lift here comes from the
+general rule, not the per-row hint. On a `field_name` corruption we blank `alt_name` (a
+fabricated name has no datasheet alias, and keeping it would leak the real name).
 
 ### Files
 - **`corruption.py`** — realistic per-key corruption + field-name corruption.
@@ -177,12 +206,13 @@ catch-Y% curve), `calibration_<model>.csv` (confidence reliability bins).
 ### OPEN TODOS
 - [ ] **Re-measure on the merged 3,356-row rm0041 slice** (see warning above) and refresh
       the results table; the prior numbers are on the smaller pre-merge slice.
-- [ ] **Use `alt_name` to cut name-mismatch false negatives.** The new schema records the
-      field/register name *as printed in the datasheet* when it differs from the SVD key
-      (e.g. SVD `bkp.dr1.d1` is just `D` in the datasheet). The benchmark keys on the SVD
-      name, so the Validator can reject a correct invariant purely because the datasheet
-      prints a different name — the same failure class the access-notation legend fixed.
-      Feed `alt_name` into the retrieval query / prompt when present.
+- [x] **Use `alt_name` to cut name-mismatch false negatives** — done (see *Name aliasing*
+      above): `--use-alt-name` adds a general structural-matching rule + a per-row
+      `datasheet_name` hint. **Follow-ups:** (a) measure the ablation (`--no-alt-name`) to
+      quantify the lift and the access-FP-style specificity cost; (b) `alt_name` coverage is
+      thin (9 rows in rm0041) and the per-row hint is an oracle unless (c) the **generator
+      emits the datasheet-printed name** in production, which would make the hint real —
+      worth doing.
 - [ ] **Expand `derived` peripherals.** Verified CSVs dedup `derivedFrom` peripherals to a
       single marker row (`status=derived`), so the benchmark currently covers only the
       prototype (e.g. `gpioa`, not `gpiob..g`). The diff pipeline expands these; the

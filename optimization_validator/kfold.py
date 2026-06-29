@@ -30,6 +30,10 @@ from optimization_validator.corruption import build_register_contexts, corrupt_r
 
 # Verified-datasheet columns we carry into the benchmark.
 _BASE_COLUMNS = ["peripheral", "register", "field_name", "key", "correct_value"]
+# Optional columns we carry through when present (else filled with ""). `alt_name` is the
+# field/register name as printed in the datasheet when it differs from the SVD key; the
+# Validator can use it to avoid rejecting a correct fact on a pure name mismatch.
+_CARRIED_OPTIONAL = ["alt_name"]
 
 # In the verified-datasheet schema (verified_datasheet/annotate.py) a row is
 # authoritative ground truth only when its status is exactly this. Every other status
@@ -82,7 +86,12 @@ def load_verified(csv_path: str) -> pd.DataFrame:
     if missing:
         raise ValueError(f"{csv_path} missing required columns: {missing}")
     df = select_ground_truth(df, source=os.path.basename(csv_path))
-    return df[_BASE_COLUMNS].reset_index(drop=True)
+    keep = _BASE_COLUMNS + [c for c in _CARRIED_OPTIONAL if c in df.columns]
+    out = df[keep].reset_index(drop=True)
+    for c in _CARRIED_OPTIONAL:
+        if c not in out.columns:
+            out[c] = ""
+    return out
 
 
 def build_corrupted_benchmark(

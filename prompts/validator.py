@@ -225,14 +225,36 @@ def create_batched_validator_file_search_query(peripheral_name: str, register_na
     Include information about the register's address offset, reset value, size, and all its fields/subfields.
     """
 
-def create_batched_validator_system_prompt(access_legend: str = "") -> str:
+def create_batched_validator_system_prompt(access_legend: str = "", name_aliasing: bool = False) -> str:
     """System prompt for batched validation of multiple invariants across registers.
 
     access_legend: optional vendor access-notation section (see
     optimization_validator.access_notation.access_legend) appended so the model treats datasheet
     codes like `rc_w0` as the canonical `read-write` access type.
+
+    name_aliasing: when True, tell the model that the SVD `field_name`/`register_name` may
+    differ from the name printed in the datasheet (the datasheet often abbreviates or
+    de-suffixes, e.g. SVD `D1` is printed as `D`), describe the optional `datasheet_name`
+    field, and instruct it to match on structural identity rather than an exact name
+    string. Reduces name-mismatch false negatives.
     """
     legend_block = f"\n\n{access_legend}\n" if access_legend else ""
+    datasheet_name_field = (
+        "\n    - `datasheet_name` (optional): the name the field or register is printed "
+        "under IN THE DATASHEET when it differs from the SVD `field_name`/`register_name` "
+        "(e.g. the SVD calls a field `D1` but the datasheet prints it as `D`). When "
+        "present, look for `datasheet_name` in the search results."
+        if name_aliasing else ""
+    )
+    name_aliasing_rule = (
+        "\n    * SVD vs datasheet names: `field_name`/`register_name` come from the SVD and "
+        "may not match the datasheet verbatim (the datasheet often abbreviates or drops a "
+        "disambiguating suffix). Match a field/register by its STRUCTURAL identity — its bit "
+        "position / address — not an exact name string, and use `datasheet_name` when given. "
+        "Do NOT reject an otherwise-correct fact merely because the datasheet prints the name "
+        "differently. (A genuinely different field is still wrong.)"
+        if name_aliasing else ""
+    )
     return f"""{legend_block}
     You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets.
     You will need to validate multiple facts about one or more registers and return confidence scores for each.
@@ -247,7 +269,7 @@ def create_batched_validator_system_prompt(access_legend: str = "") -> str:
     - `register_name`: The name of the register
     - `field_name`: The name of the field (empty string if register-level)
     - `key`: The property to validate (address_offset, reset_value, size, bit_offset, bit_width, access)
-    - `value`: The value to validate
+    - `value`: The value to validate{datasheet_name_field}
 
     # OUTPUT FORMAT
     Start with your reasoning about the register and the facts you're validating.
@@ -273,7 +295,7 @@ def create_batched_validator_system_prompt(access_legend: str = "") -> str:
     * Values like 0xXXXXXXX3 mean X can be any digit (e.g., 0x3403, 0x873 are valid)
     * Reserved bits are read-only and must be kept at reset value
     * Names are NOT case sensitive and should match the datasheet
-    * If you cannot find information, set is_true=false and confidence_score=1.0
+    * If you cannot find information, set is_true=false and confidence_score=1.0{name_aliasing_rule}
 
     # CONFIDENCE SCORING
     - 1.0: 100% certain (found explicit confirmation or contradiction)
@@ -289,15 +311,19 @@ def create_batched_validator_user_prompt(batch_registers: list, invariants: list
 
     Args:
         batch_registers: List of (peripheral, register) tuples
-        invariants: List of invariant dicts with keys: field_name, key, value, peripheral, register
+        invariants: List of invariant dicts with keys: field_name, key, value, peripheral,
+            register, and optionally alt_name (datasheet-printed name). When alt_name is a
+            non-empty string it is surfaced to the model as `datasheet_name`.
         file_search_results: Formatted search results from vector store
     """
     register_list = ", ".join([f"{p}.{r}" for p, r in batch_registers])
     # Format invariants as a numbered list
     invariant_list = ""
     for i, inv in enumerate(invariants):
+        alt = str(inv.get("alt_name", "") or "").strip()
+        alt_hint = f', datasheet_name="{alt}"' if alt else ""
         invariant_list += f"""
-    {i}. peripheral="{inv['peripheral']}", register="{inv['register']}", field_name="{inv['field_name']}", key="{inv['key']}", value="{inv['value']}"
+    {i}. peripheral="{inv['peripheral']}", register="{inv['register']}", field_name="{inv['field_name']}"{alt_hint}, key="{inv['key']}", value="{inv['value']}"
 """
 
     return f"""

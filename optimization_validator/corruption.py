@@ -323,6 +323,10 @@ def corrupt_row(row: dict, ctx: RegisterContext, rng, name_corruption_prob: floa
     if field_name and rng.random() < name_corruption_prob:
         out["field_name"] = corrupt_field_name(field_name, ctx, rng)
         out["corruption_type"] = "field_name"
+        if "alt_name" in out:
+            # The fabricated name has no datasheet alias; blanking also prevents leaking
+            # the real field's datasheet name (which would betray the corruption).
+            out["alt_name"] = ""
     else:
         out["correct_value"] = corrupt_value(row["key"], row.get("correct_value"), ctx, field_name, rng)
         out["corruption_type"] = "value"

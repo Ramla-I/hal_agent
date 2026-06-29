@@ -154,6 +154,44 @@ def test_calibration():
     check(clamp2.pi is not None and 0.0 <= clamp2.pi <= 1.0, f"pi clamped into [0,1] (got {clamp2.pi}, raw {clamp2.pi_raw})")
 
 
+def test_alt_name():
+    print("\n== alt_name plumbing + prompt ==")
+    from optimization_validator.kfold import make_benchmark_with_folds
+    from prompts.validator import (
+        create_batched_validator_system_prompt, create_batched_validator_user_prompt,
+    )
+
+    # load_verified carries alt_name; benchmark keeps it.
+    df = load_verified(VERIFIED)
+    check("alt_name" in df.columns, "load_verified carries an alt_name column")
+    bench = make_benchmark_with_folds(VERIFIED, k=5, seed=1)
+    check("alt_name" in bench.columns, "benchmark retains alt_name")
+
+    # On field-name corruption, alt_name is blanked (no leak / no datasheet alias).
+    name_corr = bench[(bench["corruption_type"] == "field_name")]
+    check(len(name_corr) > 0, "benchmark has some field_name corruptions")
+    check((name_corr["alt_name"].astype(str).str.strip() == "").all(),
+          "alt_name blanked on every field_name corruption")
+
+    # User prompt surfaces datasheet_name only when alt_name is present.
+    inv_with = [{"peripheral": "bkp", "register": "dr1", "field_name": "d1",
+                 "alt_name": "D", "key": "bit_offset", "value": "0"}]
+    inv_without = [{"peripheral": "bkp", "register": "dr1", "field_name": "d1",
+                    "alt_name": "", "key": "bit_offset", "value": "0"}]
+    up_with = create_batched_validator_user_prompt([("bkp", "dr1")], inv_with, "ctx")
+    up_without = create_batched_validator_user_prompt([("bkp", "dr1")], inv_without, "ctx")
+    check('datasheet_name="D"' in up_with, "user prompt renders datasheet_name when alt_name set")
+    check("datasheet_name" not in up_without, "user prompt omits datasheet_name when alt_name empty")
+
+    # System prompt includes the aliasing rule only when name_aliasing=True.
+    sp_on = create_batched_validator_system_prompt(name_aliasing=True)
+    sp_off = create_batched_validator_system_prompt(name_aliasing=False)
+    check("datasheet_name" in sp_on and "STRUCTURAL identity" in sp_on,
+          "system prompt adds name-aliasing guidance when enabled")
+    check("datasheet_name" not in sp_off,
+          "system prompt omits name-aliasing guidance when disabled")
+
+
 def test_operational_gate():
     print("\n== operational gate / queue ==")
     # Synthetic scored set: score increasing, with a couple of corrupted (False) rows
@@ -216,6 +254,7 @@ if __name__ == "__main__":
     test_field_name_corruption()
     test_folds()
     test_calibration()
+    test_alt_name()
     test_operational_gate()
     print("\n" + ("=" * 50))
     if _failures:
