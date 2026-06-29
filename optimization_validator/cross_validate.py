@@ -389,6 +389,7 @@ def export_curation_candidates(eval_df: pd.DataFrame, path: str, max_per_class: 
                 "value": r.get("correct_value", ""),
                 "is_true": bool(r.get("is_correct")),          # the CORRECT label to teach
                 "ground_truth_value": r.get("original_value", r.get("correct_value", "")),
+                "ground_truth_field_name": r.get("original_field_name", r.get("field_name", "") or ""),
                 "validator_said": "accept(true)" if r.get("is_true") else "reject(false)",
                 "mistake": kind,
                 "datasheet_excerpt": "",   # <- human: paste the supporting datasheet text

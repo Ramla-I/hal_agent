@@ -255,8 +255,9 @@ def test_curated_examples():
 
     # export candidates from a synthetic eval (one FP, one FN)
     ev = pd.DataFrame({
-        "peripheral": ["p", "p"], "register": ["r1", "r2"], "field_name": ["", ""],
-        "key": ["size", "size"], "correct_value": ["4", "32"], "original_value": ["32", "32"],
+        "peripheral": ["p", "p"], "register": ["r1", "r2"], "field_name": ["wrongname", "f2"],
+        "key": ["bit_offset", "size"], "correct_value": ["4", "32"], "original_value": ["4", "32"],
+        "original_field_name": ["truename", "f2"],
         "is_correct": [False, True],   # FP row is corrupted (False), FN row is correct (True)
         "is_true": [True, False],      # validator accepted the FP, rejected the FN
     })
@@ -271,7 +272,9 @@ def test_curated_examples():
           "candidates tagged FP and FN")
     fp = [c for c in cands if c["mistake"] == "false_positive"][0]
     check(fp["is_true"] is False, "FP candidate carries the correct label (False)")
-    check(fp["ground_truth_value"] == "32", "FP candidate shows the ground-truth value")
+    check(fp["ground_truth_value"] == "4", "FP candidate shows the ground-truth value")
+    check(fp["ground_truth_field_name"] == "truename",
+          "FP candidate shows the ground-truth field name")
 
 
 def test_operational_gate():
