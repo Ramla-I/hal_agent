@@ -106,8 +106,14 @@ def _extract_usage(response) -> dict:
         total = (inp or 0) + (out or 0)
     details = getattr(u, "output_tokens_details", None)
     reasoning = getattr(details, "reasoning_tokens", 0) if details is not None else 0
+    # Cached (prompt-prefix) input tokens, billed at the cheaper cached rate. Field name
+    # varies: Responses API -> input_tokens_details.cached_tokens; chat-completions ->
+    # prompt_tokens_details.cached_tokens. Absent (e.g. Groq) -> 0.
+    in_details = getattr(u, "input_tokens_details", None) or getattr(u, "prompt_tokens_details", None)
+    cached = getattr(in_details, "cached_tokens", 0) if in_details is not None else 0
     return {"input_tokens": int(inp or 0), "output_tokens": int(out or 0),
-            "reasoning_tokens": int(reasoning or 0), "total_tokens": int(total or 0)}
+            "reasoning_tokens": int(reasoning or 0), "total_tokens": int(total or 0),
+            "cached_input_tokens": int(cached or 0)}
 
 
 def pseudo_score(is_true: bool, confidence: float) -> float:
@@ -646,32 +652,42 @@ _PRICING = {
 }
 
 
-def _summarize_usage(usage_rows, model_name="", price_in=None, price_out=None):
-    """Aggregate per-call usage records into totals (+ optional $ cost). Returns
-    (summary_dict, per_call_DataFrame)."""
+def _summarize_usage(usage_rows, model_name="", price_in=None, price_out=None, price_cached_in=None):
+    """Aggregate per-call usage records into totals (+ optional $ cost). Cost splits input
+    into cached vs uncached: uncached*price_in + cached*price_cached_in + output*price_out
+    (price_cached_in defaults to price_in). Returns (summary_dict, per_call_DataFrame)."""
     if not usage_rows:
-        return {"n_calls": 0, "input_tokens": 0, "output_tokens": 0,
+        return {"n_calls": 0, "input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0,
                 "reasoning_tokens": 0, "total_tokens": 0,
-                "price_in_per_1m": price_in, "price_out_per_1m": price_out,
-                "est_cost_usd": None}, pd.DataFrame()
+                "price_in_per_1m": price_in, "price_cached_in_per_1m": price_cached_in,
+                "price_out_per_1m": price_out, "est_cost_usd": None}, pd.DataFrame()
     udf = pd.DataFrame(usage_rows)
+    if "cached_input_tokens" not in udf.columns:
+        udf["cached_input_tokens"] = 0
     if price_in is None and model_name in _PRICING:
         price_in = _PRICING[model_name][0]
     if price_out is None and model_name in _PRICING:
         price_out = _PRICING[model_name][1]
+    if price_cached_in is None:
+        price_cached_in = price_in
     tin, tout = int(udf["input_tokens"].sum()), int(udf["output_tokens"].sum())
-    cost = (tin / 1e6 * price_in + tout / 1e6 * price_out) \
-        if (price_in is not None and price_out is not None) else None
+    tcached = int(udf["cached_input_tokens"].sum())
+    cost = None
+    if price_in is not None and price_out is not None:
+        uncached = max(0, tin - tcached)
+        cost = uncached / 1e6 * price_in + tcached / 1e6 * (price_cached_in or price_in) \
+            + tout / 1e6 * price_out
     summary = {
         "n_calls": int(len(udf)),
-        "input_tokens": tin, "output_tokens": tout,
+        "input_tokens": tin, "cached_input_tokens": tcached, "output_tokens": tout,
         "reasoning_tokens": int(udf["reasoning_tokens"].sum()),
         "total_tokens": int(udf["total_tokens"].sum()),
         "input_tokens_baseline": int(udf[udf["tag"] == "baseline"]["input_tokens"].sum()),
         "output_tokens_baseline": int(udf[udf["tag"] == "baseline"]["output_tokens"].sum()),
-        "input_tokens_tuned": int(udf[udf["tag"] != "baseline"]["input_tokens"].sum()),
-        "output_tokens_tuned": int(udf[udf["tag"] != "baseline"]["output_tokens"].sum()),
-        "price_in_per_1m": price_in, "price_out_per_1m": price_out,
+        "input_tokens_curated": int(udf[udf["tag"] != "baseline"]["input_tokens"].sum()),
+        "output_tokens_curated": int(udf[udf["tag"] != "baseline"]["output_tokens"].sum()),
+        "price_in_per_1m": price_in, "price_cached_in_per_1m": price_cached_in,
+        "price_out_per_1m": price_out,
         "est_cost_usd": cost,
     }
     return summary, udf
@@ -694,7 +710,8 @@ def _agg_summary_row(model_name: str, variant: str, cv: dict) -> dict:
 def write_outputs(out_dir: str, model_name: str, baseline_cv: dict, curated_cv: dict,
                   base_system_prompt: str = "", curated_block: str = "",
                   operational_meta: Optional[dict] = None,
-                  usage_rows: Optional[list] = None, price_in=None, price_out=None) -> None:
+                  usage_rows: Optional[list] = None, price_in=None, price_out=None,
+                  price_cached_in=None) -> None:
     """Write the cross-validation results + operational artifacts + usage accounting.
 
     `curated_cv` is the headline (after curated examples); `baseline_cv` is reported
@@ -761,7 +778,8 @@ def write_outputs(out_dir: str, model_name: str, baseline_cv: dict, curated_cv: 
     }
 
     usage_summary, udf = _summarize_usage(usage_rows or [], model_name=model_name,
-                                          price_in=price_in, price_out=price_out)
+                                          price_in=price_in, price_out=price_out,
+                                          price_cached_in=price_cached_in)
     if len(udf):
         udf.to_csv(os.path.join(out_dir, f"usage_{model_name}.csv"), index=False)
 
@@ -805,8 +823,9 @@ def write_outputs(out_dir: str, model_name: str, baseline_cv: dict, curated_cv: 
           f"pi={t_calib.pi}  validated_precision={t_calib.validated_precision}")
     cost = usage_summary.get("est_cost_usd")
     print(f"  usage: {usage_summary['n_calls']} calls  "
-          f"in={usage_summary['input_tokens']:,}  out={usage_summary['output_tokens']:,}  "
-          f"reasoning={usage_summary['reasoning_tokens']:,}  total={usage_summary['total_tokens']:,}"
+          f"in={usage_summary['input_tokens']:,} (cached {usage_summary['cached_input_tokens']:,})  "
+          f"out={usage_summary['output_tokens']:,}  reasoning={usage_summary['reasoning_tokens']:,}  "
+          f"total={usage_summary['total_tokens']:,}"
           + (f"  est_cost=${cost:.2f}" if cost is not None else "  (set --price-in/--price-out for $)"))
 
 
@@ -827,6 +846,7 @@ def run_model(
     use_alt_name: bool = True,
     price_in=None,
     price_out=None,
+    price_cached_in=None,
     curated_examples_path: Optional[str] = None,
 ) -> dict:
     """End-to-end for one model.
@@ -901,7 +921,8 @@ def run_model(
                   operational_meta={"objective": objective, "target_precision": target_precision,
                                     "use_alt_name": use_alt_name, "seed": seed,
                                     "corruption_fraction": corruption_fraction},
-                  usage_rows=usage_rows, price_in=price_in, price_out=price_out)
+                  usage_rows=usage_rows, price_in=price_in, price_out=price_out,
+                  price_cached_in=price_cached_in)
     return {"baseline": baseline_cv, "curated": curated_cv}
 
 
@@ -1011,6 +1032,9 @@ def main():
                          "always recorded regardless)")
     ap.add_argument("--price-out", type=float, default=None,
                     help="USD per 1M output tokens (for the cost estimate)")
+    ap.add_argument("--price-cached-in", type=float, default=None,
+                    help="USD per 1M cached input tokens (prompt-prefix cache; defaults to "
+                         "--price-in). E.g. gpt-5.5: 0.50 vs 5.00 uncached")
     ap.add_argument("--curated-examples", default=None,
                     help="path to a per-vendor curated-examples JSON (datasheet-grounded "
                          "examples) for the second pass; omit to run baseline-only and "
@@ -1054,6 +1078,7 @@ def main():
             access_legend=legend, objective=args.objective,
             target_precision=args.target_precision, use_alt_name=args.use_alt_name,
             price_in=args.price_in, price_out=args.price_out,
+            price_cached_in=args.price_cached_in,
             curated_examples_path=args.curated_examples)
         return
 
@@ -1068,6 +1093,7 @@ def main():
             access_legend=legend, objective=args.objective,
             target_precision=args.target_precision, use_alt_name=args.use_alt_name,
             price_in=args.price_in, price_out=args.price_out,
+            price_cached_in=args.price_cached_in,
             curated_examples_path=args.curated_examples)
 
 
