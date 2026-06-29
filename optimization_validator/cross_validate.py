@@ -86,6 +86,27 @@ def _create_response(client, model_name: str, input_list: list, reasoning_effort
     return client.responses.create(**kwargs)
 
 
+def _extract_usage(response) -> dict:
+    """Pull token usage off a Responses-API result, tolerant of field-name variants
+    (input/output_tokens vs prompt/completion_tokens) and reasoning-token details."""
+    u = getattr(response, "usage", None)
+    if u is None:
+        return {"input_tokens": 0, "output_tokens": 0, "reasoning_tokens": 0, "total_tokens": 0}
+    inp = getattr(u, "input_tokens", None)
+    if inp is None:
+        inp = getattr(u, "prompt_tokens", 0) or 0
+    out = getattr(u, "output_tokens", None)
+    if out is None:
+        out = getattr(u, "completion_tokens", 0) or 0
+    total = getattr(u, "total_tokens", None)
+    if total is None:
+        total = (inp or 0) + (out or 0)
+    details = getattr(u, "output_tokens_details", None)
+    reasoning = getattr(details, "reasoning_tokens", 0) if details is not None else 0
+    return {"input_tokens": int(inp or 0), "output_tokens": int(out or 0),
+            "reasoning_tokens": int(reasoning or 0), "total_tokens": int(total or 0)}
+
+
 def pseudo_score(is_true: bool, confidence: float) -> float:
     """Pseudo-probability that the invariant is correct (C=1).
 
@@ -117,7 +138,8 @@ DEFAULT_MAX_PER_CALL = 12
 
 
 def _judge_chunk(client, model_name, system_text, peripheral, register, chunk,
-                 file_search, reasoning_effort, use_alt_name: bool = True) -> tuple[dict, bool]:
+                 file_search, reasoning_effort, use_alt_name: bool = True,
+                 usage_sink: Optional[list] = None, usage_tag: str = "") -> tuple[dict, bool]:
     """One LLM call for `chunk` rows of a register. Returns ({row_id: Judgment}, ok).
 
     ok is False if the call errored, the JSON didn't parse, or it didn't return every
@@ -142,6 +164,11 @@ def _judge_chunk(client, model_name, system_text, peripheral, register, chunk,
             {"role": "user", "content": [{"type": "input_text", "text": user_prompt}]},
         ]
         response = _create_response(client, model_name, input_list, reasoning_effort)
+        if usage_sink is not None:
+            rec = _extract_usage(response)  # counts every call, including split-retries
+            rec.update(model=model_name, tag=usage_tag, peripheral=peripheral,
+                       register=register, n_invariants=len(chunk))
+            usage_sink.append(rec)
         text = response.output_text or ""
         block = get_json_block_from_response(text)
         results = json.loads(block) if block else None
@@ -161,7 +188,8 @@ def _judge_chunk(client, model_name, system_text, peripheral, register, chunk,
 
 
 def _judge_register(client, model_name, system_text, peripheral, register, rows,
-                    file_search, reasoning_effort, max_per_call, use_alt_name: bool = True) -> dict:
+                    file_search, reasoning_effort, max_per_call, use_alt_name: bool = True,
+                    usage_sink: Optional[list] = None, usage_tag: str = "") -> dict:
     """Judge all invariants of one register, chunked to <=max_per_call per call.
 
     On any call/parse/incompleteness failure, split the chunk in half and retry, down
@@ -172,7 +200,8 @@ def _judge_register(client, model_name, system_text, peripheral, register, rows,
 
     def _recurse(chunk):
         res, ok = _judge_chunk(client, model_name, system_text, peripheral, register,
-                               chunk, file_search, reasoning_effort, use_alt_name=use_alt_name)
+                               chunk, file_search, reasoning_effort, use_alt_name=use_alt_name,
+                               usage_sink=usage_sink, usage_tag=usage_tag)
         if ok:
             judgments.update(res)
             return
@@ -201,6 +230,7 @@ def evaluate_rows(
     max_per_call: int = DEFAULT_MAX_PER_CALL,
     access_legend: str = "",
     use_alt_name: bool = True,
+    usage_sink: Optional[list] = None,
 ) -> pd.DataFrame:
     """Run the Validator over the given rows (batched per register).
 
@@ -247,7 +277,8 @@ def evaluate_rows(
         # Chunk + split-and-retry so a large register can't fail as one giant batch.
         judgments.update(_judge_register(
             client, model_name, system_text, peripheral, register, rows,
-            file_search, reasoning_effort, max_per_call, use_alt_name=use_alt_name))
+            file_search, reasoning_effort, max_per_call, use_alt_name=use_alt_name,
+            usage_sink=usage_sink, usage_tag=(progress_label.strip() or "baseline")))
 
     df["is_true"] = df["row_id"].map(lambda i: judgments[i].is_true)
     df["confidence_score"] = df["row_id"].map(lambda i: judgments[i].confidence)
@@ -268,13 +299,15 @@ def evaluate_benchmark(
     max_per_call: int = DEFAULT_MAX_PER_CALL,
     access_legend: str = "",
     use_alt_name: bool = True,
+    usage_sink: Optional[list] = None,
 ) -> pd.DataFrame:
     """Baseline pass: run the Validator over every benchmark row with the base prompt."""
     df = benchmark.reset_index(drop=True).copy()
     df["row_id"] = df.index
     return evaluate_rows(df, model_name, retrieve_fn, reasoning_effort,
                          progress=progress, max_per_call=max_per_call,
-                         access_legend=access_legend, use_alt_name=use_alt_name)
+                         access_legend=access_legend, use_alt_name=use_alt_name,
+                         usage_sink=usage_sink)
 
 
 # --------------------------------------------------------------------------- #
@@ -464,6 +497,7 @@ def cross_validate_mined(
     access_legend: str = "",
     tuner=None,
     use_alt_name: bool = True,
+    usage_sink: Optional[list] = None,
 ) -> dict:
     """Per-fold tuning with mined in-context examples + decision threshold.
 
@@ -498,7 +532,8 @@ def cross_validate_mined(
         test2 = evaluate_rows(
             test, model_name, retrieve_fn, reasoning_effort,
             extra_system_text=examples, progress_label=f" fold{f}/tuned",
-            max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name)
+            max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name,
+            usage_sink=usage_sink)
         tau = tuner(list(train["score"]), list(train["is_correct"]))
         cm = confusion_at(list(test2["score"]), list(test2["is_correct"]), tau)
         fold_results.append(FoldResult(fold=f, tau=tau, cm=cm))
@@ -644,6 +679,45 @@ def _write_prompt_versions(out_dir: str, model_name: str, tuned_cv: dict) -> Non
         fh.write("\n".join(md))
 
 
+# USD per 1M tokens (input, output). Best-effort defaults — VERIFY against current vendor
+# pricing and/or override per run with --price-in / --price-out. Tokens are ALWAYS
+# recorded exactly; cost is just tokens*price (left blank when no price is known).
+_PRICING = {
+    # model_name: (usd_per_1M_input, usd_per_1M_output)
+}
+
+
+def _summarize_usage(usage_rows, model_name="", price_in=None, price_out=None):
+    """Aggregate per-call usage records into totals (+ optional $ cost). Returns
+    (summary_dict, per_call_DataFrame)."""
+    if not usage_rows:
+        return {"n_calls": 0, "input_tokens": 0, "output_tokens": 0,
+                "reasoning_tokens": 0, "total_tokens": 0,
+                "price_in_per_1m": price_in, "price_out_per_1m": price_out,
+                "est_cost_usd": None}, pd.DataFrame()
+    udf = pd.DataFrame(usage_rows)
+    if price_in is None and model_name in _PRICING:
+        price_in = _PRICING[model_name][0]
+    if price_out is None and model_name in _PRICING:
+        price_out = _PRICING[model_name][1]
+    tin, tout = int(udf["input_tokens"].sum()), int(udf["output_tokens"].sum())
+    cost = (tin / 1e6 * price_in + tout / 1e6 * price_out) \
+        if (price_in is not None and price_out is not None) else None
+    summary = {
+        "n_calls": int(len(udf)),
+        "input_tokens": tin, "output_tokens": tout,
+        "reasoning_tokens": int(udf["reasoning_tokens"].sum()),
+        "total_tokens": int(udf["total_tokens"].sum()),
+        "input_tokens_baseline": int(udf[udf["tag"] == "baseline"]["input_tokens"].sum()),
+        "output_tokens_baseline": int(udf[udf["tag"] == "baseline"]["output_tokens"].sum()),
+        "input_tokens_tuned": int(udf[udf["tag"] != "baseline"]["input_tokens"].sum()),
+        "output_tokens_tuned": int(udf[udf["tag"] != "baseline"]["output_tokens"].sum()),
+        "price_in_per_1m": price_in, "price_out_per_1m": price_out,
+        "est_cost_usd": cost,
+    }
+    return summary, udf
+
+
 def _agg_summary_row(model_name: str, variant: str, cv: dict) -> dict:
     agg = cv["aggregated"]
     calib = cv["calibration"]
@@ -659,13 +733,17 @@ def _agg_summary_row(model_name: str, variant: str, cv: dict) -> dict:
 
 
 def write_outputs(out_dir: str, model_name: str, baseline_eval: pd.DataFrame,
-                  baseline_cv: dict, tuned_cv: dict, operational_meta: Optional[dict] = None) -> None:
+                  baseline_cv: dict, tuned_cv: dict, operational_meta: Optional[dict] = None,
+                  usage_rows: Optional[list] = None, price_in=None, price_out=None) -> None:
     """Write baseline (threshold-only) and tuned (mined examples + threshold) results,
-    plus the operational artifacts (ranked review queue, precision@k, calibration).
+    plus the operational artifacts (ranked review queue, precision@k, calibration) and
+    token-usage accounting.
 
     `tuned_cv` is the headline; `baseline_cv` is reported alongside to show the lift
     from per-fold in-context example tuning. `operational_meta` (objective,
-    target_precision) is recorded in the summary for provenance.
+    target_precision) is recorded in the summary for provenance. `usage_rows` is the
+    per-LLM-call token log; with `price_in`/`price_out` (USD per 1M tokens) it also
+    yields a $ cost estimate.
     """
     os.makedirs(out_dir, exist_ok=True)
 
@@ -723,10 +801,17 @@ def write_outputs(out_dir: str, model_name: str, baseline_eval: pd.DataFrame,
         "precision_at_top_decile": (float(pk.iloc[0]["precision_at_k"]) if len(pk) else float("nan")),
     }
 
+    # Token usage / cost: per-call log CSV + aggregated totals in the summary.
+    usage_summary, udf = _summarize_usage(usage_rows or [], model_name=model_name,
+                                          price_in=price_in, price_out=price_out)
+    if len(udf):
+        udf.to_csv(os.path.join(out_dir, f"usage_{model_name}.csv"), index=False)
+
     # Aggregated confusion + calibration -> JSON + a 2-row summary CSV (baseline, tuned).
     summary = {
         "model": model_name,
         "operational": operational,
+        "usage": usage_summary,
         "baseline_threshold_only": {
             "aggregated_confusion": baseline_cv["aggregated"].to_dict(),
             "calibration": baseline_cv["calibration"].to_dict(),
@@ -762,6 +847,11 @@ def write_outputs(out_dir: str, model_name: str, baseline_eval: pd.DataFrame,
           f"-> review_queue_{model_name}.csv")
     print(f"  calibration: alpha={t_agg.alpha}  beta={t_agg.beta}  "
           f"pi={t_calib.pi}  validated_precision={t_calib.validated_precision}")
+    cost = usage_summary.get("est_cost_usd")
+    print(f"  usage: {usage_summary['n_calls']} calls  "
+          f"in={usage_summary['input_tokens']:,}  out={usage_summary['output_tokens']:,}  "
+          f"reasoning={usage_summary['reasoning_tokens']:,}  total={usage_summary['total_tokens']:,}"
+          + (f"  est_cost=${cost:.2f}" if cost is not None else "  (set --price-in/--price-out for $)"))
 
 
 def run_model(
@@ -780,6 +870,8 @@ def run_model(
     objective: str = "precision",
     target_precision: float = 0.95,
     use_alt_name: bool = True,
+    price_in=None,
+    price_out=None,
 ) -> dict:
     """End-to-end for one model.
 
@@ -794,6 +886,7 @@ def run_model(
     `retrieve_fn(peripheral, register) -> (text, ids)` is the retrieval backend.
     """
     tuner = make_tuner(objective, target_precision)
+    usage_rows: list = []  # per-LLM-call token log, populated across both passes
     benchmark = make_benchmark_with_folds(
         verified_csv, k=k, corruption_fraction=corruption_fraction, seed=seed)
     if limit_registers is not None:
@@ -811,7 +904,8 @@ def run_model(
     print(f"[{model_name}] pass 1/2: baseline evaluation (base prompt)")
     baseline_eval = evaluate_benchmark(
         benchmark, model_name, retrieve_fn, reasoning_effort=reasoning_effort,
-        max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name)
+        max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name,
+        usage_sink=usage_rows)
     baseline_cv = cross_validate(baseline_eval, k=k, tuner=tuner)
     cov = baseline_eval["reg_in_context"].mean() if "reg_in_context" in baseline_eval else float("nan")
     n_parse_err = (baseline_eval["parse_error"].fillna("") != "").sum()
@@ -822,11 +916,14 @@ def run_model(
     tuned_cv = cross_validate_mined(
         baseline_eval, model_name, retrieve_fn, k=k, reasoning_effort=reasoning_effort,
         max_per_class=max_per_class, seed=seed, max_per_call=max_per_call,
-        access_legend=access_legend, tuner=tuner, use_alt_name=use_alt_name)
+        access_legend=access_legend, tuner=tuner, use_alt_name=use_alt_name,
+        usage_sink=usage_rows)
 
     write_outputs(out_dir, model_name, baseline_eval, baseline_cv, tuned_cv,
                   operational_meta={"objective": objective, "target_precision": target_precision,
-                                    "use_alt_name": use_alt_name})
+                                    "use_alt_name": use_alt_name, "seed": seed,
+                                    "corruption_fraction": corruption_fraction},
+                  usage_rows=usage_rows, price_in=price_in, price_out=price_out)
     return {"baseline": baseline_cv, "tuned": tuned_cv}
 
 
@@ -931,6 +1028,11 @@ def main():
     ap.add_argument("--max-per-call", type=int, default=DEFAULT_MAX_PER_CALL,
                     help="max invariants per LLM call; large registers are chunked + "
                          "split-retried on parse failure (default 12)")
+    ap.add_argument("--price-in", type=float, default=None,
+                    help="USD per 1M input tokens (for the cost estimate; tokens are "
+                         "always recorded regardless)")
+    ap.add_argument("--price-out", type=float, default=None,
+                    help="USD per 1M output tokens (for the cost estimate)")
     ap.add_argument("--out-root", default=None,
                     help="output root (default optimization_validator/<device>/cross_validation)")
     args = ap.parse_args()
@@ -968,7 +1070,8 @@ def main():
             reasoning_effort=models[0].get("reasoning_effort"),
             limit_registers=args.smoke_registers, max_per_call=args.max_per_call,
             access_legend=legend, objective=args.objective,
-            target_precision=args.target_precision, use_alt_name=args.use_alt_name)
+            target_precision=args.target_precision, use_alt_name=args.use_alt_name,
+            price_in=args.price_in, price_out=args.price_out)
         return
 
     print(f"Running cross-validation for {len(models)} model(s): "
@@ -980,7 +1083,8 @@ def main():
             k=args.k, corruption_fraction=args.corruption_fraction, seed=args.seed,
             reasoning_effort=cfg.get("reasoning_effort"), max_per_call=args.max_per_call,
             access_legend=legend, objective=args.objective,
-            target_precision=args.target_precision, use_alt_name=args.use_alt_name)
+            target_precision=args.target_precision, use_alt_name=args.use_alt_name,
+            price_in=args.price_in, price_out=args.price_out)
 
 
 if __name__ == "__main__":
