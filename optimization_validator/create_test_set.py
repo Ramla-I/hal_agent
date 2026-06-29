@@ -35,7 +35,10 @@ from optimization_validator.corruption import (  # noqa: E402
     corrupt_field_name,
     corrupt_value,
 )
-from optimization_validator.kfold import make_benchmark_with_folds  # noqa: E402  (re-exported)
+from optimization_validator.kfold import (  # noqa: E402  (re-exported)
+    make_benchmark_with_folds,
+    select_ground_truth,
+)
 
 _OUTPUT_COLUMNS = ["peripheral", "register", "field_name", "key", "correct_value", "is_correct", "corruption_type"]
 
@@ -71,9 +74,10 @@ def create_test_set(
 
     df = pd.read_csv(csv_file_path, dtype=str, keep_default_na=False)
     df = df.iloc[start_row:end_row].reset_index(drop=True)
-    df = df[["peripheral", "register", "field_name", "key", "correct_value"]].copy()
-    df["correct_value"] = df["correct_value"].astype(str).str.strip()
-    df = df[df["correct_value"] != ""].reset_index(drop=True)
+    # Apply the same status-aware ground-truth gate as the cross-validation path before
+    # narrowing to the columns this builder corrupts.
+    df = select_ground_truth(df, source=os.path.basename(csv_file_path))
+    df = df[["peripheral", "register", "field_name", "key", "correct_value"]].reset_index(drop=True)
 
     contexts = build_register_contexts(df)
 

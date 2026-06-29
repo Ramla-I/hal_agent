@@ -84,12 +84,16 @@ authoritative spec + full results + divergence log live in
 
 ### Current design (pipeline)
 
-1. **Build benchmark** (`kfold.py`): load verified CSV, drop empty-`correct_value`
-   rows, corrupt 30% of invariants (replace, no true/corrupted pairs) with realistic
-   per-key errors (`corruption.py`: in-range bit fields, nibble-flip/neighbour hex,
-   size ∈ {8,16,32,64}, access swaps, real sibling names / one-edit typos), assign
-   whole (peripheral, register) groups to k folds (correlated invariants never straddle
-   train/held-out).
+1. **Build benchmark** (`kfold.py`): load verified CSV and keep only **ground-truth
+   rows** — `select_ground_truth` gates on `status == "verified"` (the schema from
+   `verified_datasheet/annotate.py`), which in one shot drops `derived` peripheral-
+   inheritance marker rows, `not-specified` / `datasheet-ambiguous` cells, and pending
+   (empty-status) rows. An unannotated slice (e.g. rm0394) raises a clear error here
+   rather than failing opaquely in k-fold. Then corrupt 30% of invariants (replace, no
+   true/corrupted pairs) with realistic per-key errors (`corruption.py`: in-range bit
+   fields, nibble-flip/neighbour hex, size ∈ {8,16,32,64}, access swaps, real sibling
+   names / one-edit typos), and assign whole (peripheral, register) groups to k folds
+   (correlated invariants never straddle train/held-out).
 2. **Retrieve** (`make_retriever` in `cross_validate.py`): default backend is the
    **OpenEvolve evolved program** (`--retrieval openevolve`) — needs the device's
    `chunked_datasheets/<mfr>/<dev>/chunks/md/` + Chroma DB (copy from main repo or
@@ -142,13 +146,28 @@ coverage), `judgments_tuned_<model>.csv`, `error_analysis_<model>.csv` (FP/FN),
 `per_fold_<model>.csv`, `summary_<model>.{csv,json}` (baseline vs tuned),
 `prompts/` (the exact per-fold system prompt incl. legend + mined examples).
 
-### Results so far (rm0041, k=5, 2,459 invariants; OpenEvolve + chunked batching)
+### Results so far (rm0041, k=5; OpenEvolve + chunked batching)
+> ⚠️ Measured on the **pre-merge** rm0041 slice (~2,459 verified invariants). The merged
+> verified datasheet now yields **3,356** `status=verified` rows, so these numbers should
+> be **re-measured** before citing.
 | Model | F1 (tuned) | validated precision | raw sens. | β |
 |---|---|---|---|---|
 | gpt-oss-120b | 0.91 | 0.95 | 0.85 | 0.90 |
 | gpt-5.5 (+ access legend) | **0.975** | 0.96 | 0.98 | 0.90 |
 
 ### OPEN TODOS
+- [ ] **Re-measure on the merged 3,356-row rm0041 slice** (see warning above) and refresh
+      the results table; the prior numbers are on the smaller pre-merge slice.
+- [ ] **Use `alt_name` to cut name-mismatch false negatives.** The new schema records the
+      field/register name *as printed in the datasheet* when it differs from the SVD key
+      (e.g. SVD `bkp.dr1.d1` is just `D` in the datasheet). The benchmark keys on the SVD
+      name, so the Validator can reject a correct invariant purely because the datasheet
+      prints a different name — the same failure class the access-notation legend fixed.
+      Feed `alt_name` into the retrieval query / prompt when present.
+- [ ] **Expand `derived` peripherals.** Verified CSVs dedup `derivedFrom` peripherals to a
+      single marker row (`status=derived`), so the benchmark currently covers only the
+      prototype (e.g. `gpioa`, not `gpiob..g`). The diff pipeline expands these; the
+      validator benchmark should too if we want per-peripheral coverage numbers.
 - [ ] **Tune the number of mined in-context examples** (`max_per_class`, currently 6/class
       → 12/fold). Sweep it and find where added examples stop improving F1 — each one
       grows every system prompt (× every call), so the prompt shouldn't balloon. Measure

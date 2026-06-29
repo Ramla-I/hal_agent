@@ -21,6 +21,7 @@ name the existing run_validator code already reads.
 
 from __future__ import annotations
 
+import os
 import random
 
 import pandas as pd
@@ -30,26 +31,58 @@ from optimization_validator.corruption import build_register_contexts, corrupt_r
 # Verified-datasheet columns we carry into the benchmark.
 _BASE_COLUMNS = ["peripheral", "register", "field_name", "key", "correct_value"]
 
+# In the verified-datasheet schema (verified_datasheet/annotate.py) a row is
+# authoritative ground truth only when its status is exactly this. Every other status
+# (not-specified, datasheet-ambiguous, the per-peripheral `derived` marker rows, or an
+# empty/pending status) has an empty correct_value by construction, so it is neither a
+# trustworthy positive nor a corruptible base.
+GROUND_TRUTH_STATUS = "verified"
+
+
+def select_ground_truth(df: pd.DataFrame, source: str = "") -> pd.DataFrame:
+    """Keep only rows usable as ground truth: status == 'verified' with a correct_value.
+
+    Gating on status drops `derived` marker rows (peripheral-inheritance placeholders
+    with no register/key/value), `not-specified`, `datasheet-ambiguous` and pending rows
+    in one shot. Raises if nothing survives — typically an unannotated slice (e.g.
+    rm0394), which should fail loudly here rather than as an opaque k-fold error.
+    """
+    if "status" not in df.columns:
+        raise ValueError(
+            f"{source or 'verified CSV'}: missing required `status` column. Verified "
+            "datasheets must be produced by verified_datasheet/annotate.py."
+        )
+    df = df.copy()
+    df["correct_value"] = df["correct_value"].astype(str).str.strip()
+    n_before = len(df)
+    status = df["status"].astype(str).str.strip().str.lower()
+    df = df[(status == GROUND_TRUTH_STATUS) & (df["correct_value"] != "")].reset_index(drop=True)
+    n_after = len(df)
+    tag = source or "verified CSV"
+    if n_after < n_before:
+        print(f"[verified] {tag}: kept {n_after}/{n_before} ground-truth rows "
+              f"(dropped {n_before - n_after}: pending / derived / not-specified / empty)")
+    if n_after == 0:
+        raise ValueError(
+            f"{tag}: no usable ground-truth rows (status=='{GROUND_TRUTH_STATUS}' with a "
+            "correct_value). The slice is likely unannotated (e.g. rm0394) — finish "
+            "annotating it or point --verified-csv at a completed slice."
+        )
+    return df
+
 
 def load_verified(csv_path: str) -> pd.DataFrame:
-    """Load a verified datasheet and drop rows that cannot serve as ground truth.
+    """Load a verified datasheet, keep only ground-truth rows, return the base columns.
 
-    Rows with an empty `correct_value` were never human-confirmed (the annotator left
-    them blank), so they can be neither a trustworthy positive nor a corruptible base.
-    We exclude them and report the count.
+    See `select_ground_truth` for the row-selection contract (status gate + non-empty
+    correct_value). Extra schema columns (alt_name, page, set_method, …) are ignored.
     """
     df = pd.read_csv(csv_path, dtype=str, keep_default_na=False)
     missing = [c for c in _BASE_COLUMNS if c not in df.columns]
     if missing:
         raise ValueError(f"{csv_path} missing required columns: {missing}")
-    df = df[_BASE_COLUMNS].copy()
-    n_before = len(df)
-    df["correct_value"] = df["correct_value"].astype(str).str.strip()
-    df = df[df["correct_value"] != ""].reset_index(drop=True)
-    n_after = len(df)
-    if n_after < n_before:
-        print(f"[kfold] dropped {n_before - n_after}/{n_before} rows with empty correct_value")
-    return df
+    df = select_ground_truth(df, source=os.path.basename(csv_path))
+    return df[_BASE_COLUMNS].reset_index(drop=True)
 
 
 def build_corrupted_benchmark(
