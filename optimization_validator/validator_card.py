@@ -111,9 +111,15 @@ def build_card(run_dir, vendor, device, target_precision=0.95, model=None):
     op = summary.get("operational", {})
     usage = summary.get("usage", {})
 
-    scores, golds = _read_judgments(run_dir, model)
-    tau = deployment_threshold(scores, golds, target_precision)
-    fold_taus = _read_fold_taus(run_dir, model)
+    # Prefer the threshold the harness emitted (summary.deployment); else compute it from
+    # the full-config scores (older runs predate that field).
+    dep = summary.get("deployment") or {}
+    fold_taus = dep.get("per_fold_tau") or _read_fold_taus(run_dir, model)
+    if dep.get("threshold") is not None:
+        tau = dep["threshold"]
+    else:
+        scores, golds = _read_judgments(run_dir, model)
+        tau = deployment_threshold(scores, golds, target_precision)
 
     card = {
         "vendor": vendor,

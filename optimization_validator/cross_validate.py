@@ -52,6 +52,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import statistics
 import sys
 from dataclasses import dataclass
 from typing import Optional
@@ -843,9 +844,27 @@ def write_outputs(out_dir: str, model_name: str, baseline_cv: dict, curated_cv: 
     if len(udf):
         udf.to_csv(os.path.join(out_dir, f"usage_{model_name}.csv"), index=False)
 
+    # Deployment threshold: the single tau to FREEZE and apply on unverified devices,
+    # fit on the FULL final-config scores (not held out — deployment doesn't hold out).
+    # The per-fold taus are the measurement-time operating points; their spread is a
+    # stability check. (See optimization_validator/validator_card.py for the device card.)
+    obj = operational.get("objective", "precision")
+    tgt = operational.get("target_precision", 0.95)
+    dep_tau = make_tuner(obj, tgt)(list(final_eval["score"]), list(final_eval["is_correct"]))
+    fold_taus = [fr.tau for fr in curated_cv["fold_results"]]
+    deployment = {
+        "threshold": dep_tau,                      # apply on new devices: accept iff score >= this
+        "objective": obj, "target_precision": tgt,
+        "per_fold_tau": fold_taus,
+        "tau_min": min(fold_taus) if fold_taus else None,
+        "tau_max": max(fold_taus) if fold_taus else None,
+        "tau_std": statistics.pstdev(fold_taus) if len(fold_taus) > 1 else 0.0,
+    }
+
     summary = {
         "model": model_name,
         "operational": operational,
+        "deployment": deployment,
         "usage": usage_summary,
         "baseline": {
             "aggregated_confusion": baseline_cv["aggregated"].to_dict(),
@@ -881,6 +900,8 @@ def write_outputs(out_dir: str, model_name: str, baseline_cv: dict, curated_cv: 
           f"-> review_queue_{model_name}.csv")
     print(f"  calibration: alpha={t_agg.alpha}  beta={t_agg.beta}  "
           f"pi={t_calib.pi}  validated_precision={t_calib.validated_precision}")
+    print(f"  deployment threshold (freeze + apply on new devices): {deployment['threshold']:.4f}  "
+          f"(per-fold tau {deployment['tau_min']}-{deployment['tau_max']}, std {deployment['tau_std']:.4f})")
     cost = usage_summary.get("est_cost_usd")
     print(f"  usage: {usage_summary['n_calls']} calls  "
           f"in={usage_summary['input_tokens']:,} (cached {usage_summary['cached_input_tokens']:,})  "
@@ -1068,7 +1089,9 @@ MODELS = [
 def main():
     ap = argparse.ArgumentParser(description="Validator cross-validation harness")
     ap.add_argument("--verified-csv", default="verified_datasheet/stm/rm0041_stm32f100.csv")
-    ap.add_argument("--device", default="stm-rm0041")
+    ap.add_argument("--device", default="stmrm0041_run",
+                    help="output subfolder name under the default out-root (the legacy "
+                         "stm-rm0041 dir was removed)")
     ap.add_argument("--k", type=int, default=5)
     ap.add_argument("--corruption-fraction", type=float, default=0.30)
     ap.add_argument("--seed", type=int, default=0)
