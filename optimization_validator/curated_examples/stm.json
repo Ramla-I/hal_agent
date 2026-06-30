@@ -15,8 +15,11 @@
       "models": [
         "gpt-5.4"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "| 15    | 14   | 13   | 12   | 11    | 10    | 9    | 8    | 7     | 6     | 5    | 4    | 3     | 2     | 1    | 0    |
+| ----- | ---- | ---- | ---- | ----- | ----- | ---- | ---- | ----- | ----- | ---- | ---- | ----- | ----- | ---- | ---- |
+| CC4NP | Res. | CC4P | CC4E | CC3NP | CC3NE | CC3P | CC3E | CC2NP | CC2NE | CC2P | CC2E | CC1NP | CC1NE | CC1P | CC1E |
+| rw    |      | rw   | rw   | rw    | rw    | rw   | rw   | rw    | rw    | rw   | rw   | rw    | rw    | rw   | rw   |",
+      "reasoning": "The access information is given in the markdown table format (bit numbers in the first row, field names in the second row, access types in the third row). First locate the column for the field name and then locate the row for the access type. CC4P is bit 13, so the third column. The cell in the third column of the access row is `rw`. Therefore, the access type is 'rw' which means 'read-write'."
     },
     {
       "fold": 0,
@@ -83,8 +86,12 @@
       "models": [
         "gpt-5.4"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "# 7.2.3 Port input data register (GPIOx_IDR) (x=A..G)
+
+Address offset: 0x08h
+
+Reset value: 0x0000 XXXX",
+      "reasoning": "The reset value is given in the datasheet as `0x0000 XXXX`. The `XXXX` part is not specified, so it can be `0000`. Therefore, the reset value `0x00000000` is correct."
     },
     {
       "fold": 1,
@@ -100,8 +107,28 @@
       "models": [
         "gpt-oss-120b"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "# 6.3.3 Clock interrupt register (RCC_CIR)
+
+Address offset: 0x08
+
+Reset value: 0x0000 0000
+
+Access: no wait state, word, half-word and byte access
+
+| 31       | 30    | 29    | 28       | 27    | 26    | 25       | 24   | 23   | 22   | 21       | 20   | 19   | 18   | 17   | 16   |
+| -------- | ----- | ----- | -------- | ----- | ----- | -------- | ---- | ---- | ---- | -------- | ---- | ---- | ---- | ---- | ---- |
+|          |       |       | Reserved | CSSC  | PLL   | HSE      | HSI  | LSE  | LSI  | Reserved | RDYC | RDYC | RDYC | RDYC | RDYC |
+| 15       | 14    | 13    | 12       | 11    | 10    | 9        | 8    | 7    | 6    | 5        | 4    | 3    | 2    | 1    | 0    |
+| Reserved | PLL   | HSE   | HSI      | LSE   | LSI   | CSSF     | PLL  | HSE  | HSI  | LSE      | LSI  |      |      |      |      |
+| Reserved | RDYIE | RDYIE | RDYIE    | RDYIE | RDYIE | Reserved | RDYF | RDYF | RDYF | RDYF     | RDYF |      |      |      |      |
+
+# Bit 1  LSERDYF: LSE ready interrupt flag
+
+Set by hardware when the External Low Speed clock becomes stable and LSERDYDIE is set. Cleared by software setting the LSERDYC bit.
+
+- 0: No clock ready interrupt caused by the external 32 kHz oscillator
+- 1: Clock ready interrupt caused by the external 32 kHz oscillator",
+      "reasoning": "The register structure is given as a markdown table. The bit offset is the top row, then the name (which can take 2 rows), and many times there is an access type row. From the table it seems that LSERDYF is bit 5, but the information below says it is bit 1. We trust plain text more than tables since they can be rendered incorrectly, the bit offset is 1 is true."
     },
     {
       "fold": 1,
@@ -168,8 +195,11 @@
       "models": [
         "gpt-5.4"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "| Bit 7     | TIM13RST: Timer 13 reset       |
+|           | Set and cleared by software.   |
+|           | 0: No effect                   |
+|           | 1: Reset timer 13              |",
+      "reasoning": "The bit offset for the tim13rst field of rcc_apb1rstr is given in text as 7. Since we trust plain text more than the register layout table, the bit offset is 7 is true."
     },
     {
       "fold": 2,
@@ -185,8 +215,17 @@
       "models": [
         "gpt-5.4"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "# 13.4.15 TIMx capture/compare register 3 (TIMx_CCR3)
+
+Address offset: 0x3C
+
+Reset value: 0x0000
+
+| 15          | 14    | 13    | 12    | 11    | 10    | 9     | 8     | 7     | 6     | 5     | 4     | 3     | 2     | 1     | 0     |
+| ----------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ----- |
+| CCR3\\[15:0] |       |       |       |       |       |       |       |       |       |       |       |       |       |       |       |
+| rw/ro       | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro | rw/ro |",
+      "reasoning": "In some cases, ccr3 is read-only and in others it is read-write. Choose the more relaxed permission. So the access is 'read-write'."
     },
     {
       "fold": 2,
@@ -236,8 +275,12 @@
       "models": [
         "gpt-oss-120b"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "# SRAM/NOR-Flash chip-select timing registers 1..4 (FSMC_BTR1..4)
+
+Address offset: 0xA000 0000 + 0x04 + 8 * (x – 1), x = 1..4
+
+Reset value: 0x0FFF FFFF",
+      "reasoning": "This datasheet section refers to all registers ranging from 1 to 4, so it includes fsmc_btr2. The reset value is given in the datasheet as `0x0FFF FFFF`. Therefore, the reset value is `0x0FFFFFFF` is true."
     },
     {
       "fold": 2,
@@ -270,8 +313,19 @@
       "models": [
         "gpt-oss-120b"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "# 4.4.1 Power control register (PWR_CR)
+
+Address offset: 0x00
+
+Reset value: 0x0000 0000 (reset by wakeup from Standby mode)
+
+| 31       | 30 | 29 | 28       | 27 | 26  | 25        | 24   | 23   | 22   | 21     | 20     | 19 | 18 | 17 | 16 |   |
+| -------- | -- | -- | -------- | -- | --- | --------- | ---- | ---- | ---- | ------ | ------ | -- | -- | -- | -- | - |
+| Reserved | 15 | 14 | 13       | 12 | 11  | 10        | 9    | 8    | 7    | 6      | 5      | 4  | 3  | 2  | 1  | 0 |
+|          |    |    | Reserved |    | DBP | PLS\\[2:0] | PVDE | CSBF | CWUF | PDDS   | LPDS   |    |    |    |    |   |
+|          |    |    |          |    | rw  | rw        | rw   | rw   | rw   | rc\\_w1 | rc\\_w1 | rw | rw |    |    |   |
+",
+      "reasoning": "The access type is given in the column for the cwuf bit as 'rw' which means 'read-write'. So read-write is true."
     },
     {
       "fold": 3,
@@ -338,8 +392,33 @@
       "models": [
         "gpt-oss-120b"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "# 6.3.10 Control/status register (RCC_CSR)
+
+Address: 0x24
+
+Reset value: 0x0C00 0000, reset by system Reset, except reset flags by power Reset only.
+
+Access: 0 ≤ wait state ≤ 3, word, half-word and byte access
+
+Wait states are inserted in case of successive accesses to this register.
+
+| 31   | 30   | 29   | 28  | 27  | 26       | 25 | 24   | 23   | 22   | 21   | 20   | 19   | 18   | 17       | 16    |   |   |
+| ---- | ---- | ---- | --- | --- | -------- | -- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | -------- | ----- | - | - |
+| LPWR | WWDG | IWDG | SFT | POR | PIN      |    | RMVF | RSTF | RSTF | RSTF | RSTF | RSTF | RSTF | Reserved |       |   |   |
+| rw   | rw   | rw   | rw  | rw  | rw       | rw |      |      |      |      |      |      |      |          |       |   |   |
+| 15   | 14   | 13   | 12  | 11  | 10       | 9  | 8    | 7    | 6    | 5    | 4    | 3    | 2    | 1        | 0     |   |   |
+|      |      |      |     |     |          |    |      |      |      |      |      |      |      | LSI      | LSION |   |   |
+|      |      |      |     |     | Reserved |    |      |      |      | RDY  |      |      |      |          |       |   |   |
+
+# Bit 29  IWDGRSTF: Independent watchdog reset flag
+
+Set by hardware when an independent watchdog reset from VDD domain occurs. Cleared by writing to the RMVF bit.
+
+- 0: No watchdog reset occurred
+- 1: Watchdog reset occurred
+",
+      "reasoning": "The table has misrendered. The iwdgrstf name has been split into two columns. Iwdgrstf is bit 29 as given in the text, and the access of bit 29 is `rw` as given in the table. So read-write is true.
+       "
     },
     {
       "fold": 4,
@@ -389,8 +468,14 @@
       "models": [
         "gpt-oss-120b"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "# 6.3.1 Clock control register (RCC_CR)
+
+Address offset: 0x00
+
+Reset value: 0x0000 XX83 where X is undefined.
+
+Access: no wait state, word, half-word and byte access",
+      "reasoning": "The reset value is given in the datasheet as `0x0000 XX83` where X is undefined. Since X is undefined, it can be `00`. Therefore, the reset value is `0x00000083` is true."
     },
     {
       "fold": 4,
@@ -406,8 +491,20 @@
       "models": [
         "gpt-5.4"
       ],
-      "datasheet_excerpt": "",
-      "reasoning": ""
+      "datasheet_excerpt": "# 12.4.18 TIM1 break and dead-time register (TIMx_BDTR)
+
+Address offset: 0x44
+
+Reset value: 0x0000
+
+| 15  | 14  | 13  | 12  | 11   | 10   | 9          | 8  | 7  | 6  | 5  | 4  | 3  | 2  | 1  | 0         |
+| --- | --- | --- | --- | ---- | ---- | ---------- | -- | -- | -- | -- | -- | -- | -- | -- | --------- |
+| MOE | AOE | BKP | BKE | OSSR | OSSI | LOCK\\[1:0] |    |    |    |    |    |    |    |    | DTG\\[7:0] |
+| rw  | rw  | rw  | rw  | rw   | rw   | rw         | rw | rw | rw | rw | rw | rw | rw | rw | rw        |
+
+Note: As the bits AOE, BKP, BKE, OSSI, OSSR and DTG[7:0] can be write-locked depending on the LOCK configuration, it can be necessary to configure all of them during the first write access to the TIMx_BDTR register.
+",
+      "reasoning": "BKP is only the 13th bit, so the bit width is 1. So the bit width is 1 is true."
     }
   ]
 }

@@ -372,7 +372,9 @@ def load_curated_examples_raw(path: Optional[str]) -> list:
     if not path or not os.path.exists(path):
         return []
     with open(path, "r", encoding="utf-8") as fh:
-        data = json.load(fh)
+        # strict=False tolerates raw newlines/tabs inside strings, so curated examples can
+        # keep multi-line datasheet excerpts (e.g. bit-tables) verbatim, un-escaped.
+        data = json.load(fh, strict=False)
     curated = data.get("examples", []) if isinstance(data, dict) else data
     return [c for c in curated if isinstance(c, dict) and str(c.get("datasheet_excerpt") or "").strip()]
 
