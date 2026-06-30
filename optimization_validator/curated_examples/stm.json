@@ -1,0 +1,413 @@
+{
+  "_comment": "DRAFT curated examples for STM rm0041, GROUPED BY FOLD (seed-0 assignment; runtime recomputes per seed). Each entry has its fold. FILL >=2 per fold (the minimum) so every held-out fold keeps a populated, equal-sized block; fill more for better coverage. Each filled example is reused in every OTHER fold block and excluded from its own fold. Fill datasheet_excerpt (paste supporting datasheet text) + reasoning; entries with empty datasheet_excerpt are ignored. is_true=correct label; for is_true=true the value is the REAL value, ground_truth_value confirms it. Per-fold candidate counts: {0: 5, 1: 5, 2: 5, 3: 5, 4: 4}",
+  "examples": [
+    {
+      "fold": 0,
+      "peripheral": "tim1",
+      "register": "ccer",
+      "field_name": "cc4p",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "cc4p",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "tim1",
+      "register": "ccer",
+      "field_name": "cc4e",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "cc4e",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "tim1",
+      "register": "ccer",
+      "field_name": "cc3np",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "cc3np",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "tim2",
+      "register": "dmar",
+      "field_name": "dmab",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "dmab",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "gpioa",
+      "register": "idr",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0x00000000",
+      "is_true": true,
+      "ground_truth_value": "0x00000000",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "rcc",
+      "register": "cir",
+      "field_name": "lserdyf",
+      "key": "bit_offset",
+      "value": "1",
+      "is_true": true,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "lserdyf",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "rcc",
+      "register": "cir",
+      "field_name": "hsirdyf",
+      "key": "bit_offset",
+      "value": "2",
+      "is_true": true,
+      "ground_truth_value": "2",
+      "ground_truth_field_name": "hsirdyf",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "rcc",
+      "register": "cir",
+      "field_name": "lserdyie",
+      "key": "bit_offset",
+      "value": "9",
+      "is_true": true,
+      "ground_truth_value": "9",
+      "ground_truth_field_name": "lserdyie",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "rcc",
+      "register": "cir",
+      "field_name": "hsirdyie",
+      "key": "bit_offset",
+      "value": "10",
+      "is_true": true,
+      "ground_truth_value": "10",
+      "ground_truth_field_name": "hsirdyie",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "rcc",
+      "register": "apb1rstr",
+      "field_name": "tim13rst",
+      "key": "bit_offset",
+      "value": "7",
+      "is_true": true,
+      "ground_truth_value": "7",
+      "ground_truth_field_name": "tim13rst",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "tim2",
+      "register": "ccr3",
+      "field_name": "ccr3",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "ccr3",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "tim12",
+      "register": "ccer",
+      "field_name": "cc2p",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "cc2p",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "tim12",
+      "register": "ccer",
+      "field_name": "cc2e",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "cc2e",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "fsmc",
+      "register": "btr2",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0x0FFFFFFF",
+      "is_true": true,
+      "ground_truth_value": "0x0FFFFFFF",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "exti",
+      "register": "pr",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0x00000000",
+      "is_true": true,
+      "ground_truth_value": "0x00000000",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "pwr",
+      "register": "cr",
+      "field_name": "cwuf",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "cwuf",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "pwr",
+      "register": "cr",
+      "field_name": "csbf",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "csbf",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "rcc",
+      "register": "csr",
+      "field_name": "pinrstf",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "pinrstf",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "rcc",
+      "register": "csr",
+      "field_name": "sftrstf",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "sftrstf",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "rcc",
+      "register": "csr",
+      "field_name": "iwdgrstf",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "iwdgrstf",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "tim2",
+      "register": "ccr1",
+      "field_name": "ccr1",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "ccr1",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "tim2",
+      "register": "ccr2",
+      "field_name": "ccr2",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "ccr2",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "rcc",
+      "register": "cr",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0x83",
+      "is_true": true,
+      "ground_truth_value": "0x83",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "tim1",
+      "register": "bdtr",
+      "field_name": "bkp",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": true,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "bkp",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-5.4"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    }
+  ]
+}

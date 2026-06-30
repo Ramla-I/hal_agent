@@ -276,6 +276,42 @@ def test_curated_examples():
     check(fp["ground_truth_field_name"] == "truename",
           "FP candidate shows the ground-truth field name")
 
+    # per-fold exclusion: a held-out fold's own examples must NOT appear in its block
+    from optimization_validator.cross_validate import curated_block_for_fold
+    bench = pd.DataFrame({
+        "peripheral": ["gpioa", "gpiob", "tim2"], "register": ["crl", "crl", "cr1"],
+        "fold": [0, 1, 2],
+    })
+    cur = [
+        {"peripheral": "gpioa", "register": "crl", "key": "size", "value": "32",
+         "is_true": True, "datasheet_excerpt": "GPIOA CRL is 32-bit"},
+        {"peripheral": "gpiob", "register": "crl", "key": "size", "value": "32",
+         "is_true": True, "datasheet_excerpt": "GPIOB CRL is 32-bit"},
+    ]
+    blk0 = curated_block_for_fold(cur, bench, 0)   # exclude gpioa.crl (fold 0)
+    check("GPIOA CRL" not in blk0 and "GPIOB CRL" in blk0,
+          "fold 0 block excludes its own register's example, keeps others")
+    blk2 = curated_block_for_fold(cur, bench, 2)   # tim2 fold; both examples are training
+    check("GPIOA CRL" in blk2 and "GPIOB CRL" in blk2,
+          "a fold with no curated examples keeps all (all are training)")
+
+    # equalization: every fold's block uses the same count N = total - max-fold-count
+    from optimization_validator.cross_validate import curated_blocks_equalized
+    # 6 examples across 3 folds with counts {0:3, 1:2, 2:1}; T=6, max=3 -> N=3
+    bench2 = pd.DataFrame({
+        "peripheral": ["p"]*6, "register": [f"r{i}" for i in range(6)],
+        "fold": [0, 0, 0, 1, 1, 2],
+    })
+    cur2 = [{"peripheral": "p", "register": f"r{i}", "key": "size", "value": "32",
+             "is_true": True, "datasheet_excerpt": f"reg r{i} is 32-bit"} for i in range(6)]
+    blocks, N, counts, sizes = curated_blocks_equalized(cur2, bench2, k=3)
+    check(counts == {0: 3, 1: 2, 2: 1}, f"per-fold counts computed ({counts})")
+    check(N == 3, f"N = total(6) - max-fold-count(3) = 3 (got {N})")
+    check(set(sizes.values()) == {3}, f"every fold uses exactly N=3 examples ({sizes})")
+    # fold 0's block must exclude r0/r1/r2 (its own), so it can only be r3/r4/r5
+    check(all(f"reg r{i}" not in blocks[0] for i in (0, 1, 2)),
+          "fold 0 block excludes all its own-fold examples")
+
 
 def test_operational_gate():
     print("\n== operational gate / queue ==")

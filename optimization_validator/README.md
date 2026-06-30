@@ -121,6 +121,14 @@ authoritative spec + full results + divergence log live in
    pass `--curated-examples <file>` and the Validator is re-run with those grounded
    examples to measure the lift. Per-fold confusion matrices aggregate → α, β, F1
    (reported baseline vs curated).
+   - **No-leakage + equal-count curation.** The curated pass is evaluated **per fold**:
+     for held-out fold *f* the block uses only examples whose register is **not** in fold
+     *f* (an example never judges its own register), and every fold is capped to the same
+     count **N = total − max-fold-count** (override `--curated-per-fold`), sampled
+     deterministically — so the folds are comparable. Balanced filling (≈equal per fold)
+     keeps `max-fold-count` low → larger N → more of your curation effort is used. The
+     `curated_examples/<vendor>.json` draft is **grouped by fold** (each entry tagged with
+     its seed-0 fold) so you can fill ≥N-min per fold; runtime recomputes folds per seed.
 5. **Operational gate + ranked review queue** (the system this benchmark stands in for).
    The pipeline's real use is: generator candidates → Validator → whatever it gates out
    (V=0) is **dropped unseen**, and the survivors (V=1) are **ranked by confidence** for a

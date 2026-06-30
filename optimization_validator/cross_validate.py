@@ -365,15 +365,73 @@ def render_curated_examples(curated: list) -> str:
     return "\n".join(lines)
 
 
-def load_curated_examples(path: Optional[str]) -> str:
-    """Load a per-vendor curated-examples JSON ({"examples": [...]} or a bare list) and
-    render it to a prompt block. Returns "" if path is empty/missing/uncurated."""
+def load_curated_examples_raw(path: Optional[str]) -> list:
+    """Load the list of curated examples (dicts) from a per-vendor JSON
+    ({"examples": [...]} or a bare list), keeping only entries with a datasheet_excerpt.
+    Returns [] if path is empty/missing."""
     if not path or not os.path.exists(path):
-        return ""
+        return []
     with open(path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
     curated = data.get("examples", []) if isinstance(data, dict) else data
-    return render_curated_examples(curated)
+    return [c for c in curated if isinstance(c, dict) and str(c.get("datasheet_excerpt") or "").strip()]
+
+
+def load_curated_examples(path: Optional[str]) -> str:
+    """Load a per-vendor curated-examples JSON and render it to a single prompt block
+    (the full set; for per-fold-excluded blocks see curated_block_for_fold). "" if none."""
+    return render_curated_examples(load_curated_examples_raw(path))
+
+
+def _example_fold_map(curated: list, benchmark: pd.DataFrame) -> dict:
+    """(peripheral, register) -> fold, restricted to registers that have curated examples."""
+    reg_fold = {(r["peripheral"], r["register"]): r["fold"]
+                for r in benchmark[["peripheral", "register", "fold"]].drop_duplicates().to_dict("records")}
+    return reg_fold
+
+
+def curated_block_for_fold(curated: list, benchmark: pd.DataFrame, held_out_fold) -> str:
+    """Render the curated examples to use when evaluating `held_out_fold`: every example
+    EXCEPT those whose (peripheral, register) belongs to that fold — so a held-out
+    register's own example never leaks into its evaluation (examples come only from the
+    training folds). Examples whose register isn't in the benchmark are kept (no fold)."""
+    reg_fold = _example_fold_map(curated, benchmark)
+    keep = [e for e in curated
+            if reg_fold.get((e.get("peripheral"), e.get("register"))) != held_out_fold]
+    return render_curated_examples(keep)
+
+
+def curated_blocks_equalized(curated: list, benchmark: pd.DataFrame, k: int,
+                             n_per_fold: Optional[int] = None, seed: int = 0):
+    """Build one curated block PER held-out fold, each using the SAME number of examples.
+
+    For held-out fold f the training pool is the examples NOT in fold f (size T - c_f,
+    where c_f = examples whose register is in fold f). To give every fold an equal count
+    we cap to N = min_f pool = T - max_f(c_f) (override with `n_per_fold`), and sample N
+    from each fold's pool deterministically. This both prevents a held-out register's own
+    example from leaking into its fold AND keeps every fold's example count identical, so
+    the per-fold confusion matrices are comparable. Returns
+    (blocks: {fold: str}, N: int, counts: {fold: c_f}, sizes: {fold: used}).
+    """
+    import random as _random
+    reg_fold = _example_fold_map(curated, benchmark)
+    tagged = [(e, reg_fold.get((e.get("peripheral"), e.get("register")))) for e in curated]
+    counts = {f: sum(1 for _, fold in tagged if fold == f) for f in range(k)}
+    total = len(curated)
+    if n_per_fold is None:
+        n_per_fold = total - (max(counts.values()) if counts else 0)
+    n_per_fold = max(0, n_per_fold)
+
+    blocks, sizes = {}, {}
+    for f in range(k):
+        pool = [e for e, fold in tagged if fold != f]   # examples from the training folds
+        pool = sorted(pool, key=lambda e: (str(e.get("peripheral", "")), str(e.get("register", "")),
+                                           str(e.get("key", "")), str(e.get("value", ""))))
+        _random.Random(seed).shuffle(pool)              # deterministic, representative subset
+        chosen = pool[:n_per_fold]
+        blocks[f] = render_curated_examples(chosen)
+        sizes[f] = len(chosen)
+    return blocks, n_per_fold, counts, sizes
 
 
 def export_curation_candidates(eval_df: pd.DataFrame, path: str, max_per_class: int = 40) -> int:
@@ -848,6 +906,7 @@ def run_model(
     price_out=None,
     price_cached_in=None,
     curated_examples_path: Optional[str] = None,
+    curated_per_fold: Optional[int] = None,
 ) -> dict:
     """End-to-end for one model.
 
@@ -897,15 +956,32 @@ def run_model(
     print(f"[{model_name}] exported {n_cand} curation candidates -> "
           f"curation_candidates_{model_name}.json")
 
-    # Pass 2 (curated): only if a curated-examples file is provided.
-    curated_block = load_curated_examples(curated_examples_path)
-    if curated_block:
-        n_ex = curated_block.count("Example ")
-        print(f"[{model_name}] pass 2: curated evaluation ({n_ex} examples from {curated_examples_path})")
-        curated_eval = evaluate_benchmark(
-            benchmark, model_name, retrieve_fn, reasoning_effort=reasoning_effort,
-            max_per_call=max_per_call, access_legend=access_legend, use_alt_name=use_alt_name,
-            usage_sink=usage_rows, extra_system_text=curated_block, progress_label=" curated")
+    # Pass 2 (curated): only if a curated-examples file is provided. Evaluated PER FOLD,
+    # excluding any curated example whose register is in the held-out fold, so a held-out
+    # register's own example never leaks into its evaluation (examples come only from the
+    # training folds — the same no-contamination rule the threshold tuning uses).
+    curated_examples = load_curated_examples_raw(curated_examples_path)
+    curated_block = render_curated_examples(curated_examples)  # full set, for provenance
+    if curated_examples:
+        full = benchmark.reset_index(drop=True).copy()
+        full["row_id"] = full.index
+        # Per-fold blocks: held-out fold's own examples excluded AND every fold capped to
+        # the same count (N = total - max-fold-count) so the folds are comparable.
+        blocks, n_eq, counts, sizes = curated_blocks_equalized(
+            curated_examples, full, k, n_per_fold=curated_per_fold, seed=seed)
+        print(f"[{model_name}] pass 2: curated evaluation ({len(curated_examples)} examples, "
+              f"per-fold counts {counts}); using N={n_eq}/fold (held-out fold excluded, equalized)")
+        parts = []
+        for f in sorted(full["fold"].unique()):
+            test = full[full["fold"] == f]
+            if len(test) == 0:
+                continue
+            parts.append(evaluate_rows(
+                test, model_name, retrieve_fn, reasoning_effort,
+                extra_system_text=blocks.get(f, ""), progress_label=f" curated/fold{f}",
+                max_per_call=max_per_call, access_legend=access_legend,
+                use_alt_name=use_alt_name, usage_sink=usage_rows))
+        curated_eval = pd.concat(parts, ignore_index=True)
         curated_cv = cross_validate(curated_eval, k=k, tuner=tuner)
     else:
         if curated_examples_path:
@@ -1039,6 +1115,9 @@ def main():
                     help="path to a per-vendor curated-examples JSON (datasheet-grounded "
                          "examples) for the second pass; omit to run baseline-only and "
                          "export curation candidates")
+    ap.add_argument("--curated-per-fold", type=int, default=None,
+                    help="examples per held-out fold for the curated pass (default: "
+                         "total - max-fold-count, so every fold uses an equal count)")
     ap.add_argument("--out-root", default=None,
                     help="output root (default optimization_validator/<device>/cross_validation)")
     args = ap.parse_args()
@@ -1079,7 +1158,8 @@ def main():
             target_precision=args.target_precision, use_alt_name=args.use_alt_name,
             price_in=args.price_in, price_out=args.price_out,
             price_cached_in=args.price_cached_in,
-            curated_examples_path=args.curated_examples)
+            curated_examples_path=args.curated_examples,
+            curated_per_fold=args.curated_per_fold)
         return
 
     print(f"Running cross-validation for {len(models)} model(s): "
@@ -1094,7 +1174,8 @@ def main():
             target_precision=args.target_precision, use_alt_name=args.use_alt_name,
             price_in=args.price_in, price_out=args.price_out,
             price_cached_in=args.price_cached_in,
-            curated_examples_path=args.curated_examples)
+            curated_examples_path=args.curated_examples,
+            curated_per_fold=args.curated_per_fold)
 
 
 if __name__ == "__main__":
