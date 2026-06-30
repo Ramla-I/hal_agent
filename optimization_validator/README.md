@@ -282,6 +282,13 @@ program or accept `--retrieval openai`) and real NXP access notations in
 `access_notations.json` (currently stubs).
 
 ### OPEN TODOS
+- [ ] **Wire curated examples into the production validator (`core/s4_validator.py`).**
+      Curated examples currently live only in the *measurement* harness (`cross_validate`);
+      deployment doesn't load them. To deploy the validator we benchmarked, `s4` must load
+      `curated_examples/<vendor>.json` and inject the **full** set (no fold exclusion / no
+      equalisation — those are measurement-only) into the batched system prompt for the
+      vendor it's running on. Without this, the production validator runs the *baseline*
+      config, not the *curated* one we report.
 - [ ] **Re-measure on the merged 3,356-row rm0041 slice** (see warning above) and refresh
       the results table; the prior numbers are on the smaller pre-merge slice.
 - [x] **Use `alt_name` to cut name-mismatch false negatives** — done (see *Name aliasing*
