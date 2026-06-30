@@ -38,6 +38,34 @@
     "seed": 0,
     "corruption_fraction": 0.3,
     "est_cost_usd": 2.7612818999999997,
-    "note": "Single-seed estimate unless a seed-variance (E2) range is recorded."
+    "note": "3-seed (0,1,2) variance recorded in seed_variance. Curated yield mean\u00b1std = 0.698\u00b10.007; curation lift \u0394yield = -0.012\u00b10.009.",
+    "seed_variance": {
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "baseline_yield": {
+        "mean": 0.7104,
+        "std": 0.0062
+      },
+      "curated_yield": {
+        "mean": 0.6981,
+        "std": 0.0071
+      },
+      "curation_delta_yield": {
+        "mean": -0.0123,
+        "std": 0.0087,
+        "range": [
+          -0.0196,
+          0.0
+        ]
+      },
+      "curation_delta_f1": {
+        "mean": -0.008,
+        "std": 0.0056
+      },
+      "curated_precision_mean": 0.9489
+    }
   }
 }
