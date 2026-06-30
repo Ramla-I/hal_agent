@@ -1,0 +1,43 @@
+{
+  "vendor": "stm",
+  "device": "rm0041",
+  "model": "gpt-oss-120b",
+  "config_to_freeze": {
+    "curated_examples": "curated_examples/stm.json",
+    "use_alt_name": true,
+    "objective": "precision",
+    "target_precision": 0.95
+  },
+  "deployment_threshold": 0.98,
+  "threshold_stability": {
+    "per_fold_tau": [
+      0.98,
+      0.97,
+      0.98,
+      0.98,
+      0.97
+    ],
+    "min": 0.97,
+    "max": 0.98,
+    "std": 0.0049
+  },
+  "instrument": {
+    "alpha_sensitivity": 0.6887933351249664,
+    "beta_specificity": 0.911875
+  },
+  "measured_on_dev_device": {
+    "gate_precision": 0.9478550295857988,
+    "yield_recall": 0.6887933351249664,
+    "f1": 0.7978210116731518,
+    "validated_precision": 0.9478550295857988,
+    "n_invariants": 5321,
+    "config": "curated"
+  },
+  "provenance": {
+    "source_run": "optimization_validator/stmrm0041_run/curated/gpt-oss-120b",
+    "seed": 0,
+    "corruption_fraction": 0.3,
+    "est_cost_usd": 2.7612818999999997,
+    "note": "Single-seed estimate unless a seed-variance (E2) range is recorded."
+  }
+}
