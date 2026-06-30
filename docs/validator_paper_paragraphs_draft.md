@@ -79,12 +79,21 @@ positives and false negatives) as **curation candidates**, each listing the inva
 validator's wrong verdict, and the ground-truth value; a human selects the instructive
 ones and supplies, for each, the **supporting datasheet excerpt** and the correct
 conclusion. These curated examples—invariant *plus its datasheet evidence and reasoning*—
-are added to the prompt, and a second pass re-evaluates with them. Grounding each example
-in a real datasheet excerpt teaches the model *how* to reach the verdict, not merely what
-it is, and because a vendor's devices share documentation conventions the curation is
-**amortized across the manufacturer**: it is done once and reused for that vendor's other
-devices, so the extra human effort and the slower two-pass run are paid a single time per
-vendor. We report the validator both before and after curation to isolate its effect.
+are added to the prompt for a second pass, **cross-validated with the same train/test
+discipline as the threshold**: when scoring a held-out fold the curated examples are drawn
+only from the *training* folds — an example never grounds the evaluation of its own
+register — and every fold is given an **equal number** of them (capped to
+`total − max-fold-count`, sampled deterministically) so the per-fold confusion matrices
+stay comparable. The threshold is then re-tuned on the curated scores, so the baseline and
+curated configurations are each reported at *their own* 95%-precision operating point.
+Grounding each example in a real datasheet excerpt teaches the model *how* to reach the
+verdict, not merely what it is, and because a vendor's devices share documentation
+conventions the curation is **amortized across the manufacturer**: it is done once and
+reused for that vendor's other devices, so the extra human effort and the slower two-pass
+run are paid a single time per vendor. We report the validator both before and after
+curation to isolate its effect. (At *deployment* the folds are dropped entirely — one
+curated set and one threshold are applied to a new device; the fold machinery exists only
+to measure that deployed validator without contamination.)
 
 ## 3. Reported metrics
 
