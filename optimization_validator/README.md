@@ -304,23 +304,22 @@ program or accept `--retrieval openai`) and real NXP access notations in
       processes `gpioa`, `gpiob`, … as separate tasks, so the validator validates each in
       production. This is the representative population (no novel-family-generalization
       caveat applies for the operational per-chip precision/yield estimate).
-- [ ] **Tune the number of curated examples** (see B5). Each grounded example (invariant +
-      datasheet excerpt + reasoning) is ~60–120 tokens × every call, so find the smallest
-      curated set that keeps the lift; drop near-duplicate / low-information examples.
 - [ ] **Fill in real NXP / TI access notations** in `optimization_validator/access_notations.json`
       (currently stubs) when ke04 / msp430g2 slices are benchmarked.
 - [ ] **Benchmark the held-out vendors** (NXP `ke04`, then TI) — verified slices exist;
       tests whether rm0041 numbers transfer. Needs each device's chunks/Chroma + an
       OpenEvolve program (or `--retrieval openai`).
+- [ ] **Device-to-device transfer within a vendor** (the amortization claim; experiment
+      C2). **Freeze** the validator calibrated on one device — its curated
+      `curated_examples/<vendor>.json` *and* the chosen threshold — and benchmark it on a
+      **second verified datasheet of the same vendor**, to check the precision/yield holds
+      without re-tuning. Same-family second device (e.g. another STM32F1) is the trivial
+      sanity check; the real test is **cross-family, same vendor** (rm0041 → rm0090),
+      since same-family parts are near-identical. Needs the second device's verified slice
+      annotated + its chunks/Chroma + retrieval program.
 - [ ] **Genuine calibration test for π**: measure α/β on the 30% benchmark, apply to a
       held-out slice with a *different* corruption rate (e.g. 50%), check π recovers
       ~0.50. Only this exercises the correction (within-run π is an identity).
-- [ ] **Access FP tradeoff**: the legend lifts recall but accepts a few more corrupted
-      access values (gpt-5.5 β 0.909→0.897). Consider a stricter legend wording or a
-      specificity-aware threshold objective if precision matters more downstream.
-- [ ] **Field-table retrieval misses**: gpt-oss access FN are partly fields whose
-      bit-table isn't retrieved (legend can't help). Revisit retrieval granularity.
-- [ ] **Second-model cost**: gpt-5.5 sweep ≈ 15 min/run; budget before broad sweeps.
 
 ### `PLOT_EXPERIMENT_SCATTER.PY`
 Creates a scatter plot of total time vs F1 score, with point size proportional

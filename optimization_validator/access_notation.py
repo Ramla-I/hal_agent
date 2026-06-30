@@ -88,12 +88,16 @@ def access_legend(vendor: str = "default") -> str:
     header = f"# ACCESS-TYPE NOTATION ({key.upper()})"
     return (
         f"{header}\n"
-        "The datasheet may denote register/field access with vendor-specific "
-        "abbreviations. Treat the following as EQUIVALENT to the canonical access type "
-        "when validating an `access` invariant:\n"
+        "This is a NOTATION KEY only: it tells you which canonical access type each "
+        "vendor abbreviation denotes. Use it to TRANSLATE the datasheet's notation — it "
+        "does NOT relax your scrutiny of the `access` claim.\n"
         + "\n".join(lines)
-        + "\nA bit shown as e.g. `rc_w0` (read, cleared by writing 0) is access "
-        "`read-write` — it is both readable and writable. Do NOT reject a correct "
-        "canonical access value just because the datasheet writes it with one of these "
-        "codes; conversely, a genuinely different access type is still wrong."
+        + "\nHow to apply it: find the field's access notation in the datasheet, "
+        "translate THAT notation to its canonical type using the key above, then accept "
+        "the invariant only if the claimed value equals that translated type. A bit shown "
+        "as `rc_w0` (read, cleared by writing 0) is `read-write`, so a claim of "
+        "`read-write` is correct — but if the datasheet's notation translates to a "
+        "DIFFERENT canonical type than the claimed value (e.g. the field is read-only and "
+        "the claim says read-write), it is still WRONG and you must reject it. The key "
+        "resolves notation, not whether the access type itself is right."
     )
