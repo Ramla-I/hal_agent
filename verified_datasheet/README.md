@@ -33,12 +33,15 @@ Three vendors × two devices each. The two devices per vendor are deliberately f
 
 ## Scope: layout only
 
-These slices cover **register-layout invariants** only. Six keys:
+These slices cover **register-layout invariants** only. Seven keys:
 
 | Level | Keys |
 |---|---|
+| peripheral | `base_address` |
 | register | `address_offset`, `reset_value`, `size` |
 | field | `bit_offset`, `bit_width`, `access` |
+
+Every peripheral gets one `base_address` row (register/field empty). A register's absolute address is `base_address + address_offset`, so recording the base once per peripheral keeps register offsets relative (as the SVD stores them) while still pinning the absolute layout.
 
 **Out of scope (by design):**
 - **Enumerated values** — omitted for now; add a separate optional pass if a quantitative enum-bug claim is ever needed.
@@ -49,12 +52,12 @@ These slices cover **register-layout invariants** only. Six keys:
 ```
 verified_datasheet/
 ├── README.md
-├── annotate.py                          # the tool — build a verified datasheet (use this)
-├── create_digital_datasheet.py          # legacy: seed a comparison CSV from SVD + agent output
-├── correlate_digital_with_pdf_datasheet.py   # legacy/DEPRECATED — anchored, do not use (see below)
-├── retrieve_checked_values_from_csv.py  # utility: extract only the checked (correct_value) rows
+├── annotate.py                # the tool — build/resume a verified datasheet (use this)
+├── expand_derived.py          # finalization — materialize derivedFrom peripherals in a complete slice
+├── overview.py                # report annotation progress for a slice
+├── quickstart_*.py            # thin per-device wrappers around annotate.py (ke04, rm0041, rm0394, k64)
 ├── stm/
-│   └── rm0041_stm32f100.csv             # one verified datasheet per device, directly under the vendor
+│   └── rm0041_stm32f100.csv   # one verified datasheet per device, directly under the vendor
 └── nxp/
     └── ke04_mke04z4.csv
 ```
@@ -66,17 +69,17 @@ Tall — one row per invariant cell — keyed by the **SVD's** `(peripheral, reg
 
 | column | meaning |
 |---|---|
-| `peripheral`, `register`, `field_name`, `key` | the SVD-keyed cell identity (`field_name` empty for register-level keys) |
+| `peripheral`, `register`, `field_name`, `key` | the SVD-keyed cell identity (`field_name` empty for register-level keys; `register` **and** `field_name` empty for the peripheral-level `base_address` key) |
 | `alt_name` | the field/register's name **as printed in the datasheet**, when it differs from the SVD's — e.g. SVD `bkp.dr1.d1` is just `D` in the datasheet (the SVD suffixed it to disambiguate per-register). Recorded for provenance only; the row stays keyed by the SVD name so the diff join is unaffected. Empty when the names match. |
 | `correct_value` | **the human-verified datasheet value** (canonical form); the column the diff pipeline reads |
 | `svd_value` | the value the SVD asserts (shown as the confirm-or-override default) |
 | `agent_value` | the generator's value — stored only to *target* blind annotation at disagreements; **never shown during annotation** |
 | `status` | `verified` · `datasheet-ambiguous` · `not-specified` · `skipped` · *(empty = pending)* |
 | `page` | best-effort hint — the first page where the register name appears (you may navigate elsewhere in Preview) |
-| `set_method` | how the value was set: `human-verified` · `overridden` · `blind` · `imported` |
-| `derived_from` | empty for normal rows; on a **marker row** (one per `derivedFrom` peripheral) it names the prototype, e.g. `gpiob → gpioa` |
+| `set_method` | how the value was set: `human-verified` · `overridden` · `blind` · `imported` · `derived-expanded` |
+| `derived_from` | empty for normal rows; on a `derivedFrom` peripheral's rows it names the prototype, e.g. `gpiob → gpioa` |
 
-Dedup is recorded **in the CSV**: each `derivedFrom` peripheral gets one compact **marker row** (only `peripheral` + `derived_from` set, `status=derived`) instead of repeating the prototype's rows. The diff expands these against the prototype's verified values.
+Dedup is recorded **in the CSV**: each `derivedFrom` peripheral is annotated once via its prototype and kept compact — it carries only its own `base_address` row (with `derived_from` naming the prototype) plus one **marker row** (`status=derived`, `derived_from` set) instead of repeating the prototype's register/field rows. `expand_derived.py` (below) materializes the inheritance when a slice is finished; the diff pipeline reads the expanded output.
 
 ### What `set_method` means
 
