@@ -29,10 +29,10 @@ sys.path.insert(0, HERE)
 
 import annotate  # noqa: E402  (path set above)
 
-SVD = os.path.join(ROOT, "devices/nxp/ke04/svd/MKE04Z4.xml")
-PDF = os.path.join(ROOT, "devices/nxp/ke04/KE04.pdf")
-OUT = os.path.join(HERE, "nxp/ke04_mke04z4.csv")
-SPREAD = "3000"
+SVD = os.path.join(ROOT, "devices/nxp/k64/svd/MK64F12.xml")
+PDF = os.path.join(ROOT, "devices/nxp/k64/K64.pdf")
+OUT = os.path.join(HERE, "nxp/k64_mk64f12.csv")
+SPREAD = "500"
 
 if __name__ == "__main__":
     for label, path in (("SVD", SVD), ("PDF", PDF)):
