@@ -1,7 +1,9 @@
 # Migrating device assets (PDFs + SVDs)
 
-`.gitignore` excludes `devices/**/*.pdf` and `devices/**/*.svd`, so the ~2.4 GB of
-datasheets and SVD files under `devices/` **do not travel with `git clone`**. To move
+`.gitignore` excludes `devices/**/*.pdf`, `devices/**/*.svd`, `devices/**/*.xml`
+(SVDs and device-mapping files) and `devices/**/*.zip` (vendor SDK downloads), so the
+~2.4 GB of datasheets and register descriptions under `devices/` **do not travel with
+`git clone`** (SDK zips are ignored but not archived). To move
 the repo to another server without losing them, they are bundled into
 **per-manufacturer archives** published as **GitHub Release assets**, and restored on
 the new machine from a committed manifest.
