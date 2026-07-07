@@ -5,7 +5,7 @@ example, writes a read/write-with-clear bit as `rc_w0`). The verified datasheets
 only the canonical CMSIS-style labels `read-write` / `read-only` / `write-only`. Without
 a translation the Validator rejects a correct `read-write` invariant simply because the
 datasheet text says `rc_w0` — this was the single largest residual false-negative class
-for *both* models benchmarked (see docs/validator_paper_plan.md).
+for *both* models benchmarked (see docs/validator_plan.md).
 
 This module turns the editable mapping in `access_notations.json` into:
   * access_legend(vendor)  -> prompt text telling the model which datasheet codes map to

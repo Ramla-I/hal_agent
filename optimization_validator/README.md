@@ -38,9 +38,9 @@ testing. Rows with an empty `correct_value` are dropped (never human-confirmed).
 ## VALIDATOR CROSS-VALIDATION (paper §"Benchmarking the Validator as a Noisy Labeler")
 
 Benchmark the Validator as a noisy binary labeler with k-fold cross-validation at
-(Peripheral, Register) granularity, then calibrate downstream measurements. The
-authoritative spec + full results + divergence log live in
-`docs/validator_paper_plan.md`; this is the operational summary.
+(Peripheral, Register) granularity, then calibrate downstream measurements. The plan +
+TODOs live in `docs/validator_plan.md` and measured results in `stmrm0041_run/RESULTS.md`;
+this is the operational summary.
 
 ### Current design (pipeline)
 
