@@ -1,7 +1,9 @@
 # OPTIMIZATION VALIDATOR
 
-Tools and results for benchmarking validator accuracy, cost, and latency across
-models and batching configurations.
+Benchmark and tune the **Validator** (the pipeline's precision filter) as a noisy binary
+labeler: k-fold accuracy/calibration on a verified datasheet, human-curated
+datasheet-grounded examples, usage/cost, and the frozen per-device **deployment
+threshold + validator card** to apply on unverified devices.
 
 ## DIRECTORY STRUCTURE
 
@@ -15,13 +17,18 @@ optimization_validator/
 |__ access_notation.py           # vendor access-notation legend
 |__ access_notations.json        # editable vendor -> notation map
 |__ create_test_set.py           # standalone corrupted-test-set builder (corruption-backed)
+|__ validator_card.py            # build a per-device card: deployment threshold + alpha/beta
 |__ curated_examples/
 |   |__ README.md
 |   |__ <vendor>.json            # human-curated, datasheet-grounded examples
+|__ validator_cards/
+|   |__ <vendor>_<device>_<model>.json   # frozen calibration to apply on other devices
 |__ tests/test_offline.py        # offline unit tests (no network)
 |__ <device>_run/                # run outputs (e.g. stmrm0041_run/), via --out-root
     |__ baseline/<model>/        # baseline pass + curation_candidates_<model>.json
     |__ curated/<model>/         # baseline-vs-curated + review queue / precision@k / usage
+    |__ seed<N>/<model>/         # seed-variance runs (E2)
+    |__ RESULTS.md               # measured results (baseline/cross-model/curation/variance)
 ```
 
 > The legacy validator-optimization tooling (`validator_optimization.py`,
@@ -116,6 +123,14 @@ this is the operational summary.
    *different* r̂ (see TODO), and even then it's an estimate with a confidence interval.
    Operationally (gate-and-review) π/count-correction is not on
    the critical path; the gate precision + yield + ranking are the load-bearing numbers.
+7. **Freeze for deployment** (`summary.deployment` + `validator_card.py`): the per-fold τ's
+   are for measurement; deployment uses **one** τ — the full-data cutoff hitting the target
+   precision, emitted as `summary.deployment.threshold`. `validator_card.py` distils a run
+   into `validator_cards/<vendor>_<device>_<model>.json`: the **deployment threshold** (freeze
+   + apply on unverified devices — a candidate enters the review queue iff its pseudo-score ≥
+   τ, which sizes the queue), the transferable **α/β**, the per-fold τ **stability**, the
+   config to freeze (curated set, alias, target), and the held-out metrics to expect on
+   transfer. This is the per-vendor amortized asset.
 
 ### Access-notation legend (vendor-extensible)
 
@@ -164,13 +179,13 @@ scripts/docker_run.sh run -m optimization_validator.tests.test_offline          
 scripts/docker_run.sh run -m optimization_validator.cross_validate --smoke --model gpt-oss-120b   # tiny e2e
 
 # Pass 1 (baseline) — also exports curation_candidates_<model>.json:
-scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.5 --k 5 \
+scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.4 --k 5 \
     --retrieval openevolve --vendor stm --objective precision --target-precision 0.95 \
     --out-root optimization_validator/stmrm0041_run --price-in <$/1M> --price-out <$/1M>
 
 # [human] curate candidates -> optimization_validator/curated_examples/stm.json
 # Pass 2 (curated) — add the grounded examples, measure the lift:
-scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.5 --k 5 \
+scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.4 --k 5 \
     --retrieval openevolve --vendor stm --out-root optimization_validator/stmrm0041_run \
     --curated-examples optimization_validator/curated_examples/stm.json
 ```
@@ -187,31 +202,34 @@ precision@top-decile + a `usage` block: tokens + `$`), `usage_<model>.csv` (per-
 `precision_at_k_<model>.csv` (review-top-X% → catch-Y% curve), `calibration_<model>.csv`
 (confidence reliability bins).
 
-### Results so far (rm0041, k=5; OpenEvolve + chunked batching)
-> ⚠️ Measured on the **pre-merge** rm0041 slice (~2,459 verified invariants). The merged
-> verified datasheet now yields **3,356** `status=verified` rows, so these numbers should
-> be **re-measured** before citing.
-| Model | F1 (tuned) | validated precision | raw sens. | β |
-|---|---|---|---|---|
-| gpt-oss-120b | 0.91 | 0.95 | 0.85 | 0.90 |
-| gpt-5.5 (+ access legend) | **0.975** | 0.96 | 0.98 | 0.90 |
+### Results (rm0041, k=5, expanded **5,321** invariants, 3 seeds; curated config)
+Full numbers + seed variance in `stmrm0041_run/RESULTS.md`; frozen config in `validator_cards/`.
+
+| model | gate precision | yield (mean±std) | F1 | deploy τ | total cost |
+|---|---|---|---|---|---|
+| gpt-oss-120b (Groq) | 0.948 | 0.71 ± 0.01 | 0.80 | 0.98 | ~$9 |
+| gpt-5.4 (OpenAI) | 0.951 | 0.76 ± 0.06 | 0.835 | 0.93 | ~$105 |
+
+- Gate precision holds ~0.95 out-of-sample for both, all seeds.
+- **Curation is model-dependent**: +0.026 ± 0.014 yield for gpt-5.4 (positive on all 3 seeds),
+  ~0 for gpt-oss-120b (non-positive on all 3). Access, the targeted class, wasn't the driver;
+  the grounded bit-tables lifted bit-field confidence.
+- **gpt-oss-120b is the stable, ~11× cheaper default**; gpt-5.4 has higher but seed-variable
+  yield (near a threshold cliff, τ 0.93 vs 0.98).
 
 ### EXPERIMENTS (validator paper)
 
 Status: ⬜ not started · 🟡 partial · ✅ done · 🔒 blocked. **★ = load-bearing for a paper claim.**
 
 **A. Headline metrics — the main result**
-- [ ] **★ A1. Per-vendor tuned metrics** — full k-fold after a tuning round on a
-      representative STM (rm0041, 5,321 invariants) and NXP (ke04, 1,952) → gate precision,
-      yield/recall, α, β, precision@k, calibration. STM runs now; **NXP 🔒 needs a retrieval
-      backend** (no OpenEvolve program for ke04 → evolve one or use `--retrieval openai`).
-- [ ] **A2. Cross-model** — gpt-oss-120b vs gpt-5.5 on both, so the headline isn't
-      model-specific. Runs now (STM).
+- [x] **★ A1. Per-vendor tuned metrics** — STM (rm0041) **done** (see Results); NXP (ke04)
+      🔒 still needs a retrieval backend (no OpenEvolve program for ke04 → evolve one or use
+      `--retrieval openai`).
+- [x] **A2. Cross-model** — gpt-oss-120b vs **gpt-5.4** on STM **done** (Results table).
 
 **B. Ablations that justify the design**
-- [ ] **B1. Curation lift (baseline vs curated)** — emitted automatically when pass 2 runs
-      (`summary_*` has baseline vs curated); quantifies what the human-curated,
-      datasheet-grounded examples buy. Requires a `curated_examples/<vendor>.json`.
+- [x] **B1. Curation lift (baseline vs curated)** — **done** (3 seeds): model-dependent,
+      +0.026±0.014 yield for gpt-5.4, ~0 for gpt-oss-120b.
 - [ ] **B2. `alt_name` on/off** (`--use-alt-name` / `--no-alt-name`) — lift vs specificity cost.
 - [ ] **B3. Access legend on/off** (`--vendor stm` / `none`) — re-measure on the merged slice.
 - [ ] **B4. Retrieval backend** — OpenEvolve vs OpenAI file_search; justifies the switch.
@@ -231,11 +249,11 @@ Status: ⬜ not started · 🟡 partial · ✅ done · 🔒 blocked. **★ = loa
       real external ground truth. Ongoing, not a one-shot run.
 
 **E. Characterization — cheap, high-value**
-- [ ] **E1. Per-invariant-class breakdown** — precision/recall per key (`address_offset`,
-      `reset_value`, `size`, `bit_offset`, `bit_width`, `access`); motivates per-class gating.
-      Mostly in `error_analysis_*.csv`, needs aggregation.
-- [ ] **E2. Seed variance / CIs** — multiple corruption seeds → confidence intervals on
-      α/β/precision for honest error bars.
+- [x] **E1. Per-invariant-class breakdown** — **done** (see RESULTS): `access` weakest
+      (recall ~0.65), `address_offset` strongest; ~41% of FNs are registers not in retrieved
+      context.
+- [x] **E2. Seed variance / CIs** — **done** (3 seeds): yield noise ~±0.01 (gpt-oss) vs
+      ±0.05 (gpt-5.4); stamped into the validator cards' `provenance`.
 
 **Prereqs before the NXP run (A1):** a retrieval backend for ke04 (evolve an OpenEvolve
 program or accept `--retrieval openai`) and real NXP access notations in
@@ -249,8 +267,8 @@ program or accept `--retrieval openai`) and real NXP access notations in
       equalisation — those are measurement-only) into the batched system prompt for the
       vendor it's running on. Without this, the production validator runs the *baseline*
       config, not the *curated* one we report.
-- [ ] **Re-measure on the merged 3,356-row rm0041 slice** (see warning above) and refresh
-      the results table; the prior numbers are on the smaller pre-merge slice.
+- [x] **Re-measure on the merged (expanded 5,321-row) rm0041 slice** — done (3 seeds, both
+      models; see Results + `stmrm0041_run/RESULTS.md`); the stale pre-merge table is replaced.
 - [x] **Use `alt_name` to cut name-mismatch false negatives** — done (see *Name aliasing*
       above): `--use-alt-name` adds a general structural-matching rule + a per-row
       `datasheet_name` hint. **Follow-ups:** (a) measure the ablation (`--no-alt-name`) to
