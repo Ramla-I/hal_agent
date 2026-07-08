@@ -594,51 +594,56 @@ def plan_order(rows, spread):
     """Order this session's pending cells for presentation.
 
     spread == 0 (default): worklist order — finish peripheral by peripheral.
-    spread == N > 0: equalize-then-round-robin across peripherals, by COMPLETION PROPORTION,
-    completing ONE WHOLE register at a time, until at least N cells are planned.
+    spread == N > 0: strict round-robin across peripherals, completing ONE WHOLE register
+    at a time, until at least N cells are planned.
 
-    Each step serves the peripheral with the LOWEST completion proportion (already-done +
-    planned-this-session, over its total cells) its next whole register. When proportions are
-    uneven this first lifts the laggards up to parity (a peripheral already further along is
-    not served until the others catch up to it); once even it naturally round-robins. So a
-    partial session leaves every peripheral at roughly the same completion, not just the first
-    few finished. Registers stay whole (one Preview jump); the cap is honoured at the register
-    boundary, so the plan may run a little past N rather than split a register.
+    Each step serves the peripheral with the FEWEST completed registers so far (already-done
+    + served-this-session), tie-broken by worklist order. So no peripheral gets its (k+1)-th
+    register until every peripheral with pending work has its k-th — a partial session touches
+    every peripheral (breadth-first) before going deep on any one, and a peripheral that is
+    already several registers ahead waits until the rest catch up. The base_address is a
+    peripheral-scope cell, not a register, so it does not count toward the round-robin.
+    Registers stay whole (one Preview jump); the cap is honoured at the register boundary, so
+    the plan may run a little past N rather than split a register.
     """
     from collections import OrderedDict
     pending = [r for r in rows if not r["status"]]
     if not spread:
         return pending
 
-    # per-peripheral totals and already-done counts (from the full worklist, in order)
-    total, done, order = OrderedDict(), {}, {}
+    # worklist order of peripherals + how many of each peripheral's registers are already
+    # fully annotated (the round-robin metric — base_address rows are not registers)
+    order, reg_states = OrderedDict(), OrderedDict()
     for r in rows:
         if r["status"] == STATUS_DERIVED:   # legacy marker rows are never annotated
             continue
         p = r["peripheral"]
-        if p not in total:
-            total[p], done[p], order[p] = 0, 0, len(order)
-        total[p] += 1
-        if r["status"]:
-            done[p] += 1
+        if p not in order:
+            order[p] = len(order)
+        if r["register"]:
+            reg_states.setdefault((p, r["register"]), []).append(r["status"])
+    served = {p: 0 for p in order}
+    for (p, _reg), states in reg_states.items():
+        if all(states):                        # a fully-annotated register
+            served[p] += 1
 
-    # per-peripheral queues of pending register-chunks, in worklist order
+    # per-peripheral queues of pending chunks (one WHOLE register each), in worklist order
     buckets = OrderedDict()
     for r in pending:
         buckets.setdefault(r["peripheral"], OrderedDict()).setdefault(r["register"], []).append(r)
-    queues = {p: list(regs.values()) for p, regs in buckets.items()}
+    queues = {p: list(regs.items()) for p, regs in buckets.items()}
 
-    planned = dict(done)                       # done count grows as we plan registers
     plan = []
     while len(plan) < spread:
         cands = [p for p in queues if queues[p]]
         if not cands:
             break
-        # lowest completion proportion first; stable tie-break by worklist order (round-robin)
-        p = min(cands, key=lambda p: (planned[p] / total[p], order[p]))
-        chunk = queues[p].pop(0)               # this peripheral's next WHOLE register
+        # fewest completed registers first; stable tie-break by worklist order (round-robin)
+        p = min(cands, key=lambda p: (served[p], order[p]))
+        reg, chunk = queues[p].pop(0)          # this peripheral's next WHOLE register
         plan.extend(chunk)
-        planned[p] += len(chunk)
+        if reg:                                # base_address chunk isn't a register
+            served[p] += 1
     return plan                                # whole registers only — never truncated mid-register
 
 
