@@ -44,7 +44,7 @@ queue by score is ranking by the model's confidence.
 "Run across models" is the `MODELS` list in __main__. In-context examples are
 human-curated once per manufacturer (scaffolded by the exported curation candidates +
 FP/FN error analysis); the only automated per-fold tuning here is the decision threshold
-(see docs/validator_plan.md).
+(see optimization_validator/README.md).
 """
 
 from __future__ import annotations

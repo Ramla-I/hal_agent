@@ -45,9 +45,20 @@ testing. Rows with an empty `correct_value` are dropped (never human-confirmed).
 ## VALIDATOR CROSS-VALIDATION (paper §"Benchmarking the Validator as a Noisy Labeler")
 
 Benchmark the Validator as a noisy binary labeler with k-fold cross-validation at
-(Peripheral, Register) granularity, then calibrate downstream measurements. The plan +
-TODOs live in `docs/validator_plan.md` and measured results in `stmrm0041_run/RESULTS.md`;
-this is the operational summary.
+(Peripheral, Register) granularity, then calibrate downstream measurements. Measured
+results are in `stmrm0041_run/RESULTS.md`; open work is in the TODOs at the end.
+
+### Purpose
+
+The Validator is a **precision filter upstream of human PR review**: it removes the
+generator's mistakes so the facts a human reviews (and we ultimately file as SVD/PAC
+corrections) are mostly true. Human review time is the bottleneck and a false PR to a
+maintainer is costly, so we operate at a **target precision (95%)** and rank survivors by
+confidence for top-down review. We benchmark precision **per vendor** on verified
+datasheets before trusting the Validator on that vendor's unverified devices — the
+per-vendor amortization that lets a fixed annotation cost cover many devices. For vendors
+with thin upstream communities (NXP, TI), this internal precision is the primary evidence
+that filed bugs are real, standing in for slow upstream merges.
 
 ### Current design (pipeline)
 
@@ -298,6 +309,11 @@ program or accept `--retrieval openai`) and real NXP access notations in
 - [ ] **Genuine calibration test for π**: measure α/β on the 30% benchmark, apply to a
       held-out slice with a *different* corruption rate (e.g. 50%), check π recovers
       ~0.50. Only this exercises the correction (within-run π is an identity).
+- [ ] **gpt-5.4 threshold instability**: its per-fold τ is bimodal (0.93 vs 0.98) → yield
+      swings ±0.05 across seeds; decide whether it's deployable with a frozen threshold or
+      needs a more stable objective (gpt-oss-120b is tight, ±0.01).
+- [ ] **Fold-3 hard cases**: recall craters on fold 3 for both models (~0.5), partly from
+      registers not present in the retrieved context. Revisit retrieval granularity.
 
 ## NOTES
 
