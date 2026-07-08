@@ -228,21 +228,15 @@ Full numbers + seed variance in `stmrm0041_run/RESULTS.md`; frozen config in `va
 - **gpt-oss-120b is the stable, ~11× cheaper default**; gpt-5.4 has higher but seed-variable
   yield (near a threshold cliff, τ 0.93 vs 0.98).
 
-### EXPERIMENTS (validator paper)
+### EXPERIMENTS — remaining (validator paper)
 
-Status: ⬜ not started · 🟡 partial · ✅ done · 🔒 blocked. **★ = load-bearing for a paper claim.**
-
-**A. Headline metrics — the main result**
-- [x] **★ A1. Per-vendor tuned metrics** — STM (rm0041) **done** (see Results); NXP (ke04)
-      🔒 still needs a retrieval backend (no OpenEvolve program for ke04 → evolve one or use
-      `--retrieval openai`).
-- [x] **A2. Cross-model** — gpt-oss-120b vs **gpt-5.4** on STM **done** (Results table).
+Status: ⬜ not started · 🔒 blocked. **★ = load-bearing for a paper claim.** Done —
+A1 headline metrics, A2 cross-model, B1 curation lift, E1 per-class, E2 seed variance —
+are in the Results table above and `stmrm0041_run/RESULTS.md`.
 
 **B. Ablations that justify the design**
-- [x] **B1. Curation lift (baseline vs curated)** — **done** (3 seeds): model-dependent,
-      +0.026±0.014 yield for gpt-5.4, ~0 for gpt-oss-120b.
 - [ ] **B2. `alt_name` on/off** (`--use-alt-name` / `--no-alt-name`) — lift vs specificity cost.
-- [ ] **B3. Access legend on/off** (`--vendor stm` / `none`) — re-measure on the merged slice.
+- [ ] **B3. Access legend on/off** (`--vendor stm` / `none`).
 - [ ] **B4. Retrieval backend** — OpenEvolve vs OpenAI file_search; justifies the switch.
 - [ ] **B5. Number of curated examples** — vary how many curated, datasheet-grounded
       examples go in the prompt; find where added examples stop helping vs prompt-size cost.
@@ -250,7 +244,7 @@ Status: ⬜ not started · 🟡 partial · ✅ done · 🔒 blocked. **★ = loa
 **C. Validity of the calibration — the scientific core**
 - [ ] **★ C1. Cross-distribution π test** — measure α/β at 30% corruption, apply to a slice
       at a *different* rate (e.g. 50%), check π̂ recovers ~0.50. The only experiment that
-      exercises Rogan–Gladen (within-run π is an identity). Runs now.
+      exercises Rogan–Gladen (within-run π is an identity).
 - [ ] **★ C2. Per-vendor transfer (amortization claim)** — calibrate/freeze on device 1,
       apply to device 2 of the same vendor (rm0041→rm0090, ke04→s32k116); check precision/
       yield holds. **🔒 second-device slices not annotated yet** (longest lead time).
@@ -259,15 +253,8 @@ Status: ⬜ not started · 🟡 partial · ✅ done · 🔒 blocked. **★ = loa
 - [ ] **D1. Validator-confirmed bugs vs upstream merges** (STM) — ties internal precision to
       real external ground truth. Ongoing, not a one-shot run.
 
-**E. Characterization — cheap, high-value**
-- [x] **E1. Per-invariant-class breakdown** — **done** (see RESULTS): `access` weakest
-      (recall ~0.65), `address_offset` strongest; ~41% of FNs are registers not in retrieved
-      context.
-- [x] **E2. Seed variance / CIs** — **done** (3 seeds): yield noise ~±0.01 (gpt-oss) vs
-      ±0.05 (gpt-5.4); stamped into the validator cards' `provenance`.
-
-**Prereqs before the NXP run (A1):** a retrieval backend for ke04 (evolve an OpenEvolve
-program or accept `--retrieval openai`) and real NXP access notations in
+**Prereqs for the NXP / held-out-vendor runs:** a retrieval backend for ke04 (evolve an
+OpenEvolve program or accept `--retrieval openai`) and real NXP access notations in
 `access_notations.json` (currently stubs).
 
 ### OPEN TODOS
@@ -278,21 +265,11 @@ program or accept `--retrieval openai`) and real NXP access notations in
       equalisation — those are measurement-only) into the batched system prompt for the
       vendor it's running on. Without this, the production validator runs the *baseline*
       config, not the *curated* one we report.
-- [x] **Re-measure on the merged (expanded 5,321-row) rm0041 slice** — done (3 seeds, both
-      models; see Results + `stmrm0041_run/RESULTS.md`); the stale pre-merge table is replaced.
-- [x] **Use `alt_name` to cut name-mismatch false negatives** — done (see *Name aliasing*
-      above): `--use-alt-name` adds a general structural-matching rule + a per-row
-      `datasheet_name` hint. **Follow-ups:** (a) measure the ablation (`--no-alt-name`) to
-      quantify the lift and the access-FP-style specificity cost; (b) `alt_name` coverage is
-      thin (9 rows in rm0041) and the per-row hint is an oracle unless (c) the **generator
-      emits the datasheet-printed name** in production, which would make the hint real —
-      worth doing.
-- [x] **Expand `derived` peripherals** — done (`expand_derived_rows`, default on): the
-      benchmark now materializes `derivedFrom` peripherals (rm0041: 30 → 48 peripherals,
-      3,356 → 5,321 invariants), matching what the generator actually extracts — it
-      processes `gpioa`, `gpiob`, … as separate tasks, so the validator validates each in
-      production. This is the representative population (no novel-family-generalization
-      caveat applies for the operational per-chip precision/yield estimate).
+- [ ] **Make `alt_name` production-real**: the per-row `datasheet_name` hint only helps in
+      the benchmark unless the **generator emits the datasheet-printed name** at extraction
+      time — add that so the hint transfers to deployment (the general aliasing rule already
+      does). (`alt_name` handling and derived-peripheral expansion themselves are done — see
+      *Name aliasing* and the pipeline above.)
 - [ ] **Fill in real NXP / TI access notations** in `optimization_validator/access_notations.json`
       (currently stubs) when ke04 / msp430g2 slices are benchmarked.
 - [ ] **Benchmark the held-out vendors** (NXP `ke04`, then TI) — verified slices exist;
