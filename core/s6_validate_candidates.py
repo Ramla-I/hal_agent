@@ -22,6 +22,14 @@ import sys
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# Put repo root + core/ on sys.path so `python core/s6_...py` resolves config,
+# s0_run_full_analysis, etc. (mirrors s0's bootstrap).
+_CORE_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_CORE_DIR)
+for _p in (_REPO_ROOT, _CORE_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 import tiktoken
 
 import config
@@ -36,7 +44,7 @@ from prompts.validator import (
     create_batched_validator_user_prompt,
 )
 from utils.parse_output import get_json_block_from_response
-from core.s0_run_full_analysis import (
+from s0_run_full_analysis import (
     resolve_device_paths, build_context_retrieval_params, apply_retrieval_override,
 )
 from applications.bug_finding.validate_candidates import (
@@ -151,8 +159,11 @@ def validate_run(ctx, repo_root: str, run_number: int, models: list,
     if not invs:
         return {"device": device, "run": run_number, "candidates": 0, "skipped": "no candidates"}
 
+    # Use the device's default retrieval (the local vector DB the runs built) —
+    # search_context (like the stock batched validator) supports it; OPENEVOLVE
+    # is not a search_context method. NOTE: the validator_card was calibrated with
+    # OpenEvolve retrieval, so the threshold is approximate here (recorded below).
     cr_params = build_context_retrieval_params(paths.device_dir, ctx)
-    cr_params = apply_retrieval_override(cr_params, "openevolve", device, repo_root)
 
     validator_dir = os.path.join(paths.agent_output_dir, "validator")
     true_count, false_count = run_validator_batched_resilient(
@@ -165,6 +176,7 @@ def validate_run(ctx, repo_root: str, run_number: int, models: list,
     _update_manifest(paths.agent_output_dir, {
         "candidate_validator_used": True,
         "candidate_validator_model": models[0],
+        "candidate_validator_retrieval": cr_params.context_retrieval_method.value,
         "candidate_validator_calibrated_for": calibrated_for,
         "candidate_validator_threshold": threshold,
         "candidate_validator_true": true_count,
@@ -186,8 +198,8 @@ def main() -> None:
     ap.add_argument("--parallel", type=int, default=1)
     args = ap.parse_args()
 
-    repo_root = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-    from core.s0_run_full_analysis import resolve_run_number
+    repo_root = _REPO_ROOT
+    from s0_run_full_analysis import resolve_run_number
 
     contexts = config.user_contexts
     if args.devices:
