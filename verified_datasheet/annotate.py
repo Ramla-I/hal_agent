@@ -196,6 +196,78 @@ def parse_svd_worklist(svd_path: str):
 
 
 # ---------------------------------------------------------------------------
+# SVD dim parsing (for %s expansion) — dim / dimIncrement / dimIndex per %s
+# register or field, keyed to the CSV convention (lowercased, prefix-stripped).
+# ---------------------------------------------------------------------------
+
+def parse_svd_dims(svd_path):
+    """Return (reg_dims, field_dims) for names containing '%s'.
+
+    reg_dims:   (peripheral, register)          -> {dim, dim_increment, dim_index}
+    field_dims: (peripheral, register, field)   -> {dim, dim_increment, dim_index}
+    Names are lowercased and register prefixes stripped to match the worklist/CSV.
+    derivedFrom peripherals are skipped (they inherit the prototype's layout).
+    """
+    root = _strip_ns(ET.parse(svd_path).getroot())
+    peripherals = root.find("peripherals")
+    reg_dims, field_dims = {}, {}
+    if peripherals is None:
+        return reg_dims, field_dims
+    for periph in peripherals.findall("peripheral"):
+        pname = (_text(periph, "name") or "").lower()
+        if not pname or periph.get("derivedFrom"):
+            continue
+        regs_elem = periph.find("registers")
+        if regs_elem is None:
+            continue
+        for reg in regs_elem.findall("register"):
+            rname = _strip_prefix((_text(reg, "name") or "").lower(), pname)
+            if not rname:
+                continue
+            if _text(reg, "dim") and "%s" in rname:
+                reg_dims[(pname, rname)] = dict(
+                    dim=_text(reg, "dim"),
+                    dim_increment=_text(reg, "dimIncrement"),
+                    dim_index=_text(reg, "dimIndex"),
+                )
+            fields_elem = reg.find("fields")
+            if fields_elem is None:
+                continue
+            for field in fields_elem.findall("field"):
+                fname = (_text(field, "name") or "").lower()
+                if _text(field, "dim") and "%s" in fname:
+                    field_dims[(pname, rname, fname)] = dict(
+                        dim=_text(field, "dim"),
+                        dim_increment=_text(field, "dimIncrement"),
+                        dim_index=_text(field, "dimIndex"),
+                    )
+    return reg_dims, field_dims
+
+
+def dim_index_labels(dim_index, dim):
+    """Expand an SVD dimIndex string into concrete labels for '%s' substitution.
+
+    Handles list form 'A,B' -> [A, B] and range form '1-4' / '10-18' -> [1..4].
+    Falls back to 0..dim-1 when dimIndex is absent."""
+    s = (dim_index or "").strip()
+    try:
+        n = int(dim)
+    except (TypeError, ValueError):
+        n = 0
+    if s and "," in s:
+        return [x.strip() for x in s.split(",") if x.strip()]
+    if s and "-" in s:
+        lo_s, hi_s = (x.strip() for x in s.split("-", 1))
+        try:
+            return [str(x) for x in range(int(lo_s), int(hi_s) + 1)]
+        except ValueError:
+            return [s]
+    if s:
+        return [s]
+    return [str(x) for x in range(n)]
+
+
+# ---------------------------------------------------------------------------
 # Datasheet text index — pick a good search term + page hint (no external index)
 # + agent values (internal, never shown)
 # ---------------------------------------------------------------------------
@@ -513,7 +585,7 @@ def print_command_key():
     print("  pn       mark the WHOLE peripheral not-specified (all its pending cells; e.g. NVIC mentioned but not detailed)")
     print("  r        record the datasheet's name for this field/register (alias; keeps SVD key)")
     print("  s        skip (leave pending for later)")
-    print("  q        save and quit")
+    print("  q        save and quit (offers to expand any fully-verified %s dim rows)")
     print("  ?        show this command key")
     print("  (blind mode: SVD value hidden — Enter re-searches; type the value you read)")
 
@@ -522,52 +594,264 @@ def plan_order(rows, spread):
     """Order this session's pending cells for presentation.
 
     spread == 0 (default): worklist order — finish peripheral by peripheral.
-    spread == N > 0: equalize-then-round-robin across peripherals, by COMPLETION PROPORTION,
-    completing ONE WHOLE register at a time, until at least N cells are planned.
+    spread == N > 0: strict round-robin across peripherals, completing ONE WHOLE register
+    at a time, until at least N cells are planned.
 
-    Each step serves the peripheral with the LOWEST completion proportion (already-done +
-    planned-this-session, over its total cells) its next whole register. When proportions are
-    uneven this first lifts the laggards up to parity (a peripheral already further along is
-    not served until the others catch up to it); once even it naturally round-robins. So a
-    partial session leaves every peripheral at roughly the same completion, not just the first
-    few finished. Registers stay whole (one Preview jump); the cap is honoured at the register
-    boundary, so the plan may run a little past N rather than split a register.
+    Each step serves the peripheral with the FEWEST completed registers so far (already-done
+    + served-this-session), tie-broken by worklist order. So no peripheral gets its (k+1)-th
+    register until every peripheral with pending work has its k-th — a partial session touches
+    every peripheral (breadth-first) before going deep on any one, and a peripheral that is
+    already several registers ahead waits until the rest catch up. The base_address is a
+    peripheral-scope cell, not a register, so it does not count toward the round-robin.
+    Registers stay whole (one Preview jump); the cap is honoured at the register boundary, so
+    the plan may run a little past N rather than split a register.
     """
     from collections import OrderedDict
     pending = [r for r in rows if not r["status"]]
     if not spread:
         return pending
 
-    # per-peripheral totals and already-done counts (from the full worklist, in order)
-    total, done, order = OrderedDict(), {}, {}
+    # worklist order of peripherals + how many of each peripheral's registers are already
+    # fully annotated (the round-robin metric — base_address rows are not registers)
+    order, reg_states = OrderedDict(), OrderedDict()
     for r in rows:
         if r["status"] == STATUS_DERIVED:   # legacy marker rows are never annotated
             continue
         p = r["peripheral"]
-        if p not in total:
-            total[p], done[p], order[p] = 0, 0, len(order)
-        total[p] += 1
-        if r["status"]:
-            done[p] += 1
+        if p not in order:
+            order[p] = len(order)
+        if r["register"]:
+            reg_states.setdefault((p, r["register"]), []).append(r["status"])
+    served = {p: 0 for p in order}
+    for (p, _reg), states in reg_states.items():
+        if all(states):                        # a fully-annotated register
+            served[p] += 1
 
-    # per-peripheral queues of pending register-chunks, in worklist order
+    # per-peripheral queues of pending chunks (one WHOLE register each), in worklist order
     buckets = OrderedDict()
     for r in pending:
         buckets.setdefault(r["peripheral"], OrderedDict()).setdefault(r["register"], []).append(r)
-    queues = {p: list(regs.values()) for p, regs in buckets.items()}
+    queues = {p: list(regs.items()) for p, regs in buckets.items()}
 
-    planned = dict(done)                       # done count grows as we plan registers
     plan = []
     while len(plan) < spread:
         cands = [p for p in queues if queues[p]]
         if not cands:
             break
-        # lowest completion proportion first; stable tie-break by worklist order (round-robin)
-        p = min(cands, key=lambda p: (planned[p] / total[p], order[p]))
-        chunk = queues[p].pop(0)               # this peripheral's next WHOLE register
+        # fewest completed registers first; stable tie-break by worklist order (round-robin)
+        p = min(cands, key=lambda p: (served[p], order[p]))
+        reg, chunk = queues[p].pop(0)          # this peripheral's next WHOLE register
         plan.extend(chunk)
-        planned[p] += len(chunk)
+        if reg:                                # base_address chunk isn't a register
+            served[p] += 1
     return plan                                # whole registers only — never truncated mid-register
+
+
+# ---------------------------------------------------------------------------
+# %s dim expansion — turn a verified '%s' register/field into its concrete
+# instances (OFR%s -> OFR1..OFR4), incrementing the offset by dimIncrement and
+# copying every other cell. Offered at end of session (on `q`).
+# ---------------------------------------------------------------------------
+
+def _inc_value(base_str, k, inc, key):
+    """base + k*inc, canonicalized for `key`. Copies verbatim if unparseable."""
+    try:
+        return canonical(key, str(int(base_str, 0) + k * inc))
+    except (ValueError, TypeError):
+        return base_str
+
+
+def _expand_alias(alt_name, label):
+    """Per-instance datasheet name from a '%s' rename: substitute the index label.
+
+    The rename convention for expandable rows is to carry '%s' (e.g. 'mode%s' ->
+    mode0, mode1, ...). An alias without '%s' is NOT expanded — a concrete alias such
+    as 'awd1' signals the user already resolved that row to a single instance (its
+    siblings were annotated by hand), so we leave it as-is. Returns '' when unset."""
+    if alt_name and "%s" in alt_name:
+        return alt_name.replace("%s", label.lower())
+    return ""
+
+
+def _rep_alias(group_rows, is_register):
+    """The group's identity alias: the rename on the register-level rows for a
+    register-dim group, or on the field rows for a field-dim group."""
+    for r in group_rows:
+        if (r["field_name"] == "") == is_register and r.get("alt_name"):
+            return r["alt_name"]
+    return ""
+
+
+def _build_dim_expansion(group_rows, info, is_register):
+    """Compute the concrete rows a '%s' group expands into (does not mutate rows).
+
+    Returns (new_rows, labels, inc, preview_values, alias_names) or None. For a
+    register-dim group `address_offset` increments and the block's field rows are
+    replicated (their identity is constant across instances); for a field-dim group
+    `bit_offset` increments. When the group carries a '%s' rename, each instance's
+    `alt_name` is derived from it; otherwise the SVD-key name is used for display."""
+    inc_key = "address_offset" if is_register else "bit_offset"
+    labels = dim_index_labels(info.get("dim_index"), info.get("dim"))
+    if not labels:
+        return None
+    try:
+        inc = int(info.get("dim_increment") or "0", 0)
+    except ValueError:
+        inc = 0
+    # the cell whose value increments across instances (register-level for reg-dim)
+    inc_row = next((r for r in group_rows
+                    if r["key"] == inc_key and (is_register == (r["field_name"] == ""))), None)
+    dim_name = group_rows[0]["register"] if is_register else group_rows[0]["field_name"]
+
+    new_rows, preview, alias_names = [], [], []
+    for k, label in enumerate(labels):
+        sub = label.lower()
+        alias_names.append(_expand_alias(_rep_alias(group_rows, is_register), label)
+                           or dim_name.replace("%s", sub))
+        for gr in group_rows:
+            nr = dict(gr)
+            if is_register:
+                nr["register"] = gr["register"].replace("%s", sub)
+                if gr["field_name"] == "":            # register-level row: index its alias
+                    nr["alt_name"] = _expand_alias(gr.get("alt_name", ""), label)
+                # field rows keep their (constant) alias, copied via dict(gr)
+            else:
+                nr["field_name"] = gr["field_name"].replace("%s", sub)
+                nr["alt_name"] = _expand_alias(gr.get("alt_name", ""), label)
+            if gr is inc_row:
+                nr["correct_value"] = _inc_value(gr["correct_value"], k, inc, inc_key)
+                nr["svd_value"] = _inc_value(gr["svd_value"], k, inc, inc_key)
+                preview.append(nr["correct_value"] or nr["svd_value"])
+            new_rows.append(nr)
+    return new_rows, labels, inc, preview, alias_names
+
+
+def expand_verified_dims(rows, svd_path):
+    """Interactively expand every fully-verified '%s' register/field into its
+    concrete instances, rewriting `rows` in place. Returns the number of groups
+    expanded. Groups with pending cells or no SVD dim metadata are left untouched."""
+    from collections import OrderedDict
+    has_pct = any("%s" in r["register"] or "%s" in r["field_name"] for r in rows)
+    if not has_pct:
+        return 0
+    try:
+        reg_dims, field_dims = parse_svd_dims(svd_path)
+    except Exception as e:
+        print(f"  (could not read dim info from {svd_path}: {e})")
+        return 0
+
+    # collect %s groups in file order: register-dim (register has %s) spans the
+    # register-level rows + its field rows; field-dim is a %s field in a plain register.
+    reg_groups, field_groups = OrderedDict(), OrderedDict()
+    for r in rows:
+        if "%s" in r["register"]:
+            reg_groups.setdefault((r["peripheral"], r["register"]), []).append(r)
+        elif "%s" in r["field_name"]:
+            field_groups.setdefault((r["peripheral"], r["register"], r["field_name"]), []).append(r)
+
+    # cell ids of already-concrete rows — if an expansion would recreate one, the group
+    # was expanded by hand already (e.g. awd%s + separate awd2/awd3), so leave it be.
+    concrete_ids = {cell_id(r) for r in rows
+                    if "%s" not in r["register"] and "%s" not in r["field_name"]}
+
+    # readiness = every cell in the group has a status; build the expansion plan
+    plan = OrderedDict()   # ("R",p,reg)/("F",p,reg,f) -> (label, info, built)
+    pending, missing, resolved, collide = [], [], [], []
+    def _consider(gk, label, grp, info, is_register):
+        if not all(g["status"] for g in grp):
+            pending.append(label); return
+        if not info:
+            missing.append(label); return
+        # a concrete rename (no '%s') means the user resolved this row by hand — skip it
+        alias = _rep_alias(grp, is_register)
+        if alias and "%s" not in alias:
+            resolved.append(f"{label} (renamed {alias!r})"); return
+        built = _build_dim_expansion(grp, info, is_register)
+        if not built:
+            return
+        if any(cell_id(nr) in concrete_ids for nr in built[0]):
+            collide.append(label); return       # would duplicate an existing concrete row
+        plan[gk] = (label, info, built)
+    for (p, reg), grp in reg_groups.items():
+        _consider(("R", p, reg), f"{p}.{reg}", grp, reg_dims.get((p, reg)), True)
+    for (p, reg, f), grp in field_groups.items():
+        _consider(("F", p, reg, f), f"{p}.{reg}.{f}", grp, field_dims.get((p, reg, f)), False)
+
+    def _report(items, why):
+        if items:
+            print(f"  {len(items)} '%s' group(s) {why}: "
+                  + ", ".join(items[:8]) + (" ..." if len(items) > 8 else ""))
+    _report(pending, "still have pending cells — not expanding")
+    _report(missing, "have no SVD dim metadata — left as-is")
+    _report(resolved, "carry a concrete rename (already resolved by hand) — not expanding")
+    _report(collide, "already have concrete instances in the CSV — not expanding")
+    if not plan:
+        return 0
+
+    ans = input(f"\n{len(plan)} verified '%s' group(s) can be expanded into concrete "
+                f"registers/fields. Review them? [y/N] ").strip().lower()
+    if ans != "y":
+        print("  (skipped dim expansion)")
+        return 0
+
+    approved = {}
+    approve_all = False
+    for gk, (label, info, built) in plan.items():
+        new_rows, labels, inc, preview, alias_names = built
+        is_reg = gk[0] == "R"
+        base = gk[2] if is_reg else gk[3]  # the '%s' register or field name
+        svd_names = [base.replace("%s", L.lower()) for L in labels]
+        # show the datasheet (renamed) names when they differ from the SVD names
+        renamed = any(a != s for a, s in zip(alias_names, svd_names))
+        names = ", ".join(alias_names if renamed else svd_names)
+        inc_key = "address_offset" if is_reg else "bit_offset"
+        print(f"\n{REG_C(label)}  ({'register' if is_reg else 'field'} dim: "
+              f"dim={info.get('dim')}, dimIncrement={info.get('dim_increment')}, "
+              f"dimIndex={info.get('dim_index')})")
+        print(f"  -> {KEY_C(names)}" + (f"  {DIM_C('[SVD keys: ' + ', '.join(svd_names) + ']')}" if renamed else ""))
+        print(f"     {inc_key}: {SVD_C(', '.join(str(v) for v in preview))}")
+        if is_reg:
+            n_fields = len({g['field_name'] for g in reg_groups[(gk[1], gk[2])] if g['field_name']})
+            if n_fields:
+                print(f"     {DIM_C(f'(reset_value, size + {n_fields} field(s) copied to each instance)')}")
+        else:
+            print(f"     {DIM_C('(bit_width, access copied to each instance)')}")
+        if approve_all:
+            approved[gk] = new_rows
+            continue
+        c = input("  approve? [y=yes / N=no / a=yes to all / q=stop] ").strip().lower()
+        if c == "q":
+            break
+        if c == "a":
+            approve_all = True
+            approved[gk] = new_rows
+        elif c == "y":
+            approved[gk] = new_rows
+
+    if not approved:
+        print("  (nothing approved)")
+        return 0
+
+    # rewrite rows: replace each approved group's cells with its expansion, in place
+    def group_key(r):
+        if "%s" in r["register"]:
+            return ("R", r["peripheral"], r["register"])
+        if "%s" in r["field_name"]:
+            return ("F", r["peripheral"], r["register"], r["field_name"])
+        return None
+
+    out, emitted = [], set()
+    for r in rows:
+        gk = group_key(r)
+        if gk in approved:
+            if gk not in emitted:
+                out.extend(approved[gk])
+                emitted.add(gk)
+            continue
+        out.append(r)
+    rows[:] = out
+    print(f"\n  expanded {len(approved)} '%s' group(s).")
+    return len(approved)
 
 
 def annotate(cells, derived_map, args):
@@ -621,6 +905,14 @@ def annotate(cells, derived_map, args):
 
     def _save():
         save_atomic(args.out, rows + markers)
+
+    def _offer_dim_expansion():
+        """On graceful exit, offer to expand any fully-verified '%s' dim rows."""
+        try:
+            if expand_verified_dims(rows, args.svd):
+                _save()
+        except (EOFError, KeyboardInterrupt):
+            print("\n  (dim expansion cancelled)")
 
     last_register = None
     for i, r in enumerate(plan, 1):
@@ -695,6 +987,7 @@ def annotate(cells, derived_map, args):
                 preview_find(term); continue
             if cmd == "q":
                 _save()
+                _offer_dim_expansion()
                 print(f"\nSaved {args.out}. Done: {sum(1 for x in rows if x['status'])}/{len(rows)}.")
                 return
             if cmd == "a":
@@ -716,6 +1009,7 @@ def annotate(cells, derived_map, args):
             break
 
     _save()
+    _offer_dim_expansion()
     print(f"\nComplete. {sum(1 for x in rows if x['status'])}/{len(rows)} cells. Saved {args.out}.")
 
 

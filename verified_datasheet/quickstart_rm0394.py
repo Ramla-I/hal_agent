@@ -32,7 +32,7 @@ import annotate  # noqa: E402  (path set above)
 SVD = os.path.join(ROOT, "devices/stm/rm0394/svd/stm32l412.svd")
 PDF = os.path.join(ROOT, "devices/stm/rm0394/rm0394.pdf")
 OUT = os.path.join(HERE, "stm/rm0394_stm32l412.csv")
-SPREAD = "3000"
+SPREAD = "500"
 
 if __name__ == "__main__":
     for label, path in (("SVD", SVD), ("PDF", PDF)):

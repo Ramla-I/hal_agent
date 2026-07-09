@@ -240,9 +240,12 @@ evaluation/
 # Test outputs (organized)
 optimization/test_outputs/
 
-# Devices (only PDF/SVD, not markdown docs)
+# Devices: large binaries live in the release assets (see docs/device_assets.md),
+# not in git — PDFs, SVDs (.svd/.xml), device-mapping xml, and vendor SDK zips.
 devices/**/*.pdf
 devices/**/*.svd
+devices/**/*.xml
+devices/**/*.zip
 
 # Coverage improver optimization
 coverage_improver_optimization/
