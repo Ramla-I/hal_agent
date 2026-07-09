@@ -34,7 +34,7 @@ import tiktoken
 
 import config
 from defs import ContextRetrievalParameters
-from context_retrieval.search import search_context
+from context_retrieval.retrieve_context import retrieve_context
 from utils.llm import call_llm
 from utils.result_saver import ResultSaver, UsageStats
 from utils.utils import setup_logger
@@ -58,6 +58,8 @@ _CARDS_DIR = os.path.join("optimization_validator", "validator_cards")
 
 def run_validator_batched_resilient(models: list, invariants: list, output_dir: str,
                                     cr_params: ContextRetrievalParameters,
+                                    device_name: str, device_dir: str, manufacturer,
+                                    agent_output_dir: str,
                                     reasoning_effort: str | None = None) -> tuple[int, int]:
     """Batched validator (one LLM call per register) routed through call_llm for
     retry-after resilience. Writes a fresh classification.csv. Mirrors
@@ -77,8 +79,9 @@ def run_validator_batched_resilient(models: list, invariants: list, output_dir: 
 
     total_true = total_false = 0
     for (peripheral_name, register_name), batch in batches.items():
-        query = create_batched_validator_file_search_query(peripheral_name, register_name)
-        file_search, _ = search_context(query, cr_params)
+        file_search, _ = retrieve_context(
+            cr_params, device_name, device_dir, peripheral_name, register_name,
+            manufacturer, agent_output_dir)
         file_search = file_search or ""
         try:
             file_search_tokens = len(tiktoken.get_encoding("cl100k_base").encode(file_search))
@@ -159,15 +162,17 @@ def validate_run(ctx, repo_root: str, run_number: int, models: list,
     if not invs:
         return {"device": device, "run": run_number, "candidates": 0, "skipped": "no candidates"}
 
-    # Use the device's default retrieval (the local vector DB the runs built) —
-    # search_context (like the stock batched validator) supports it; OPENEVOLVE
-    # is not a search_context method. NOTE: the validator_card was calibrated with
-    # OpenEvolve retrieval, so the threshold is approximate here (recorded below).
+    # OpenEvolve retrieval via retrieve_context — the retrieval the generator AND
+    # the validator_card were calibrated with, and (unlike search_context) it works
+    # for every device regardless of its vector_stores.json default.
     cr_params = build_context_retrieval_params(paths.device_dir, ctx)
+    cr_params = apply_retrieval_override(cr_params, "openevolve", device, repo_root)
 
     validator_dir = os.path.join(paths.agent_output_dir, "validator")
     true_count, false_count = run_validator_batched_resilient(
-        models, invs, validator_dir, cr_params, reasoning_effort)
+        models, invs, validator_dir, cr_params,
+        device, paths.device_dir, ctx.manufacturer, paths.agent_output_dir,
+        reasoning_effort)
 
     card, calibrated_for = load_card("stm", device, models[0], cards_dir)
     threshold = card_threshold(card)
