@@ -30,6 +30,9 @@ import random
 import pandas as pd
 
 from optimization_validator.corruption import build_register_contexts, corrupt_row
+# Single derivedFrom-expansion implementation (verified_datasheet is a package,
+# importable from the repo root).
+from verified_datasheet.expand_derived import expand_rows
 
 # Verified-datasheet columns we carry into the benchmark.
 _BASE_COLUMNS = ["peripheral", "register", "field_name", "key", "correct_value"]
@@ -38,19 +41,14 @@ _BASE_COLUMNS = ["peripheral", "register", "field_name", "key", "correct_value"]
 # Validator can use it to avoid rejecting a correct fact on a pure name mismatch.
 _CARRIED_OPTIONAL = ["alt_name"]
 
-# Peripheral-scope invariant key (register/field_name empty); matches
-# verified_datasheet/annotate.PERIPH_KEY. Used to keep a derived peripheral's own
-# base_address row during expansion.
-_PERIPH_KEY = "base_address"
-
 
 def expand_derived_rows(df: pd.DataFrame) -> pd.DataFrame:
-    """Materialize `derivedFrom` peripherals in-memory (mirrors
-    verified_datasheet/expand_derived.py).
+    """Materialize `derivedFrom` peripherals in-memory by delegating to the single
+    implementation in verified_datasheet/expand_derived.py (`expand_rows`).
 
     The verified CSV is compact: a peripheral that derives from another (e.g. GPIOB <-
     GPIOA) carries only its own `base_address` row plus a `derived_from` marker and
-    inherits the prototype's register/field layout. This copies each prototype's
+    inherits the prototype's register/field layout. Expansion copies each prototype's
     register/field rows under every peripheral that derives from it (keeping the derived
     peripheral's own base_address), so the benchmark covers ALL peripherals, not just the
     prototypes. Run on the RAW rows BEFORE the status gate, because the `derived_from`
@@ -61,55 +59,10 @@ def expand_derived_rows(df: pd.DataFrame) -> pd.DataFrame:
     if "derived_from" not in df.columns:
         return df
     cols = list(df.columns)
-    rows = df.to_dict("records")
-
-    def periph(r):
-        return str(r.get("peripheral") or "").lower()
-
-    def is_layout(r):  # a register/field row (has a register), not a base/marker row
-        return bool(str(r.get("register") or "").strip())
-
-    def is_base(r):
-        return str(r.get("key") or "") == _PERIPH_KEY and not str(r.get("register") or "").strip()
-
-    proto_of = {}  # derived peripheral -> prototype it inherits from
-    for r in rows:
-        d = str(r.get("derived_from") or "").lower()
-        if d:
-            proto_of.setdefault(periph(r), d)
-    if not proto_of:
-        return df
-
-    layout, base_row = {}, {}
-    for r in rows:
-        if is_layout(r):
-            layout.setdefault(periph(r), []).append(r)
-        elif is_base(r):
-            base_row[periph(r)] = r
-
-    out, done, n_exp = [], set(), 0
-    for r in rows:
-        p = periph(r)
-        if p in proto_of:
-            if p in done:  # other compact rows for this derived peripheral (markers/dups)
-                continue
-            done.add(p)
-            proto = proto_of[p]
-            if p in base_row:  # keep the derived peripheral's own base address
-                out.append(base_row[p])
-            for lr in layout.get(proto, []):  # materialize the inherited layout
-                nr = {k: lr.get(k, "") for k in cols}
-                nr["peripheral"] = r.get("peripheral")  # under the derived peripheral's name
-                if "derived_from" in nr:
-                    nr["derived_from"] = proto
-                nr["set_method"] = "derived-expanded"
-                out.append(nr)
-                n_exp += 1
-            continue
-        out.append(r)
-
-    if n_exp:
-        print(f"[verified] expanded {len(proto_of)} derived peripherals (+{n_exp} rows)")
+    out, info = expand_rows(df.to_dict("records"), cols)
+    if info["n_expanded"]:
+        print(f"[verified] expanded {len(info['proto_of'])} derived peripherals "
+              f"(+{info['n_expanded']} rows)")
     return pd.DataFrame(out, columns=cols)
 
 # In the verified-datasheet schema (verified_datasheet/annotate.py) a row is

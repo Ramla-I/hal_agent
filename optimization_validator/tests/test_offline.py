@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import os
 import random
-import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -16,17 +15,16 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 import pandas as pd
 
 from optimization_validator.corruption import (
-    ACCESS_VALUES, COMMON_SIZES, build_register_contexts, corrupt_row, corrupt_value, corrupt_field_name,
+    ACCESS_VALUES, COMMON_SIZES, _HEX_RE, build_register_contexts, corrupt_row, corrupt_value, corrupt_field_name,
 )
 from optimization_validator.kfold import load_verified, build_corrupted_benchmark, assign_folds
 from optimization_validator.calibration import ConfusionMatrix, calibrate
 from optimization_validator.cross_validate import (
-    confusion_at, tune_threshold, tune_threshold_precision, make_tuner,
+    confusion_at, tune_threshold_precision, make_tuner,
     build_review_queue, precision_at_k_table, reliability_table,
 )
 
 VERIFIED = "verified_datasheet/stm/rm0041_stm32f100.csv"
-_HEX_RE = re.compile(r"^0x[0-9a-fA-F]+$")
 
 _failures = []
 
@@ -47,23 +45,34 @@ def test_corruption_realism():
 
     # Corrupt every row's VALUE and check per-key constraints.
     n = len(df)
-    bad_diff = bad_range = 0
+    bad_diff = bad_range = bad_numeric = 0
     sizes_ok = access_ok = hex_ok = 0
     sizes_tot = access_tot = hex_tot = 0
-    for row in df.to_dict("records"):
+    for i, row in enumerate(df.to_dict("records")):
         ctx = contexts[(row["peripheral"], row["register"])]
         key = row["key"]
         field_name = "" if row["field_name"] is None else str(row["field_name"])
         new = corrupt_value(key, row["correct_value"], ctx, field_name, rng)
+        
+        if False and i == 4:  # flip to True to eyeball one invariant's format
+            print("  -- sample invariant --")
+            print(f"     row/invariant: {row}")
+            print(f"     key:           {key}")
+            print(f"     field_name:    {field_name!r}")
+            print(f"     original:      {row['correct_value']!r}")
+            print(f"     register ctx:  {ctx}")
+            print(f"     corrupted:     {new!r}")
+
         if str(new).strip() == str(row["correct_value"]).strip():
             bad_diff += 1
-        if key == "bit_offset" and new.lstrip("-").isdigit():
+        if key in ("bit_offset", "bit_width"):
             size = ctx.size or 32
-            if not (0 <= int(new) < size):
+            if not new.lstrip("-").isdigit():
+                # bit corruptions must stay numeric; a non-digit result is unrealistic.
+                bad_numeric += 1
+            elif key == "bit_offset" and not (0 <= int(new) < size):
                 bad_range += 1
-        if key == "bit_width" and new.lstrip("-").isdigit():
-            size = ctx.size or 32
-            if not (1 <= int(new) <= size):
+            elif key == "bit_width" and not (1 <= int(new) <= size):
                 bad_range += 1
         if key == "size":
             sizes_tot += 1
@@ -79,6 +88,7 @@ def test_corruption_realism():
                 hex_ok += 1
 
     check(bad_diff == 0, f"all {n} value corruptions differ from original (violations={bad_diff})")
+    check(bad_numeric == 0, f"bit_offset/width corruptions stay numeric (violations={bad_numeric})")
     check(bad_range == 0, f"bit_offset/width corruptions stay in range (violations={bad_range})")
     check(sizes_ok == sizes_tot, f"size corruptions in {{8,16,32,64}} & changed ({sizes_ok}/{sizes_tot})")
     check(access_ok == access_tot, f"access corruptions valid & changed ({access_ok}/{access_tot})")
@@ -125,6 +135,39 @@ def test_folds():
     # No corrupted/original pair leakage: replacement means one row per (per,reg,field,key)
     # within a fold partition is structurally guaranteed by grouping registers.
     check(folded["fold"].nunique() == k, f"exactly {k} folds populated")
+    # Folds partition the benchmark: summing per-fold counts recovers every invariant.
+    total_across_folds = sum(int((folded["fold"] == f).sum()) for f in range(k))
+    check(total_across_folds == len(bench),
+          f"invariants summed across folds == original ({total_across_folds} == {len(bench)})")
+    # Corrupted invariants are spread across ALL folds, not dumped into a few: every fold's
+    # negative fraction stays near the global ~0.30 (generous band — folds are whole
+    # register groups, so exact balance isn't expected). Also confirms all negatives are
+    # accounted for across folds.
+    neg = ~folded["is_correct"]
+    global_neg_frac = neg.mean()
+    fold_neg_fracs = {f: (neg & (folded["fold"] == f)).sum() / max(1, (folded["fold"] == f).sum())
+                      for f in range(k)}
+    max_dev = max(abs(fr - global_neg_frac) for fr in fold_neg_fracs.values())
+    check(max_dev < 0.12,
+          f"each fold's corrupted fraction within 0.12 of global {global_neg_frac:.3f} "
+          f"(max dev {max_dev:.3f}; per-fold {[round(fold_neg_fracs[f], 3) for f in range(k)]})")
+    total_neg_across_folds = sum(int((neg & (folded["fold"] == f)).sum()) for f in range(k))
+    check(total_neg_across_folds == int(neg.sum()),
+          f"corrupted invariants summed across folds == total negatives "
+          f"({total_neg_across_folds} == {int(neg.sum())})")
+
+    # Peripheral-stratified corruption (bench built with the default stratify_by="peripheral"):
+    # negatives span ALL peripherals, not a clustered few — a break here keeps the global
+    # fraction at 0.30 so it would slip past the checks above.
+    per = bench.groupby("peripheral")["is_correct"].apply(lambda s: (~s).mean())
+    sizes = bench.groupby("peripheral").size()
+    big_periphs = sizes[sizes >= 4].index
+    check(all(per[p] > 0 for p in big_periphs),
+          f"every peripheral with >=4 rows gets >=1 negative ({len(big_periphs)} periphs)")
+    check(per.max() <= 0.5, f"no peripheral is mostly negatives (max frac {per.max():.2f})")
+    # Global-uniform mode (stratify_by=None) still supported and near the target fraction.
+    uni = build_corrupted_benchmark(df, corruption_fraction=0.30, seed=3, stratify_by=None)
+    check(abs((~uni["is_correct"]).mean() - 0.30) < 0.02, "stratify_by=None keeps ~0.30 global")
 
 
 def test_calibration():
@@ -152,37 +195,6 @@ def test_calibration():
     # Proper clamp case: alpha=0.9, beta=0.9, but observed r_hat very high.
     clamp2 = calibrate(ConfusionMatrix(tp=95, fp=4, tn=1, fn=0))
     check(clamp2.pi is not None and 0.0 <= clamp2.pi <= 1.0, f"pi clamped into [0,1] (got {clamp2.pi}, raw {clamp2.pi_raw})")
-
-
-def test_expand_and_stratify():
-    print("\n== derived expansion + peripheral-stratified corruption ==")
-    from optimization_validator.kfold import build_corrupted_benchmark
-
-    compact = load_verified(VERIFIED, expand=False)
-    expanded = load_verified(VERIFIED, expand=True)
-    check(expanded["peripheral"].nunique() > compact["peripheral"].nunique(),
-          f"expansion adds peripherals ({compact['peripheral'].nunique()} -> "
-          f"{expanded['peripheral'].nunique()})")
-    check(len(expanded) > len(compact),
-          f"expansion adds rows ({len(compact)} -> {len(expanded)})")
-
-    # Stratified corruption: each peripheral with enough rows contributes negatives near
-    # the target fraction; the global fraction stays ~0.30.
-    bench = build_corrupted_benchmark(expanded, corruption_fraction=0.30, seed=2,
-                                      stratify_by="peripheral")
-    frac = (~bench["is_correct"]).mean()
-    check(abs(frac - 0.30) < 0.02, f"global corruption fraction ~0.30 (got {frac:.3f})")
-    per = bench.groupby("peripheral")["is_correct"].apply(lambda s: (~s).mean())
-    # Every peripheral with >=4 rows should get at least one negative (round(4*0.3)=1).
-    big = bench.groupby("peripheral").size()
-    big_periphs = big[big >= 4].index
-    covered = all(per[p] > 0 for p in big_periphs)
-    check(covered, f"every peripheral with >=4 rows has >=1 negative ({len(big_periphs)} periphs)")
-    check(per.max() <= 0.5, f"no peripheral is mostly negatives (max frac {per.max():.2f})")
-
-    # Global-uniform mode still available and unstratified.
-    uni = build_corrupted_benchmark(expanded, corruption_fraction=0.30, seed=2, stratify_by=None)
-    check(abs((~uni["is_correct"]).mean() - 0.30) < 0.02, "stratify_by=None keeps ~0.30 global")
 
 
 def test_alt_name():
@@ -223,7 +235,7 @@ def test_alt_name():
           "system prompt omits name-aliasing guidance when disabled")
 
 
-def test_curated_examples():
+def test_curated_examples_render_load_export():
     print("\n== curated examples (render / load / export) ==")
     import json, tempfile
     from optimization_validator.cross_validate import (
@@ -243,7 +255,9 @@ def test_curated_examples():
     block = render_curated_examples(curated)
     check("Datasheet:" in block, "rendered block includes the datasheet excerpt")
     check("rc_w0" in block, "datasheet text is present in the block")
-    check(block.count("Example ") == 2, "uncurated entry (no excerpt) is skipped (2 of 3)")
+    # Count header lines only (robust if an excerpt/reasoning ever contains "Example ").
+    n_rendered = sum(1 for ln in block.splitlines() if ln.startswith("Example "))
+    check(n_rendered == 2, f"uncurated entry (no excerpt) is skipped (2 of 3, rendered {n_rendered})")
     check("TRUE — accept" in block and "FALSE — reject" in block, "both verdicts render")
 
     # load round-trip
@@ -276,6 +290,9 @@ def test_curated_examples():
     check(fp["ground_truth_field_name"] == "truename",
           "FP candidate shows the ground-truth field name")
 
+
+def test_curated_examples_fold_selection():
+    print("\n== curated examples (per-fold exclusion / equalization) ==")
     # per-fold exclusion: a held-out fold's own examples must NOT appear in its block
     from optimization_validator.cross_validate import curated_block_for_fold
     bench = pd.DataFrame({
@@ -322,19 +339,20 @@ def test_operational_gate():
     scores = [0.1, 0.2, 0.3, 0.4, 0.55, 0.6, 0.7, 0.8, 0.9, 0.95]
     golds  = [False, False, False, False, True, False, True, True, True, True]
 
-    # F1 tuner vs precision tuner should generally differ here.
-    tau_f1 = tune_threshold(scores, golds)
     tau_p = tune_threshold_precision(scores, golds, target_precision=1.0)
     cm_p = confusion_at(scores, golds, tau_p)
     check(cm_p.precision >= 1.0 - 1e-9, f"precision-gate hits target=1.0 (got {cm_p.precision:.3f}, tau={tau_p})")
     # At target 1.0 the gate must exclude the False@0.6 -> tau > 0.6, keeping the 4 top Trues.
     check(cm_p.tp == 4 and cm_p.fp == 0, f"precision-gate keeps the 4 clean trues (tp={cm_p.tp}, fp={cm_p.fp})")
+    check(cm_p.tn == 5 and cm_p.fn == 1, f"precision-gate keeps the 5 clean falses (tn={cm_p.tn}, fn={cm_p.fn})")
 
     # Yield-maximisation: a looser target should keep at least as many true positives.
     tau_loose = tune_threshold_precision(scores, golds, target_precision=0.8)
     cm_loose = confusion_at(scores, golds, tau_loose)
+    check(cm_loose.precision >= 0.8 - 1e-9, f"precision-gate hits target=0.8 (got {cm_loose.precision:.3f}, tau={tau_loose})")
     check(cm_loose.tp >= cm_p.tp, f"looser target yields >= recall ({cm_loose.tp} >= {cm_p.tp})")
-    check(make_tuner("f1")(scores, golds) == tau_f1, "make_tuner('f1') matches tune_threshold")
+    # make_tuner binds the target-precision tuner.
+    check(make_tuner(1.0)(scores, golds) == tau_p, "make_tuner(target) matches tune_threshold_precision")
 
     # Build a tuned_eval-like frame (one held-out pass): needs score, tau, is_correct,
     # confidence_score + identity cols. Survivors = score >= tau.
@@ -375,9 +393,9 @@ if __name__ == "__main__":
     test_field_name_corruption()
     test_folds()
     test_calibration()
-    test_expand_and_stratify()
     test_alt_name()
-    test_curated_examples()
+    test_curated_examples_render_load_export()
+    test_curated_examples_fold_selection()
     test_operational_gate()
     print("\n" + ("=" * 50))
     if _failures:

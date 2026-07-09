@@ -16,9 +16,9 @@ Protocol:
      manufacturer (a human supplies the datasheet excerpt + conclusion for selected
      candidates); there is NO automatic example mining.
   4. k-fold: for each fold i, tune the gate threshold on the *training* partition, then
-     score fold i at that threshold. The default objective is OPERATIONAL: the lowest
-     threshold whose training precision clears a target (--target-precision, default
-     0.95), maximising yield (recall) under it (--objective f1 restores max-F1).
+     score fold i at that threshold. The objective is OPERATIONAL: the lowest threshold
+     whose training precision clears a target (--target-precision, default 0.95),
+     maximising yield (recall) under it.
   5. Aggregate per-fold confusion matrices. Headline numbers: the gate's **precision**
      (quality of the reviewed pile) and **yield/recall** (fraction of real bugs kept —
      the rest dropped unseen). Reported baseline vs curated to show the lift.
@@ -249,7 +249,8 @@ def evaluate_rows(
     `rows_df` must carry a stable `row_id` column (set by the caller). Returns a copy
     with added columns: is_true, confidence_score, score, reasoning, parse_error,
     file_search_chars, reg_in_context (retrieval-coverage instrumentation). Rows the
-    model failed to judge get is_true=False, confidence=0.0 and a parse_error note.
+    model could not judge (retrieval/parse failures) are DROPPED from the returned frame
+    (with a logged count), so a non-judgment never becomes a misleading pseudo-score.
 
     `extra_system_text` is appended to the system prompt — used to inject the per-fold
     mined in-context examples without mutating the shared prompt module.
@@ -297,7 +298,18 @@ def evaluate_rows(
     df["file_search_chars"] = df["row_id"].map(lambda i: coverage.get(i, (0, False))[0])
     df["reg_in_context"] = df["row_id"].map(lambda i: coverage.get(i, (0, False))[1])
     df["score"] = df.apply(lambda r: pseudo_score(r["is_true"], r["confidence_score"]), axis=1)
-    return df
+
+    # Rows the model could not judge (retrieval error, or a parse failure that survived
+    # split-and-retry) are NOT data points: the failure sentinel (is_true=False,
+    # confidence=0.0) maps to pseudo_score 1.0, which would otherwise rank a non-judgment
+    # at the TOP of the gate/queue. Drop them here rather than score them, and log the
+    # count so the exclusion is never silent.
+    failed = df["parse_error"].astype(str).str.strip() != ""
+    n_failed = int(failed.sum())
+    if n_failed:
+        print(f"  [{model_name}{progress_label}] dropped {n_failed}/{len(df)} unjudged rows "
+              f"(retrieval/parse failures) — excluded from scoring")
+    return df[~failed].reset_index(drop=True)
 
 
 def evaluate_benchmark(
@@ -501,18 +513,6 @@ def _score_grid(scores):
     return [0.0] + [u for u in uniq] + [1.0001]
 
 
-def tune_threshold(scores, golds, grid=None) -> float:
-    """Pick the threshold maximising F1 on (scores, golds). Ties -> lower threshold."""
-    if grid is None:
-        grid = _score_grid(scores)
-    best_tau, best_f1 = 0.5, -1.0
-    for tau in grid:
-        f1 = confusion_at(scores, golds, tau).f1
-        if f1 > best_f1:
-            best_f1, best_tau = f1, tau
-    return best_tau
-
-
 def tune_threshold_precision(scores, golds, target_precision: float, grid=None) -> float:
     """Operating point for the operational gate: the threshold that maximises **yield**
     (recall) subject to precision >= target_precision on (scores, golds).
@@ -545,17 +545,10 @@ def tune_threshold_precision(scores, golds, target_precision: float, grid=None) 
     return 1.0001  # degenerate: accept nothing
 
 
-def make_tuner(objective: str = "precision", target_precision: float = 0.95):
-    """Return a `(scores, golds) -> tau` threshold tuner for the chosen objective.
-
-    objective="precision" (default, operational): yield-maximising at precision >= target.
-    objective="f1": legacy max-F1 tuning.
-    """
-    if objective == "f1":
-        return lambda scores, golds: tune_threshold(scores, golds)
-    if objective == "precision":
-        return lambda scores, golds: tune_threshold_precision(scores, golds, target_precision)
-    raise ValueError(f"unknown threshold objective: {objective!r} (use 'precision' or 'f1')")
+def make_tuner(target_precision: float = 0.95):
+    """Return the `(scores, golds) -> tau` operational tuner: yield-maximising (max recall)
+    subject to precision >= target_precision."""
+    return lambda scores, golds: tune_threshold_precision(scores, golds, target_precision)
 
 
 @dataclass
@@ -569,12 +562,12 @@ def cross_validate(evaluated: pd.DataFrame, k: int, tuner=None) -> dict:
     """k-fold: tune threshold on training rows, evaluate on held-out fold.
 
     `evaluated` must have columns: fold, is_correct, score. `tuner(scores, golds) -> tau`
-    selects the gate threshold (defaults to max-F1 for backward compatibility; pass
-    make_tuner("precision", target) for the operational gate). Returns a dict with
-    per-fold results, the aggregated tuned confusion matrix, the untuned (tau=0.5)
-    confusion matrix, and the calibration result.
+    selects the gate threshold (defaults to the operational precision-gate at 0.95; pass
+    make_tuner(target) to set a different target). Returns a dict with per-fold results,
+    the aggregated tuned confusion matrix, the untuned (tau=0.5) confusion matrix, and the
+    calibration result.
     """
-    tuner = tuner or (lambda scores, golds: tune_threshold(scores, golds))
+    tuner = tuner or make_tuner()
     fold_results: list[FoldResult] = []
     agg = ConfusionMatrix(0, 0, 0, 0)
     ev = evaluated.copy()
@@ -606,9 +599,11 @@ def cross_validate(evaluated: pd.DataFrame, k: int, tuner=None) -> dict:
 # --------------------------------------------------------------------------- #
 
 # Columns surfaced to a human reviewer in the ranked queue (identity + decision signal).
+# `reasoning` is intentionally omitted here (it stays in judgments_<model>.csv); the queue
+# is a compact ranked worklist.
 _QUEUE_COLS = ["rank", "score", "confidence_score", "is_true", "is_correct",
                "peripheral", "register", "field_name", "alt_name", "key", "correct_value",
-               "corruption_type", "fold", "tau", "reasoning"]
+               "corruption_type", "fold", "tau"]
 
 
 def build_review_queue(tuned_eval: pd.DataFrame) -> pd.DataFrame:
@@ -850,7 +845,7 @@ def write_outputs(out_dir: str, model_name: str, baseline_cv: dict, curated_cv: 
     # stability check. (See optimization_validator/validator_card.py for the device card.)
     obj = operational.get("objective", "precision")
     tgt = operational.get("target_precision", 0.95)
-    dep_tau = make_tuner(obj, tgt)(list(final_eval["score"]), list(final_eval["is_correct"]))
+    dep_tau = make_tuner(tgt)(list(final_eval["score"]), list(final_eval["is_correct"]))
     fold_taus = [fr.tau for fr in curated_cv["fold_results"]]
     deployment = {
         "threshold": dep_tau,                      # apply on new devices: accept iff score >= this
@@ -922,7 +917,6 @@ def run_model(
     limit_registers: Optional[int] = None,
     max_per_call: int = DEFAULT_MAX_PER_CALL,
     access_legend: str = "",
-    objective: str = "precision",
     target_precision: float = 0.95,
     use_alt_name: bool = True,
     price_in=None,
@@ -940,10 +934,10 @@ def run_model(
     invariant with those curated examples injected, to measure the lift. Both passes are
     cross-validated (gate threshold tuned per fold on training scores).
 
-    `objective`/`target_precision` choose the gate operating point. `retrieve_fn` is the
-    retrieval backend.
+    `target_precision` sets the gate operating point (yield-maximising at that precision).
+    `retrieve_fn` is the retrieval backend.
     """
-    tuner = make_tuner(objective, target_precision)
+    tuner = make_tuner(target_precision)
     usage_rows: list = []  # per-LLM-call token log, populated across both passes
     benchmark = make_benchmark_with_folds(
         verified_csv, k=k, corruption_fraction=corruption_fraction, seed=seed)
@@ -968,9 +962,10 @@ def run_model(
         usage_sink=usage_rows)
     baseline_cv = cross_validate(baseline_eval, k=k, tuner=tuner)
     cov = baseline_eval["reg_in_context"].mean() if "reg_in_context" in baseline_eval else float("nan")
-    n_parse_err = (baseline_eval["parse_error"].fillna("") != "").sum()
-    print(f"[{model_name}] retrieval coverage: register name present for {cov:.0%} of invariants; "
-          f"{n_parse_err} rows with parse/retrieval errors")
+    # Unjudged rows are dropped inside evaluate_rows, so count them as benchmark - judged.
+    n_unjudged = len(benchmark) - len(baseline_eval)
+    print(f"[{model_name}] retrieval coverage: register name present for {cov:.0%} of judged invariants; "
+          f"{n_unjudged} rows dropped (parse/retrieval errors)")
 
     # Export curation candidates (the human seeds the per-vendor curated file from these).
     os.makedirs(out_dir, exist_ok=True)
@@ -1017,7 +1012,7 @@ def run_model(
 
     write_outputs(out_dir, model_name, baseline_cv, curated_cv,
                   base_system_prompt=base_system, curated_block=curated_block,
-                  operational_meta={"objective": objective, "target_precision": target_precision,
+                  operational_meta={"objective": "precision", "target_precision": target_precision,
                                     "use_alt_name": use_alt_name, "seed": seed,
                                     "corruption_fraction": corruption_fraction},
                   usage_rows=usage_rows, price_in=price_in, price_out=price_out,
@@ -1114,11 +1109,9 @@ def main():
     ap.add_argument("--vendor", default="stm",
                     help="vendor key for the access-notation legend (see "
                          "optimization_validator/access_notations.json); '' or 'none' to disable")
-    ap.add_argument("--objective", choices=["precision", "f1"], default="precision",
-                    help="gate operating point: 'precision' (default) maximises yield at "
-                         "precision >= --target-precision; 'f1' restores max-F1 tuning")
     ap.add_argument("--target-precision", type=float, default=0.95,
-                    help="target gate precision for --objective precision (default 0.95)")
+                    help="target gate precision: the gate maximises yield subject to "
+                         "precision >= this value (default 0.95)")
     ap.add_argument("--use-alt-name", dest="use_alt_name", action="store_true", default=True,
                     help="use the verified datasheet's alt_name (datasheet-printed name) to "
                          "reduce name-mismatch false negatives — adds a name-aliasing prompt "
@@ -1179,7 +1172,7 @@ def main():
             k=k, corruption_fraction=args.corruption_fraction, seed=args.seed,
             reasoning_effort=models[0].get("reasoning_effort"),
             limit_registers=args.smoke_registers, max_per_call=args.max_per_call,
-            access_legend=legend, objective=args.objective,
+            access_legend=legend,
             target_precision=args.target_precision, use_alt_name=args.use_alt_name,
             price_in=args.price_in, price_out=args.price_out,
             price_cached_in=args.price_cached_in,
@@ -1195,7 +1188,7 @@ def main():
             args.verified_csv, cfg["model_name"], out_dir, retrieve_fn,
             k=args.k, corruption_fraction=args.corruption_fraction, seed=args.seed,
             reasoning_effort=cfg.get("reasoning_effort"), max_per_call=args.max_per_call,
-            access_legend=legend, objective=args.objective,
+            access_legend=legend,
             target_precision=args.target_precision, use_alt_name=args.use_alt_name,
             price_in=args.price_in, price_out=args.price_out,
             price_cached_in=args.price_cached_in,

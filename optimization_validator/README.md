@@ -16,7 +16,6 @@ optimization_validator/
 |__ calibration.py               # ConfusionMatrix + Rogan-Gladen calibrate()
 |__ access_notation.py           # vendor access-notation legend
 |__ access_notations.json        # editable vendor -> notation map
-|__ create_test_set.py           # standalone corrupted-test-set builder (corruption-backed)
 |__ validator_card.py            # build a per-device card: deployment threshold + alpha/beta
 |__ curated_examples/
 |   |__ README.md
@@ -111,9 +110,9 @@ that filed bugs are real, standing in for slow upstream merges.
    The pipeline's real use is: generator candidates → Validator → whatever it gates out
    (V=0) is **dropped unseen**, and the survivors (V=1) are **ranked by confidence** for a
    human to review top-down until labour runs out. So the gate threshold is tuned for a
-   **target precision** (`--objective precision --target-precision 0.95`, the default):
-   the lowest threshold whose training precision clears the target, **maximising yield
-   (recall)** under that constraint. (`--objective f1` restores max-F1.) Because V=0 is
+   **target precision** (`--target-precision 0.95`, the default): the lowest threshold
+   whose training precision clears the target, **maximising yield (recall)** under that
+   constraint. Because V=0 is
    dropped, a false negative is a *permanently lost bug*, so the harness reports both the
    reviewed-pile **precision** and the kept-bug **yield/recall**, plus a **precision@k**
    curve (front-loading quality) and a **calibration/reliability** table (mean confidence
@@ -191,7 +190,7 @@ scripts/docker_run.sh run -m optimization_validator.cross_validate --smoke --mod
 
 # Pass 1 (baseline) — also exports curation_candidates_<model>.json:
 scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.4 --k 5 \
-    --retrieval openevolve --vendor stm --objective precision --target-precision 0.95 \
+    --retrieval openevolve --vendor stm --target-precision 0.95 \
     --out-root optimization_validator/stmrm0041_run --price-in <$/1M> --price-out <$/1M>
 
 # [human] curate candidates -> optimization_validator/curated_examples/stm.json
