@@ -1,0 +1,23 @@
+{
+  "_comment": "Datasheet access-notation synonyms -> canonical access type, per vendor. The validator treats every listed synonym as equivalent to its canonical key when checking an `access` invariant, so it stops rejecting a correct `read-write` just because the datasheet writes it as e.g. `rc_w0`. TO ADD A VENDOR: copy a block, set the key to the vendor slug (lowercase, matches Manufacturer name), and list that vendor's notation codes under the three canonical access types. Matching is case-insensitive and exact-token (so `r` does not match `rc_w0`). Synonyms not found here fall back to the `default` block.",
+  "default": {
+    "read-write": ["read-write", "read/write", "rw"],
+    "read-only": ["read-only", "read only", "r", "ro"],
+    "write-only": ["write-only", "write only", "w", "wo"]
+  },
+  "stm": {
+    "read-write": ["rw", "rc_w0", "rc_w1", "rc_w", "rs", "rt_w", "rt_w0", "rt_w1", "rw0", "rw1", "t", "read-write", "read/write"],
+    "read-only": ["r", "ro", "rc_r", "read-only", "read only"],
+    "write-only": ["w", "wo", "w1", "ws", "write-only", "write only"]
+  },
+  "nxp": {
+    "read-write": ["rw", "r/w", "read-write", "read/write"],
+    "read-only": ["r", "ro", "read-only", "read only"],
+    "write-only": ["w", "wo", "write-only", "write only"]
+  },
+  "ti": {
+    "read-write": ["rw", "r/w", "read-write", "read/write"],
+    "read-only": ["r", "ro", "read-only", "read only"],
+    "write-only": ["w", "wo", "write-only", "write only"]
+  }
+}

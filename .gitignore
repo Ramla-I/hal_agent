@@ -255,6 +255,7 @@ coverage_improver_optimization/
 optimization_coverage_improver/*/
 optimization_validator/**/experiments/
 optimization_validator/**/hold_set_results/
+optimization_validator/**/cross_validation/
 analysis/*.csv
 plots/*.pdf
 plots/*.png

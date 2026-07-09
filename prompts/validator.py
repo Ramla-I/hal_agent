@@ -5,8 +5,9 @@ def create_validator_file_search_query(peripheral_name: str, register_name: str,
     The given value of the key is {value}, but it could be different in the datasheet.
     """
 
-def create_validator_system_prompt() -> str:
-    return f"""
+def create_validator_system_prompt(access_legend: str = "") -> str:
+    legend_block = f"\n\n{access_legend}\n" if access_legend else ""
+    return f"""{legend_block}
     You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets. 
     You will need to validate facts about a register and return a confidence score indicating how confident you are in the fact being true.
 
@@ -224,9 +225,37 @@ def create_batched_validator_file_search_query(peripheral_name: str, register_na
     Include information about the register's address offset, reset value, size, and all its fields/subfields.
     """
 
-def create_batched_validator_system_prompt() -> str:
-    """System prompt for batched validation of multiple invariants across registers"""
-    return f"""
+def create_batched_validator_system_prompt(access_legend: str = "", name_aliasing: bool = False) -> str:
+    """System prompt for batched validation of multiple invariants across registers.
+
+    access_legend: optional vendor access-notation section (see
+    optimization_validator.access_notation.access_legend) appended so the model treats datasheet
+    codes like `rc_w0` as the canonical `read-write` access type.
+
+    name_aliasing: when True, tell the model that the SVD `field_name`/`register_name` may
+    differ from the name printed in the datasheet (the datasheet often abbreviates or
+    de-suffixes, e.g. SVD `D1` is printed as `D`), describe the optional `datasheet_name`
+    field, and instruct it to match on structural identity rather than an exact name
+    string. Reduces name-mismatch false negatives.
+    """
+    legend_block = f"\n\n{access_legend}\n" if access_legend else ""
+    datasheet_name_field = (
+        "\n    - `datasheet_name` (optional): the name the field or register is printed "
+        "under IN THE DATASHEET when it differs from the SVD `field_name`/`register_name` "
+        "(e.g. the SVD calls a field `D1` but the datasheet prints it as `D`). When "
+        "present, look for `datasheet_name` in the search results."
+        if name_aliasing else ""
+    )
+    name_aliasing_rule = (
+        "\n    * SVD vs datasheet names: `field_name`/`register_name` come from the SVD and "
+        "may not match the datasheet verbatim (the datasheet often abbreviates or drops a "
+        "disambiguating suffix). Match a field/register by its STRUCTURAL identity — its bit "
+        "position / address — not an exact name string, and use `datasheet_name` when given. "
+        "Do NOT reject an otherwise-correct fact merely because the datasheet prints the name "
+        "differently. (A genuinely different field is still wrong.)"
+        if name_aliasing else ""
+    )
+    return f"""{legend_block}
     You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets.
     You will need to validate multiple facts about one or more registers and return confidence scores for each.
 
@@ -240,7 +269,7 @@ def create_batched_validator_system_prompt() -> str:
     - `register_name`: The name of the register
     - `field_name`: The name of the field (empty string if register-level)
     - `key`: The property to validate (address_offset, reset_value, size, bit_offset, bit_width, access)
-    - `value`: The value to validate
+    - `value`: The value to validate{datasheet_name_field}
 
     # OUTPUT FORMAT
     Start with your reasoning about the register and the facts you're validating.
@@ -266,7 +295,7 @@ def create_batched_validator_system_prompt() -> str:
     * Values like 0xXXXXXXX3 mean X can be any digit (e.g., 0x3403, 0x873 are valid)
     * Reserved bits are read-only and must be kept at reset value
     * Names are NOT case sensitive and should match the datasheet
-    * If you cannot find information, set is_true=false and confidence_score=1.0
+    * If you cannot find information, set is_true=false and confidence_score=1.0{name_aliasing_rule}
 
     # CONFIDENCE SCORING
     - 1.0: 100% certain (found explicit confirmation or contradiction)
@@ -274,6 +303,34 @@ def create_batched_validator_system_prompt() -> str:
     - 0.7-0.85: Fairly confident (reasonable evidence)
     - 0.5-0.65: Uncertain (conflicting or ambiguous information)
     - 0.0: Cannot find any information about the register/field
+
+    # EXAMPLE (how to reason over a batch, then emit the array)
+    These show the kind of reasoning expected. The file search results are omitted here;
+    in a real call you have the datasheet text to ground each judgment.
+
+    Input invariants:
+      0. peripheral="GPIOA", register="GPIOA_OTYPER", field_name="", key="address_offset", value="0x04"
+      1. peripheral="BKP", register="BKP_DR23", field_name="", key="address_offset", value="0x6C"
+      2. peripheral="CEC", register="CEC_CR", field_name="", key="reset_value", value="0x443"
+      3. peripheral="CEC", register="CEC_CR", field_name="", key="size", value="4"
+      4. peripheral="FTM0", register="FTM0_C7SC", field_name="Xyfka", key="bit_offset", value="7"
+
+    Reasoning:
+      0. The datasheet lists GPIOA_OTYPER at address offset 0x04, matching the value. True, fully confident.
+      1. No BKP_DR23 register is described in the datasheet, so its offset cannot be confirmed. False, fully confident.
+      2. CEC_CR resets to 0xXXXXXXX3, where each X is any digit; 0x443 ends in 3 and fits that pattern. True.
+      3. CEC_CR is a 32-bit register, not 4 bits. False.
+      4. FTM0_C7SC exists, but it has no field named "Xyfka". False.
+
+    ```json
+    [
+        {{"invariant_index": 0, "is_true": true, "confidence_score": 1.0}},
+        {{"invariant_index": 1, "is_true": false, "confidence_score": 1.0}},
+        {{"invariant_index": 2, "is_true": true, "confidence_score": 0.95}},
+        {{"invariant_index": 3, "is_true": false, "confidence_score": 1.0}},
+        {{"invariant_index": 4, "is_true": false, "confidence_score": 1.0}}
+    ]
+    ```
     """
 
 def create_batched_validator_user_prompt(batch_registers: list, invariants: list, file_search_results: str) -> str:
@@ -282,15 +339,19 @@ def create_batched_validator_user_prompt(batch_registers: list, invariants: list
 
     Args:
         batch_registers: List of (peripheral, register) tuples
-        invariants: List of invariant dicts with keys: field_name, key, value, peripheral, register
+        invariants: List of invariant dicts with keys: field_name, key, value, peripheral,
+            register, and optionally alt_name (datasheet-printed name). When alt_name is a
+            non-empty string it is surfaced to the model as `datasheet_name`.
         file_search_results: Formatted search results from vector store
     """
     register_list = ", ".join([f"{p}.{r}" for p, r in batch_registers])
     # Format invariants as a numbered list
     invariant_list = ""
     for i, inv in enumerate(invariants):
+        alt = str(inv.get("alt_name", "") or "").strip()
+        alt_hint = f', datasheet_name="{alt}"' if alt else ""
         invariant_list += f"""
-    {i}. peripheral="{inv['peripheral']}", register="{inv['register']}", field_name="{inv['field_name']}", key="{inv['key']}", value="{inv['value']}"
+    {i}. peripheral="{inv['peripheral']}", register="{inv['register']}", field_name="{inv['field_name']}"{alt_hint}, key="{inv['key']}", value="{inv['value']}"
 """
 
     return f"""
