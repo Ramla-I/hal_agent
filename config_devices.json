@@ -153,6 +153,186 @@
       "file_id": "",
       "vs_id": "",
       "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0401",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0366",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0377",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0367",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0376",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0365",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0454",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0383",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0402",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0038",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0390",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0430",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0431",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0444",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0434",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0394",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0385",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0386",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0493",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
+    },
+    {
+      "device_name": "rm0410",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": "",
+      "manufacturer": "STM"
     }
   ]
 }
