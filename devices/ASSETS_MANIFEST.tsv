@@ -1,8 +1,16 @@
 kind	path	archive	bytes	sha256
 asset	devices/intel/82579/82579.pdf	intel.tar.gz	501681	471ad60893d4970a5e177c8baf9628f6dd2d39ebfb358cad340222ff47a14cd1
 asset	devices/intel/82599/82599.pdf	intel.tar.gz	1417096	d37702223785257568c2fe149b182844c611c7e95c9ff17d9222fdefa538b04c
-asset	devices/nxp/ke04/ke04.pdf	nxp.tar.gz	5215417	dfb243593d77981d2cf93ebbbcacb201158b8dd96e773d5307472d859c3ebc4e
-asset	devices/nxp/ke04/svd/mke04z4.svd	nxp.tar.gz	864341	875d7698204422b7578379b24e79c4b120a6317279d03164215578376ef233a9
+asset	devices/nxp/k32l3a/K32L3A.pdf	nxp.tar.gz	14796559	53eeefd26e1f52a57a7410d7f23939e2778c582f2a6296b4675b27d7fbfd4712
+asset	devices/nxp/k32l3a/svd/K32L3A60_cm0plus.xml	nxp.tar.gz	5218991	964145daa3c1fd6801346348c52c22563c178149a00d2bf1546c2e770cb9996d
+asset	devices/nxp/k32l3a/svd/K32L3A60_cm4.xml	nxp.tar.gz	5833745	2f416f04534f28e8d72b416d4acdfcf1dae9f2a099299fdb28d79a26f4956d5e
+asset	devices/nxp/k64/K64.pdf	nxp.tar.gz	18084023	2d0437353abd9a6945b40bc47b25ad7c52bed011e8bc1a1dc98e921bfadfb228
+asset	devices/nxp/k64/svd/MK64F12.xml	nxp.tar.gz	7037247	933ec735ae055d7c2fd429dee4968ad429e059bde86e8adf426fbc28ff13f9d9
+asset	devices/nxp/ke04/KE04.pdf	nxp.tar.gz	7847758	db8a818117486be71d9f8b009cb156aa4a3ac452afae136bd93af6998af8275d
+asset	devices/nxp/ke04/svd/MKE04Z4.xml	nxp.tar.gz	843607	e2fae8f51478da51f274d2ba9b4554086de33a8132b32718554c9ef16e3da2fb
+asset	devices/nxp/ke04_old/ke04.pdf	nxp.tar.gz	5215417	dfb243593d77981d2cf93ebbbcacb201158b8dd96e773d5307472d859c3ebc4e
+asset	devices/nxp/ke04_old/svd/mke04z4.svd	nxp.tar.gz	864341	875d7698204422b7578379b24e79c4b120a6317279d03164215578376ef233a9
+asset	devices/nxp/rm_device_mapping.xml	nxp.tar.gz	2398	effa3dff3fe3e2308ed8f77437cba9f343c7a79ba434fcf68ea7fdcdeddfe53f
 asset	devices/nxp/s32k1xx/s32k1xx.pdf	nxp.tar.gz	15783744	89dd44b3569dc1b50d1e4a6995a1c3d4c63af37e2c8bf7438d1e0e839537b339
 asset	devices/nxp/s32k1xx/svd/s32k116.svd	nxp.tar.gz	4307320	3e1865846ea598ad68fa86564f9ef3135e0ab1187a26ca242119c400b2986aa9
 asset	devices/nxp/s32k1xx/svd/s32k118.svd	nxp.tar.gz	4368394	3839c8f7f078a37b1db90e5ce62f12ded1b6bcbd19fb33b738fdbb036ed68681
@@ -394,7 +402,4 @@ asset	devices/stm/rm0530/svd/stm32wb06.svd	stm.tar.gz	948713	874a1aaf7ad0c1fc926
 asset	devices/stm/rm0530/svd/stm32wb07.svd	stm.tar.gz	948571	9929c9123486478a7edde3cb6c2606695aba2f9733a1afb5eefe195d95769238
 asset	devices/ti/msp430g2/msp430g2.pdf	ti.tar.gz	9952227	841493836042c4dc2979ebe9a7b42f4e6f373a01edc34ee6d26445ae38a2f7b2
 asset	devices/ti/msp430g2/svd/msp430g2553.svd	ti.tar.gz	228585	1b9aa90a999a6c5c9756166cbbe7e57e6781dd50bdba5c1966df8dfd37bff4e9
-archive	intel.tar.gz		1792216	3a2a6d173521e6043457864d18bd5999729832d4705b38d18c2289e5550c8b6b
-archive	nxp.tar.gz		17973818	a6afe7e03109d99408a3dc7cba4f657b32b854695a1338aba128858674a02047
-archive	stm.tar.gz		649106112	bd191c6cca7e1c8007fccb8993dfb329098c8cc2e9469a913690fabb528745fe
-archive	ti.tar.gz		7857163	2c0a9a63d78c2520e2516689054ddf4cc2970c463d69d64420d75c7ea8b4185f
+archive	nxp.tar.gz		45586525	e599917f253fd226f5df8290a4c41ae4c727c45707a6ad58ad6d1fb76c73da70
