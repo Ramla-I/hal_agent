@@ -123,9 +123,12 @@ def apply_verdicts(review_csv_path: str, classification_csv_path: str,
         fields = list(reader.fieldnames or [])
         rows = list(reader)
 
-    for col in VALIDATOR_COLS:
-        if col not in fields:
-            fields.append(col)
+    new_cols = [c for c in VALIDATOR_COLS if c not in fields]
+    if new_cols:                                       # place them right before tp_fp (canonical order)
+        if "tp_fp" in fields:
+            fields[fields.index("tp_fp"):fields.index("tp_fp")] = new_cols
+        else:
+            fields.extend(new_cols)
 
     counts = {"TP": 0, "FP": 0, "abstain": 0, "unmatched": 0, "candidates": 0}
     for row in rows:
