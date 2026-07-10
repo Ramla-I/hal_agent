@@ -1151,7 +1151,11 @@ def main():
         print(f"Retrieval: OpenAI file_search (vs={args.vs_id}, {args.num_embeddings} chunks)")
 
     from defs import Manufacturer
-    retrieve_fn = make_retriever(params, args.device_name, args.device_dir, Manufacturer.STM)
+    try:
+        mfr = Manufacturer[args.vendor.upper()]          # stm/nxp/ti/intel -> enum
+    except (KeyError, AttributeError):
+        mfr = Manufacturer.STM
+    retrieve_fn = make_retriever(params, args.device_name, args.device_dir, mfr)
 
     # Vendor access-notation legend (maps datasheet codes like rc_w0 -> read-write).
     from optimization_validator.access_notation import access_legend as _access_legend
