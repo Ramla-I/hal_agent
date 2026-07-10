@@ -41,7 +41,7 @@ def all_svd_file_paths(device_directory: str) -> list[str]:
         print(f"Found device directory: {device_dir}")
         for fname in os.listdir(device_dir):
             print(f"Found SVD file: {fname}")
-            if fname.lower().endswith('.svd'):
+            if fname.lower().endswith(('.svd', '.xml')):   # NXP SVDs use .xml
                 svd_files.append(os.path.join(device_dir, fname))
     return svd_files
 

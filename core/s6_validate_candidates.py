@@ -50,6 +50,7 @@ from s0_run_full_analysis import (
 from applications.bug_finding.validate_candidates import (
     candidate_invariants, load_card, card_threshold, apply_verdicts,
 )
+from optimization_validator.access_notation import access_legend
 
 logger = setup_logger(__name__)
 
@@ -77,6 +78,11 @@ def run_validator_batched_resilient(models: list, invariants: list, output_dir: 
     logger.info("Validating %d candidate invariants in %d register batches",
                 len(invariants), len(batches))
 
+    # Build the system prompt once with the vendor's access-notation legend +
+    # name aliasing — the configuration the validator_card was calibrated with.
+    vendor = getattr(manufacturer, "value", str(manufacturer)).lower()
+    system_prompt = create_batched_validator_system_prompt(access_legend(vendor), name_aliasing=True)
+
     total_true = total_false = 0
     for (peripheral_name, register_name), batch in batches.items():
         file_search, _ = retrieve_context(
@@ -90,7 +96,7 @@ def run_validator_batched_resilient(models: list, invariants: list, output_dir: 
 
         input_list = [
             {"role": "developer", "content": [
-                {"type": "input_text", "text": create_batched_validator_system_prompt()}]},
+                {"type": "input_text", "text": system_prompt}]},
             {"role": "user", "content": [
                 {"type": "input_text", "text": create_batched_validator_user_prompt(
                     [(peripheral_name, register_name)],
@@ -174,12 +180,14 @@ def validate_run(ctx, repo_root: str, run_number: int, models: list,
         device, paths.device_dir, ctx.manufacturer, paths.agent_output_dir,
         reasoning_effort)
 
-    card, calibrated_for = load_card("stm", device, models[0], cards_dir)
+    vendor = getattr(ctx.manufacturer, "value", str(ctx.manufacturer)).lower()
+    card, calibrated_for = load_card(vendor, device, models[0], cards_dir)
     threshold = card_threshold(card)
     counts = apply_verdicts(review_csv, os.path.join(validator_dir, "classification.csv"), threshold)
 
     _update_manifest(paths.agent_output_dir, {
         "candidate_validator_used": True,
+        "candidate_validator_vendor": vendor,
         "candidate_validator_model": models[0],
         "candidate_validator_retrieval": cr_params.context_retrieval_method.value,
         "candidate_validator_calibrated_for": calibrated_for,

@@ -484,7 +484,8 @@ def run_pipeline_for_device(
 
         # -- Step 3: Coverage Improver (optional) --
         if ci_iterations > 0:
-            svd_files = sorted(glob.glob(os.path.join(paths.svd_dir, "*.svd")))
+            svd_files = sorted(glob.glob(os.path.join(paths.svd_dir, "*.svd"))
+                               + glob.glob(os.path.join(paths.svd_dir, "*.xml")))   # NXP SVDs use .xml
             if not svd_files:
                 print(f"  No SVD files in {paths.svd_dir} — skipping coverage improver")
             else:
@@ -627,7 +628,8 @@ def _write_run_manifest(result: "DeviceResult", ctx: UserContext, args: argparse
         run_number = result.final_run_number or 1
         paths = resolve_device_paths(ctx, repo_root, run_number)
         svd_files = sorted(
-            os.path.basename(p) for p in glob.glob(os.path.join(paths.svd_dir, "*.svd"))
+            os.path.basename(p) for p in (glob.glob(os.path.join(paths.svd_dir, "*.svd"))
+                                          + glob.glob(os.path.join(paths.svd_dir, "*.xml")))
         )
         registers = _count_generated_registers(paths.agent_output_dir)
         manifest = RunManifest(

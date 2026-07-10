@@ -40,7 +40,8 @@ def run_bug_finding(
         analyzer_models: model list for the analyzer (default
             config.STAGE_MODELS["analyzer"]).
     """
-    svd_files = sorted(glob.glob(os.path.join(svd_dir, "*.svd")))
+    svd_files = sorted(glob.glob(os.path.join(svd_dir, "*.svd"))
+                       + glob.glob(os.path.join(svd_dir, "*.xml")))   # NXP SVDs use .xml
     if not svd_files:
         logger.warning("No SVD files in %s — nothing to do", svd_dir)
         return {}
