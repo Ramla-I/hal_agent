@@ -1,0 +1,43 @@
+{
+  "vendor": "nxp",
+  "device": "ke04",
+  "model": "gpt-oss-120b",
+  "config_to_freeze": {
+    "curated_examples": null,
+    "use_alt_name": true,
+    "objective": "precision",
+    "target_precision": 0.95
+  },
+  "deployment_threshold": 0.15,
+  "threshold_stability": {
+    "per_fold_tau": [
+      0.15,
+      0.9,
+      0.15,
+      0.15,
+      0.85
+    ],
+    "min": 0.15,
+    "max": 0.9,
+    "std": 0.3555
+  },
+  "instrument": {
+    "alpha_sensitivity": 0.8633093525179856,
+    "beta_specificity": 0.9008363201911589
+  },
+  "measured_on_dev_device": {
+    "gate_precision": 0.952921157118548,
+    "yield_recall": 0.8633093525179856,
+    "f1": 0.9059045564842276,
+    "validated_precision": 0.9529211571185479,
+    "n_invariants": 2783,
+    "config": "baseline"
+  },
+  "provenance": {
+    "source_run": "optimization_validator/nxpke04_run/gpt-oss-120b",
+    "seed": 0,
+    "corruption_fraction": 0.3,
+    "est_cost_usd": null,
+    "note": "Single-seed estimate unless a seed-variance (E2) range is recorded."
+  }
+}

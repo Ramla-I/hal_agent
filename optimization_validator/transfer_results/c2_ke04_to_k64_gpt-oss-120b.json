@@ -1,0 +1,31 @@
+{
+  "frozen_tau": 0.15,
+  "target_precision": 0.95,
+  "amortization_tol": 0.01,
+  "reaches_target": true,
+  "amortization_holds": true,
+  "frozen_applied": {
+    "tau": 0.15,
+    "precision": 0.9675126903553299,
+    "yield_recall": 0.5821624923640807,
+    "n_reviewed": 985,
+    "n_total": 2344,
+    "true_positives": 953,
+    "false_positives": 32,
+    "false_negatives": 684,
+    "true_negatives": 675
+  },
+  "device_own_retuned": {
+    "tau": 0.09999999999999998,
+    "precision": 0.9511465603190429,
+    "yield_recall": 0.5827733659132559,
+    "n_reviewed": 1003,
+    "n_total": 2344,
+    "true_positives": 954,
+    "false_positives": 49,
+    "false_negatives": 683,
+    "true_negatives": 658
+  },
+  "precision_gap_vs_own": -0.016366130036287063,
+  "yield_gap_vs_own": 0.0006108735491752171
+}

@@ -248,11 +248,13 @@ A1 headline metrics, A2 cross-model, B1 curation lift, E1 per-class, E2 seed var
 - [x] **★ C1. Cross-distribution π test** (STM/gpt-oss) — froze raw α/β at 30% corruption,
       applied to 50%: instrument stable (Δα 0.023, Δβ 0.010), π̂ recovered to ~2.5–3%
       (`c1_cross_distribution.py`; `transfer_results/RESULTS.md`). Remaining: gpt-5.4 / NXP.
-- [~] **★ C2. Per-vendor transfer (amortization claim)** — freeze device-1 calibration,
-      apply to device 2 of the same vendor. **STM done** (rm0041 STM32F1 → rm0394 STM32L4):
-      evolved program transfers (95% coverage), same τ=0.98, freezing costs 0 precision/yield
-      vs re-tuning (`c2_transfer.py`; `transfer_results/RESULTS.md`). **Remaining: NXP**
-      (ke04 → k64) — needs the `--manufacturer` plumbing fix + NXP retrieval assets.
+- [x] **★ C2. Per-vendor transfer (amortization claim)** — freeze device-1 calibration,
+      apply to device 2 of the same vendor. **Done both vendors** (`c2_transfer.py`;
+      `transfer_results/RESULTS.md`): STM rm0041 (F1) → rm0394 (L4) — program transfers
+      (95% cov), same τ=0.98, 0 cost vs re-tuning; NXP ke04 → k64 — program transfers
+      (90% cov), frozen τ clears target (prec 0.968), amortization holds. Amortization holds
+      for both; they differ only on target-reachability (rm0394's ceiling 0.941 < 0.95).
+      Remaining: gpt-5.4; a same-family sanity pair.
 
 **D. External validation — strongest evidence, slow**
 - [ ] **D1. Validator-confirmed bugs vs upstream merges** (STM) — ties internal precision to
@@ -275,16 +277,17 @@ OpenEvolve program or accept `--retrieval openai`) and real NXP access notations
       time — add that so the hint transfers to deployment (the general aliasing rule already
       does). (`alt_name` handling and derived-peripheral expansion themselves are done — see
       *Name aliasing* and the pipeline above.)
-- [ ] **Fill in real NXP / TI access notations** in `optimization_validator/access_notations.json`
-      (currently stubs) when ke04 / msp430g2 slices are benchmarked.
-- [ ] **Benchmark the held-out vendors** (NXP `ke04`, then TI) — verified slices exist;
-      tests whether rm0041 numbers transfer. Needs each device's chunks/Chroma + an
-      OpenEvolve program (or `--retrieval openai`).
-- [~] **Device-to-device transfer within a vendor** (the amortization claim; experiment
-      C2). **STM DONE** — froze the rm0041 (STM32F1) calibration (evolved program + τ=0.98)
-      and applied it cross-family to rm0394 (STM32L4): 95% retrieval coverage, same τ, zero
-      precision/yield cost vs re-tuning (`transfer_results/RESULTS.md`). **Remaining: NXP**
-      (ke04 → k64) — needs the `--manufacturer` fix + NXP chunks/retrieval.
+- [ ] **`%s`-dim register expansion in verified CSVs** — NXP ke04's top `access` FN class
+      was retrieval misses on unexpanded SVD array registers (`pit.tctrl%s` never matches the
+      datasheet's `TCTRL0/1/2`), not a notation gap. Expand `%s` dims so these are retrievable.
+      (Real NXP/TI access *notations* turned out not to be the bottleneck — the stub legend
+      was fine on ke04.)
+- [x] **Benchmark the held-out vendor** (NXP `ke04`) — done: gate precision 0.953 / yield
+      0.863 / 97% coverage with `--manufacturer nxp` + ke04's evolved program
+      (`transfer_results/RESULTS.md`). TI still open.
+- [x] **Device-to-device transfer within a vendor** (experiment C2) — done both vendors:
+      STM rm0041→rm0394 (cross-family) and NXP ke04→k64; amortization holds in both
+      (`transfer_results/RESULTS.md`). Remaining: gpt-5.4; a same-family sanity pair.
 - [x] **Genuine calibration test for π** (STM/gpt-oss) — measured raw α/β at 30% corruption,
       applied to a 50%-corrupted slice; π̂ recovered to ~2.5–3% (`transfer_results/RESULTS.md`).
       Remaining: gpt-5.4 / NXP.

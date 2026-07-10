@@ -1,0 +1,44 @@
+{
+  "vendor": "nxp",
+  "device": "k64",
+  "model": "gpt-oss-120b",
+  "config_to_freeze": {
+    "curated_examples": null,
+    "use_alt_name": true,
+    "objective": "precision",
+    "target_precision": 0.95
+  },
+  "deployment_threshold": 0.1,
+  "threshold_stability": {
+    "per_fold_tau": [
+      0.1,
+      0.1,
+      0.15,
+      0.15,
+      0.1
+    ],
+    "min": 0.1,
+    "max": 0.15,
+    "std": 0.0245
+  },
+  "instrument": {
+    "alpha_sensitivity": 0.5827733659132559,
+    "beta_specificity": 0.9363507779349364
+  },
+  "measured_on_dev_device": {
+    "gate_precision": 0.954954954954955,
+    "yield_recall": 0.5827733659132559,
+    "f1": 0.723823975720789,
+    "validated_precision": 0.9549549549549551,
+    "n_invariants": 2344,
+    "config": "baseline"
+  },
+  "provenance": {
+    "source_run": "optimization_validator/nxpk64_c2_run/gpt-oss-120b",
+    "seed": 0,
+    "corruption_fraction": 0.3,
+    "est_cost_usd": null,
+    "note": "Single-seed C2 transfer measurement. Retrieval frozen from ke04 and applied to k64; see transfer_results/RESULTS.md.",
+    "retrieval": "OpenEvolve program transferred from ke04 (output_ke04/best) \u2014 NXP C2 cross-device transfer, not a native k64 evolution"
+  }
+}

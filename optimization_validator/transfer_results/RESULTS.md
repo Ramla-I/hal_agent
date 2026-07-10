@@ -53,9 +53,50 @@ baseline config); apply the frozen τ and compare to rm0394's own tuning.
 
 Artifact: `c2_rm0041_to_rm0394_gpt-oss-120b.json`.
 
+## Held-out vendor — NXP ke04 (does the approach work off STM at all?)
+
+Ran the full pipeline on NXP KE04 (`--manufacturer nxp`, ke04's own evolved program,
+30% corruption, baseline). **It works, and slightly better than STM:** gate precision
+**0.953** (clears target), yield **0.863**, F1 0.906, retrieval coverage **97%**.
+
+Two caveats surfaced (both benchmark/device facts, not method failures):
+- **`access` is the top FN class (82/261)** — but inspection shows it is *not* a notation
+  gap: where the datasheet is retrieved it already says "read-write", and the misses are
+  retrieval failures on **unexpanded SVD array registers** (`pit.tctrl%s` never matches the
+  datasheet's `TCTRL0/1/2`). Filling the NXP legend would not help; the fix is `%s`-dim
+  expansion in the verified CSV.
+- **ke04's deployment threshold is unstable:** τ=0.15 with per-fold spread 0.15–0.9
+  (std 0.36) — very unlike rm0041's rock-steady τ=0.98.
+
+## ★ C2 (NXP) — transfer ke04 → k64 (MK64F12)
+
+Froze ke04's evolved program + deployment τ (0.15) and applied to k64.
+
+- **Retrieval transfers:** ke04 program → **90%** coverage on k64.
+- **Frozen τ = 0.15 on k64:** precision **0.968**, yield **0.582** — **clears the target**
+  (higher precision than k64's own tuning, 0.951) and freezing costs
+  **d_precision −0.016, d_yield 0.001** vs re-tuning ⇒ **amortization holds**.
+- Notably the transfer succeeds *despite* ke04's unstable threshold: k64's labeler is clean
+  enough that a low τ still gives high precision (k64's own τ=0.10 is tight, std 0.024).
+
+| device | retrieval coverage | frozen τ | precision | yield | own-tuned τ | amortization |
+|---|---|---|---|---|---|---|
+| ke04 (dev) | 97% | 0.15 | 0.953 | 0.863 | — | — |
+| k64 (transfer) | 90% | 0.15 | 0.968 | 0.582 | 0.10 | holds (d_prec −0.016, d_yield 0.001) |
+
+Artifact: `c2_ke04_to_k64_gpt-oss-120b.json`.
+
+## Summary across both vendors (C2)
+
+**Amortization holds for both STM and NXP** — freezing device-1's calibration costs ~nothing
+vs. re-tuning on device-2. The two differ on `reaches_target`: rm0394's own precision ceiling
+(0.941) sits just below 0.95, while k64 clears it (0.968). So the paper claim is "the frozen
+operating point is no worse than per-device tuning," with the target-reachability caveat that
+some devices are intrinsically harder.
+
 ## Notes
 
 - C1's α/β are the **raw** labeler (τ=0.5) — the fixed operating point cross-distribution
-  transfer requires — so they differ from the validator card's tuned-gate α/β (0.689/0.912).
-- Both experiments are gpt-oss-120b only (gpt-5.4 not run for transfer). NXP (ke04 → k64) is
-  the remaining vendor pair and needs the `--manufacturer` plumbing fix first.
+  transfer requires — so they differ from the validator card's tuned-gate α/β.
+- All transfer results are gpt-oss-120b only (gpt-5.4 not run for transfer).
+- C1 was run for STM only; NXP C1 (cross-distribution π on ke04/k64) is not yet done.

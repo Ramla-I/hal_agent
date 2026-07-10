@@ -1,6 +1,7 @@
 {
   "frozen_tau": 0.98,
   "target_precision": 0.95,
+  "amortization_tol": 0.01,
   "reaches_target": false,
   "amortization_holds": true,
   "frozen_applied": {

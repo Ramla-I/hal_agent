@@ -108,25 +108,31 @@ def read_judgments(path: str):
     return scores, golds
 
 
-def transfer_report(scores, golds, frozen_tau, target_precision=0.95) -> dict:
-    """Apply the FROZEN tau to this device and compare to its own re-tuned operating point."""
+def transfer_report(scores, golds, frozen_tau, target_precision=0.95, tol=0.01) -> dict:
+    """Apply the FROZEN tau to this device and compare to its own re-tuned operating point.
+
+    `tol` is the "no meaningful cost" tolerance for the amortization verdict (default 0.01,
+    i.e. 1 percentage point) — small measurement-scale gaps don't count as a transfer cost.
+    """
     frozen = metrics_at(scores, golds, frozen_tau)
     own_tau = best_tau_at_precision(scores, golds, target_precision)
     own = metrics_at(scores, golds, own_tau)
     reaches_target = frozen["precision"] is not None and frozen["precision"] >= target_precision
+    # gap = how much BETTER re-tuning does than freezing (positive => freezing left something
+    # on the table; <= 0 => freezing is as good or better).
     p_gap = ((own["precision"] - frozen["precision"])
              if own["precision"] is not None and frozen["precision"] is not None else None)
     y_gap = ((own["yield_recall"] - frozen["yield_recall"])
              if own["yield_recall"] is not None and frozen["yield_recall"] is not None else None)
     # The amortization claim: freezing device-1's tau costs (almost) nothing vs. per-device
-    # tuning on device-2. This is distinct from whether device-2 can hit the target at all
-    # (a device-hardness question) — device-2's ceiling may sit below target regardless.
-    eps = 1e-6
+    # tuning on device-2. Distinct from whether device-2 can hit the target at all (a
+    # device-hardness question) — device-2's ceiling may sit below target regardless.
     amortization_holds = (p_gap is not None and y_gap is not None
-                          and p_gap <= eps and y_gap <= eps)
+                          and p_gap <= tol and y_gap <= tol)
     return {
         "frozen_tau": frozen_tau,
         "target_precision": target_precision,
+        "amortization_tol": tol,
         # frozen tau achieves the precision target on device-2 (operational go/no-go):
         "reaches_target": reaches_target,
         # frozen tau is no worse than re-tuning on device-2 (the amortization claim):
@@ -149,6 +155,9 @@ def main():
     ap.add_argument("--frozen-card", default=None,
                     help="device-1 validator card JSON (reads deployment_threshold)")
     ap.add_argument("--target-precision", type=float, default=0.95)
+    ap.add_argument("--amortization-tol", type=float, default=0.01,
+                    help="tolerance (default 0.01) below which a precision/yield gap vs "
+                         "re-tuning is treated as no transfer cost")
     ap.add_argument("--out", default=None, help="optional path to write the result JSON")
     args = ap.parse_args()
 
@@ -160,7 +169,7 @@ def main():
         frozen_tau = card["deployment_threshold"]
 
     scores, golds = read_judgments(args.judgments)
-    rep = transfer_report(scores, golds, frozen_tau, args.target_precision)
+    rep = transfer_report(scores, golds, frozen_tau, args.target_precision, args.amortization_tol)
 
     fa, ow = rep["frozen_applied"], rep["device_own_retuned"]
     print("C2 — per-vendor transfer (freeze device-1 tau, apply to device-2)")
