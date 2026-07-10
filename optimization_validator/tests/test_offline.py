@@ -388,7 +388,98 @@ def test_operational_gate():
     check(int(rel["n"].sum()) == len(queue), "reliability bins cover every survivor")
 
 
+def test_c1_cross_distribution():
+    print("\n== C1 cross-distribution pi (Rogan-Gladen transfer) ==")
+    from optimization_validator.c1_cross_distribution import (
+        instrument_from_labels, rogan_gladen, cross_distribution,
+    )
+
+    def labels(tp, fp, tn, fn):
+        # (is_true, is_correct) pairs: TP=(T,T) FP=(T,F) TN=(F,F) FN=(F,T)
+        it = [True] * tp + [True] * fp + [False] * tn + [False] * fn
+        ic = [True] * tp + [False] * fp + [False] * tn + [True] * fn
+        return it, ic
+
+    # A prevalence-INVARIANT labeler: alpha=0.9, beta=0.8, applied at two prevalences.
+    calib = labels(tp=630, fp=60, tn=240, fn=70)   # pi=0.70 (700 pos / 300 neg)
+    apply = labels(tp=450, fp=100, tn=400, fn=50)  # pi=0.50 (500 pos / 500 neg)
+
+    ci = instrument_from_labels(*calib)
+    check(abs(ci["alpha"] - 0.9) < 1e-9 and abs(ci["beta"] - 0.8) < 1e-9,
+          f"instrument alpha/beta from labels (a={ci['alpha']}, b={ci['beta']})")
+    check(abs(ci["pi_true"] - 0.7) < 1e-9 and abs(ci["r_hat"] - 0.69) < 1e-9,
+          f"calib pi_true=0.70, r_hat=0.69 (got {ci['pi_true']}, {ci['r_hat']})")
+
+    # FORWARD: freeze the 0.70-run instrument, recover the 0.50-run's prevalence.
+    fwd = cross_distribution(calib, apply)
+    check(abs(fwd["pi_hat_cross"] - 0.50) < 1e-9,
+          f"forward pi_hat recovers 0.50 from a foreign (0.70) instrument (got {fwd['pi_hat_cross']})")
+    check(fwd["pi_error"] < 1e-9, f"forward |error| ~ 0 (got {fwd['pi_error']})")
+    # REVERSE: same stable instrument the other way recovers 0.70.
+    rev = cross_distribution(apply, calib)
+    check(abs(rev["pi_hat_cross"] - 0.70) < 1e-9,
+          f"reverse pi_hat recovers 0.70 (got {rev['pi_hat_cross']})")
+    # Instrument is stable, so the measured deltas are ~0.
+    st = fwd["instrument_stability"]
+    check(st["alpha_abs_delta"] < 1e-9 and st["beta_abs_delta"] < 1e-9,
+          f"instrument stable across prevalences (d_alpha={st['alpha_abs_delta']}, d_beta={st['beta_abs_delta']})")
+
+    # A DRIFTING instrument (alpha/beta change with prevalence) must NOT recover the truth,
+    # so C1 would flag it — apply a random-ish labeler's numbers.
+    drift = rogan_gladen(r_hat=0.55, alpha=0.5, beta=0.5)  # alpha+beta-1 = 0 -> not identifiable
+    check(not drift["identifiable"] and drift["pi"] is None,
+          "non-identifiable instrument (alpha+beta<=1) flagged, no pi returned")
+
+
+def test_c2_transfer():
+    print("\n== C2 per-vendor transfer (freeze device-1 tau, apply to device-2) ==")
+    from optimization_validator.c2_transfer import (
+        metrics_at, best_tau_at_precision, transfer_report,
+    )
+
+    # Device-2 scores where a frozen tau=0.98 holds precision (1.0) but leaves yield on the
+    # table vs device-2's own tuned tau=0.85 (which keeps all 3 trues cleanly).
+    scores = [0.99, 0.90, 0.85, 0.80, 0.30]
+    golds = [True, True, True, False, False]
+    rep = transfer_report(scores, golds, frozen_tau=0.98, target_precision=0.95)
+    check(rep["reaches_target"] is True, "frozen tau still clears the precision target on device-2")
+    check(abs(rep["frozen_applied"]["precision"] - 1.0) < 1e-9,
+          f"frozen-tau precision on device-2 ({rep['frozen_applied']['precision']})")
+    check(abs(rep["frozen_applied"]["yield_recall"] - 1 / 3) < 1e-9,
+          f"frozen-tau yield on device-2 = 1/3 ({rep['frozen_applied']['yield_recall']})")
+    check(abs(rep["device_own_retuned"]["tau"] - 0.85) < 1e-9,
+          f"device-2 re-tunes to tau=0.85 ({rep['device_own_retuned']['tau']})")
+    check(abs(rep["yield_gap_vs_own"] - (1.0 - 1 / 3)) < 1e-9,
+          f"transfer costs 2/3 yield vs recalibrating ({rep['yield_gap_vs_own']})")
+    # Here freezing DOES cost yield vs re-tuning, so amortization does NOT hold.
+    check(rep["amortization_holds"] is False, "amortization does not hold when freezing leaves yield on the table")
+
+    # Transfer FAILS the target: a high-score false positive on device-2 drops frozen precision.
+    rep2 = transfer_report([0.99, 0.985], [False, True], frozen_tau=0.98, target_precision=0.95)
+    check(rep2["reaches_target"] is False, "frozen tau misses the target when device-2 has a high-score FP")
+    check(abs(rep2["frozen_applied"]["precision"] - 0.5) < 1e-9,
+          f"frozen-tau precision drops to 0.5 ({rep2['frozen_applied']['precision']})")
+
+    # Amortization HOLDS but target NOT reached: device-2's ceiling sits below target (a
+    # top-score FP caps precision at 0.5), and the frozen tau costs nothing vs re-tuning
+    # (both accept the same rows) — the rm0394-shaped case.
+    rep3 = transfer_report([0.99, 0.98], [False, True], frozen_tau=0.98, target_precision=0.95)
+    check(rep3["reaches_target"] is False, "device-2 ceiling below target -> reaches_target False")
+    check(rep3["amortization_holds"] is True,
+          "amortization holds: freezing matches device-2's own tuning even below target")
+
+
 if __name__ == "__main__":
+    test_corruption_realism()
+    test_field_name_corruption()
+    test_folds()
+    test_calibration()
+    test_alt_name()
+    test_curated_examples_render_load_export()
+    test_curated_examples_fold_selection()
+    test_operational_gate()
+    test_c1_cross_distribution()
+    test_c2_transfer()
     test_corruption_realism()
     test_field_name_corruption()
     test_folds()
