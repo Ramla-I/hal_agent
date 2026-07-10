@@ -25,7 +25,7 @@ Make sure that changes to ``rust_codegen.py`` (or to the shared schema in
 
   3. ENFORCEMENT CHECK (needs cargo + a generated PAC) -- ``test_unconstrained_write_fails_to_compile``
      Inject, then ``cargo check`` a program that writes CR1 WITHOUT the required
-     witness tokens, and assert it is REJECTED with E0061 (wrong argument count).
+     composite proof, and assert it is REJECTED with E0061 (wrong argument count).
      This proves the constraint is actually enforced, not merely that legal code
      compiles. The PAC and the swapped-in ``main.rs`` are restored and checked,
      exactly as above.
@@ -207,11 +207,18 @@ def test_synthetic_constraint_matrix():
     generated = generate_constraint_module(register, "fake")
     assert generated.count("impl crate::ConstrainedReg") == 1
     assert generated.count("pub fn write<F>") == 1
+    assert generated.count("pub struct CtrlWriteReady(())") == 1
+    proof_section = generated.split("// === Composite Proof ===", 1)[1].split(
+        "// === Error Type ===",
+        1,
+    )[0]
+    assert "#[derive" not in proof_section
     assert "r.busy().bit_is_clear()" in generated
     assert "r.enabled().bit_is_set()" in generated
     assert "r.mode().bits() == 0x3" in generated
-    assert "verify_enabled_set" in generated
-    assert "verify_mode_equals" in generated
+    assert "pub fn verify_write_ready(&self)" in generated
+    assert "verify_enabled_set" not in generated
+    assert "verify_mode_equals" not in generated
     assert "First write rule" in generated
     assert "Second write rule" in generated
     assert generated == generate_constraint_module(register, "fake")
@@ -302,8 +309,8 @@ def test_constraint_test_compiles():
 # Test 3: enforcement (illegal program must NOT compile)
 # --------------------------------------------------------------------------- #
 
-# Illegal program: writes CR1 without the required witness tokens. After
-# injection the inherent CR1 write() shadow requires four arguments, so this is
+# Illegal program: writes CR1 without the required composite proof. After
+# injection the inherent CR1 write() shadow requires two arguments, so this is
 # rejected at type-check time (E0061).
 ILLEGAL_MAIN = """\
 #![no_std]
@@ -319,15 +326,37 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 pub extern "C" fn main() -> ! {
     let dp = unsafe { stm32f405::Peripherals::steal() };
     let i2c1 = &dp.I2C1;
-    // ILLEGAL: write without the required witness tokens.
+    // ILLEGAL: write without the required composite proof.
     i2c1.cr1().write(|w| w.pe().enabled());
+    loop {}
+}
+"""
+
+REUSED_PROOF_MAIN = """\
+#![no_std]
+#![no_main]
+use stm32f4::stm32f405;
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
+
+#[no_mangle]
+pub extern "C" fn main() -> ! {
+    let dp = unsafe { stm32f405::Peripherals::steal() };
+    let i2c1 = &dp.I2C1;
+    let proof = i2c1.cr1().verify_write_ready().unwrap();
+    i2c1.cr1().write(|w| w.pe().enabled(), proof);
+    // ILLEGAL: the non-Copy proof was consumed by the first write.
+    i2c1.cr1().write(|w| w.pe().enabled(), proof);
     loop {}
 }
 """
 
 
 def test_unconstrained_write_fails_to_compile():
-    """A token-less cr1().write(...) must be REJECTED at compile time (E0061).
+    """Proof-less and proof-reusing writes must be rejected by the compiler.
 
     Proves the constraint is actually enforced -- not merely that legal code
     compiles. Skips under the same conditions as test_constraint_test_compiles.
@@ -346,7 +375,7 @@ def test_unconstrained_write_fails_to_compile():
     orig_main = main_rs.read_bytes()
     sha_before = {p: _sha(p) for p in (PAC_GENERIC, PAC_MODRS, main_rs)}
 
-    check = None
+    checks: list[tuple[str, subprocess.CompletedProcess[str], str]] = []
     detail = ""
     try:
         inject = subprocess.run(
@@ -357,11 +386,16 @@ def test_unconstrained_write_fails_to_compile():
         if inject.returncode != 0:
             detail = "injection failed:\n" + inject.stdout + inject.stderr
         else:
-            main_rs.write_text(ILLEGAL_MAIN)
-            check = subprocess.run(
-                ["cargo", "check"], cwd=str(CRATE_DIR),
-                capture_output=True, text=True,
-            )
+            for name, source, expected_error in (
+                ("token-less write", ILLEGAL_MAIN, "E0061"),
+                ("reused proof", REUSED_PROOF_MAIN, "E0382"),
+            ):
+                main_rs.write_text(source)
+                check = subprocess.run(
+                    ["cargo", "check"], cwd=str(CRATE_DIR),
+                    capture_output=True, text=True,
+                )
+                checks.append((name, check, expected_error))
     except Exception as exc:  # never leave files mutated on an unexpected error
         detail = f"unexpected error during inject/check: {exc!r}"
     finally:
@@ -374,17 +408,15 @@ def test_unconstrained_write_fails_to_compile():
     for p in (PAC_GENERIC, PAC_MODRS, main_rs):
         assert _sha(p) == sha_before[p], f"{p} was NOT restored after the test."
 
-    # The injection must have run for this to be a valid negative test.
-    assert check is not None, detail or "constraint injection did not run"
-    # Enforcement: the illegal program must be rejected, specifically with E0061.
-    assert check.returncode != 0, (
-        "token-less cr1().write(...) COMPILED -- the constraint is NOT enforced!"
-    )
-    out = check.stdout + check.stderr
-    assert "E0061" in out, (
-        "illegal write was rejected, but not with the expected argument-count "
-        f"error (E0061):\n{out}"
-    )
+    assert checks, detail or "constraint injection did not run"
+    for name, check, expected_error in checks:
+        assert check.returncode != 0, (
+            f"{name} compiled -- the composite proof is not enforced"
+        )
+        output = check.stdout + check.stderr
+        assert expected_error in output, (
+            f"{name} did not produce expected {expected_error}:\n{output}"
+        )
 
 
 # --------------------------------------------------------------------------- #

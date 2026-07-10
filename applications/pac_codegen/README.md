@@ -3,9 +3,9 @@
 This is the **enforcement arm** of LIDAR: it turns extracted register **access
 constraints** (dependency / ordering invariants from datasheets) into
 compile-time–safe Rust for STM32 Peripheral Access Crates (PACs). The design
-uses witness tokens / linear types — a constrained register write requires proof
-tokens that the hardware preconditions hold, so an illegal access sequence fails
-to compile.
+uses affine witness proofs — a constrained register write requires a non-`Copy`
+composite proof that all hardware preconditions were checked, so an illegal
+access sequence fails to compile.
 
 This is one application under [`../`](../); the layout arm (SVD-diff bug-finding
 and reporting) is a separate sibling. See [`../README.md`](../README.md).
@@ -75,6 +75,11 @@ python applications/pac_codegen/rust_codegen.py \
     --inject applications/pac_codegen/vendored/stm32-rs/stm32f4/src/stm32f405/mod.rs
 ```
 
+For each constrained operation, the generated `verify_*_ready()` method performs
+one fresh register read, checks every precondition from that snapshot, and
+returns a single proof with a private constructor. The write or modify consumes
+that proof, so it cannot be reused for a second operation.
+
 `constraint_test/` is a minimal `no_std` crate that compiles the injected PAC and
 exercises both the safe (token-bearing) and would-be-unsafe access paths, serving
 as a compile-time regression check. Its `Cargo.toml` depends on the vendored PAC
@@ -133,8 +138,8 @@ python applications/pac_codegen/test_codegen.py
 - **`test_constraint_test_compiles`** injects into the PAC and `cargo check`s the
   `constraint_test` crate (legal, token-bearing paths) — it must pass.
 - **`test_unconstrained_write_fails_to_compile`** injects and `cargo check`s a
-  token-less `cr1().write(...)` — it must be **rejected with `E0061`**, proving
-  the constraint is enforced.
+  proof-less `cr1().write(...)` and a program that reuses a consumed proof. They
+  must be rejected with `E0061` and `E0382`, respectively.
 
 The two `cargo check` tests **skip** (they do not fail) unless `cargo` is on
 PATH **and** a *generated* `stm32f4` PAC exists at

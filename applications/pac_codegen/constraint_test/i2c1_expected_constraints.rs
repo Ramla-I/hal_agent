@@ -1,54 +1,19 @@
-// =============================================================================
-// i2c1_expected_constraints.rs
-//
-// GOLDEN reference output for the PAC constraint code generator.
-//
-// This is the exact Rust module that `rust_codegen.py` must emit for the I2C1
-// CR1 access constraints described in `stm32f405_i2c1.json` (same folder).
-// `test_codegen.py` regenerates that module and diffs it, line for line, against
-// the generated section below the marker line — so an unintended change to the
-// code generator (or to the shared schema in `defs.py`) is caught immediately,
-// before it can reach the PAC.
-//
-// This file is test data only: the `constraint_test` crate does NOT compile it
-// (cargo only builds `src/`).
-//
-// Everything ABOVE the marker line is an ignored, human-readable header.
-// Everything BELOW it is compared verbatim. If you change `rust_codegen.py` on
-// purpose, refresh the generated section by running, from
-// `applications/pac_codegen/`:
-//
-//     python rust_codegen.py constraint_test/stm32f405_i2c1.json \
-//         --peripheral i2c1 --output /tmp/new.rs
-//
-// then replacing everything below the marker line with the contents of
-// /tmp/new.rs.
-// =============================================================================
+// Golden output for applications/pac_codegen/rust_codegen.py.
+// Regenerate the generated section with the command documented in README.md.
 //@@LIDAR-GOLDEN-GENERATED@@
 //! Compile-time access constraints for I2C1 CR1.
 //!
 //! Generated from datasheet constraints. Do not edit manually.
 //!
-//! This module provides witness-token-based safe write methods that enforce
+//! This module provides composite-proof safe write methods that enforce
 //! hardware preconditions at the type level.
 
-// === Witness Tokens ===
-// Zero-sized types that prove a precondition has been verified.
+// === Composite Proof ===
+// A zero-sized, non-Copy proof that all preconditions were checked.
 
-/// Proof that STOP is cleared in CR1.
-/// This token is consumed by `write_constrained()` to enforce the
-/// precondition at compile time.
-pub struct StopClearedToken(());
-
-/// Proof that START is cleared in CR1.
-/// This token is consumed by `write_constrained()` to enforce the
-/// precondition at compile time.
-pub struct StartClearedToken(());
-
-/// Proof that PEC is cleared in CR1.
-/// This token is consumed by `write_constrained()` to enforce the
-/// precondition at compile time.
-pub struct PecClearedToken(());
+/// Proof that CR1 is ready for a constrained write operation.
+/// The private constructor ensures this can only be obtained by verification.
+pub struct Cr1WriteReady(());
 
 // === Error Type ===
 
@@ -63,54 +28,6 @@ pub enum ConstraintError {
     PecNotCleared,
 }
 
-// === Verification Methods ===
-// Methods on cr1::R to verify preconditions and obtain tokens.
-
-impl super::cr1::R {
-    /// Verify that STOP is cleared and obtain a proof token.
-    ///
-    /// Returns `Ok(StopClearedToken)` if the precondition holds,
-    /// `Err(ConstraintError::StopNotCleared)` otherwise.
-    #[inline(always)]
-    pub fn verify_stop_cleared(&self) -> Result<StopClearedToken, ConstraintError> {
-        let r = self;
-        if r.stop().bit_is_clear() {
-            Ok(StopClearedToken(()))
-        } else {
-            Err(ConstraintError::StopNotCleared)
-        }
-    }
-
-    /// Verify that START is cleared and obtain a proof token.
-    ///
-    /// Returns `Ok(StartClearedToken)` if the precondition holds,
-    /// `Err(ConstraintError::StartNotCleared)` otherwise.
-    #[inline(always)]
-    pub fn verify_start_cleared(&self) -> Result<StartClearedToken, ConstraintError> {
-        let r = self;
-        if r.start().bit_is_clear() {
-            Ok(StartClearedToken(()))
-        } else {
-            Err(ConstraintError::StartNotCleared)
-        }
-    }
-
-    /// Verify that PEC is cleared and obtain a proof token.
-    ///
-    /// Returns `Ok(PecClearedToken)` if the precondition holds,
-    /// `Err(ConstraintError::PecNotCleared)` otherwise.
-    #[inline(always)]
-    pub fn verify_pec_cleared(&self) -> Result<PecClearedToken, ConstraintError> {
-        let r = self;
-        if r.pec().bit_is_clear() {
-            Ok(PecClearedToken(()))
-        } else {
-            Err(ConstraintError::PecNotCleared)
-        }
-    }
-
-}
-
 // === Constrained Write ===
 
 /// Safe write to CR1 that enforces datasheet constraints.
@@ -120,15 +37,28 @@ impl super::cr1::R {
 ///
 /// # Usage
 /// ```no_run
-/// let r = i2c1.cr1().read();
-/// let stop_token = r.verify_stop_cleared().unwrap();
-/// let start_token = r.verify_start_cleared().unwrap();
-/// let pec_token = r.verify_pec_cleared().unwrap();
-/// i2c1.cr1().write_constrained(|w| w, stop_token, start_token, pec_token);
+/// let proof = i2c1.cr1().verify_write_ready().unwrap();
+/// i2c1.cr1().write_constrained(|w| w, proof);
 /// ```
 impl crate::ConstrainedReg<super::cr1::CR1rs> {
+    /// Read CR1 once and verify every write precondition.
     #[inline(always)]
-    pub fn write_constrained<F>(&self, f: F, _stop_token: StopClearedToken, _start_token: StartClearedToken, _pec_token: PecClearedToken) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
+    pub fn verify_write_ready(&self) -> Result<Cr1WriteReady, ConstraintError> {
+        let r = self.reg.read();
+        if !(r.stop().bit_is_clear()) {
+            return Err(ConstraintError::StopNotCleared);
+        }
+        if !(r.start().bit_is_clear()) {
+            return Err(ConstraintError::StartNotCleared);
+        }
+        if !(r.pec().bit_is_clear()) {
+            return Err(ConstraintError::PecNotCleared);
+        }
+        Ok(Cr1WriteReady(()))
+    }
+
+    #[inline(always)]
+    pub fn write_constrained<F>(&self, f: F, _proof: Cr1WriteReady) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
     where
         F: FnOnce(&mut crate::W<super::cr1::CR1rs>) -> &mut crate::W<super::cr1::CR1rs>,
     {
@@ -148,7 +78,7 @@ impl crate::ConstrainedReg<super::cr1::CR1rs> {
     /// # Constraint
     /// When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. This is to avoid setting a second STOP, START or PEC request.
     #[inline(always)]
-    pub fn modify_constrained<F>(&self, f: F, _stop_token: StopClearedToken, _start_token: StartClearedToken, _pec_token: PecClearedToken) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
+    pub fn modify_constrained<F>(&self, f: F, _proof: Cr1WriteReady) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
     where
         for<'w> F: FnOnce(&crate::R<super::cr1::CR1rs>, &'w mut crate::W<super::cr1::CR1rs>) -> &'w mut crate::W<super::cr1::CR1rs>,
     {
@@ -172,25 +102,25 @@ impl crate::ConstrainedReg<super::cr1::CR1rs> {
 
     /// Writes to CR1 with constraint verification.
     ///
-    /// This method shadows `Reg::write()` and requires witness tokens,
+    /// This method shadows `Reg::write()` and requires a composite proof,
     /// enforcing hardware constraints at compile time.
     #[inline(always)]
-    pub fn write<F>(&self, f: F, _stop_token: StopClearedToken, _start_token: StartClearedToken, _pec_token: PecClearedToken) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
+    pub fn write<F>(&self, f: F, proof: Cr1WriteReady) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
     where
         F: FnOnce(&mut crate::W<super::cr1::CR1rs>) -> &mut crate::W<super::cr1::CR1rs>,
     {
-        self.write_constrained(f, _stop_token, _start_token, _pec_token)
+        self.write_constrained(f, proof)
     }
 
     /// Modifies CR1 via read-modify-write with constraint verification.
     ///
-    /// This method shadows `Reg::modify()` and requires witness tokens,
+    /// This method shadows `Reg::modify()` and requires a composite proof,
     /// enforcing hardware constraints at compile time.
     #[inline(always)]
-    pub fn modify<F>(&self, f: F, _stop_token: StopClearedToken, _start_token: StartClearedToken, _pec_token: PecClearedToken) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
+    pub fn modify<F>(&self, f: F, proof: Cr1WriteReady) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
     where
         for<'w> F: FnOnce(&crate::R<super::cr1::CR1rs>, &'w mut crate::W<super::cr1::CR1rs>) -> &'w mut crate::W<super::cr1::CR1rs>,
     {
-        self.modify_constrained(f, _stop_token, _start_token, _pec_token)
+        self.modify_constrained(f, proof)
     }
 }

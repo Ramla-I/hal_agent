@@ -3,7 +3,7 @@
 Constraint-aware Rust code generator for PAC crates.
 
 Reads a RegisterInfo JSON file (with access_constraints) and generates
-a Rust module that adds compile-time safety via witness tokens and
+a Rust module that adds compile-time safety via affine witness proofs and
 constrained write methods alongside the existing svd2rust-generated code.
 
 Usage:
@@ -79,25 +79,9 @@ def field_to_rust_name(field_name: str) -> str:
     return field_name.lower()
 
 
-def field_to_token_name(field_name: str, state: str) -> str:
-    """Generate a witness token type name from field + required state.
-
-    Examples:
-        ("STOP", "cleared") -> "StopClearedToken"
-        ("START", "set")    -> "StartSetToken"
-        ("PEC", "cleared")  -> "PecClearedToken"
-    """
-    name_part = field_name.capitalize()
-    if state == "cleared":
-        state_part = "Cleared"
-    elif state == "set":
-        state_part = "Set"
-    elif state.startswith("equals:"):
-        val = state.split(":", 1)[1]
-        state_part = f"Eq{val}"
-    else:
-        state_part = state.capitalize()
-    return f"{name_part}{state_part}Token"
+def operation_to_proof_name(register_name: str, operation: str) -> str:
+    """Generate the private-constructor proof type for an operation."""
+    return f"{register_name.capitalize()}{operation.capitalize()}Ready"
 
 
 def field_to_error_variant(field_name: str, state: str) -> str:
@@ -143,15 +127,20 @@ def generate_constraint_module(
     """Generate a Rust module implementing compile-time constraints.
 
     The module provides:
-    - Zero-sized witness token types for each precondition
+    - One zero-sized composite proof per constrained operation
     - A ConstraintError enum for runtime verification failures
-    - verify_* methods on the register reader to obtain tokens
-    - A write_constrained() method that consumes tokens
+    - A fresh-read verifier on the constrained register
+    - write/modify methods that consume the composite proof
     """
     reg_name = register_info.datasheet_register_abbreviation
     reg_lower = reg_name.lower()
     peripheral_lower = peripheral.lower()
     constraints = normalize_constraints(register_info)
+    write_constraints = [
+        constraint
+        for constraint in constraints
+        if constraint.target_operation == "write"
+    ]
 
     lines = []
 
@@ -160,13 +149,13 @@ def generate_constraint_module(
     lines.append(f'//!')
     lines.append(f'//! Generated from datasheet constraints. Do not edit manually.')
     lines.append(f'//!')
-    lines.append(f'//! This module provides witness-token-based safe write methods that enforce')
+    lines.append(f'//! This module provides composite-proof safe write methods that enforce')
     lines.append(f'//! hardware preconditions at the type level.')
     lines.append('')
 
     # Collect all preconditions across all constraints
     all_preconditions = []
-    for constraint in constraints:
+    for constraint in write_constraints:
         for pre in constraint.preconditions:
             key = (pre.field_name, pre.required_state)
             if key not in [(p.field_name, p.required_state) for p in all_preconditions]:
@@ -176,17 +165,15 @@ def generate_constraint_module(
         lines.append('// No access constraints defined for this register.')
         return '\n'.join(lines)
 
-    # --- Witness token types ---
-    lines.append('// === Witness Tokens ===')
-    lines.append('// Zero-sized types that prove a precondition has been verified.')
+    # --- Composite proof type ---
+    proof_name = operation_to_proof_name(reg_name, "write")
+    lines.append('// === Composite Proof ===')
+    lines.append('// A zero-sized, non-Copy proof that all preconditions were checked.')
     lines.append('')
-    for pre in all_preconditions:
-        token_name = field_to_token_name(pre.field_name, pre.required_state)
-        lines.append(f'/// Proof that {pre.field_name} is {pre.required_state} in {reg_name}.')
-        lines.append(f'/// This token is consumed by `write_constrained()` to enforce the')
-        lines.append(f'/// precondition at compile time.')
-        lines.append(f'pub struct {token_name}(());')
-        lines.append('')
+    lines.append(f'/// Proof that {reg_name} is ready for a constrained write operation.')
+    lines.append(f'/// The private constructor ensures this can only be obtained by verification.')
+    lines.append(f'pub struct {proof_name}(());')
+    lines.append('')
 
     # --- Error enum ---
     lines.append('// === Error Type ===')
@@ -201,47 +188,9 @@ def generate_constraint_module(
     lines.append('}')
     lines.append('')
 
-    # --- Verify methods on R (reader) ---
-    lines.append('// === Verification Methods ===')
-    lines.append(f'// Methods on {reg_lower}::R to verify preconditions and obtain tokens.')
-    lines.append('')
-    lines.append(f'impl super::{reg_lower}::R {{')
-    for pre in all_preconditions:
-        token_name = field_to_token_name(pre.field_name, pre.required_state)
-        error_variant = field_to_error_variant(pre.field_name, pre.required_state)
-        method_name = f"verify_{field_to_rust_name(pre.field_name)}_{pre.required_state.split(':')[0]}"
-        check_expr = state_to_check(pre.field_name, pre.required_state)
-
-        lines.append(f'    /// Verify that {pre.field_name} is {pre.required_state} and obtain a proof token.')
-        lines.append(f'    ///')
-        lines.append(f'    /// Returns `Ok({token_name})` if the precondition holds,')
-        lines.append(f'    /// `Err(ConstraintError::{error_variant})` otherwise.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn {method_name}(&self) -> Result<{token_name}, ConstraintError> {{')
-        lines.append(f'        let r = self;')
-        lines.append(f'        if {check_expr} {{')
-        lines.append(f'            Ok({token_name}(()))')
-        lines.append(f'        }} else {{')
-        lines.append(f'            Err(ConstraintError::{error_variant})')
-        lines.append(f'        }}')
-        lines.append(f'    }}')
-        lines.append('')
-    lines.append('}')
-    lines.append('')
-
     # --- Constrained write methods on Reg ---
     # Normalization guarantees one method set per target operation.
-    for constraint in constraints:
-        if constraint.target_operation != "write":
-            continue
-
-        # Build token parameter list
-        token_params = []
-        for pre in constraint.preconditions:
-            token_name = field_to_token_name(pre.field_name, pre.required_state)
-            param_name = f"_{field_to_rust_name(pre.field_name)}_token"
-            token_params.append((param_name, token_name))
-
+    for constraint in write_constraints:
         target = constraint.target_register.lower()
 
         # Fully-qualified type alias for readability in generated code
@@ -271,28 +220,47 @@ def generate_constraint_module(
         lines.append(f'///')
         lines.append(f'/// # Usage')
         lines.append(f'/// ```no_run')
-        lines.append(f'/// let r = {peripheral_lower}.{target}().read();')
-        for (param_name, token_name), precondition in zip(
-            token_params,
-            constraint.preconditions,
-        ):
-            state_method = precondition.required_state.split(":", 1)[0]
-            verify_method = (
-                f"verify_{param_name.strip('_').replace('_token', '')}_"
-                f"{state_method}"
-            )
-            lines.append(f'/// let {param_name.lstrip("_")} = r.{verify_method}().unwrap();')
-        call_args = ', '.join(f'{p.lstrip("_")}' for p, _ in token_params)
-        lines.append(f'/// {peripheral_lower}.{target}().write_constrained(|w| w, {call_args});')
+        lines.append(
+            f'/// let proof = {peripheral_lower}.{target}()'
+            f'.verify_write_ready().unwrap();'
+        )
+        lines.append(
+            f'/// {peripheral_lower}.{target}()'
+            f'.write_constrained(|w| w, proof);'
+        )
         lines.append(f'/// ```')
 
-        # Open impl block — contains write_constrained, deprecated write, deprecated modify
-        params_str = ', '.join(f'{p}: {t}' for p, t in token_params)
+        # One inherent impl verifies and consumes the operation-level proof.
         lines.append(f'impl crate::ConstrainedReg<{reg_spec}> {{')
+
+        lines.append(f'    /// Read {reg_name} once and verify every write precondition.')
+        lines.append(f'    #[inline(always)]')
+        lines.append(
+            f'    pub fn verify_write_ready(&self) '
+            f'-> Result<{proof_name}, ConstraintError> {{'
+        )
+        lines.append(f'        let r = self.reg.read();')
+        for precondition in constraint.preconditions:
+            error_variant = field_to_error_variant(
+                precondition.field_name,
+                precondition.required_state,
+            )
+            check_expr = state_to_check(
+                precondition.field_name,
+                precondition.required_state,
+            )
+            lines.append(f'        if !({check_expr}) {{')
+            lines.append(
+                f'            return Err(ConstraintError::{error_variant});'
+            )
+            lines.append(f'        }}')
+        lines.append(f'        Ok({proof_name}(()))')
+        lines.append(f'    }}')
+        lines.append('')
 
         # --- write_constrained: own body (does NOT call self.write to avoid deprecation) ---
         lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn write_constrained<F>(&self, f: F, {params_str}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
+        lines.append(f'    pub fn write_constrained<F>(&self, f: F, _proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
         lines.append(f'    where')
         lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,')
         lines.append(f'    {{')
@@ -308,14 +276,14 @@ def generate_constraint_module(
         lines.append(f'    }}')
         lines.append('')
 
-        # --- modify_constrained: read-modify-write with tokens ---
+        # --- modify_constrained: read-modify-write with a composite proof ---
         lines.append(f'    /// Safe read-modify-write to {reg_name} that enforces datasheet constraints.')
         lines.append(f'    ///')
         lines.append(f'    /// # Constraint')
         for datasheet_text in constraint.datasheet_texts:
             lines.append(f'    /// {datasheet_text}')
         lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn modify_constrained<F>(&self, f: F, {params_str}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
+        lines.append(f'    pub fn modify_constrained<F>(&self, f: F, _proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
         lines.append(f'    where')
         lines.append(f'        for<\'w> F: FnOnce(&crate::R<{reg_spec}>, &\'w mut crate::W<{reg_spec}>) -> &\'w mut crate::W<{reg_spec}>,')
         lines.append(f'    {{')
@@ -338,32 +306,32 @@ def generate_constraint_module(
         lines.append(f'    }}')
         lines.append('')
 
-        # --- write() shadow: requires tokens, shadows Deref target's write(f) ---
-        # Calling write(f) without tokens produces a compilation error (argument count mismatch).
+        # --- write() shadow: requires proof, shadows Deref target's write(f) ---
+        # Calling write(f) without proof produces an argument-count error.
         lines.append(f'    /// Writes to {reg_name} with constraint verification.')
         lines.append(f'    ///')
-        lines.append(f'    /// This method shadows `Reg::write()` and requires witness tokens,')
+        lines.append(f'    /// This method shadows `Reg::write()` and requires a composite proof,')
         lines.append(f'    /// enforcing hardware constraints at compile time.')
         lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn write<F>(&self, f: F, {params_str}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
+        lines.append(f'    pub fn write<F>(&self, f: F, proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
         lines.append(f'    where')
         lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,')
         lines.append(f'    {{')
-        lines.append(f'        self.write_constrained(f, {", ".join(p for p, _ in token_params)})')
+        lines.append(f'        self.write_constrained(f, proof)')
         lines.append(f'    }}')
         lines.append('')
 
-        # --- modify() shadow: requires tokens, shadows Deref target's modify(f) ---
+        # --- modify() shadow: requires proof, shadows Deref target's modify(f) ---
         lines.append(f'    /// Modifies {reg_name} via read-modify-write with constraint verification.')
         lines.append(f'    ///')
-        lines.append(f'    /// This method shadows `Reg::modify()` and requires witness tokens,')
+        lines.append(f'    /// This method shadows `Reg::modify()` and requires a composite proof,')
         lines.append(f'    /// enforcing hardware constraints at compile time.')
         lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn modify<F>(&self, f: F, {params_str}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
+        lines.append(f'    pub fn modify<F>(&self, f: F, proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
         lines.append(f'    where')
         lines.append(f'        for<\'w> F: FnOnce(&crate::R<{reg_spec}>, &\'w mut crate::W<{reg_spec}>) -> &\'w mut crate::W<{reg_spec}>,')
         lines.append(f'    {{')
-        lines.append(f'        self.modify_constrained(f, {", ".join(p for p, _ in token_params)})')
+        lines.append(f'        self.modify_constrained(f, proof)')
         lines.append(f'    }}')
 
         # Close impl block

@@ -95,47 +95,31 @@ RegisterAccessConstraint(
 ### Generated Rust Code
 
 ```rust
-// Witness tokens (zero-sized types)
-pub struct StopClearedToken(());
-pub struct StartClearedToken(());
-pub struct PecClearedToken(());
+// One affine proof for the complete write procedure. Its constructor is private.
+pub struct Cr1WriteReady(());
 
 impl CR1 {
-    /// Check if STOP bit is cleared. Returns a witness token if true.
-    pub fn verify_stop_cleared(&self) -> Result<StopClearedToken, I2cError> {
-        if self.read().stop().bit_is_clear() {
-            Ok(StopClearedToken(()))
-        } else {
-            Err(I2cError::StopBitNotCleared)
+    /// Perform one fresh read and verify every write precondition.
+    pub fn verify_write_ready(&self) -> Result<Cr1WriteReady, I2cError> {
+        let r = self.read();
+        if !r.stop().bit_is_clear() {
+            return Err(I2cError::StopBitNotCleared);
         }
+        if !r.start().bit_is_clear() {
+            return Err(I2cError::StartBitNotCleared);
+        }
+        if !r.pec().bit_is_clear() {
+            return Err(I2cError::PecBitNotCleared);
+        }
+        Ok(Cr1WriteReady(()))
     }
 
-    pub fn verify_start_cleared(&self) -> Result<StartClearedToken, I2cError> {
-        if self.read().start().bit_is_clear() {
-            Ok(StartClearedToken(()))
-        } else {
-            Err(I2cError::StartBitNotCleared)
-        }
-    }
-
-    pub fn verify_pec_cleared(&self) -> Result<PecClearedToken, I2cError> {
-        if self.read().pec().bit_is_clear() {
-            Ok(PecClearedToken(()))
-        } else {
-            Err(I2cError::PecBitNotCleared)
-        }
-    }
-
-    /// Write to CR1. Requires witness tokens proving preconditions are met.
-    /// Tokens are consumed (moved) to prevent reuse.
+    /// Write to CR1. Consumes proof that the complete check was performed.
     pub fn write_safe(
         &mut self,
         f: impl FnOnce(&mut W) -> &mut W,
-        _stop: StopClearedToken,
-        _start: StartClearedToken,
-        _pec: PecClearedToken
+        _proof: Cr1WriteReady,
     ) {
-        // Tokens consumed here, can only be used once
         self.write(f)
     }
 }
@@ -144,15 +128,9 @@ impl CR1 {
 ### Usage
 
 ```rust
-// Runtime checks produce tokens
-let stop = cr1.verify_stop_cleared()?;
-let start = cr1.verify_start_cleared()?;
-let pec = cr1.verify_pec_cleared()?;
-
-// Compile-time: must provide tokens to write
-cr1.write_safe(|w| w.bits(value), stop, start, pec);
-
-// Tokens are consumed and cannot be reused
+let proof = cr1.verify_write_ready()?;
+cr1.write_safe(|w| w.bits(value), proof);
+// `proof` was moved and cannot authorize another operation.
 ```
 
 ## Example 2: MTQC Register (Pre AND Post Conditions)
