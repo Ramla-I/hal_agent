@@ -65,6 +65,7 @@ from collect_constraints import collect_constraints
 from rust_codegen import (
     generate_constraint_module,
     generate_peripheral_constraint_module,
+    inject_into_pac_batch,
     normalize_constraints,
 )
 
@@ -72,6 +73,7 @@ RUST_CODEGEN = APP_DIR / "rust_codegen.py"
 CRATE_DIR = APP_DIR / "constraint_test"
 FIXTURE = CRATE_DIR / "stm32f405_i2c1.json"
 CROSS_FIXTURE = CRATE_DIR / "stm32f405_i2c1_cross_register.json"
+ACTION_FIXTURE = CRATE_DIR / "stm32f405_i2c1_action_chain.json"
 MTQC_FIXTURE = CRATE_DIR / "mtqc_rttdcs_cross_register.json"
 GOLDEN = CRATE_DIR / "i2c1_expected_constraints.rs"
 
@@ -279,17 +281,38 @@ def test_cross_register_constraint_matrix():
     register = RegisterInfo(**json.loads(MTQC_FIXTURE.read_text()))
     generated = generate_constraint_module(register, "enet")
 
-    assert "pub struct MtqcModifyReady(())" in generated
-    assert (
-        "pub fn verify_mtqc_modify_ready(rttdcs: "
-        "&crate::Reg<super::rttdcs::RTTDCSrs>)"
-        in generated
-    )
-    assert generated.count("let rttdcs_state = rttdcs.read();") == 1
-    assert "rttdcs_state.arbdis().bit_is_set()" in generated
-    assert "MtqcConstraintError::RttdcsArbdisNotSet" in generated
+    assert "pub struct ArbdisSet(())" in generated
+    assert "pub struct ArbdisMustClear<T>(T)" in generated
+    assert "pub fn set_arbdis(&self) -> ArbdisSet" in generated
+    assert "pub fn clear_arbdis<T>" in generated
+    assert "self.reg.modify(|_, w| w.arbdis().set_bit())" in generated
+    assert "self.reg.modify(|_, w| w.arbdis().clear_bit())" in generated
+    assert "pub struct MtqcModifyReady(())" not in generated
+    assert "verify_mtqc_modify_ready" not in generated
     assert "pub fn verify_modify_ready(&self)" not in generated
-    assert "pub fn modify<F>" in generated
+    assert "pub fn modify<F>(&self, f: F, arbdis_set: ArbdisSet)" in generated
+    assert "-> ArbdisMustClear<" in generated
+
+    mixed_data = register.model_dump(mode="json")
+    mixed_data["access_constraints"][0]["preconditions"].append(
+        {
+            "register_name": "MTQC",
+            "field_name": "READY",
+            "required_state": "set",
+            "evidence_kind": "observed_state",
+            "action_operation": None,
+        }
+    )
+    mixed = generate_constraint_module(
+        RegisterInfo(**mixed_data),
+        "enet",
+    )
+    assert "pub struct MtqcModifyReady(())" in mixed
+    assert "pub fn verify_modify_ready(&self)" in mixed
+    assert (
+        "f: F, proof: MtqcModifyReady, arbdis_set: ArbdisSet"
+        in mixed
+    )
 
 
 def test_grouped_peripheral_manifest_and_codegen():
@@ -335,6 +358,80 @@ def test_grouped_peripheral_manifest_and_codegen():
     assert generated.count("impl crate::ConstrainedReg") == 2
     assert "pub enum CtrlConstraintError" in generated
     assert "pub enum StatusConstraintError" in generated
+
+
+def test_action_source_register_is_wrapped():
+    register = RegisterInfo(**json.loads(ACTION_FIXTURE.read_text()))
+    generated = generate_peripheral_constraint_module(
+        [register],
+        "fake",
+    )
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        device_dir = root / "device"
+        device_dir.mkdir()
+        generic = root / "generic.rs"
+        pac = device_dir / "mod.rs"
+        generic.write_text(
+            "unsafe impl<REG: RegisterSpec> Send for Reg<REG> "
+            "where REG::Ux: Send {}\n"
+        )
+        pac.write_text(
+            "pub mod fake {\n"
+            "    pub type CR1 = crate::Reg<cr1::CR1rs>;\n"
+            "    pub mod cr1 {\n"
+            "        impl crate::Resettable for CR1rs {}\n"
+            "    }\n"
+            "    pub type CR2 = crate::Reg<cr2::CR2rs>;\n"
+            "    pub mod cr2 {\n"
+            "        impl crate::Resettable for CR2rs {}\n"
+            "    }\n"
+            "}\n"
+        )
+
+        inject_into_pac_batch(pac, "fake", [register], generated)
+        injected = pac.read_text()
+
+    assert "pub type CR1 = crate::ConstrainedReg<cr1::CR1rs>;" in injected
+    assert "pub type CR2 = crate::ConstrainedReg<cr2::CR2rs>;" in injected
+    assert injected.count("pub mod constraints") == 1
+
+
+def test_nested_action_producer_constraint_is_rejected():
+    target = RegisterInfo(**json.loads(MTQC_FIXTURE.read_text()))
+    source = RegisterInfo(
+        datasheet_register_abbreviation="RTTDCS",
+        address_offset="0x00",
+        reset_value="0x00",
+        size=32,
+        subfields=[],
+        access_constraints=[
+            {
+                "target_register": "RTTDCS",
+                "target_fields": [],
+                "target_operation": "modify",
+                "preconditions": [
+                    {
+                        "register_name": "RTTDCS",
+                        "field_name": "READY",
+                        "required_state": "set",
+                    }
+                ],
+                "postconditions": [],
+                "severity": "error",
+                "consequence": "Synthetic nested constraint",
+                "datasheet_text": "RTTDCS modify requires READY.",
+            }
+        ],
+    )
+    try:
+        generate_peripheral_constraint_module([target, source], "enet")
+    except ValueError as error:
+        assert "nested action proof composition" in str(error)
+    else:
+        raise AssertionError(
+            "constrained action producer should be rejected"
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -512,6 +609,143 @@ pub extern "C" fn main() -> ! {
         else:
             assert check.returncode != 0, f"{name} unexpectedly compiled"
             assert expected_error in check.stdout + check.stderr
+
+
+def test_action_chain_compiles_and_enforces():
+    """Action-derived setup and cleanup tokens enforce the full chain."""
+    if not _cargo_available() or not _pac_generated():
+        print(
+            "SKIP test_action_chain_compiles_and_enforces: "
+            "cargo or generated stm32f4 PAC unavailable"
+        )
+        return
+
+    main_rs = CRATE_DIR / "src" / "main.rs"
+    original = {
+        path: path.read_bytes()
+        for path in (PAC_GENERIC, PAC_MODRS, main_rs)
+    }
+    program = """\
+#![no_std]
+#![no_main]
+use stm32f4::stm32f405;
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! { loop {} }
+
+#[no_mangle]
+pub extern "C" fn main() -> ! {
+    let dp = unsafe { stm32f405::Peripherals::steal() };
+    let i2c1 = &dp.I2C1;
+    __BODY__
+    loop {}
+}
+"""
+    setup = "let ready = i2c1.cr2().set_freq_to_16();"
+    modify = (
+        "let pending = i2c1.cr1().modify("
+        "|_, w| w.pe().enabled(), ready);"
+    )
+    cleanup = (
+        "let _result = i2c1.cr2().set_freq_to_8(pending);"
+    )
+    cases = [
+        (
+            "legal action chain",
+            f"{setup}\n    {modify}\n    {cleanup}",
+            0,
+            "",
+        ),
+        (
+            "missing setup token",
+            "i2c1.cr1().modify(|_, w| w.pe().enabled());",
+            1,
+            "E0061",
+        ),
+        (
+            "wrong action token",
+            f"{setup}\n    {modify}\n    "
+            "i2c1.cr1().modify(|_, w| w.pe().enabled(), pending);",
+            1,
+            "E0308",
+        ),
+        (
+            "reused setup token",
+            f"{setup}\n    {modify}\n    "
+            "i2c1.cr1().modify(|_, w| w.pe().enabled(), ready);",
+            1,
+            "E0382",
+        ),
+        (
+            "cleanup without obligation",
+            "i2c1.cr2().set_freq_to_8();",
+            1,
+            "E0061",
+        ),
+        (
+            "reused cleanup obligation",
+            f"{setup}\n    {modify}\n    {cleanup}\n    "
+            "i2c1.cr2().set_freq_to_8(pending);",
+            1,
+            "E0382",
+        ),
+        (
+            "ignored cleanup obligation under deny",
+            f"{setup}\n    i2c1.cr1().modify("
+            "|_, w| w.pe().enabled(), ready);",
+            1,
+            "must be used",
+        ),
+    ]
+    checks: list[tuple[str, subprocess.CompletedProcess[str], int, str]] = []
+    try:
+        inject = subprocess.run(
+            [
+                sys.executable,
+                str(RUST_CODEGEN),
+                str(ACTION_FIXTURE),
+                "--peripheral",
+                PERIPHERAL,
+                "--inject",
+                str(PAC_MODRS),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert inject.returncode == 0, inject.stdout + inject.stderr
+
+        for name, body, expected_status, expected_error in cases:
+            source = program.replace("__BODY__", body)
+            if name == "ignored cleanup obligation under deny":
+                source = source.replace(
+                    "#![no_std]",
+                    "#![no_std]\n#![deny(unused_must_use)]",
+                )
+            main_rs.write_text(source)
+            check = subprocess.run(
+                ["cargo", "check"],
+                cwd=str(CRATE_DIR),
+                capture_output=True,
+                text=True,
+            )
+            checks.append(
+                (name, check, expected_status, expected_error)
+            )
+    finally:
+        for path, data in original.items():
+            path.write_bytes(data)
+
+    for path, data in original.items():
+        assert path.read_bytes() == data, f"{path} was not restored"
+    for name, check, expected_status, expected_error in checks:
+        output = check.stdout + check.stderr
+        if expected_status == 0:
+            assert check.returncode == 0, f"{name} failed:\n{output}"
+        else:
+            assert check.returncode != 0, f"{name} unexpectedly compiled"
+            assert expected_error in output, (
+                f"{name} did not report {expected_error}:\n{output}"
+            )
 
 
 # --------------------------------------------------------------------------- #
@@ -706,8 +940,11 @@ if __name__ == "__main__":
         test_operation_specific_constraint_matrix,
         test_cross_register_constraint_matrix,
         test_grouped_peripheral_manifest_and_codegen,
+        test_action_source_register_is_wrapped,
+        test_nested_action_producer_constraint_is_rejected,
         test_constraint_test_compiles,
         test_cross_register_proofs_compile_and_enforce,
+        test_action_chain_compiles_and_enforces,
         test_unconstrained_operations_fail_to_compile,
     ]
     print("Running codegen tests...\n")

@@ -34,13 +34,15 @@ class NormalizedConstraint:
     target_fields: list[str]
     target_operation: str
     preconditions: list[FieldState]
+    postconditions: list[FieldState]
     datasheet_texts: list[str]
 
 
 def normalize_constraints(register_info: RegisterInfo) -> list[NormalizedConstraint]:
     """Group constraints by operation and deduplicate predicates deterministically."""
     plans: dict[str, NormalizedConstraint] = {}
-    seen_preconditions: dict[str, set[tuple[str, str, str]]] = {}
+    seen_preconditions: dict[str, set[tuple[str, str, str, str, str | None]]] = {}
+    seen_postconditions: dict[str, set[tuple[str, str, str, str, str | None]]] = {}
     seen_fields: dict[str, set[str]] = {}
 
     for constraint in register_info.access_constraints:
@@ -51,9 +53,11 @@ def normalize_constraints(register_info: RegisterInfo) -> list[NormalizedConstra
                 target_fields=[],
                 target_operation=operation,
                 preconditions=[],
+                postconditions=[],
                 datasheet_texts=[],
             )
             seen_preconditions[operation] = set()
+            seen_postconditions[operation] = set()
             seen_fields[operation] = set()
 
         plan = plans[operation]
@@ -67,10 +71,24 @@ def normalize_constraints(register_info: RegisterInfo) -> list[NormalizedConstra
                 precondition.register_name,
                 precondition.field_name,
                 precondition.required_state,
+                precondition.evidence_kind,
+                precondition.action_operation,
             )
             if key not in seen_preconditions[operation]:
                 plan.preconditions.append(precondition)
                 seen_preconditions[operation].add(key)
+
+        for postcondition in constraint.postconditions:
+            key = (
+                postcondition.register_name,
+                postcondition.field_name,
+                postcondition.required_state,
+                postcondition.evidence_kind,
+                postcondition.action_operation,
+            )
+            if key not in seen_postconditions[operation]:
+                plan.postconditions.append(postcondition)
+                seen_postconditions[operation].add(key)
 
         if constraint.datasheet_text not in plan.datasheet_texts:
             plan.datasheet_texts.append(constraint.datasheet_text)
@@ -86,6 +104,68 @@ def field_to_rust_name(field_name: str) -> str:
 def operation_to_proof_name(register_name: str, operation: str) -> str:
     """Generate the private-constructor proof type for an operation."""
     return f"{register_name.capitalize()}{operation.capitalize()}Ready"
+
+
+def _state_name(state: str) -> str:
+    if state == "set":
+        return "Set"
+    if state == "cleared":
+        return "Cleared"
+    if state.startswith("equals:"):
+        value = re.sub(r"[^A-Za-z0-9]", "", state.split(":", 1)[1])
+        return f"Eq{value}"
+    raise ValueError(f"Unknown state: {state}")
+
+
+def action_token_name(field_state: FieldState) -> str:
+    return f"{field_state.field_name.capitalize()}{_state_name(field_state.required_state)}"
+
+
+def obligation_token_name(field_state: FieldState) -> str:
+    if field_state.required_state == "cleared":
+        state = "Clear"
+    elif field_state.required_state == "set":
+        state = "Set"
+    elif field_state.required_state.startswith("equals:"):
+        value = re.sub(
+            r"[^A-Za-z0-9]",
+            "",
+            field_state.required_state.split(":", 1)[1],
+        )
+        state = f"SetTo{value}"
+    else:
+        raise ValueError(f"Unknown state: {field_state.required_state}")
+    return f"{field_state.field_name.capitalize()}Must{state}"
+
+
+def _observed_preconditions(
+    constraint: NormalizedConstraint,
+) -> list[FieldState]:
+    return [
+        precondition
+        for precondition in constraint.preconditions
+        if precondition.evidence_kind == "observed_state"
+    ]
+
+
+def _action_preconditions(
+    constraint: NormalizedConstraint,
+) -> list[FieldState]:
+    return [
+        precondition
+        for precondition in constraint.preconditions
+        if precondition.evidence_kind == "software_action"
+    ]
+
+
+def _action_postconditions(
+    constraint: NormalizedConstraint,
+) -> list[FieldState]:
+    return [
+        postcondition
+        for postcondition in constraint.postconditions
+        if postcondition.evidence_kind == "software_action"
+    ]
 
 
 def field_to_error_variant(field_name: str, state: str) -> str:
@@ -140,17 +220,27 @@ def _register_matches_target(
     )
 
 
+def _pac_register_name(register_name: str, peripheral: str) -> str:
+    prefix = f"{peripheral.upper()}_"
+    if register_name.upper().startswith(prefix):
+        return register_name[len(prefix):]
+    return register_name
+
+
 def _is_same_register_constraint(
     constraint: NormalizedConstraint,
     register_name: str,
 ) -> bool:
+    preconditions = _observed_preconditions(constraint)
+    if not preconditions:
+        return True
     return all(
         _register_matches_target(
             precondition.register_name,
             register_name,
             constraint.target_register,
         )
-        for precondition in constraint.preconditions
+        for precondition in preconditions
     )
 
 
@@ -219,7 +309,7 @@ def _append_verifier(
         f"-> Result<{proof_name}, {error_name}> {{"
     )
     lines.append("        let r = self.reg.read();")
-    for precondition in constraint.preconditions:
+    for precondition in _observed_preconditions(constraint):
         error_variant = _error_variant_for_precondition(
             precondition,
             constraint,
@@ -248,7 +338,7 @@ def _append_cross_register_verifier(
     proof_name = operation_to_proof_name(reg_name, operation)
     error_name = f"{reg_name.capitalize()}ConstraintError"
     sources: list[str] = []
-    for precondition in constraint.preconditions:
+    for precondition in _observed_preconditions(constraint):
         source = _source_register_name(
             precondition,
             constraint,
@@ -275,7 +365,7 @@ def _append_cross_register_verifier(
     for source in sources:
         variable = field_to_rust_name(source)
         lines.append(f"    let {variable}_state = {variable}.read();")
-    for precondition in constraint.preconditions:
+    for precondition in _observed_preconditions(constraint):
         source = _source_register_name(
             precondition,
             constraint,
@@ -302,73 +392,322 @@ def _append_cross_register_verifier(
     lines.append("")
 
 
+def _authorization_parameters(
+    constraint: NormalizedConstraint,
+    reg_name: str,
+    *,
+    consumed: bool,
+) -> list[tuple[str, str]]:
+    parameters: list[tuple[str, str]] = []
+    if _observed_preconditions(constraint):
+        name = "_proof" if consumed else "proof"
+        parameters.append(
+            (
+                name,
+                operation_to_proof_name(
+                    reg_name,
+                    constraint.target_operation,
+                ),
+            )
+        )
+    for precondition in _action_preconditions(constraint):
+        base = (
+            f"{field_to_rust_name(precondition.field_name)}_"
+            f"{_state_name(precondition.required_state).lower()}"
+        )
+        name = f"_{base}" if consumed else base
+        item = (name, action_token_name(precondition))
+        if item not in parameters:
+            parameters.append(item)
+    return parameters
+
+
+def _parameter_suffix(parameters: list[tuple[str, str]]) -> str:
+    if not parameters:
+        return ""
+    return ", " + ", ".join(
+        f"{name}: {type_name}" for name, type_name in parameters
+    )
+
+
+def _parameter_names(parameters: list[tuple[str, str]]) -> str:
+    return ", ".join(name.lstrip("_") for name, _ in parameters)
+
+
+def _action_postcondition(
+    constraint: NormalizedConstraint,
+) -> FieldState | None:
+    postconditions = _action_postconditions(constraint)
+    if len(postconditions) > 1:
+        raise ValueError(
+            "Action-derived codegen currently supports one postcondition "
+            f"per {constraint.target_register} "
+            f"{constraint.target_operation} operation"
+        )
+    return postconditions[0] if postconditions else None
+
+
+def _result_type(result_type: str, constraint: NormalizedConstraint) -> str:
+    postcondition = _action_postcondition(constraint)
+    if postcondition is None:
+        return result_type
+    return f"{obligation_token_name(postcondition)}<{result_type}>"
+
+
+def _result_expression(
+    expression: str,
+    constraint: NormalizedConstraint,
+) -> str:
+    postcondition = _action_postcondition(constraint)
+    if postcondition is None:
+        return expression
+    return f"{obligation_token_name(postcondition)}({expression})"
+
+
+def _action_method_name(field_state: FieldState) -> str:
+    field = field_to_rust_name(field_state.field_name)
+    if field_state.required_state == "set":
+        return f"set_{field}"
+    if field_state.required_state == "cleared":
+        return f"clear_{field}"
+    if field_state.required_state.startswith("equals:"):
+        value = re.sub(
+            r"[^A-Za-z0-9]",
+            "_",
+            field_state.required_state.split(":", 1)[1],
+        ).strip("_")
+        return f"set_{field}_to_{value.lower()}"
+    raise ValueError(f"Unknown state: {field_state.required_state}")
+
+
+def _action_write_expression(field_state: FieldState) -> str:
+    field = field_to_rust_name(field_state.field_name)
+    if field_state.required_state == "set":
+        writer = f"w.{field}().set_bit()"
+    elif field_state.required_state == "cleared":
+        writer = f"w.{field}().clear_bit()"
+    elif field_state.required_state.startswith("equals:"):
+        value = field_state.required_state.split(":", 1)[1]
+        writer = f"unsafe {{ w.{field}().bits({value}) }}"
+    else:
+        raise ValueError(f"Unknown state: {field_state.required_state}")
+
+    if field_state.action_operation == "modify":
+        return f"self.reg.modify(|_, w| {writer})"
+    if field_state.action_operation == "write":
+        return f"self.reg.write(|w| {writer})"
+    raise ValueError(
+        "software_action field states require action_operation "
+        f"for {field_state.register_name}.{field_state.field_name}"
+    )
+
+
+def _append_action_support(
+    lines: list[str],
+    constraints: list[NormalizedConstraint],
+    peripheral: str,
+) -> None:
+    setup_states: list[FieldState] = []
+    cleanup_states: list[FieldState] = []
+    for constraint in constraints:
+        for precondition in _action_preconditions(constraint):
+            if precondition not in setup_states:
+                setup_states.append(precondition)
+        for postcondition in _action_postconditions(constraint):
+            if postcondition not in cleanup_states:
+                cleanup_states.append(postcondition)
+
+    if not setup_states and not cleanup_states:
+        return
+
+    lines.extend(
+        [
+            "// === Action-Derived Witnesses ===",
+            "",
+        ]
+    )
+    emitted_types: dict[str, tuple[str, str, str]] = {}
+    for state in setup_states:
+        type_name = action_token_name(state)
+        identity = (
+            state.register_name,
+            state.field_name,
+            state.required_state,
+        )
+        if type_name in emitted_types and emitted_types[type_name] != identity:
+            raise ValueError(f"Conflicting action token name: {type_name}")
+        if type_name not in emitted_types:
+            lines.append(
+                f"/// Proof that software established "
+                f"{state.register_name}.{state.field_name} as "
+                f"{state.required_state}."
+            )
+            lines.append(f"pub struct {type_name}(());")
+            lines.append("")
+            emitted_types[type_name] = identity
+    for state in cleanup_states:
+        type_name = obligation_token_name(state)
+        identity = (
+            state.register_name,
+            state.field_name,
+            state.required_state,
+        )
+        if type_name in emitted_types and emitted_types[type_name] != identity:
+            raise ValueError(f"Conflicting obligation token name: {type_name}")
+        if type_name not in emitted_types:
+            lines.append(
+                f"#[must_use = \"{state.register_name}.{state.field_name} "
+                f"must be {state.required_state}\"]"
+            )
+            lines.append(
+                f"pub struct {type_name}<T>(T);"
+            )
+            lines.append("")
+            emitted_types[type_name] = identity
+
+    by_source: dict[str, tuple[list[FieldState], list[FieldState]]] = {}
+    for state in setup_states:
+        source = _pac_register_name(state.register_name, peripheral)
+        by_source.setdefault(source, ([], []))[0].append(state)
+    for state in cleanup_states:
+        source = _pac_register_name(state.register_name, peripheral)
+        by_source.setdefault(source, ([], []))[1].append(state)
+
+    for source, (setups, cleanups) in by_source.items():
+        source_lower = field_to_rust_name(source)
+        source_upper = source.upper()
+        setup_names = {_action_method_name(state) for state in setups}
+        cleanup_names = {_action_method_name(state) for state in cleanups}
+        collisions = setup_names & cleanup_names
+        if collisions:
+            raise ValueError(
+                f"Setup and cleanup methods collide for {source}: "
+                f"{sorted(collisions)}"
+            )
+        lines.append(
+            f"impl crate::ConstrainedReg<"
+            f"super::{source_lower}::{source_upper}rs> {{"
+        )
+        for state in setups:
+            method = _action_method_name(state)
+            token = action_token_name(state)
+            lines.extend(
+                [
+                    "    #[inline(always)]",
+                    f"    pub fn {method}(&self) -> {token} {{",
+                    f"        {_action_write_expression(state)};",
+                    f"        {token}(())",
+                    "    }",
+                    "",
+                ]
+            )
+        for state in cleanups:
+            method = _action_method_name(state)
+            obligation = obligation_token_name(state)
+            lines.extend(
+                [
+                    "    #[inline(always)]",
+                    f"    pub fn {method}<T>(&self, obligation: {obligation}<T>) -> T {{",
+                    f"        {_action_write_expression(state)};",
+                    "        obligation.0",
+                    "    }",
+                    "",
+                ]
+            )
+        lines.extend(["}", ""])
+
+
 def _append_write_methods(
     lines: list[str],
     constraint: NormalizedConstraint,
     reg_name: str,
     reg_spec: str,
 ) -> None:
-    proof_name = operation_to_proof_name(reg_name, "write")
     ux = f"<{reg_spec} as crate::RegisterSpec>::Ux"
+    consumed = _authorization_parameters(
+        constraint,
+        reg_name,
+        consumed=True,
+    )
+    public = _authorization_parameters(
+        constraint,
+        reg_name,
+        consumed=False,
+    )
+    consumed_suffix = _parameter_suffix(consumed)
+    public_suffix = _parameter_suffix(public)
+    call_args = _parameter_names(public)
+    call_suffix = f", {call_args}" if call_args else ""
+    ux_result = _result_type(ux, constraint)
+    generic_result = _result_type("T", constraint)
+    unit_result = _result_type("()", constraint)
+    reset_return = (
+        "" if unit_result == "()" else f" -> {unit_result}"
+    )
+    reset_expression = (
+        "self.reg.reset()"
+        if unit_result == "()"
+        else _result_expression("{ self.reg.reset(); () }", constraint)
+    )
     _constraint_doc_lines(lines, constraint, "    ")
     lines.extend(
         [
             "    #[inline(always)]",
-            f"    pub fn write_constrained<F>(&self, f: F, _proof: {proof_name}) -> {ux}",
+            f"    pub fn write_constrained<F>(&self, f: F{consumed_suffix}) -> {ux_result}",
             "    where",
             f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,",
             "    {",
-            "        self.reg.write(f)",
+            f"        {_result_expression('self.reg.write(f)', constraint)}",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn write<F>(&self, f: F, proof: {proof_name}) -> {ux}",
+            f"    pub fn write<F>(&self, f: F{public_suffix}) -> {ux_result}",
             "    where",
             f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,",
             "    {",
-            "        self.write_constrained(f, proof)",
+            f"        self.write_constrained(f{call_suffix})",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn reset_constrained(&self, _proof: {proof_name}) {{",
-            "        self.reg.reset()",
+            f"    pub fn reset_constrained(&self{consumed_suffix}){reset_return} {{",
+            f"        {reset_expression}",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn reset(&self, proof: {proof_name}) {{",
-            "        self.reset_constrained(proof)",
+            f"    pub fn reset(&self{public_suffix}){reset_return} {{",
+            f"        self.reset_constrained({call_args})" if call_args else "        self.reset_constrained()",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn write_with_zero_constrained<F>(&self, f: F, _proof: {proof_name}) -> {ux}",
+            f"    pub fn write_with_zero_constrained<F>(&self, f: F{consumed_suffix}) -> {ux_result}",
             "    where",
             f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,",
             "    {",
-            "        self.reg.write_with_zero(f)",
+            f"        {_result_expression('self.reg.write_with_zero(f)', constraint)}",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn write_with_zero<F>(&self, f: F, proof: {proof_name}) -> {ux}",
+            f"    pub fn write_with_zero<F>(&self, f: F{public_suffix}) -> {ux_result}",
             "    where",
             f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,",
             "    {",
-            "        self.write_with_zero_constrained(f, proof)",
+            f"        self.write_with_zero_constrained(f{call_suffix})",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn from_write_constrained<F, T>(&self, f: F, _proof: {proof_name}) -> T",
+            f"    pub fn from_write_constrained<F, T>(&self, f: F{consumed_suffix}) -> {generic_result}",
             "    where",
             f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> T,",
             "    {",
-            "        self.reg.from_write(f)",
+            f"        {_result_expression('self.reg.from_write(f)', constraint)}",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn from_write<F, T>(&self, f: F, proof: {proof_name}) -> T",
+            f"    pub fn from_write<F, T>(&self, f: F{public_suffix}) -> {generic_result}",
             "    where",
             f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> T,",
             "    {",
-            "        self.from_write_constrained(f, proof)",
+            f"        self.from_write_constrained(f{call_suffix})",
             "    }",
             "",
         ]
@@ -381,8 +720,23 @@ def _append_modify_methods(
     reg_name: str,
     reg_spec: str,
 ) -> None:
-    proof_name = operation_to_proof_name(reg_name, "modify")
     ux = f"<{reg_spec} as crate::RegisterSpec>::Ux"
+    consumed = _authorization_parameters(
+        constraint,
+        reg_name,
+        consumed=True,
+    )
+    public = _authorization_parameters(
+        constraint,
+        reg_name,
+        consumed=False,
+    )
+    consumed_suffix = _parameter_suffix(consumed)
+    public_suffix = _parameter_suffix(public)
+    call_args = _parameter_names(public)
+    call_suffix = f", {call_args}" if call_args else ""
+    ux_result = _result_type(ux, constraint)
+    generic_result = _result_type("T", constraint)
     callback = (
         f"for<'w> F: FnOnce(&crate::R<{reg_spec}>, "
         f"&'w mut crate::W<{reg_spec}>) -> &'w mut crate::W<{reg_spec}>,"
@@ -395,35 +749,35 @@ def _append_modify_methods(
     lines.extend(
         [
             "    #[inline(always)]",
-            f"    pub fn modify_constrained<F>(&self, f: F, _proof: {proof_name}) -> {ux}",
+            f"    pub fn modify_constrained<F>(&self, f: F{consumed_suffix}) -> {ux_result}",
             "    where",
             f"        {callback}",
             "    {",
-            "        self.reg.modify(f)",
+            f"        {_result_expression('self.reg.modify(f)', constraint)}",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn modify<F>(&self, f: F, proof: {proof_name}) -> {ux}",
+            f"    pub fn modify<F>(&self, f: F{public_suffix}) -> {ux_result}",
             "    where",
             f"        {callback}",
             "    {",
-            "        self.modify_constrained(f, proof)",
+            f"        self.modify_constrained(f{call_suffix})",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn from_modify_constrained<F, T>(&self, f: F, _proof: {proof_name}) -> T",
+            f"    pub fn from_modify_constrained<F, T>(&self, f: F{consumed_suffix}) -> {generic_result}",
             "    where",
             f"        {callback_value}",
             "    {",
-            "        self.reg.from_modify(f)",
+            f"        {_result_expression('self.reg.from_modify(f)', constraint)}",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn from_modify<F, T>(&self, f: F, proof: {proof_name}) -> T",
+            f"    pub fn from_modify<F, T>(&self, f: F{public_suffix}) -> {generic_result}",
             "    where",
             f"        {callback_value}",
             "    {",
-            "        self.from_modify_constrained(f, proof)",
+            f"        self.from_modify_constrained(f{call_suffix})",
             "    }",
             "",
         ]
@@ -436,19 +790,32 @@ def _append_read_methods(
     reg_name: str,
     reg_spec: str,
 ) -> None:
-    proof_name = operation_to_proof_name(reg_name, "read")
     reader = f"crate::R<{reg_spec}>"
+    consumed = _authorization_parameters(
+        constraint,
+        reg_name,
+        consumed=True,
+    )
+    public = _authorization_parameters(
+        constraint,
+        reg_name,
+        consumed=False,
+    )
+    consumed_suffix = _parameter_suffix(consumed)
+    public_suffix = _parameter_suffix(public)
+    call_args = _parameter_names(public)
+    reader_result = _result_type(reader, constraint)
     _constraint_doc_lines(lines, constraint, "    ")
     lines.extend(
         [
             "    #[inline(always)]",
-            f"    pub fn read_constrained(&self, _proof: {proof_name}) -> {reader} {{",
-            "        self.reg.read()",
+            f"    pub fn read_constrained(&self{consumed_suffix}) -> {reader_result} {{",
+            f"        {_result_expression('self.reg.read()', constraint)}",
             "    }",
             "",
             "    #[inline(always)]",
-            f"    pub fn read(&self, proof: {proof_name}) -> {reader} {{",
-            "        self.read_constrained(proof)",
+            f"    pub fn read(&self{public_suffix}) -> {reader_result} {{",
+            f"        self.read_constrained({call_args})" if call_args else "        self.read_constrained()",
             "    }",
             "",
         ]
@@ -459,6 +826,7 @@ def generate_constraint_module(
     register_info: RegisterInfo,
     peripheral: str,
     include_header: bool = True,
+    include_action_support: bool = True,
 ) -> str:
     """Generate operation-specific proof APIs for one constrained register."""
     reg_name = register_info.datasheet_register_abbreviation
@@ -473,7 +841,14 @@ def generate_constraint_module(
     if unknown:
         raise ValueError(f"Unsupported target operations: {unknown}")
     constraints = [
-        constraint for constraint in constraints if constraint.preconditions
+        constraint
+        for constraint in constraints
+        if constraint.preconditions or constraint.postconditions
+    ]
+    observed_constraints = [
+        constraint
+        for constraint in constraints
+        if _observed_preconditions(constraint)
     ]
 
     if include_header:
@@ -491,50 +866,54 @@ def generate_constraint_module(
         lines.append("// No access constraints defined for this register.")
         return "\n".join(lines)
 
-    lines.extend(
-        [
-            "// === Composite Proofs ===",
-            "// Private constructors ensure proofs only come from fresh verification.",
-            "",
-        ]
-    )
-    for constraint in constraints:
-        operation = constraint.target_operation
-        proof_name = operation_to_proof_name(reg_name, operation)
-        lines.append(
-            f"/// Proof that {reg_name} is ready for a constrained {operation}."
+    if include_action_support:
+        _append_action_support(lines, constraints, peripheral)
+
+    if observed_constraints:
+        lines.extend(
+            [
+                "// === Composite Proofs ===",
+                "// Private constructors ensure proofs only come from fresh verification.",
+                "",
+            ]
         )
-        lines.append(f"pub struct {proof_name}(());")
-        lines.append("")
-
-    lines.extend(
-        [
-            "// === Error Type ===",
-            "",
-            "/// Errors returned when a precondition is not satisfied.",
-            "#[derive(Debug, Clone, Copy, PartialEq, Eq)]",
-            f"pub enum {reg_name.capitalize()}ConstraintError {{",
-        ]
-    )
-    seen_errors: set[str] = set()
-    for constraint in constraints:
-        for precondition in constraint.preconditions:
-            variant = _error_variant_for_precondition(
-                precondition,
-                constraint,
-                reg_name,
-            )
-            if variant in seen_errors:
-                continue
-            seen_errors.add(variant)
+        for constraint in observed_constraints:
+            operation = constraint.target_operation
+            proof_name = operation_to_proof_name(reg_name, operation)
             lines.append(
-                f"    /// {precondition.field_name} is not "
-                f"{precondition.required_state}"
+                f"/// Proof that {reg_name} is ready for a constrained {operation}."
             )
-            lines.append(f"    {variant},")
-    lines.extend(["}", ""])
+            lines.append(f"pub struct {proof_name}(());")
+            lines.append("")
 
-    for constraint in constraints:
+        lines.extend(
+            [
+                "// === Error Type ===",
+                "",
+                "/// Errors returned when a precondition is not satisfied.",
+                "#[derive(Debug, Clone, Copy, PartialEq, Eq)]",
+                f"pub enum {reg_name.capitalize()}ConstraintError {{",
+            ]
+        )
+        seen_errors: set[str] = set()
+        for constraint in observed_constraints:
+            for precondition in _observed_preconditions(constraint):
+                variant = _error_variant_for_precondition(
+                    precondition,
+                    constraint,
+                    reg_name,
+                )
+                if variant in seen_errors:
+                    continue
+                seen_errors.add(variant)
+                lines.append(
+                    f"    /// {precondition.field_name} is not "
+                    f"{precondition.required_state}"
+                )
+                lines.append(f"    {variant},")
+        lines.extend(["}", ""])
+
+    for constraint in observed_constraints:
         if not _is_same_register_constraint(constraint, reg_name):
             _append_cross_register_verifier(
                 lines,
@@ -544,7 +923,7 @@ def generate_constraint_module(
 
     reg_spec = f"super::{reg_lower}::{reg_name}rs"
     lines.append(f"impl crate::ConstrainedReg<{reg_spec}> {{")
-    for constraint in constraints:
+    for constraint in observed_constraints:
         if _is_same_register_constraint(constraint, reg_name):
             _append_verifier(lines, constraint, reg_name)
 
@@ -602,12 +981,45 @@ def generate_peripheral_constraint_module(
         "//! Generated from trusted register constraints. Do not edit manually.",
         "",
     ]
+    all_constraints = [
+        constraint
+        for register_info in register_infos
+        for constraint in normalize_constraints(register_info)
+    ]
+    constrained_operations = {
+        register_info.datasheet_register_abbreviation.upper(): {
+            constraint.target_operation
+            for constraint in normalize_constraints(register_info)
+        }
+        for register_info in register_infos
+    }
+    for constraint in all_constraints:
+        for state in (
+            _action_preconditions(constraint)
+            + _action_postconditions(constraint)
+        ):
+            source_operations = constrained_operations.get(
+                _pac_register_name(
+                    state.register_name,
+                    peripheral,
+                ).upper(),
+                set(),
+            )
+            if state.action_operation in source_operations:
+                raise ValueError(
+                    f"Action {state.register_name}.{state.field_name} uses "
+                    f"constrained {state.action_operation}; nested action "
+                    "proof composition is not yet supported"
+                )
+    _append_action_support(lines, all_constraints, peripheral)
+
     for register_info in register_infos:
         lines.append(
             generate_constraint_module(
                 register_info,
                 peripheral,
                 include_header=False,
+                include_action_support=False,
             ).rstrip()
         )
         lines.append("")
@@ -787,6 +1199,22 @@ def inject_into_pac_batch(
         raise ValueError("At least one constrained register is required")
 
     first_register = register_infos[0].datasheet_register_abbreviation
+    wrapped_registers = [
+        register_info.datasheet_register_abbreviation
+        for register_info in register_infos
+    ]
+    for register_info in register_infos:
+        for constraint in normalize_constraints(register_info):
+            for state in (
+                _action_preconditions(constraint)
+                + _action_postconditions(constraint)
+            ):
+                source_register = _pac_register_name(
+                    state.register_name,
+                    peripheral,
+                )
+                if source_register not in wrapped_registers:
+                    wrapped_registers.append(source_register)
     inject_into_pac(
         pac_path,
         peripheral,
@@ -798,8 +1226,7 @@ def inject_into_pac_batch(
     if peripheral_start < 0:
         raise ValueError(f"Peripheral module {peripheral} not found")
 
-    for register_info in register_infos[1:]:
-        register_name = register_info.datasheet_register_abbreviation
+    for register_name in wrapped_registers[1:]:
         reg_lower = register_name.lower()
         old_alias = (
             f"pub type {register_name} = "

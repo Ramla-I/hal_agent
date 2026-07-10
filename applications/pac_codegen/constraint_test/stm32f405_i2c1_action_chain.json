@@ -1,0 +1,35 @@
+{
+  "datasheet_register_abbreviation": "CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [],
+  "access_constraints": [
+    {
+      "target_register": "CR1",
+      "target_fields": [],
+      "target_operation": "modify",
+      "preconditions": [
+        {
+          "register_name": "CR2",
+          "field_name": "FREQ",
+          "required_state": "equals:16",
+          "evidence_kind": "software_action",
+          "action_operation": "modify"
+        }
+      ],
+      "postconditions": [
+        {
+          "register_name": "CR2",
+          "field_name": "FREQ",
+          "required_state": "equals:8",
+          "evidence_kind": "software_action",
+          "action_operation": "modify"
+        }
+      ],
+      "severity": "error",
+      "consequence": "Synthetic action-chain test constraint",
+      "datasheet_text": "Set CR2.FREQ to 16 before modifying CR1, then restore it to 8."
+    }
+  ]
+}

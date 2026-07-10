@@ -11,11 +11,12 @@ The goal is to update peripheral access crates with compile-time enforceable con
 We use **linear types** (affine types) to enforce constraints at compile time:
 
 1. **Preconditions**: Operations consume linear type tokens, proving requirements are met
-2. **Postconditions**: Operations produce linear type tokens that must be consumed, enforcing cleanup
+2. **Postconditions**: Operations produce affine cleanup obligations for generated transition methods
 
 This is a hybrid approach:
-- **Runtime check** to obtain witness tokens
-- **Compile-time enforcement** that checks were performed (tokens must be obtained and consumed)
+- **Observed-state evidence** performs a fresh runtime check to obtain a proof.
+- **Software-action evidence** obtains a proof by executing the required setup operation.
+- **Compile-time enforcement** requires the resulting affine values at dependent operations.
 
 ## Data Model
 
@@ -29,7 +30,14 @@ class FieldState(BaseModel):
     register_name: str  # Can be different register (e.g., "RTTDCS" when constraining "MTQC")
     field_name: str
     required_state: str  # "cleared", "set", "equals:<value>"
+    evidence_kind: Literal["observed_state", "software_action"] = "observed_state"
+    action_operation: Optional[Literal["write", "modify"]] = None
 ```
+
+`observed_state` is appropriate when hardware establishes the state and software
+must inspect it. `software_action` is appropriate when the datasheet requires
+software to establish the state; `action_operation` specifies whether the
+generated source-register method uses `write` or `modify`.
 
 ### RegisterAccessConstraint
 
@@ -41,7 +49,7 @@ class RegisterAccessConstraint(BaseModel):
     Constraint on register/field access using linear types.
 
     Preconditions are enforced by consuming linear type tokens.
-    Postconditions are enforced by producing linear type tokens that must be consumed elsewhere.
+    Software-action postconditions produce affine cleanup obligations.
     """
     # What's being constrained
     target_register: str
@@ -52,8 +60,7 @@ class RegisterAccessConstraint(BaseModel):
     # e.g., to write, you must consume StopClearedToken
     preconditions: list[FieldState]
 
-    # Post-conditions: linear types that are PRODUCED and must be used elsewhere
-    # e.g., writing produces ArbdisMustClearToken that must be consumed
+    # Post-conditions: affine obligations produced for cleanup transitions
     postconditions: list[FieldState]
 
     # Metadata
@@ -78,9 +85,12 @@ RegisterAccessConstraint(
 
     # Must consume these tokens (proving the fields are cleared)
     preconditions=[
-        FieldState(register_name="I2C_CR1", field_name="STOP", required_state="cleared"),
-        FieldState(register_name="I2C_CR1", field_name="START", required_state="cleared"),
-        FieldState(register_name="I2C_CR1", field_name="PEC", required_state="cleared"),
+        FieldState(register_name="I2C_CR1", field_name="STOP",
+                   required_state="cleared", evidence_kind="observed_state"),
+        FieldState(register_name="I2C_CR1", field_name="START",
+                   required_state="cleared", evidence_kind="observed_state"),
+        FieldState(register_name="I2C_CR1", field_name="PEC",
+                   required_state="cleared", evidence_kind="observed_state"),
     ],
 
     # No postconditions (doesn't produce tokens)
@@ -165,12 +175,24 @@ RegisterAccessConstraint(
 
     # Must consume token proving ARBDIS is set
     preconditions=[
-        FieldState(register_name="RTTDCS", field_name="ARBDIS", required_state="set")
+        FieldState(
+            register_name="RTTDCS",
+            field_name="ARBDIS",
+            required_state="set",
+            evidence_kind="software_action",
+            action_operation="modify",
+        )
     ],
 
     # Produces token that MUST be consumed (by clearing ARBDIS)
     postconditions=[
-        FieldState(register_name="RTTDCS", field_name="ARBDIS", required_state="cleared")
+        FieldState(
+            register_name="RTTDCS",
+            field_name="ARBDIS",
+            required_state="cleared",
+            evidence_kind="software_action",
+            action_operation="modify",
+        )
     ],
 
     severity="error",
@@ -184,21 +206,26 @@ Note: The "init phase only" constraint is handled at the peripheral level API de
 ### Generated Rust Code
 
 ```rust
-pub struct MtqcWriteReady(());
+pub struct ArbdisSet(());
 
-pub fn verify_mtqc_write_ready(
-    rttdcs: &crate::Reg<super::rttdcs::RTTDCSrs>,
-) -> Result<MtqcWriteReady, MtqcConstraintError> {
-    // The verifier, rather than its caller, performs the fresh source read.
-    let rttdcs_state = rttdcs.read();
-    if !rttdcs_state.arbdis().bit_is_set() {
-        return Err(MtqcConstraintError::RttdcsArbdisNotSet);
+#[must_use = "RTTDCS.ARBDIS must be cleared"]
+pub struct ArbdisMustClear<T>(T);
+
+impl crate::ConstrainedReg<super::rttdcs::RTTDCSrs> {
+    pub fn set_arbdis(&self) -> ArbdisSet {
+        self.reg.modify(|_, w| w.arbdis().set_bit());
+        ArbdisSet(())
     }
-    Ok(MtqcWriteReady(()))
+
+    pub fn clear_arbdis<T>(&self, obligation: ArbdisMustClear<T>) -> T {
+        self.reg.modify(|_, w| w.arbdis().clear_bit());
+        obligation.0
+    }
 }
 
 impl crate::ConstrainedReg<super::mtqc::MTQCrs> {
-    pub fn write<F>(&self, f: F, proof: MtqcWriteReady) -> u32
+    pub fn write<F>(&self, f: F, proof: ArbdisSet)
+        -> ArbdisMustClear<u32>
     where
         F: FnOnce(&mut crate::W<super::mtqc::MTQCrs>)
             -> &mut crate::W<super::mtqc::MTQCrs>,
@@ -208,9 +235,9 @@ impl crate::ConstrainedReg<super::mtqc::MTQCrs> {
 }
 ```
 
-Cross-register preconditions are currently supported as shown above. The
-postcondition in this example is not yet enforced; multi-step setup/cleanup
-procedures require the deferred typestate-session design.
+Here the witness records that software executed the required setup action rather
+than merely observing `ARBDIS` as set. The operation's original return value is
+stored inside the cleanup obligation and becomes available after cleanup.
 
 ### Usage
 
@@ -226,8 +253,15 @@ rttdcs.clear_arbdis(must_clear);
 
 // Compiler enforces:
 // 1. Can't write MTQC without setting ARBDIS first (need the token)
-// 2. Can't forget to clear ARBDIS (must_clear token must be used)
+// 2. Can't call generated cleanup without the obligation
+// 3. Can't reuse either affine token after it is consumed
 ```
+
+`#[must_use]` warns when the cleanup obligation is ignored, and projects may
+promote that warning to an error. Rust remains affine rather than strictly
+linear, however: code may explicitly drop the obligation or allow the lint.
+Therefore this chain structures and audits cleanup but does not provide the
+unconditional cleanup guarantee of a closure-scoped session.
 
 ## Key Patterns
 
@@ -246,12 +280,13 @@ rttdcs.clear_arbdis(must_clear);
 - Constraints can span multiple registers
 - Use `register_name` in `FieldState` to reference other registers
 - **Example**: MTQC write depends on RTTDCS.ARBDIS state
+- Setup/cleanup source operations that are themselves constrained are rejected until nested proof composition is supported
 
 ## Benefits
 
-1. **Compile-time safety**: Impossible to violate constraints without explicitly bypassing safety
+1. **Compile-time guidance**: Missing, mismatched, and reused witnesses are rejected unless safety is explicitly bypassed
 2. **Self-documenting**: API signatures encode requirements
-3. **Zero runtime cost**: Tokens are zero-sized types, optimized away
+3. **No token allocation**: Setup proofs are zero-sized and cleanup obligations carry only the operation's existing result
 4. **Explicit errors**: Clear compilation errors guide developers
 5. **Linear types**: Tokens can only be used once, preventing state tracking bugs
 

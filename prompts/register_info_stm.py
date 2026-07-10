@@ -64,10 +64,14 @@ def create_register_info_stm_system_prompt(function_calls_description: str | Non
             - `register_name`: The register containing the field to check. A string.
             - `field_name`: The field name to check. A string.
             - `required_state`: The required state: "cleared", "set", or "equals:<value>". A string.
+            - `evidence_kind`: "observed_state" if software must check the state, or "software_action" if software must establish it. A string.
+            - `action_operation`: For "software_action", the source-register operation used to establish the state: "write" or "modify"; otherwise null.
         - `postconditions`: A list of field states that must be established AFTER the operation. Each object has:
             - `register_name`: The register containing the field to modify. A string.
             - `field_name`: The field name to modify. A string.
             - `required_state`: The required end state: "cleared", "set", or "equals:<value>". A string.
+            - `evidence_kind`: Use "software_action" when software must perform the cleanup action. A string.
+            - `action_operation`: The source-register operation used for cleanup: "write" or "modify". A string.
         - `severity`: The severity of the constraint: "error" or "warning". A string.
         - `consequence`: Description of what happens if the constraint is violated. A string.
         - `datasheet_text`: The original text from the datasheet describing this constraint. A string.
@@ -92,10 +96,10 @@ def create_register_info_stm_system_prompt(function_calls_description: str | Non
 
     Examples:
     1. "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware"
-       → Constraint on I2C_CR1 write with preconditions: STOP=cleared, START=cleared, PEC=cleared
+       → Constraint on I2C_CR1 write with observed_state preconditions: STOP=cleared, START=cleared, PEC=cleared
 
     2. "Software must set RTTDCS.ARBDIS before configuring MTQC and then clear RTTDCS.ARBDIS afterwards"
-       → Constraint on MTQC write with precondition: ARBDIS=set and postcondition: ARBDIS=cleared
+       → Constraint on MTQC write with software_action precondition: ARBDIS=set via modify and software_action postcondition: ARBDIS=cleared via modify
 
     3. "The BUSY flag must be cleared before writing to the DATA register"
        → Constraint on DATA write with precondition: BUSY=cleared
@@ -213,10 +217,14 @@ def create_register_info_stm_system_prompt_batched(
             - `register_name`: The register containing the field to check. A string.
             - `field_name`: The field name to check. A string.
             - `required_state`: The required state: "cleared", "set", or "equals:<value>". A string.
+            - `evidence_kind`: "observed_state" if software must check the state, or "software_action" if software must establish it. A string.
+            - `action_operation`: For "software_action", the source-register operation used to establish the state: "write" or "modify"; otherwise null.
         - `postconditions`: A list of field states that must be established AFTER the operation. Each object has:
             - `register_name`: The register containing the field to modify. A string.
             - `field_name`: The field name to modify. A string.
             - `required_state`: The required end state: "cleared", "set", or "equals:<value>". A string.
+            - `evidence_kind`: Use "software_action" when software must perform the cleanup action. A string.
+            - `action_operation`: The source-register operation used for cleanup: "write" or "modify". A string.
         - `severity`: The severity of the constraint: "error" or "warning". A string.
         - `consequence`: Description of what happens if the constraint is violated. A string.
         - `datasheet_text`: The original text from the datasheet describing this constraint. A string.
@@ -241,10 +249,10 @@ def create_register_info_stm_system_prompt_batched(
 
     Examples:
     1. "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware"
-       → Constraint on I2C_CR1 write with preconditions: STOP=cleared, START=cleared, PEC=cleared
+       → Constraint on I2C_CR1 write with observed_state preconditions: STOP=cleared, START=cleared, PEC=cleared
 
     2. "Software must set RTTDCS.ARBDIS before configuring MTQC and then clear RTTDCS.ARBDIS afterwards"
-       → Constraint on MTQC write with precondition: ARBDIS=set and postcondition: ARBDIS=cleared
+       → Constraint on MTQC write with software_action precondition: ARBDIS=set via modify and software_action postcondition: ARBDIS=cleared via modify
 
     3. "The BUSY flag must be cleared before writing to the DATA register"
        → Constraint on DATA write with precondition: BUSY=cleared
@@ -304,7 +312,7 @@ def create_register_info_stm_system_prompt_batched_minimal(
         - `enumerated_values` (list): [{{"value": str, "name": str}}] or empty
     - `access_constraints` (list): each with:
         - `target_register` (str), `target_fields` (list[str]), `target_operation` (str: "write"|"read"|"modify")
-        - `preconditions` / `postconditions`: [{{"register_name": str, "field_name": str, "required_state": str}}]
+        - `preconditions` / `postconditions`: [{{"register_name": str, "field_name": str, "required_state": str, "evidence_kind": "observed_state"|"software_action", "action_operation": null|"write"|"modify"}}]
         - `severity` (str: "error"|"warning"), `consequence` (str), `datasheet_text` (str)
 
     # FUNCTION CALLS

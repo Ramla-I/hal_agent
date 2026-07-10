@@ -248,17 +248,23 @@ stm_datasheet_example = """
                     {
                         "register_name": "I2C_CR1",
                         "field_name": "STOP",
-                        "required_state": "cleared"
+                        "required_state": "cleared",
+                        "evidence_kind": "observed_state",
+                        "action_operation": null
                     },
                     {
                         "register_name": "I2C_CR1",
                         "field_name": "START",
-                        "required_state": "cleared"
+                        "required_state": "cleared",
+                        "evidence_kind": "observed_state",
+                        "action_operation": null
                     },
                     {
                         "register_name": "I2C_CR1",
                         "field_name": "PEC",
-                        "required_state": "cleared"
+                        "required_state": "cleared",
+                        "evidence_kind": "observed_state",
+                        "action_operation": null
                     }
                 ],
                 "postconditions": [],

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict
 
 class Manufacturer(Enum):
@@ -87,13 +87,15 @@ class FieldState(BaseModel):
     register_name: str  # Can be different register (e.g., "RTTDCS" when constraining "MTQC")
     field_name: str
     required_state: str  # "cleared", "set", "equals:<value>"
+    evidence_kind: Literal["observed_state", "software_action"] = "observed_state"
+    action_operation: Optional[Literal["write", "modify"]] = None
 
 class RegisterAccessConstraint(BaseModel):
     """
     Constraint on register/field access using linear types.
 
     Preconditions are enforced by consuming linear type tokens.
-    Postconditions are enforced by producing linear type tokens that must be consumed elsewhere.
+    Software-action postconditions produce affine cleanup obligations.
 
     See REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md for detailed explanation and examples.
     """
@@ -106,8 +108,7 @@ class RegisterAccessConstraint(BaseModel):
     # e.g., to write, you must consume StopClearedToken
     preconditions: list[FieldState]
 
-    # Post-conditions: linear types that are PRODUCED and must be used elsewhere
-    # e.g., writing produces ArbdisMustClearToken that must be consumed
+    # Post-conditions: affine obligations produced for generated cleanup methods
     postconditions: list[FieldState]
 
     # Metadata

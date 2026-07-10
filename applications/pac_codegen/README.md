@@ -75,13 +75,19 @@ python applications/pac_codegen/rust_codegen.py \
     --inject applications/pac_codegen/vendored/stm32-rs/stm32f4/src/stm32f405/mod.rs
 ```
 
-For each constrained operation, verification performs one fresh read of every
-register named by its preconditions and returns an operation-specific proof with
-a private constructor. Same-register rules use an inherent
-`verify_*_ready()` method. Cross-register rules use a peripheral-level function
-such as `constraints::verify_mtqc_modify_ready(&rttdcs)`, which receives the
-relevant register handles and reads them internally. `write`,
-`modify`, and `read` constraints produce distinct proof types, so proof for one
+Each field-state requirement declares how its evidence is obtained. An
+`observed_state` requirement performs a fresh read and returns an
+operation-specific proof with a private constructor. Same-register rules use an
+inherent `verify_*_ready()` method, while observed cross-register rules use a
+peripheral-level verifier that receives the relevant register handles.
+A `software_action` requirement instead generates the operation that establishes
+the state. For example, `rttdcs.set_arbdis()` returns `ArbdisSet`, an MTQC
+operation consumes it and returns `ArbdisMustClear<T>`, and
+`rttdcs.clear_arbdis()` consumes that cleanup obligation and returns `T`.
+Generation rejects setup or cleanup actions whose own source operation is
+constrained; composing nested action proofs is not yet supported.
+For observed-state evidence, `write`, `modify`, and `read` constraints produce
+distinct proof types, so proof for one
 operation cannot authorize another. A write constraint gates `write`, `reset`,
 `write_with_zero`, and `from_write`; a modify constraint gates `modify` and
 `from_modify`; a read constraint gates `read`. Unconstrained operations retain
@@ -127,8 +133,8 @@ python applications/pac_codegen/rust_codegen.py \
 
 Manifest codegen emits one flat constraints module per peripheral, allowing
 proof verifiers to refer to source registers other than the constrained target.
-Injection adds that module once and converts every constrained target register
-alias to `ConstrainedReg`.
+Injection adds that module once and converts every constrained target register,
+plus source registers that host setup or cleanup actions, to `ConstrainedReg`.
 
 It only **collects and forwards** dependency invariants. This application treats
 its inputs as already validated and does not check consistency, satisfiability,
@@ -137,18 +143,16 @@ untouched.
 
 ## TODO: advanced constraint forms
 
-- **Multi-step precondition/postcondition procedures:** Rules such as “set
-  ARBDIS, configure MTQC, then clear ARBDIS” need more than a precondition
-  witness. A future implementation should generate a closure-scoped typestate
-  session: generated code performs the required setup and cleanup, while the
-  closure receives a restricted API exposing only operations valid during the
-  intermediate state.
+- **Strict cleanup sessions:** Action-derived postconditions return affine
+  `#[must_use]` obligations, but Rust permits values to be explicitly dropped
+  and allows the lint to be downgraded. A future closure-scoped typestate session
+  could perform cleanup automatically and provide a stronger guarantee.
 - **Field-level constraints:** The current design promotes the whole register to
   `ConstrainedReg`. A future implementation may generate restricted writer
   types so writes to unconstrained fields remain available without proof while
   constrained fields require it.
 
-Both features are intentionally deferred until the application has enough
+Both stricter cleanup sessions and field-level enforcement are deferred until the application has enough
 representative datasheet examples to establish the right generated API.
 
 ## Testing
@@ -171,6 +175,9 @@ python applications/pac_codegen/test_codegen.py
 - **`test_cross_register_proofs_compile_and_enforce`** checks a synthetic
   CR2→CR1 rule, including the legal verifier flow and rejection of missing or
   operation-mismatched proofs.
+- **`test_action_chain_compiles_and_enforces`** checks setup-token production,
+  target-operation consumption, cleanup obligations, and rejection of missing,
+  mismatched, or reused tokens.
 - **`test_unconstrained_operations_fail_to_compile`** injects and checks every
   ordinary write-capable method without proof, plus a program that reuses a
   consumed proof or passes proof for the wrong operation. They must be rejected

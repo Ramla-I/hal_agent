@@ -113,14 +113,18 @@ def test_access_constraint_with_postconditions():
                     {
                         "register_name": "RTTDCS",
                         "field_name": "ARBDIS",
-                        "required_state": "set"
+                        "required_state": "set",
+                        "evidence_kind": "software_action",
+                        "action_operation": "modify"
                     }
                 ],
                 "postconditions": [
                     {
                         "register_name": "RTTDCS",
                         "field_name": "ARBDIS",
-                        "required_state": "cleared"
+                        "required_state": "cleared",
+                        "evidence_kind": "software_action",
+                        "action_operation": "modify"
                     }
                 ],
                 "severity": "error",
@@ -138,6 +142,8 @@ def test_access_constraint_with_postconditions():
     assert len(constraint.postconditions) == 1
     assert constraint.preconditions[0].required_state == "set"
     assert constraint.postconditions[0].required_state == "cleared"
+    assert constraint.preconditions[0].evidence_kind == "software_action"
+    assert constraint.postconditions[0].action_operation == "modify"
 
 
 def test_field_state_schema():
@@ -152,6 +158,8 @@ def test_field_state_schema():
     assert field_state.register_name == "I2C_CR1"
     assert field_state.field_name == "STOP"
     assert field_state.required_state == "cleared"
+    assert field_state.evidence_kind == "observed_state"
+    assert field_state.action_operation is None
 
 
 def test_field_state_with_value():
@@ -283,7 +291,9 @@ def test_field_state_required_fields():
     required_fields = {
         "register_name",
         "field_name",
-        "required_state"
+        "required_state",
+        "evidence_kind",
+        "action_operation"
     }
 
     model_fields = set(FieldState.model_fields.keys())

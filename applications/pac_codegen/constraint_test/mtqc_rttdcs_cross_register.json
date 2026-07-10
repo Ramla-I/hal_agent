@@ -13,10 +13,20 @@
         {
           "register_name": "RTTDCS",
           "field_name": "ARBDIS",
-          "required_state": "set"
+          "required_state": "set",
+          "evidence_kind": "software_action",
+          "action_operation": "modify"
         }
       ],
-      "postconditions": [],
+      "postconditions": [
+        {
+          "register_name": "RTTDCS",
+          "field_name": "ARBDIS",
+          "required_state": "cleared",
+          "evidence_kind": "software_action",
+          "action_operation": "modify"
+        }
+      ],
       "severity": "error",
       "consequence": "Transmit queues may be reconfigured while arbitration is active",
       "datasheet_text": "Set RTTDCS.ARBDIS before modifying MTQC.TTC0."
