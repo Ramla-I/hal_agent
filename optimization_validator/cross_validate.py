@@ -1106,6 +1106,9 @@ def main():
     ap.add_argument("--device-dir", default="devices/stm/rm0041",
                     help="device asset dir (used by OpenEvolve to locate chunked_datasheets)")
     ap.add_argument("--device-name", default="rm0041")
+    ap.add_argument("--manufacturer", default="stm", choices=["stm", "nxp", "ti", "intel"],
+                    help="device manufacturer for retrieval (OpenEvolve register-query "
+                         "building); default stm")
     ap.add_argument("--vendor", default="stm",
                     help="vendor key for the access-notation legend (see "
                          "optimization_validator/access_notations.json); '' or 'none' to disable")
@@ -1151,7 +1154,8 @@ def main():
         print(f"Retrieval: OpenAI file_search (vs={args.vs_id}, {args.num_embeddings} chunks)")
 
     from defs import Manufacturer
-    retrieve_fn = make_retriever(params, args.device_name, args.device_dir, Manufacturer.STM)
+    manufacturer = Manufacturer[args.manufacturer.upper()]
+    retrieve_fn = make_retriever(params, args.device_name, args.device_dir, manufacturer)
 
     # Vendor access-notation legend (maps datasheet codes like rc_w0 -> read-write).
     from optimization_validator.access_notation import access_legend as _access_legend
