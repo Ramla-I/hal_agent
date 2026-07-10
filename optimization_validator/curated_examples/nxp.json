@@ -1,0 +1,1365 @@
+{
+  "_comment": "DRAFT curated examples for NXP ke04, GROUPED BY FOLD (seed-0 assignment; runtime recomputes folds per seed). Each entry carries its fold. FILL datasheet_excerpt + reasoning for >=2 per fold (the minimum, so every held-out fold keeps a populated, equal-sized block); fill more for better coverage. false_negative entries (validator wrongly rejected a correct fact) are the most instructive and are listed first per fold. Delete entries you don't fill. Then run cross_validate.py with --curated-examples optimization_validator/curated_examples/nxp.json. Candidate pool: 80 ({'false_positive': 40, 'false_negative': 40}); per-fold counts {0: 10, 1: 16, 2: 8, 3: 22, 4: 24}.",
+  "examples": [
+    {
+      "fold": 0,
+      "peripheral": "crc",
+      "register": "data",
+      "field_name": "lu",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "hu",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "ftm0",
+      "register": "combine",
+      "field_name": "dten1",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "syncen0",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "ftm0",
+      "register": "combine",
+      "field_name": "decapen1",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "faulten1",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "ftm0",
+      "register": "combine",
+      "field_name": "decap3",
+      "key": "bit_offset",
+      "value": "25",
+      "is_true": false,
+      "ground_truth_value": "27",
+      "ground_truth_field_name": "decap3",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "ftm0",
+      "register": "combine",
+      "field_name": "syyncen3",
+      "key": "bit_offset",
+      "value": "29",
+      "is_true": false,
+      "ground_truth_value": "29",
+      "ground_truth_field_name": "syncen3",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "ftm0",
+      "register": "filter",
+      "field_name": "chf2val",
+      "key": "bit_offset",
+      "value": "8",
+      "is_true": false,
+      "ground_truth_value": "8",
+      "ground_truth_field_name": "ch2fval",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "ftm0",
+      "register": "status",
+      "field_name": "ch0f",
+      "key": "bit_offset",
+      "value": "2",
+      "is_true": false,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "ch0f",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "ftm2",
+      "register": "exttrig",
+      "field_name": "ch1trig",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "ch3trig",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "ftm2",
+      "register": "exttrig",
+      "field_name": "ch3trig",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "trigf",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 0,
+      "peripheral": "ftm2",
+      "register": "pol",
+      "field_name": "pool6",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "pol6",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "irq",
+      "register": "sc",
+      "field_name": "",
+      "key": "address_offset",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "irq",
+      "register": "sc",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "irq",
+      "register": "sc",
+      "field_name": "",
+      "key": "size",
+      "value": "8",
+      "is_true": true,
+      "ground_truth_value": "8",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "irq",
+      "register": "sc",
+      "field_name": "irqpdd",
+      "key": "bit_offset",
+      "value": "6",
+      "is_true": true,
+      "ground_truth_value": "6",
+      "ground_truth_field_name": "irqpdd",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "irq",
+      "register": "sc",
+      "field_name": "irqpdd",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": true,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "irqpdd",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "irq",
+      "register": "sc",
+      "field_name": "irqpdd",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "irqpdd",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "crc",
+      "register": "ctrl",
+      "field_name": "fxor",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "was",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "crc",
+      "register": "gpoly",
+      "field_name": "lw",
+      "key": "bit_width",
+      "value": "16",
+      "is_true": false,
+      "ground_truth_value": "16",
+      "ground_truth_field_name": "low",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "ftm0",
+      "register": "outinit",
+      "field_name": "ch7oi",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "ch2oi",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "ftm0",
+      "register": "pwmload",
+      "field_name": "ch3sel",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "ch4sel",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "ftm0",
+      "register": "pwmload",
+      "field_name": "ch6sel",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "ldok",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "ftm2",
+      "register": "cnt",
+      "field_name": "iount",
+      "key": "bit_offset",
+      "value": "0",
+      "is_true": false,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "count",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "ftm2",
+      "register": "combine",
+      "field_name": "faulten1",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "dten0",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "ftm2",
+      "register": "combine",
+      "field_name": "comp0",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "syncen0",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "ftm2",
+      "register": "combine",
+      "field_name": "syncen0",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "comp2",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 1,
+      "peripheral": "ftm2",
+      "register": "combine",
+      "field_name": "comp3",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "faulten3",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "ftmre",
+      "register": "fopt",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "ftm0",
+      "register": "synconf",
+      "field_name": "hwwrbuf",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "swom",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "ftm0",
+      "register": "synconf",
+      "field_name": "swmo",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "swom",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "ftm0",
+      "register": "synconf",
+      "field_name": "hwtrigmode",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "swinvc",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "ftm0",
+      "register": "synconf",
+      "field_name": "swrstcnt",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "hwsoc",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "ftm2",
+      "register": "mode",
+      "field_name": "wpdiis",
+      "key": "bit_offset",
+      "value": "2",
+      "is_true": false,
+      "ground_truth_value": "2",
+      "ground_truth_field_name": "wpdis",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "ftm2",
+      "register": "mode",
+      "field_name": "captest",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "wpdis",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 2,
+      "peripheral": "ftm2",
+      "register": "mode",
+      "field_name": "wpdis",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "faultm",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "c%ssc",
+      "field_name": "",
+      "key": "address_offset",
+      "value": "0xC",
+      "is_true": true,
+      "ground_truth_value": "0xC",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "c%ssc",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "c%ssc",
+      "field_name": "elsa",
+      "key": "bit_offset",
+      "value": "2",
+      "is_true": true,
+      "ground_truth_value": "2",
+      "ground_truth_field_name": "elsa",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "c%ssc",
+      "field_name": "elsa",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": true,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "elsa",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "c%ssc",
+      "field_name": "elsa",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "elsa",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "c%ssc",
+      "field_name": "elsb",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": true,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "elsb",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "c%ssc",
+      "field_name": "msa",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "msa",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "c%ssc",
+      "field_name": "msb",
+      "key": "bit_offset",
+      "value": "5",
+      "is_true": true,
+      "ground_truth_value": "5",
+      "ground_truth_field_name": "msb",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "mod",
+      "field_name": "",
+      "key": "address_offset",
+      "value": "0x8",
+      "is_true": true,
+      "ground_truth_value": "0x8",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "mod",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "mod",
+      "field_name": "mod",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "mod",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "pit",
+      "register": "cval%s",
+      "field_name": "",
+      "key": "address_offset",
+      "value": "0x104",
+      "is_true": true,
+      "ground_truth_value": "0x104",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "pit",
+      "register": "cval%s",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "pit",
+      "register": "cval%s",
+      "field_name": "tvl",
+      "key": "bit_width",
+      "value": "32",
+      "is_true": true,
+      "ground_truth_value": "32",
+      "ground_truth_field_name": "tvl",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "fms",
+      "field_name": "ffaultin",
+      "key": "access",
+      "value": "read-only",
+      "is_true": false,
+      "ground_truth_value": "read-only",
+      "ground_truth_field_name": "faultin",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "fms",
+      "field_name": "faultf2",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "wpen",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "outmask",
+      "field_name": "ch1om",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "ch3om",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "outmask",
+      "field_name": "ch5om",
+      "key": "access",
+      "value": "write-only",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "ch5om",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "outmask",
+      "field_name": "ch0om",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "ch7om",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "swoctrl",
+      "field_name": "ch6oc",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "ch2oc",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "swoctrl",
+      "field_name": "ch6ocv",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "ch0ocv",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 3,
+      "peripheral": "ftm0",
+      "register": "swoctrl",
+      "field_name": "ch0ocv",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "ch7ocv",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "ftmre",
+      "register": "fsec",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "ldval%s",
+      "field_name": "",
+      "key": "address_offset",
+      "value": "0x100",
+      "is_true": true,
+      "ground_truth_value": "0x100",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "ldval%s",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "ldval%s",
+      "field_name": "",
+      "key": "size",
+      "value": "32",
+      "is_true": true,
+      "ground_truth_value": "32",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "ldval%s",
+      "field_name": "tsv",
+      "key": "bit_width",
+      "value": "32",
+      "is_true": true,
+      "ground_truth_value": "32",
+      "ground_truth_field_name": "tsv",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "ldval%s",
+      "field_name": "tsv",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "tsv",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "",
+      "key": "address_offset",
+      "value": "0x108",
+      "is_true": true,
+      "ground_truth_value": "0x108",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "",
+      "key": "size",
+      "value": "32",
+      "is_true": true,
+      "ground_truth_value": "32",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "ten",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": true,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "ten",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "ten",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "ten",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "tie",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": true,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "tie",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "tie",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "tie",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "chn",
+      "key": "bit_offset",
+      "value": "2",
+      "is_true": true,
+      "ground_truth_value": "2",
+      "ground_truth_field_name": "chn",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "chn",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": true,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "chn",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tctrl%s",
+      "field_name": "chn",
+      "key": "access",
+      "value": "read-write",
+      "is_true": true,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "chn",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tflg%s",
+      "field_name": "",
+      "key": "size",
+      "value": "32",
+      "is_true": true,
+      "ground_truth_value": "32",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pit",
+      "register": "tflg%s",
+      "field_name": "tif",
+      "key": "bit_offset",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "tif",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pwt",
+      "register": "r1",
+      "field_name": "",
+      "key": "reset_value",
+      "value": "0",
+      "is_true": true,
+      "ground_truth_value": "0",
+      "ground_truth_field_name": "",
+      "mistake": "false_negative",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "ftm0",
+      "register": "sc",
+      "field_name": "tof",
+      "key": "bit_offset",
+      "value": "0",
+      "is_true": false,
+      "ground_truth_value": "7",
+      "ground_truth_field_name": "tof",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "ftm2",
+      "register": "outmask",
+      "field_name": "ch0om",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "ch3om",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pwt",
+      "register": "r1",
+      "field_name": "edge",
+      "key": "access",
+      "value": "read-write",
+      "is_true": false,
+      "ground_truth_value": "read-write",
+      "ground_truth_field_name": "pwtrdy",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pwt",
+      "register": "r1",
+      "field_name": "pwtrdy",
+      "key": "bit_width",
+      "value": "1",
+      "is_true": false,
+      "ground_truth_value": "1",
+      "ground_truth_field_name": "povie",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    },
+    {
+      "fold": 4,
+      "peripheral": "pwt",
+      "register": "r1",
+      "field_name": "pinnsel",
+      "key": "bit_width",
+      "value": "2",
+      "is_true": false,
+      "ground_truth_value": "2",
+      "ground_truth_field_name": "pinsel",
+      "mistake": "false_positive",
+      "models": [
+        "gpt-oss-120b"
+      ],
+      "datasheet_excerpt": "",
+      "reasoning": ""
+    }
+  ]
+}
