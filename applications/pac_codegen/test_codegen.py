@@ -23,9 +23,9 @@ Make sure that changes to ``rust_codegen.py`` (or to the shared schema in
      are backed up first and restored in a ``finally``; the test then asserts the
      PAC crate was left byte-for-byte as it started.
 
-  3. ENFORCEMENT CHECK (needs cargo + a generated PAC) -- ``test_unconstrained_write_fails_to_compile``
-     Inject, then ``cargo check`` a program that writes CR1 WITHOUT the required
-     composite proof, and assert it is REJECTED with E0061 (wrong argument count).
+  3. ENFORCEMENT CHECK (needs cargo + a generated PAC) -- ``test_unconstrained_operations_fail_to_compile``
+     Inject, then ``cargo check`` every ordinary write-capable CR1 operation
+     WITHOUT the composite proof, and assert rejection with E0061.
      This proves the constraint is actually enforced, not merely that legal code
      compiles. The PAC and the swapped-in ``main.rs`` are restored and checked,
      exactly as above.
@@ -219,6 +219,15 @@ def test_synthetic_constraint_matrix():
     assert "pub fn verify_write_ready(&self)" in generated
     assert "verify_enabled_set" not in generated
     assert "verify_mode_equals" not in generated
+    for signature in (
+        "pub fn write<F>",
+        "pub fn modify<F>",
+        "pub fn reset(",
+        "pub fn write_with_zero<F>",
+        "pub fn from_write<F, T>",
+        "pub fn from_modify<F, T>",
+    ):
+        assert generated.count(signature) == 1
     assert "First write rule" in generated
     assert "Second write rule" in generated
     assert generated == generate_constraint_module(register, "fake")
@@ -355,17 +364,17 @@ pub extern "C" fn main() -> ! {
 """
 
 
-def test_unconstrained_write_fails_to_compile():
+def test_unconstrained_operations_fail_to_compile():
     """Proof-less and proof-reusing writes must be rejected by the compiler.
 
     Proves the constraint is actually enforced -- not merely that legal code
     compiles. Skips under the same conditions as test_constraint_test_compiles.
     """
     if not _cargo_available():
-        print("SKIP test_unconstrained_write_fails_to_compile: cargo not on PATH")
+        print("SKIP test_unconstrained_operations_fail_to_compile: cargo not on PATH")
         return
     if not _pac_generated():
-        print("SKIP test_unconstrained_write_fails_to_compile: generated stm32f4 "
+        print("SKIP test_unconstrained_operations_fail_to_compile: generated stm32f4 "
               f"PAC not found under {PAC_SRC}.")
         return
 
@@ -386,8 +395,49 @@ def test_unconstrained_write_fails_to_compile():
         if inject.returncode != 0:
             detail = "injection failed:\n" + inject.stdout + inject.stderr
         else:
+            illegal_write = "i2c1.cr1().write(|w| w.pe().enabled());"
             for name, source, expected_error in (
                 ("token-less write", ILLEGAL_MAIN, "E0061"),
+                (
+                    "token-less modify",
+                    ILLEGAL_MAIN.replace(
+                        illegal_write,
+                        "i2c1.cr1().modify(|_, w| w.pe().enabled());",
+                    ),
+                    "E0061",
+                ),
+                (
+                    "token-less reset",
+                    ILLEGAL_MAIN.replace(
+                        illegal_write,
+                        "i2c1.cr1().reset();",
+                    ),
+                    "E0061",
+                ),
+                (
+                    "token-less write_with_zero",
+                    ILLEGAL_MAIN.replace(
+                        illegal_write,
+                        "i2c1.cr1().write_with_zero(|w| w.pe().enabled());",
+                    ),
+                    "E0061",
+                ),
+                (
+                    "token-less from_write",
+                    ILLEGAL_MAIN.replace(
+                        illegal_write,
+                        "i2c1.cr1().from_write(|w| { w.pe().enabled(); });",
+                    ),
+                    "E0061",
+                ),
+                (
+                    "token-less from_modify",
+                    ILLEGAL_MAIN.replace(
+                        illegal_write,
+                        "i2c1.cr1().from_modify(|_, w| { w.pe().enabled(); });",
+                    ),
+                    "E0061",
+                ),
                 ("reused proof", REUSED_PROOF_MAIN, "E0382"),
             ):
                 main_rs.write_text(source)
@@ -428,7 +478,7 @@ if __name__ == "__main__":
         test_codegen_matches_golden,
         test_synthetic_constraint_matrix,
         test_constraint_test_compiles,
-        test_unconstrained_write_fails_to_compile,
+        test_unconstrained_operations_fail_to_compile,
     ]
     print("Running codegen tests...\n")
     passed = failed = 0

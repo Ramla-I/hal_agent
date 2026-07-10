@@ -133,6 +133,12 @@ cr1.write_safe(|w| w.bits(value), proof);
 // `proof` was moved and cannot authorize another operation.
 ```
 
+For a register-level write constraint, generated PAC shadows must cover every
+ordinary API that performs a write: `write`, `modify`, `reset`,
+`write_with_zero`, `from_write`, and `from_modify`. Each proof-bearing shadow
+delegates to the corresponding method on the wrapped `Reg`; unconstrained
+registers retain the stock methods.
+
 ## Example 2: MTQC Register (Pre AND Post Conditions)
 
 ### Datasheet Constraint

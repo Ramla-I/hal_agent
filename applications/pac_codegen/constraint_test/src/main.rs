@@ -35,6 +35,30 @@ pub extern "C" fn main() -> ! {
     i2c1.cr1()
         .modify(|_, w| w.pe().enabled(), proof);
 
+    // === Every ordinary write-capable PAC method requires fresh proof ===
+    let proof = i2c1.cr1().verify_write_ready().unwrap();
+    i2c1.cr1().reset(proof);
+
+    let proof = i2c1.cr1().verify_write_ready().unwrap();
+    i2c1.cr1()
+        .write_with_zero(|w| w.pe().enabled(), proof);
+
+    let proof = i2c1.cr1().verify_write_ready().unwrap();
+    i2c1.cr1().from_write(
+        |w| {
+            w.pe().enabled();
+        },
+        proof,
+    );
+
+    let proof = i2c1.cr1().verify_write_ready().unwrap();
+    i2c1.cr1().from_modify(
+        |_, w| {
+            w.pe().enabled();
+        },
+        proof,
+    );
+
     // === Unconstrained register: write()/modify() work without proof ===
     // CR2 has no constraints, so Deref to Reg provides the original methods.
     i2c1.cr2().write(|w| unsafe { w.freq().bits(8) });

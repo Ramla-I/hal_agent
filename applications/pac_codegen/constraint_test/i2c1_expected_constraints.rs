@@ -62,15 +62,7 @@ impl crate::ConstrainedReg<super::cr1::CR1rs> {
     where
         F: FnOnce(&mut crate::W<super::cr1::CR1rs>) -> &mut crate::W<super::cr1::CR1rs>,
     {
-        let value = f(&mut crate::W {
-            bits: <super::cr1::CR1rs as crate::Resettable>::RESET_VALUE
-                & !<super::cr1::CR1rs as crate::Writable>::ONE_TO_MODIFY_FIELDS_BITMAP
-                | <super::cr1::CR1rs as crate::Writable>::ZERO_TO_MODIFY_FIELDS_BITMAP,
-            _reg: core::marker::PhantomData,
-        })
-        .bits;
-        self.reg.register.set(value);
-        value
+        self.reg.write(f)
     }
 
     /// Safe read-modify-write to CR1 that enforces datasheet constraints.
@@ -82,22 +74,7 @@ impl crate::ConstrainedReg<super::cr1::CR1rs> {
     where
         for<'w> F: FnOnce(&crate::R<super::cr1::CR1rs>, &'w mut crate::W<super::cr1::CR1rs>) -> &'w mut crate::W<super::cr1::CR1rs>,
     {
-        let bits = self.reg.register.get();
-        let value = f(
-            &crate::R {
-                bits,
-                _reg: core::marker::PhantomData,
-            },
-            &mut crate::W {
-                bits: bits
-                    & !<super::cr1::CR1rs as crate::Writable>::ONE_TO_MODIFY_FIELDS_BITMAP
-                    | <super::cr1::CR1rs as crate::Writable>::ZERO_TO_MODIFY_FIELDS_BITMAP,
-                _reg: core::marker::PhantomData,
-            },
-        )
-        .bits;
-        self.reg.register.set(value);
-        value
+        self.reg.modify(f)
     }
 
     /// Writes to CR1 with constraint verification.
@@ -112,6 +89,51 @@ impl crate::ConstrainedReg<super::cr1::CR1rs> {
         self.write_constrained(f, proof)
     }
 
+    /// Reset CR1 after constraint verification.
+    #[inline(always)]
+    pub fn reset_constrained(&self, _proof: Cr1WriteReady) {
+        self.reg.reset()
+    }
+
+    #[inline(always)]
+    pub fn reset(&self, proof: Cr1WriteReady) {
+        self.reset_constrained(proof)
+    }
+
+    /// Write from zero after constraint verification.
+    #[inline(always)]
+    pub fn write_with_zero_constrained<F>(&self, f: F, _proof: Cr1WriteReady) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
+    where
+        F: FnOnce(&mut crate::W<super::cr1::CR1rs>) -> &mut crate::W<super::cr1::CR1rs>,
+    {
+        self.reg.write_with_zero(f)
+    }
+
+    #[inline(always)]
+    pub fn write_with_zero<F>(&self, f: F, proof: Cr1WriteReady) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
+    where
+        F: FnOnce(&mut crate::W<super::cr1::CR1rs>) -> &mut crate::W<super::cr1::CR1rs>,
+    {
+        self.write_with_zero_constrained(f, proof)
+    }
+
+    /// Write and return a closure-produced value after verification.
+    #[inline(always)]
+    pub fn from_write_constrained<F, T>(&self, f: F, _proof: Cr1WriteReady) -> T
+    where
+        F: FnOnce(&mut crate::W<super::cr1::CR1rs>) -> T,
+    {
+        self.reg.from_write(f)
+    }
+
+    #[inline(always)]
+    pub fn from_write<F, T>(&self, f: F, proof: Cr1WriteReady) -> T
+    where
+        F: FnOnce(&mut crate::W<super::cr1::CR1rs>) -> T,
+    {
+        self.from_write_constrained(f, proof)
+    }
+
     /// Modifies CR1 via read-modify-write with constraint verification.
     ///
     /// This method shadows `Reg::modify()` and requires a composite proof,
@@ -122,5 +144,22 @@ impl crate::ConstrainedReg<super::cr1::CR1rs> {
         for<'w> F: FnOnce(&crate::R<super::cr1::CR1rs>, &'w mut crate::W<super::cr1::CR1rs>) -> &'w mut crate::W<super::cr1::CR1rs>,
     {
         self.modify_constrained(f, proof)
+    }
+
+    /// Read-modify-write and return a closure-produced value.
+    #[inline(always)]
+    pub fn from_modify_constrained<F, T>(&self, f: F, _proof: Cr1WriteReady) -> T
+    where
+        for<'w> F: FnOnce(&crate::R<super::cr1::CR1rs>, &'w mut crate::W<super::cr1::CR1rs>) -> T,
+    {
+        self.reg.from_modify(f)
+    }
+
+    #[inline(always)]
+    pub fn from_modify<F, T>(&self, f: F, proof: Cr1WriteReady) -> T
+    where
+        for<'w> F: FnOnce(&crate::R<super::cr1::CR1rs>, &'w mut crate::W<super::cr1::CR1rs>) -> T,
+    {
+        self.from_modify_constrained(f, proof)
     }
 }
