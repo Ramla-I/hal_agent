@@ -37,7 +37,7 @@ EXTRACTION_DISCIPLINE_NOTE = (
     "value you could not find."
 )
 
-def create_register_info_stm_system_prompt(function_calls_description: str | None = calculate_address_offset_fn_description, examples: str | None = stm_datasheet_example) -> str:
+def create_register_info_stm_system_prompt(function_calls_description: str | None = calculate_address_offset_fn_description, examples: str | None = stm_datasheet_example, naming_note: str = INSTANCE_NAMING_NOTE, discipline_note: str = EXTRACTION_DISCIPLINE_NOTE) -> str:
     if function_calls_description is None:
         function_calls_description = "No function calls provided"
     if examples is None:
@@ -51,9 +51,9 @@ def create_register_info_stm_system_prompt(function_calls_description: str | Non
     You will also be given a section of a hardware datasheet in markdown format that could contain information about the register.
     You will be asked to extract the information about a register.
 
-    {INSTANCE_NAMING_NOTE}
+    {naming_note}
 
-    {EXTRACTION_DISCIPLINE_NOTE}
+    {discipline_note}
 
     # OUTPUT INFORMATION
     You will need to extract the following information about the register:
@@ -167,6 +167,8 @@ def create_register_info_stm_system_prompt_batched(
     function_calls_description: str | None = calculate_address_offset_fn_description,
     examples: str | None = None,
     include_reasoning: bool = True,
+    naming_note: str = INSTANCE_NAMING_NOTE,
+    discipline_note: str = EXTRACTION_DISCIPLINE_NOTE,
 ) -> str:
     if function_calls_description is None:
         function_calls_description = "No function calls provided"
@@ -221,9 +223,9 @@ def create_register_info_stm_system_prompt_batched(
     You will also be given a section of a hardware datasheet in markdown format that could contain information about these registers.
     You will be asked to extract the information about each register.
 
-    {INSTANCE_NAMING_NOTE}
+    {naming_note}
 
-    {EXTRACTION_DISCIPLINE_NOTE}
+    {discipline_note}
 
     # OUTPUT INFORMATION
     For each register, you will need to extract the following information:

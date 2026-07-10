@@ -11,6 +11,10 @@ from prompts.register_info_stm import (
     create_register_info_stm_system_prompt_batched,
     create_register_info_stm_user_prompt_batched,
 )
+from prompts.register_info_nxp import (
+    create_register_info_nxp_system_prompt,
+    create_register_info_nxp_system_prompt_batched,
+)
 from utils.parse_output import (
     get_json_block_from_response,
     get_json_array_from_response,
@@ -125,7 +129,9 @@ def run_generator(
             input_list = [
                 {
                     "role": "developer",
-                    "content": create_register_info_stm_system_prompt()
+                    "content": (create_register_info_nxp_system_prompt()
+                                if manufacturer == Manufacturer.NXP
+                                else create_register_info_stm_system_prompt())
                 },
                 {
                     "role": "user",
@@ -355,7 +361,9 @@ def run_generator_batched(
     if system_prompt_override is not None:
         system_prompt = system_prompt_override
     else:
-        system_prompt = create_register_info_stm_system_prompt_batched(include_reasoning=include_reasoning)
+        system_prompt = (create_register_info_nxp_system_prompt_batched(include_reasoning=include_reasoning)
+                         if manufacturer == Manufacturer.NXP
+                         else create_register_info_stm_system_prompt_batched(include_reasoning=include_reasoning))
 
     # ---- Build peripheral→registers mapping ----
     svd_file_paths = all_svd_file_paths(device_dir)
