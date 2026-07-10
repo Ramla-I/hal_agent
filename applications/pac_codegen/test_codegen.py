@@ -55,6 +55,12 @@ from pathlib import Path
 
 # This application's directory: applications/pac_codegen/
 APP_DIR = Path(__file__).resolve().parent
+REPO_ROOT = APP_DIR.parent.parent
+sys.path.insert(0, str(APP_DIR))
+sys.path.insert(0, str(REPO_ROOT))
+
+from defs import RegisterInfo
+from rust_codegen import generate_constraint_module, normalize_constraints
 
 RUST_CODEGEN = APP_DIR / "rust_codegen.py"
 CRATE_DIR = APP_DIR / "constraint_test"
@@ -121,6 +127,94 @@ def test_codegen_matches_golden():
             f"{GOLDEN.name}. If this change is intentional, refresh the golden's "
             "generated section (see its header).\n\n" + diff
         )
+
+
+def _synthetic_constraint(
+    preconditions: list[tuple[str, str]],
+    *,
+    target_fields: list[str] | None = None,
+    text: str = "Synthetic trusted constraint",
+) -> dict:
+    return {
+        "target_register": "CTRL",
+        "target_fields": target_fields or [],
+        "target_operation": "write",
+        "preconditions": [
+            {
+                "register_name": "CTRL",
+                "field_name": field,
+                "required_state": state,
+            }
+            for field, state in preconditions
+        ],
+        "postconditions": [],
+        "severity": "error",
+        "consequence": "Synthetic test consequence",
+        "datasheet_text": text,
+    }
+
+
+def _synthetic_register(constraints: list[dict]) -> RegisterInfo:
+    return RegisterInfo(
+        datasheet_register_abbreviation="CTRL",
+        address_offset="0x00",
+        reset_value="0x00",
+        size=32,
+        subfields=[],
+        access_constraints=constraints,
+    )
+
+
+def test_synthetic_constraint_matrix():
+    """Exercise every state and normalization variation supported in Step 1."""
+    empty = generate_constraint_module(_synthetic_register([]), "fake")
+    assert "No access constraints defined for this register" in empty
+
+    single = generate_constraint_module(
+        _synthetic_register(
+            [_synthetic_constraint([("READY", "set")])]
+        ),
+        "fake",
+    )
+    assert single.count("pub fn write<F>") == 1
+    assert "r.ready().bit_is_set()" in single
+
+    register = _synthetic_register(
+        [
+            _synthetic_constraint(
+                [("BUSY", "cleared"), ("ENABLED", "set")],
+                target_fields=["DATA"],
+                text="First write rule",
+            ),
+            _synthetic_constraint(
+                [("BUSY", "cleared"), ("MODE", "equals:0x3")],
+                text="Second write rule",
+            ),
+        ]
+    )
+    plans = normalize_constraints(register)
+    assert len(plans) == 1
+    assert plans[0].target_fields == ["DATA"]
+    assert [
+        (pre.field_name, pre.required_state)
+        for pre in plans[0].preconditions
+    ] == [
+        ("BUSY", "cleared"),
+        ("ENABLED", "set"),
+        ("MODE", "equals:0x3"),
+    ]
+
+    generated = generate_constraint_module(register, "fake")
+    assert generated.count("impl crate::ConstrainedReg") == 1
+    assert generated.count("pub fn write<F>") == 1
+    assert "r.busy().bit_is_clear()" in generated
+    assert "r.enabled().bit_is_set()" in generated
+    assert "r.mode().bits() == 0x3" in generated
+    assert "verify_enabled_set" in generated
+    assert "verify_mode_equals" in generated
+    assert "First write rule" in generated
+    assert "Second write rule" in generated
+    assert generated == generate_constraint_module(register, "fake")
 
 
 # --------------------------------------------------------------------------- #
@@ -300,6 +394,7 @@ def test_unconstrained_write_fails_to_compile():
 if __name__ == "__main__":
     tests = [
         test_codegen_matches_golden,
+        test_synthetic_constraint_matrix,
         test_constraint_test_compiles,
         test_unconstrained_write_fails_to_compile,
     ]

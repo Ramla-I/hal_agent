@@ -16,13 +16,62 @@ import json
 import os
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 # Add the repo root to sys.path so we can import the shared defs.py.
 # This file lives at applications/pac_codegen/rust_codegen.py, so the repo
 # root is three levels up.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from defs import RegisterInfo
+from defs import FieldState, RegisterInfo
+
+
+@dataclass
+class NormalizedConstraint:
+    """Conjunctive constraints for one target operation."""
+
+    target_register: str
+    target_fields: list[str]
+    target_operation: str
+    preconditions: list[FieldState]
+    datasheet_texts: list[str]
+
+
+def normalize_constraints(register_info: RegisterInfo) -> list[NormalizedConstraint]:
+    """Group constraints by operation and deduplicate predicates deterministically."""
+    plans: dict[str, NormalizedConstraint] = {}
+    seen_preconditions: dict[str, set[tuple[str, str]]] = {}
+    seen_fields: dict[str, set[str]] = {}
+
+    for constraint in register_info.access_constraints:
+        operation = constraint.target_operation
+        if operation not in plans:
+            plans[operation] = NormalizedConstraint(
+                target_register=constraint.target_register,
+                target_fields=[],
+                target_operation=operation,
+                preconditions=[],
+                datasheet_texts=[],
+            )
+            seen_preconditions[operation] = set()
+            seen_fields[operation] = set()
+
+        plan = plans[operation]
+        for field in constraint.target_fields:
+            if field not in seen_fields[operation]:
+                plan.target_fields.append(field)
+                seen_fields[operation].add(field)
+
+        for precondition in constraint.preconditions:
+            key = (precondition.field_name, precondition.required_state)
+            if key not in seen_preconditions[operation]:
+                plan.preconditions.append(precondition)
+                seen_preconditions[operation].add(key)
+
+        if constraint.datasheet_text not in plan.datasheet_texts:
+            plan.datasheet_texts.append(constraint.datasheet_text)
+
+    return list(plans.values())
 
 
 def field_to_rust_name(field_name: str) -> str:
@@ -102,6 +151,7 @@ def generate_constraint_module(
     reg_name = register_info.datasheet_register_abbreviation
     reg_lower = reg_name.lower()
     peripheral_lower = peripheral.lower()
+    constraints = normalize_constraints(register_info)
 
     lines = []
 
@@ -116,7 +166,7 @@ def generate_constraint_module(
 
     # Collect all preconditions across all constraints
     all_preconditions = []
-    for constraint in register_info.access_constraints:
+    for constraint in constraints:
         for pre in constraint.preconditions:
             key = (pre.field_name, pre.required_state)
             if key not in [(p.field_name, p.required_state) for p in all_preconditions]:
@@ -179,9 +229,9 @@ def generate_constraint_module(
     lines.append('}')
     lines.append('')
 
-    # --- Constrained write method(s) on Reg ---
-    # We generate one write_constrained per constraint
-    for constraint in register_info.access_constraints:
+    # --- Constrained write methods on Reg ---
+    # Normalization guarantees one method set per target operation.
+    for constraint in constraints:
         if constraint.target_operation != "write":
             continue
 
@@ -216,13 +266,21 @@ def generate_constraint_module(
         lines.append(f'/// Safe write to {reg_name} that enforces datasheet constraints.')
         lines.append(f'///')
         lines.append(f'/// # Constraint')
-        lines.append(f'/// {constraint.datasheet_text}')
+        for datasheet_text in constraint.datasheet_texts:
+            lines.append(f'/// {datasheet_text}')
         lines.append(f'///')
         lines.append(f'/// # Usage')
         lines.append(f'/// ```no_run')
         lines.append(f'/// let r = {peripheral_lower}.{target}().read();')
-        for param_name, token_name in token_params:
-            verify_method = f"verify_{param_name.strip('_').replace('_token', '')}_cleared"
+        for (param_name, token_name), precondition in zip(
+            token_params,
+            constraint.preconditions,
+        ):
+            state_method = precondition.required_state.split(":", 1)[0]
+            verify_method = (
+                f"verify_{param_name.strip('_').replace('_token', '')}_"
+                f"{state_method}"
+            )
             lines.append(f'/// let {param_name.lstrip("_")} = r.{verify_method}().unwrap();')
         call_args = ', '.join(f'{p.lstrip("_")}' for p, _ in token_params)
         lines.append(f'/// {peripheral_lower}.{target}().write_constrained(|w| w, {call_args});')
@@ -254,7 +312,8 @@ def generate_constraint_module(
         lines.append(f'    /// Safe read-modify-write to {reg_name} that enforces datasheet constraints.')
         lines.append(f'    ///')
         lines.append(f'    /// # Constraint')
-        lines.append(f'    /// {constraint.datasheet_text}')
+        for datasheet_text in constraint.datasheet_texts:
+            lines.append(f'    /// {datasheet_text}')
         lines.append(f'    #[inline(always)]')
         lines.append(f'    pub fn modify_constrained<F>(&self, f: F, {params_str}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
         lines.append(f'    where')

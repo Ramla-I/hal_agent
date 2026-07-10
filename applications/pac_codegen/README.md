@@ -94,9 +94,26 @@ python applications/pac_codegen/collect_constraints.py agent_output/stm/rm0041/2
     --output-dir applications/pac_codegen/constraints/rm0041_24
 ```
 
-It only **collects and forwards** the dependency invariants. *Validating* them
-(consistency, satisfiability, datasheet fidelity) is later work (Phase 2/4); the
-pipeline validator in `core/s4_validator.py` is left untouched.
+It only **collects and forwards** dependency invariants. This application treats
+its inputs as already validated and does not check consistency, satisfiability,
+or datasheet fidelity; the pipeline validator in `core/s4_validator.py` is left
+untouched.
+
+## TODO: advanced constraint forms
+
+- **Multi-step precondition/postcondition procedures:** Rules such as “set
+  ARBDIS, configure MTQC, then clear ARBDIS” need more than a precondition
+  witness. A future implementation should generate a closure-scoped typestate
+  session: generated code performs the required setup and cleanup, while the
+  closure receives a restricted API exposing only operations valid during the
+  intermediate state.
+- **Field-level constraints:** The current design promotes the whole register to
+  `ConstrainedReg`. A future implementation may generate restricted writer
+  types so writes to unconstrained fields remain available without proof while
+  constrained fields require it.
+
+Both features are intentionally deferred until the application has enough
+representative datasheet examples to establish the right generated API.
 
 ## Testing
 
