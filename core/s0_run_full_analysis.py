@@ -266,20 +266,29 @@ def build_context_retrieval_params(
     )
 
 
-def resolve_openevolve_program(device_name: str, repo_root: str) -> str:
+# Per-vendor reference OpenEvolve program, used when a device has no evolution of
+# its own (NXP short-name retrieval differs enough that the STM program is a poor
+# fallback — ke04 is the NXP reference, mirroring the vendor-default validator card).
+_VENDOR_OE_DEFAULT = {"nxp": "output_ke04", "stm": "output_rm0041"}
+
+
+def resolve_openevolve_program(device_name: str, repo_root: str, manufacturer=None) -> str:
     """Path to the device's evolved OpenEvolve best_program.py.
 
-    Falls back to the rm0041 program when a device-specific evolution is absent
-    (per the Phase 1d plan: use the evolved STM retrieval, default rm0041).
+    Device-specific evolution if present; else the vendor's reference program
+    (NXP -> ke04, STM -> rm0041); else rm0041.
     """
-    device_specific = os.path.join(
-        repo_root, "openevolve_retrieval", f"output_{device_name}", "best", "best_program.py",
-    )
+    def _prog(subdir):
+        return os.path.join(repo_root, "openevolve_retrieval", subdir, "best", "best_program.py")
+
+    device_specific = _prog(f"output_{device_name}")
     if os.path.exists(device_specific):
         return device_specific
-    return os.path.join(
-        repo_root, "openevolve_retrieval", "output_rm0041", "best", "best_program.py",
-    )
+    vendor = getattr(manufacturer, "value", "").lower() if manufacturer is not None else ""
+    vendor_default = _prog(_VENDOR_OE_DEFAULT.get(vendor, "output_rm0041"))
+    if os.path.exists(vendor_default):
+        return vendor_default
+    return _prog("output_rm0041")
 
 
 def apply_retrieval_override(
@@ -287,6 +296,7 @@ def apply_retrieval_override(
     retrieval: str,
     device_name: str,
     repo_root: str,
+    manufacturer=None,
 ) -> ContextRetrievalParameters:
     """Override auto-resolved retrieval params when an explicit method is requested.
 
@@ -297,7 +307,7 @@ def apply_retrieval_override(
     if retrieval in (None, "auto"):
         return cr_params
     if retrieval == "openevolve":
-        program = resolve_openevolve_program(device_name, repo_root)
+        program = resolve_openevolve_program(device_name, repo_root, manufacturer)
         if not os.path.exists(program):
             raise FileNotFoundError(f"OpenEvolve program not found: {program}")
         return ContextRetrievalParameters(
@@ -458,7 +468,7 @@ def run_pipeline_for_device(
 
         # Apply explicit retrieval override (e.g. --retrieval openevolve) last, so
         # it wins over the auto-resolved params above.
-        cr_params = apply_retrieval_override(cr_params, args.retrieval, ctx.device_name, repo_root)
+        cr_params = apply_retrieval_override(cr_params, args.retrieval, ctx.device_name, repo_root, ctx.manufacturer)
         print(f"  Retrieval (effective): {cr_params.context_retrieval_method.value}")
         result.retrieval_method = cr_params.context_retrieval_method.value
         result.generator_models = list(generator_models)

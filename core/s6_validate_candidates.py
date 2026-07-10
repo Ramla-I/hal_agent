@@ -172,7 +172,7 @@ def validate_run(ctx, repo_root: str, run_number: int, models: list,
     # the validator_card were calibrated with, and (unlike search_context) it works
     # for every device regardless of its vector_stores.json default.
     cr_params = build_context_retrieval_params(paths.device_dir, ctx)
-    cr_params = apply_retrieval_override(cr_params, "openevolve", device, repo_root)
+    cr_params = apply_retrieval_override(cr_params, "openevolve", device, repo_root, ctx.manufacturer)
 
     validator_dir = os.path.join(paths.agent_output_dir, "validator")
     true_count, false_count = run_validator_batched_resilient(

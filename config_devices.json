@@ -333,6 +333,24 @@
       "file_id": "",
       "vs_id": "",
       "manufacturer": "STM"
+    },
+    {
+      "device_name": "k64",
+      "manufacturer": "NXP",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "k32l3a",
+      "manufacturer": "NXP",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
     }
   ]
 }
