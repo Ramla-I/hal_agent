@@ -252,7 +252,7 @@ A1 headline metrics, A2 cross-model, B1 curation lift, E1 per-class, E2 seed var
       apply to device 2 of the same vendor. **Done both vendors** (`c2_transfer.py`;
       `transfer_results/RESULTS.md`): STM rm0041 (F1) → rm0394 (L4) — program transfers
       (95% cov), same τ=0.98, 0 cost vs re-tuning; NXP ke04 → k64 — program transfers
-      (90% cov), frozen τ clears target (prec 0.968), amortization holds. Amortization holds
+      (90% cov), frozen τ=0.07 clears target (prec 0.951), 0 cost. Amortization holds
       for both; they differ only on target-reachability (rm0394's ceiling 0.941 < 0.95).
       Remaining: gpt-5.4; a same-family sanity pair.
 
@@ -277,13 +277,14 @@ OpenEvolve program or accept `--retrieval openai`) and real NXP access notations
       time — add that so the hint transfers to deployment (the general aliasing rule already
       does). (`alt_name` handling and derived-peripheral expansion themselves are done — see
       *Name aliasing* and the pipeline above.)
-- [ ] **`%s`-dim register expansion in verified CSVs** — NXP ke04's top `access` FN class
-      was retrieval misses on unexpanded SVD array registers (`pit.tctrl%s` never matches the
-      datasheet's `TCTRL0/1/2`), not a notation gap. Expand `%s` dims so these are retrievable.
-      (Real NXP/TI access *notations* turned out not to be the bottleneck — the stub legend
-      was fine on ke04.)
-- [x] **Benchmark the held-out vendor** (NXP `ke04`) — done: gate precision 0.953 / yield
-      0.863 / 97% coverage with `--manufacturer nxp` + ke04's evolved program
+- [x] **`%s`-dim register expansion in verified CSVs** — done for ke04 (annotate.py's
+      `expand_verified_dims`): `pit.tctrl%s` → `tctrl0/1`, etc. Notable effect: it **stabilized**
+      ke04's deployment threshold (τ 0.15 std 0.36 → 0.07 std 0.012) — the instability *was*
+      the `%s` artifact — but lowered yield (0.863→0.783) as the concrete instances add
+      invariants the validator rejects. (Access *notations* were never the bottleneck; the stub
+      legend is fine.) Remaining: apply the same expansion to k64 / other slices.
+- [x] **Benchmark the held-out vendor** (NXP `ke04`) — done: gate precision 0.958 / yield
+      0.783 / 97% coverage (on the `%s`-expanded slice) with `--manufacturer nxp` + ke04's program
       (`transfer_results/RESULTS.md`). TI still open.
 - [x] **Device-to-device transfer within a vendor** (experiment C2) — done both vendors:
       STM rm0041→rm0394 (cross-family) and NXP ke04→k64; amortization holds in both

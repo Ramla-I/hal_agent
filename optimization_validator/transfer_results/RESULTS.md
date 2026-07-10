@@ -56,43 +56,48 @@ Artifact: `c2_rm0041_to_rm0394_gpt-oss-120b.json`.
 ## Held-out vendor — NXP ke04 (does the approach work off STM at all?)
 
 Ran the full pipeline on NXP KE04 (`--manufacturer nxp`, ke04's own evolved program,
-30% corruption, baseline). **It works, and slightly better than STM:** gate precision
-**0.953** (clears target), yield **0.863**, F1 0.906, retrieval coverage **97%**.
+30% corruption, baseline), on the `%s`-dim-EXPANDED verified datasheet (3,267 invariants,
+236 registers). **It works, comparable to STM:** gate precision **0.958** (clears target),
+yield **0.783**, F1 0.861, retrieval coverage 97%.
 
-Two caveats surfaced (both benchmark/device facts, not method failures):
-- **`access` is the top FN class (82/261)** — but inspection shows it is *not* a notation
-  gap: where the datasheet is retrieved it already says "read-write", and the misses are
-  retrieval failures on **unexpanded SVD array registers** (`pit.tctrl%s` never matches the
-  datasheet's `TCTRL0/1/2`). Filling the NXP legend would not help; the fix is `%s`-dim
-  expansion in the verified CSV.
-- **ke04's deployment threshold is unstable:** τ=0.15 with per-fold spread 0.15–0.9
-  (std 0.36) — very unlike rm0041's rock-steady τ=0.98.
+The `%s`-dim expansion (fixing the earlier retrieval artifact) had a two-sided effect:
+- **It stabilized the deployment threshold** — the earlier instability *was* the `%s`
+  artifact. τ went from 0.15 (per-fold 0.15–0.9, **std 0.36**) to **0.07** (per-fold
+  0.07–0.10, **std 0.012**), now as well-determined as rm0041's τ=0.98.
+- **But yield dropped** (0.863 → 0.783) and total FN rose (261 → 494): materializing each
+  `%s` array register into its concrete instances (tctrl0/tctrl1, …) added invariants the
+  validator rejects, so `access`/`bit_offset`/`bit_width` are now the large FN classes. Net:
+  a more honest (and more stable) benchmark, at some recall.
+
+(Pre-expansion numbers, for the record: precision 0.953, yield 0.863, unstable τ=0.15.)
 
 ## ★ C2 (NXP) — transfer ke04 → k64 (MK64F12)
 
-Froze ke04's evolved program + deployment τ (0.15) and applied to k64.
+Froze the (expanded) ke04's evolved program + deployment τ (**0.07**) and applied to k64.
 
 - **Retrieval transfers:** ke04 program → **90%** coverage on k64.
-- **Frozen τ = 0.15 on k64:** precision **0.968**, yield **0.582** — **clears the target**
-  (higher precision than k64's own tuning, 0.951) and freezing costs
-  **d_precision −0.016, d_yield 0.001** vs re-tuning ⇒ **amortization holds**.
-- Notably the transfer succeeds *despite* ke04's unstable threshold: k64's labeler is clean
-  enough that a low τ still gives high precision (k64's own τ=0.10 is tight, std 0.024).
+- **Frozen τ = 0.07 on k64:** precision **0.951**, yield **0.583** — **clears the target**,
+  and freezing costs **exactly zero** (d_precision 0.000, d_yield 0.000): the frozen τ accepts
+  the same rows as k64's own tuned τ=0.10 ⇒ **amortization holds**.
+- With ke04's threshold now stable, the transfer is a clean exact match rather than the
+  earlier overshoot (0.968) from an unstable frozen τ.
 
 | device | retrieval coverage | frozen τ | precision | yield | own-tuned τ | amortization |
 |---|---|---|---|---|---|---|
-| ke04 (dev) | 97% | 0.15 | 0.953 | 0.863 | — | — |
-| k64 (transfer) | 90% | 0.15 | 0.968 | 0.582 | 0.10 | holds (d_prec −0.016, d_yield 0.001) |
+| ke04 (dev) | 97% | 0.07 | 0.958 | 0.783 | — | — |
+| k64 (transfer) | 90% | 0.07 | 0.951 | 0.583 | 0.10 | holds (d_prec 0.000, d_yield 0.000) |
 
 Artifact: `c2_ke04_to_k64_gpt-oss-120b.json`.
 
 ## Summary across both vendors (C2)
 
 **Amortization holds for both STM and NXP** — freezing device-1's calibration costs ~nothing
-vs. re-tuning on device-2. The two differ on `reaches_target`: rm0394's own precision ceiling
-(0.941) sits just below 0.95, while k64 clears it (0.968). So the paper claim is "the frozen
-operating point is no worse than per-device tuning," with the target-reachability caveat that
-some devices are intrinsically harder.
+vs. re-tuning on device-2 (STM d = 0.000/0.000; NXP d = 0.000/0.000). The two differ on
+`reaches_target`: rm0394's own precision ceiling (0.941) sits just below 0.95, while k64
+clears it (0.951). So the paper claim is "the frozen operating point is no worse than
+per-device tuning," with the target-reachability caveat that some devices are intrinsically
+harder. Threshold stability is a benchmark-quality signal: ke04's `%s`-dim artifact made its
+τ swing 0.15–0.9 until the array registers were expanded, after which τ tightened to 0.07±0.01.
 
 ## Notes
 
