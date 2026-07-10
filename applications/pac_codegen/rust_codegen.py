@@ -120,281 +120,330 @@ def state_to_check(field_name: str, state: str) -> str:
         raise ValueError(f"Unknown state: {state}")
 
 
+def _constraint_doc_lines(
+    lines: list[str],
+    constraint: NormalizedConstraint,
+    indent: str = "",
+) -> None:
+    lines.append(f"{indent}/// Datasheet constraints:")
+    for datasheet_text in constraint.datasheet_texts:
+        lines.append(f"{indent}/// - {datasheet_text}")
+    if constraint.target_fields:
+        fields = ", ".join(constraint.target_fields)
+        lines.append(
+            f"{indent}/// Target fields: {fields} "
+            "(currently enforced at register granularity)."
+        )
+
+
+def _append_verifier(
+    lines: list[str],
+    constraint: NormalizedConstraint,
+    reg_name: str,
+) -> None:
+    operation = constraint.target_operation
+    proof_name = operation_to_proof_name(reg_name, operation)
+    lines.append(
+        f"    /// Read {reg_name} once and verify every {operation} precondition."
+    )
+    lines.append("    #[inline(always)]")
+    lines.append(
+        f"    pub fn verify_{operation}_ready(&self) "
+        f"-> Result<{proof_name}, ConstraintError> {{"
+    )
+    lines.append("        let r = self.reg.read();")
+    for precondition in constraint.preconditions:
+        error_variant = field_to_error_variant(
+            precondition.field_name,
+            precondition.required_state,
+        )
+        check_expr = state_to_check(
+            precondition.field_name,
+            precondition.required_state,
+        )
+        lines.append(f"        if !({check_expr}) {{")
+        lines.append(
+            f"            return Err(ConstraintError::{error_variant});"
+        )
+        lines.append("        }")
+    lines.append(f"        Ok({proof_name}(()))")
+    lines.append("    }")
+    lines.append("")
+
+
+def _append_write_methods(
+    lines: list[str],
+    constraint: NormalizedConstraint,
+    reg_name: str,
+    reg_spec: str,
+) -> None:
+    proof_name = operation_to_proof_name(reg_name, "write")
+    ux = f"<{reg_spec} as crate::RegisterSpec>::Ux"
+    _constraint_doc_lines(lines, constraint, "    ")
+    lines.extend(
+        [
+            "    #[inline(always)]",
+            f"    pub fn write_constrained<F>(&self, f: F, _proof: {proof_name}) -> {ux}",
+            "    where",
+            f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,",
+            "    {",
+            "        self.reg.write(f)",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn write<F>(&self, f: F, proof: {proof_name}) -> {ux}",
+            "    where",
+            f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,",
+            "    {",
+            "        self.write_constrained(f, proof)",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn reset_constrained(&self, _proof: {proof_name}) {{",
+            "        self.reg.reset()",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn reset(&self, proof: {proof_name}) {{",
+            "        self.reset_constrained(proof)",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn write_with_zero_constrained<F>(&self, f: F, _proof: {proof_name}) -> {ux}",
+            "    where",
+            f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,",
+            "    {",
+            "        self.reg.write_with_zero(f)",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn write_with_zero<F>(&self, f: F, proof: {proof_name}) -> {ux}",
+            "    where",
+            f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,",
+            "    {",
+            "        self.write_with_zero_constrained(f, proof)",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn from_write_constrained<F, T>(&self, f: F, _proof: {proof_name}) -> T",
+            "    where",
+            f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> T,",
+            "    {",
+            "        self.reg.from_write(f)",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn from_write<F, T>(&self, f: F, proof: {proof_name}) -> T",
+            "    where",
+            f"        F: FnOnce(&mut crate::W<{reg_spec}>) -> T,",
+            "    {",
+            "        self.from_write_constrained(f, proof)",
+            "    }",
+            "",
+        ]
+    )
+
+
+def _append_modify_methods(
+    lines: list[str],
+    constraint: NormalizedConstraint,
+    reg_name: str,
+    reg_spec: str,
+) -> None:
+    proof_name = operation_to_proof_name(reg_name, "modify")
+    ux = f"<{reg_spec} as crate::RegisterSpec>::Ux"
+    callback = (
+        f"for<'w> F: FnOnce(&crate::R<{reg_spec}>, "
+        f"&'w mut crate::W<{reg_spec}>) -> &'w mut crate::W<{reg_spec}>,"
+    )
+    callback_value = (
+        f"for<'w> F: FnOnce(&crate::R<{reg_spec}>, "
+        f"&'w mut crate::W<{reg_spec}>) -> T,"
+    )
+    _constraint_doc_lines(lines, constraint, "    ")
+    lines.extend(
+        [
+            "    #[inline(always)]",
+            f"    pub fn modify_constrained<F>(&self, f: F, _proof: {proof_name}) -> {ux}",
+            "    where",
+            f"        {callback}",
+            "    {",
+            "        self.reg.modify(f)",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn modify<F>(&self, f: F, proof: {proof_name}) -> {ux}",
+            "    where",
+            f"        {callback}",
+            "    {",
+            "        self.modify_constrained(f, proof)",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn from_modify_constrained<F, T>(&self, f: F, _proof: {proof_name}) -> T",
+            "    where",
+            f"        {callback_value}",
+            "    {",
+            "        self.reg.from_modify(f)",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn from_modify<F, T>(&self, f: F, proof: {proof_name}) -> T",
+            "    where",
+            f"        {callback_value}",
+            "    {",
+            "        self.from_modify_constrained(f, proof)",
+            "    }",
+            "",
+        ]
+    )
+
+
+def _append_read_methods(
+    lines: list[str],
+    constraint: NormalizedConstraint,
+    reg_name: str,
+    reg_spec: str,
+) -> None:
+    proof_name = operation_to_proof_name(reg_name, "read")
+    reader = f"crate::R<{reg_spec}>"
+    _constraint_doc_lines(lines, constraint, "    ")
+    lines.extend(
+        [
+            "    #[inline(always)]",
+            f"    pub fn read_constrained(&self, _proof: {proof_name}) -> {reader} {{",
+            "        self.reg.read()",
+            "    }",
+            "",
+            "    #[inline(always)]",
+            f"    pub fn read(&self, proof: {proof_name}) -> {reader} {{",
+            "        self.read_constrained(proof)",
+            "    }",
+            "",
+        ]
+    )
+
+
 def generate_constraint_module(
     register_info: RegisterInfo,
     peripheral: str,
 ) -> str:
-    """Generate a Rust module implementing compile-time constraints.
-
-    The module provides:
-    - One zero-sized composite proof per constrained operation
-    - A ConstraintError enum for runtime verification failures
-    - A fresh-read verifier on the constrained register
-    - write/modify methods that consume the composite proof
-    """
+    """Generate operation-specific proof APIs for one constrained register."""
     reg_name = register_info.datasheet_register_abbreviation
     reg_lower = reg_name.lower()
-    peripheral_lower = peripheral.lower()
     constraints = normalize_constraints(register_info)
-    write_constraints = [
-        constraint
+    supported = {"write", "modify", "read"}
+    unknown = [
+        constraint.target_operation
         for constraint in constraints
-        if constraint.target_operation == "write"
+        if constraint.target_operation not in supported
+    ]
+    if unknown:
+        raise ValueError(f"Unsupported target operations: {unknown}")
+    constraints = [
+        constraint for constraint in constraints if constraint.preconditions
     ]
 
-    lines = []
+    lines = [
+        f"//! Compile-time access constraints for {peripheral.upper()} {reg_name}.",
+        "//!",
+        "//! Generated from datasheet constraints. Do not edit manually.",
+        "//!",
+        "//! Each constrained operation requires its own affine composite proof.",
+        "",
+    ]
+    if not constraints:
+        lines.append("// No access constraints defined for this register.")
+        return "\n".join(lines)
 
-    # Module-level doc comment
-    lines.append(f'//! Compile-time access constraints for {peripheral.upper()} {reg_name}.')
-    lines.append(f'//!')
-    lines.append(f'//! Generated from datasheet constraints. Do not edit manually.')
-    lines.append(f'//!')
-    lines.append(f'//! This module provides composite-proof safe write methods that enforce')
-    lines.append(f'//! hardware preconditions at the type level.')
-    lines.append('')
-
-    # Collect all preconditions across all constraints
-    all_preconditions = []
-    for constraint in write_constraints:
-        for pre in constraint.preconditions:
-            key = (pre.field_name, pre.required_state)
-            if key not in [(p.field_name, p.required_state) for p in all_preconditions]:
-                all_preconditions.append(pre)
-
-    if not all_preconditions:
-        lines.append('// No access constraints defined for this register.')
-        return '\n'.join(lines)
-
-    # --- Composite proof type ---
-    proof_name = operation_to_proof_name(reg_name, "write")
-    lines.append('// === Composite Proof ===')
-    lines.append('// A zero-sized, non-Copy proof that all preconditions were checked.')
-    lines.append('')
-    lines.append(f'/// Proof that {reg_name} is ready for a constrained write operation.')
-    lines.append(f'/// The private constructor ensures this can only be obtained by verification.')
-    lines.append(f'pub struct {proof_name}(());')
-    lines.append('')
-
-    # --- Error enum ---
-    lines.append('// === Error Type ===')
-    lines.append('')
-    lines.append('/// Errors returned when a precondition is not satisfied.')
-    lines.append('#[derive(Debug, Clone, Copy, PartialEq, Eq)]')
-    lines.append('pub enum ConstraintError {')
-    for pre in all_preconditions:
-        variant = field_to_error_variant(pre.field_name, pre.required_state)
-        lines.append(f'    /// {pre.field_name} is not {pre.required_state}')
-        lines.append(f'    {variant},')
-    lines.append('}')
-    lines.append('')
-
-    # --- Constrained write methods on Reg ---
-    # Normalization guarantees one method set per target operation.
-    for constraint in write_constraints:
-        target = constraint.target_register.lower()
-
-        # Fully-qualified type alias for readability in generated code
-        reg_spec = f'super::{reg_lower}::{reg_name}rs'
-
-        # Build deprecation note from constraint metadata
-        field_list = ', '.join(pre.field_name for pre in constraint.preconditions)
-        state_list = ', '.join(
-            f'{pre.field_name} must be {pre.required_state}'
-            for pre in constraint.preconditions
-        )
-        deprecation_note = (
-            f'{peripheral.upper()}_{reg_name} has hardware constraints: '
-            f'{state_list} before writing. '
-            f'Use `{peripheral_lower}::constraints::write_constrained()` instead.'
-        )
-
-        lines.append('// === Constrained Write ===')
-        lines.append('')
-
-        # Doc comment with the datasheet text
-        lines.append(f'/// Safe write to {reg_name} that enforces datasheet constraints.')
-        lines.append(f'///')
-        lines.append(f'/// # Constraint')
-        for datasheet_text in constraint.datasheet_texts:
-            lines.append(f'/// {datasheet_text}')
-        lines.append(f'///')
-        lines.append(f'/// # Usage')
-        lines.append(f'/// ```no_run')
+    lines.extend(
+        [
+            "// === Composite Proofs ===",
+            "// Private constructors ensure proofs only come from fresh verification.",
+            "",
+        ]
+    )
+    for constraint in constraints:
+        operation = constraint.target_operation
+        proof_name = operation_to_proof_name(reg_name, operation)
         lines.append(
-            f'/// let proof = {peripheral_lower}.{target}()'
-            f'.verify_write_ready().unwrap();'
+            f"/// Proof that {reg_name} is ready for a constrained {operation}."
         )
-        lines.append(
-            f'/// {peripheral_lower}.{target}()'
-            f'.write_constrained(|w| w, proof);'
-        )
-        lines.append(f'/// ```')
+        lines.append(f"pub struct {proof_name}(());")
+        lines.append("")
 
-        # One inherent impl verifies and consumes the operation-level proof.
-        lines.append(f'impl crate::ConstrainedReg<{reg_spec}> {{')
-
-        lines.append(f'    /// Read {reg_name} once and verify every write precondition.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(
-            f'    pub fn verify_write_ready(&self) '
-            f'-> Result<{proof_name}, ConstraintError> {{'
-        )
-        lines.append(f'        let r = self.reg.read();')
+    lines.extend(
+        [
+            "// === Error Type ===",
+            "",
+            "/// Errors returned when a precondition is not satisfied.",
+            "#[derive(Debug, Clone, Copy, PartialEq, Eq)]",
+            "pub enum ConstraintError {",
+        ]
+    )
+    seen_errors: set[str] = set()
+    for constraint in constraints:
         for precondition in constraint.preconditions:
-            error_variant = field_to_error_variant(
+            variant = field_to_error_variant(
                 precondition.field_name,
                 precondition.required_state,
             )
-            check_expr = state_to_check(
-                precondition.field_name,
-                precondition.required_state,
-            )
-            lines.append(f'        if !({check_expr}) {{')
+            if variant in seen_errors:
+                continue
+            seen_errors.add(variant)
             lines.append(
-                f'            return Err(ConstraintError::{error_variant});'
+                f"    /// {precondition.field_name} is not "
+                f"{precondition.required_state}"
             )
-            lines.append(f'        }}')
-        lines.append(f'        Ok({proof_name}(()))')
-        lines.append(f'    }}')
-        lines.append('')
+            lines.append(f"    {variant},")
+    lines.extend(["}", ""])
 
-        lines.append(f'    /// Explicitly bypass generated datasheet constraint enforcement.')
-        lines.append(f'    ///')
-        lines.append(f'    /// # Safety')
-        lines.append(f'    /// The caller accepts responsibility for following or intentionally')
-        lines.append(f'    /// overriding the hardware procedure documented by the datasheet.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub unsafe fn bypass_constraints(&self) -> &crate::Reg<{reg_spec}> {{')
-        lines.append(f'        &self.reg')
-        lines.append(f'    }}')
-        lines.append('')
+    reg_spec = f"super::{reg_lower}::{reg_name}rs"
+    lines.append(f"impl crate::ConstrainedReg<{reg_spec}> {{")
+    for constraint in constraints:
+        _append_verifier(lines, constraint, reg_name)
 
-        # Delegate to the wrapped Reg explicitly, bypassing inherent shadows.
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn write_constrained<F>(&self, f: F, _proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        self.reg.write(f)')
-        lines.append(f'    }}')
-        lines.append('')
+    lines.extend(
+        [
+            "    /// Explicitly bypass generated datasheet constraint enforcement.",
+            "    ///",
+            "    /// # Safety",
+            "    /// The caller accepts responsibility for intentionally overriding",
+            "    /// the hardware procedure documented by the datasheet.",
+            "    #[inline(always)]",
+            f"    pub unsafe fn bypass_constraints(&self) -> &crate::Reg<{reg_spec}> {{",
+            "        &self.reg",
+            "    }",
+            "",
+        ]
+    )
 
-        # --- modify_constrained: read-modify-write with a composite proof ---
-        lines.append(f'    /// Safe read-modify-write to {reg_name} that enforces datasheet constraints.')
-        lines.append(f'    ///')
-        lines.append(f'    /// # Constraint')
-        for datasheet_text in constraint.datasheet_texts:
-            lines.append(f'    /// {datasheet_text}')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn modify_constrained<F>(&self, f: F, _proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        for<\'w> F: FnOnce(&crate::R<{reg_spec}>, &\'w mut crate::W<{reg_spec}>) -> &\'w mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        self.reg.modify(f)')
-        lines.append(f'    }}')
-        lines.append('')
-
-        # --- write() shadow: requires proof, shadows Deref target's write(f) ---
-        # Calling write(f) without proof produces an argument-count error.
-        lines.append(f'    /// Writes to {reg_name} with constraint verification.')
-        lines.append(f'    ///')
-        lines.append(f'    /// This method shadows `Reg::write()` and requires a composite proof,')
-        lines.append(f'    /// enforcing hardware constraints at compile time.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn write<F>(&self, f: F, proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        self.write_constrained(f, proof)')
-        lines.append(f'    }}')
-        lines.append('')
-
-        # --- Other full-write entry points ---
-        lines.append(f'    /// Reset {reg_name} after constraint verification.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn reset_constrained(&self, _proof: {proof_name}) {{')
-        lines.append(f'        self.reg.reset()')
-        lines.append(f'    }}')
-        lines.append('')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn reset(&self, proof: {proof_name}) {{')
-        lines.append(f'        self.reset_constrained(proof)')
-        lines.append(f'    }}')
-        lines.append('')
-
-        lines.append(f'    /// Write from zero after constraint verification.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn write_with_zero_constrained<F>(&self, f: F, _proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        self.reg.write_with_zero(f)')
-        lines.append(f'    }}')
-        lines.append('')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn write_with_zero<F>(&self, f: F, proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        self.write_with_zero_constrained(f, proof)')
-        lines.append(f'    }}')
-        lines.append('')
-
-        lines.append(f'    /// Write and return a closure-produced value after verification.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn from_write_constrained<F, T>(&self, f: F, _proof: {proof_name}) -> T')
-        lines.append(f'    where')
-        lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> T,')
-        lines.append(f'    {{')
-        lines.append(f'        self.reg.from_write(f)')
-        lines.append(f'    }}')
-        lines.append('')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn from_write<F, T>(&self, f: F, proof: {proof_name}) -> T')
-        lines.append(f'    where')
-        lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> T,')
-        lines.append(f'    {{')
-        lines.append(f'        self.from_write_constrained(f, proof)')
-        lines.append(f'    }}')
-        lines.append('')
-
-        # --- modify() shadow: requires proof, shadows Deref target's modify(f) ---
-        lines.append(f'    /// Modifies {reg_name} via read-modify-write with constraint verification.')
-        lines.append(f'    ///')
-        lines.append(f'    /// This method shadows `Reg::modify()` and requires a composite proof,')
-        lines.append(f'    /// enforcing hardware constraints at compile time.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn modify<F>(&self, f: F, proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        for<\'w> F: FnOnce(&crate::R<{reg_spec}>, &\'w mut crate::W<{reg_spec}>) -> &\'w mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        self.modify_constrained(f, proof)')
-        lines.append(f'    }}')
-        lines.append('')
-
-        lines.append(f'    /// Read-modify-write and return a closure-produced value.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn from_modify_constrained<F, T>(&self, f: F, _proof: {proof_name}) -> T')
-        lines.append(f'    where')
-        lines.append(f'        for<\'w> F: FnOnce(&crate::R<{reg_spec}>, &\'w mut crate::W<{reg_spec}>) -> T,')
-        lines.append(f'    {{')
-        lines.append(f'        self.reg.from_modify(f)')
-        lines.append(f'    }}')
-        lines.append('')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn from_modify<F, T>(&self, f: F, proof: {proof_name}) -> T')
-        lines.append(f'    where')
-        lines.append(f'        for<\'w> F: FnOnce(&crate::R<{reg_spec}>, &\'w mut crate::W<{reg_spec}>) -> T,')
-        lines.append(f'    {{')
-        lines.append(f'        self.from_modify_constrained(f, proof)')
-        lines.append(f'    }}')
-
-        # Close impl block
-        lines.append(f'}}')
-        lines.append('')
-
-    return '\n'.join(lines)
-
+    by_operation = {
+        constraint.target_operation: constraint for constraint in constraints
+    }
+    if "write" in by_operation:
+        _append_write_methods(
+            lines,
+            by_operation["write"],
+            reg_name,
+            reg_spec,
+        )
+    if "modify" in by_operation:
+        _append_modify_methods(
+            lines,
+            by_operation["modify"],
+            reg_name,
+            reg_spec,
+        )
+    if "read" in by_operation:
+        _append_read_methods(
+            lines,
+            by_operation["read"],
+            reg_name,
+            reg_spec,
+        )
+    lines.extend(["}", ""])
+    return "\n".join(lines)
 
 def indent_block(text: str, indent: str = "        ") -> str:
     """Indent every line of text by the given prefix."""

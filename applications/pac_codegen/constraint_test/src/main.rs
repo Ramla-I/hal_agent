@@ -22,7 +22,7 @@ pub extern "C" fn main() -> ! {
         .write_constrained(|w| w.pe().enabled(), proof);
 
     // === Safe path: modify_constrained() — no errors ===
-    let proof = i2c1.cr1().verify_write_ready().unwrap();
+    let proof = i2c1.cr1().verify_modify_ready().unwrap();
     i2c1.cr1()
         .modify_constrained(|_, w| w.pe().enabled(), proof);
 
@@ -31,7 +31,7 @@ pub extern "C" fn main() -> ! {
     i2c1.cr1()
         .write(|w| w.pe().enabled(), proof);
 
-    let proof = i2c1.cr1().verify_write_ready().unwrap();
+    let proof = i2c1.cr1().verify_modify_ready().unwrap();
     i2c1.cr1()
         .modify(|_, w| w.pe().enabled(), proof);
 
@@ -51,7 +51,7 @@ pub extern "C" fn main() -> ! {
         proof,
     );
 
-    let proof = i2c1.cr1().verify_write_ready().unwrap();
+    let proof = i2c1.cr1().verify_modify_ready().unwrap();
     i2c1.cr1().from_modify(
         |_, w| {
             w.pe().enabled();

@@ -133,11 +133,16 @@ cr1.write_safe(|w| w.bits(value), proof);
 // `proof` was moved and cannot authorize another operation.
 ```
 
-For a register-level write constraint, generated PAC shadows must cover every
-ordinary API that performs a write: `write`, `modify`, `reset`,
-`write_with_zero`, `from_write`, and `from_modify`. Each proof-bearing shadow
-delegates to the corresponding method on the wrapped `Reg`; unconstrained
-registers retain the stock methods.
+Generated proofs are operation-specific. A `write` constraint gates the
+full-write APIs (`write`, `reset`, `write_with_zero`, and `from_write`), a
+`modify` constraint gates read-modify-write APIs (`modify` and `from_modify`),
+and a `read` constraint gates `read`. Separate proof types prevent a check for
+one operation from authorizing another. Multiple constraints for the same
+operation are conjunctive and normalize into one proof.
+
+`target_fields` is recorded in generated documentation but currently enforced
+at register granularity: all calls for that operation require proof regardless
+of which field the closure accesses.
 
 Constraint-aware registers retain `Deref<Target = Reg<REG>>` for compatibility
 and expose an explicit unsafe `bypass_constraints()` facade. This is an

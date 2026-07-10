@@ -132,13 +132,14 @@ def test_codegen_matches_golden():
 def _synthetic_constraint(
     preconditions: list[tuple[str, str]],
     *,
+    operation: str = "write",
     target_fields: list[str] | None = None,
     text: str = "Synthetic trusted constraint",
 ) -> dict:
     return {
         "target_register": "CTRL",
         "target_fields": target_fields or [],
-        "target_operation": "write",
+        "target_operation": operation,
         "preconditions": [
             {
                 "register_name": "CTRL",
@@ -208,7 +209,7 @@ def test_synthetic_constraint_matrix():
     assert generated.count("impl crate::ConstrainedReg") == 1
     assert generated.count("pub fn write<F>") == 1
     assert generated.count("pub struct CtrlWriteReady(())") == 1
-    proof_section = generated.split("// === Composite Proof ===", 1)[1].split(
+    proof_section = generated.split("// === Composite Proofs ===", 1)[1].split(
         "// === Error Type ===",
         1,
     )[0]
@@ -225,16 +226,45 @@ def test_synthetic_constraint_matrix():
     assert "verify_mode_equals" not in generated
     for signature in (
         "pub fn write<F>",
-        "pub fn modify<F>",
         "pub fn reset(",
         "pub fn write_with_zero<F>",
         "pub fn from_write<F, T>",
-        "pub fn from_modify<F, T>",
     ):
         assert generated.count(signature) == 1
+    assert "pub fn modify<F>" not in generated
+    assert "pub fn read(&self" not in generated
     assert "First write rule" in generated
     assert "Second write rule" in generated
     assert generated == generate_constraint_module(register, "fake")
+
+
+def test_operation_specific_constraint_matrix():
+    register = _synthetic_register(
+        [
+            _synthetic_constraint(
+                [("BUSY", "cleared")],
+                operation="write",
+            ),
+            _synthetic_constraint(
+                [("ENABLED", "set")],
+                operation="modify",
+            ),
+            _synthetic_constraint(
+                [("MODE", "equals:0x3")],
+                operation="read",
+                target_fields=["DATA"],
+            ),
+        ]
+    )
+    generated = generate_constraint_module(register, "fake")
+    assert generated.count("impl crate::ConstrainedReg") == 1
+    for operation in ("Write", "Modify", "Read"):
+        assert f"pub struct Ctrl{operation}Ready(())" in generated
+        assert f"verify_{operation.lower()}_ready" in generated
+    assert "pub fn write<F>" in generated
+    assert "pub fn modify<F>" in generated
+    assert "pub fn read(&self, proof: CtrlReadReady)" in generated
+    assert "Target fields: DATA (currently enforced at register granularity)." in generated
 
 
 # --------------------------------------------------------------------------- #
@@ -367,6 +397,27 @@ pub extern "C" fn main() -> ! {
 }
 """
 
+WRONG_OPERATION_PROOF_MAIN = """\
+#![no_std]
+#![no_main]
+use stm32f4::stm32f405;
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
+
+#[no_mangle]
+pub extern "C" fn main() -> ! {
+    let dp = unsafe { stm32f405::Peripherals::steal() };
+    let i2c1 = &dp.I2C1;
+    let write_proof = i2c1.cr1().verify_write_ready().unwrap();
+    // ILLEGAL: a write proof cannot authorize a modify operation.
+    i2c1.cr1().modify(|_, w| w.pe().enabled(), write_proof);
+    loop {}
+}
+"""
+
 
 def test_unconstrained_operations_fail_to_compile():
     """Proof-less and proof-reusing writes must be rejected by the compiler.
@@ -443,6 +494,11 @@ def test_unconstrained_operations_fail_to_compile():
                     "E0061",
                 ),
                 ("reused proof", REUSED_PROOF_MAIN, "E0382"),
+                (
+                    "wrong operation proof",
+                    WRONG_OPERATION_PROOF_MAIN,
+                    "E0308",
+                ),
             ):
                 main_rs.write_text(source)
                 check = subprocess.run(
@@ -481,6 +537,7 @@ if __name__ == "__main__":
     tests = [
         test_codegen_matches_golden,
         test_synthetic_constraint_matrix,
+        test_operation_specific_constraint_matrix,
         test_constraint_test_compiles,
         test_unconstrained_operations_fail_to_compile,
     ]

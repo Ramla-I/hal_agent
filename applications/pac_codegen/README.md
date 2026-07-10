@@ -77,11 +77,12 @@ python applications/pac_codegen/rust_codegen.py \
 
 For each constrained operation, the generated `verify_*_ready()` method performs
 one fresh register read, checks every precondition from that snapshot, and
-returns a single proof with a private constructor. The write or modify consumes
-that proof, so it cannot be reused for a second operation. Normal calls to
-`write`, `modify`, `reset`, `write_with_zero`, `from_write`, and `from_modify`
-all require proof on a constrained register; unconstrained registers retain the
-stock PAC methods through `Deref`.
+returns an operation-specific proof with a private constructor. `write`,
+`modify`, and `read` constraints produce distinct proof types, so proof for one
+operation cannot authorize another. A write constraint gates `write`, `reset`,
+`write_with_zero`, and `from_write`; a modify constraint gates `modify` and
+`from_modify`; a read constraint gates `read`. Unconstrained operations retain
+the stock PAC methods through `Deref`.
 
 Cooperative developers can intentionally bypass enforcement through the
 explicit unsafe facade:
@@ -98,7 +99,7 @@ because it makes the decision to override a datasheet procedure visible and
 auditable.
 
 `constraint_test/` is a minimal `no_std` crate that compiles the injected PAC and
-exercises both the safe (token-bearing) and would-be-unsafe access paths, serving
+exercises both the safe (proof-bearing) and would-be-unsafe access paths, serving
 as a compile-time regression check. Its `Cargo.toml` depends on the vendored PAC
 via the relative path `../vendored/stm32-rs/stm32f4`, so it builds once the
 submodule above is fetched.
@@ -153,10 +154,11 @@ python applications/pac_codegen/test_codegen.py
   `rust_codegen.py`'s output fails this with a diff — if the change is intended,
   refresh the golden (see its header for the one-line command).
 - **`test_constraint_test_compiles`** injects into the PAC and `cargo check`s the
-  `constraint_test` crate (legal, token-bearing paths) — it must pass.
+  `constraint_test` crate (legal, proof-bearing paths) — it must pass.
 - **`test_unconstrained_operations_fail_to_compile`** injects and checks every
   ordinary write-capable method without proof, plus a program that reuses a
-  consumed proof. They must be rejected with `E0061` and `E0382`, respectively.
+  consumed proof or passes proof for the wrong operation. They must be rejected
+  with `E0061`, `E0382`, and `E0308`, respectively.
 
 The two `cargo check` tests **skip** (they do not fail) unless `cargo` is on
 PATH **and** a *generated* `stm32f4` PAC exists at
