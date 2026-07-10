@@ -20,7 +20,7 @@ pub struct Cr1ModifyReady(());
 
 /// Errors returned when a precondition is not satisfied.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ConstraintError {
+pub enum Cr1ConstraintError {
     /// STOP is not cleared
     StopNotCleared,
     /// START is not cleared
@@ -32,32 +32,32 @@ pub enum ConstraintError {
 impl crate::ConstrainedReg<super::cr1::CR1rs> {
     /// Read CR1 once and verify every write precondition.
     #[inline(always)]
-    pub fn verify_write_ready(&self) -> Result<Cr1WriteReady, ConstraintError> {
+    pub fn verify_write_ready(&self) -> Result<Cr1WriteReady, Cr1ConstraintError> {
         let r = self.reg.read();
         if !(r.stop().bit_is_clear()) {
-            return Err(ConstraintError::StopNotCleared);
+            return Err(Cr1ConstraintError::StopNotCleared);
         }
         if !(r.start().bit_is_clear()) {
-            return Err(ConstraintError::StartNotCleared);
+            return Err(Cr1ConstraintError::StartNotCleared);
         }
         if !(r.pec().bit_is_clear()) {
-            return Err(ConstraintError::PecNotCleared);
+            return Err(Cr1ConstraintError::PecNotCleared);
         }
         Ok(Cr1WriteReady(()))
     }
 
     /// Read CR1 once and verify every modify precondition.
     #[inline(always)]
-    pub fn verify_modify_ready(&self) -> Result<Cr1ModifyReady, ConstraintError> {
+    pub fn verify_modify_ready(&self) -> Result<Cr1ModifyReady, Cr1ConstraintError> {
         let r = self.reg.read();
         if !(r.stop().bit_is_clear()) {
-            return Err(ConstraintError::StopNotCleared);
+            return Err(Cr1ConstraintError::StopNotCleared);
         }
         if !(r.start().bit_is_clear()) {
-            return Err(ConstraintError::StartNotCleared);
+            return Err(Cr1ConstraintError::StartNotCleared);
         }
         if !(r.pec().bit_is_clear()) {
-            return Err(ConstraintError::PecNotCleared);
+            return Err(Cr1ConstraintError::PecNotCleared);
         }
         Ok(Cr1ModifyReady(()))
     }

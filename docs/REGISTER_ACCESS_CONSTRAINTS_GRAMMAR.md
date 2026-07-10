@@ -184,39 +184,33 @@ Note: The "init phase only" constraint is handled at the peripheral level API de
 ### Generated Rust Code
 
 ```rust
-/// Token proving ARBDIS is set (produced by set operation)
-pub struct ArbdisSetToken(());
+pub struct MtqcWriteReady(());
 
-/// Token that MUST be consumed by clearing ARBDIS
-#[must_use = "ARBDIS must be cleared after MTQC write"]
-pub struct ArbdisMustClearToken(());
-
-impl RTTDCS {
-    /// Set ARBDIS, returns token
-    pub fn set_arbdis(&mut self) -> ArbdisSetToken {
-        self.modify(|_, w| w.arbdis().set_bit());
-        ArbdisSetToken(())
+pub fn verify_mtqc_write_ready(
+    rttdcs: &crate::Reg<super::rttdcs::RTTDCSrs>,
+) -> Result<MtqcWriteReady, MtqcConstraintError> {
+    // The verifier, rather than its caller, performs the fresh source read.
+    let rttdcs_state = rttdcs.read();
+    if !rttdcs_state.arbdis().bit_is_set() {
+        return Err(MtqcConstraintError::RttdcsArbdisNotSet);
     }
-
-    /// Clear ARBDIS, consumes the must-clear token
-    pub fn clear_arbdis(&mut self, _token: ArbdisMustClearToken) {
-        self.modify(|_, w| w.arbdis().clear_bit());
-        // token consumed
-    }
+    Ok(MtqcWriteReady(()))
 }
 
-impl MTQC {
-    /// Write MTQC, consumes set token, produces must-clear token
-    pub fn write(
-        &mut self,
-        value: u32,
-        _arbdis_set: ArbdisSetToken  // Consumed (precondition)
-    ) -> ArbdisMustClearToken {      // Produced (postcondition)
-        self.write(|w| unsafe { w.bits(value) });
-        ArbdisMustClearToken(())     // MUST be used
+impl crate::ConstrainedReg<super::mtqc::MTQCrs> {
+    pub fn write<F>(&self, f: F, proof: MtqcWriteReady) -> u32
+    where
+        F: FnOnce(&mut crate::W<super::mtqc::MTQCrs>)
+            -> &mut crate::W<super::mtqc::MTQCrs>,
+    {
+        self.write_constrained(f, proof)
     }
 }
 ```
+
+Cross-register preconditions are currently supported as shown above. The
+postcondition in this example is not yet enforced; multi-step setup/cleanup
+procedures require the deferred typestate-session design.
 
 ### Usage
 

@@ -7,8 +7,9 @@ single generator-output run directory (the layout produced by the pipeline,
 ``agent_output/<manufacturer>/<device>/<run>/``, with one file per register named
 ``{peripheral}_{register}``), reads each register's ``access_constraints`` list,
 and writes per-register constraints files in the exact schema that
-``applications/pac_codegen/rust_codegen.py`` consumes (a ``RegisterInfo`` JSON,
-matching the example fixture ``applications/pac_codegen/constraint_test/stm32f405_i2c1.json``).
+``applications/pac_codegen/rust_codegen.py`` consumes. It also writes a grouped
+``manifest.json`` so all constrained registers in a peripheral can be generated
+and injected together.
 
 Each register file in a run directory is already a ``RegisterInfo`` JSON
 (``datasheet_register_abbreviation``, ``address_offset``, ``reset_value``,
@@ -148,6 +149,7 @@ def collect_constraints(
     out_path.mkdir(parents=True, exist_ok=True)
 
     results: list[dict] = []
+    grouped: dict[str, list[dict]] = {}
     for entry in sorted(run_path.iterdir()):
         if entry.name in _SKIP_NAMES:
             continue
@@ -180,7 +182,27 @@ def collect_constraints(
                 "output_path": str(out_file),
             }
         )
+        grouped.setdefault(peripheral, []).append(
+            {
+                "register": register,
+                "source": entry.name,
+                "register_info": register_info.model_dump(mode="json"),
+            }
+        )
 
+    manifest = {
+        "schema_version": 1,
+        "peripherals": [
+            {
+                "name": peripheral,
+                "registers": registers,
+            }
+            for peripheral, registers in sorted(grouped.items())
+        ],
+    }
+    (out_path / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n"
+    )
     return results
 
 

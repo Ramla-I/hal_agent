@@ -40,7 +40,7 @@ class NormalizedConstraint:
 def normalize_constraints(register_info: RegisterInfo) -> list[NormalizedConstraint]:
     """Group constraints by operation and deduplicate predicates deterministically."""
     plans: dict[str, NormalizedConstraint] = {}
-    seen_preconditions: dict[str, set[tuple[str, str]]] = {}
+    seen_preconditions: dict[str, set[tuple[str, str, str]]] = {}
     seen_fields: dict[str, set[str]] = {}
 
     for constraint in register_info.access_constraints:
@@ -63,7 +63,11 @@ def normalize_constraints(register_info: RegisterInfo) -> list[NormalizedConstra
                 seen_fields[operation].add(field)
 
         for precondition in constraint.preconditions:
-            key = (precondition.field_name, precondition.required_state)
+            key = (
+                precondition.register_name,
+                precondition.field_name,
+                precondition.required_state,
+            )
             if key not in seen_preconditions[operation]:
                 plan.preconditions.append(precondition)
                 seen_preconditions[operation].add(key)
@@ -103,21 +107,83 @@ def field_to_error_variant(field_name: str, state: str) -> str:
         return f"{name_part}Invalid"
 
 
-def state_to_check(field_name: str, state: str) -> str:
+def state_to_check(
+    field_name: str,
+    state: str,
+    reader_name: str = "r",
+) -> str:
     """Generate a Rust check expression for a field state.
 
     Returns a string like `r.stop().bit_is_clear()`.
     """
     accessor = field_to_rust_name(field_name)
     if state == "cleared":
-        return f"r.{accessor}().bit_is_clear()"
+        return f"{reader_name}.{accessor}().bit_is_clear()"
     elif state == "set":
-        return f"r.{accessor}().bit_is_set()"
+        return f"{reader_name}.{accessor}().bit_is_set()"
     elif state.startswith("equals:"):
         val = state.split(":", 1)[1]
-        return f"r.{accessor}().bits() == {val}"
+        return f"{reader_name}.{accessor}().bits() == {val}"
     else:
         raise ValueError(f"Unknown state: {state}")
+
+
+def _register_matches_target(
+    register_name: str,
+    register_abbreviation: str,
+    target_register: str,
+) -> bool:
+    candidate = register_name.upper()
+    targets = {register_abbreviation.upper(), target_register.upper()}
+    return candidate in targets or any(
+        candidate.endswith(f"_{target}") for target in targets
+    )
+
+
+def _is_same_register_constraint(
+    constraint: NormalizedConstraint,
+    register_name: str,
+) -> bool:
+    return all(
+        _register_matches_target(
+            precondition.register_name,
+            register_name,
+            constraint.target_register,
+        )
+        for precondition in constraint.preconditions
+    )
+
+
+def _source_register_name(
+    precondition: FieldState,
+    constraint: NormalizedConstraint,
+    register_name: str,
+) -> str:
+    if _register_matches_target(
+        precondition.register_name,
+        register_name,
+        constraint.target_register,
+    ):
+        return register_name
+    return precondition.register_name
+
+
+def _error_variant_for_precondition(
+    precondition: FieldState,
+    constraint: NormalizedConstraint,
+    register_name: str,
+) -> str:
+    prefix = ""
+    if not _register_matches_target(
+        precondition.register_name,
+        register_name,
+        constraint.target_register,
+    ):
+        prefix = precondition.register_name.capitalize()
+    return prefix + field_to_error_variant(
+        precondition.field_name,
+        precondition.required_state,
+    )
 
 
 def _constraint_doc_lines(
@@ -143,19 +209,21 @@ def _append_verifier(
 ) -> None:
     operation = constraint.target_operation
     proof_name = operation_to_proof_name(reg_name, operation)
+    error_name = f"{reg_name.capitalize()}ConstraintError"
     lines.append(
         f"    /// Read {reg_name} once and verify every {operation} precondition."
     )
     lines.append("    #[inline(always)]")
     lines.append(
         f"    pub fn verify_{operation}_ready(&self) "
-        f"-> Result<{proof_name}, ConstraintError> {{"
+        f"-> Result<{proof_name}, {error_name}> {{"
     )
     lines.append("        let r = self.reg.read();")
     for precondition in constraint.preconditions:
-        error_variant = field_to_error_variant(
-            precondition.field_name,
-            precondition.required_state,
+        error_variant = _error_variant_for_precondition(
+            precondition,
+            constraint,
+            reg_name,
         )
         check_expr = state_to_check(
             precondition.field_name,
@@ -163,11 +231,74 @@ def _append_verifier(
         )
         lines.append(f"        if !({check_expr}) {{")
         lines.append(
-            f"            return Err(ConstraintError::{error_variant});"
+            f"            return Err({error_name}::{error_variant});"
         )
         lines.append("        }")
     lines.append(f"        Ok({proof_name}(()))")
     lines.append("    }")
+    lines.append("")
+
+
+def _append_cross_register_verifier(
+    lines: list[str],
+    constraint: NormalizedConstraint,
+    reg_name: str,
+) -> None:
+    operation = constraint.target_operation
+    proof_name = operation_to_proof_name(reg_name, operation)
+    error_name = f"{reg_name.capitalize()}ConstraintError"
+    sources: list[str] = []
+    for precondition in constraint.preconditions:
+        source = _source_register_name(
+            precondition,
+            constraint,
+            reg_name,
+        )
+        if source not in sources:
+            sources.append(source)
+
+    parameters = ", ".join(
+        f"{field_to_rust_name(source)}: "
+        f"&crate::Reg<super::{field_to_rust_name(source)}::"
+        f"{source.upper()}rs>"
+        for source in sources
+    )
+    function_name = (
+        f"verify_{field_to_rust_name(reg_name)}_{operation}_ready"
+    )
+    _constraint_doc_lines(lines, constraint)
+    lines.append("#[inline(always)]")
+    lines.append(
+        f"pub fn {function_name}({parameters}) "
+        f"-> Result<{proof_name}, {error_name}> {{"
+    )
+    for source in sources:
+        variable = field_to_rust_name(source)
+        lines.append(f"    let {variable}_state = {variable}.read();")
+    for precondition in constraint.preconditions:
+        source = _source_register_name(
+            precondition,
+            constraint,
+            reg_name,
+        )
+        reader_name = f"{field_to_rust_name(source)}_state"
+        check_expr = state_to_check(
+            precondition.field_name,
+            precondition.required_state,
+            reader_name,
+        )
+        error_variant = _error_variant_for_precondition(
+            precondition,
+            constraint,
+            reg_name,
+        )
+        lines.append(f"    if !({check_expr}) {{")
+        lines.append(
+            f"        return Err({error_name}::{error_variant});"
+        )
+        lines.append("    }")
+    lines.append(f"    Ok({proof_name}(()))")
+    lines.append("}")
     lines.append("")
 
 
@@ -327,6 +458,7 @@ def _append_read_methods(
 def generate_constraint_module(
     register_info: RegisterInfo,
     peripheral: str,
+    include_header: bool = True,
 ) -> str:
     """Generate operation-specific proof APIs for one constrained register."""
     reg_name = register_info.datasheet_register_abbreviation
@@ -344,14 +476,17 @@ def generate_constraint_module(
         constraint for constraint in constraints if constraint.preconditions
     ]
 
-    lines = [
-        f"//! Compile-time access constraints for {peripheral.upper()} {reg_name}.",
-        "//!",
-        "//! Generated from datasheet constraints. Do not edit manually.",
-        "//!",
-        "//! Each constrained operation requires its own affine composite proof.",
-        "",
-    ]
+    if include_header:
+        lines = [
+            f"//! Compile-time access constraints for {peripheral.upper()} {reg_name}.",
+            "//!",
+            "//! Generated from datasheet constraints. Do not edit manually.",
+            "//!",
+            "//! Each constrained operation requires its own affine composite proof.",
+            "",
+        ]
+    else:
+        lines = [f"// === {reg_name} access constraints ===", ""]
     if not constraints:
         lines.append("// No access constraints defined for this register.")
         return "\n".join(lines)
@@ -378,15 +513,16 @@ def generate_constraint_module(
             "",
             "/// Errors returned when a precondition is not satisfied.",
             "#[derive(Debug, Clone, Copy, PartialEq, Eq)]",
-            "pub enum ConstraintError {",
+            f"pub enum {reg_name.capitalize()}ConstraintError {{",
         ]
     )
     seen_errors: set[str] = set()
     for constraint in constraints:
         for precondition in constraint.preconditions:
-            variant = field_to_error_variant(
-                precondition.field_name,
-                precondition.required_state,
+            variant = _error_variant_for_precondition(
+                precondition,
+                constraint,
+                reg_name,
             )
             if variant in seen_errors:
                 continue
@@ -398,10 +534,19 @@ def generate_constraint_module(
             lines.append(f"    {variant},")
     lines.extend(["}", ""])
 
+    for constraint in constraints:
+        if not _is_same_register_constraint(constraint, reg_name):
+            _append_cross_register_verifier(
+                lines,
+                constraint,
+                reg_name,
+            )
+
     reg_spec = f"super::{reg_lower}::{reg_name}rs"
     lines.append(f"impl crate::ConstrainedReg<{reg_spec}> {{")
     for constraint in constraints:
-        _append_verifier(lines, constraint, reg_name)
+        if _is_same_register_constraint(constraint, reg_name):
+            _append_verifier(lines, constraint, reg_name)
 
     lines.extend(
         [
@@ -444,6 +589,30 @@ def generate_constraint_module(
         )
     lines.extend(["}", ""])
     return "\n".join(lines)
+
+
+def generate_peripheral_constraint_module(
+    register_infos: list[RegisterInfo],
+    peripheral: str,
+) -> str:
+    """Generate one flat constraints module for a complete peripheral."""
+    lines = [
+        f"//! Compile-time access constraints for {peripheral.upper()} registers.",
+        "//!",
+        "//! Generated from trusted register constraints. Do not edit manually.",
+        "",
+    ]
+    for register_info in register_infos:
+        lines.append(
+            generate_constraint_module(
+                register_info,
+                peripheral,
+                include_header=False,
+            ).rstrip()
+        )
+        lines.append("")
+    return "\n".join(lines).rstrip()
+
 
 def indent_block(text: str, indent: str = "        ") -> str:
     """Indent every line of text by the given prefix."""
@@ -607,18 +776,71 @@ def inject_into_pac(pac_path: Path, peripheral: str, reg_name: str, module_code:
     pac_path.write_text(new_content)
 
 
+def inject_into_pac_batch(
+    pac_path: Path,
+    peripheral: str,
+    register_infos: list[RegisterInfo],
+    module_code: str,
+) -> None:
+    """Inject one peripheral module and patch every constrained target alias."""
+    if not register_infos:
+        raise ValueError("At least one constrained register is required")
+
+    first_register = register_infos[0].datasheet_register_abbreviation
+    inject_into_pac(
+        pac_path,
+        peripheral,
+        first_register,
+        module_code,
+    )
+    content = pac_path.read_text()
+    peripheral_start = content.find(f"pub mod {peripheral} {{")
+    if peripheral_start < 0:
+        raise ValueError(f"Peripheral module {peripheral} not found")
+
+    for register_info in register_infos[1:]:
+        register_name = register_info.datasheet_register_abbreviation
+        reg_lower = register_name.lower()
+        old_alias = (
+            f"pub type {register_name} = "
+            f"crate::Reg<{reg_lower}::{register_name}rs>;"
+        )
+        new_alias = (
+            f"pub type {register_name} = "
+            f"crate::ConstrainedReg<{reg_lower}::{register_name}rs>;"
+        )
+        alias_position = content.find(old_alias, peripheral_start)
+        if alias_position < 0:
+            raise ValueError(
+                f"Register alias {peripheral}::{register_name} not found"
+            )
+        content = (
+            content[:alias_position]
+            + new_alias
+            + content[alias_position + len(old_alias):]
+        )
+
+    pac_path.write_text(content)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate constraint-aware Rust code from RegisterInfo JSON"
     )
     parser.add_argument(
         "input",
+        nargs="?",
         help="Path to constraints JSON file (RegisterInfo schema)",
     )
     parser.add_argument(
+        "--manifest",
+        default=None,
+        help="Grouped peripheral manifest produced by collect_constraints.py",
+    )
+    parser.add_argument(
         "--peripheral",
-        default="i2c1",
-        help="Peripheral name (e.g., i2c1). Default: i2c1",
+        default=None,
+        help="Peripheral name; required for multi-peripheral manifests",
     )
     parser.add_argument(
         "--output",
@@ -632,45 +854,72 @@ def main():
     )
     args = parser.parse_args()
 
-    # Read and validate the input JSON
-    input_path = Path(args.input)
-    if not input_path.exists():
-        print(f"Error: Input file not found: {input_path}", file=sys.stderr)
-        sys.exit(1)
+    if bool(args.input) == bool(args.manifest):
+        parser.error("provide exactly one input JSON or --manifest")
 
-    with open(input_path) as f:
-        data = json.load(f)
-
-    register_info = RegisterInfo(**data)
-
-    # Generate the Rust code
-    rust_code = generate_constraint_module(register_info, args.peripheral)
+    register_infos: list[RegisterInfo]
+    if args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.exists():
+            parser.error(f"manifest not found: {manifest_path}")
+        manifest = json.loads(manifest_path.read_text())
+        peripherals = manifest.get("peripherals", [])
+        if args.peripheral:
+            selected = [
+                item
+                for item in peripherals
+                if item["name"].lower() == args.peripheral.lower()
+            ]
+        elif len(peripherals) == 1:
+            selected = peripherals
+        else:
+            parser.error(
+                "--peripheral is required for a multi-peripheral manifest"
+            )
+        if not selected:
+            parser.error(f"peripheral {args.peripheral!r} not found")
+        peripheral = selected[0]["name"]
+        register_infos = [
+            RegisterInfo(**entry["register_info"])
+            for entry in selected[0]["registers"]
+        ]
+        rust_code = generate_peripheral_constraint_module(
+            register_infos,
+            peripheral,
+        )
+    else:
+        input_path = Path(args.input)
+        if not input_path.exists():
+            parser.error(f"input not found: {input_path}")
+        peripheral = args.peripheral or "i2c1"
+        register_infos = [
+            RegisterInfo(**json.loads(input_path.read_text()))
+        ]
+        rust_code = generate_constraint_module(
+            register_infos[0],
+            peripheral,
+        )
 
     if args.inject:
-        # Inject into PAC source
         pac_path = Path(args.inject)
         if not pac_path.exists():
             print(f"Error: PAC file not found: {pac_path}", file=sys.stderr)
             sys.exit(1)
-        inject_into_pac(
+        inject_into_pac_batch(
             pac_path,
-            args.peripheral,
-            register_info.datasheet_register_abbreviation,
+            peripheral,
+            register_infos,
             rust_code,
         )
         print(f"Injected constraints into: {pac_path}")
     else:
-        # Write standalone file
         if args.output:
             output_path = Path(args.output)
         else:
-            # Default into applications/pac_codegen/generated/<peripheral>/constraints.rs,
-            # kept inside this application's own directory. This file lives at
-            # applications/pac_codegen/rust_codegen.py, so the app dir is one level up.
             output_path = (
                 Path(__file__).resolve().parent
                 / "generated"
-                / args.peripheral
+                / peripheral
                 / "constraints.rs"
             )
         output_path.parent.mkdir(parents=True, exist_ok=True)

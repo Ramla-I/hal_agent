@@ -75,9 +75,12 @@ python applications/pac_codegen/rust_codegen.py \
     --inject applications/pac_codegen/vendored/stm32-rs/stm32f4/src/stm32f405/mod.rs
 ```
 
-For each constrained operation, the generated `verify_*_ready()` method performs
-one fresh register read, checks every precondition from that snapshot, and
-returns an operation-specific proof with a private constructor. `write`,
+For each constrained operation, verification performs one fresh read of every
+register named by its preconditions and returns an operation-specific proof with
+a private constructor. Same-register rules use an inherent
+`verify_*_ready()` method. Cross-register rules use a peripheral-level function
+such as `constraints::verify_mtqc_modify_ready(&rttdcs)`, which receives the
+relevant register handles and reads them internally. `write`,
 `modify`, and `read` constraints produce distinct proof types, so proof for one
 operation cannot authorize another. A write constraint gates `write`, `reset`,
 `write_with_zero`, and `from_write`; a modify constraint gates `modify` and
@@ -110,12 +113,22 @@ submodule above is fetched.
 path. It scans a generator-output **run directory**
 (`agent_output/<mfg>/<device>/<run>/`, one file per register named
 `{peripheral}_{register}`), reads each register's `access_constraints`, and
-writes per-register `RegisterInfo` JSON files that `rust_codegen.py` consumes:
+writes per-register `RegisterInfo` JSON files plus a grouped `manifest.json`:
 
 ```sh
 python applications/pac_codegen/collect_constraints.py agent_output/stm/rm0041/24 \
     --output-dir applications/pac_codegen/constraints/rm0041_24
+
+python applications/pac_codegen/rust_codegen.py \
+    --manifest applications/pac_codegen/constraints/rm0041_24/manifest.json \
+    --peripheral i2c1 \
+    --output applications/pac_codegen/generated/i2c1/constraints.rs
 ```
+
+Manifest codegen emits one flat constraints module per peripheral, allowing
+proof verifiers to refer to source registers other than the constrained target.
+Injection adds that module once and converts every constrained target register
+alias to `ConstrainedReg`.
 
 It only **collects and forwards** dependency invariants. This application treats
 its inputs as already validated and does not check consistency, satisfiability,
@@ -155,6 +168,9 @@ python applications/pac_codegen/test_codegen.py
   refresh the golden (see its header for the one-line command).
 - **`test_constraint_test_compiles`** injects into the PAC and `cargo check`s the
   `constraint_test` crate (legal, proof-bearing paths) — it must pass.
+- **`test_cross_register_proofs_compile_and_enforce`** checks a synthetic
+  CR2→CR1 rule, including the legal verifier flow and rejection of missing or
+  operation-mismatched proofs.
 - **`test_unconstrained_operations_fail_to_compile`** injects and checks every
   ordinary write-capable method without proof, plus a program that reuses a
   consumed proof or passes proof for the wrong operation. They must be rejected

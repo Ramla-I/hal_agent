@@ -1,0 +1,25 @@
+{
+  "datasheet_register_abbreviation": "MTQC",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [],
+  "access_constraints": [
+    {
+      "target_register": "ENET_MTQC",
+      "target_fields": ["TTC0"],
+      "target_operation": "modify",
+      "preconditions": [
+        {
+          "register_name": "RTTDCS",
+          "field_name": "ARBDIS",
+          "required_state": "set"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Transmit queues may be reconfigured while arbitration is active",
+      "datasheet_text": "Set RTTDCS.ARBDIS before modifying MTQC.TTC0."
+    }
+  ]
+}

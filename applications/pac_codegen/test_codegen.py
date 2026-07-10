@@ -47,6 +47,7 @@ Run directly (``python test_codegen.py``) or under pytest.
 
 import difflib
 import hashlib
+import json
 import shutil
 import subprocess
 import sys
@@ -60,11 +61,18 @@ sys.path.insert(0, str(APP_DIR))
 sys.path.insert(0, str(REPO_ROOT))
 
 from defs import RegisterInfo
-from rust_codegen import generate_constraint_module, normalize_constraints
+from collect_constraints import collect_constraints
+from rust_codegen import (
+    generate_constraint_module,
+    generate_peripheral_constraint_module,
+    normalize_constraints,
+)
 
 RUST_CODEGEN = APP_DIR / "rust_codegen.py"
 CRATE_DIR = APP_DIR / "constraint_test"
 FIXTURE = CRATE_DIR / "stm32f405_i2c1.json"
+CROSS_FIXTURE = CRATE_DIR / "stm32f405_i2c1_cross_register.json"
+MTQC_FIXTURE = CRATE_DIR / "mtqc_rttdcs_cross_register.json"
 GOLDEN = CRATE_DIR / "i2c1_expected_constraints.rs"
 
 # The generated stm32f4 PAC (only present once the submodule is fetched AND the
@@ -267,6 +275,68 @@ def test_operation_specific_constraint_matrix():
     assert "Target fields: DATA (currently enforced at register granularity)." in generated
 
 
+def test_cross_register_constraint_matrix():
+    register = RegisterInfo(**json.loads(MTQC_FIXTURE.read_text()))
+    generated = generate_constraint_module(register, "enet")
+
+    assert "pub struct MtqcModifyReady(())" in generated
+    assert (
+        "pub fn verify_mtqc_modify_ready(rttdcs: "
+        "&crate::Reg<super::rttdcs::RTTDCSrs>)"
+        in generated
+    )
+    assert generated.count("let rttdcs_state = rttdcs.read();") == 1
+    assert "rttdcs_state.arbdis().bit_is_set()" in generated
+    assert "MtqcConstraintError::RttdcsArbdisNotSet" in generated
+    assert "pub fn verify_modify_ready(&self)" not in generated
+    assert "pub fn modify<F>" in generated
+
+
+def test_grouped_peripheral_manifest_and_codegen():
+    first = _synthetic_register(
+        [_synthetic_constraint([("READY", "set")])]
+    )
+    second_data = first.model_dump(mode="json")
+    second_data["datasheet_register_abbreviation"] = "STATUS"
+    second_data["access_constraints"][0]["target_register"] = "STATUS"
+    second_data["access_constraints"][0]["preconditions"][0][
+        "register_name"
+    ] = "STATUS"
+
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        run_dir = root / "run"
+        output_dir = root / "collected"
+        run_dir.mkdir()
+        (run_dir / "fake_ctrl").write_text(
+            first.model_dump_json(indent=2)
+        )
+        (run_dir / "fake_status").write_text(
+            json.dumps(second_data, indent=2)
+        )
+
+        results = collect_constraints(
+            str(run_dir),
+            output_dir=str(output_dir),
+        )
+        manifest = json.loads(
+            (output_dir / "manifest.json").read_text()
+        )
+
+    assert len(results) == 2
+    assert [item["name"] for item in manifest["peripherals"]] == ["fake"]
+    entries = manifest["peripherals"][0]["registers"]
+    assert [item["register"] for item in entries] == ["ctrl", "status"]
+    generated = generate_peripheral_constraint_module(
+        [RegisterInfo(**item["register_info"]) for item in entries],
+        "fake",
+    )
+    assert generated.count("//! Compile-time access constraints") == 1
+    assert generated.count("impl crate::ConstrainedReg") == 2
+    assert "pub enum CtrlConstraintError" in generated
+    assert "pub enum StatusConstraintError" in generated
+
+
 # --------------------------------------------------------------------------- #
 # Test 2: compile test (inject -> cargo build -> restore)
 # --------------------------------------------------------------------------- #
@@ -346,6 +416,102 @@ def test_constraint_test_compiles():
     # Compile result (reported after the restore check so a build failure never
     # leaves the PAC dirty).
     assert build_ok, detail
+
+
+def test_cross_register_proofs_compile_and_enforce():
+    """Cross-register proofs compile and reject missing or mismatched proofs."""
+    if not _cargo_available() or not _pac_generated():
+        print(
+            "SKIP test_cross_register_proofs_compile_and_enforce: "
+            "cargo or generated stm32f4 PAC unavailable"
+        )
+        return
+
+    main_rs = CRATE_DIR / "src" / "main.rs"
+    original = {
+        path: path.read_bytes()
+        for path in (PAC_GENERIC, PAC_MODRS, main_rs)
+    }
+    program = """\
+#![no_std]
+#![no_main]
+use stm32f4::stm32f405;
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! { loop {} }
+
+#[no_mangle]
+pub extern "C" fn main() -> ! {
+    let dp = unsafe { stm32f405::Peripherals::steal() };
+    let i2c1 = &dp.I2C1;
+    __BODY__
+    loop {}
+}
+"""
+    legal = (
+        "let proof = stm32f405::i2c1::constraints::"
+        "verify_cr1_write_ready(i2c1.cr2()).unwrap();\n"
+        "    i2c1.cr1().write(|w| w.pe().enabled(), proof);"
+    )
+    checks: list[tuple[str, subprocess.CompletedProcess[str], int, str]] = []
+    try:
+        inject = subprocess.run(
+            [
+                sys.executable,
+                str(RUST_CODEGEN),
+                str(CROSS_FIXTURE),
+                "--peripheral",
+                PERIPHERAL,
+                "--inject",
+                str(PAC_MODRS),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert inject.returncode == 0, inject.stdout + inject.stderr
+
+        cases = [
+            ("legal cross-register proof", legal, 0, ""),
+            (
+                "missing cross-register proof",
+                "i2c1.cr1().write(|w| w.pe().enabled());",
+                1,
+                "E0061",
+            ),
+            (
+                "wrong cross-register operation proof",
+                legal.splitlines()[0]
+                + "\n    i2c1.cr1().modify("
+                "|_, w| w.pe().enabled(), proof);",
+                1,
+                "E0308",
+            ),
+        ]
+        for name, body, expected_status, expected_error in cases:
+            main_rs.write_text(program.replace("__BODY__", body))
+            check = subprocess.run(
+                ["cargo", "check"],
+                cwd=str(CRATE_DIR),
+                capture_output=True,
+                text=True,
+            )
+            checks.append(
+                (name, check, expected_status, expected_error)
+            )
+    finally:
+        for path, data in original.items():
+            path.write_bytes(data)
+
+    for path, data in original.items():
+        assert path.read_bytes() == data, f"{path} was not restored"
+    for name, check, expected_status, expected_error in checks:
+        if expected_status == 0:
+            assert check.returncode == 0, (
+                f"{name} failed:\n{check.stdout}{check.stderr}"
+            )
+        else:
+            assert check.returncode != 0, f"{name} unexpectedly compiled"
+            assert expected_error in check.stdout + check.stderr
 
 
 # --------------------------------------------------------------------------- #
@@ -538,7 +704,10 @@ if __name__ == "__main__":
         test_codegen_matches_golden,
         test_synthetic_constraint_matrix,
         test_operation_specific_constraint_matrix,
+        test_cross_register_constraint_matrix,
+        test_grouped_peripheral_manifest_and_codegen,
         test_constraint_test_compiles,
+        test_cross_register_proofs_compile_and_enforce,
         test_unconstrained_operations_fail_to_compile,
     ]
     print("Running codegen tests...\n")
