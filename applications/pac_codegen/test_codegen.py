@@ -217,6 +217,10 @@ def test_synthetic_constraint_matrix():
     assert "r.enabled().bit_is_set()" in generated
     assert "r.mode().bits() == 0x3" in generated
     assert "pub fn verify_write_ready(&self)" in generated
+    assert (
+        "pub unsafe fn bypass_constraints(&self) -> "
+        "&crate::Reg<super::ctrl::CTRLrs>"
+    ) in generated
     assert "verify_enabled_set" not in generated
     assert "verify_mode_equals" not in generated
     for signature in (

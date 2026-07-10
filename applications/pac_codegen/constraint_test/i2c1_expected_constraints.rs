@@ -57,6 +57,16 @@ impl crate::ConstrainedReg<super::cr1::CR1rs> {
         Ok(Cr1WriteReady(()))
     }
 
+    /// Explicitly bypass generated datasheet constraint enforcement.
+    ///
+    /// # Safety
+    /// The caller accepts responsibility for following or intentionally
+    /// overriding the hardware procedure documented by the datasheet.
+    #[inline(always)]
+    pub unsafe fn bypass_constraints(&self) -> &crate::Reg<super::cr1::CR1rs> {
+        &self.reg
+    }
+
     #[inline(always)]
     pub fn write_constrained<F>(&self, f: F, _proof: Cr1WriteReady) -> <super::cr1::CR1rs as crate::RegisterSpec>::Ux
     where

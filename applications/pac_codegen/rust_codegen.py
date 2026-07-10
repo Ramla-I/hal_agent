@@ -258,6 +258,17 @@ def generate_constraint_module(
         lines.append(f'    }}')
         lines.append('')
 
+        lines.append(f'    /// Explicitly bypass generated datasheet constraint enforcement.')
+        lines.append(f'    ///')
+        lines.append(f'    /// # Safety')
+        lines.append(f'    /// The caller accepts responsibility for following or intentionally')
+        lines.append(f'    /// overriding the hardware procedure documented by the datasheet.')
+        lines.append(f'    #[inline(always)]')
+        lines.append(f'    pub unsafe fn bypass_constraints(&self) -> &crate::Reg<{reg_spec}> {{')
+        lines.append(f'        &self.reg')
+        lines.append(f'    }}')
+        lines.append('')
+
         # Delegate to the wrapped Reg explicitly, bypassing inherent shadows.
         lines.append(f'    #[inline(always)]')
         lines.append(f'    pub fn write_constrained<F>(&self, f: F, _proof: {proof_name}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
@@ -436,7 +447,7 @@ def patch_generic_rs(pac_dir: Path) -> None:
             "\n"
             "/// A register wrapper indicating hardware write constraints exist.\n"
             "/// Forwards all operations via Deref to Reg; constraint modules add\n"
-            "/// deprecated write()/modify() shadows as inherent methods.\n"
+            "/// proof-requiring operation shadows as inherent methods.\n"
             "#[repr(transparent)]\n"
             "pub struct ConstrainedReg<REG: RegisterSpec> {\n"
             "    pub(crate) reg: Reg<REG>,\n"

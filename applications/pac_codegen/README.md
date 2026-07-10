@@ -83,6 +83,20 @@ that proof, so it cannot be reused for a second operation. Normal calls to
 all require proof on a constrained register; unconstrained registers retain the
 stock PAC methods through `Deref`.
 
+Cooperative developers can intentionally bypass enforcement through the
+explicit unsafe facade:
+
+```rust
+unsafe {
+    i2c1.cr1().bypass_constraints().write(|w| w.pe().enabled());
+}
+```
+
+`Deref<Target = Reg<REG>>` remains for PAC compatibility, so a fully qualified
+`Reg` call is also a possible low-level escape. The named facade is preferred
+because it makes the decision to override a datasheet procedure visible and
+auditable.
+
 `constraint_test/` is a minimal `no_std` crate that compiles the injected PAC and
 exercises both the safe (token-bearing) and would-be-unsafe access paths, serving
 as a compile-time regression check. Its `Cargo.toml` depends on the vendored PAC

@@ -59,6 +59,15 @@ pub extern "C" fn main() -> ! {
         proof,
     );
 
+    // === Explicit cooperative-developer bypass ===
+    unsafe {
+        i2c1
+            .cr1()
+            .bypass_constraints()
+            .write(|w| w.pe().enabled());
+        i2c1.cr1().bypass_constraints().reset();
+    }
+
     // === Unconstrained register: write()/modify() work without proof ===
     // CR2 has no constraints, so Deref to Reg provides the original methods.
     i2c1.cr2().write(|w| unsafe { w.freq().bits(8) });

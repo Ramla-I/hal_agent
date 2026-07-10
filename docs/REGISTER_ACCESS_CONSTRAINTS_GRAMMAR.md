@@ -139,6 +139,11 @@ ordinary API that performs a write: `write`, `modify`, `reset`,
 delegates to the corresponding method on the wrapped `Reg`; unconstrained
 registers retain the stock methods.
 
+Constraint-aware registers retain `Deref<Target = Reg<REG>>` for compatibility
+and expose an explicit unsafe `bypass_constraints()` facade. This is an
+intentional escape hatch for cooperative developers handling errata or other
+exceptional procedures; ordinary method-call syntax continues to require proof.
+
 ## Example 2: MTQC Register (Pre AND Post Conditions)
 
 ### Datasheet Constraint
