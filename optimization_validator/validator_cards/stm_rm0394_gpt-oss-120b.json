@@ -38,7 +38,7 @@
     "seed": 0,
     "corruption_fraction": 0.3,
     "est_cost_usd": null,
-    "note": "Single-seed C2 transfer measurement. Retrieval + threshold frozen from rm0041 (STM32F1) and applied to rm0394 (STM32L4); see transfer_results/RESULTS.md.",
+    "note": "Single-seed C2 transfer measurement. Retrieval + threshold frozen from rm0041 (STM32F1) and applied to rm0394 (STM32L4); see results/transfer_and_calibration.md.",
     "retrieval": "OpenEvolve program transferred from rm0041 (output_rm0041/best) \u2014 C2 cross-family transfer, not a native rm0394 evolution"
   }
 }

@@ -38,7 +38,7 @@
     "seed": 0,
     "corruption_fraction": 0.3,
     "est_cost_usd": null,
-    "note": "Single-seed C2 transfer measurement. Retrieval frozen from ke04 and applied to k64; see transfer_results/RESULTS.md.",
+    "note": "Single-seed C2 transfer measurement. Retrieval frozen from ke04 and applied to k64; see results/transfer_and_calibration.md.",
     "retrieval": "OpenEvolve program transferred from ke04 (output_ke04/best) \u2014 NXP C2 cross-device transfer, not a native k64 evolution"
   }
 }

@@ -19,7 +19,8 @@ optimization_validator/
 |__ validator_card.py            # build a per-device card: deployment threshold + alpha/beta
 |__ c1_cross_distribution.py     # C1: Rogan-Gladen instrument transfer across corruption rates
 |__ c2_transfer.py               # C2: freeze device-1 tau, apply to device-2 (per-vendor transfer)
-|__ transfer_results/            # C1/C2 distilled results (JSONs + RESULTS.md)
+|__ results/                     # distilled results: transfer_and_calibration.md,
+|                                #   stm_rm0041_original_run.md, + C1/C2 JSONs
 |__ curated_examples/
 |   |__ README.md
 |   |__ <vendor>.json            # human-curated, datasheet-grounded examples
@@ -48,7 +49,7 @@ testing. Rows with an empty `correct_value` are dropped (never human-confirmed).
 
 Benchmark the Validator as a noisy binary labeler with k-fold cross-validation at
 (Peripheral, Register) granularity, then calibrate downstream measurements. Measured
-results are in `stmrm0041_run/RESULTS.md`; open work is in the TODOs at the end.
+results are in `results/stm_rm0041_original_run.md`; open work is in the TODOs at the end.
 
 ### Purpose
 
@@ -216,7 +217,7 @@ precision@top-decile + a `usage` block: tokens + `$`), `usage_<model>.csv` (per-
 (confidence reliability bins).
 
 ### Results (rm0041, k=5, expanded **5,321** invariants, 3 seeds; curated config)
-Full numbers + seed variance in `stmrm0041_run/RESULTS.md`; frozen config in `validator_cards/`.
+Full numbers + seed variance in `results/stm_rm0041_original_run.md`; frozen config in `validator_cards/`.
 
 | model | gate precision | yield (mean±std) | F1 | deploy τ | total cost |
 |---|---|---|---|---|---|
@@ -234,8 +235,8 @@ Full numbers + seed variance in `stmrm0041_run/RESULTS.md`; frozen config in `va
 
 Status: ⬜ not started · 🔒 blocked. **★ = load-bearing for a paper claim.** Done —
 A1 headline metrics, A2 cross-model, B1 curation lift, E1 per-class, E2 seed variance
-(in the Results table above and `stmrm0041_run/RESULTS.md`); **C1 + C2 for STM/gpt-oss**
-(in `transfer_results/RESULTS.md`, via `c1_cross_distribution.py` / `c2_transfer.py`).
+(in the Results table above and `results/stm_rm0041_original_run.md`); **C1 + C2 for STM/gpt-oss**
+(in `results/transfer_and_calibration.md`, via `c1_cross_distribution.py` / `c2_transfer.py`).
 
 **B. Ablations that justify the design**
 - [ ] **B2. `alt_name` on/off** (`--use-alt-name` / `--no-alt-name`) — lift vs specificity cost.
@@ -247,10 +248,10 @@ A1 headline metrics, A2 cross-model, B1 curation lift, E1 per-class, E2 seed var
 **C. Validity of the calibration — the scientific core**
 - [x] **★ C1. Cross-distribution π test** (STM/gpt-oss) — froze raw α/β at 30% corruption,
       applied to 50%: instrument stable (Δα 0.023, Δβ 0.010), π̂ recovered to ~2.5–3%
-      (`c1_cross_distribution.py`; `transfer_results/RESULTS.md`). Remaining: gpt-5.4 / NXP.
+      (`c1_cross_distribution.py`; `results/transfer_and_calibration.md`). Remaining: gpt-5.4 / NXP.
 - [x] **★ C2. Per-vendor transfer (amortization claim)** — freeze device-1 calibration,
       apply to device 2 of the same vendor. **Done both vendors** (`c2_transfer.py`;
-      `transfer_results/RESULTS.md`): STM rm0041 (F1) → rm0394 (L4) — program transfers
+      `results/transfer_and_calibration.md`): STM rm0041 (F1) → rm0394 (L4) — program transfers
       (95% cov), same τ=0.98, 0 cost vs re-tuning; NXP ke04 → k64 — program transfers
       (90% cov), frozen τ=0.07 clears target (prec 0.951), 0 cost. Amortization holds
       for both; they differ only on target-reachability (rm0394's ceiling 0.941 < 0.95).
@@ -285,12 +286,12 @@ OpenEvolve program or accept `--retrieval openai`) and real NXP access notations
       legend is fine.) Remaining: apply the same expansion to k64 / other slices.
 - [x] **Benchmark the held-out vendor** (NXP `ke04`) — done: gate precision 0.958 / yield
       0.783 / 97% coverage (on the `%s`-expanded slice) with `--manufacturer nxp` + ke04's program
-      (`transfer_results/RESULTS.md`). TI still open.
+      (`results/transfer_and_calibration.md`). TI still open.
 - [x] **Device-to-device transfer within a vendor** (experiment C2) — done both vendors:
       STM rm0041→rm0394 (cross-family) and NXP ke04→k64; amortization holds in both
-      (`transfer_results/RESULTS.md`). Remaining: gpt-5.4; a same-family sanity pair.
+      (`results/transfer_and_calibration.md`). Remaining: gpt-5.4; a same-family sanity pair.
 - [x] **Genuine calibration test for π** (STM/gpt-oss) — measured raw α/β at 30% corruption,
-      applied to a 50%-corrupted slice; π̂ recovered to ~2.5–3% (`transfer_results/RESULTS.md`).
+      applied to a 50%-corrupted slice; π̂ recovered to ~2.5–3% (`results/transfer_and_calibration.md`).
       Remaining: gpt-5.4 / NXP.
 - [ ] **gpt-5.4 threshold instability**: its per-fold τ is bimodal (0.93 vs 0.98) → yield
       swings ±0.05 across seeds; decide whether it's deployable with a frozen threshold or

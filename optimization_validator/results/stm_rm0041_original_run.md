@@ -1,6 +1,6 @@
-# rm0041 validator results — phase 1b
+# STM rm0041 — validator accuracy, curation & seed variance (A1/A2/B1/E1/E2)
 
-Device: stm/rm0041 (expanded 5,321 invariants, 30%% peripheral-stratified corruption, k=5).
+Device: stm/rm0041 (expanded 5,321 invariants, 30% peripheral-stratified corruption, k=5).
 Retrieval: OpenEvolve. Access legend: stm. alt_name: on.
 
 ## A1 — baseline (gpt-oss-120b, NO curated examples yet)
@@ -28,14 +28,14 @@ Retrieval: OpenEvolve. Access legend: stm. alt_name: on.
 | reset_value | 189 | 0.991 | 0.821 | 0.982 |
 | size | 189 | 0.927 | 0.913 | 0.857 |
 
-Retrieval coverage: 85.8%% of invariants. Of 868 false negatives, 360 (41%%) are registers NOT in the retrieved context (retrieval gap, not model conservatism).
+Retrieval coverage: 85.8% of invariants. Of 868 false negatives, 360 (41%) are registers NOT in the retrieved context (retrieval gap, not model conservatism).
 
 **Weakest class: access (recall 0.65)** — curated, datasheet-grounded examples target exactly this. **Strongest: address_offset (1.00/0.94).**
 
 ## Status
 - A1 (baseline), E1, usage/cost: DONE (this file).
 - B1 (curation lift): BLOCKED — fill curated_examples/stm.json from curation_candidates_gpt-oss-120b.json (80 candidates), then re-run with --curated-examples.
-- A2 (gpt-5.5), C1 (50%% corruption), E2 (seed variance): pending.
+- A2 (gpt-5.5), C1 (50% corruption), E2 (seed variance): pending.
 ## A2 — cross-model BASELINE (before curation; gpt-oss=Groq, gpt-5.4=OpenAI)
 | model | gate prec | yield | alpha | beta | F1 | est cost |
 |---|---|---|---|---|---|---|

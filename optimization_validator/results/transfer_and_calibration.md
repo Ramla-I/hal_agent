@@ -1,4 +1,4 @@
-# Transfer experiments (C1, C2) — gpt-oss-120b, STM
+# Cross-device transfer & calibration (experiments C1, C2)
 
 Distilled results for the two load-bearing transfer experiments. Raw run outputs live in
 `stmrm0041_c1_50/` and `stmrm0394_c2_run/` (root-owned by Docker, untracked); the JSONs in
@@ -25,7 +25,7 @@ prevalence (1 − corruption).
 - **Verdict:** the 30%-calibrated instrument recovers a different distribution's true defect
   prevalence to ~2.5–3%. Rogan–Gladen works out-of-distribution here.
 
-Artifact: `c1_rm0041_gpt-oss-120b.json`.
+Artifact: `pi_calibration_crossdist_rm0041_gpt-oss.json`.
 
 ## ★ C2 — cross-family transfer, rm0041 (STM32F1) → rm0394 (STM32L4)
 
@@ -51,7 +51,7 @@ baseline config); apply the frozen τ and compare to rm0394's own tuning.
 | rm0041 (dev) | 86% | 0.98 | 0.948 | 0.689 | — | — |
 | rm0394 (transfer) | 95% | 0.98 | 0.941 | 0.843 | 0.98 | d_prec 0.000, d_yield 0.000 |
 
-Artifact: `c2_rm0041_to_rm0394_gpt-oss-120b.json`.
+Artifact: `transfer_stm_rm0041_to_rm0394_gpt-oss.json`.
 
 ## Held-out vendor — NXP ke04 (does the approach work off STM at all?)
 
@@ -87,7 +87,7 @@ Froze the (expanded) ke04's evolved program + deployment τ (**0.07**) and appli
 | ke04 (dev) | 97% | 0.07 | 0.958 | 0.783 | — | — |
 | k64 (transfer) | 90% | 0.07 | 0.951 | 0.583 | 0.10 | holds (d_prec 0.000, d_yield 0.000) |
 
-Artifact: `c2_ke04_to_k64_gpt-oss-120b.json`.
+Artifact: `transfer_nxp_ke04_to_k64_gpt-oss.json`.
 
 ## Summary across both vendors (C2)
 
