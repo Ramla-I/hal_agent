@@ -27,11 +27,10 @@ optimization_validator/
 |__ validator_cards/
 |   |__ <vendor>_<device>_<model>.json   # frozen calibration to apply on other devices
 |__ tests/test_offline.py        # offline unit tests (no network)
-|__ <device>_run/                # run outputs (e.g. stmrm0041_run/), via --out-root
-    |__ baseline/<model>/        # baseline pass + curation_candidates_<model>.json
-    |__ curated/<model>/         # baseline-vs-curated + review queue / precision@k / usage
-    |__ seed<N>/<model>/         # seed-variance runs (E2)
-    |__ RESULTS.md               # measured results (baseline/cross-model/curation/variance)
+|__ experiments/                 # ALL raw run outputs (git-ignored, ~240 MB, zipped as
+    |__ README.md                #   a release asset). One <run>/ per experiment; see
+    |__ <run>/<model>/           #   experiments/README.md for the run-to-experiment map.
+        |__ summary/judgments/review_queue/precision_at_k/calibration/per_fold/usage ...
 ```
 
 > The legacy validator-optimization tooling (`validator_optimization.py`,
@@ -195,12 +194,12 @@ scripts/docker_run.sh run -m optimization_validator.cross_validate --smoke --mod
 # Pass 1 (baseline) — also exports curation_candidates_<model>.json:
 scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.4 --k 5 \
     --retrieval openevolve --vendor stm --target-precision 0.95 \
-    --out-root optimization_validator/stmrm0041_run --price-in <$/1M> --price-out <$/1M>
+    --out-root optimization_validator/experiments/stmrm0041_run --price-in <$/1M> --price-out <$/1M>
 
 # [human] curate candidates -> optimization_validator/curated_examples/stm.json
 # Pass 2 (curated) — add the grounded examples, measure the lift:
 scripts/docker_run.sh run -m optimization_validator.cross_validate --model gpt-5.4 --k 5 \
-    --retrieval openevolve --vendor stm --out-root optimization_validator/stmrm0041_run \
+    --retrieval openevolve --vendor stm --out-root optimization_validator/experiments/stmrm0041_run \
     --curated-examples optimization_validator/curated_examples/stm.json
 ```
 Token usage is always recorded; `--price-in/--price-out` (USD per 1M tokens) add a `$` estimate.
@@ -301,6 +300,6 @@ OpenEvolve program or accept `--retrieval openai`) and real NXP access notations
 
 ## NOTES
 
-- Cross-validation run outputs go to `--out-root` (e.g. `stmrm0041_run/<baseline|curated>/<model>/`).
+- Cross-validation run outputs go to `--out-root` (e.g. `experiments/stmrm0041_run/<baseline|curated>/<model>/`).
 - The benchmark is built directly from the verified datasheet (`verified_datasheet/<mfr>/<dev>.csv`);
   there are no standing test/hold-set CSVs.

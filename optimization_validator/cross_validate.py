@@ -1085,8 +1085,8 @@ def main():
     ap = argparse.ArgumentParser(description="Validator cross-validation harness")
     ap.add_argument("--verified-csv", default="verified_datasheet/stm/rm0041_stm32f100.csv")
     ap.add_argument("--device", default="stmrm0041_run",
-                    help="output subfolder name under the default out-root (the legacy "
-                         "stm-rm0041 dir was removed)")
+                    help="run-name subfolder under experiments/ for the default out-root "
+                         "(runs land in optimization_validator/experiments/<device>/...)")
     ap.add_argument("--k", type=int, default=5)
     ap.add_argument("--corruption-fraction", type=float, default=0.30)
     ap.add_argument("--seed", type=int, default=0)
@@ -1144,7 +1144,7 @@ def main():
     args = ap.parse_args()
 
     out_root = args.out_root or os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), args.device, "cross_validation")
+        os.path.dirname(os.path.abspath(__file__)), "experiments", args.device, "cross_validation")
 
     if args.retrieval == "openevolve":
         params = _openevolve_params(args.oe_program)

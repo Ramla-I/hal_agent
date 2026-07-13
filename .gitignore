@@ -253,7 +253,10 @@ coverage_improver_optimization/
 # Experiment run outputs / LLM output — kept locally, never committed.
 # Scripts, configs, READMEs and curated test-set CSVs in these trees stay tracked.
 optimization_coverage_improver/*/
-optimization_validator/**/experiments/
+# Raw per-run outputs live under optimization_validator/experiments/<run>/ — too large
+# for git (~240 MB), shipped as a zipped release asset. Keep the index README tracked.
+optimization_validator/experiments/*
+!optimization_validator/experiments/README.md
 optimization_validator/**/hold_set_results/
 optimization_validator/**/cross_validation/
 analysis/*.csv

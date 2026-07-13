@@ -34,7 +34,7 @@
     "config": "baseline"
   },
   "provenance": {
-    "source_run": "optimization_validator/nxpk64_c2_run/gpt-oss-120b",
+    "source_run": "optimization_validator/experiments/nxpk64_c2_run/gpt-oss-120b",
     "seed": 0,
     "corruption_fraction": 0.3,
     "est_cost_usd": null,

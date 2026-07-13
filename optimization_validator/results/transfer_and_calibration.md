@@ -1,8 +1,9 @@
 # Cross-device transfer & calibration (experiments C1, C2)
 
-Distilled results for the two load-bearing transfer experiments. Raw run outputs live in
-`stmrm0041_c1_50/` and `stmrm0394_c2_run/` (root-owned by Docker, untracked); the JSONs in
-this directory + this file are the committed record. Scripts:
+Distilled results for the two load-bearing transfer experiments. Raw run outputs live under
+`../experiments/` (`stmrm0041_c1_50/`, `stmrm0394_c2_run/`, `nxpke04_run/`, `nxpk64_c2_run/`
+— git-ignored, shipped as a zip asset); the JSONs in this directory + this file are the
+committed record. Scripts:
 `optimization_validator/c1_cross_distribution.py`, `optimization_validator/c2_transfer.py`
 (both offline-tested in `tests/test_offline.py`).
 
