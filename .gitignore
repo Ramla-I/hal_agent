@@ -257,6 +257,7 @@ optimization_coverage_improver/*/
 # for git (~240 MB), shipped as a zipped release asset. Keep the index README tracked.
 optimization_validator/experiments/*
 !optimization_validator/experiments/README.md
+optimization_validator/validator_experiments.zip
 optimization_validator/**/hold_set_results/
 optimization_validator/**/cross_validation/
 analysis/*.csv
