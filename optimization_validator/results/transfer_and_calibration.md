@@ -90,15 +90,36 @@ Froze the (expanded) ke04's evolved program + deployment τ (**0.07**) and appli
 
 Artifact: `transfer_nxp_ke04_to_k64_gpt-oss.json`.
 
-## Summary across both vendors (C2)
+## Summary across both vendors (C2) — device 1 vs device 2
 
-**Amortization holds for both STM and NXP** — freezing device-1's calibration costs ~nothing
-vs. re-tuning on device-2 (STM d = 0.000/0.000; NXP d = 0.000/0.000). The two differ on
-`reaches_target`: rm0394's own precision ceiling (0.941) sits just below 0.95, while k64
-clears it (0.951). So the paper claim is "the frozen operating point is no worse than
-per-device tuning," with the target-reachability caveat that some devices are intrinsically
-harder. Threshold stability is a benchmark-quality signal: ke04's `%s`-dim artifact made its
-τ swing 0.15–0.9 until the array registers were expanded, after which τ tightened to 0.07±0.01.
+The meaningful transfer comparison is **device 1 (where everything was calibrated) vs.
+device 2 (where the whole frozen configuration — retrieval program + threshold + instrument —
+is applied)**, both read at the calibrated (device-1) threshold. Δ = device 1 − device 2
+(positive ⇒ device 2 is lower).
+
+| Vendor | Calibrated τ | Δ precision (dev1 − dev2) @ cal τ | Δ recall (dev1 − dev2) @ cal τ | Transfer device τ |
+|---|---|---|---|---|
+| STM (STM32F100 → STM32L412) | 0.98 | +0.007 | −0.154 | 0.98 |
+| NXP (MKE04Z4 → MK64F12) | 0.07 | +0.007 | +0.200 | 0.07 (own ≈ 0.10) |
+
+Underlying values — precision: STM 0.948 → 0.941, NXP 0.958 → 0.951; recall: STM 0.689 →
+0.843, NXP 0.783 → 0.583. "Transfer device τ" is device 2's own independently-tuned
+threshold (shown for reference; it coincides with the calibrated τ — but re-tuning only the
+threshold is a weak comparison, since it leaves the expensive parts of the calibration fixed,
+so we report the device-1-vs-device-2 change above instead).
+
+**Reading:** gate **precision transfers tightly** — it drops only **0.007** on both second
+devices, so the frozen operating point keeps the reviewed pile ~95% correct on a different
+chip of the same vendor (STM's device 2 lands at 0.941, just under the 0.95 target — transfer
+holds precision *approximately*, it does not *guarantee* the target on every device).
+**Recall is device-specific**, not transferable: it swings +0.154 on the STM32L4 and −0.200
+on the K64, reflecting each device's intrinsic difficulty (harder datasheets, sparser
+retrievable field tables) rather than any failure of transfer. So the defensible claim is:
+*the frozen per-vendor calibration, applied whole to a different device of the same vendor,
+holds gate precision to within ~0.01, while yield is device-dependent.*
+
+(Threshold stability is a separate benchmark-quality signal: ke04's `%s`-dim artifact made its
+τ swing 0.15–0.9 until the array registers were expanded, after which τ tightened to 0.07±0.01.)
 
 ## Notes
 
