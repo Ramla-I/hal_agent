@@ -123,10 +123,13 @@ the *wrong* facts, i.e. false positives). These transfer very differently:
 
 | Vendor | α (sensitivity = recall) | β (specificity → precision) |
 |---|---|---|
-| STM (STM32F100 → STM32L412) | 0.689 → 0.841 (Δ +0.152) | 0.912 → 0.876 (Δ −0.035) |
-| NXP (MKE04Z4 → MK64F12) | 0.783 → 0.583 (Δ −0.200) | 0.920 → 0.936 (Δ +0.017) |
+| STM (STM32F100 → STM32L412) | 0.689 → 0.843 (Δ +0.155) | 0.912 → 0.876 (Δ −0.035) |
+| NXP (MKE04Z4 → MK64F12) | 0.783 → 0.583 (Δ −0.200) | 0.920 → 0.931 (Δ +0.011) |
 
-β (specificity) is **~5–10× more stable** across devices than α (sensitivity). This is the
+Device-1 values are the CV-measured **frozen instrument** (what transfers); device-2 values are
+measured on that device's **full set at the frozen threshold** — no cross-validation on the
+transfer device, matching what the experiment does. β (specificity) moves by at most ~0.035
+across devices while α (sensitivity) moves by 0.15–0.20 — roughly **4–18× more stable**. This is the
 mechanistic root of the result: how the validator handles *wrong* facts is a stable property
 of the labeler, so precision transfers; how it handles *correct* facts depends on whether each
 device's evidence was retrievable, so recall (= α) does not. The coincident transfer threshold
