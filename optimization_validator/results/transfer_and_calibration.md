@@ -114,9 +114,34 @@ chip of the same vendor (STM's device 2 lands at 0.941, just under the 0.95 targ
 holds precision *approximately*, it does not *guarantee* the target on every device).
 **Recall is device-specific**, not transferable: it swings +0.154 on the STM32L4 and −0.200
 on the K64, reflecting each device's intrinsic difficulty (harder datasheets, sparser
-retrievable field tables) rather than any failure of transfer. So the defensible claim is:
-*the frozen per-vendor calibration, applied whole to a different device of the same vendor,
-holds gate precision to within ~0.01, while yield is device-dependent.*
+retrievable field tables) rather than any failure of transfer.
+
+**Why precision transfers but recall does not — the instrument.** Decompose the validator
+into its two error rates: recall *is* sensitivity α (= TP/(TP+FN), how it scores the *correct*
+facts), while gate precision, at fixed prevalence, is governed by specificity β (how it scores
+the *wrong* facts, i.e. false positives). These transfer very differently:
+
+| Vendor | α (sensitivity = recall) | β (specificity → precision) |
+|---|---|---|
+| STM (STM32F100 → STM32L412) | 0.689 → 0.841 (Δ +0.152) | 0.912 → 0.876 (Δ −0.035) |
+| NXP (MKE04Z4 → MK64F12) | 0.783 → 0.583 (Δ −0.200) | 0.920 → 0.936 (Δ +0.017) |
+
+β (specificity) is **~5–10× more stable** across devices than α (sensitivity). This is the
+mechanistic root of the result: how the validator handles *wrong* facts is a stable property
+of the labeler, so precision transfers; how it handles *correct* facts depends on whether each
+device's evidence was retrievable, so recall (= α) does not. The coincident transfer threshold
+is the *operational signature* of this stable specificity — the gate threshold is tuned to the
+precision target, i.e. set where wrong facts start leaking in, so stable β ⟹ stable threshold ⟹
+transferable precision (all the same fact seen three ways). It also lets us attribute STM's
+0.941 correctly: because device 2's own re-tuned threshold coincides with the frozen one, 0.941
+is that device's precision *ceiling*, not a loss from using the frozen threshold.
+
+So the defensible claim is: *the frozen per-vendor calibration, applied whole to a different
+device of the same vendor, holds gate precision to within ~0.01 because the validator's
+specificity is device-stable, while yield is device-dependent because its sensitivity is not.*
+(Caveats: precision's tightness is partly by construction — the threshold is tuned to the 0.95
+target; and this is n = 2 vendors, one model, so the α-varies/β-stable pattern is a consistent
+observation, not an established law.)
 
 (Threshold stability is a separate benchmark-quality signal: ke04's `%s`-dim artifact made its
 τ swing 0.15–0.9 until the array registers were expanded, after which τ tightened to 0.07±0.01.)
