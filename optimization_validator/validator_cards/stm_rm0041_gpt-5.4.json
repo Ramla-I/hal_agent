@@ -34,7 +34,7 @@
     "config": "curated"
   },
   "provenance": {
-    "source_run": "optimization_validator/stmrm0041_run/curated/gpt-5.4",
+    "source_run": "optimization_validator/experiments/stmrm0041_run/curated/gpt-5.4",
     "seed": 0,
     "corruption_fraction": 0.3,
     "est_cost_usd": 29.981939499999996,

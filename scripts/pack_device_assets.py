@@ -275,7 +275,7 @@ def main() -> None:
         for p, (arc, size, sha) in prev_assets.items():
             if manufacturer(p) not in args.only:
                 asset_rows.append((p, arc, size, sha))
-        kept = {a for a, *_ in asset_rows}
+        kept = {arc for _rel, arc, _sz, _sh in asset_rows}  # archive names, not asset paths
         for arc, (size, sha) in prev_archives.items():
             if arc in kept and arc not in {r[0] for r in archive_rows}:
                 archive_rows.append((arc, size, sha))

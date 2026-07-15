@@ -1085,8 +1085,8 @@ def main():
     ap = argparse.ArgumentParser(description="Validator cross-validation harness")
     ap.add_argument("--verified-csv", default="verified_datasheet/stm/rm0041_stm32f100.csv")
     ap.add_argument("--device", default="stmrm0041_run",
-                    help="output subfolder name under the default out-root (the legacy "
-                         "stm-rm0041 dir was removed)")
+                    help="run-name subfolder under experiments/ for the default out-root "
+                         "(runs land in optimization_validator/experiments/<device>/...)")
     ap.add_argument("--k", type=int, default=5)
     ap.add_argument("--corruption-fraction", type=float, default=0.30)
     ap.add_argument("--seed", type=int, default=0)
@@ -1106,6 +1106,9 @@ def main():
     ap.add_argument("--device-dir", default="devices/stm/rm0041",
                     help="device asset dir (used by OpenEvolve to locate chunked_datasheets)")
     ap.add_argument("--device-name", default="rm0041")
+    ap.add_argument("--manufacturer", default="stm", choices=["stm", "nxp", "ti", "intel"],
+                    help="device manufacturer for retrieval (OpenEvolve register-query "
+                         "building); default stm")
     ap.add_argument("--vendor", default="stm",
                     help="vendor key for the access-notation legend (see "
                          "optimization_validator/access_notations.json); '' or 'none' to disable")
@@ -1141,7 +1144,7 @@ def main():
     args = ap.parse_args()
 
     out_root = args.out_root or os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), args.device, "cross_validation")
+        os.path.dirname(os.path.abspath(__file__)), "experiments", args.device, "cross_validation")
 
     if args.retrieval == "openevolve":
         params = _openevolve_params(args.oe_program)
@@ -1151,7 +1154,8 @@ def main():
         print(f"Retrieval: OpenAI file_search (vs={args.vs_id}, {args.num_embeddings} chunks)")
 
     from defs import Manufacturer
-    retrieve_fn = make_retriever(params, args.device_name, args.device_dir, Manufacturer.STM)
+    manufacturer = Manufacturer[args.manufacturer.upper()]
+    retrieve_fn = make_retriever(params, args.device_name, args.device_dir, manufacturer)
 
     # Vendor access-notation legend (maps datasheet codes like rc_w0 -> read-write).
     from optimization_validator.access_notation import access_legend as _access_legend
