@@ -315,14 +315,16 @@ PR 15 itself: **closed unmerged — nothing lands from the branch** (settled 202
 
 
 
-## 11. Open questions for Ramla
+## 11. Decisions — all settled with Ramla, 2026-07-15
 
-1. **Encoding:** adopt trait-level gating (§3) directly, or land an intermediate step first (ConstrainedReg minus Deref, explicit forwarders)? My recommendation: go straight to §3 — the intermediate step rewrites the same code twice.
-2. **Grammar v2 scope for this round:** all six kinds, or `state_gate` + `sequence` first (the two with corpus-proven volume) and the rest as schema stubs?
-3. ~~PR 15 disposition: close-and-re-cut, or strip to salvage set?~~ **Settled 2026-07-15 (Ramla):** PR 15 is not used at all — closed unmerged, zero cherry-picks; everything written fresh per §10. Optional: post the review findings as a closing comment on the PR.
-4. ~~Judgment-sample labeling: schedule alongside Phase 1c?~~ **Settled 2026-07-15:** decoupled via the verified-constraints datasheet + `annotate_constraints.py` (§7.2) — the validator runs without it; annotation proceeds at Ramla's pace and retrospectively measures α; she is never the stopping point.
-5. **Section-scoped recall probe** (optional, §7.2): worth an evening for 2–3 peripherals, or skip entirely this round?
-6. **Fixtures:** agree to replace the synthetic Intel MTQC/RTTDCS example in docs/prompts/fixtures with RTC-CNF + IWDG (§5.2)?
+1. **Encoding: trait-level gating directly** (§3/Appendix A) — no intermediate ConstrainedReg-minus-Deref step; one rewrite, no throwaway code, the Deref hole never exists, E0277 diagnostics from day one.
+2. **Grammar v2 scope: full schema, phased codegen** — all 8 kinds land in `defs.py` + collection in step D (extraction and the corpus lift produce v2 data immediately); codegen support arrives per kind: `state_gate` in B, `sequence` + cross-register in H, `clock_gate`/`write_once`/`delay` later.
+3. **PR 15: not used at all** — closed unmerged, zero cherry-picks; everything written fresh per §10. Optional: post the review findings as a closing comment on the PR.
+4. **Human α-audit: decoupled** via the verified-constraints datasheet + `annotate_constraints.py` (§7.2) — the validator runs without it; annotation proceeds at Ramla's pace and retrospectively measures α; she is never the stopping point.
+5. **Section-scoped recall probe: skipped this round** — the thesis makes no recall claim; annotation time goes to the verified-constraints datasheet instead. (Can be revisited at paper-writing if a coverage-within-sections number proves useful.)
+6. **Fixtures: replace the synthetic Intel MTQC/RTTDCS example everywhere** (docs, prompts, codegen fixtures) with the real STM pair — RTC-CNF pre+post (`rm0008/1/rtc_cnth`) and IWDG dual-evidence (`rm0008/1/iwdg_pr`).
+
+**Process rule (Ramla, 2026-07-15):** during implementation, commit after every major change — each completed roadmap step and each coherent milestone within one.
 
 ---
 
