@@ -256,9 +256,21 @@ def test_all_required_fields_present():
         "subfields",
         "access_constraints"
     }
+    # Optional fields with defaults -- absent from every prompt-emitted JSON,
+    # so they must never become required. schema_version tags the constraint
+    # grammar version (v1 wire format until roadmap step F; defaults to 1).
+    optional_fields = {"schema_version"}
 
     model_fields = set(RegisterInfo.model_fields.keys())
-    assert required_fields == model_fields, f"Field mismatch. Expected: {required_fields}, Got: {model_fields}"
+    assert required_fields | optional_fields == model_fields, \
+        f"Field mismatch. Expected: {required_fields | optional_fields}, Got: {model_fields}"
+    for name in required_fields:
+        assert RegisterInfo.model_fields[name].is_required(), \
+            f"{name} must stay required"
+    for name in optional_fields:
+        assert not RegisterInfo.model_fields[name].is_required(), \
+            f"{name} must stay optional (prompts do not emit it)"
+    assert RegisterInfo.model_fields["schema_version"].default == 1
 
 
 def test_constraint_required_fields():
