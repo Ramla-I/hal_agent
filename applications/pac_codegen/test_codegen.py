@@ -1,53 +1,40 @@
 #!/usr/bin/env python3
-"""
-test_codegen.py -- regression test for the PAC constraint code generator.
+"""test_codegen.py -- regression tests for the trait-gated PAC code generator.
 
 WHAT THIS GUARDS
 ----------------
-Make sure that changes to ``rust_codegen.py`` (or to the shared schema in
-``defs.py``) do not silently break the generated Rust. There are two tests:
+Changes to ``rust_codegen.py`` (or the shared schema in ``defs.py``) must not
+silently break the generated Rust OR the enforcement it claims. Three layers:
 
   1. GOLDEN DIFF (fast, no toolchain) -- ``test_codegen_matches_golden``
-     Regenerate the constraints module from
-     ``constraint_test/stm32f405_i2c1.json`` and diff it, line for line, against
-     the committed golden ``constraint_test/i2c1_expected_constraints.rs``. A
-     mismatch means the code generator's output changed: review the printed diff
-     and, if the change was intentional, refresh the golden (see that file's
-     header for the one-line command).
+     Regenerate the constraints module from the fixture and diff it against
+     the committed golden. A mismatch means the emitter's output changed:
+     review the diff and refresh the golden if intentional (see its header).
 
-  2. COMPILE CHECK (needs cargo + a generated PAC) -- ``test_constraint_test_compiles``
-     Inject the generated module into the vendored ``stm32f4`` PAC and ``cargo
-     check`` the ``constraint_test`` crate, whose ``main.rs`` exercises only the
-     token-bearing (legal) access paths. A clean check proves the generated code
-     is real, type-correct Rust. The two PAC source files that injection mutates
-     are backed up first and restored in a ``finally``; the test then asserts the
-     PAC crate was left byte-for-byte as it started.
+  2. LEGAL PATHS COMPILE -- ``test_constraint_test_compiles``
+     Inject into the provisioned PAC (get_pac.py) and ``cargo check`` the
+     constraint_test crate, whose ``main.rs`` exercises every legal access
+     path (witnessed writes, when_ready, escapes, unconstrained registers).
 
-  3. ENFORCEMENT CHECK (needs cargo + a generated PAC) -- ``test_unconstrained_write_fails_to_compile``
-     Inject, then ``cargo check`` a program that writes CR1 WITHOUT the required
-     witness tokens, and assert it is REJECTED with E0061 (wrong argument count).
-     This proves the constraint is actually enforced, not merely that legal code
-     compiles. The PAC and the swapped-in ``main.rs`` are restored and checked,
-     exactly as above.
+  3. ENFORCEMENT (compile-fail table) -- ``test_illegal_programs_rejected``
+     Inject once, then for each adversarial program assert cargo REJECTS it
+     with the expected error code AND message substring. The table encodes
+     the soundness properties the encoding claims -- including the exact
+     bypass that compiled silently under the old shadowing design (PR 15
+     defect 2), which must stay a compile error forever.
 
-  Why ``cargo check`` and not ``cargo build``: the constraint enforcement is a
-  front-end type/argument error, which ``cargo check`` reports without codegen. A
-  full ``cargo build`` would try to generate code for the Cortex-M PAC against the
-  host target, which fails for unrelated reasons (e.g. mach-o vector-table
-  sections on macOS). ``cargo check`` is also much faster.
+  The compile tests snapshot generic.rs + the whole device module tree and
+  restore them afterward (injection is one-shot from a pristine PAC), then
+  verify the restore byte-for-byte.
 
-  NOTE: the ``stm32f4`` crate source (``generic.rs``, the device modules) is a
-  *generated* svd2rust artifact. Provision it with one command::
+  Why ``cargo check`` not ``cargo build``: enforcement is a front-end type
+  error; a full build would codegen the Cortex-M PAC for the host and fail
+  for unrelated target reasons.
 
-      python applications/pac_codegen/get_pac.py
-
-  which downloads the pinned, checksum-verified crates.io package (svd2rust
-  PACs publish their generated source) into ``vendored/pac/stm32f4/``. When the
-  PAC (or cargo) is absent, the compile checks SKIP rather than fail so the
-  suite still passes on a fresh clone -- EXCEPT when the environment variable
-  ``LIDAR_REQUIRE_PAC_TESTS`` is set (CI sets it), in which case any would-be
-  skip is a hard failure. Skipping enforcement tests silently is how a
-  non-compiling generator once shipped; the flag makes that impossible in CI.
+  SKIP POLICY: without cargo or the provisioned PAC the compile tests SKIP so
+  a fresh clone still passes -- EXCEPT when ``LIDAR_REQUIRE_PAC_TESTS`` is set
+  (CI sets it), which turns any would-be skip into a hard failure. Silently
+  skipped enforcement tests are how a non-compiling generator once shipped.
 
 Run directly (``python test_codegen.py``) or under pytest.
 """
@@ -68,12 +55,20 @@ RUST_CODEGEN = APP_DIR / "rust_codegen.py"
 CRATE_DIR = APP_DIR / "constraint_test"
 FIXTURE = CRATE_DIR / "stm32f405_i2c1.json"
 GOLDEN = CRATE_DIR / "i2c1_expected_constraints.rs"
+MAIN_RS = CRATE_DIR / "src" / "main.rs"
 
 # The generated stm32f4 PAC, provisioned from crates.io by get_pac.py.
-# Injection mutates exactly these two files.
-PAC_SRC = APP_DIR / "vendored" / "pac" / "stm32f4" / "src"
+PAC_ROOT = APP_DIR / "vendored" / "pac" / "stm32f4"
+PAC_SRC = PAC_ROOT / "src"
 PAC_GENERIC = PAC_SRC / "generic.rs"
-PAC_MODRS = PAC_SRC / "stm32f405" / "mod.rs"
+DEVICE = "stm32f405"
+DEVICE_DIR = PAC_SRC / DEVICE
+
+PERIPHERAL = "i2c1"
+
+# Separates the human-readable header in the golden file from the bytes that
+# must match rust_codegen.py output. Appears on its own line, exactly once.
+GOLDEN_MARKER = "//@@LIDAR-GOLDEN-GENERATED@@"
 
 # When set (CI does), a compile test that would SKIP fails instead.
 REQUIRE_ENV = "LIDAR_REQUIRE_PAC_TESTS"
@@ -89,19 +84,12 @@ def _skip(test_name: str, reason: str) -> None:
         )
     print(f"SKIP {test_name}: {reason}")
 
-PERIPHERAL = "i2c1"
-
-# Separates the human-readable header in the golden file from the bytes that must
-# match rust_codegen.py output. Appears on its own line, exactly once.
-GOLDEN_MARKER = "//@@LIDAR-GOLDEN-GENERATED@@"
-
 
 # --------------------------------------------------------------------------- #
 # Test 1: golden diff
 # --------------------------------------------------------------------------- #
 
 def _generate_standalone(out_path: Path) -> None:
-    """Run rust_codegen.py in standalone mode, writing the module to out_path."""
     subprocess.run(
         [sys.executable, str(RUST_CODEGEN), str(FIXTURE),
          "--peripheral", PERIPHERAL, "--output", str(out_path)],
@@ -110,8 +98,6 @@ def _generate_standalone(out_path: Path) -> None:
 
 
 def _golden_generated_section() -> str:
-    """Return the golden file's content below the marker line (the part that must
-    match rust_codegen.py's output). The header above the marker is ignored."""
     lines = GOLDEN.read_text().splitlines()
     for i, line in enumerate(lines):
         if line.strip() == GOLDEN_MARKER:
@@ -139,181 +125,218 @@ def test_codegen_matches_golden():
         ))
         raise AssertionError(
             "Generated codegen output no longer matches the golden "
-            f"{GOLDEN.name}. If this change is intentional, refresh the golden's "
-            "generated section (see its header).\n\n" + diff
+            f"{GOLDEN.name}. If this change is intentional, refresh the "
+            "golden's generated section (see its header).\n\n" + diff
         )
 
 
 # --------------------------------------------------------------------------- #
-# Test 2: compile test (inject -> cargo build -> restore)
+# Compile-test machinery: snapshot -> inject -> check -> restore
 # --------------------------------------------------------------------------- #
 
 def _cargo_available() -> bool:
     return shutil.which("cargo") is not None
 
 
-def _pac_generated() -> bool:
-    """True only if the *generated* stm32f4 crate source is on disk. The stm32-rs
-    submodule does not ship these files, so a bare fetch is not enough."""
-    return PAC_GENERIC.is_file() and PAC_MODRS.is_file()
+def _pac_provisioned() -> bool:
+    return PAC_GENERIC.is_file() and (DEVICE_DIR / f"{PERIPHERAL}.rs").is_file()
 
 
-def _sha(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def _tree_digest(*roots: Path) -> str:
+    """One sha256 over every file under the given paths (order-stable)."""
+    h = hashlib.sha256()
+    for root in roots:
+        files = [root] if root.is_file() else sorted(root.rglob("*"))
+        for f in files:
+            if f.is_file():
+                h.update(str(f.relative_to(APP_DIR)).encode())
+                h.update(f.read_bytes())
+    return h.hexdigest()
 
 
-def test_constraint_test_compiles():
-    """Inject into the PAC, build constraint_test, then restore the PAC.
+class _InjectedPac:
+    """Context manager: snapshot the PAC + main.rs, inject, restore on exit,
+    and assert the restore is byte-for-byte."""
 
-    Skips (does not fail) unless both cargo and a generated stm32f4 PAC are
-    available.
-    """
-    if not _cargo_available():
-        _skip("test_constraint_test_compiles", "cargo not on PATH")
-        return
-    if not _pac_generated():
-        _skip("test_constraint_test_compiles",
-              f"generated stm32f4 PAC not found under {PAC_SRC} "
-              "(run get_pac.py)")
-        return
-
-    # Capture the pristine bytes of the only two files injection touches.
-    orig_generic = PAC_GENERIC.read_bytes()
-    orig_modrs = PAC_MODRS.read_bytes()
-    sha_generic_before = _sha(PAC_GENERIC)
-    sha_modrs_before = _sha(PAC_MODRS)
-
-    build_ok = False
-    detail = ""
-    try:
+    def __enter__(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        backup = Path(self._tmp.name)
+        shutil.copy2(PAC_GENERIC, backup / "generic.rs")
+        shutil.copytree(DEVICE_DIR, backup / DEVICE)
+        self._main = MAIN_RS.read_bytes()
+        self._digest = _tree_digest(PAC_GENERIC, DEVICE_DIR)
         inject = subprocess.run(
             [sys.executable, str(RUST_CODEGEN), str(FIXTURE),
-             "--peripheral", PERIPHERAL, "--inject", str(PAC_MODRS)],
+             "--peripheral", PERIPHERAL,
+             "--inject-pac", str(PAC_ROOT), "--device", DEVICE],
             capture_output=True, text=True,
         )
         if inject.returncode != 0:
-            detail = "injection failed:\n" + inject.stdout + inject.stderr
-        else:
-            # cargo check (front-end only): the constraint enforcement is a type
-            # error, so a check is enough; a full build would codegen the
-            # Cortex-M PAC for the host and fail for unrelated target reasons.
-            check = subprocess.run(
-                ["cargo", "check"], cwd=str(CRATE_DIR),
-                capture_output=True, text=True,
-            )
-            build_ok = check.returncode == 0
-            if not build_ok:
-                detail = "cargo check failed:\n" + check.stdout + check.stderr
-    except Exception as exc:  # never leave the PAC mutated on an unexpected error
-        detail = f"unexpected error during inject/build: {exc!r}"
-    finally:
-        # Always restore the PAC to its pre-test state.
-        PAC_GENERIC.write_bytes(orig_generic)
-        PAC_MODRS.write_bytes(orig_modrs)
+            self._restore()
+            raise AssertionError(
+                "injection failed:\n" + inject.stdout + inject.stderr)
+        return self
 
-    # Restore check: the original PAC crate must be back to byte-for-byte what it
-    # was before the test ran. This runs whether or not the build succeeded.
-    generic_restored = _sha(PAC_GENERIC) == sha_generic_before
-    modrs_restored = _sha(PAC_MODRS) == sha_modrs_before
-    assert generic_restored and modrs_restored, (
-        "PAC crate was NOT restored after the test -- it has been left modified.\n"
-        f"  {PAC_GENERIC}: restored={generic_restored}\n"
-        f"  {PAC_MODRS}: restored={modrs_restored}"
-    )
+    def cargo_check(self, main_source: str | None = None):
+        if main_source is not None:
+            MAIN_RS.write_text(main_source)
+        return subprocess.run(
+            ["cargo", "check"], cwd=str(CRATE_DIR),
+            capture_output=True, text=True,
+        )
 
-    # Compile result (reported after the restore check so a build failure never
-    # leaves the PAC dirty).
-    assert build_ok, detail
+    def _restore(self):
+        backup = Path(self._tmp.name)
+        shutil.copy2(backup / "generic.rs", PAC_GENERIC)
+        shutil.rmtree(DEVICE_DIR)
+        shutil.copytree(backup / DEVICE, DEVICE_DIR)
+        MAIN_RS.write_bytes(self._main)
+
+    def __exit__(self, *exc):
+        self._restore()
+        restored = _tree_digest(PAC_GENERIC, DEVICE_DIR) == self._digest
+        self._tmp.cleanup()
+        assert restored, (
+            "PAC crate was NOT restored after the test -- it has been left "
+            "modified. Re-provision with get_pac.py --force."
+        )
+        return False
 
 
 # --------------------------------------------------------------------------- #
-# Test 3: enforcement (illegal program must NOT compile)
+# Test 2: legal paths compile
 # --------------------------------------------------------------------------- #
 
-# Illegal program: writes CR1 without the required witness tokens. After
-# injection the inherent CR1 write() shadow requires four arguments, so this is
-# rejected at type-check time (E0061).
-ILLEGAL_MAIN = """\
+def test_constraint_test_compiles():
+    """Inject, then the committed main.rs (all legal paths) must cargo-check."""
+    if not _cargo_available():
+        _skip("test_constraint_test_compiles", "cargo not on PATH")
+        return
+    if not _pac_provisioned():
+        _skip("test_constraint_test_compiles",
+              f"provisioned stm32f4 PAC not found under {PAC_SRC} "
+              "(run get_pac.py)")
+        return
+
+    with _InjectedPac() as pac:
+        check = pac.cargo_check()
+        assert check.returncode == 0, (
+            "legal-paths crate failed to compile against the injected PAC:\n"
+            + check.stdout + check.stderr
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Test 3: enforcement — the compile-fail table
+# --------------------------------------------------------------------------- #
+
+_PRELUDE = """\
 #![no_std]
 #![no_main]
 use stm32f4::stm32f405;
-
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
-}
-
+fn panic(_info: &core::panic::PanicInfo) -> ! { loop {} }
 #[no_mangle]
 pub extern "C" fn main() -> ! {
     let dp = unsafe { stm32f405::Peripherals::steal() };
     let i2c1 = &dp.I2C1;
-    // ILLEGAL: write without the required witness tokens.
-    i2c1.cr1().write(|w| w.pe().enabled());
+    BODY
     loop {}
 }
 """
 
 
-def test_unconstrained_write_fails_to_compile():
-    """A token-less cr1().write(...) must be REJECTED at compile time (E0061).
+def _program(body: str) -> str:
+    return _PRELUDE.replace("    BODY", body)
 
-    Proves the constraint is actually enforced -- not merely that legal code
-    compiles. Skips under the same conditions as test_constraint_test_compiles.
-    """
+
+# (name, body, expected error code, expected message substring)
+# Each row is a soundness property of the encoding; a row that starts
+# compiling is a hole. Rows 2-3 are PR 15's verified defect 2 (the safe
+# Deref/UFCS bypass) pinned as regressions forever.
+ILLEGAL_PROGRAMS = [
+    (
+        "witnessless_write",
+        "    i2c1.cr1().write(|w| w.pe().enabled());",
+        "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "ascribed_ref_bypass",
+        "    let r: &stm32f4::Reg<stm32f405::i2c1::cr1::CR1rs> = i2c1.cr1();\n"
+        "    r.write(|w| w.pe().enabled());",
+        "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "ufcs_bypass",
+        "    stm32f4::Reg::<stm32f405::i2c1::cr1::CR1rs>::write("
+        "i2c1.cr1(), |w| w.pe().enabled());",
+        "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "witness_reuse",
+        "    if let Ok(w) = i2c1.cr1().check_write_ready() {\n"
+        "        i2c1.cr1().write_witnessed(|x| x.pe().enabled(), w);\n"
+        "        i2c1.cr1().write_witnessed(|x| x.pe().enabled(), w);\n"
+        "    }",
+        "E0382", "",
+    ),
+    (
+        "wrong_operation_witness",
+        "    if let Ok(w) = i2c1.cr1().check_write_ready() {\n"
+        "        i2c1.cr1().modify_witnessed(|_, x| x.pe().enabled(), w);\n"
+        "    }",
+        "E0308", "",
+    ),
+    (
+        "witnessless_modify",
+        "    i2c1.cr1().modify(|_, w| w.pe().enabled());",
+        "E0277", "modify-constrained by its datasheet",
+    ),
+    (
+        "witnessless_reset",
+        "    i2c1.cr1().reset();",
+        "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "witnessless_write_with_zero",
+        "    unsafe { i2c1.cr1().write_with_zero(|w| w.pe().enabled()) };",
+        "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "witnessless_from_write",
+        "    i2c1.cr1().from_write(|w| { w.pe().enabled(); });",
+        "E0277", "write-constrained by its datasheet",
+    ),
+]
+
+
+def test_illegal_programs_rejected():
+    """Every adversarial program must be rejected with the expected error."""
     if not _cargo_available():
-        _skip("test_unconstrained_write_fails_to_compile", "cargo not on PATH")
+        _skip("test_illegal_programs_rejected", "cargo not on PATH")
         return
-    if not _pac_generated():
-        _skip("test_unconstrained_write_fails_to_compile",
-              f"generated stm32f4 PAC not found under {PAC_SRC} "
+    if not _pac_provisioned():
+        _skip("test_illegal_programs_rejected",
+              f"provisioned stm32f4 PAC not found under {PAC_SRC} "
               "(run get_pac.py)")
         return
 
-    main_rs = CRATE_DIR / "src" / "main.rs"
-    orig_generic = PAC_GENERIC.read_bytes()
-    orig_modrs = PAC_MODRS.read_bytes()
-    orig_main = main_rs.read_bytes()
-    sha_before = {p: _sha(p) for p in (PAC_GENERIC, PAC_MODRS, main_rs)}
+    failures = []
+    with _InjectedPac() as pac:
+        for name, body, code, needle in ILLEGAL_PROGRAMS:
+            check = pac.cargo_check(_program(body))
+            out = check.stdout + check.stderr
+            if check.returncode == 0:
+                failures.append(f"{name}: COMPILED -- enforcement hole!")
+            elif f"error[{code}]" not in out:
+                failures.append(
+                    f"{name}: rejected, but not with {code}:\n{out[-1500:]}")
+            elif needle and needle not in out:
+                failures.append(
+                    f"{name}: {code} raised without the expected diagnostic "
+                    f"({needle!r}):\n{out[-1500:]}")
 
-    check = None
-    detail = ""
-    try:
-        inject = subprocess.run(
-            [sys.executable, str(RUST_CODEGEN), str(FIXTURE),
-             "--peripheral", PERIPHERAL, "--inject", str(PAC_MODRS)],
-            capture_output=True, text=True,
-        )
-        if inject.returncode != 0:
-            detail = "injection failed:\n" + inject.stdout + inject.stderr
-        else:
-            main_rs.write_text(ILLEGAL_MAIN)
-            check = subprocess.run(
-                ["cargo", "check"], cwd=str(CRATE_DIR),
-                capture_output=True, text=True,
-            )
-    except Exception as exc:  # never leave files mutated on an unexpected error
-        detail = f"unexpected error during inject/check: {exc!r}"
-    finally:
-        # Always restore the PAC and the test's own main.rs.
-        PAC_GENERIC.write_bytes(orig_generic)
-        PAC_MODRS.write_bytes(orig_modrs)
-        main_rs.write_bytes(orig_main)
-
-    # Restore check: PAC crate and main.rs must be back to byte-for-byte pristine.
-    for p in (PAC_GENERIC, PAC_MODRS, main_rs):
-        assert _sha(p) == sha_before[p], f"{p} was NOT restored after the test."
-
-    # The injection must have run for this to be a valid negative test.
-    assert check is not None, detail or "constraint injection did not run"
-    # Enforcement: the illegal program must be rejected, specifically with E0061.
-    assert check.returncode != 0, (
-        "token-less cr1().write(...) COMPILED -- the constraint is NOT enforced!"
-    )
-    out = check.stdout + check.stderr
-    assert "E0061" in out, (
-        "illegal write was rejected, but not with the expected argument-count "
-        f"error (E0061):\n{out}"
-    )
+    assert not failures, "\n\n".join(failures)
 
 
 # --------------------------------------------------------------------------- #
@@ -324,7 +347,7 @@ if __name__ == "__main__":
     tests = [
         test_codegen_matches_golden,
         test_constraint_test_compiles,
-        test_unconstrained_write_fails_to_compile,
+        test_illegal_programs_rejected,
     ]
     print("Running codegen tests...\n")
     passed = failed = 0

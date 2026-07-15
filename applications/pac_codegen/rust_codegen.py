@@ -1,550 +1,756 @@
 #!/usr/bin/env python3
-"""
-Constraint-aware Rust code generator for PAC crates.
+"""Constraint-aware Rust code generator for svd2rust PAC crates (trait gating).
 
-Reads a RegisterInfo JSON file (with access_constraints) and generates
-a Rust module that adds compile-time safety via witness tokens and
-constrained write methods alongside the existing svd2rust-generated code.
+Reads a RegisterInfo JSON (v1 schema from the repo-root ``defs.py``) and turns
+its ``access_constraints`` into compile-time enforcement inside a PAC crate.
 
-Usage:
-    python applications/pac_codegen/rust_codegen.py applications/pac_codegen/constraint_test/stm32f405_i2c1.json \
-        --peripheral i2c1 --output applications/pac_codegen/generated/i2c1/constraints.rs
+ENCODING (see docs/register_constraints_plan.md §3 + Appendix A)
+----------------------------------------------------------------
+Gating is by TRAIT BOUND, not wrapper types or method shadowing: the stock
+``Reg::write``/``modify``/``read``/``reset``/``write_with_zero``/``from_*``
+methods gain a ``where REG: UnconstrainedWrite/Modify/Read`` clause in
+``generic.rs``. Every unconstrained register receives one-line marker impls;
+a constrained register receives NO marker for the gated operation, so the
+witness-free method *does not exist* for it — every call site gets E0277 with
+a ``#[diagnostic::on_unimplemented]`` message naming the fix. The witness
+types ride on separate ``WriteGate``/``ModifyGate``/``ReadGate`` traits that
+only constrained registers implement, so the stock ``Writable``/``Readable``
+trait definitions (and all ~everything svd2rust emitted) stay untouched.
+
+Per constrained register the injected ``constraints`` module provides:
+  - zero-sized witness types (``Cr1WriteWitness`` — private field, non-Copy)
+  - a register-scoped error enum
+  - ``check_write_ready()`` — ONE fresh volatile read checks every
+    precondition conjunctively and mints the witness (a *state witness*)
+  - ``write_when_ready(f)`` — check + witnessed write welded into one call
+    (the recommended entry point: the witness never escapes user code)
+
+The only escapes are ``unsafe`` (``write_unwitnessed`` etc.); there is no
+wrapper, no ``Deref`` hole, and no visibility widening (injected code lives
+inside the crate's own modules).
+
+SCOPE (roadmap step B): same-register preconditions on write/modify. A
+``write`` constraint gates BOTH the write surface (write/reset/
+write_with_zero/from_write) and the modify surface (a modify performs a
+write), each with its own witness type. Cross-register witnesses land in
+step H; postconditions/action witnesses in step I; same-register read gates
+are rejected as self-defeating (the check performs the read).
+
+USAGE
+-----
+Standalone module (golden test input):
+    python rust_codegen.py fixture.json --peripheral i2c1 --output out.rs
+
+Inject into a provisioned PAC (see get_pac.py):
+    python rust_codegen.py fixture.json --peripheral i2c1 \
+        --inject-pac applications/pac_codegen/vendored/pac/stm32f4 \
+        --device stm32f405
+
+Injection is ONE-SHOT from a pristine PAC (it refuses to run twice); the
+compile tests snapshot and restore the tree around each case.
 """
 
 import argparse
 import json
-import os
 import re
 import sys
 from pathlib import Path
 
-# Add the repo root to sys.path so we can import the shared defs.py.
-# This file lives at applications/pac_codegen/rust_codegen.py, so the repo
-# root is three levels up.
+# Repo root (three levels up) for the shared v1 schema.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from defs import RegisterInfo
+from defs import FieldState, RegisterInfo  # noqa: E402
+
+GENERIC_SENTINEL = "// ===== LIDAR constraint gating (generated; do not edit) ====="
+MARKER_SENTINEL = "// LIDAR-MARKERS (generated; do not edit)"
+MODULE_SENTINEL = "// LIDAR-CONSTRAINTS (generated; do not edit)"
+
+# Operations and the generic.rs surface each one gates.
+WRITE_SURFACE = "write/reset/write_with_zero/from_write"
+MODIFY_SURFACE = "modify/from_modify"
 
 
-def field_to_rust_name(field_name: str) -> str:
-    """Map a field name to its svd2rust accessor (lowercase)."""
-    return field_name.lower()
+# --------------------------------------------------------------------------- #
+# Normalization: v1 RegisterInfo -> per-operation conjunctive precondition sets
+# --------------------------------------------------------------------------- #
+
+def _norm_reg_name(name: str) -> str:
+    """Uppercase, underscore-free register name for same-register matching
+    (datasheets write ``I2C_CR1`` where the SVD register is ``CR1``)."""
+    return name.upper().replace("_", "")
 
 
-def field_to_token_name(field_name: str, state: str) -> str:
-    """Generate a witness token type name from field + required state.
+def _is_same_register(field_state: FieldState, target: str) -> bool:
+    ref = _norm_reg_name(field_state.register_name)
+    tgt = _norm_reg_name(target)
+    return ref == tgt or ref.endswith(tgt)
 
-    Examples:
-        ("STOP", "cleared") -> "StopClearedToken"
-        ("START", "set")    -> "StartSetToken"
-        ("PEC", "cleared")  -> "PecClearedToken"
+
+def _parse_equals_value(state: str) -> int:
+    """Parse the value of an ``equals:<v>`` state to an int, strictly.
+
+    Raw text must never be spliced into Rust (it is an injection surface and
+    ``a|b`` silently changes meaning under Rust operator precedence).
     """
-    name_part = field_name.capitalize()
-    if state == "cleared":
-        state_part = "Cleared"
-    elif state == "set":
-        state_part = "Set"
-    elif state.startswith("equals:"):
-        val = state.split(":", 1)[1]
-        state_part = f"Eq{val}"
-    else:
-        state_part = state.capitalize()
-    return f"{name_part}{state_part}Token"
-
-
-def field_to_error_variant(field_name: str, state: str) -> str:
-    """Generate an error variant name from field + required state.
-
-    Examples:
-        ("STOP", "cleared") -> "StopNotCleared"
-        ("START", "set")    -> "StartNotSet"
-    """
-    name_part = field_name.capitalize()
-    if state == "cleared":
-        return f"{name_part}NotCleared"
-    elif state == "set":
-        return f"{name_part}NotSet"
-    elif state.startswith("equals:"):
-        val = state.split(":", 1)[1]
-        return f"{name_part}NotEq{val}"
-    else:
-        return f"{name_part}Invalid"
-
-
-def state_to_check(field_name: str, state: str) -> str:
-    """Generate a Rust check expression for a field state.
-
-    Returns a string like `r.stop().bit_is_clear()`.
-    """
-    accessor = field_to_rust_name(field_name)
-    if state == "cleared":
-        return f"r.{accessor}().bit_is_clear()"
-    elif state == "set":
-        return f"r.{accessor}().bit_is_set()"
-    elif state.startswith("equals:"):
-        val = state.split(":", 1)[1]
-        return f"r.{accessor}().bits() == {val}"
-    else:
-        raise ValueError(f"Unknown state: {state}")
-
-
-def generate_constraint_module(
-    register_info: RegisterInfo,
-    peripheral: str,
-) -> str:
-    """Generate a Rust module implementing compile-time constraints.
-
-    The module provides:
-    - Zero-sized witness token types for each precondition
-    - A ConstraintError enum for runtime verification failures
-    - verify_* methods on the register reader to obtain tokens
-    - A write_constrained() method that consumes tokens
-    """
-    reg_name = register_info.datasheet_register_abbreviation
-    reg_lower = reg_name.lower()
-    peripheral_lower = peripheral.lower()
-
-    lines = []
-
-    # Module-level doc comment
-    lines.append(f'//! Compile-time access constraints for {peripheral.upper()} {reg_name}.')
-    lines.append(f'//!')
-    lines.append(f'//! Generated from datasheet constraints. Do not edit manually.')
-    lines.append(f'//!')
-    lines.append(f'//! This module provides witness-token-based safe write methods that enforce')
-    lines.append(f'//! hardware preconditions at the type level.')
-    lines.append('')
-
-    # Collect all preconditions across all constraints
-    all_preconditions = []
-    for constraint in register_info.access_constraints:
-        for pre in constraint.preconditions:
-            key = (pre.field_name, pre.required_state)
-            if key not in [(p.field_name, p.required_state) for p in all_preconditions]:
-                all_preconditions.append(pre)
-
-    if not all_preconditions:
-        lines.append('// No access constraints defined for this register.')
-        return '\n'.join(lines)
-
-    # --- Witness token types ---
-    lines.append('// === Witness Tokens ===')
-    lines.append('// Zero-sized types that prove a precondition has been verified.')
-    lines.append('')
-    for pre in all_preconditions:
-        token_name = field_to_token_name(pre.field_name, pre.required_state)
-        lines.append(f'/// Proof that {pre.field_name} is {pre.required_state} in {reg_name}.')
-        lines.append(f'/// This token is consumed by `write_constrained()` to enforce the')
-        lines.append(f'/// precondition at compile time.')
-        lines.append(f'pub struct {token_name}(());')
-        lines.append('')
-
-    # --- Error enum ---
-    lines.append('// === Error Type ===')
-    lines.append('')
-    lines.append('/// Errors returned when a precondition is not satisfied.')
-    lines.append('#[derive(Debug, Clone, Copy, PartialEq, Eq)]')
-    lines.append('pub enum ConstraintError {')
-    for pre in all_preconditions:
-        variant = field_to_error_variant(pre.field_name, pre.required_state)
-        lines.append(f'    /// {pre.field_name} is not {pre.required_state}')
-        lines.append(f'    {variant},')
-    lines.append('}')
-    lines.append('')
-
-    # --- Verify methods on R (reader) ---
-    lines.append('// === Verification Methods ===')
-    lines.append(f'// Methods on {reg_lower}::R to verify preconditions and obtain tokens.')
-    lines.append('')
-    lines.append(f'impl super::{reg_lower}::R {{')
-    for pre in all_preconditions:
-        token_name = field_to_token_name(pre.field_name, pre.required_state)
-        error_variant = field_to_error_variant(pre.field_name, pre.required_state)
-        method_name = f"verify_{field_to_rust_name(pre.field_name)}_{pre.required_state.split(':')[0]}"
-        check_expr = state_to_check(pre.field_name, pre.required_state)
-
-        lines.append(f'    /// Verify that {pre.field_name} is {pre.required_state} and obtain a proof token.')
-        lines.append(f'    ///')
-        lines.append(f'    /// Returns `Ok({token_name})` if the precondition holds,')
-        lines.append(f'    /// `Err(ConstraintError::{error_variant})` otherwise.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn {method_name}(&self) -> Result<{token_name}, ConstraintError> {{')
-        lines.append(f'        let r = self;')
-        lines.append(f'        if {check_expr} {{')
-        lines.append(f'            Ok({token_name}(()))')
-        lines.append(f'        }} else {{')
-        lines.append(f'            Err(ConstraintError::{error_variant})')
-        lines.append(f'        }}')
-        lines.append(f'    }}')
-        lines.append('')
-    lines.append('}')
-    lines.append('')
-
-    # --- Constrained write method(s) on Reg ---
-    # We generate one write_constrained per constraint
-    for constraint in register_info.access_constraints:
-        if constraint.target_operation != "write":
-            continue
-
-        # Build token parameter list
-        token_params = []
-        for pre in constraint.preconditions:
-            token_name = field_to_token_name(pre.field_name, pre.required_state)
-            param_name = f"_{field_to_rust_name(pre.field_name)}_token"
-            token_params.append((param_name, token_name))
-
-        target = constraint.target_register.lower()
-
-        # Fully-qualified type alias for readability in generated code
-        reg_spec = f'super::{reg_lower}::{reg_name}rs'
-
-        # Build deprecation note from constraint metadata
-        field_list = ', '.join(pre.field_name for pre in constraint.preconditions)
-        state_list = ', '.join(
-            f'{pre.field_name} must be {pre.required_state}'
-            for pre in constraint.preconditions
-        )
-        deprecation_note = (
-            f'{peripheral.upper()}_{reg_name} has hardware constraints: '
-            f'{state_list} before writing. '
-            f'Use `{peripheral_lower}::constraints::write_constrained()` instead.'
-        )
-
-        lines.append('// === Constrained Write ===')
-        lines.append('')
-
-        # Doc comment with the datasheet text
-        lines.append(f'/// Safe write to {reg_name} that enforces datasheet constraints.')
-        lines.append(f'///')
-        lines.append(f'/// # Constraint')
-        lines.append(f'/// {constraint.datasheet_text}')
-        lines.append(f'///')
-        lines.append(f'/// # Usage')
-        lines.append(f'/// ```no_run')
-        lines.append(f'/// let r = {peripheral_lower}.{target}().read();')
-        for param_name, token_name in token_params:
-            verify_method = f"verify_{param_name.strip('_').replace('_token', '')}_cleared"
-            lines.append(f'/// let {param_name.lstrip("_")} = r.{verify_method}().unwrap();')
-        call_args = ', '.join(f'{p.lstrip("_")}' for p, _ in token_params)
-        lines.append(f'/// {peripheral_lower}.{target}().write_constrained(|w| w, {call_args});')
-        lines.append(f'/// ```')
-
-        # Open impl block — contains write_constrained, deprecated write, deprecated modify
-        params_str = ', '.join(f'{p}: {t}' for p, t in token_params)
-        lines.append(f'impl crate::ConstrainedReg<{reg_spec}> {{')
-
-        # --- write_constrained: own body (does NOT call self.write to avoid deprecation) ---
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn write_constrained<F>(&self, f: F, {params_str}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        let value = f(&mut crate::W {{')
-        lines.append(f'            bits: <{reg_spec} as crate::Resettable>::RESET_VALUE')
-        lines.append(f'                & !<{reg_spec} as crate::Writable>::ONE_TO_MODIFY_FIELDS_BITMAP')
-        lines.append(f'                | <{reg_spec} as crate::Writable>::ZERO_TO_MODIFY_FIELDS_BITMAP,')
-        lines.append(f'            _reg: core::marker::PhantomData,')
-        lines.append(f'        }})')
-        lines.append(f'        .bits;')
-        lines.append(f'        self.reg.register.set(value);')
-        lines.append(f'        value')
-        lines.append(f'    }}')
-        lines.append('')
-
-        # --- modify_constrained: read-modify-write with tokens ---
-        lines.append(f'    /// Safe read-modify-write to {reg_name} that enforces datasheet constraints.')
-        lines.append(f'    ///')
-        lines.append(f'    /// # Constraint')
-        lines.append(f'    /// {constraint.datasheet_text}')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn modify_constrained<F>(&self, f: F, {params_str}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        for<\'w> F: FnOnce(&crate::R<{reg_spec}>, &\'w mut crate::W<{reg_spec}>) -> &\'w mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        let bits = self.reg.register.get();')
-        lines.append(f'        let value = f(')
-        lines.append(f'            &crate::R {{')
-        lines.append(f'                bits,')
-        lines.append(f'                _reg: core::marker::PhantomData,')
-        lines.append(f'            }},')
-        lines.append(f'            &mut crate::W {{')
-        lines.append(f'                bits: bits')
-        lines.append(f'                    & !<{reg_spec} as crate::Writable>::ONE_TO_MODIFY_FIELDS_BITMAP')
-        lines.append(f'                    | <{reg_spec} as crate::Writable>::ZERO_TO_MODIFY_FIELDS_BITMAP,')
-        lines.append(f'                _reg: core::marker::PhantomData,')
-        lines.append(f'            }},')
-        lines.append(f'        )')
-        lines.append(f'        .bits;')
-        lines.append(f'        self.reg.register.set(value);')
-        lines.append(f'        value')
-        lines.append(f'    }}')
-        lines.append('')
-
-        # --- write() shadow: requires tokens, shadows Deref target's write(f) ---
-        # Calling write(f) without tokens produces a compilation error (argument count mismatch).
-        lines.append(f'    /// Writes to {reg_name} with constraint verification.')
-        lines.append(f'    ///')
-        lines.append(f'    /// This method shadows `Reg::write()` and requires witness tokens,')
-        lines.append(f'    /// enforcing hardware constraints at compile time.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn write<F>(&self, f: F, {params_str}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        F: FnOnce(&mut crate::W<{reg_spec}>) -> &mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        self.write_constrained(f, {", ".join(p for p, _ in token_params)})')
-        lines.append(f'    }}')
-        lines.append('')
-
-        # --- modify() shadow: requires tokens, shadows Deref target's modify(f) ---
-        lines.append(f'    /// Modifies {reg_name} via read-modify-write with constraint verification.')
-        lines.append(f'    ///')
-        lines.append(f'    /// This method shadows `Reg::modify()` and requires witness tokens,')
-        lines.append(f'    /// enforcing hardware constraints at compile time.')
-        lines.append(f'    #[inline(always)]')
-        lines.append(f'    pub fn modify<F>(&self, f: F, {params_str}) -> <{reg_spec} as crate::RegisterSpec>::Ux')
-        lines.append(f'    where')
-        lines.append(f'        for<\'w> F: FnOnce(&crate::R<{reg_spec}>, &\'w mut crate::W<{reg_spec}>) -> &\'w mut crate::W<{reg_spec}>,')
-        lines.append(f'    {{')
-        lines.append(f'        self.modify_constrained(f, {", ".join(p for p, _ in token_params)})')
-        lines.append(f'    }}')
-
-        # Close impl block
-        lines.append(f'}}')
-        lines.append('')
-
-    return '\n'.join(lines)
-
-
-def indent_block(text: str, indent: str = "        ") -> str:
-    """Indent every line of text by the given prefix."""
-    return '\n'.join(
-        indent + line if line.strip() else ''
-        for line in text.split('\n')
-    )
-
-
-def patch_generic_rs(pac_dir: Path) -> None:
-    """Patch generic.rs for constraint module support.
-
-    Changes:
-    - Reg.register: private -> pub(crate)
-    - raw::R._reg: pub(super) -> pub(crate)
-    - raw::W._reg: pub(super) -> pub(crate)
-    - Adds ConstrainedReg<REG> wrapper with Deref to Reg<REG>
-    """
-    generic_path = pac_dir / "generic.rs"
-    if not generic_path.exists():
-        raise FileNotFoundError(f"generic.rs not found at {generic_path}")
-
-    content = generic_path.read_text()
-    original = content
-
-    # --- Field visibility changes ---
-
-    # Widen Reg.register visibility
-    content = content.replace(
-        "    register: vcell::VolatileCell<REG::Ux>,",
-        "    pub(crate) register: vcell::VolatileCell<REG::Ux>,",
-    )
-
-    # Widen raw::R._reg visibility (pub(super) -> pub(crate))
-    content = re.sub(
-        r'(pub struct R<REG: RegisterSpec> \{\s*pub\(crate\) bits: REG::Ux,\s*)pub\(super\)( _reg: marker::PhantomData<REG>,)',
-        r'\1pub(crate)\2',
-        content,
-    )
-    # Widen raw::W._reg visibility (pub(super) -> pub(crate))
-    content = re.sub(
-        r'(pub struct W<REG: RegisterSpec> \{\s*///Writable bits\s*pub\(crate\) bits: REG::Ux,\s*)pub\(super\)( _reg: marker::PhantomData<REG>,)',
-        r'\1pub(crate)\2',
-        content,
-    )
-
-    # --- Add ConstrainedReg wrapper ---
-    if 'pub struct ConstrainedReg' not in content:
-        constrained_reg_block = (
-            "\n"
-            "/// A register wrapper indicating hardware write constraints exist.\n"
-            "/// Forwards all operations via Deref to Reg; constraint modules add\n"
-            "/// deprecated write()/modify() shadows as inherent methods.\n"
-            "#[repr(transparent)]\n"
-            "pub struct ConstrainedReg<REG: RegisterSpec> {\n"
-            "    pub(crate) reg: Reg<REG>,\n"
-            "}\n"
-            "\n"
-            "unsafe impl<REG: RegisterSpec> Send for ConstrainedReg<REG> where REG::Ux: Send {}\n"
-            "\n"
-            "impl<REG: RegisterSpec> core::ops::Deref for ConstrainedReg<REG> {\n"
-            "    type Target = Reg<REG>;\n"
-            "    #[inline(always)]\n"
-            "    fn deref(&self) -> &Reg<REG> {\n"
-            "        &self.reg\n"
-            "    }\n"
-            "}\n"
-            "\n"
-            "impl<REG: Readable> core::fmt::Debug for ConstrainedReg<REG>\n"
-            "where\n"
-            "    R<REG>: core::fmt::Debug,\n"
-            "{\n"
-            "    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {\n"
-            "        core::fmt::Debug::fmt(&**self, f)\n"
-            "    }\n"
-            "}\n"
-        )
-        # Insert after the `unsafe impl ... Send for Reg<REG>` line
-        send_line = "unsafe impl<REG: RegisterSpec> Send for Reg<REG> where REG::Ux: Send {}"
-        content = content.replace(send_line, send_line + constrained_reg_block)
-
-    if content != original:
-        generic_path.write_text(content)
-        print(f"  Patched generic.rs: {generic_path}")
-    else:
-        print(f"  generic.rs already patched (no changes needed)")
-
-
-def inject_into_pac(pac_path: Path, peripheral: str, reg_name: str, module_code: str) -> None:
-    """Inject a constraints module into a PAC mod.rs file.
-
-    Inserts `pub mod constraints { ... }` inside the peripheral module,
-    right after the register's sub-module closes.
-
-    Also patches generic.rs field visibility to allow constraint module access.
-    """
-    # Patch generic.rs first
-    pac_dir = pac_path.parent
-    # generic.rs is in the src/ directory (sibling of the device dir)
-    # pac_path is e.g. stm32f4/src/stm32f405/mod.rs -> generic.rs is at stm32f4/src/generic.rs
-    generic_dir = pac_path.parent.parent
-    patch_generic_rs(generic_dir)
-
-    content = pac_path.read_text()
-    reg_lower = reg_name.lower()
-
-    # Find the closing of the register module inside the peripheral module.
-    # We look for the pattern: `impl crate::Resettable for {REG}rs {}` followed by `}`
-    # that appears inside `pub mod {peripheral} { ... pub mod {reg} { ... } }`
-    # and is followed by a CR2/other register doc comment containing the peripheral name.
-    marker = f"STM32F405.html#{peripheral.upper()}:{reg_name}"
-    # Find the Resettable impl for this register in the right peripheral context
-    search = f'impl crate::Resettable for {reg_name}rs {{}}'
-
-    # Find all occurrences and pick the one in the right peripheral
-    positions = [m.end() for m in re.finditer(re.escape(search), content)]
-
-    # For each position, check if the surrounding context mentions our peripheral
-    target_pos = None
-    for pos in positions:
-        # Look backwards ~2000 chars for the peripheral module declaration
-        context_start = max(0, pos - 5000)
-        context = content[context_start:pos]
-        if f'pub mod {peripheral}' in context or f'#{peripheral.upper()}:' in context:
-            # Also verify the next line closes the module (indented `}`)
-            next_chunk = content[pos:pos + 50]
-            if '\n    }' in next_chunk:
-                # Find the closing brace
-                brace_pos = pos + next_chunk.index('\n    }') + len('\n    }')
-                target_pos = brace_pos
-                break
-
-    if target_pos is None:
+    raw = state.split(":", 1)[1].strip()
+    if not re.fullmatch(r"(0[xX][0-9a-fA-F]+|0[bB][01]+|\d+)", raw):
         raise ValueError(
-            f"Could not find insertion point for {peripheral}::{reg_lower} in {pac_path}"
+            f"unsupported equals value {raw!r}: must be a single hex/bin/dec "
+            "integer literal (OR-values and sequences are a grammar-v2 concern)"
         )
+    return int(raw, 0)
 
-    # Build the module to inject
-    indented = indent_block(module_code)
-    injection = f"\n    pub mod constraints {{\n{indented}\n    }}"
 
-    new_content = content[:target_pos] + injection + content[target_pos:]
+class Precondition:
+    """A same-register field-state check, validated and value-parsed."""
 
-    # Patch the register type alias to use ConstrainedReg.
-    # Must find the alias within the correct peripheral module, not just the first
-    # occurrence in the file (multiple peripherals may share the same register name).
-    old_alias = f'pub type {reg_name} = crate::Reg<{reg_lower}::{reg_name}rs>;'
-    new_alias = f'pub type {reg_name} = crate::ConstrainedReg<{reg_lower}::{reg_name}rs>;'
-    # Find the peripheral module start and search for the alias after it
-    periph_mod = f'pub mod {peripheral} {{'
-    periph_start = new_content.find(periph_mod)
-    if periph_start >= 0:
-        alias_pos = new_content.find(old_alias, periph_start)
-        if alias_pos >= 0:
-            new_content = (
-                new_content[:alias_pos]
-                + new_alias
-                + new_content[alias_pos + len(old_alias):]
+    def __init__(self, fs: FieldState):
+        self.field = fs.field_name
+        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", self.field or ""):
+            raise ValueError(
+                f"field name {self.field!r} is not an SVD-style identifier "
+                "(ranges/wildcards/pseudo-fields are rejected)"
             )
-
-    pac_path.write_text(new_content)
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Generate constraint-aware Rust code from RegisterInfo JSON"
-    )
-    parser.add_argument(
-        "input",
-        help="Path to constraints JSON file (RegisterInfo schema)",
-    )
-    parser.add_argument(
-        "--peripheral",
-        default="i2c1",
-        help="Peripheral name (e.g., i2c1). Default: i2c1",
-    )
-    parser.add_argument(
-        "--output",
-        default=None,
-        help="Output .rs file path. Default: applications/pac_codegen/generated/<peripheral>/constraints.rs",
-    )
-    parser.add_argument(
-        "--inject",
-        default=None,
-        help="Path to PAC mod.rs to inject constraints into (e.g., stm32-rs/stm32f4/src/stm32f405/mod.rs)",
-    )
-    args = parser.parse_args()
-
-    # Read and validate the input JSON
-    input_path = Path(args.input)
-    if not input_path.exists():
-        print(f"Error: Input file not found: {input_path}", file=sys.stderr)
-        sys.exit(1)
-
-    with open(input_path) as f:
-        data = json.load(f)
-
-    register_info = RegisterInfo(**data)
-
-    # Generate the Rust code
-    rust_code = generate_constraint_module(register_info, args.peripheral)
-
-    if args.inject:
-        # Inject into PAC source
-        pac_path = Path(args.inject)
-        if not pac_path.exists():
-            print(f"Error: PAC file not found: {pac_path}", file=sys.stderr)
-            sys.exit(1)
-        inject_into_pac(
-            pac_path,
-            args.peripheral,
-            register_info.datasheet_register_abbreviation,
-            rust_code,
-        )
-        print(f"Injected constraints into: {pac_path}")
-    else:
-        # Write standalone file
-        if args.output:
-            output_path = Path(args.output)
+        state = fs.required_state
+        if state == "cleared":
+            self.kind, self.value = "cleared", None
+        elif state == "set":
+            self.kind, self.value = "set", None
+        elif state.startswith("equals:"):
+            self.kind, self.value = "equals", _parse_equals_value(state)
         else:
-            # Default into applications/pac_codegen/generated/<peripheral>/constraints.rs,
-            # kept inside this application's own directory. This file lives at
-            # applications/pac_codegen/rust_codegen.py, so the app dir is one level up.
-            output_path = (
-                Path(__file__).resolve().parent
-                / "generated"
-                / args.peripheral
-                / "constraints.rs"
+            raise ValueError(f"unsupported required_state {state!r}")
+
+    def key(self):
+        return (self.field.lower(), self.kind, self.value)
+
+    def describe(self) -> str:
+        if self.kind == "equals":
+            return f"{self.field} == {self.value:#x}"
+        return f"{self.field} {self.kind}"
+
+    def check_expr(self, reader: str = "r") -> str:
+        accessor = self.field.lower()
+        if self.kind == "cleared":
+            return f"{reader}.{accessor}().bit_is_clear()"
+        if self.kind == "set":
+            return f"{reader}.{accessor}().bit_is_set()"
+        return f"{reader}.{accessor}().bits() == {self.value:#x}"
+
+    def error_variant(self) -> str:
+        name = self.field.capitalize()
+        if self.kind == "cleared":
+            return f"{name}NotCleared"
+        if self.kind == "set":
+            return f"{name}NotSet"
+        return f"{name}NotEq{self.value}"
+
+
+class RegisterPlan:
+    """Everything the emitter needs for one constrained register."""
+
+    def __init__(self, register_info: RegisterInfo, peripheral: str):
+        self.reg_name = register_info.datasheet_register_abbreviation  # e.g. CR1
+        self.reg_lower = self.reg_name.lower()
+        self.peripheral = peripheral.lower()
+        # op -> ordered unique preconditions; op in {"write", "modify"}
+        self.preconditions: dict[str, list[Precondition]] = {}
+        # op -> constraint doc lines (datasheet text + consequence)
+        self.docs: dict[str, list[str]] = {}
+
+        for c in register_info.access_constraints:
+            if c.postconditions:
+                raise NotImplementedError(
+                    f"{self.reg_name}: postconditions/action witnesses are "
+                    "roadmap step I; not emitted yet"
+                )
+            for fs in c.preconditions:
+                if not _is_same_register(fs, c.target_register):
+                    raise NotImplementedError(
+                        f"{self.reg_name}: cross-register precondition on "
+                        f"{fs.register_name} is roadmap step H; not emitted yet"
+                    )
+            if c.target_operation == "write":
+                ops = ["write", "modify"]  # a modify performs a write
+            elif c.target_operation == "modify":
+                ops = ["modify"]
+            elif c.target_operation == "read":
+                raise ValueError(
+                    f"{self.reg_name}: same-register read gate is "
+                    "self-defeating (the check performs the read); rejected"
+                )
+            else:
+                raise ValueError(
+                    f"{self.reg_name}: unsupported target_operation "
+                    f"{c.target_operation!r} (v1 vocabulary is write/read/modify)"
+                )
+            pres = [Precondition(fs) for fs in c.preconditions]
+            if not pres:
+                raise ValueError(
+                    f"{self.reg_name}: constraint has no preconditions — "
+                    "nothing to enforce (grammar-v2 `other` material)"
+                )
+            for op in ops:
+                bucket = self.preconditions.setdefault(op, [])
+                seen = {p.key() for p in bucket}
+                for p in pres:
+                    if p.key() not in seen:
+                        bucket.append(p)
+                        seen.add(p.key())
+                doc = self.docs.setdefault(op, [])
+                line = c.datasheet_text.strip()
+                if line and line not in doc:
+                    doc.append(line)
+
+        if not self.preconditions:
+            raise ValueError(f"{self.reg_name}: no enforceable constraints")
+
+    # (register-spec type, gated operation) pairs, for the marker walk
+    def gated_ops(self) -> set[tuple[str, str]]:
+        spec = f"{self.reg_name.upper()}rs"
+        return {(spec, op) for op in self.preconditions}
+
+    def witness_name(self, op: str) -> str:
+        return f"{self.reg_name.capitalize()}{op.capitalize()}Witness"
+
+    def error_name(self) -> str:
+        return f"{self.reg_name.capitalize()}ConstraintError"
+
+
+# --------------------------------------------------------------------------- #
+# Emitter: the per-peripheral `constraints` module
+# --------------------------------------------------------------------------- #
+
+def generate_constraint_module(plan: RegisterPlan) -> str:
+    reg = plan.reg_name
+    spec = f"super::{plan.reg_lower}::{reg.upper()}rs"
+    ux = f"<{spec} as crate::RegisterSpec>::Ux"
+    err = plan.error_name()
+
+    lines: list[str] = []
+    a = lines.append
+
+    a(f"//! Compile-time access constraints for {plan.peripheral.upper()} {reg}.")
+    a("//!")
+    a("//! Generated from datasheet constraints. Do not edit manually.")
+    a("//!")
+    a("//! A witness attests that the preconditions were OBSERVED TRUE in one")
+    a("//! fresh volatile read; prefer `*_when_ready` (check + use in one call).")
+    a("")
+
+    # --- Witness types (state witnesses: private field, non-Copy, ZST) ---
+    a("// === Witnesses ===")
+    for op in sorted(plan.preconditions):
+        w = plan.witness_name(op)
+        a(f"/// State witness authorizing one {op} of {reg}.")
+        a(f"pub struct {w} {{ _priv: () }}")
+    a("")
+
+    # --- Error enum (register-scoped name: peripheral module may gain more) ---
+    all_pres: list[Precondition] = []
+    seen = set()
+    for op in sorted(plan.preconditions):
+        for p in plan.preconditions[op]:
+            if p.key() not in seen:
+                all_pres.append(p)
+                seen.add(p.key())
+    a("// === Error Type ===")
+    a("/// A precondition that was not satisfied at check time.")
+    a("#[derive(Debug, Clone, Copy, PartialEq, Eq)]")
+    a(f"pub enum {err} {{")
+    for p in all_pres:
+        a(f"    /// {p.describe()} was required")
+        a(f"    {p.error_variant()},")
+    a("}")
+    a("")
+
+    # --- Gate impls: the witness types ride on WriteGate/ModifyGate ---
+    a("// === Gates ===")
+    for op in sorted(plan.preconditions):
+        gate = {"write": "WriteGate", "modify": "ModifyGate"}[op]
+        a(f"impl crate::{gate} for {spec} {{")
+        a(f"    type Witness = {plan.witness_name(op)};")
+        a("}")
+    a("")
+
+    # --- Check methods + welded check+use entry points ---
+    a("// === Checks ===")
+    a(f"impl crate::Reg<{spec}> {{")
+    for op in sorted(plan.preconditions):
+        w = plan.witness_name(op)
+        pres = plan.preconditions[op]
+        a(f"    /// Read {reg} once and check every {op} precondition.")
+        a("    ///")
+        a("    /// # Constraint")
+        for doc in plan.docs.get(op, []):
+            a(f"    /// {doc}")
+        a("    #[inline(always)]")
+        a(f"    pub fn check_{op}_ready(&self) -> Result<{w}, {err}> {{")
+        a("        let r = self.read();")
+        for p in pres:
+            a(f"        if !({p.check_expr()}) {{")
+            a(f"            return Err({err}::{p.error_variant()});")
+            a("        }")
+        a(f"        Ok({w} {{ _priv: () }})")
+        a("    }")
+        a("")
+
+    # write_when_ready / modify_when_ready
+    if "write" in plan.preconditions:
+        a(f"    /// Check and {WRITE_SURFACE.split('/')[0]} in one call — the witness")
+        a("    /// never escapes, so the check-to-write window is fixed by this body.")
+        a("    #[inline(always)]")
+        a(f"    pub fn write_when_ready<F>(&self, f: F) -> Result<{ux}, {err}>")
+        a("    where")
+        a(f"        F: FnOnce(&mut crate::W<{spec}>) -> &mut crate::W<{spec}>,")
+        a("    {")
+        a("        let witness = self.check_write_ready()?;")
+        a("        Ok(self.write_witnessed(f, witness))")
+        a("    }")
+        a("")
+    if "modify" in plan.preconditions:
+        a("    /// Check and modify in one call — the witness never escapes.")
+        a("    #[inline(always)]")
+        a(f"    pub fn modify_when_ready<F>(&self, f: F) -> Result<{ux}, {err}>")
+        a("    where")
+        a(f"        for<'w> F: FnOnce(&crate::R<{spec}>, &'w mut crate::W<{spec}>) -> &'w mut crate::W<{spec}>,")
+        a("    {")
+        a("        let witness = self.check_modify_ready()?;")
+        a("        Ok(self.modify_witnessed(f, witness))")
+        a("    }")
+        a("")
+    a("}")
+    return "\n".join(lines) + "\n"
+
+
+# --------------------------------------------------------------------------- #
+# generic.rs patch: gate stock methods, add witnessed/unwitnessed surface
+# --------------------------------------------------------------------------- #
+
+# (method signature to find — must contain a where clause, where-bound to add).
+# `read` and `reset` have no stock where clause and are handled separately.
+_GATED_METHODS = [
+    ("    pub fn write<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
+    ("    pub fn from_write<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite"),
+    ("    pub unsafe fn write_with_zero<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
+    ("    pub unsafe fn from_write_with_zero<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite"),
+    ("    pub fn modify<F>(&self, f: F) -> REG::Ux\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> &'w mut W<REG>,", "UnconstrainedModify"),
+    ("    pub fn from_modify<F, T>(&self, f: F) -> T\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> T,", "UnconstrainedModify"),
+]
+
+_GENERIC_ADDITIONS = GENERIC_SENTINEL + """
+
+/// Marker: this register's WRITE surface needs no witness. Emitted for every
+/// unconstrained register; ABSENT on write-constrained ones, so the stock
+/// methods do not exist for them and E0277 points at the offending call.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is write-constrained by its datasheet",
+    label = "this register requires a witness: call `write_witnessed(f, witness)` or `write_when_ready(f)`; obtain the witness via `check_write_ready()`; bypass only with `unsafe write_unwitnessed`",
+)]
+pub trait UnconstrainedWrite: Writable {}
+
+/// Marker: this register's MODIFY surface needs no witness.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is modify-constrained by its datasheet",
+    label = "call `modify_witnessed(f, witness)` or `modify_when_ready(f)`; obtain the witness via `check_modify_ready()`; bypass only with `unsafe modify_unwitnessed`",
+)]
+pub trait UnconstrainedModify: Readable + Writable {}
+
+/// Marker: this register's READ surface needs no witness.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is read-constrained by its datasheet",
+    label = "call `read_witnessed(witness)`; bypass only with `unsafe read_unwitnessed`",
+)]
+pub trait UnconstrainedRead: Readable {}
+
+/// Implemented ONLY by write-constrained registers; carries the witness type
+/// their gated write surface consumes.
+pub trait WriteGate: Writable {
+    /// The witness consumed by `write_witnessed`/`reset_witnessed`/....
+    type Witness;
+}
+
+/// Implemented ONLY by modify-constrained registers.
+pub trait ModifyGate: Readable + Writable {
+    /// The witness consumed by `modify_witnessed`/`from_modify_witnessed`.
+    type Witness;
+}
+
+/// Implemented ONLY by read-constrained registers.
+pub trait ReadGate: Readable {
+    /// The witness consumed by `read_witnessed`.
+    type Witness;
+}
+
+impl<REG: Resettable + Writable> Reg<REG> {
+    /// Witnessed `write`: consumes the witness minted by the register's
+    /// `check_write_ready()`. The witness attests a past observation; prefer
+    /// `write_when_ready` which welds check and write into one call.
+    #[inline(always)]
+    pub fn write_witnessed<F>(&self, f: F, _witness: <REG as WriteGate>::Witness) -> REG::Ux
+    where
+        REG: WriteGate,
+        F: FnOnce(&mut W<REG>) -> &mut W<REG>,
+    {
+        let value = f(&mut W {
+            bits: REG::RESET_VALUE & !REG::ONE_TO_MODIFY_FIELDS_BITMAP
+                | REG::ZERO_TO_MODIFY_FIELDS_BITMAP,
+            _reg: marker::PhantomData,
+        })
+        .bits;
+        self.register.set(value);
+        value
+    }
+
+    /// Witnessed `reset`.
+    #[inline(always)]
+    pub fn reset_witnessed(&self, _witness: <REG as WriteGate>::Witness)
+    where
+        REG: WriteGate,
+    {
+        self.register.set(REG::RESET_VALUE)
+    }
+
+    /// Witnessed `from_write`.
+    #[inline(always)]
+    pub fn from_write_witnessed<F, T>(&self, f: F, _witness: <REG as WriteGate>::Witness) -> T
+    where
+        REG: WriteGate,
+        F: FnOnce(&mut W<REG>) -> T,
+    {
+        let mut writer = W {
+            bits: REG::RESET_VALUE & !REG::ONE_TO_MODIFY_FIELDS_BITMAP
+                | REG::ZERO_TO_MODIFY_FIELDS_BITMAP,
+            _reg: marker::PhantomData,
+        };
+        let result = f(&mut writer);
+        self.register.set(writer.bits);
+        result
+    }
+
+    /// The sanctioned escape hatch: write WITHOUT the datasheet-required
+    /// witness. Greppable; the caller accepts responsibility for violating
+    /// the documented hardware procedure (errata, bring-up, etc.).
+    ///
+    /// # Safety
+    ///
+    /// The datasheet forbids this write unless its preconditions hold; the
+    /// caller must establish them by other means.
+    #[inline(always)]
+    pub unsafe fn write_unwitnessed<F>(&self, f: F) -> REG::Ux
+    where
+        F: FnOnce(&mut W<REG>) -> &mut W<REG>,
+    {
+        let value = f(&mut W {
+            bits: REG::RESET_VALUE & !REG::ONE_TO_MODIFY_FIELDS_BITMAP
+                | REG::ZERO_TO_MODIFY_FIELDS_BITMAP,
+            _reg: marker::PhantomData,
+        })
+        .bits;
+        self.register.set(value);
+        value
+    }
+}
+
+impl<REG: Writable> Reg<REG> {
+    /// Witnessed `write_with_zero`. Still `unsafe`: the zero-base bit
+    /// pattern may be invalid for the register (svd2rust's own contract).
+    ///
+    /// # Safety
+    ///
+    /// Unsafe to use with registers which don't allow to write 0.
+    #[inline(always)]
+    pub unsafe fn write_with_zero_witnessed<F>(&self, f: F, _witness: <REG as WriteGate>::Witness) -> REG::Ux
+    where
+        REG: WriteGate,
+        F: FnOnce(&mut W<REG>) -> &mut W<REG>,
+    {
+        let value = f(&mut W {
+            bits: REG::Ux::ZERO,
+            _reg: marker::PhantomData,
+        })
+        .bits;
+        self.register.set(value);
+        value
+    }
+}
+
+impl<REG: Readable + Writable> Reg<REG> {
+    /// Witnessed `modify`: consumes the witness minted by the register's
+    /// `check_modify_ready()`. Prefer `modify_when_ready`.
+    #[inline(always)]
+    pub fn modify_witnessed<F>(&self, f: F, _witness: <REG as ModifyGate>::Witness) -> REG::Ux
+    where
+        REG: ModifyGate,
+        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> &'w mut W<REG>,
+    {
+        let bits = self.register.get();
+        let value = f(
+            &R {
+                bits,
+                _reg: marker::PhantomData,
+            },
+            &mut W {
+                bits: bits & !REG::ONE_TO_MODIFY_FIELDS_BITMAP | REG::ZERO_TO_MODIFY_FIELDS_BITMAP,
+                _reg: marker::PhantomData,
+            },
+        )
+        .bits;
+        self.register.set(value);
+        value
+    }
+
+    /// Witnessed `from_modify`.
+    #[inline(always)]
+    pub fn from_modify_witnessed<F, T>(&self, f: F, _witness: <REG as ModifyGate>::Witness) -> T
+    where
+        REG: ModifyGate,
+        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> T,
+    {
+        let bits = self.register.get();
+        let mut writer = W {
+            bits: bits & !REG::ONE_TO_MODIFY_FIELDS_BITMAP | REG::ZERO_TO_MODIFY_FIELDS_BITMAP,
+            _reg: marker::PhantomData,
+        };
+        let result = f(
+            &R {
+                bits,
+                _reg: marker::PhantomData,
+            },
+            &mut writer,
+        );
+        self.register.set(writer.bits);
+        result
+    }
+
+    /// Escape hatch for the modify surface.
+    ///
+    /// # Safety
+    ///
+    /// The datasheet forbids this read-modify-write unless its preconditions
+    /// hold; the caller must establish them by other means.
+    #[inline(always)]
+    pub unsafe fn modify_unwitnessed<F>(&self, f: F) -> REG::Ux
+    where
+        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> &'w mut W<REG>,
+    {
+        let bits = self.register.get();
+        let value = f(
+            &R {
+                bits,
+                _reg: marker::PhantomData,
+            },
+            &mut W {
+                bits: bits & !REG::ONE_TO_MODIFY_FIELDS_BITMAP | REG::ZERO_TO_MODIFY_FIELDS_BITMAP,
+                _reg: marker::PhantomData,
+            },
+        )
+        .bits;
+        self.register.set(value);
+        value
+    }
+}
+
+impl<REG: Readable> Reg<REG> {
+    /// Witnessed `read` (only exists for read-constrained registers, whose
+    /// witnesses come from cross-register checks).
+    #[inline(always)]
+    pub fn read_witnessed(&self, _witness: <REG as ReadGate>::Witness) -> R<REG>
+    where
+        REG: ReadGate,
+    {
+        R {
+            bits: self.register.get(),
+            _reg: marker::PhantomData,
+        }
+    }
+
+    /// Escape hatch for the read surface.
+    ///
+    /// # Safety
+    ///
+    /// The datasheet constrains reads of this register; the caller must
+    /// establish the preconditions by other means.
+    #[inline(always)]
+    pub unsafe fn read_unwitnessed(&self) -> R<REG> {
+        R {
+            bits: self.register.get(),
+            _reg: marker::PhantomData,
+        }
+    }
+}
+"""
+
+
+def patch_generic_rs(generic_path: Path) -> None:
+    """Gate the stock methods and append the witnessed/unwitnessed surface."""
+    content = generic_path.read_text()
+    if GENERIC_SENTINEL in content:
+        raise RuntimeError(
+            f"{generic_path} already carries the LIDAR patch; injection is "
+            "one-shot from a pristine PAC (restore it, e.g. get_pac.py --force)"
+        )
+
+    # `read` has no where clause in stock svd2rust; give it one.
+    read_sig = "    pub fn read(&self) -> R<REG> {"
+    if read_sig not in content:
+        raise RuntimeError("generic.rs drift: stock `read` signature not found")
+    content = content.replace(
+        read_sig,
+        "    pub fn read(&self) -> R<REG>\n"
+        "    where\n"
+        "        REG: UnconstrainedRead,\n"
+        "    {",
+        1,
+    )
+
+    # `reset` likewise.
+    reset_sig = "    pub fn reset(&self) {"
+    if reset_sig not in content:
+        raise RuntimeError("generic.rs drift: stock `reset` signature not found")
+    content = content.replace(
+        reset_sig,
+        "    pub fn reset(&self)\n"
+        "    where\n"
+        "        REG: UnconstrainedWrite,\n"
+        "    {",
+        1,
+    )
+
+    # The rest already have a where clause: require the marker first.
+    for sig, bound in _GATED_METHODS:
+        head, tail = sig.split("\n    where\n", 1)
+        if sig not in content:
+            raise RuntimeError(f"generic.rs drift: signature not found:\n{sig}")
+        content = content.replace(
+            sig,
+            f"{head}\n    where\n        REG: {bound},\n{tail}",
+            1,
+        )
+
+    # The generic Debug impl performs a read; it now needs the read marker.
+    dbg = ("impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
+           "where\n"
+           "    R<REG>: core::fmt::Debug,")
+    if dbg not in content:
+        raise RuntimeError("generic.rs drift: Debug impl not found")
+    content = content.replace(
+        dbg,
+        "impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
+        "where\n"
+        "    R<REG>: core::fmt::Debug,\n"
+        "    REG: UnconstrainedRead,",
+        1,
+    )
+
+    content += "\n" + _GENERIC_ADDITIONS
+    generic_path.write_text(content)
+
+
+# --------------------------------------------------------------------------- #
+# Marker walk: every register in the device gets Unconstrained* impls except
+# the (spec, op) pairs the constraints gate.
+# --------------------------------------------------------------------------- #
+
+_READABLE_RE = re.compile(r"impl crate::Readable for (\w+) \{")
+_WRITABLE_RE = re.compile(r"impl crate::Writable for (\w+) \{")
+
+
+def add_marker_impls(device_dir: Path, gated: set[tuple[str, str]]) -> int:
+    """Append Unconstrained* marker impls to every register file. Returns the
+    number of files patched. ``gated`` holds (RegisterSpec, op) pairs to skip
+    — absence of the marker IS the gate."""
+    patched = 0
+    for rs_file in sorted(device_dir.rglob("*.rs")):
+        text = rs_file.read_text()
+        if MARKER_SENTINEL in text:
+            raise RuntimeError(
+                f"{rs_file} already carries LIDAR markers; injection is one-shot"
             )
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(rust_code)
-        print(f"Generated: {output_path}")
+        readable = _READABLE_RE.findall(text)
+        writable = _WRITABLE_RE.findall(text)
+        if not readable and not writable:
+            continue
+        lines = ["", MARKER_SENTINEL]
+        for spec in readable:
+            if (spec, "read") not in gated:
+                lines.append(f"impl crate::UnconstrainedRead for {spec} {{}}")
+        for spec in writable:
+            if (spec, "write") not in gated:
+                lines.append(f"impl crate::UnconstrainedWrite for {spec} {{}}")
+        for spec in writable:
+            if spec in readable and (spec, "modify") not in gated:
+                lines.append(f"impl crate::UnconstrainedModify for {spec} {{}}")
+        if len(lines) > 2:
+            rs_file.write_text(text + "\n".join(lines) + "\n")
+            patched += 1
+    return patched
+
+
+def inject_constraints_module(peripheral_file: Path, module_code: str) -> None:
+    """Append `pub mod constraints { ... }` to the peripheral module file."""
+    text = peripheral_file.read_text()
+    if MODULE_SENTINEL in text:
+        raise RuntimeError(
+            f"{peripheral_file} already carries a LIDAR constraints module"
+        )
+    indented = "\n".join(
+        ("    " + line) if line.strip() else "" for line in module_code.splitlines()
+    )
+    text += (
+        f"\n{MODULE_SENTINEL}\n"
+        "///Datasheet access-constraint witnesses and checks\n"
+        f"pub mod constraints {{\n{indented}\n}}\n"
+    )
+    peripheral_file.write_text(text)
+
+
+def inject_into_pac(pac_root: Path, device: str, plan: RegisterPlan) -> None:
+    src = pac_root / "src"
+    generic = src / "generic.rs"
+    device_dir = src / device
+    peripheral_file = device_dir / f"{plan.peripheral}.rs"
+    for p in (generic, device_dir, peripheral_file):
+        if not p.exists():
+            raise FileNotFoundError(p)
+
+    patch_generic_rs(generic)
+    n = add_marker_impls(device_dir, plan.gated_ops())
+    inject_constraints_module(peripheral_file, generate_constraint_module(plan))
+    print(f"Patched generic.rs, added markers to {n} register files, "
+          f"injected constraints into {peripheral_file}")
+
+
+# --------------------------------------------------------------------------- #
+# CLI
+# --------------------------------------------------------------------------- #
+
+def main() -> None:
+    ap = argparse.ArgumentParser(
+        description="Generate trait-gated constraint Rust from RegisterInfo JSON"
+    )
+    ap.add_argument("input", help="RegisterInfo JSON (v1 schema)")
+    ap.add_argument("--peripheral", required=True, help="peripheral name, e.g. i2c1")
+    ap.add_argument("--output", help="write the standalone constraints module here")
+    ap.add_argument("--inject-pac",
+                    help="PAC crate root (e.g. vendored/pac/stm32f4) to inject into")
+    ap.add_argument("--device", default="stm32f405",
+                    help="device module inside the PAC (default: stm32f405)")
+    args = ap.parse_args()
+
+    data = json.loads(Path(args.input).read_text())
+    plan = RegisterPlan(RegisterInfo(**data), args.peripheral)
+
+    if args.inject_pac:
+        inject_into_pac(Path(args.inject_pac), args.device, plan)
+    else:
+        code = generate_constraint_module(plan)
+        if args.output:
+            out = Path(args.output)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(code)
+            print(f"Generated: {out}")
+        else:
+            sys.stdout.write(code)
 
 
 if __name__ == "__main__":
