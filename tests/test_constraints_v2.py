@@ -515,14 +515,17 @@ def run_dir(tmp_path):
             "consequence": "lock sequence aborted",
             "datasheet_text": "A specific write sequence must be applied.",
         },
+        # NOTE: op is "modify", not "read" -- a same-register hardware-evidence
+        # READ gate is now rejected as self_defeating_read_gate (stage-0 lint,
+        # covered in tests/test_collect_lint.py).
         {
             "target_register": "GPIOA_LCKR", "target_fields": [],
-            "target_operation": "read",
+            "target_operation": "modify",
             "preconditions": [{"register_name": "GPIOA_LCKR", "field_name": "LCKK",
                                "required_state": "set"}],
             "postconditions": [], "severity": "warning",
             "consequence": "stale lock status",
-            "datasheet_text": "Read the LCKK bit.",
+            "datasheet_text": "Modify while LCKK is set.",
         },
     ])))
 
@@ -650,7 +653,7 @@ def test_collect_end_to_end_without_svd(run_dir, tmp_path):
     lckr = json.loads((out_dir / "gpioa_lckr.json").read_text())
     assert len(lckr["access_constraints"]) == 2          # v1 untouched
     assert len(lckr["access_constraints_v2"]) == 1
-    assert lckr["access_constraints_v2"][0]["target_operation"] == "read"
+    assert lckr["access_constraints_v2"][0]["target_operation"] == "modify"
     bad, good = lckr["constraint_reports"]
     assert bad["kinds"] == [] and bad["rejects"][0]["reason"] == "unparseable_required_state"
     assert good["kinds"] == ["state_gate"] and good["rejects"] == []
