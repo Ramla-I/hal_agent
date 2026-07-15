@@ -53,9 +53,19 @@ APP_DIR = Path(__file__).resolve().parent
 
 RUST_CODEGEN = APP_DIR / "rust_codegen.py"
 CRATE_DIR = APP_DIR / "constraint_test"
-FIXTURE = CRATE_DIR / "stm32f405_i2c1.json"
-GOLDEN = CRATE_DIR / "i2c1_expected_constraints.rs"
 MAIN_RS = CRATE_DIR / "src" / "main.rs"
+
+# (fixture json, peripheral, golden file) — every entry is golden-diffed and
+# all of them are injected together for the compile tests. The spi1/rcc
+# fixtures are real generator output (cross-register read/write gates).
+FIXTURES = [
+    (CRATE_DIR / "stm32f405_i2c1.json", "i2c1",
+     CRATE_DIR / "i2c1_expected_constraints.rs"),
+    (CRATE_DIR / "stm32f405_spi1_txcrcr.json", "spi1",
+     CRATE_DIR / "spi1_txcrcr_expected_constraints.rs"),
+    (CRATE_DIR / "stm32f405_rcc_sscgr.json", "rcc",
+     CRATE_DIR / "rcc_sscgr_expected_constraints.rs"),
+]
 
 # The generated stm32f4 PAC, provisioned from crates.io by get_pac.py.
 PAC_ROOT = APP_DIR / "vendored" / "pac" / "stm32f4"
@@ -63,8 +73,6 @@ PAC_SRC = PAC_ROOT / "src"
 PAC_GENERIC = PAC_SRC / "generic.rs"
 DEVICE = "stm32f405"
 DEVICE_DIR = PAC_SRC / DEVICE
-
-PERIPHERAL = "i2c1"
 
 # Separates the human-readable header in the golden file from the bytes that
 # must match rust_codegen.py output. Appears on its own line, exactly once.
@@ -89,45 +97,46 @@ def _skip(test_name: str, reason: str) -> None:
 # Test 1: golden diff
 # --------------------------------------------------------------------------- #
 
-def _generate_standalone(out_path: Path) -> None:
+def _generate_standalone(fixture: Path, peripheral: str, out_path: Path) -> None:
     subprocess.run(
-        [sys.executable, str(RUST_CODEGEN), str(FIXTURE),
-         "--peripheral", PERIPHERAL, "--output", str(out_path)],
+        [sys.executable, str(RUST_CODEGEN), str(fixture),
+         "--peripheral", peripheral, "--output", str(out_path)],
         check=True, capture_output=True, text=True,
     )
 
 
-def _golden_generated_section() -> str:
-    lines = GOLDEN.read_text().splitlines()
+def _golden_generated_section(golden: Path) -> str:
+    lines = golden.read_text().splitlines()
     for i, line in enumerate(lines):
         if line.strip() == GOLDEN_MARKER:
             return "\n".join(lines[i + 1:])
     raise AssertionError(
-        f"Golden file {GOLDEN.name} is missing its marker line "
+        f"Golden file {golden.name} is missing its marker line "
         f"'{GOLDEN_MARKER}'."
     )
 
 
 def test_codegen_matches_golden():
-    """Generated constraints must match the committed golden, line for line."""
-    with tempfile.TemporaryDirectory() as td:
-        out = Path(td) / "constraints.rs"
-        _generate_standalone(out)
-        generated = out.read_text()
+    """Every fixture's output must match its committed golden, line for line."""
+    for fixture, peripheral, golden in FIXTURES:
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "constraints.rs"
+            _generate_standalone(fixture, peripheral, out)
+            generated = out.read_text()
 
-    expected = _golden_generated_section()
-    if generated.splitlines() != expected.splitlines():
-        diff = "\n".join(difflib.unified_diff(
-            expected.splitlines(), generated.splitlines(),
-            fromfile=f"{GOLDEN.name} (expected)",
-            tofile="rust_codegen.py output (actual)",
-            lineterm="",
-        ))
-        raise AssertionError(
-            "Generated codegen output no longer matches the golden "
-            f"{GOLDEN.name}. If this change is intentional, refresh the "
-            "golden's generated section (see its header).\n\n" + diff
-        )
+        expected = _golden_generated_section(golden)
+        if generated.splitlines() != expected.splitlines():
+            diff = "\n".join(difflib.unified_diff(
+                expected.splitlines(), generated.splitlines(),
+                fromfile=f"{golden.name} (expected)",
+                tofile=f"rust_codegen.py output for {fixture.name} (actual)",
+                lineterm="",
+            ))
+            raise AssertionError(
+                "Generated codegen output no longer matches the golden "
+                f"{golden.name}. If this change is intentional, refresh the "
+                "golden's generated section (see its header).\n\n" + diff
+            )
 
 
 # --------------------------------------------------------------------------- #
@@ -139,7 +148,10 @@ def _cargo_available() -> bool:
 
 
 def _pac_provisioned() -> bool:
-    return PAC_GENERIC.is_file() and (DEVICE_DIR / f"{PERIPHERAL}.rs").is_file()
+    return PAC_GENERIC.is_file() and all(
+        (DEVICE_DIR / f"{peripheral}.rs").is_file()
+        for _, peripheral, _ in FIXTURES
+    )
 
 
 def _tree_digest(*roots: Path) -> str:
@@ -165,12 +177,12 @@ class _InjectedPac:
         shutil.copytree(DEVICE_DIR, backup / DEVICE)
         self._main = MAIN_RS.read_bytes()
         self._digest = _tree_digest(PAC_GENERIC, DEVICE_DIR)
-        inject = subprocess.run(
-            [sys.executable, str(RUST_CODEGEN), str(FIXTURE),
-             "--peripheral", PERIPHERAL,
-             "--inject-pac", str(PAC_ROOT), "--device", DEVICE],
-            capture_output=True, text=True,
-        )
+        cmd = [sys.executable, str(RUST_CODEGEN),
+               str(FIXTURES[0][0]), "--peripheral", FIXTURES[0][1],
+               "--inject-pac", str(PAC_ROOT), "--device", DEVICE]
+        for fixture, peripheral, _ in FIXTURES[1:]:
+            cmd += ["--constraint", f"{peripheral}={fixture}"]
+        inject = subprocess.run(cmd, capture_output=True, text=True)
         if inject.returncode != 0:
             self._restore()
             raise AssertionError(
@@ -239,6 +251,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! { loop {} }
 #[no_mangle]
 pub extern "C" fn main() -> ! {
     let dp = unsafe { stm32f405::Peripherals::steal() };
+    #[allow(unused_variables)]
     let i2c1 = &dp.I2C1;
     BODY
     loop {}
@@ -305,6 +318,16 @@ ILLEGAL_PROGRAMS = [
     (
         "witnessless_from_write",
         "    i2c1.cr1().from_write(|w| { w.pe().enabled(); });",
+        "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "witnessless_read_of_read_gated",
+        "    let _ = dp.SPI1.txcrcr().read().bits();",
+        "E0277", "read-constrained by its datasheet",
+    ),
+    (
+        "witnessless_cross_register_write",
+        "    dp.RCC.sscgr().write(|w| unsafe { w.bits(0) });",
         "E0277", "write-constrained by its datasheet",
     ),
 ]

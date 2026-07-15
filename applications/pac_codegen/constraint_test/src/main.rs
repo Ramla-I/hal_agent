@@ -73,5 +73,22 @@ pub extern "C" fn main() -> ! {
     i2c1.cr2().reset();
     let _ = i2c1.cr2().read().bits();
 
+    // === Cross-register write gate (RCC_SSCGR <= RCC_CR.PLLON cleared) ===
+    let _ = dp.RCC.sscgr().write_when_ready(|w| unsafe { w.bits(0) }, dp.RCC.cr());
+    if let Ok(witness) = dp.RCC.sscgr().check_write_ready(dp.RCC.cr()) {
+        dp.RCC.sscgr().write_witnessed(|w| unsafe { w.bits(0) }, witness);
+    }
+
+    // === Cross-register READ gate (SPI_TXCRCR <= SPI_SR.BSY cleared) ===
+    let spi1 = &dp.SPI1;
+    if let Ok(r) = spi1.txcrcr().read_when_ready(spi1.sr()) {
+        let _ = r.bits();
+    }
+    if let Ok(witness) = spi1.txcrcr().check_read_ready(spi1.sr()) {
+        let _ = spi1.txcrcr().read_witnessed(witness).bits();
+    }
+    // SAFETY: escape hatch for the read surface, compilation test only.
+    let _ = unsafe { spi1.txcrcr().read_unwitnessed() }.bits();
+
     loop {}
 }

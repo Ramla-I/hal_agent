@@ -1,0 +1,84 @@
+{
+ "datasheet_register_abbreviation": "RCC_SSCGR",
+ "address_offset": "0x80",
+ "reset_value": "0x00000000",
+ "size": 32,
+ "subfields": [
+  {
+   "name": "SSCGEN",
+   "description": "Spread spectrum modulation enable",
+   "access": "read-write",
+   "bit_number": {
+    "start_bit": 31,
+    "end_bit": 31
+   },
+   "enumerated_values": [
+    {
+     "value": "0",
+     "name": "Disable"
+    },
+    {
+     "value": "1",
+     "name": "Enable"
+    }
+   ]
+  },
+  {
+   "name": "SPREADSEL",
+   "description": "Spread Select",
+   "access": "read-write",
+   "bit_number": {
+    "start_bit": 30,
+    "end_bit": 30
+   },
+   "enumerated_values": [
+    {
+     "value": "0",
+     "name": "CenterSpread"
+    },
+    {
+     "value": "1",
+     "name": "DownSpread"
+    }
+   ]
+  },
+  {
+   "name": "INCSTEP",
+   "description": "Incrementation step",
+   "access": "read-write",
+   "bit_number": {
+    "start_bit": 27,
+    "end_bit": 13
+   },
+   "enumerated_values": []
+  },
+  {
+   "name": "MODPER",
+   "description": "Modulation period",
+   "access": "read-write",
+   "bit_number": {
+    "start_bit": 12,
+    "end_bit": 0
+   },
+   "enumerated_values": []
+  }
+ ],
+ "access_constraints": [
+  {
+   "target_register": "RCC_SSCGR",
+   "target_fields": [],
+   "target_operation": "write",
+   "preconditions": [
+    {
+     "register_name": "RCC_CR",
+     "field_name": "PLLON",
+     "required_state": "cleared"
+    }
+   ],
+   "postconditions": [],
+   "severity": "error",
+   "consequence": "Writing while the main PLL is enabled may be ignored or cause undefined behavior.",
+   "datasheet_text": "The RCC_SSCGR register must be written either before the main PLL is enabled or after the main PLL disabled. To write before setting CR[24]=PLLON bit."
+  }
+ ]
+}

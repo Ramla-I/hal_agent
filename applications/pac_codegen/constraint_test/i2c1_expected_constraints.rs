@@ -77,8 +77,8 @@ impl crate::Reg<super::cr1::CR1rs> {
         Ok(Cr1WriteWitness { _priv: () })
     }
 
-    /// Check and write in one call — the witness
-    /// never escapes, so the check-to-write window is fixed by this body.
+    /// Check and write in one call — the witness never escapes,
+    /// so the check-to-write window is fixed by this body.
     #[inline(always)]
     pub fn write_when_ready<F>(&self, f: F) -> Result<<super::cr1::CR1rs as crate::RegisterSpec>::Ux, Cr1ConstraintError>
     where
