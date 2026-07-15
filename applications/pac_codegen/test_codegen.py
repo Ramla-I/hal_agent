@@ -37,16 +37,24 @@ Make sure that changes to ``rust_codegen.py`` (or to the shared schema in
   sections on macOS). ``cargo check`` is also much faster.
 
   NOTE: the ``stm32f4`` crate source (``generic.rs``, the device modules) is a
-  *generated* svd2rust artifact that the ``stm32-rs`` submodule does NOT ship.
-  Fetching the submodule alone is therefore not enough -- the PAC must already
-  have been generated on disk. When it (or cargo) is absent, the two checks above
-  SKIP rather than fail, so the suite still passes on a fresh clone.
+  *generated* svd2rust artifact. Provision it with one command::
+
+      python applications/pac_codegen/get_pac.py
+
+  which downloads the pinned, checksum-verified crates.io package (svd2rust
+  PACs publish their generated source) into ``vendored/pac/stm32f4/``. When the
+  PAC (or cargo) is absent, the compile checks SKIP rather than fail so the
+  suite still passes on a fresh clone -- EXCEPT when the environment variable
+  ``LIDAR_REQUIRE_PAC_TESTS`` is set (CI sets it), in which case any would-be
+  skip is a hard failure. Skipping enforcement tests silently is how a
+  non-compiling generator once shipped; the flag makes that impossible in CI.
 
 Run directly (``python test_codegen.py``) or under pytest.
 """
 
 import difflib
 import hashlib
+import os
 import shutil
 import subprocess
 import sys
@@ -61,12 +69,25 @@ CRATE_DIR = APP_DIR / "constraint_test"
 FIXTURE = CRATE_DIR / "stm32f405_i2c1.json"
 GOLDEN = CRATE_DIR / "i2c1_expected_constraints.rs"
 
-# The generated stm32f4 PAC (only present once the submodule is fetched AND the
-# crate has been generated via svd2rust). Injection mutates exactly these two
-# files.
-PAC_SRC = APP_DIR / "vendored" / "stm32-rs" / "stm32f4" / "src"
+# The generated stm32f4 PAC, provisioned from crates.io by get_pac.py.
+# Injection mutates exactly these two files.
+PAC_SRC = APP_DIR / "vendored" / "pac" / "stm32f4" / "src"
 PAC_GENERIC = PAC_SRC / "generic.rs"
 PAC_MODRS = PAC_SRC / "stm32f405" / "mod.rs"
+
+# When set (CI does), a compile test that would SKIP fails instead.
+REQUIRE_ENV = "LIDAR_REQUIRE_PAC_TESTS"
+
+
+def _skip(test_name: str, reason: str) -> None:
+    """Record a skip -- or fail hard when the CI gate is armed."""
+    if os.environ.get(REQUIRE_ENV):
+        raise AssertionError(
+            f"{test_name} would SKIP ({reason}), but {REQUIRE_ENV} is set: "
+            "compile tests are required to run in this environment. "
+            "Provision the PAC with `python applications/pac_codegen/get_pac.py`."
+        )
+    print(f"SKIP {test_name}: {reason}")
 
 PERIPHERAL = "i2c1"
 
@@ -148,11 +169,12 @@ def test_constraint_test_compiles():
     available.
     """
     if not _cargo_available():
-        print("SKIP test_constraint_test_compiles: cargo not on PATH")
+        _skip("test_constraint_test_compiles", "cargo not on PATH")
         return
     if not _pac_generated():
-        print("SKIP test_constraint_test_compiles: generated stm32f4 PAC not "
-              f"found under {PAC_SRC} (fetch the submodule and generate the PAC).")
+        _skip("test_constraint_test_compiles",
+              f"generated stm32f4 PAC not found under {PAC_SRC} "
+              "(run get_pac.py)")
         return
 
     # Capture the pristine bytes of the only two files injection touches.
@@ -239,11 +261,12 @@ def test_unconstrained_write_fails_to_compile():
     compiles. Skips under the same conditions as test_constraint_test_compiles.
     """
     if not _cargo_available():
-        print("SKIP test_unconstrained_write_fails_to_compile: cargo not on PATH")
+        _skip("test_unconstrained_write_fails_to_compile", "cargo not on PATH")
         return
     if not _pac_generated():
-        print("SKIP test_unconstrained_write_fails_to_compile: generated stm32f4 "
-              f"PAC not found under {PAC_SRC}.")
+        _skip("test_unconstrained_write_fails_to_compile",
+              f"generated stm32f4 PAC not found under {PAC_SRC} "
+              "(run get_pac.py)")
         return
 
     main_rs = CRATE_DIR / "src" / "main.rs"

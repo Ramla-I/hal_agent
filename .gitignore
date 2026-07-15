@@ -255,3 +255,5 @@ optimization_validator/**/hold_set_results/
 analysis/*.csv
 plots/*.pdf
 plots/*.png
+# pac_codegen: crates.io-provisioned generated PAC for compile tests (see get_pac.py)
+applications/pac_codegen/vendored/pac/

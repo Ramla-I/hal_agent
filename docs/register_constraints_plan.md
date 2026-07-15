@@ -796,5 +796,6 @@ Codegen records `enforced_as` (same enum) per constraint in `manifest.json`, mak
 
 *(Record departures from this plan here as they happen, per project convention.)*
 
+- 2026-07-15 (step A): the plan's "stub mini-PAC fixture" is replaced by provisioning the **published crates.io package** (`stm32f4` 0.16.0, checksum-verified, cached, `get_pac.py`) — svd2rust PACs publish their generated source, so one 4 MB download yields a byte-authentic `generic.rs` + device modules; a hand-maintained stub could drift from real svd2rust output, and fidelity was the whole point of §2 defect 1. Consequence: the canonical test PAC lives at `vendored/pac/stm32f4/` (git-ignored), not in the `stm32-rs` submodule; `constraint_test/Cargo.toml` repointed. CI's enforcement-test step is `continue-on-error` until step B lands (the pre-B injector cannot handle the multi-file crates.io layout — expected, documented); step B removes that line.
 - 2026-07-15: initial draft (from the PR-15 multi-agent review + STM corpus audit; session artifacts: nine agent reports + `curated_stm_constraint_examples.json` in the session scratchpad).
 

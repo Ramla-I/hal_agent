@@ -1,0 +1,75 @@
+# CI for the enforcement arm (applications/pac_codegen).
+#
+# Two jobs:
+#   python-tests — golden diff + schema consistency; no Rust toolchain needed.
+#   pac-compile  — provisions the real generated stm32f4 PAC from crates.io
+#                  (checksum-verified, cached) and runs the compile/enforcement
+#                  tests with LIDAR_REQUIRE_PAC_TESTS=1, so a would-be SKIP is
+#                  a hard failure. Silently-skipped enforcement tests are how a
+#                  non-compiling generator once shipped; this gate exists so
+#                  that cannot recur.
+
+name: pac-codegen
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "applications/pac_codegen/**"
+      - "defs.py"
+      - "prompts/**"
+      - "tests/**"
+      - ".github/workflows/pac-codegen.yml"
+  pull_request:
+    paths:
+      - "applications/pac_codegen/**"
+      - "defs.py"
+      - "prompts/**"
+      - "tests/**"
+      - ".github/workflows/pac-codegen.yml"
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pydantic pytest
+      - name: Golden diff + schema consistency
+        run: |
+          pytest applications/pac_codegen/test_codegen.py::test_codegen_matches_golden \
+                 tests/test_prompt_schema_consistency.py -q
+
+  pac-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pydantic pytest
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cache provisioned PAC + cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            applications/pac_codegen/vendored/pac
+            applications/pac_codegen/constraint_test/target
+            ~/.cargo/registry
+          key: pac-stm32f4-0.16.0-${{ runner.os }}-${{ hashFiles('applications/pac_codegen/constraint_test/Cargo.lock') }}
+      - name: Provision generated PAC (crates.io, checksum-verified)
+        run: python applications/pac_codegen/get_pac.py
+      - name: Pristine PAC compiles (also primes the cache)
+        run: cargo check --features stm32f405
+        working-directory: applications/pac_codegen/vendored/pac/stm32f4
+      # Step B arms this fully: compile + enforcement tests, skip = fail.
+      - name: Compile + enforcement tests (skips forbidden)
+        env:
+          LIDAR_REQUIRE_PAC_TESTS: "1"
+        run: pytest applications/pac_codegen/test_codegen.py -q
+        # Until roadmap step B lands the trait-gating emitter, the injector
+        # cannot handle the multi-file crates.io PAC layout; keep the gate
+        # observable but non-blocking. Step B REMOVES this line.
+        continue-on-error: true
