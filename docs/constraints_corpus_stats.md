@@ -125,6 +125,15 @@ Outliers worth knowing: rm0490 (57.5% rejects — smallest SVD of a multi-device
 
 ## %s root cause
 
+> **Resolution (Ramla, 2026-07-16): accepted as-is — no pipeline fix.** The
+> verified-datasheet annotation tooling already handles `%s` dim templates
+> downstream (`annotate.py` expands verified `%s` dim registers/fields on
+> session exit, PR #12), and both sides of the coverage loop are consistently
+> templated, so the pipeline behavior stays. For the enforcement arm,
+> stage-0 lint keeps quarantining placeholder names (`placeholder_in_name`
+> rejects, never guessed). The proposed fix below is retained for reference
+> only, in case a future need arises to make run dirs concrete-per-instance.
+
 **Symptom:** 424 of 15,388 run-dir register files (and 89–96 constraints) carry svd2rust `<dim>` placeholders in names — `tim3_ccr%s`, `rtc_alrm%sssr`, `dac_dhr12r%s`, `adc1_jdr%s`, `rtc_bkp%sr`. (Plan §5.1 attributes this to "derivedFrom plumbing"; the actual mechanism is SVD `<dim>` array templates — derivedFrom is unrelated.)
 
 **Mechanism (exact path):**
