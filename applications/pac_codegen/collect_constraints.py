@@ -1200,7 +1200,9 @@ def collect_constraints(
     return results
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    """CLI entry point; ``argv`` lets drivers (inject_from_run.py) call this
+    in-process instead of shelling out. None = use sys.argv as before."""
     parser = argparse.ArgumentParser(
         description=(
             "Collect access_constraints from a generator-output run directory, "
@@ -1235,7 +1237,7 @@ def main() -> None:
             "it, v2 constraints carry the 'svd_unchecked' lint flag."
         ),
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     results = collect_constraints(
         args.run_dir,

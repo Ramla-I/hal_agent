@@ -282,6 +282,27 @@ class RegisterPlan:
     def has_read_gate(self) -> bool:
         return "read" in self.preconditions
 
+    def prune_for_access(self, readable: bool, writable: bool) -> list[str]:
+        """Drop gates the register's access mode cannot express (a write-only
+        register has no `modify`/`read` to gate; svd2rust never emits them and
+        the gate impls would not compile). Same-register preconditions also
+        need `self.read()`, so a non-readable register can only carry
+        cross-register checks. Returns the removed operations."""
+        removed = []
+        for op in list(self.preconditions):
+            bad = (
+                (op == "write" and not writable)
+                or (op == "modify" and not (readable and writable))
+                or (op == "read" and not readable)
+                or (not readable and any(
+                    p.source is None for p in self.preconditions[op]))
+            )
+            if bad:
+                del self.preconditions[op]
+                self.docs.pop(op, None)
+                removed.append(op)
+        return removed
+
     # (peripheral module, register-spec type, gated op), for the marker walk
     def gated_ops(self) -> set[tuple[str, str, str]]:
         spec = f"{self.reg_name.upper()}rs"
@@ -795,8 +816,12 @@ def add_marker_impls(device_dir: Path, gated: set[tuple[str, str, str]]) -> int:
     return patched
 
 
-def inject_constraints_module(peripheral_file: Path, plan: RegisterPlan) -> None:
-    """Append `pub mod constraints { ... }` to the peripheral module file.
+def inject_constraints_module(peripheral_file: Path,
+                              plans: list[RegisterPlan]) -> None:
+    """Append ONE `pub mod constraints { ... }` holding every constrained
+    register of this peripheral (a peripheral may have several — e.g. F1's
+    AFIO gates both EVCR and MAPR; type names are register-scoped so the
+    merged module cannot collide).
 
     A read-gated register makes `Reg<...>` lose its (read-performing) Debug
     impl, so the peripheral RegisterBlock's `#[derive(Debug)]` must go — a
@@ -807,7 +832,7 @@ def inject_constraints_module(peripheral_file: Path, plan: RegisterPlan) -> None
         raise RuntimeError(
             f"{peripheral_file} already carries a LIDAR constraints module"
         )
-    if plan.has_read_gate():
+    if any(plan.has_read_gate() for plan in plans):
         derive = "#[derive(Debug)]\n///Register block\npub struct RegisterBlock {"
         if derive in text:
             text = text.replace(
@@ -816,7 +841,18 @@ def inject_constraints_module(peripheral_file: Path, plan: RegisterPlan) -> None
                 "read-gated register\n///Register block\npub struct RegisterBlock {",
                 1,
             )
-    module_code = generate_constraint_module(plan)
+    parts = []
+    for i, p in enumerate(plans):
+        code = generate_constraint_module(p)
+        if i > 0:
+            # `//!` inner docs are only legal at the top of the module; demote
+            # subsequent registers' headers to plain comments.
+            code = "\n".join(
+                ("//" + line[3:]) if line.startswith("//!") else line
+                for line in code.splitlines()
+            ) + "\n"
+        parts.append(code)
+    module_code = "\n".join(parts)
     indented = "\n".join(
         ("    " + line) if line.strip() else "" for line in module_code.splitlines()
     )
@@ -840,17 +876,34 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
         peripheral_file = device_dir / f"{plan.peripheral}.rs"
         if not peripheral_file.is_file():
             raise FileNotFoundError(peripheral_file)
+        # Prune gates the register's real access mode can't express (checked
+        # against the generated register file itself — the ground truth).
+        reg_file = device_dir / plan.peripheral / f"{plan.reg_lower}.rs"
+        spec = f"{plan.reg_name.upper()}rs"
+        reg_text = reg_file.read_text() if reg_file.is_file() else ""
+        removed = plan.prune_for_access(
+            readable=f"impl crate::Readable for {spec}" in reg_text,
+            writable=f"impl crate::Writable for {spec}" in reg_text,
+        )
+        if removed:
+            print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
+                  f"{removed} gate(s) — unsupported by the register's "
+                  "access mode")
+        if not plan.preconditions:
+            print(f"  note: {plan.peripheral}/{plan.reg_name}: nothing left "
+                  "to gate; skipped")
+            continue
         by_periph.setdefault(plan.peripheral, []).append(plan)
         gated |= plan.gated_ops()
 
     patch_generic_rs(generic)
     n = add_marker_impls(device_dir, gated)
     for periph, periph_plans in by_periph.items():
-        for plan in periph_plans:
-            inject_constraints_module(device_dir / f"{periph}.rs", plan)
+        inject_constraints_module(device_dir / f"{periph}.rs", periph_plans)
+    kept = [p for periph_plans in by_periph.values() for p in periph_plans]
     print(f"Patched generic.rs, added markers to {n} register files, "
           f"injected constraints for: "
-          + ", ".join(f"{p.peripheral}/{p.reg_name}" for p in plans))
+          + ", ".join(f"{p.peripheral}/{p.reg_name}" for p in kept))
 
 
 # --------------------------------------------------------------------------- #

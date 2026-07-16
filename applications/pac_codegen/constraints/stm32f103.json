@@ -1,0 +1,500 @@
+{
+ "device": "stm32f103",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0008/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0008/svd/stm32f103.svd",
+ "note": "constraints this device's crate enforces, post collection-lint and emitter selection; regenerate with inject_from_run.py",
+ "registers": [
+  {
+   "peripheral": "afio",
+   "register": "EVCR",
+   "gated_operations": [
+    "modify",
+    "read",
+    "write"
+   ],
+   "preconditions": {
+    "read": [
+     "RCC_APB2ENR.AFIOEN set"
+    ],
+    "write": [
+     "RCC_APB2ENR.AFIOEN set"
+    ],
+    "modify": [
+     "RCC_APB2ENR.AFIOEN set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ],
+    "write": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ],
+    "modify": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ]
+   }
+  },
+  {
+   "peripheral": "afio",
+   "register": "EXTICR1",
+   "gated_operations": [
+    "modify",
+    "read",
+    "write"
+   ],
+   "preconditions": {
+    "read": [
+     "RCC_APB2ENR.AFIOEN set"
+    ],
+    "write": [
+     "RCC_APB2ENR.AFIOEN set"
+    ],
+    "modify": [
+     "RCC_APB2ENR.AFIOEN set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ],
+    "write": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ],
+    "modify": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ]
+   }
+  },
+  {
+   "peripheral": "afio",
+   "register": "EXTICR2",
+   "gated_operations": [
+    "modify",
+    "read",
+    "write"
+   ],
+   "preconditions": {
+    "read": [
+     "RCC_APB2ENR.AFIOEN set"
+    ],
+    "write": [
+     "RCC_APB2ENR.AFIOEN set"
+    ],
+    "modify": [
+     "RCC_APB2ENR.AFIOEN set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ],
+    "write": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ],
+    "modify": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ]
+   }
+  },
+  {
+   "peripheral": "afio",
+   "register": "EXTICR3",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RCC_APB2ENR.AFIOEN set"
+    ],
+    "modify": [
+     "RCC_APB2ENR.AFIOEN set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ],
+    "modify": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ]
+   }
+  },
+  {
+   "peripheral": "afio",
+   "register": "EXTICR4",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RCC_APB2ENR.AFIOEN set"
+    ],
+    "modify": [
+     "RCC_APB2ENR.AFIOEN set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ],
+    "modify": [
+     "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ]
+   }
+  },
+  {
+   "peripheral": "bkp",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "TPE cleared"
+    ],
+    "modify": [
+     "TPE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Setting the TPAL and TPE bits at the same time is always safe, however resetting both at the same time can generate a spurious Tamper event. For this reason it is recommended to change TPAL bit only when the TPE bit is reset."
+    ],
+    "modify": [
+     "Setting the TPAL and TPE bits at the same time is always safe, however resetting both at the same time can generate a spurious Tamper event. For this reason it is recommended to change TPAL bit only when the TPE bit is reset."
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "CR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "STOP cleared",
+     "START cleared",
+     "PEC cleared"
+    ],
+    "modify": [
+     "STOP cleared",
+     "START cleared",
+     "PEC cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
+    ],
+    "modify": [
+     "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
+    ]
+   }
+  },
+  {
+   "peripheral": "iwdg",
+   "register": "RLR",
+   "gated_operations": [
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "IWDG_SR.RVU cleared"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "Reading this register returns the reload value from the VDD voltage domain. This value may not be up to date/valid if a write operation to this register is ongoing. For this reason the value read from this register is valid only when the RVU bit in the IWDG_SR register is reset."
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "BDCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "PWR_CR.DBP set"
+    ],
+    "modify": [
+     "PWR_CR.DBP set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The LSEON, LSEBYP, RTCSEL and RTCEN bits of the Backup domain control register (RCC_BDCR) are in the Backup domain. As a result, after Reset, these bits are write\u2011protected and the DBP bit in the Power control register (PWR_CR) has to be set before these can be modified."
+    ],
+    "modify": [
+     "The LSEON, LSEBYP, RTCSEL and RTCEN bits of the Backup domain control register (RCC_BDCR) are in the Backup domain. As a result, after Reset, these bits are write\u2011protected and the DBP bit in the Power control register (PWR_CR) has to be set before these can be modified."
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "CFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RCC_APB1ENR.USBEN cleared"
+    ],
+    "modify": [
+     "RCC_APB1ENR.USBEN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "USBPRE: Set and cleared by software to generate 48\u202fMHz USB clock. This bit must be valid before enabling the USB clock in the RCC_APB1ENR register. This bit can\u2019t be reset if the USB clock is enabled."
+    ],
+    "modify": [
+     "USBPRE: Set and cleared by software to generate 48\u202fMHz USB clock. This bit must be valid before enabling the USB clock in the RCC_APB1ENR register. This bit can\u2019t be reset if the USB clock is enabled."
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "HSEON cleared"
+    ],
+    "modify": [
+     "HSEON cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The HSEBYP bit can be written only if the HSE oscillator is disabled."
+    ],
+    "modify": [
+     "The HSEBYP bit can be written only if the HSE oscillator is disabled."
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "CRH",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_CRL.RTOFF set"
+    ],
+    "modify": [
+     "RTC_CRL.RTOFF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "It is not possible to write to the RTC_CRH register when the peripheral is completing a previous write operation (flagged by RTOFF=0, see Section 18.3.4)."
+    ],
+    "modify": [
+     "It is not possible to write to the RTC_CRH register when the peripheral is completing a previous write operation (flagged by RTOFF=0, see Section 18.3.4)."
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "PRLH",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_CRL.RTOFF set"
+    ],
+    "modify": [
+     "RTC_CRL.RTOFF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The Prescaler Load registers ... are write-protected by the RTOFF bit in the RTC_CR register, and a write operation is allowed if the RTOFF value is \u20181\u2019."
+    ],
+    "modify": [
+     "The Prescaler Load registers ... are write-protected by the RTOFF bit in the RTC_CR register, and a write operation is allowed if the RTOFF value is \u20181\u2019."
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "CR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPE cleared"
+    ],
+    "modify": [
+     "SPE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation."
+    ],
+    "modify": [
+     "Note: This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation."
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "I2SPR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_I2SCFGR.I2SMOD cleared"
+    ],
+    "modify": [
+     "SPI_I2SCFGR.I2SMOD cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Bit 9 MCKOE ... Note: This bit should be configured when the I2S is disabled. It is used only when the I2S is in master mode. This bit is not used in SPI mode. Bit 8 ODD ... Note: This bit should be configured when the I2S is disabled. It is used only when the I2S is in master mode. This bit is not used in SPI mode. Bits 7:0 I2SDIV ... Note: These bits should be configured when the I2S is disabled. It is used only when the I2S is in master mode."
+    ],
+    "modify": [
+     "Bit 9 MCKOE ... Note: This bit should be configured when the I2S is disabled. It is used only when the I2S is in master mode. This bit is not used in SPI mode. Bit 8 ODD ... Note: This bit should be configured when the I2S is disabled. It is used only when the I2S is in master mode. This bit is not used in SPI mode. Bits 7:0 I2SDIV ... Note: These bits should be configured when the I2S is disabled. It is used only when the I2S is in master mode."
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "RXCRCR",
+   "gated_operations": [
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "SPI_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "A read to this register when the BSY Flag is set could return an incorrect value."
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "TXCRCR",
+   "gated_operations": [
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "SPI_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "A read to this register when the BSY Flag is set could return an incorrect value."
+    ]
+   }
+  },
+  {
+   "peripheral": "tim1",
+   "register": "CR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CEN cleared",
+     "CMS == 0x0"
+    ],
+    "modify": [
+     "CEN cleared",
+     "CMS == 0x0"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "It is not allowed to switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1).",
+     "Note: This bit is read only when the timer is configured in Center-aligned mode or Encoder mode."
+    ],
+    "modify": [
+     "It is not allowed to switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1).",
+     "Note: This bit is read only when the timer is configured in Center-aligned mode or Encoder mode."
+    ]
+   }
+  },
+  {
+   "peripheral": "tim2",
+   "register": "CR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CEN cleared",
+     "CMS == 0x0"
+    ],
+    "modify": [
+     "CEN cleared",
+     "CMS == 0x0"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "It is not allowed to switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1)",
+     "Note: This bit is read only when the timer is configured in Center-aligned mode or Encoder mode."
+    ],
+    "modify": [
+     "It is not allowed to switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1)",
+     "Note: This bit is read only when the timer is configured in Center-aligned mode or Encoder mode."
+    ]
+   }
+  },
+  {
+   "peripheral": "usart1",
+   "register": "CR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.TE cleared"
+    ],
+    "modify": [
+     "USART_CR1.TE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled."
+    ],
+    "modify": [
+     "These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled."
+    ]
+   }
+  }
+ ]
+}
