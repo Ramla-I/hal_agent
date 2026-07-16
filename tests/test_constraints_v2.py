@@ -451,7 +451,10 @@ def test_enforceability_state_gate():
     assert derive_enforceability(_gate([hw, sw])) == "witnessed_runtime_check"
     # All-software is pure action-witness ordering.
     assert derive_enforceability(_gate([sw])) == "compile_gate"
-    assert derive_enforceability(_gate([])) == "compile_gate"
+    # Vacuous gate (no conditions at all): nothing to enforce — doc_only,
+    # NOT compile_gate; counting it as enforceable inflates the paper metric
+    # (the v1 corpus carries 593 of these).
+    assert derive_enforceability(_gate([])) == "doc_only"
 
 
 def test_enforceability_other_kinds():

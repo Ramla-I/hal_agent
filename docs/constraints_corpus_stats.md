@@ -35,7 +35,9 @@ The sweep completed over all 32 run dirs with **zero crashes** in ~8 s.
 | `other`-rate | 0.0% | the lift never emits `other`; becomes meaningful at step-F re-extraction |
 | repairs logged | 194 | enum-name→value, `any` expansion, whole-register flag, severity `info`→`warning`, … |
 
-Enforceability of the 2,857 v2 gates (computed, never LLM-emitted): **2,243 `witnessed_runtime_check`** (≥1 hardware-evidence precondition) and **614 `compile_gate`** (all-software / no conditions).
+Enforceability of the 2,857 v2 gates (computed, never LLM-emitted): **2,243 `witnessed_runtime_check`** (≥1 hardware-evidence precondition), **614 `doc_only`**, **0 `compile_gate`**.
+
+> **Correction (2026-07-16):** an earlier revision reported the 614 as `compile_gate`. That bucket is almost entirely the **vacuous** constraints (empty pre- and postconditions, 593 in corpus) which satisfied "all preconditions are software" vacuously — counting them as compile-enforceable inflated the paper metric. `derive_enforceability` now classifies condition-less gates as `doc_only`. Zero `compile_gate` is the *correct* current number: the v1 corpus carries no `evidence` field, so every lifted condition defaults to hardware evidence; genuine compile-gates (software-action ordering: UE=0, CNF set/clear, FINIT=1) appear only after step-F re-extraction emits `evidence: "software"` — which makes this row a direct measure of what step F is for.
 
 ## Exact dedup
 

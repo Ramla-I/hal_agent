@@ -499,6 +499,12 @@ def derive_enforceability(constraint) -> Enforceability:
     """
     kind = constraint.kind
     if kind == "state_gate":
+        if not constraint.preconditions and not constraint.postconditions:
+            # Vacuous gate (v1 corpus has 593): nothing to check, nothing to
+            # gate — counting it as compile-enforceable would inflate the
+            # paper metric. It is documentation until re-extraction gives it
+            # structure.
+            return "doc_only"
         if any(p.evidence == "hardware" for p in constraint.preconditions):
             return "witnessed_runtime_check"
         return "compile_gate"
