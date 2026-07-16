@@ -64,8 +64,8 @@ by plain string search against the manual---no retrieval, no judgment---and
 the surrounding paragraph can be recovered as trusted context for later
 validation.
 
-\paragraph{An evidence dichotomy.}
-Each condition declares \emph{who establishes the state}: \texttt{hardware}
+\paragraph{Who establishes the state.}
+Each condition's \texttt{established\_by} key declares exactly that: \texttt{hardware}
 (software may only observe it---the running example, where hardware clears
 STOP) or \texttt{software} (the driver itself must establish it, e.g.\ ``this
 register may be written only while the peripheral is disabled''). The
@@ -78,16 +78,16 @@ multi-step sequences (unlock keys), write-once locks, delays, read
 side-effects, peripheral clock gates, value relations, and an explicit
 \texttt{other} escape valve so a real requirement that fits no kind is
 preserved verbatim rather than force-fitted or dropped. Enforceability is
-\emph{computed} from the kind and evidence, never emitted by the model.
+\emph{computed} from the kind and `established_by`, never emitted by the model.
 The running example in grammar form:
 
 \begin{lstlisting}
 { "kind": "state_gate",
   "target_register": "CR1", "target_operation": "write",
   "preconditions": [
-    {"register": "I2C_CR1", "field": "STOP",  "state": "cleared", "evidence": "hardware"},
-    {"register": "I2C_CR1", "field": "START", "state": "cleared", "evidence": "hardware"},
-    {"register": "I2C_CR1", "field": "PEC",   "state": "cleared", "evidence": "hardware"}],
+    {"register": "I2C_CR1", "field": "STOP",  "state": "cleared", "established_by": "hardware"},
+    {"register": "I2C_CR1", "field": "START", "state": "cleared", "established_by": "hardware"},
+    {"register": "I2C_CR1", "field": "PEC",   "state": "cleared", "established_by": "hardware"}],
   "postconditions": [],
   "severity": "error",
   "datasheet_text": "When the STOP, START or PEC bit is set, ..." }
@@ -164,7 +164,7 @@ runtime check at all.
 Of the 2{,}857 accepted gates, 2{,}243 translate to runtime-checked state
 witnesses and 614 remain documentation-only (they carry no checkable
 condition in the legacy corpus encoding); action witnesses appear once
-re-extraction emits the evidence field, making that split a direct measure
+re-extraction emits the `established_by` field, making that split a direct measure
 of the re-extraction step's value.
 
 \subsection{Applying the Changes to PAC Crates}

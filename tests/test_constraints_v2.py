@@ -4,7 +4,7 @@ Grammar v2 tests: models, validators, v1->v2 lift, enforceability, collection.
 Covers the normative spec in docs/register_constraints_plan.md Appendix B
 (mirrored in docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md):
 
-- FieldCondition validators (evidence/action_operation iff, equals/values iff,
+- FieldCondition validators (established_by/action_operation iff, equals/values iff,
   hex/bin/dec value normalization, whole_register flag);
 - the discriminated union round-trip for all eight kinds;
 - every drift-disposition row of the B.6 v1->v2 lift table, using the REAL
@@ -108,15 +108,15 @@ def test_parse_value_token_rejects_drift(bad):
 
 def test_field_condition_software_requires_action_operation():
     with pytest.raises(ValidationError, match="action_operation"):
-        FieldCondition(**make_condition(evidence="software"))
+        FieldCondition(**make_condition(established_by="software"))
     # And with it, parses fine.
-    cond = FieldCondition(**make_condition(evidence="software", action_operation="modify"))
+    cond = FieldCondition(**make_condition(established_by="software", action_operation="modify"))
     assert cond.action_operation == "modify"
 
 
 def test_field_condition_hardware_forbids_action_operation():
     with pytest.raises(ValidationError, match="action_operation"):
-        FieldCondition(**make_condition(evidence="hardware", action_operation="write"))
+        FieldCondition(**make_condition(established_by="hardware", action_operation="write"))
 
 
 def test_field_condition_equals_requires_values():
@@ -151,14 +151,14 @@ def test_field_ref_whole_register_flag():
 
 
 def test_state_gate_rejects_observed_state_postconditions():
-    # B.2.1: postconditions are software-evidence ONLY (PR 15's silently
+    # B.2.1: postconditions are software-established ONLY (PR 15's silently
     # dropped class is a loud parse error in v2).
     with pytest.raises(ValidationError, match="postcondition"):
         StateGate(
             target_register="RTC_CNTH", target_operation="write",
             preconditions=[],
             postconditions=[FieldCondition(register="RTC_CRL", field="CNF",
-                                           state="cleared", evidence="hardware")],
+                                           state="cleared", established_by="hardware")],
             consequence="c", datasheet_text="t",
         )
 
@@ -172,7 +172,7 @@ ALL_KIND_SAMPLES = {
         "kind": "state_gate", "target_register": "USART_BRR",
         "target_operation": "write",
         "preconditions": [{"register": "USART_CR1", "field": "UE",
-                           "state": "cleared", "evidence": "software",
+                           "state": "cleared", "established_by": "software",
                            "action_operation": "modify"}],
         "postconditions": [],
         "severity": "error",
@@ -212,7 +212,7 @@ ALL_KIND_SAMPLES = {
     "clock_gate": {
         "kind": "clock_gate",
         "clock": {"register": "RCC_APB1ENR", "field": "I2C1EN", "state": "set",
-                  "evidence": "software", "action_operation": "modify"},
+                  "established_by": "software", "action_operation": "modify"},
         "consequence": "peripheral registers read 0x0",
         "datasheet_text": "When the peripheral clock is not active, the returned value is always 0x0.",
     },
@@ -277,7 +277,7 @@ def test_lift_basic_state_gate():
     # register_name/field_name -> register/field; "cleared" passes through.
     assert (cond.register, cond.field, cond.state) == ("USART_CR1", "UE", "cleared")
     # v1 corpus files LACK evidence_kind entirely -> default hardware.
-    assert cond.evidence == "hardware"
+    assert cond.established_by == "hardware"
     assert cond.action_operation is None
 
 
@@ -315,8 +315,8 @@ def test_lift_evidence_kind_mapping():
          "action_operation": "modify"},
     ])
     (gate,) = lift_v1_constraint(v1, "USART_BRR").constraints
-    assert gate.preconditions[0].evidence == "hardware"
-    assert gate.preconditions[1].evidence == "software"
+    assert gate.preconditions[0].established_by == "hardware"
+    assert gate.preconditions[1].established_by == "software"
     assert gate.preconditions[1].action_operation == "modify"
 
 
@@ -378,7 +378,7 @@ def test_lift_unparseable_required_state_rejected(state):
 
 
 def test_lift_empty_field_name_becomes_whole_register():
-    # The real IWDG dual-evidence example encodes the whole-register
+    # The real IWDG dual-established_by example encodes the whole-register
     # KR==0x5555 condition as field_name="".
     v1 = make_v1(preconditions=[
         {"register_name": "IWDG_KR", "field_name": "", "required_state": "equals:0x5555"},
@@ -407,7 +407,7 @@ def test_lift_observed_state_postcondition_dropped_loudly():
 
 def test_lift_software_postcondition_kept():
     # The RTC-CNF pre+post software action (rm0008/1/rtc_cnth): with
-    # PR-15-style evidence the postcondition is representable and kept.
+    # PR-15-style established_by the postcondition is representable and kept.
     v1 = make_v1(
         preconditions=[{"register_name": "RTC_CRL", "field_name": "CNF",
                         "required_state": "set",
@@ -422,7 +422,7 @@ def test_lift_software_postcondition_kept():
     (gate,) = result.constraints
     assert not result.rejects
     assert len(gate.postconditions) == 1
-    assert gate.postconditions[0].evidence == "software"
+    assert gate.postconditions[0].established_by == "software"
 
 
 def test_lift_target_register_stamped_from_container():
@@ -445,8 +445,8 @@ def _gate(preconditions):
 def test_enforceability_state_gate():
     hw = FieldCondition(register="RTC_ISR", field="WUTWF", state="set")
     sw = FieldCondition(register="USART_CR1", field="UE", state="cleared",
-                        evidence="software", action_operation="modify")
-    # Any hardware-evidence precondition needs a runtime check.
+                        established_by="software", action_operation="modify")
+    # Any hardware-established precondition needs a runtime check.
     assert derive_enforceability(_gate([hw])) == "witnessed_runtime_check"
     assert derive_enforceability(_gate([hw, sw])) == "witnessed_runtime_check"
     # All-software is pure action-witness ordering.
@@ -493,7 +493,7 @@ def run_dir(tmp_path):
     run.mkdir(parents=True)
     (run / "info").mkdir()  # non-register subdir: must be skipped
 
-    # 1. The IWDG dual-evidence gate (whole-register + hardware flag).
+    # 1. The IWDG dual-established_by gate (whole-register + hardware flag).
     (run / "iwdg_pr").write_text(json.dumps(_register_json("IWDG_PR", [{
         "target_register": "IWDG_PR", "target_fields": [],
         "target_operation": "write",
@@ -518,7 +518,7 @@ def run_dir(tmp_path):
             "consequence": "lock sequence aborted",
             "datasheet_text": "A specific write sequence must be applied.",
         },
-        # NOTE: op is "modify", not "read" -- a same-register hardware-evidence
+        # NOTE: op is "modify", not "read" -- a same-register hardware-established
         # READ gate is now rejected as self_defeating_read_gate (stage-0 lint,
         # covered in tests/test_collect_lint.py).
         {
@@ -638,7 +638,7 @@ def test_collect_end_to_end_without_svd(run_dir, tmp_path):
     # Empty register skipped; the three constrained + the placeholder collected.
     assert set(by_name) == {"iwdg_pr", "gpioa_lckr", "tim3_ccr%s", "usart1_brr"}
 
-    # IWDG: lifted, whole_register repair, hardware evidence -> witnessed.
+    # IWDG: lifted, whole_register repair, hardware established_by -> witnessed.
     iwdg = json.loads((out_dir / "iwdg_pr.json").read_text())
     assert len(iwdg["access_constraints"]) == 1          # v1 key untouched
     assert iwdg["access_constraints"][0]["preconditions"][0]["field_name"] == ""

@@ -48,7 +48,7 @@ On top of the lift, collection now runs the deterministic stage-0 lint:
   oneToClear/... or a status register with ``readAction``) -> reject
   ``w1c_flag_semantics`` + flag ``w1c_semantics``; read gates whose check
   touches a ``readAction`` register/field -> flag ``read_side_effect``.
-- **Structural flags** (no SVD needed): read gates whose hardware-evidence
+- **Structural flags** (no SVD needed): read gates whose hardware-established
   preconditions all live on the target register itself -> reject
   ``self_defeating_read_gate`` (the check would perform the constrained read;
   codegen refuses these, collection stops them earlier); conditions whose
@@ -664,7 +664,7 @@ def _is_self_defeating_read_gate(gate, svd_index: Optional[dict]) -> bool:
     """Plan section 3: a read gate whose check performs the constrained read.
 
     op=read, at least one precondition, and EVERY precondition is a
-    hardware-evidence condition on the target register itself -- checking it
+    hardware-established condition on the target register itself -- checking it
     requires reading the target, which is exactly the constrained operation.
     Codegen rejects these; collection stops them earlier.
     """
@@ -673,7 +673,7 @@ def _is_self_defeating_read_gate(gate, svd_index: Optional[dict]) -> bool:
     if not gate.preconditions:
         return False
     return all(
-        cond.evidence == "hardware"
+        cond.established_by == "hardware"
         and _same_register(cond.register, gate.target_register, svd_index)
         for cond in gate.preconditions
     )

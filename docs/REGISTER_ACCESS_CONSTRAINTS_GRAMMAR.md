@@ -69,9 +69,9 @@ class FieldCondition(FieldRef):
     values: list[int] = []            # non-empty iff state == "equals";
                                       # >1 entry = OR-of-values; parsed from
                                       # hex/bin/dec strings, normalized to int
-    evidence: Literal["hardware", "software"] = "hardware"
+    established_by: Literal["hardware", "software"] = "hardware"
     action_operation: Optional[Literal["write", "modify"]] = None
-                                      # required iff evidence == "software"
+                                      # required iff established_by == "software"
 ```
 
 `values` accepts hex (`0x5555`), binary (`0b01`), or decimal strings, validated
@@ -79,7 +79,7 @@ by the regex `^(0x[0-9A-Fa-f]+|0b[01]+|\d+)$` and normalized to `int` — this
 kills both the v1 OR-string drift (`equals:0b01|0b10|0b11`) and the
 code-injection surface of splicing value strings verbatim into Rust.
 
-`evidence` is the load-bearing semantic distinction (only the prose says who
+`established_by` is the load-bearing semantic distinction (only the prose says who
 establishes a state — codegen cannot infer it):
 
 - `"hardware"` — hardware establishes the state; software can only *observe*
@@ -107,18 +107,18 @@ class StateGate(ConstraintBase):
                                       # "any" legal at extraction; EXPANDED to
                                       # per-operation gates at collection
     preconditions: list[FieldCondition]    # conjunctive
-    postconditions: list[FieldCondition]   # software-evidence ONLY: an observed-state
+    postconditions: list[FieldCondition]   # software-established ONLY: an observed-state
                                            # postcondition is unenforceable → parse error
 ```
 
-Mode-gate, software evidence (`rm0091/2/usart1_brr`, ×37): *"This register can
+Mode-gate, software established_by (`rm0091/2/usart1_brr`, ×37): *"This register can
 only be written when the USART is disabled (UE=0)."*
 
 ```json
 { "kind": "state_gate", "target_register": "USART_BRR", "target_fields": [],
   "target_operation": "write",
   "preconditions": [{ "register": "USART_CR1", "field": "UE", "state": "cleared",
-                      "evidence": "software", "action_operation": "modify" }],
+                      "established_by": "software", "action_operation": "modify" }],
   "postconditions": [], "severity": "error",
   "consequence": "BRR writes while the USART is enabled are ignored or corrupt the baud rate",
   "datasheet_text": "This register can only be written when the USART is disabled (UE=0)." }
@@ -128,15 +128,15 @@ More real shapes:
 
 - **Hardware-flag gate** (`rm0430/1/rtc_wutr`): *"This register can be written
   only when WUTWF is set to 1 in RTC_ISR"* — same shape with
-  `evidence: "hardware"` (a check is emitted, not a setup method).
-- **Dual-evidence unlock** (`rm0008/1/iwdg_pr`): `IWDG_PR` write requires
+  `established_by: "hardware"` (a check is emitted, not a setup method).
+- **Dual-established_by unlock** (`rm0008/1/iwdg_pr`): `IWDG_PR` write requires
   `IWDG_KR == 0x5555` (software, whole-register value) **and** `IWDG_SR.PVU`
   cleared (hardware). The whole-register condition uses
   `"whole_register": true` — never `field: ""`.
 - **Pre+post software action** (`rm0008/1/rtc_cnth` — the canonical fixture):
   F1 RTC config mode — set `RTC_CRL.CNF` before writing `CNTH/ALRH/…`, clear it
-  after. Software-evidence precondition `CNF state="set"` plus
-  software-evidence postcondition `CNF state="cleared"`, both
+  after. Software-established_by precondition `CNF state="set"` plus
+  software-established postcondition `CNF state="cleared"`, both
   `action_operation: "modify"`.
 - **OR-valued equals** (legalized v1 drift): `required_state:
   "equals:0b01|0b10|0b11"` → `"state": "equals", "values": [1, 2, 3]`.
@@ -241,12 +241,12 @@ the decision tree routes the model to `sequence` instead.
 class ClockGate(ConstraintBase):
     kind: Literal["clock_gate"]
     clock: FieldCondition              # e.g. RCC_APB1ENR.I2C1EN, state="set",
-                                       # evidence="software", action_operation="modify"
+                                       # established_by="software", action_operation="modify"
 ```
 
 Peripheral-scoped: the LLM may emit it on any register file of the peripheral;
 collection deduplicates and hoists it to the peripheral entry in
-`manifest.json`. Corpus evidence: `rm0008/1/rcc_ahbenr` (*"When the peripheral
+`manifest.json`. Corpus established_by: `rm0008/1/rcc_ahbenr` (*"When the peripheral
 clock is not active, the peripheral register values may not be readable … the
 returned value is always 0x0"*).
 
@@ -300,7 +300,7 @@ enforceability: Literal["compile_gate", "witnessed_runtime_check", "dynamic_chec
 
 | kind | derivation |
 | --- | --- |
-| `state_gate` | any hardware-evidence precondition → `witnessed_runtime_check`; all-software → `compile_gate` |
+| `state_gate` | any hardware-established precondition → `witnessed_runtime_check`; all-software → `compile_gate` |
 | `sequence`, `write_once`, `clock_gate` | `compile_gate` |
 | `delay` | `witnessed_runtime_check` if `before` names the dependent access, else `dynamic_check` |
 | `read_effect`, `value_relation`, `other` | `doc_only` |
@@ -331,7 +331,7 @@ value, reason}`, enabling one automated re-prompt round, then per-constraint
 drop with a manifest entry — NEVER aborting a peripheral):**
 
 - unknown `kind` / `state` / `target_operation` / `severity`;
-- `evidence: "software"` without `action_operation`;
+- `established_by: "software"` without `action_operation`;
 - names unresolvable in the SVD (only checked when `--svd-dir` is given;
   otherwise registers carry the lint flag `svd_unchecked`);
 - values exceeding field width (stage-0 lint, roadmap step E);
@@ -376,7 +376,7 @@ judgment-requiring drift becomes structured `LiftResult.rejects` entries
 | `required_state: "cleared"` / `"set"` | `state: "cleared"` / `"set"` |
 | `required_state: "equals:<v>"` | `state: "equals", values: [parse(v)]` |
 | `required_state: "equals:A\|B\|C"` | `state: "equals", values: [A, B, C]` |
-| `evidence_kind: "observed_state"` / `"software_action"` (absent → observed) | `evidence: "hardware"` / `"software"` |
+| `evidence_kind: "observed_state"` / `"software_action"` (absent → observed) | `established_by: "hardware"` / `"software"` |
 | `target_operation: "any"` / `"read/write"` / `"read-write"` | expanded to per-operation `state_gate`s |
 | `severity: "info"` | `"warning"` |
 | observed-state postcondition | dropped with structured reject (gate survives) |

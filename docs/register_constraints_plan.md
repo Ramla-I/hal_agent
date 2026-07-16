@@ -55,7 +55,7 @@ All findings below were verified by generating against the real PAC and running 
 6. `equals:` **values spliced verbatim into Rust** — an injection surface, and `equals:0b01|0b10|0b11` silently becomes `bits() == 0b11` (Rust `|` binds tighter than `==`).
 7. **Generator robustness:** nested-action guard false-rejects whole peripherals on vacuous constraints; injector only handles single-file `mod.rs` (real crates.io PACs are multi-file); no Rust-keyword escaping (a field named `TYPE` emits `r.type()`); ~40% of the 1,358 lines is duplication an IR would remove.
 
-**Disposition (settled 2026-07-15): PR 15 is not used at all — closed unmerged, zero code cherry-picked.** Everything is written fresh by Claude via the §10 series. The branch survives only as a *reviewed reference*: the ideas judged good above (composite per-operation witnesses, full write-surface gating, the evidence dichotomy, grouped manifest, honest affine framing) are **re-implemented from scratch** — under the settled terminology and the trait-bound encoding, neither of which the branch has — and the ideas judged bad (Deref-based gating, action chains ahead of extraction evidence, blind prompt changes) are simply not carried. This also removes all rebase/attribution complexity: no commit from `cursor/stabilize-pac-codegen` enters main's history.
+**Disposition (settled 2026-07-15): PR 15 is not used at all — closed unmerged, zero code cherry-picked.** Everything is written fresh by Claude via the §10 series. The branch survives only as a *reviewed reference*: the ideas judged good above (composite per-operation witnesses, full write-surface gating, the established_by dichotomy, grouped manifest, honest affine framing) are **re-implemented from scratch** — under the settled terminology and the trait-bound encoding, neither of which the branch has — and the ideas judged bad (Deref-based gating, action chains ahead of extraction evidence, blind prompt changes) are simply not carried. This also removes all rebase/attribution complexity: no commit from `cursor/stabilize-pac-codegen` enters main's history.
 
 ---
 
@@ -133,7 +133,7 @@ class FieldCondition(BaseModel):
     field: str                          # "" not allowed; whole-register via explicit flag
     state: Literal["cleared", "set", "equals"]
     values: list[int] = []              # equals: >=1 entries; >1 == OR-of-values
-    evidence: Literal["hardware", "software"] = "hardware"
+    established_by: Literal["hardware", "software"] = "hardware"
     action_operation: Optional[Literal["write", "modify"]] = None  # required iff software
 ```
 
@@ -157,7 +157,7 @@ class FieldCondition(BaseModel):
 
 Drift dispositions: `target_operation:"any"` → legalized, expanded deterministically to per-op constraints at collection; `"read/write"`/`"read-write"` → normalized likewise; `"access"` (width notes) and privilege/secure notes → **not constraints** (routed out at the prompt, §6); `"enabled"` → repaired via SVD `enumeratedValues` name match, else rejected; `"equals:X then Y"` → must be a `sequence`.
 
-**Enforceability is computed, never LLM-emitted:** collection derives `enforceability ∈ {compile_gate, witnessed_runtime_check, dynamic_check, doc_only}` from `(kind, evidence, target_fields)`; codegen records `enforced_as` per constraint in the manifest. Paper metric = fraction classifiable as compile-enforceable × fraction actually enforced, measured from manifests.
+**Enforceability is computed, never LLM-emitted:** collection derives `enforceability ∈ {compile_gate, witnessed_runtime_check, dynamic_check, doc_only}` from `(kind, established_by, target_fields)`; codegen records `enforced_as` per constraint in the manifest. Paper metric = fraction classifiable as compile-enforceable × fraction actually enforced, measured from manifests.
 
 **Evolution:** `schema_version`; mechanical lossless v1→v2 lift for all 30 existing run dirs; repair-vs-reject policy in `collect_constraints` (repair the deterministic: value parsing, `any` expansion, SVD-casing, enum-name→value; reject the judgmental: unknown kinds/states, unresolvable names, out-of-range values), with structured per-constraint errors enabling one automated re-prompt round — never aborting a peripheral.
 
@@ -593,12 +593,12 @@ class FieldCondition(FieldRef):
     values: list[int] = []            # required non-empty iff state == "equals";
                                       # >1 entry = OR-of-values; parsed from hex/bin/dec
                                       # strings, range-checked against SVD field width
-    evidence: Literal["hardware", "software"] = "hardware"
+    established_by: Literal["hardware", "software"] = "hardware"
     action_operation: Optional[Literal["write", "modify"]] = None
                                       # REQUIRED iff evidence == "software" (model_validator)
 ```
 
-`evidence` is the load-bearing semantic distinction (kept from PR 15, renamed):
+`established_by` is the load-bearing semantic distinction (kept from PR 15; renamed from `evidence_kind` via an interim `evidence`, final name settled with Ramla 2026-07-16):
 
 - `"hardware"` — hardware establishes the state; software can only *observe* it → codegen emits a runtime **check** minting a **state witness** (`check_write_ready() -> Cr1WriteWitness`).
 - `"software"` — the driver itself must establish the state → codegen emits a setup method minting an **action witness** (`set_cnf() -> CnfSetWitness`), performed via `action_operation`.
@@ -640,13 +640,13 @@ Mode-gate, software evidence (`rm0091/2/usart1_brr`, ×37): *"This register can 
 { "kind": "state_gate", "target_register": "USART_BRR", "target_fields": [],
   "target_operation": "write",
   "preconditions": [{ "register": "USART_CR1", "field": "UE", "state": "cleared",
-                      "evidence": "software", "action_operation": "modify" }],
+                      "established_by": "software", "action_operation": "modify" }],
   "postconditions": [], "severity": "error",
   "consequence": "BRR writes while the USART is enabled are ignored or corrupt the baud rate",
   "datasheet_text": "This register can only be written when the USART is disabled (UE=0)." }
 ```
 
-Hardware-flag gate (`rm0430/1/rtc_wutr`): *"This register can be written only when WUTWF is set to 1 in RTC_ISR"* → same shape with `evidence: "hardware"` (a check is emitted, not a setup method). Pre+post software action (`rm0008/1/rtc_cnth`, the MTQC replacement): software-evidence precondition `RTC_CRL.CNF state="set"` plus software-evidence postcondition `CNF state="cleared"`, both `action_operation: "modify"`. OR-valued equals (legalized drift): `required_state: "equals:0b01|0b10|0b11"` → `"state": "equals", "values": [1, 2, 3]`.
+Hardware-flag gate (`rm0430/1/rtc_wutr`): *"This register can be written only when WUTWF is set to 1 in RTC_ISR"* → same shape with `established_by: "hardware"` (a check is emitted, not a setup method). Pre+post software action (`rm0008/1/rtc_cnth`, the MTQC replacement): software-evidence precondition `RTC_CRL.CNF state="set"` plus software-evidence postcondition `CNF state="cleared"`, both `action_operation: "modify"`. OR-valued equals (legalized drift): `required_state: "equals:0b01|0b10|0b11"` → `"state": "equals", "values": [1, 2, 3]`.
 
 **Enforcement:** hardware preconditions → `witnessed_runtime_check` (composite state witness from one fresh read); software preconditions → `compile_gate` (action witness); postconditions → obligation + closure-scoped wrapper + reframe-as-precondition where the hazardous next operation is named (§3.1). Gated via the trait bound (§3, Appendix A).
 
@@ -723,7 +723,7 @@ Examples: `rm0386/1/dsi_isr1` (*"always cleared after a read"* — today misextr
 class ClockGate(ConstraintBase):
     kind: Literal["clock_gate"]
     clock: FieldCondition              # e.g. RCC_APB1ENR.I2C1EN, state="set",
-                                       # evidence="software", action_operation="modify"
+                                       # established_by="software", action_operation="modify"
 ```
 
 Peripheral-scoped: the LLM may emit it on any register file of the peripheral; collection deduplicates and hoists it to the peripheral entry in `manifest.json`. Corpus evidence: `rm0008/1/rcc_ahbenr` (*"When the peripheral clock is not active, the peripheral register values may not be readable … the returned value is always 0x0"*).
@@ -759,7 +759,7 @@ At collection, each constraint gains:
 
 ```python
 enforceability: Literal["compile_gate", "witnessed_runtime_check", "dynamic_check", "doc_only"]
-# derived deterministically from (kind, evidence, target_fields) — models would guess it
+# derived deterministically from (kind, established_by, target_fields) — models would guess it
 ```
 
 Codegen records `enforced_as` (same enum) per constraint in `manifest.json`, making downgrades visible (field-granular gate enforced at register granularity; a `delay` with no gateable successor). Paper metrics — fraction *classifiable* as compile-enforceable and fraction *actually enforced* — are computed from manifests, not hand counts.
@@ -768,7 +768,7 @@ Codegen records `enforced_as` (same enum) per constraint in `manifest.json`, mak
 
 **Repair deterministically (lossless, logged):** hex/bin value strings → `int`; `"any"` → three per-operation constraints; v1 → v2 lift (B.6); SVD-canonical name casing; enum *names* → values via SVD `enumeratedValues` (the `"enabled"` drift case); `%s`-placeholder filename repair.
 
-**Reject (judgment required; structured error, one automated re-prompt round, then per-constraint drop with manifest entry — never abort a peripheral):** unknown `kind`/`state`; `evidence:"software"` without `action_operation`; names unresolvable in the SVD; values exceeding field width; `sequence` with < 2 steps; observed-state postconditions; write constraints on SVD read-only fields (FP by construction).
+**Reject (judgment required; structured error, one automated re-prompt round, then per-constraint drop with manifest entry — never abort a peripheral):** unknown `kind`/`state`; `established_by:"software"` without `action_operation`; names unresolvable in the SVD; values exceeding field width; `sequence` with < 2 steps; observed-state postconditions; write constraints on SVD read-only fields (FP by construction).
 
 **Routed out at the prompt (not constraints; emit nothing):** w1c/rc_w flag semantics (SVD `modifiedWriteValues`), read-to-clear behavior standing alone (→ `read_effect` if worth recording), access-width requirements, secure/privileged-access notes, "value is don't-care" validity notes, reset behavior.
 
@@ -785,7 +785,7 @@ Codegen records `enforced_as` (same enum) per constraint in `manifest.json`, mak
 | `required_state: "cleared"` / `"set"`                  | `state: "cleared"` / `"set"`                                                |
 | `required_state: "equals:<v>"`                         | `state: "equals", values: [parse(v)]`                                       |
 | `required_state: "equals:A\|B\|C"`                     | `state: "equals", values: [A, B, C]`                                        |
-| `evidence_kind: "observed_state"` / `"software_action"`| `evidence: "hardware"` / `"software"`                                       |
+| `evidence_kind: "observed_state"` / `"software_action"`| `established_by: "hardware"` / `"software"`                                       |
 | `target_operation: "any"` / `"read/write"`             | expanded to per-operation `state_gate`s                                     |
 | `severity: "info"`                                     | `"warning"`                                                                 |
 | unparseable `required_state` (`"unlocked"`, `"written"`, `"equals:X then Y"` …) | reject with reason → re-prompt round (most are `sequence`/`other` in v2) |
@@ -796,6 +796,7 @@ Codegen records `enforced_as` (same enum) per constraint in `manifest.json`, mak
 
 *(Record departures from this plan here as they happen, per project convention.)*
 
+- 2026-07-16 (grammar naming): the v2 condition key `evidence` is renamed **`established_by`** (Ramla) — it states the extracted world-fact (who brings the state about) instead of the enforcement mechanism it feeds; values unchanged. v1's `evidence_kind` wire-format key is historical and stays; the lift maps it. Swept through defs.py, collection, tests, grammar doc, Appendix B, and the paper draft.
 - 2026-07-16 (step J, first half — the HAL demo): `eval_hal/` compiles the UNMODIFIED stm32f4xx-hal 0.23.0 (the crates.io release built against stm32f4 0.16.0) under `[patch.crates-io]` against the injected PAC; pinned as `test_hal_demo`. Result: (1) **true enforcement — 14/14**: every place the HAL touches I2C CR1 (8 in `i2c.rs`, 6 in `i2c/dma.rs`) fails with the datasheet diagnostic, zero false hits anywhere else in ~30k lines; baseline (pristine PAC) compiles clean, so adoption costs nothing where nothing is constrained. (2) **§3's "churn edge" is bigger than predicted**: the plan called generic-over-registers driver code "rare — HAL register code is macro-generated and monomorphic," but stm32f4xx-hal 0.23 moved its serial layer to trait generics (`UartRB` associated register types), and generic definitions calling read/write/modify fail to type-check without the marker bounds — 14 errors across `serial.rs`/`serial/uart_impls.rs` even though no UART register is constrained. Quantified adoption cost: ~10 mechanical one-line where-clause additions in one module. This is inherent to conditional method availability (no post-monomorphization errors in Rust); the honest paper claim splits the two numbers: monomorphic driver code = perfect precision, trait-generic driver code = small quantified patch. Second half of J (the fork + regenerate.sh + publishing) remains.
 - 2026-07-15 (step E): stage-0 lint complete; published stats live in `docs/constraints_corpus_stats.md` (not `optimization/test_outputs/` — a citable, committed snapshot beats a git-ignored one). Key dispositions: within-register exact dedup drops 91 (2.0%); cross-INSTANCE duplication (589) is flagged, not dropped — per-instance rows are what codegen injects, so the plan's "−36% dedup" mass is deliberately retained; post-dedup 4,362 unique → 2,857 v2 state_gates (2,243 witnessed_runtime_check / 614 compile_gate) + 35.6% whole-constraint rejects, dominated by SVD-unresolvable names under the one-SVD-per-RM projection (~307 of those are single-device coverage misses, 28.5% reject rate with all SVDs; per-device projection is arguably correct — a constraint is enforceable only for registers the device has). New reject classes verified genuine by spot-check: RTC_WPR 0xCA53 vs 8-bit field (width), FLASH_SR.BSY writes (read-only target), USART_SR.TC (w1c postconditions), 8 self-defeating read gates. **`%s` root cause documented, NOT fixed** (stats doc §"%s root cause"): SVD `<dim>` templates — not derivedFrom as §5.1 guessed — flow through `agent_tools/svd_parsing.py:70-77` → `core/s1a_generator.py` worklist → filenames; the coverage comparator keys the SVD side by the SAME templates, so a worklist-only fix would desync the live coverage loop and is unverifiable offline — three-call-site fix proposal recorded for a live-run session. Step C note: the IR refactor's motivation (PR-15's 40% duplication) was discarded with PR 15; the fresh emitter is ~700 lines with a Plan/emit split — C reduced to "extract a naming module if step I bloats it."
 - 2026-07-15 (step H): cross-register witnesses landed as inherent check methods taking the SOURCE register(s) as `&Reg<SRCrs>` parameters (`check_write_ready(&self, cr: &Reg<CRrs>)`), same-peripheral (`super::<reg>::`) and cross-peripheral (`super::super::<periph>::<reg>::`) resolved from the datasheet's `<PERIPHERAL>_<REGISTER>` prefix vs the target peripheral's instance-stripped base. Fixtures are verbatim generator corpus output: SPI_TXCRCR read-gate ⇐ SPI_SR.BSY (rm0008) and RCC_SSCGR ⇐ RCC_CR.PLLON (rm0368); cross-peripheral verified by a synthetic RTC_DR ⇐ PWR_CR.DBP compile probe (real corpus RTC constraints bundle the WPR key sequence, which is step I/sequence material). Read gating consequence handled: the peripheral RegisterBlock's `#[derive(Debug)]` is stripped when a read gate is present (debug-printing performs a read) — documented API divergence. Marker walk now keys (peripheral, spec, op) so same-named specs elsewhere keep their markers; injection accepts multiple constraint inputs in one shot. Compile-fail table grew to 11 rows (witness-less read of read-gated register; witness-less cross-register write).

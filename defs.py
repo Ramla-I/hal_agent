@@ -292,7 +292,7 @@ with warnings.catch_warnings():
 class FieldCondition(FieldRef):
     """A single field-state condition (pre- or postcondition of a state_gate).
 
-    `evidence` is the load-bearing semantic distinction (only prose says who
+    `established_by` is the load-bearing semantic distinction (only prose says who
     establishes a state -- codegen cannot infer it):
       - "hardware": hardware establishes the state; software can only observe
         it -> codegen emits a runtime check minting a STATE WITNESS.
@@ -303,9 +303,9 @@ class FieldCondition(FieldRef):
     state: Literal["cleared", "set", "equals"]
     values: list[int] = []            # non-empty iff state == "equals";
                                       # >1 entry = OR-of-values
-    evidence: Literal["hardware", "software"] = "hardware"
+    established_by: Literal["hardware", "software"] = "hardware"
     action_operation: Optional[Literal["write", "modify"]] = None
-                                      # required iff evidence == "software"
+                                      # required iff established_by == "software"
 
     @field_validator("values", mode="before")
     @classmethod
@@ -324,10 +324,10 @@ class FieldCondition(FieldRef):
             raise ValueError('state "equals" requires at least one entry in values')
         if self.state != "equals" and self.values:
             raise ValueError(f'values are only allowed with state "equals" (state={self.state!r})')
-        if self.evidence == "software" and self.action_operation is None:
-            raise ValueError('action_operation is required when evidence == "software"')
-        if self.evidence == "hardware" and self.action_operation is not None:
-            raise ValueError('action_operation is only meaningful when evidence == "software"')
+        if self.established_by == "software" and self.action_operation is None:
+            raise ValueError('action_operation is required when established_by == "software"')
+        if self.established_by == "hardware" and self.action_operation is not None:
+            raise ValueError('action_operation is only meaningful when established_by == "software"')
         return self
 
 
@@ -345,7 +345,7 @@ class StateGate(ConstraintBase):
     """An operation is permitted only while named field conditions hold.
 
     The workhorse kind (~all of today's true positives): UE=0 mode gates,
-    hardware-flag gates (WUTWF=1), dual-evidence unlocks (IWDG), and the
+    hardware-flag gates (WUTWF=1), dual-established_by unlocks (IWDG), and the
     RTC-CNF pre+post software action.
     """
     kind: Literal["state_gate"] = "state_gate"
@@ -356,18 +356,18 @@ class StateGate(ConstraintBase):
                                       # "any" legal at extraction; EXPANDED to
                                       # per-operation gates at collection
     preconditions: list[FieldCondition]    # conjunctive
-    postconditions: list[FieldCondition]   # software-evidence ONLY (validated below)
+    postconditions: list[FieldCondition]   # software-established ONLY (validated below)
 
     @model_validator(mode="after")
     def _postconditions_software_only(self):
-        # An observed-state (hardware-evidence) postcondition is unenforceable
+        # An observed-state (hardware-established) postcondition is unenforceable
         # -- it was PR 15's silently-dropped class. v2 rejects it loudly at
         # parse time; the lift converts such v1 postconditions into structured
         # rejects instead (see lift_v1_constraint).
         for i, pc in enumerate(self.postconditions):
-            if pc.evidence != "software":
+            if pc.established_by != "software":
                 raise ValueError(
-                    f"postconditions[{i}]: observed-state (hardware-evidence) "
+                    f"postconditions[{i}]: observed-state (hardware-established) "
                     "postconditions are unenforceable and not representable; "
                     "reframe as a precondition of the hazardous next operation"
                 )
@@ -441,7 +441,7 @@ class ClockGate(ConstraintBase):
     """
     kind: Literal["clock_gate"] = "clock_gate"
     clock: FieldCondition              # e.g. RCC_APB1ENR.I2C1EN state="set",
-                                       # evidence="software", action_operation="modify"
+                                       # established_by="software", action_operation="modify"
 
 
 class ValueRelation(ConstraintBase):
@@ -486,8 +486,8 @@ def derive_enforceability(constraint) -> Enforceability:
     """Derive the enforceability class of a v2 constraint.
 
     Computed, never LLM-emitted -- models would guess it. Deterministic from
-    (kind, evidence, target refs):
-      - state_gate: any hardware-evidence precondition needs a runtime check
+    (kind, established_by, target refs):
+      - state_gate: any hardware-established precondition needs a runtime check
         minting a state witness -> "witnessed_runtime_check"; all-software
         preconditions are pure action-witness ordering -> "compile_gate".
       - sequence / write_once / clock_gate: pure token ordering/capability ->
@@ -505,7 +505,7 @@ def derive_enforceability(constraint) -> Enforceability:
             # paper metric. It is documentation until re-extraction gives it
             # structure.
             return "doc_only"
-        if any(p.evidence == "hardware" for p in constraint.preconditions):
+        if any(p.established_by == "hardware" for p in constraint.preconditions):
             return "witnessed_runtime_check"
         return "compile_gate"
     if kind in ("sequence", "write_once", "clock_gate"):
@@ -559,7 +559,7 @@ _V1_OPERATION_LIFT = {
     "read-write": ["read", "write"],
 }
 
-# v1 evidence_kind -> v2 evidence (B.6). v1 corpus files lack evidence_kind
+# v1 evidence_kind -> v2 established_by (B.6). v1 corpus files lack evidence_kind
 # entirely (it was a PR-15 addition) -> default "hardware", matching the v1
 # reading that a bare condition is observed state.
 _V1_EVIDENCE_LIFT = {
@@ -612,12 +612,12 @@ def _lift_field_state(fs: FieldState, where: str, rejects: list, repairs: list):
             reason="unknown_evidence_kind",
         ))
         return None
-    evidence = _V1_EVIDENCE_LIFT[evidence_kind]
+    established_by = _V1_EVIDENCE_LIFT[evidence_kind]
 
     action_operation = getattr(fs, "action_operation", None)
-    if evidence == "software":
+    if established_by == "software":
         if action_operation not in ("write", "modify"):
-            # B.4 reject: evidence "software" without a usable action_operation.
+            # B.4 reject: established_by "software" without a usable action_operation.
             rejects.append(LiftReject(
                 field=f"{where}.action_operation",
                 value=str(action_operation),
@@ -625,10 +625,10 @@ def _lift_field_state(fs: FieldState, where: str, rejects: list, repairs: list):
             ))
             return None
     elif action_operation is not None:
-        # Only meaningful with software evidence; dropping it is lossless.
+        # Only meaningful with software established_by; dropping it is lossless.
         repairs.append(
             f"{where}: dropped action_operation={action_operation!r} "
-            "(only meaningful with software evidence)"
+            "(only meaningful with software established_by)"
         )
         action_operation = None
 
@@ -644,8 +644,8 @@ def _lift_field_state(fs: FieldState, where: str, rejects: list, repairs: list):
         whole_register=whole_register,
         state=state,
         values=values,
-        evidence=evidence,
-        action_operation=action_operation if evidence == "software" else None,
+        established_by=established_by,
+        action_operation=action_operation if established_by == "software" else None,
     )
 
 
@@ -705,7 +705,7 @@ def lift_v1_constraint(c: RegisterAccessConstraint, target_register: str) -> Lif
             return LiftResult(rejects=rejects, repairs=repairs)
         preconditions.append(cond)
 
-    # Postconditions: software-evidence only survive (B.2.1). Observed-state
+    # Postconditions: software-established only survive (B.2.1). Observed-state
     # postconditions are unenforceable -- PR 15 dropped them silently; the lift
     # drops them LOUDLY (structured reject) while keeping the still-sound
     # precondition gate. An unparseable postcondition state rejects the whole
@@ -719,7 +719,7 @@ def lift_v1_constraint(c: RegisterAccessConstraint, target_register: str) -> Lif
             if reason == "unparseable_required_state":
                 return LiftResult(rejects=rejects, repairs=repairs)
             continue  # element-level drop (e.g. software without action_operation)
-        if cond.evidence != "software":
+        if cond.established_by != "software":
             rejects.append(LiftReject(
                 field=f"postconditions[{i}]",
                 value=f"{fs.register_name}.{fs.field_name} {fs.required_state}",

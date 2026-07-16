@@ -47,8 +47,8 @@ constraint, its authenticity is checkable by plain string search against the
 manual — no retrieval, no judgment — and the surrounding paragraph can be
 recovered as trusted context for later validation.
 
-**An evidence dichotomy.** Each condition declares *who establishes the
-state*: `hardware` (software may only observe it — the running example, where
+**Who establishes the state.** Each condition's `established_by` key declares exactly that:
+`hardware` (software may only observe it — the running example, where
 hardware clears STOP) or `software` (the driver itself must establish it,
 e.g. "this register may be written only while the peripheral is disabled").
 The distinction cannot be inferred from the SVD; it exists only in prose, so
@@ -60,7 +60,7 @@ multi-step sequences (unlock keys), write-once locks, delays, read
 side-effects, peripheral clock gates, value relations, and an explicit
 `other` escape valve so a real requirement that fits no kind is preserved
 verbatim rather than force-fitted or dropped. Enforceability is *computed*
-from the kind and evidence, never emitted by the model.
+from the kind and `established_by`, never emitted by the model.
 
 The running example in grammar form:
 
@@ -68,9 +68,9 @@ The running example in grammar form:
 { "kind": "state_gate",
   "target_register": "CR1", "target_operation": "write",
   "preconditions": [
-    {"register": "I2C_CR1", "field": "STOP",  "state": "cleared", "evidence": "hardware"},
-    {"register": "I2C_CR1", "field": "START", "state": "cleared", "evidence": "hardware"},
-    {"register": "I2C_CR1", "field": "PEC",   "state": "cleared", "evidence": "hardware"}],
+    {"register": "I2C_CR1", "field": "STOP",  "state": "cleared", "established_by": "hardware"},
+    {"register": "I2C_CR1", "field": "START", "state": "cleared", "established_by": "hardware"},
+    {"register": "I2C_CR1", "field": "PEC",   "state": "cleared", "established_by": "hardware"}],
   "postconditions": [],
   "severity": "error",
   "datasheet_text": "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. ..." }
@@ -130,16 +130,16 @@ that the preconditions were observed true in one fresh read. Time-of-check to
 time-of-use is inherited from the hardware contract itself: memory-mapped I/O
 has no atomic check-and-act, so the manual's own prescribed procedure carries
 the identical window, and for hardware-cleared flags like STOP the race is
-benign in the safe direction (hardware only clears it). The evidence
-dichotomy from §1 selects the witness's origin: `hardware` evidence produces
-a runtime check as above (a *state witness*); `software` evidence produces a
-token minted by performing the required setup action (an *action witness*),
-with no runtime check at all.
+benign in the safe direction (hardware only clears it). The `established_by`
+field from §1 selects the witness's origin: hardware-established state
+produces a runtime check as above (a *state witness*); software-established
+state produces a token minted by performing the required setup action (an
+*action witness*), with no runtime check at all.
 
 **Results.** Of the 2,857 accepted gates, 2,243 translate to runtime-checked
 state witnesses and 614 remain documentation-only (they carry no checkable
 condition in the legacy corpus encoding); action witnesses appear once
-re-extraction emits the evidence field, making that split a direct measure of
+re-extraction emits the `established_by` field, making that split a direct measure of
 the re-extraction step's value.
 
 ## 3. Applying the changes to PAC crates

@@ -16,7 +16,7 @@ Covers, on top of tests/test_constraints_v2.py's lift/collection coverage:
   w1c_flag_semantics (not the generic observed-state reason);
 - read_side_effect flag for read gates touching readAction registers;
 - self_defeating_read_gate rejects (with and without SVD, per expanded
-  operation, hardware evidence only);
+  operation, hardware established_by only);
 - cross_peripheral lint flag (name-prefix heuristic + SVD refinement,
   usart/uart and gpioa/gpiob family compatibility);
 - --svd-dir accepting a single .svd file (the corpus-sweep shape).
@@ -433,7 +433,7 @@ def test_cross_register_read_gate_survives(tmp_path):
 
 
 def test_software_evidence_read_gate_not_self_defeating(tmp_path):
-    # Task spec: the reject is for HARDWARE-evidence checks (a software-action
+    # Task spec: the reject is for HARDWARE-established_by checks (a software-action
     # witness does not read the target register to check).
     files = {"spi1_txcrcr": _register_json("SPI_TXCRCR", [
         _constraint("SPI_TXCRCR", op="read",
