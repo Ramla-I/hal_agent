@@ -363,6 +363,126 @@ def test_illegal_programs_rejected():
 
 
 # --------------------------------------------------------------------------- #
+# Test 4: the "real driver" demo — unmodified stm32f4xx-hal vs injected PAC
+# --------------------------------------------------------------------------- #
+
+EVAL_HAL_DIR = APP_DIR / "eval_hal"
+
+# Both counts are pinned: the HAL version is pinned (=0.23.0) and the fixture
+# set is committed, so the error inventory is deterministic.
+#
+# TRUE ENFORCEMENT: the HAL's I2C driver modifies CR1 at 14 sites; every one
+# must fail with our datasheet diagnostic, and no other module may be hit by
+# the CR1 constraint.
+HAL_I2C_ERRORS = 14
+HAL_I2C_FILES = {"src/i2c.rs", "src/i2c/dma.rs"}
+# KNOWN FRICTION (documented in eval_hal/README.md and the plan's divergence
+# log): the HAL's serial layer is written generically over UART register
+# blocks via trait associated types; generic code calling read/write/modify
+# now needs the Unconstrained* marker bounds it (predating us) does not
+# declare, so its generic definitions fail to typecheck even though no USART
+# register is constrained. This is the encoding's one adoption cost for
+# trait-generic driver code — mechanical one-line bounds in one module.
+HAL_GENERIC_ERRORS = 14
+HAL_GENERIC_FILES = {"src/serial.rs", "src/serial/uart_impls.rs"}
+
+
+def _hal_check_json() -> list[dict]:
+    """cargo-check eval_hal and return E0277 diagnostics with their HAL
+    source files attributed (primary spans + macro-expansion spans)."""
+    import json as _json
+    run = subprocess.run(
+        ["cargo", "check", "--message-format=json"],
+        cwd=str(EVAL_HAL_DIR), capture_output=True, text=True,
+    )
+    out = []
+    for line in run.stdout.splitlines():
+        try:
+            m = _json.loads(line)
+        except ValueError:
+            continue
+        if m.get("reason") != "compiler-message":
+            continue
+        d = m["message"]
+        if d.get("level") != "error":
+            continue
+        files = set()
+
+        def _walk(spans):
+            for s in spans:
+                fn = s.get("file_name", "")
+                if "stm32f4xx-hal" in fn:
+                    files.add(fn.split("stm32f4xx-hal-0.23.0/")[-1])
+                exp = s.get("expansion")
+                if exp and exp.get("span"):
+                    _walk([exp["span"]])
+
+        _walk(d.get("spans", []))
+        for ch in d.get("children", []):
+            _walk(ch.get("spans", []))
+        out.append({
+            "code": (d.get("code") or {}).get("code", ""),
+            "message": d.get("message", ""),
+            "hal_files": files,
+        })
+    return out
+
+
+def test_hal_demo():
+    """The unmodified stm32f4xx-hal, consumed exactly as a downstream user
+    would (crates.io package + [patch.crates-io] PAC swap), must:
+      (a) compile cleanly against the PRISTINE PAC (adoption costs nothing),
+      (b) against the INJECTED PAC, fail ONLY with our datasheet diagnostics,
+          at exactly the known I2C sites plus the documented generic-serial
+          friction — nothing else in the ~30k-line HAL may break.
+    """
+    if not _cargo_available():
+        _skip("test_hal_demo", "cargo not on PATH")
+        return
+    if not _pac_provisioned():
+        _skip("test_hal_demo",
+              f"provisioned stm32f4 PAC not found under {PAC_SRC} "
+              "(run get_pac.py)")
+        return
+
+    # (a) baseline: pristine PAC, unmodified HAL -> clean check.
+    baseline = subprocess.run(
+        ["cargo", "check"], cwd=str(EVAL_HAL_DIR),
+        capture_output=True, text=True,
+    )
+    assert baseline.returncode == 0, (
+        "unmodified stm32f4xx-hal failed against the PRISTINE PAC — the "
+        "baseline is broken, the demo means nothing:\n" + baseline.stderr[-2000:]
+    )
+
+    # (b) injected PAC.
+    with _InjectedPac():
+        errors = _hal_check_json()
+
+    assert errors, "injected PAC produced no errors in the HAL — gate inert?"
+    unexpected = []
+    i2c = generic = 0
+    for e in errors:
+        if e["code"] != "E0277" or "constrained by its datasheet" not in e["message"]:
+            unexpected.append(f"non-witness error: {e['code']} {e['message'][:120]}")
+        elif "CR1rs" in e["message"]:
+            i2c += 1
+            if not e["hal_files"] <= HAL_I2C_FILES:
+                unexpected.append(f"CR1 constraint hit outside I2C: {e['hal_files']}")
+        elif e["hal_files"] and e["hal_files"] <= HAL_GENERIC_FILES:
+            generic += 1
+        else:
+            unexpected.append(f"unexplained error location: {e['hal_files']} "
+                              f"{e['message'][:120]}")
+    assert not unexpected, "\n".join(unexpected)
+    assert i2c == HAL_I2C_ERRORS, f"expected {HAL_I2C_ERRORS} I2C hits, got {i2c}"
+    assert generic == HAL_GENERIC_ERRORS, (
+        f"expected {HAL_GENERIC_ERRORS} generic-serial errors, got {generic} — "
+        "if the HAL or encoding changed, re-derive and update the inventory"
+    )
+
+
+# --------------------------------------------------------------------------- #
 # Direct runner (mirrors tests/test_prompt_schema_consistency.py style)
 # --------------------------------------------------------------------------- #
 
@@ -371,6 +491,7 @@ if __name__ == "__main__":
         test_codegen_matches_golden,
         test_constraint_test_compiles,
         test_illegal_programs_rejected,
+        test_hal_demo,
     ]
     print("Running codegen tests...\n")
     passed = failed = 0

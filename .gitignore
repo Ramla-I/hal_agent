@@ -257,3 +257,4 @@ plots/*.pdf
 plots/*.png
 # pac_codegen: crates.io-provisioned generated PAC for compile tests (see get_pac.py)
 applications/pac_codegen/vendored/pac/
+applications/pac_codegen/eval_hal/target/
