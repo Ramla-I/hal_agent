@@ -260,3 +260,4 @@ applications/pac_codegen/vendored/pac/
 applications/pac_codegen/eval_hal/target/
 # constraint_validator: quote-anchoring run artifacts (summary committed in docs/)
 constraint_validator/out/
+applications/pac_codegen/experiments/out/
