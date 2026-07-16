@@ -203,6 +203,14 @@ class _InjectedPac:
         shutil.rmtree(DEVICE_DIR)
         shutil.copytree(backup / DEVICE, DEVICE_DIR)
         MAIN_RS.write_bytes(self._main)
+        # copy2 preserves the ORIGINAL (old) mtimes; cargo treats
+        # older-than-recorded files as fresh and would replay the cached
+        # diagnostics of the INJECTED build against the restored pristine
+        # tree. Touch everything so the next check always re-reads sources.
+        os.utime(PAC_GENERIC)
+        for f in DEVICE_DIR.rglob("*"):
+            if f.is_file():
+                os.utime(f)
 
     def __exit__(self, *exc):
         self._restore()
