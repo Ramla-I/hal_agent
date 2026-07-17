@@ -569,6 +569,52 @@ def anchor_row(matcher: RMMatcher, row: dict) -> dict:
     return rec
 
 
+_ONE_EDIT_MIN_LEN = 5           # never fuzz short names ("calr" vs "call")
+_NAME_TOKEN_RE = re.compile(r"[a-z0-9_]+")
+
+
+def _within_one_edit(a: str, b: str) -> bool:
+    """Levenshtein distance <= 1, without building a matrix."""
+    if a == b:
+        return True
+    la, lb = len(a), len(b)
+    if abs(la - lb) > 1:
+        return False
+    if la == lb:
+        return sum(1 for x, y in zip(a, b) if x != y) <= 1
+    if la > lb:
+        a, b, la = b, a, lb
+    i = 0
+    while i < la and a[i] == b[i]:
+        i += 1
+    return a[i:] == b[i + 1:]
+
+
+def _unit_name_tokens(matcher, key) -> dict:
+    """Name-shaped tokens of a unit's normalized text, bucketed by length.
+
+    Compound tokens contribute their underscore-stripped form and their
+    parts too, so "dma_cparx" can vouch for candidate "cpar4"."""
+    cache = getattr(matcher, "_name_token_cache", None)
+    if cache is None:
+        cache = matcher._name_token_cache = {}
+    got = cache.get(key)
+    if got is not None:
+        return got
+    toks: set = set()
+    for m in _NAME_TOKEN_RE.finditer(matcher.unit_norm(key)):
+        t = m.group()
+        toks.add(t)
+        if "_" in t:
+            toks.add(t.replace("_", ""))
+            toks.update(t.split("_"))
+    by_len: dict = defaultdict(set)
+    for t in toks:
+        by_len[len(t)].add(t)
+    got = cache[key] = dict(by_len)
+    return got
+
+
 def _target_verification(rec: dict, matcher, unit, nq: str,
                          peripheral: str, register: str) -> None:
     """Verify the constraint's TARGET register, two ways (plan discussion,
@@ -581,7 +627,15 @@ def _target_verification(rec: dict, matcher, unit, nq: str,
     gate. Retargeting a nameless quote at a different register is exactly the
     corruption class no text-only judge can catch."""
     reg_norm = normalize_text(register)
-    named = bool(reg_norm) and reg_norm in nq
+    # SVD dim-templates keep a literal placeholder ("alrm%sr" stands for
+    # ALRMAR/ALRMBR); the manual never prints "%s", so search the name with
+    # the placeholder removed -- one-edit tolerance below then absorbs
+    # whatever single character the manual printed in that slot (Ramla,
+    # 2026-07-17).
+    name_forms = {reg_norm}
+    if "%s" in reg_norm:
+        name_forms = {reg_norm.replace("%s", ""), reg_norm.replace("%s", "x")}
+    named = bool(reg_norm) and any(f and f in nq for f in name_forms)
     if not named and reg_norm:
         # Datasheets name register FAMILIES with their own placeholder
         # ("AFIO_EXTICRX" covers EXTICR1..4); accept the x-form as naming
@@ -595,20 +649,49 @@ def _target_verification(rec: dict, matcher, unit, nq: str,
         # Manual-prose name forms: run-file names are peripheral-scoped
         # compounds ("dma_dmardlar") where the manual writes a prefixed tail
         # ("ETH_DMARDLAR") -- searching the tail segment recovers them.
-        # (Measured 2026-07-17: candidates cut corpus location-unverified
-        # from 27.9% to 15.1% of anchored rows; widening the page window
-        # alone recovered <1%.)
-        cands = {reg_norm}
-        if "_" in reg_norm:
-            cands.add(reg_norm.split("_")[-1])
-            cands.add(reg_norm.replace("_", ""))
+        # (Measured 2026-07-17: tail candidates cut corpus location-
+        # unverified 27.9% -> 15.1%; widening the page window alone
+        # recovered <1%. Placeholder-strip + one-edit tolerance below then
+        # cut it 17.8% -> 5.1% (673 -> 194 rows) on the 4160-row corpus,
+        # while the gate still rejected 96% of 468 deliberate retargets
+        # vs 97% with tolerance off.)
+        cands = set()
+        for b in name_forms:
+            cands.add(b)
+            if "_" in b:
+                cands.add(b.split("_")[-1])
+                cands.add(b.replace("_", ""))
         cands = {c for c in cands if len(c) >= 4}
+        # One-edit tolerance (Ramla, 2026-07-17): the manual prints family
+        # placeholders one character away from the SVD's concrete name
+        # ("DMA_CPARx" for cpar4, "GPIOx_IDR" for gpioa's idr), so compare
+        # against page tokens allowing a single edit. Long names only; the
+        # peripheral-prefixed compounds let the tolerance land in either
+        # half. Deliberate coarsening: a sibling one edit away (cpar4 on a
+        # cpar5 page) now locates -- acceptable, families share a section.
+        fuzz = {c for c in cands if len(c) >= _ONE_EDIT_MIN_LEN}
+        per_norm = normalize_text(peripheral)
+        if per_norm:
+            for p in {per_norm, per_norm.rstrip("0123456789")}:
+                for b in name_forms:
+                    if p and b:
+                        fuzz.add(f"{p}_{b}")
 
         def _page_locates(key) -> bool:
             if matcher.mention_score(key, peripheral, register) > 0:
                 return True
             txt = matcher.unit_norm(key)
-            return any(c in txt for c in cands)
+            if any(c in txt for c in cands):
+                return True
+            if fuzz:
+                by_len = _unit_name_tokens(matcher, key)
+                for c in fuzz:
+                    lc = len(c)
+                    for length in (lc - 1, lc, lc + 1):
+                        for t in by_len.get(length, ()):
+                            if _within_one_edit(c, t):
+                                return True
+            return False
 
         located = _page_locates(unit)
         if not located:

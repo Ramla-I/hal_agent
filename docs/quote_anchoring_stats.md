@@ -101,6 +101,48 @@ joins (`RTC_CNT registers ... are write-protected`), inserted parentheticals
 evidence-fidelity failures the deterministic anchor exists to catch
 (plan §7.1: no match → the constraint dies, no LLM spent).
 
+## Target-register location verification (2026-07-17)
+
+An anchored quote proves the *text* exists; it does not prove the text is
+about the *claimed register*. Most corpus quotes are self-referential
+("This register can be written only when ...") — 3,062 of the 3,789
+anchored rows never name their register — so the anchor's **location**
+must vouch instead: the matched page (± 2 pages) has to mention the
+target register. A retargeted quote (real text, wrong register) is exactly
+the corruption no text-only judge can catch.
+
+The check is pure string search, and its misses were name-*spelling*
+problems, fixed in three steps (each with a regression test):
+
+| location search | unverified rows | % of anchored |
+| --- | ---: | ---: |
+| exact name only | — | 27.9% |
+| + tail candidates (`dma_dmardlar` → `DMARDLAR`), ±2-page window | 673 | 17.8%¹ |
+| + `%s` placeholder strip + one-edit tolerance (Ramla's rule) | **194** | **5.1%** |
+
+1. Supersedes the previously quoted 15.1% (same code, different
+   measurement script); this table's last two rows are the same metric on
+   the same run for a clean comparison.
+
+The final step is Ramla's suggestion (2026-07-17): SVD dim-templates keep
+a literal `%s` in family names (`alrm%sr` stands for ALRMAR/ALRMBR) which
+the manual never prints — so delete the placeholder and search for what's
+left, allowing **one edit** of difference. That single tolerance also
+absorbs the manual's own family placeholders (`cpar4` under `DMA_CPARx`,
+gpioa's `idr` under `GPIOx_IDR`), which is why it recovered 479 rows — far
+more than the 85 `%s`-name rows alone. Guard rails: tolerance applies only
+to names of ≥ 5 characters (so `calr` cannot drift into prose like
+"call"), and exact matching remains the primary path.
+
+**Does the loosened search still catch retargeting?** Measured by
+deliberately re-attributing located quotes to a different peripheral's
+register (rm0008, rm0410, rm0493; 468 retargets): the gate rejected
+**96%** with tolerance on vs 97% with it off — 3 extra escapes bought 479
+genuine recoveries. Remaining unverified residue (194 rows): quotes
+anchored in functional-description prose far from any register section,
+CAN filter-bank names two edits from the manual's `CAN_FiRx`, and
+doubled-prefix names like `cec_cec_cr`.
+
 ## Reproduce
 
 ```bash

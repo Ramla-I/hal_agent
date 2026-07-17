@@ -430,3 +430,87 @@ def test_target_verification_compound_name_tail(tmp_path):
     assert rec["tier"] == "exact"
     assert rec["self_referential"] is True
     assert rec["target_located"] is True
+
+
+def test_target_verification_dim_template_placeholder(tmp_path):
+    # SVD dim-templates keep a literal "%s" ("alrm%sr" covers ALRMAR/ALRMBR);
+    # the manual never prints it. Strip the placeholder and let one-edit
+    # tolerance absorb the concrete letter (Ramla, 2026-07-17).
+    m = _matcher_for(tmp_path,
+        "Section: RTC_ALRMAR alarm A register. "
+        "This register can be written only when ALRAWF is set.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "This register can be written only when ALRAWF is set.",
+        "register": "alrm%sr", "peripheral": "rtc"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is True
+    assert rec["target_located"] is True      # alrmr ~ alrmar (one edit)
+
+
+def test_target_verification_one_edit_family_placeholder(tmp_path):
+    # The manual's family placeholder sits one edit from the SVD's concrete
+    # name: register cpar4 is described under "DMA_CPARx".
+    m = _matcher_for(tmp_path,
+        "Section: DMA_CPARx channel x peripheral address register. "
+        "This register must not be written when the channel is enabled.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "This register must not be written when the channel is enabled.",
+        "register": "cpar4", "peripheral": "dma1"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is True
+    assert rec["target_located"] is True      # cpar4 ~ cparx via dma_cparx
+
+
+def test_target_verification_one_edit_in_peripheral_half(tmp_path):
+    # Placeholder in the PERIPHERAL half: gpioa's idr appears as "GPIOx_IDR";
+    # the compound candidate gpioa_idr is one edit from the page's token.
+    m = _matcher_for(tmp_path,
+        "Section: GPIOx_IDR port input data register. "
+        "This register is read-only and can be accessed in word mode only.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "This register is read-only and can be accessed in word mode only.",
+        "register": "idr", "peripheral": "gpioa"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is True
+    assert rec["target_located"] is True
+
+
+def test_target_verification_short_names_never_fuzzed(tmp_path):
+    # One-edit tolerance must not let a short register name drift into
+    # ordinary prose ("calr" is one edit from "call"): short names still
+    # require an exact mention.
+    m = _matcher_for(tmp_path,
+        "Software should call the initialization routine. "
+        "This register can be written only in initialization mode.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "This register can be written only in initialization mode.",
+        "register": "calr", "peripheral": "rtc"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is True
+    assert rec["target_located"] is False
+
+
+def test_target_verification_retarget_still_caught_with_tolerance(tmp_path):
+    # The corruption class the location gate exists for must survive the
+    # tolerance: a nameless quote in a distant register's section still
+    # fails to locate a retargeted claim.
+    m = _matcher_for(tmp_path,
+        "Section: SPI_TXCRCR CRC register. "
+        "This register can be written only when the peripheral is disabled.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "This register can be written only when the peripheral is disabled.",
+        "register": "wutr", "peripheral": "rtc"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is True
+    assert rec["target_located"] is False
+
+
+def test_within_one_edit():
+    f = quote_anchor._within_one_edit
+    assert f("alrmr", "alrmar")      # insertion
+    assert f("cpar4", "cparx")       # substitution
+    assert f("usartcr2", "uartcr2")  # deletion
+    assert f("abcd", "abcd")         # equal
+    assert not f("alrmr", "alarm")   # distance 3
+    assert not f("cpar4", "cmar5")   # two substitutions
+    assert not f("ab", "abcd")       # length gap 2
