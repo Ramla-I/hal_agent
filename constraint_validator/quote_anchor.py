@@ -536,15 +536,16 @@ def anchor_row(matcher: RMMatcher, row: dict) -> dict:
         rec["pages"] = sorted({p for u in units for p in u})
         rec["ratio"] = 1.0
         rec["tier"] = "exact"
+        per = row.get("peripheral", "") or ""
+        reg = row.get("register", "") or ""
         if len(units) > 1:
-            per = row.get("peripheral", "") or ""
-            reg = row.get("register", "") or ""
             scores = {u: matcher.mention_score(u, per, reg) for u in units}
             mentioning = [u for u in units if scores[u] > 0]
             rec["ambiguous"] = len(mentioning) != 1
             chosen = sorted(units, key=lambda u: (-scores[u], u))[0]
         else:
             chosen = units[0]
+        _target_verification(rec, matcher, chosen, nq, per, reg)
         pos = matcher.unit_norm(chosen).find(nq)
         ctx = matcher.derive_context(chosen, pos, len(nq))
         if ctx is not None:
@@ -557,12 +558,53 @@ def anchor_row(matcher: RMMatcher, row: dict) -> dict:
         rec["pages"] = list(key)
     if key is not None and ratio >= FUZZY_THRESHOLD:
         rec["tier"] = "fuzzy"
+        _target_verification(rec, matcher, key, nq,
+                             row.get("peripheral", "") or "",
+                             row.get("register", "") or "")
         ctx = matcher.derive_context(key, s, wlen)
         if ctx is not None:
             rec["context"] = ctx
     else:
         rec["tier"] = "unanchored"
     return rec
+
+
+def _target_verification(rec: dict, matcher, unit, nq: str,
+                         peripheral: str, register: str) -> None:
+    """Verify the constraint's TARGET register, two ways (plan discussion,
+    2026-07-17): a quote that names the register verifies it textually; a
+    SELF-REFERENTIAL quote ("This register can be written only when ...")
+    cannot, so the anchor LOCATION must vouch instead — the matched page must
+    mention the target register (datasheets keep a register's rules inside
+    its own section). Both facts are recorded; policy (reject on
+    self-referential + unlocated) belongs to consumers like the injection
+    gate. Retargeting a nameless quote at a different register is exactly the
+    corruption class no text-only judge can catch."""
+    reg_norm = normalize_text(register)
+    named = bool(reg_norm) and reg_norm in nq
+    if not named and reg_norm:
+        # Datasheets name register FAMILIES with their own placeholder
+        # ("AFIO_EXTICRX" covers EXTICR1..4); accept the x-form as naming
+        # the register (same convention mention_score uses for peripherals).
+        family = reg_norm.rstrip("0123456789")
+        if family != reg_norm:
+            named = f"{family}x" in nq or f"{family}%s" in nq
+    rec["self_referential"] = bool(reg_norm) and not named
+    located = False
+    if reg_norm:
+        located = matcher.mention_score(unit, peripheral, register) > 0
+        if not located:
+            # Register sections span pages: the section header naming the
+            # register often sits on the page BEFORE the quoted note. Accept
+            # a mention on the matched page's immediate neighbors.
+            for page in unit:
+                for q in (page - 1, page + 1):
+                    if q in matcher.page_orig and                             matcher.mention_score((q,), peripheral, register) > 0:
+                        located = True
+                        break
+                if located:
+                    break
+    rec["target_located"] = located
 
 
 # ---------------------------------------------------------------------------

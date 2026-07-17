@@ -14,6 +14,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from constraint_validator import quote_anchor  # noqa: E402
 from constraint_validator.quote_anchor import (  # noqa: E402
     FUZZY_THRESHOLD,
     normalize_text,
@@ -338,3 +339,80 @@ def test_cli(tmp_path):
     # JSON keys sorted for deterministic bytes
     rec = json.loads(lines[0])
     assert list(rec) == sorted(rec)
+
+
+# ---------------------------------------------------------------------------
+# Target verification (2026-07-17): self-referential quotes must be vouched
+# for by their anchor LOCATION; named quotes verify textually.
+# ---------------------------------------------------------------------------
+
+def _matcher_for(tmp_path, text, page=10):
+    make_chunks(tmp_path, {page: [text]})
+    return quote_anchor.RMMatcher(RM, str(tmp_path / RM / "chunks" / "md"))
+
+
+def test_target_verification_named_in_text(tmp_path):
+    m = _matcher_for(tmp_path,
+        "The I2C_CR1 register must not be written while STOP is set.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "The I2C_CR1 register must not be written while STOP is set.",
+        "register": "CR1", "peripheral": "i2c1"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is False   # CR1 appears in the quote
+
+
+def test_target_verification_self_referential_located(tmp_path):
+    m = _matcher_for(tmp_path,
+        "Section: I2C_CR1 control register. "
+        "This register can be written only when the flag is cleared.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "This register can be written only when the flag is cleared.",
+        "register": "CR1", "peripheral": "i2c1"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is True
+    assert rec["target_located"] is True      # page names I2C_CR1
+
+
+def test_target_verification_retarget_caught(tmp_path):
+    # The calibration blind spot: a nameless quote anchored in ANOTHER
+    # register's section, while the constraint claims a different target.
+    m = _matcher_for(tmp_path,
+        "Section: SPI_TXCRCR. "
+        "This register can be written only when the flag is cleared.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "This register can be written only when the flag is cleared.",
+        "register": "WUTR", "peripheral": "rtc"})   # retargeted claim
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is True
+    assert rec["target_located"] is False     # page never mentions RTC/WUTR
+
+
+def test_target_verification_family_placeholder_names_register(tmp_path):
+    # "AFIO_EXTICRX" is the manual's own family placeholder for EXTICR1..4 —
+    # it NAMES the register; the location requirement must not fire.
+    m = _matcher_for(tmp_path,
+        "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, "
+        "the AFIO clock should first be enabled.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "To read/write the AFIO_EVCR, AFIO_MAPR and "
+                          "AFIO_EXTICRX registers, the AFIO clock should "
+                          "first be enabled.",
+        "register": "EXTICR1", "peripheral": "afio"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is False
+
+
+def test_target_verification_section_header_on_previous_page(tmp_path):
+    # Register sections span pages: the header naming the register sits on
+    # the page before the quoted note (the USART_CR2 case, rm0008 p823/824).
+    make_chunks(tmp_path, {
+        20: ["Section 27.6.5: USART_CR2 control register 2. Bits above."],
+        21: ["These 3 bits should not be written while the transmitter is enabled."],
+    })
+    m = quote_anchor.RMMatcher(RM, str(tmp_path / RM / "chunks" / "md"))
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "These 3 bits should not be written while the transmitter is enabled.",
+        "register": "CR2", "peripheral": "usart1"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is True
+    assert rec["target_located"] is True      # named on the neighbor page

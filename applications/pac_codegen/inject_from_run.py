@@ -156,24 +156,42 @@ def main() -> None:
                 tiers = {}
                 for op in list(plan.preconditions):
                     op_tiers = []
+                    drop_reason = None
                     for quote in plan.docs.get(op, []):
-                        rec = qa.anchor_row(matcher, {"datasheet_text": quote,
-                                                      "register": plan.reg_name})
+                        rec = qa.anchor_row(matcher, {
+                            "datasheet_text": quote,
+                            "register": plan.reg_name,
+                            "peripheral": plan.peripheral,
+                        })
                         op_tiers.append(rec["tier"])
+                        if rec["tier"] == "unanchored":
+                            drop_reason = ("quote_unanchored",
+                                           "supporting quote not found in the "
+                                           f"{rm} datasheet markdown")
+                        elif (rec.get("self_referential")
+                              and not rec.get("target_located")):
+                            # The quote never names the register ("This
+                            # register ...") AND the page it lives on is not
+                            # the target's section — the target cannot be
+                            # verified textually OR positionally.
+                            drop_reason = ("target_unverified_by_location",
+                                           "self-referential quote anchored "
+                                           "outside the target register's "
+                                           "section")
                     tiers[op] = op_tiers
-                    if any(tr == "unanchored" for tr in op_tiers):
+                    if drop_reason:
+                        fate, why = drop_reason
                         del plan.preconditions[op]
                         plan.docs.pop(op, None)
                         rows.append({
                             "file": "", "peripheral": plan.peripheral,
                             "register": plan.reg_name,
-                            "fate": "quote_unanchored",
-                            "reason": f"{op}: supporting quote not found in "
-                                      f"the {rm} datasheet markdown",
+                            "fate": fate,
+                            "reason": f"{op}: {why}",
                             "constraints": [],
                         })
                         print(f"  note: {plan.peripheral}/{plan.reg_name}: "
-                              f"dropped {op} gate — quote unanchored")
+                              f"dropped {op} gate — {fate}")
                 quote_tiers[(plan.peripheral, plan.reg_name)] = tiers
                 if plan.preconditions:
                     kept_plans.append(plan)
