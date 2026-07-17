@@ -416,3 +416,17 @@ def test_target_verification_section_header_on_previous_page(tmp_path):
     assert rec["tier"] == "exact"
     assert rec["self_referential"] is True
     assert rec["target_located"] is True      # named on the neighbor page
+
+
+def test_target_verification_compound_name_tail(tmp_path):
+    # Run-file names are peripheral-scoped compounds; the manual writes a
+    # prefixed tail: register "dma_dmardlar" appears as "ETH_DMARDLAR".
+    m = _matcher_for(tmp_path,
+        "The ETH_DMARDLAR register description. "
+        "This register can be written only when transmission has stopped.")
+    rec = quote_anchor.anchor_row(m, {
+        "datasheet_text": "This register can be written only when transmission has stopped.",
+        "register": "dma_dmardlar", "peripheral": "ethernet"})
+    assert rec["tier"] == "exact"
+    assert rec["self_referential"] is True
+    assert rec["target_located"] is True

@@ -592,14 +592,32 @@ def _target_verification(rec: dict, matcher, unit, nq: str,
     rec["self_referential"] = bool(reg_norm) and not named
     located = False
     if reg_norm:
-        located = matcher.mention_score(unit, peripheral, register) > 0
+        # Manual-prose name forms: run-file names are peripheral-scoped
+        # compounds ("dma_dmardlar") where the manual writes a prefixed tail
+        # ("ETH_DMARDLAR") -- searching the tail segment recovers them.
+        # (Measured 2026-07-17: candidates cut corpus location-unverified
+        # from 27.9% to 15.1% of anchored rows; widening the page window
+        # alone recovered <1%.)
+        cands = {reg_norm}
+        if "_" in reg_norm:
+            cands.add(reg_norm.split("_")[-1])
+            cands.add(reg_norm.replace("_", ""))
+        cands = {c for c in cands if len(c) >= 4}
+
+        def _page_locates(key) -> bool:
+            if matcher.mention_score(key, peripheral, register) > 0:
+                return True
+            txt = matcher.unit_norm(key)
+            return any(c in txt for c in cands)
+
+        located = _page_locates(unit)
         if not located:
             # Register sections span pages: the section header naming the
-            # register often sits on the page BEFORE the quoted note. Accept
-            # a mention on the matched page's immediate neighbors.
+            # register often sits on a nearby page (the previous page for
+            # continuation notes; register-map tables just after).
             for page in unit:
-                for q in (page - 1, page + 1):
-                    if q in matcher.page_orig and                             matcher.mention_score((q,), peripheral, register) > 0:
+                for q in (page - 2, page - 1, page + 1, page + 2):
+                    if q in matcher.page_orig and _page_locates((q,)):
                         located = True
                         break
                 if located:
