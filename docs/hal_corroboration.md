@@ -48,8 +48,18 @@ Adjudicated classification of all 34:
 | final class | count | meaning |
 | --- | --- | --- |
 | **fully corroborated** (all three preconditions checked) | **0** | *no site in either HAL implements the complete rule* |
-| **partially corroborated** (waits on STOP only; never START or PEC) | 10 | the rule was known — one third of it was implemented |
-| **unchecked** | 24 | the constrained operation runs with no nearby precondition check |
+| **partially corroborated** (waits on STOP only; never START or PEC) | 8 | the rule was known — one third of it was implemented |
+| **unchecked** | 26 | the constrained operation runs with no nearby precondition check |
+
+> **Correction (2026-07-17):** an earlier revision reported 10 partial / 24
+> unchecked by mapping all ten scan/judge disagreements to *partial*. A
+> per-site re-adjudication against the HAL source (full breakdown in
+> [`i2c_call_sites.md`](i2c_call_sites.md)) found that two f4 `i2c/dma.rs`
+> disagreements (`send_start:434`, `handle_dma_interrupt:788`) were scan
+> false positives — writer-proxy matches, not real STOP waits — and belong
+> in *unchecked*. Corrected to **8 partial / 26 unchecked**; 0 fully
+> corroborated is unchanged. This is exactly the "scan over-credits via
+> writer proxies" failure mode noted below.
 
 The partial sites are unambiguous about author intent — stm32f4xx-hal even
 carries the manual's reasoning as a comment directly above its STOP wait:
@@ -69,7 +79,7 @@ extracted. START and PEC are never checked anywhere in either HAL.
 ## The headline
 
 **Zero of 34 real-world call sites implement the complete datasheet rule.**
-Ten implement a third of it (the STOP wait); twenty-four implement none of
+Eight implement a third of it (the STOP wait); twenty-six implement none of
 it. This is the strongest possible framing for the witnessed API: where HAL
 authors knew the rule they encoded it partially and by hand; the generated
 `check_write_ready()` performs the *complete, datasheet-derived* check, and
