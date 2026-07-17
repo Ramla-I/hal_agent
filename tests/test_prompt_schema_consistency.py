@@ -2,16 +2,58 @@
 Test that the JSON schema described in prompts matches the Pydantic models in defs.py
 
 This ensures the prompt description stays in sync with the actual data models.
+Covers both the v1 layout/constraint wire format (still parsed from the
+corpus) and the grammar-v2 constraint text (ACCESS_CONSTRAINTS_V2_SCHEMA /
+ACCESS_CONSTRAINTS_V2_GUIDANCE), which every generator system prompt and the
+constraints-only eval prompt must share verbatim.
 """
 
+import re
 import sys
 import os
 import json
 
+from pydantic import TypeAdapter
+
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from defs import RegisterInfo, BitField, BitNumber, EnumValue, FieldState, RegisterAccessConstraint
+from defs import (
+    ConstraintBase,
+    ConstraintV2,
+    FieldCondition,
+    FieldState,
+    RegisterAccessConstraint,
+    RegisterInfo,
+    StateGate,
+)
+from prompts.register_info_stm import (
+    ACCESS_CONSTRAINTS_V2_GUIDANCE,
+    ACCESS_CONSTRAINTS_V2_SCHEMA,
+    create_register_constraints_v2_system_prompt,
+    create_register_info_stm_system_prompt,
+    create_register_info_stm_system_prompt_batched,
+    create_register_info_stm_system_prompt_batched_minimal,
+)
+from prompts.examples import (
+    stm_access_constraints_v2_examples,
+    stm_datasheet_batched_example,
+    stm_datasheet_batched_example_no_reasoning,
+    stm_datasheet_example,
+)
+
+CONSTRAINT_V2_ADAPTER = TypeAdapter(ConstraintV2)
+
+ALL_SYSTEM_PROMPTS = {
+    "full": create_register_info_stm_system_prompt(),
+    "batched": create_register_info_stm_system_prompt_batched(),
+    "batched_no_reasoning": create_register_info_stm_system_prompt_batched(
+        include_reasoning=False),
+    "batched_minimal": create_register_info_stm_system_prompt_batched_minimal(),
+    "constraints_only": create_register_constraints_v2_system_prompt(),
+}
+
+_JSON_FENCE_RE = re.compile(r"```json\s*(.*?)```", re.DOTALL)
 
 
 def test_complete_register_info_schema():
@@ -97,35 +139,36 @@ def test_minimal_register_info_schema():
 
 
 def test_access_constraint_with_postconditions():
-    """Test access constraint with both pre and post conditions"""
+    """Test access constraint with both pre and post conditions (v1 wire
+    format, the real RTC-CNF pre+post software action from rm0008)."""
     sample_json = {
-        "datasheet_register_abbreviation": "MTQC",
-        "address_offset": "0x10",
+        "datasheet_register_abbreviation": "RTC_CNTH",
+        "address_offset": "0x18",
         "reset_value": "0x0000",
         "size": 32,
         "subfields": [],
         "access_constraints": [
             {
-                "target_register": "MTQC",
+                "target_register": "RTC_CNTH",
                 "target_fields": [],
                 "target_operation": "write",
                 "preconditions": [
                     {
-                        "register_name": "RTTDCS",
-                        "field_name": "ARBDIS",
+                        "register_name": "RTC_CRL",
+                        "field_name": "CNF",
                         "required_state": "set"
                     }
                 ],
                 "postconditions": [
                     {
-                        "register_name": "RTTDCS",
-                        "field_name": "ARBDIS",
+                        "register_name": "RTC_CRL",
+                        "field_name": "CNF",
                         "required_state": "cleared"
                     }
                 ],
                 "severity": "error",
-                "consequence": "Undefined behavior if ARBDIS not cleared after",
-                "datasheet_text": "Software must set RTTDCS.ARBDIS before configuring MTQC and then clear RTTDCS.ARBDIS afterwards"
+                "consequence": "The write is not executed until CNF is set before and cleared after",
+                "datasheet_text": "To write to this register it is necessary to enter configuration mode (set CNF). The write operation is only executed when the CNF bit is reset by software after has been set."
             }
         ]
     }
@@ -133,7 +176,7 @@ def test_access_constraint_with_postconditions():
     register_info = RegisterInfo(**sample_json)
     constraint = register_info.access_constraints[0]
 
-    assert constraint.target_register == "MTQC"
+    assert constraint.target_register == "RTC_CNTH"
     assert len(constraint.preconditions) == 1
     assert len(constraint.postconditions) == 1
     assert constraint.preconditions[0].required_state == "set"
@@ -256,10 +299,11 @@ def test_all_required_fields_present():
         "subfields",
         "access_constraints"
     }
-    # Optional fields with defaults -- absent from every prompt-emitted JSON,
-    # so they must never become required. schema_version tags the constraint
-    # grammar version (v1 wire format until roadmap step F; defaults to 1).
-    optional_fields = {"schema_version"}
+    # Optional fields with defaults -- absent from v1-era run files, so they
+    # must never become required. schema_version tags the constraint grammar
+    # version (defaults to 1; the v2-native generator stamps 2);
+    # access_constraints_v2 defaults empty so every v1 file still parses.
+    optional_fields = {"schema_version", "access_constraints_v2"}
 
     model_fields = set(RegisterInfo.model_fields.keys())
     assert required_fields | optional_fields == model_fields, \
@@ -269,7 +313,7 @@ def test_all_required_fields_present():
             f"{name} must stay required"
     for name in optional_fields:
         assert not RegisterInfo.model_fields[name].is_required(), \
-            f"{name} must stay optional (prompts do not emit it)"
+            f"{name} must stay optional (v1 run files do not carry it)"
     assert RegisterInfo.model_fields["schema_version"].default == 1
 
 
@@ -302,6 +346,168 @@ def test_field_state_required_fields():
     assert required_fields == model_fields, f"Field mismatch. Expected: {required_fields}, Got: {model_fields}"
 
 
+# ---------------------------------------------------------------------------
+# Grammar v2: prompt <-> schema alignment
+# ---------------------------------------------------------------------------
+
+
+def test_native_v2_register_info_parses():
+    """The v2-native wire format (step F): access_constraints kept empty,
+    access_constraints_v2 populated, schema_version 2."""
+    sample_json = {
+        "datasheet_register_abbreviation": "USART_BRR",
+        "address_offset": "0x08",
+        "reset_value": "0x0000",
+        "size": 32,
+        "subfields": [],
+        "access_constraints": [],
+        "access_constraints_v2": [
+            {
+                "kind": "state_gate",
+                "target_register": "USART_BRR",
+                "target_fields": [],
+                "target_operation": "write",
+                "preconditions": [
+                    {"register": "USART_CR1", "field": "UE", "state": "cleared",
+                     "established_by": "software", "action_operation": "modify"}
+                ],
+                "postconditions": [],
+                "severity": "error",
+                "consequence": "baud rate corrupted",
+                "datasheet_text": "This register can only be written when the USART is disabled (UE=0).",
+            }
+        ],
+        "schema_version": 2,
+    }
+    register_info = RegisterInfo(**sample_json)
+    assert register_info.schema_version == 2
+    assert register_info.access_constraints == []
+    (gate,) = register_info.access_constraints_v2
+    assert isinstance(gate, StateGate)
+    assert gate.preconditions[0].established_by == "software"
+
+
+def test_all_prompts_share_v2_constraint_text():
+    """Every generator system prompt AND the constraints-only eval prompt
+    embed the two authoritative constraint-text constants verbatim -- the
+    factoring that lets the extraction eval test exactly what ships."""
+    for name, prompt in ALL_SYSTEM_PROMPTS.items():
+        assert ACCESS_CONSTRAINTS_V2_SCHEMA in prompt, \
+            f"{name} prompt does not embed ACCESS_CONSTRAINTS_V2_SCHEMA verbatim"
+        assert ACCESS_CONSTRAINTS_V2_GUIDANCE in prompt, \
+            f"{name} prompt does not embed ACCESS_CONSTRAINTS_V2_GUIDANCE verbatim"
+        assert stm_access_constraints_v2_examples in prompt, \
+            f"{name} prompt does not embed the worked constraint examples"
+
+
+def test_prompt_schema_covers_v2_vocabulary():
+    """Every Literal vocabulary of the v2 union appears in the schema text;
+    every FieldCondition wire key is described."""
+    kinds = ConstraintBase.model_fields["kind"].annotation.__args__
+    assert set(kinds) == {"state_gate", "sequence", "write_once", "delay",
+                          "read_effect", "clock_gate", "value_relation", "other"}
+    for kind in kinds:
+        assert f'"{kind}"' in ACCESS_CONSTRAINTS_V2_SCHEMA, \
+            f"kind {kind} missing from the prompt schema"
+    for field_name in FieldCondition.model_fields:
+        assert f"`{field_name}`" in ACCESS_CONSTRAINTS_V2_SCHEMA, \
+            f"condition field {field_name} missing from the prompt schema"
+    for value in ("hardware", "software"):
+        assert f'"{value}"' in ACCESS_CONSTRAINTS_V2_SCHEMA
+    for state in ("cleared", "set", "equals"):
+        assert f'"{state}"' in ACCESS_CONSTRAINTS_V2_SCHEMA
+    # The wire-format keys themselves.
+    for key in ("schema_version", "access_constraints", "access_constraints_v2"):
+        assert f"`{key}`" in ACCESS_CONSTRAINTS_V2_SCHEMA
+    # established_by is explained (one sentence each) in the guidance.
+    assert "established_by" in ACCESS_CONSTRAINTS_V2_GUIDANCE
+    assert "action_operation" in ACCESS_CONSTRAINTS_V2_GUIDANCE
+
+
+def test_guidance_has_decision_tree_and_negative_rules():
+    """Plan section 6: decision tree ends in the two-way fork; the negative
+    routing rules cover every FP class of section 5.3."""
+    g = ACCESS_CONSTRAINTS_V2_GUIDANCE
+    # Two-way fork: genuine-but-fits-no-kind -> other; not-a-requirement -> nothing.
+    assert '"other"' in g
+    assert "emit NOTHING" in g
+    for negative in ("w1c", "Read-to-clear", "Access-width", "privileged",
+                     "don't-care", "Reset behavior"):
+        assert negative in g, f"negative routing rule for {negative!r} missing"
+    # Naming, values, verbatim-quote and dedup rules.
+    assert "whole_register" in g
+    assert "wildcards" in g
+    assert "VERBATIM AND COMPLETE" in g
+    assert "target_fields" in g  # dedup guidance
+
+
+def test_prompt_example_json_validates_against_models():
+    """Every ```json block in the example sets parses, and every
+    access_constraints_v2 entry validates against the v2 union -- so the
+    few-shots can never drift from defs.py."""
+    # strict=True: every fenced block must be valid JSON (pure example sets).
+    # strict=False: format-placeholder snippets like ```json\n[...]``` are
+    # allowed to skip (full built prompts).
+    sources = {
+        "stm_datasheet_example": (stm_datasheet_example, True),
+        "stm_access_constraints_v2_examples":
+            (stm_access_constraints_v2_examples, True),
+        "stm_datasheet_batched_example": (stm_datasheet_batched_example, True),
+        "stm_datasheet_batched_example_no_reasoning":
+            (stm_datasheet_batched_example_no_reasoning, True),
+        "batched_minimal_prompt":
+            (ALL_SYSTEM_PROMPTS["batched_minimal"], False),
+    }
+    v2_entries = 0
+    for name, (text, strict) in sources.items():
+        blocks = _JSON_FENCE_RE.findall(text)
+        assert blocks, f"{name} has no ```json blocks"
+        parsed = 0
+        for block in blocks:
+            try:
+                data = json.loads(block)
+            except ValueError:
+                if strict:
+                    raise AssertionError(
+                        f"{name} has an invalid ```json block: {block[:120]!r}")
+                continue
+            parsed += 1
+            objs = data if isinstance(data, list) else [data]
+            for obj in objs:
+                if not isinstance(obj, dict):
+                    continue
+                v2 = obj.get("access_constraints_v2")
+                if isinstance(obj.get("kind"), str):
+                    # a bare constraint example
+                    CONSTRAINT_V2_ADAPTER.validate_python(obj)
+                    v2_entries += 1
+                if v2 is None:
+                    continue
+                # The wire-format decision: v1 key present and EMPTY wherever
+                # v2 constraints appear; schema_version stamped 2.
+                assert obj.get("access_constraints") == [], \
+                    f"{name}: access_constraints must stay [] next to v2 output"
+                assert obj.get("schema_version") == 2, \
+                    f"{name}: schema_version 2 missing"
+                for entry in v2:
+                    CONSTRAINT_V2_ADAPTER.validate_python(entry)
+                    v2_entries += 1
+        assert parsed, f"{name}: no ```json block parsed"
+    assert v2_entries >= 4, "expected the worked few-shots to carry v2 constraints"
+
+
+def test_synthetic_intel_example_gone():
+    """Decision 11.6: the synthetic Intel MTQC/RTTDCS example is replaced by
+    real STM few-shots everywhere."""
+    for name, prompt in ALL_SYSTEM_PROMPTS.items():
+        assert "MTQC" not in prompt and "RTTDCS" not in prompt, \
+            f"{name} prompt still carries the synthetic Intel example"
+    # And the real replacements are present in the shared examples.
+    for marker in ("RTC_CRL", "IWDG_KR", "USART_CR1", "EWIF"):
+        assert marker in stm_access_constraints_v2_examples, \
+            f"real STM few-shot {marker} missing"
+
+
 if __name__ == "__main__":
     # Run all test functions
     test_functions = [
@@ -315,6 +521,12 @@ if __name__ == "__main__":
         test_all_required_fields_present,
         test_constraint_required_fields,
         test_field_state_required_fields,
+        test_native_v2_register_info_parses,
+        test_all_prompts_share_v2_constraint_text,
+        test_prompt_schema_covers_v2_vocabulary,
+        test_guidance_has_decision_tree_and_negative_rules,
+        test_prompt_example_json_validates_against_models,
+        test_synthetic_intel_example_gone,
     ]
 
     print("Running prompt schema consistency tests...\n")

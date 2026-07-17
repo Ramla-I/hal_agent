@@ -154,14 +154,19 @@ class RegisterInfo(BaseModel):
     reset_value: str
     size: int
     subfields: list[BitField]
-    # Grammar v1 constraints -- the generator wire format until roadmap step F.
-    # Grammar v2 constraints are derived at collection time (see
-    # applications/pac_codegen/collect_constraints.py) and written alongside
-    # this list under the JSON key "access_constraints_v2".
+    # Grammar v1 constraints. The v2-native generator (roadmap step F) keeps
+    # this key present but ALWAYS EMPTY; v1-era run files still populate it
+    # and are lifted at collection time (see
+    # applications/pac_codegen/collect_constraints.py).
     access_constraints: list[RegisterAccessConstraint]
-    # Grammar version of access_constraints. Absent in every existing run file,
-    # so it defaults to 1; collection stamps 2 only once the generator emits
-    # the v2 union natively (roadmap step F).
+    # Grammar v2 constraints (the discriminated union defined below; forward
+    # reference resolved by the model_rebuild() at the end of this module).
+    # Default empty so every existing v1 run file parses unchanged. A register
+    # is native-v2 when schema_version == 2 or this list is non-empty;
+    # collection then skips the v1 lift and lints these objects directly.
+    access_constraints_v2: list["ConstraintV2"] = []
+    # Grammar version of the constraint wire format. Absent in every v1 run
+    # file, so it defaults to 1; the v2-native generator stamps 2.
     schema_version: int = 1
 
 class RegisterList(BaseModel):
@@ -475,6 +480,12 @@ ConstraintV2 = Annotated[
           ValueRelation, Other],
     Field(discriminator="kind"),
 ]
+
+# RegisterInfo.access_constraints_v2 forward-references ConstraintV2 (defined
+# just above); resolve it now that the union exists. RegisterList nests
+# RegisterInfo, so it must be rebuilt too.
+RegisterInfo.model_rebuild()
+RegisterList.model_rebuild()
 
 
 Enforceability = Literal[

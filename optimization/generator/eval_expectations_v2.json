@@ -1,0 +1,176 @@
+{
+  "description": "Fixed golden sample for the grammar-v2 extraction eval (roadmap step F, plan section 6). Eleven registers chosen to exercise every prompt behavior: hardware vs software established_by, dual establishment, whole-register conditions, pre+post software actions, cross-register read gates, the sequence kind, and the negative routing rules (w1c, access-width, plain data/control registers -> emit nothing). Contexts are assembled deterministically from the chunked markdown (pages mentioning the register), NOT via the pipeline's retrieval stack, so the eval isolates prompt quality from retrieval quality. Scoring semantics: required_kinds must all be emitted; kinds outside allowed_kinds count as 'extra'; expected_established_by keys are 'REGISTER.FIELD' (or 'REGISTER' for whole-register conditions) matched suffix-insensitively against emitted conditions.",
+  "model": "openai/gpt-oss-120b",
+  "cases": [
+    {
+      "id": "rm0008_i2c1_cr1",
+      "rm": "rm0008",
+      "file": "i2c1_cr1",
+      "peripheral": "i2c1",
+      "register": "cr1",
+      "register_name": "I2C_CR1",
+      "peripheral_name": "I2C1",
+      "expect_zero": false,
+      "required_kinds": ["state_gate"],
+      "allowed_kinds": ["state_gate", "other"],
+      "expected_established_by": {
+        "I2C_CR1.STOP": "hardware",
+        "I2C_CR1.START": "hardware",
+        "I2C_CR1.PEC": "hardware"
+      },
+      "notes": "The canonical hardware state_gate: 3 conditions (STOP/START/PEC), all cleared by hardware. Mirrors the updated I2C_CR1 few-shot but must be reproduced from live context."
+    },
+    {
+      "id": "rm0091_usart1_cr1",
+      "rm": "rm0091",
+      "file": "usart1_cr1",
+      "peripheral": "usart1",
+      "register": "cr1",
+      "register_name": "USART_CR1",
+      "peripheral_name": "USART1",
+      "expect_zero": false,
+      "required_kinds": ["state_gate"],
+      "allowed_kinds": ["state_gate", "other"],
+      "expected_established_by": {
+        "USART_CR1.UE": "software"
+      },
+      "notes": "Software mode-gate: several CR1 bits (M1, M0, PCE, PS, ...) 'can only be written when the USART is disabled (UE=0)'. UE is cleared by the driver -> established_by software. Also exercises the dedup guidance (one gate with target_fields, not per-bit repeats)."
+    },
+    {
+      "id": "rm0008_rtc_cnth",
+      "rm": "rm0008",
+      "file": "rtc_cnth",
+      "peripheral": "rtc",
+      "register": "cnth",
+      "register_name": "RTC_CNTH",
+      "peripheral_name": "RTC",
+      "expect_zero": false,
+      "required_kinds": ["state_gate"],
+      "allowed_kinds": ["state_gate", "sequence", "other"],
+      "expected_established_by": {
+        "RTC_CRL.CNF": "software",
+        "RTC_CRL.RTOFF": "hardware"
+      },
+      "notes": "The RTC-CNF pre+post software action (the MTQC replacement): set CNF before the write, clear it after (software, modify), plus the hardware-observed RTOFF=1 write-allowed flag. The configuration procedure may legitimately be encoded as a sequence too (allowed)."
+    },
+    {
+      "id": "rm0008_iwdg_pr",
+      "rm": "rm0008",
+      "file": "iwdg_pr",
+      "peripheral": "iwdg",
+      "register": "pr",
+      "register_name": "IWDG_PR",
+      "peripheral_name": "IWDG",
+      "expect_zero": false,
+      "required_kinds": ["state_gate"],
+      "allowed_kinds": ["state_gate", "other"],
+      "expected_established_by": {
+        "IWDG_KR": "software",
+        "IWDG_SR.PVU": "hardware"
+      },
+      "notes": "Dual establishment + whole-register condition: KR==0x5555 written by the driver (software, whole_register, numeric value) AND the hardware-managed PVU flag cleared. The whole_register flag must be used, never field ''."
+    },
+    {
+      "id": "rm0383_rtc_dr",
+      "rm": "rm0383",
+      "file": "rtc_dr",
+      "peripheral": "rtc",
+      "register": "dr",
+      "register_name": "RTC_DR",
+      "peripheral_name": "RTC",
+      "expect_zero": false,
+      "required_kinds": ["sequence"],
+      "allowed_kinds": ["sequence", "state_gate", "other"],
+      "expected_established_by": {},
+      "notes": "The RTC_WPR 0xCA -> 0x53 unlock protocol should become a sequence (v1 mangled it into 'equals:0xCA then 0x53'). A state_gate (DBP/INIT gating) or other encoding of the unlock counts as partial, per the plan. expected_established_by left empty: which of the procedure's gates the model emits is legitimately variable."
+    },
+    {
+      "id": "rm0008_spi1_txcrcr",
+      "rm": "rm0008",
+      "file": "spi1_txcrcr",
+      "peripheral": "spi1",
+      "register": "txcrcr",
+      "register_name": "SPI_TXCRCR",
+      "peripheral_name": "SPI1",
+      "expect_zero": false,
+      "required_kinds": ["state_gate"],
+      "allowed_kinds": ["state_gate", "other"],
+      "expected_established_by": {
+        "SPI_SR.BSY": "hardware"
+      },
+      "notes": "Cross-register READ gate (severity warning in the corpus): reading TXCRCR while SPI_SR.BSY is set returns garbage. BSY is hardware-managed. Sound (not self-defeating) because the check reads a different register."
+    },
+    {
+      "id": "rm0360_adc_chselr",
+      "rm": "rm0360",
+      "file": "adc_chselr",
+      "peripheral": "adc",
+      "register": "chselr",
+      "register_name": "ADC_CHSELR",
+      "peripheral_name": "ADC",
+      "expect_zero": false,
+      "required_kinds": ["state_gate"],
+      "allowed_kinds": ["state_gate", "other"],
+      "expected_established_by": {
+        "ADC_CR.ADSTART": "software"
+      },
+      "notes": "Software gate: channel selection writable only when no conversion is ongoing (ADSTART=0); the driver controls whether a conversion was started, so the cleared state is software-established."
+    },
+    {
+      "id": "rm0313_rcc_csr",
+      "rm": "rm0313",
+      "file": "rcc_csr",
+      "peripheral": "rcc",
+      "register": "csr",
+      "register_name": "RCC_CSR",
+      "peripheral_name": "RCC",
+      "expect_zero": true,
+      "required_kinds": [],
+      "allowed_kinds": [],
+      "expected_established_by": {},
+      "notes": "NEGATIVE (FP class 1): the reset-flag bits are 'cleared by writing to the RMVF bit' -- w1c flag-acknowledge semantics that the v1 corpus misextracted into a 9-postcondition pathology. The v2 prompt must emit nothing."
+    },
+    {
+      "id": "rm0008_wwdg_cfr",
+      "rm": "rm0008",
+      "file": "wwdg_cfr",
+      "peripheral": "wwdg",
+      "register": "cfr",
+      "register_name": "WWDG_CFR",
+      "peripheral_name": "WWDG",
+      "expect_zero": true,
+      "required_kinds": [],
+      "allowed_kinds": [],
+      "expected_established_by": {},
+      "notes": "NEGATIVE (FP class 3): the only candidate note is the access-width rule ('registers have to be accessed by half-words or words'), which is routed out. The v1 corpus emitted a vacuous read/write constraint here; v2 must emit nothing."
+    },
+    {
+      "id": "rm0008_gpioa_odr",
+      "rm": "rm0008",
+      "file": "gpioa_odr",
+      "peripheral": "gpioa",
+      "register": "odr",
+      "register_name": "GPIOx_ODR",
+      "peripheral_name": "GPIOA",
+      "expect_zero": true,
+      "required_kinds": [],
+      "allowed_kinds": [],
+      "expected_established_by": {},
+      "notes": "NEGATIVE control: an ordinary port output data register whose section states no access/ordering requirement (the BSRR atomic-set remark is descriptive). Expect zero constraints."
+    },
+    {
+      "id": "rm0008_crc_dr",
+      "rm": "rm0008",
+      "file": "crc_dr",
+      "peripheral": "crc",
+      "register": "dr",
+      "register_name": "CRC_DR",
+      "peripheral_name": "CRC",
+      "expect_zero": true,
+      "required_kinds": [],
+      "allowed_kinds": [],
+      "expected_established_by": {},
+      "notes": "NEGATIVE control: a plain data register (input on write, result on read) with no constraint prose in its section. Expect zero constraints."
+    }
+  ]
+}

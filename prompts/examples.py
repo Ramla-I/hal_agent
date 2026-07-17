@@ -88,7 +88,9 @@ stm_datasheet_example = """
                 ]
             }
         ],
-        "access_constraints": []
+        "access_constraints": [],
+        "access_constraints_v2": [],
+        "schema_version": 2
     }
     ```
 
@@ -181,7 +183,8 @@ stm_datasheet_example = """
     The register is 16 bits (based on the bit field table).
     I can see STOP and START bits which have special constraints mentioned in the Note.
     The Note states that software must not write to I2C_CR1 while STOP, START, or PEC bits are set (before they are cleared by hardware).
-    This is an access constraint that needs to be captured.
+    This is a state condition on a write operation, so the kind is "state_gate".
+    The bits are cleared by hardware, so each condition is established_by "hardware".
 
     ```json
     {
@@ -239,26 +242,31 @@ stm_datasheet_example = """
                 ]
             }
         ],
-        "access_constraints": [
+        "access_constraints": [],
+        "access_constraints_v2": [
             {
+                "kind": "state_gate",
                 "target_register": "I2C_CR1",
                 "target_fields": [],
                 "target_operation": "write",
                 "preconditions": [
                     {
-                        "register_name": "I2C_CR1",
-                        "field_name": "STOP",
-                        "required_state": "cleared"
+                        "register": "I2C_CR1",
+                        "field": "STOP",
+                        "state": "cleared",
+                        "established_by": "hardware"
                     },
                     {
-                        "register_name": "I2C_CR1",
-                        "field_name": "START",
-                        "required_state": "cleared"
+                        "register": "I2C_CR1",
+                        "field": "START",
+                        "state": "cleared",
+                        "established_by": "hardware"
                     },
                     {
-                        "register_name": "I2C_CR1",
-                        "field_name": "PEC",
-                        "required_state": "cleared"
+                        "register": "I2C_CR1",
+                        "field": "PEC",
+                        "state": "cleared",
+                        "established_by": "hardware"
                     }
                 ],
                 "postconditions": [],
@@ -266,9 +274,97 @@ stm_datasheet_example = """
                 "consequence": "Risk of setting a second STOP, START or PEC request",
                 "datasheet_text": "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
             }
-        ]
+        ],
+        "schema_version": 2
     }
     ```
+"""
+
+
+# ---------------------------------------------------------------------------
+# Worked access-constraint few-shots (grammar v2). Real STM examples per plan
+# section 5.2 / decision 11.6 -- these REPLACE the synthetic Intel
+# MTQC/RTTDCS example everywhere. Embedded verbatim in every generator system
+# prompt (via ACCESS_CONSTRAINTS_V2_GUIDANCE in prompts/register_info_stm.py)
+# and in the constraints-only extraction-eval prompt.
+# ---------------------------------------------------------------------------
+
+stm_access_constraints_v2_examples = """\
+    Worked constraint examples (datasheet text -> access_constraints_v2 entries):
+
+    CONSTRAINT EXAMPLE 1 -- software mode-gate (state_gate, established_by "software"):
+    Datasheet text about USART_BRR: "This register can only be written when the USART is disabled (UE=0)."
+    The driver itself must clear UE first, so the condition is established_by "software" with action_operation "modify".
+    Emits:
+    ```json
+    [
+        {
+            "kind": "state_gate",
+            "target_register": "USART_BRR",
+            "target_fields": [],
+            "target_operation": "write",
+            "preconditions": [
+                {"register": "USART_CR1", "field": "UE", "state": "cleared", "established_by": "software", "action_operation": "modify"}
+            ],
+            "postconditions": [],
+            "severity": "error",
+            "consequence": "Writing BRR while the USART is enabled is not allowed and can corrupt the baud rate",
+            "datasheet_text": "This register can only be written when the USART is disabled (UE=0)."
+        }
+    ]
+    ```
+
+    CONSTRAINT EXAMPLE 2 -- pre + post software action (state_gate with a software postcondition):
+    Datasheet text about RTC_CNTH: "To write to this register it is necessary to enter configuration mode (set CNF). The write operation is only executed when the CNF bit is reset by software after has been set."
+    Software must SET RTC_CRL.CNF before the write and CLEAR it afterwards -- a software-established precondition plus a software postcondition, both performed by modifying RTC_CRL.
+    Emits:
+    ```json
+    [
+        {
+            "kind": "state_gate",
+            "target_register": "RTC_CNTH",
+            "target_fields": [],
+            "target_operation": "write",
+            "preconditions": [
+                {"register": "RTC_CRL", "field": "CNF", "state": "set", "established_by": "software", "action_operation": "modify"}
+            ],
+            "postconditions": [
+                {"register": "RTC_CRL", "field": "CNF", "state": "cleared", "established_by": "software", "action_operation": "modify"}
+            ],
+            "severity": "error",
+            "consequence": "The write is not executed until CNF is set before and cleared after the write",
+            "datasheet_text": "To write to this register it is necessary to enter configuration mode (set CNF). The write operation is only executed when the CNF bit is reset by software after has been set."
+        }
+    ]
+    ```
+
+    CONSTRAINT EXAMPLE 3 -- dual establishment + whole-register condition (state_gate):
+    Datasheet text about IWDG_PR: "Write access to the IWDG_PR and IWDG_RLR registers is protected. To modify them, first write the code 0x5555 in the IWDG_KR register. PVU bit of IWDG_SR must be reset in order to be able to change the prescaler divider."
+    Two conditions: software must write the key value into the whole IWDG_KR register (whole_register, "equals", established_by "software"), and the hardware-managed PVU flag must be cleared (established_by "hardware"). Values are numeric literals.
+    Emits:
+    ```json
+    [
+        {
+            "kind": "state_gate",
+            "target_register": "IWDG_PR",
+            "target_fields": [],
+            "target_operation": "write",
+            "preconditions": [
+                {"register": "IWDG_KR", "whole_register": true, "state": "equals", "values": ["0x5555"], "established_by": "software", "action_operation": "write"},
+                {"register": "IWDG_SR", "field": "PVU", "state": "cleared", "established_by": "hardware"}
+            ],
+            "postconditions": [],
+            "severity": "error",
+            "consequence": "The write to IWDG_PR is ignored while the register is protected or a prescaler update is ongoing",
+            "datasheet_text": "Write access to the IWDG_PR and IWDG_RLR registers is protected. To modify them, first write the code 0x5555 in the IWDG_KR register. PVU bit of IWDG_SR must be reset in order to be able to change the prescaler divider."
+        }
+    ]
+    ```
+
+    CONSTRAINT EXAMPLE 4 -- NEGATIVE: flag-acknowledge semantics emit nothing:
+    Datasheet text about WWDG_SR bit EWIF: "This bit is set by hardware when the counter has reached the value 0x40. It must be cleared by software by writing '0'. A write of '1' has no effect."
+    This describes HOW a status flag is set by hardware and acknowledged by software (write-to-clear semantics). It is not an access or ordering requirement on the register.
+    Emits: nothing -- access_constraints_v2 stays [].
 """
 
 
@@ -412,7 +508,9 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints": []
+            "access_constraints": [],
+            "access_constraints_v2": [],
+            "schema_version": 2
         },
         {
             "register_name": "BKP_DR2",
@@ -431,7 +529,9 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints": []
+            "access_constraints": [],
+            "access_constraints_v2": [],
+            "schema_version": 2
         },
         {
             "register_name": "BKP_CR",
@@ -450,7 +550,9 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints": []
+            "access_constraints": [],
+            "access_constraints_v2": [],
+            "schema_version": 2
         },
         {
             "register_name": "BKP_CSR",
@@ -505,7 +607,9 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints": []
+            "access_constraints": [],
+            "access_constraints_v2": [],
+            "schema_version": 2
         },
         {
             "register_name": "BKP_DR35",
@@ -514,7 +618,9 @@ stm_datasheet_batched_example = """
             "reset_value": null,
             "size": null,
             "subfields": null,
-            "access_constraints": null
+            "access_constraints": null,
+            "access_constraints_v2": null,
+            "schema_version": 2
         }
     ]
     ```
@@ -641,7 +747,9 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints": []
+            "access_constraints": [],
+            "access_constraints_v2": [],
+            "schema_version": 2
         },
         {
             "register_name": "BKP_DR2",
@@ -660,7 +768,9 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints": []
+            "access_constraints": [],
+            "access_constraints_v2": [],
+            "schema_version": 2
         },
         {
             "register_name": "BKP_CR",
@@ -679,7 +789,9 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints": []
+            "access_constraints": [],
+            "access_constraints_v2": [],
+            "schema_version": 2
         },
         {
             "register_name": "BKP_CSR",
@@ -734,7 +846,9 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints": []
+            "access_constraints": [],
+            "access_constraints_v2": [],
+            "schema_version": 2
         },
         {
             "register_name": "BKP_DR35",
@@ -743,7 +857,9 @@ stm_datasheet_batched_example_no_reasoning = """
             "reset_value": null,
             "size": null,
             "subfields": null,
-            "access_constraints": null
+            "access_constraints": null,
+            "access_constraints_v2": null,
+            "schema_version": 2
         }
     ]
     ```
