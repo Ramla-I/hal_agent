@@ -42,30 +42,35 @@ retrieval anywhere in the judging path (plan §7.1).
 
 ### Corruption detection (the β leg — known-bad by construction)
 
+> **Amendment (2026-07-17, Ramla's rule):** the first run scored 138/150
+> (92.0%) with `change_operation` at 23/30 — but 6 of its 7 "misses" were
+> `write→modify` swaps, which are not corruptions at all. A `modify`
+> performs both a read and a write, so a rule quantifying over all writes
+> (or all reads) *entails* the modify claim; the judge confirming those was
+> correct reasoning penalized by an unfair harness (in one case,
+> `LPTIM_CMP`, the "corruption" restored the manual's own word
+> "modified"). `corruption.py` now bans corrupting **toward** modify
+> (`write→modify`, `read→modify`); away from modify stays, since a rule
+> about the read-modify-write cycle says nothing about standalone
+> operations. The 11 affected rows regenerated deterministically (same
+> seed) as `write→read` — genuinely false claims — and the judge caught
+> **all 11**. The table below is the post-fix scorecard.
+
 | corruption type | detected | rate | verdicts |
 | --- | ---: | ---: | --- |
 | `flip_polarity` | 30/30 | **100%** | 29 encoding_error, 1 not_constraint |
 | `perturb_value` | 30/30 | **100%** | 29 encoding_error, 1 not_constraint |
+| `change_operation` | 29/30 | **96.7%** | 27 encoding_error, 2 not_constraint, 1 confirmed |
 | `swap_field` | 28/30 | **93.3%** | 27 encoding_error, 1 not_constraint, 2 confirmed |
 | `retarget_register` | 27/30 | **90.0%** | 20 encoding_error, 7 not_constraint, 3 confirmed |
-| `change_operation` | 23/30 | **76.7%** | 21 encoding_error, 2 not_constraint, 7 confirmed |
-| **overall** | **138/150** | **92.0%** | |
+| **overall** | **144/150** | **96.0%** | |
 
-`change_operation` splits sharply by direction — the misses are almost all
-the semantically adjacent swap:
-
-| direction | detected |
-| --- | ---: |
-| read → write | 7/7 |
-| write → read | 11/12 |
-| write → modify | 5/11 |
-
-A `modify` performs a write, so "software may write this bit only when …"
-prose genuinely licenses a `modify` encoding; the write→modify corruption is
-close to semantically benign (trait-gated codegen would still gate the
-modify surface, plan §3). Counting only the semantically substantive
-corruptions (excluding write↔modify), overall detection is 133/139
-(**95.7%**).
+The six remaining misses decompose cleanly: 3 retargets of self-referential
+quotes (structurally invisible to any text-only judge — since 2026-07-17
+static validation's target-location gate catches this class
+deterministically, and these three cases are pinned regressions there),
+2 sibling-field swaps the surrounding text does not disambiguate, and one
+`write→read` swap (IWDG reload register).
 
 ### Flag rate on originals
 
@@ -108,9 +113,10 @@ feature for coverage but makes the sample deliberately unrepresentative:
 - **Parsing:** 0 parse failures; 7/300 items needed the one-shot repair
   retry (`parse_recovered`), all succeeded. No `json_schema` mode was used
   (Groq OSS models hard-error on it).
-- **Usage:** 479,927 tokens (358,178 in / 121,749 out), 307 API calls,
-  estimated **$0.145** at Groq list prices ($0.15/M in, $0.75/M out —
-  adjust in `calibrate.py` if pricing changes).
+- **Usage:** 478,499 tokens (358,178 in / 120,321 out), 307 API calls,
+  estimated **$0.144** at Groq list prices ($0.15/M in, $0.75/M out —
+  adjust in `calibrate.py` if pricing changes; totals include the 11-row
+  re-judge of the 2026-07-17 amendment, ~$0.003).
 - **Wall time:** 69.6 s total at concurrency 6 (~35 s per 150-item batch);
   no rate-limit stalls (wall time shows no backoff waits).
 
@@ -162,9 +168,11 @@ same shape ("The registers are not accessible in write mode when…").
    number here.
 2. **Corruption detection is a lower-bound proxy for β, on *synthetic*
    errors.** Real extraction errors (selective quoting, invented conditions)
-   may be easier or harder than these five types. Two structural blind spots
-   surfaced: self-referential quotes hide `retarget_register`, and
-   write↔modify is semantically adjacent. One realism artifact cuts the
+   may be easier or harder than these five types. One structural blind spot
+   surfaced: self-referential quotes hide `retarget_register` (now covered
+   upstream by static validation's location gate). A second apparent blind
+   spot — write→modify — turned out to be a harness bug, not a judge
+   weakness (see the 2026-07-17 amendment). One realism artifact cuts the
    other way: a sibling swap occasionally lands on a *text-consistent*
    field (`I2SMOD`→`I2SE` under "configured when the I2S is disabled";
    `BSY`→`BUSY` is a near-alias mined from another row's extraction) — such

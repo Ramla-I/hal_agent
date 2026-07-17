@@ -14,7 +14,9 @@ numbers. All corruptions here stay in-distribution:
                      field named in the same row's conditions, or a real
                      same-register field name mined from other rows of the
                      CSV. Never gibberish.
-  change_operation   write <-> read or write <-> modify on target_operation.
+  change_operation   write <-> read; modify -> write. Never toward modify:
+                     a modify contains a read AND a write, so write->modify
+                     and read->modify are entailed-true, not corruptions.
   perturb_value      equals value +/-1, staying in range (the new value's
                      bit-length never exceeds the original literal's width).
   retarget_register  point the target at a DIFFERENT register that appears
@@ -59,8 +61,13 @@ CORRUPTION_TYPES = ("flip_polarity", "swap_field", "change_operation",
                     "perturb_value", "retarget_register")
 
 POLARITY_FLIP = {"cleared": "set", "set": "cleared"}
-# write has two realistic alternatives; the per-row RNG picks one
-OP_ALTERNATIVES = {"write": ("read", "modify"),
+# Never corrupt TOWARD modify (Ramla, 2026-07-17): a modify performs both a
+# read and a write, so a rule over all writes (or all reads) entails the
+# modify claim -- write->modify / read->modify manufacture TRUE statements
+# a correct judge must confirm (6 of the 7 op-swap "escapes" in the first
+# calibration were exactly this). Away from modify is falsifying: a rule
+# about the read-modify-write cycle says nothing about standalone ops.
+OP_ALTERNATIVES = {"write": ("read",),
                    "read": ("write",),
                    "modify": ("write",)}
 _EQUALS_RE = re.compile(r"^equals:(0[bB][01]+|0[xX][0-9a-fA-F]+|\d+)$")

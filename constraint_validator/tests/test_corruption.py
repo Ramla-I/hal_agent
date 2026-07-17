@@ -126,10 +126,23 @@ def test_swap_field_sibling_pool_respects_rm_boundary():
 # change_operation
 # ---------------------------------------------------------------------------
 
-def test_change_operation_write_becomes_read_or_modify():
+def test_change_operation_write_becomes_read_never_modify():
+    # write->modify is entailed-true (a modify performs a write), so it is
+    # banned as a corruption; write's only falsifying swap is read.
     got = corruption.corrupt_change_operation(
         corruption.parse_row(base_row()), rng(), EMPTY_IDX)
-    assert got["target_operation"] in ("read", "modify")
+    assert got["target_operation"] == "read"
+
+
+def test_change_operation_never_produces_modify():
+    # No direction may corrupt TOWARD modify: rules over all writes or all
+    # reads entail the modify claim, so such swaps are true statements.
+    for op in ("write", "read", "modify"):
+        got = corruption.corrupt_change_operation(
+            corruption.parse_row(base_row(target_operation=op)), rng(),
+            EMPTY_IDX)
+        assert got["target_operation"] != "modify"
+        assert got["target_operation"] != op
 
 
 def test_change_operation_read_and_modify_become_write():
