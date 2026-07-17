@@ -110,6 +110,12 @@ def main() -> None:
     ap.add_argument("--device", required=True, help="device module, e.g. stm32f103")
     ap.add_argument("--svd-dir", default=None,
                     help="SVD file/dir for collection's name+width lint")
+    ap.add_argument("--chunks", default=None, metavar="DIR",
+                    help="chunked-datasheet root (e.g. .../chunked_datasheets/stm); "
+                         "when given, every kept constraint's quote is verified "
+                         "against the manual and UNANCHORED quotes drop their "
+                         "gates (plan §7.1: no unverifiable evidence reaches a "
+                         "crate)")
     ap.add_argument("--report", default=None, help="write the JSON report here")
     ap.add_argument("--save-constraints", default=None, metavar="PATH",
                     help="write the per-DEVICE constraints file (the durable, "
@@ -134,14 +140,55 @@ def main() -> None:
 
         plans, rows = select_and_plan(collect_dir, device_dir)
 
+        # Match the artifact and injection exactly: apply the access-mode
+        # prune (write-only registers cannot carry modify/read gates) BEFORE
+        # saving; injection re-runs it idempotently.
+        plans = rust_codegen.prune_plans_for_device(device_dir, plans)
+
+        quote_tiers = {}
+        if args.chunks:
+            rm = Path(args.run_dir.rstrip("/")).parent.name
+            from constraint_validator import quote_anchor as qa
+            matcher = qa.RMMatcher(
+                rm, str(Path(args.chunks) / rm / "chunks" / "md"))
+            kept_plans = []
+            for plan in plans:
+                tiers = {}
+                for op in list(plan.preconditions):
+                    op_tiers = []
+                    for quote in plan.docs.get(op, []):
+                        rec = qa.anchor_row(matcher, {"datasheet_text": quote,
+                                                      "register": plan.reg_name})
+                        op_tiers.append(rec["tier"])
+                    tiers[op] = op_tiers
+                    if any(tr == "unanchored" for tr in op_tiers):
+                        del plan.preconditions[op]
+                        plan.docs.pop(op, None)
+                        rows.append({
+                            "file": "", "peripheral": plan.peripheral,
+                            "register": plan.reg_name,
+                            "fate": "quote_unanchored",
+                            "reason": f"{op}: supporting quote not found in "
+                                      f"the {rm} datasheet markdown",
+                            "constraints": [],
+                        })
+                        print(f"  note: {plan.peripheral}/{plan.reg_name}: "
+                              f"dropped {op} gate — quote unanchored")
+                quote_tiers[(plan.peripheral, plan.reg_name)] = tiers
+                if plan.preconditions:
+                    kept_plans.append(plan)
+            plans = kept_plans
+
         if args.save_constraints:
             device_file = {
                 "device": args.device,
                 "source_run": args.run_dir,
                 "svd_dir": args.svd_dir,
                 "note": "constraints this device's crate enforces, post "
-                        "collection-lint and emitter selection; regenerate "
-                        "with inject_from_run.py",
+                        "collection-lint, emitter selection, access-mode "
+                        "pruning, and (with --chunks) quote verification; "
+                        "regenerate with inject_from_run.py",
+                "quote_verified_against": args.chunks or None,
                 "registers": [
                     {
                         "peripheral": p.peripheral,
@@ -152,6 +199,8 @@ def main() -> None:
                             op: [pre.describe() for pre in pres]
                             for op, pres in p.preconditions.items()},
                         "datasheet_text": p.docs,
+                        "quote_verification": quote_tiers.get(
+                            (p.peripheral, p.reg_name)),
                     }
                     for p in plans
                 ],

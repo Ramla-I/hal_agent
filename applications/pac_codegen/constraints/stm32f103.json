@@ -2,7 +2,8 @@
  "device": "stm32f103",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0008/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0008/svd/stm32f103.svd",
- "note": "constraints this device's crate enforces, post collection-lint and emitter selection; regenerate with inject_from_run.py",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
+ "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "registers": [
   {
    "peripheral": "afio",
@@ -32,6 +33,17 @@
     ],
     "modify": [
      "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ]
+   },
+   "quote_verification": {
+    "read": [
+     "exact"
+    ],
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
     ]
    }
   },
@@ -64,6 +76,17 @@
     "modify": [
      "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
     ]
+   },
+   "quote_verification": {
+    "read": [
+     "exact"
+    ],
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
    }
   },
   {
@@ -95,6 +118,17 @@
     "modify": [
      "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
     ]
+   },
+   "quote_verification": {
+    "read": [
+     "exact"
+    ],
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
    }
   },
   {
@@ -118,6 +152,14 @@
     ],
     "modify": [
      "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
     ]
    }
   },
@@ -143,6 +185,14 @@
     "modify": [
      "To read/write the AFIO_EVCR, AFIO_MAPR and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to Section 7.3.7: APB2 peripheral clock enable register (RCC_APB2ENR)."
     ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
    }
   },
   {
@@ -166,6 +216,14 @@
     ],
     "modify": [
      "Setting the TPAL and TPE bits at the same time is always safe, however resetting both at the same time can generate a spurious Tamper event. For this reason it is recommended to change TPAL bit only when the TPE bit is reset."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
     ]
    }
   },
@@ -195,6 +253,14 @@
     "modify": [
      "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
     ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
    }
   },
   {
@@ -211,6 +277,11 @@
    "datasheet_text": {
     "read": [
      "Reading this register returns the reload value from the VDD voltage domain. This value may not be up to date/valid if a write operation to this register is ongoing. For this reason the value read from this register is valid only when the RVU bit in the IWDG_SR register is reset."
+    ]
+   },
+   "quote_verification": {
+    "read": [
+     "fuzzy"
     ]
    }
   },
@@ -236,6 +307,14 @@
     "modify": [
      "The LSEON, LSEBYP, RTCSEL and RTCEN bits of the Backup domain control register (RCC_BDCR) are in the Backup domain. As a result, after Reset, these bits are write\u2011protected and the DBP bit in the Power control register (PWR_CR) has to be set before these can be modified."
     ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
    }
   },
   {
@@ -259,6 +338,14 @@
     ],
     "modify": [
      "USBPRE: Set and cleared by software to generate 48\u202fMHz USB clock. This bit must be valid before enabling the USB clock in the RCC_APB1ENR register. This bit can\u2019t be reset if the USB clock is enabled."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
     ]
    }
   },
@@ -284,6 +371,14 @@
     "modify": [
      "The HSEBYP bit can be written only if the HSE oscillator is disabled."
     ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
    }
   },
   {
@@ -308,29 +403,35 @@
     "modify": [
      "It is not possible to write to the RTC_CRH register when the peripheral is completing a previous write operation (flagged by RTOFF=0, see Section 18.3.4)."
     ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
    }
   },
   {
    "peripheral": "rtc",
    "register": "PRLH",
    "gated_operations": [
-    "modify",
     "write"
    ],
    "preconditions": {
     "write": [
-     "RTC_CRL.RTOFF set"
-    ],
-    "modify": [
      "RTC_CRL.RTOFF set"
     ]
    },
    "datasheet_text": {
     "write": [
      "The Prescaler Load registers ... are write-protected by the RTOFF bit in the RTC_CR register, and a write operation is allowed if the RTOFF value is \u20181\u2019."
-    ],
-    "modify": [
-     "The Prescaler Load registers ... are write-protected by the RTOFF bit in the RTC_CR register, and a write operation is allowed if the RTOFF value is \u20181\u2019."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
     ]
    }
   },
@@ -356,29 +457,13 @@
     "modify": [
      "Note: This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation."
     ]
-   }
-  },
-  {
-   "peripheral": "spi1",
-   "register": "I2SPR",
-   "gated_operations": [
-    "modify",
-    "write"
-   ],
-   "preconditions": {
-    "write": [
-     "SPI_I2SCFGR.I2SMOD cleared"
-    ],
-    "modify": [
-     "SPI_I2SCFGR.I2SMOD cleared"
-    ]
    },
-   "datasheet_text": {
+   "quote_verification": {
     "write": [
-     "Bit 9 MCKOE ... Note: This bit should be configured when the I2S is disabled. It is used only when the I2S is in master mode. This bit is not used in SPI mode. Bit 8 ODD ... Note: This bit should be configured when the I2S is disabled. It is used only when the I2S is in master mode. This bit is not used in SPI mode. Bits 7:0 I2SDIV ... Note: These bits should be configured when the I2S is disabled. It is used only when the I2S is in master mode."
+     "exact"
     ],
     "modify": [
-     "Bit 9 MCKOE ... Note: This bit should be configured when the I2S is disabled. It is used only when the I2S is in master mode. This bit is not used in SPI mode. Bit 8 ODD ... Note: This bit should be configured when the I2S is disabled. It is used only when the I2S is in master mode. This bit is not used in SPI mode. Bits 7:0 I2SDIV ... Note: These bits should be configured when the I2S is disabled. It is used only when the I2S is in master mode."
+     "exact"
     ]
    }
   },
@@ -397,6 +482,11 @@
     "read": [
      "A read to this register when the BSY Flag is set could return an incorrect value."
     ]
+   },
+   "quote_verification": {
+    "read": [
+     "exact"
+    ]
    }
   },
   {
@@ -413,6 +503,11 @@
    "datasheet_text": {
     "read": [
      "A read to this register when the BSY Flag is set could return an incorrect value."
+    ]
+   },
+   "quote_verification": {
+    "read": [
+     "exact"
     ]
    }
   },
@@ -442,6 +537,16 @@
      "It is not allowed to switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1).",
      "Note: This bit is read only when the timer is configured in Center-aligned mode or Encoder mode."
     ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy",
+     "exact"
+    ],
+    "modify": [
+     "fuzzy",
+     "exact"
+    ]
    }
   },
   {
@@ -470,6 +575,16 @@
      "It is not allowed to switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1)",
      "Note: This bit is read only when the timer is configured in Center-aligned mode or Encoder mode."
     ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact",
+     "exact"
+    ],
+    "modify": [
+     "exact",
+     "exact"
+    ]
    }
   },
   {
@@ -493,6 +608,14 @@
     ],
     "modify": [
      "These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
     ]
    }
   }

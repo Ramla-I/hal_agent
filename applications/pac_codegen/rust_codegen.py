@@ -864,20 +864,15 @@ def inject_constraints_module(peripheral_file: Path,
     peripheral_file.write_text(text)
 
 
-def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> None:
-    src = pac_root / "src"
-    generic = src / "generic.rs"
-    device_dir = src / device
-    if not generic.exists() or not device_dir.is_dir():
-        raise FileNotFoundError(f"{generic} / {device_dir}")
-    by_periph: dict[str, list[RegisterPlan]] = {}
-    gated: set[tuple[str, str, str]] = set()
+def prune_plans_for_device(device_dir: Path,
+                           plans: list[RegisterPlan]) -> list[RegisterPlan]:
+    """Drop gates each register's real access mode cannot express (checked
+    against the generated register file itself — the ground truth). Mutates
+    the plans; returns those with something left to gate. Idempotent, and
+    callable by drivers BEFORE saving artifacts so the record matches what is
+    actually injected."""
+    kept = []
     for plan in plans:
-        peripheral_file = device_dir / f"{plan.peripheral}.rs"
-        if not peripheral_file.is_file():
-            raise FileNotFoundError(peripheral_file)
-        # Prune gates the register's real access mode can't express (checked
-        # against the generated register file itself — the ground truth).
         reg_file = device_dir / plan.peripheral / f"{plan.reg_lower}.rs"
         spec = f"{plan.reg_name.upper()}rs"
         reg_text = reg_file.read_text() if reg_file.is_file() else ""
@@ -889,10 +884,27 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
             print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
                   f"{removed} gate(s) — unsupported by the register's "
                   "access mode")
-        if not plan.preconditions:
+        if plan.preconditions:
+            kept.append(plan)
+        else:
             print(f"  note: {plan.peripheral}/{plan.reg_name}: nothing left "
                   "to gate; skipped")
-            continue
+    return kept
+
+
+def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> None:
+    src = pac_root / "src"
+    generic = src / "generic.rs"
+    device_dir = src / device
+    if not generic.exists() or not device_dir.is_dir():
+        raise FileNotFoundError(f"{generic} / {device_dir}")
+    plans = prune_plans_for_device(device_dir, plans)
+    by_periph: dict[str, list[RegisterPlan]] = {}
+    gated: set[tuple[str, str, str]] = set()
+    for plan in plans:
+        peripheral_file = device_dir / f"{plan.peripheral}.rs"
+        if not peripheral_file.is_file():
+            raise FileNotFoundError(peripheral_file)
         by_periph.setdefault(plan.peripheral, []).append(plan)
         gated |= plan.gated_ops()
 
