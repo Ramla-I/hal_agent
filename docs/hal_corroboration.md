@@ -18,10 +18,23 @@ stm32f1xx-hal 0.11.0; constraint = the I2C CR1 STOP/START/PEC rule):
 
 1. **Deterministic scan** — does the enclosing function reference any
    precondition-field accessor before the flagged line?
-2. **LLM judge** — the calibrated gpt-oss validator, closed-book: the
-   constraint + quote + the enclosing function, verdict
-   corroborated / unchecked / unclear.
+2. **LLM judge** — the same gpt-oss-120b model and Groq plumbing as the
+   Constraint Validator, but a **different, un-calibrated prompt for a
+   different task**: it reads Rust code (constraint + quote + the enclosing
+   function, closed-book) and asks "is the check already here?", returning
+   corroborated / unchecked / unclear. This is *not* the validator's
+   encoding-faithfulness judge and its 96% corruption-detection calibration
+   does **not** transfer — here the model is a cheap second opinion, not a
+   trusted oracle (see the note below).
 3. **Human adjudication** of every disagreement (10 of 34).
+
+The judge is deliberately never trusted alone. A final label is only
+automatic where the deterministic scan and the judge *agree*; every
+disagreement goes to a human. On this run all 10 disagreements were
+human-adjudicated, so the headline numbers below rest on the
+scan-and-human, with the judge serving only to flag where to look — and its
+outputs are cheap to audit because it must cite the specific code line as
+evidence.
 
 ## Results
 
