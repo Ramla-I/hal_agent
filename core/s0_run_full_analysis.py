@@ -107,6 +107,12 @@ class DeviceResult:
     evaluation_done: bool = False
     svd_files_compared: int = 0
 
+    # Step 6 — constraint validation (v2 grammar)
+    constraint_validation_done: bool = False
+    constraints_extracted: int = 0
+    constraints_anchored: int = 0
+    constraints_confirmed: int = 0
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -334,6 +340,112 @@ def preprocess_device(
 # Steps 2-5: Per-device pipeline
 # ---------------------------------------------------------------------------
 
+def _flatten_v2_run_to_rows(run_dir: str, rm: str) -> list[dict]:
+    """Flatten a generator run's native grammar-v2 ``state_gate`` constraints
+    into validator rows (the verified-constraints CSV schema), so the static
+    quote validator and the LLM constraint validator can consume a fresh run
+    the same way they consume the corpus."""
+    import hashlib
+    rows: list[dict] = []
+    for fn in sorted(os.listdir(run_dir)):
+        fp = os.path.join(run_dir, fn)
+        if os.path.isdir(fp) or "_" not in fn:
+            continue
+        try:
+            data = json.load(open(fp, encoding="utf-8"))
+        except Exception:
+            continue
+        if not isinstance(data, dict):
+            continue
+        peripheral, register = fn.split("_", 1)
+        for c in (data.get("access_constraints_v2") or []):
+            if not isinstance(c, dict) or c.get("kind") != "state_gate":
+                continue  # only state gates map to the flat validator schema
+            def _conds(key):
+                return [{"register_name": x.get("register", ""),
+                         "field_name": x.get("field", ""),
+                         "required_state": x.get("state", "")}
+                        for x in (c.get(key) or []) if isinstance(x, dict)]
+            text = c.get("datasheet_text", "")
+            cid = hashlib.sha1(
+                f"{rm}|{register}|{c.get('target_operation')}|{text}".encode()
+            ).hexdigest()[:12]
+            rows.append({
+                "id": cid, "reference_manual": rm, "run": os.path.basename(run_dir),
+                "source_file": f"{rm}/{os.path.basename(run_dir)}/{fn}",
+                "peripheral": peripheral, "register": register,
+                "target_operation": c.get("target_operation", ""),
+                "target_fields": json.dumps(c.get("target_fields") or []),
+                "preconditions": json.dumps(_conds("preconditions")),
+                "postconditions": json.dumps(_conds("postconditions")),
+                "severity": c.get("severity", ""), "consequence": c.get("consequence", ""),
+                "datasheet_text": text, "dup_count": "1", "lint_flags": "",
+                "status": "", "note": "",
+            })
+    return rows
+
+
+def run_constraint_validation_phase(
+    run_dir: str,
+    reference_manual: str,
+    chunks_root: str,
+    judge_model: str = "openai/gpt-oss-120b",
+) -> dict:
+    """Step 6: the v2 constraint pipeline on a fresh generator run —
+    static quote validation (deterministic) then the LLM constraint
+    validator (closed-book, gated on anchoring). Writes artifacts under
+    ``<run_dir>/constraint_validation/`` and returns the funnel counts."""
+    from constraint_validator.quote_anchor import run as anchor_run
+    from constraint_validator.judge import load_items, run_judge, make_client
+
+    if not chunks_root:
+        raise ValueError(
+            "--constraint-chunks-root is required with --constraint-validation "
+            "(static quote validation searches the chunked datasheet)")
+
+    out_dir = os.path.join(run_dir, "constraint_validation")
+    os.makedirs(out_dir, exist_ok=True)
+    cols = ["id", "reference_manual", "run", "source_file", "peripheral",
+            "register", "target_operation", "target_fields", "preconditions",
+            "postconditions", "severity", "consequence", "datasheet_text",
+            "dup_count", "lint_flags", "status", "note"]
+
+    rows = _flatten_v2_run_to_rows(run_dir, reference_manual)
+    csv_path = os.path.join(out_dir, "constraints.csv")
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=cols)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow(r)
+
+    # Static validation: quote anchoring + target location (deterministic).
+    anchors_path = os.path.join(out_dir, "anchors.jsonl")
+    anchor_run(csv_path, chunks_root, anchors_path,
+               rm_filter=reference_manual, quiet=True)
+    anchors = [json.loads(l) for l in open(anchors_path)]
+    anchored = [a for a in anchors if a.get("tier") in ("exact", "fuzzy")]
+    static_pass = [a for a in anchored
+                   if not (a.get("self_referential") and not a.get("target_located"))]
+
+    # Constraint validator: LLM judge, closed-book, only on anchored rows.
+    confirmed = 0
+    if anchored:
+        items = load_items(csv_path, anchors_path)
+        records, _ = run_judge(items, client=make_client(),
+                               model=judge_model, quiet=True)
+        with open(os.path.join(out_dir, "judgments.jsonl"), "w",
+                  encoding="utf-8") as f:
+            for rec in records:
+                f.write(json.dumps(rec, sort_keys=True) + "\n")
+        confirmed = sum(1 for rec in records if rec.get("verdict") == "confirmed")
+
+    summary = {"extracted": len(rows), "anchored": len(anchored),
+               "static_pass": len(static_pass), "confirmed": confirmed}
+    with open(os.path.join(out_dir, "summary.json"), "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
+    return summary
+
+
 def run_pipeline_for_device(
     ctx: UserContext,
     args: argparse.Namespace,
@@ -502,6 +614,28 @@ def run_pipeline_for_device(
             result.false_count = false_count
             print(f"  Validator: {true_count} true, {false_count} false")
 
+        # -- Step 6: Constraint validation (v2 grammar, optional) --
+        # The generator emits grammar v2 natively; this stage runs the
+        # constraint pipeline on that output: static quote validation (does
+        # the quote exist in the manual, and name the register?) then the LLM
+        # constraint validator (is the encoding faithful?).
+        if args.constraint_validation:
+            print(f"\n--- Step 6: Constraint Validation (v2 grammar) ---")
+            cv = run_constraint_validation_phase(
+                run_dir=paths.agent_output_dir,
+                reference_manual=ctx.device_name,
+                chunks_root=args.constraint_chunks_root,
+                judge_model=args.constraint_judge_model,
+            )
+            result.constraint_validation_done = True
+            result.constraints_extracted = cv["extracted"]
+            result.constraints_anchored = cv["anchored"]
+            result.constraints_confirmed = cv["confirmed"]
+            print(f"  Funnel: {cv['extracted']} extracted -> "
+                  f"{cv['anchored']} quote-anchored -> "
+                  f"{cv['static_pass']} static-pass -> "
+                  f"{cv['confirmed']} validator-confirmed")
+
         # -- Step 5: Evaluation (optional) --
         if not args.skip_evaluation:
             print(f"\n--- Step 5: Evaluation ---")
@@ -659,6 +793,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no-embed-metadata", action="store_false", dest="embed_metadata",
         help="Do not embed metadata in chunks during preprocessing",
+    )
+    parser.add_argument(
+        "--constraint-validation", action="store_true",
+        help="Step 6: after the generator, run the v2 constraint pipeline "
+             "(static quote validation + LLM constraint validator)",
+    )
+    parser.add_argument(
+        "--constraint-chunks-root", default=None,
+        help="Root of the chunked datasheets ({rm}/chunks/md) for static "
+             "quote validation (required with --constraint-validation)",
+    )
+    parser.add_argument(
+        "--constraint-judge-model", default="openai/gpt-oss-120b",
+        help="Model for the constraint validator judge (default: Groq gpt-oss-120b)",
     )
 
     return parser.parse_args()
