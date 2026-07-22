@@ -109,14 +109,24 @@ paraphrased quotes and are routed to human review.
 \subsection{Translating Constraints to Witness Tokens}
 \label{sec:enforcement:witnesses}
 
-The compiler cannot observe hardware, so it cannot enforce ``STOP is
-clear.'' What it \emph{can} enforce is an ordering: \textbf{the
-datasheet-prescribed check must happen before the constrained operation}.
-The translation makes that ordering a type-system fact using \emph{witness
-tokens}: zero-sized values that can only be created by performing the
-prescribed check, and that the constrained operation consumes. For the
-running example the generator emits, into the PAC's I\textsuperscript{2}C
-module:
+How strong a guarantee the type system can give depends on who establishes
+the condition, which the grammar's \texttt{established\_by} field records.
+The easy case is \emph{software}: when the driver itself must bring the
+condition about---it must disable the USART (\texttt{UE=0}) before writing
+the baud-rate register---the compiler enforces the requirement outright.
+The generated \texttt{disable()} returns a witness token that the write
+consumes, so code that writes the baud rate without first disabling the
+USART does not compile; and because software alone controls \texttt{UE},
+that witness is a \emph{standing} guarantee rather than a snapshot. The
+harder case, and our running example, is \emph{hardware}: the compiler
+cannot observe hardware, so it cannot enforce ``STOP is clear'' directly.
+What it \emph{can} enforce is an ordering---\textbf{the datasheet-prescribed
+check must happen before the constrained operation}---so that holding the
+witness attests the check was performed on a fresh read. Both cases use the
+same device, \emph{witness tokens}: zero-sized values creatable only by
+performing the prescribed action or check, and consumed by the constrained
+operation. We develop the harder case in full; the generator emits, into the
+PAC's I\textsuperscript{2}C module:
 
 \begin{lstlisting}
 /// State witness authorizing one write of CR1.
@@ -153,17 +163,14 @@ attests that the preconditions were observed true in one fresh read.
 Time-of-check to time-of-use is inherited from the hardware contract itself:
 memory-mapped I/O has no atomic check-and-act, so the manual's own prescribed
 procedure carries the identical window, and for hardware-cleared flags like
-STOP the race is benign in the safe direction (hardware only clears it). The
-\texttt{established\_by} dichotomy of \S\ref{sec:enforcement:grammar} selects
-how the witness is minted, but not \emph{whether} enforcement is compile-time:
-in both cases the gated operation will not type-check without the witness. A
-\texttt{hardware}-established condition can only be \emph{observed}, so its
-witness is minted by a runtime check (a \emph{state witness}); a
-\texttt{software}-established condition is \emph{caused} by a setup action the
-program performs, so its witness is minted by that action (an \emph{action
-witness}), with no runtime check at all. The difference is therefore the
-presence of a fallible runtime check, not the locus of enforcement---both
-establish the condition at runtime, and both gate the use at compile time.
+STOP the race is benign in the safe direction (hardware only clears it). In the terms of the opening, this is the \emph{hardware} case, and its fresh
+check mints what we call a \emph{state witness}; the \emph{software} case
+mints an \emph{action witness}---the setup action itself, with no runtime
+check. Naming aside, \texttt{established\_by} selects only \emph{how} the
+witness is minted, not \emph{whether} enforcement is compile-time: in both
+cases the gated operation will not type-check without the witness, and in
+both the condition is established at runtime. The sole difference is the
+presence of a fallible runtime check.
 
 \paragraph{Results.}
 Of the 2{,}857 accepted gates, 2{,}243 translate to compile-gated state
