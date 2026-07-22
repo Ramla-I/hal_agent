@@ -63,7 +63,7 @@ All findings below were verified by generating against the real PAC and running 
 
 ## 3. Target encoding: trait-level gating in `generic.rs`
 
-**Terminology (settled 2026-07-15):** the umbrella term is **witness tokens**, restoring the original grammar-doc/README language — PR 15's "proof" overclaims (a token attests a *past observation*, not a present guarantee; see §3.1 TOCTOU). Four distinct roles, never conflated: **state witness** (minted by a runtime check of hardware state), **action witness** (minted by performing the required software action), **obligation** (a duty to discharge — postcondition cleanup), **capability** (authority to do X at most once — write_once). Verbs are reserved too: **validate** = the LLM pipeline judging extracted facts (s4 Validator, Constraint Validator); **check** = the runtime inspection in generated code (`check_write_ready()`, matching the grammar doc's "runtime check" and the `witnessed_runtime_check` enforceability class — not "verify", which reads as static/formal and collides with the Validator); **enforce** = what the compiler does at compile time. Use these words everywhere: grammar doc, `defs.py` docstrings, generated Rust identifiers, paper ("witness-gated", not "proof-gated").
+**Terminology (settled 2026-07-15):** the umbrella term is **witness tokens**, restoring the original grammar-doc/README language — PR 15's "proof" overclaims (a token attests a *past observation*, not a present guarantee; see §3.1 TOCTOU). Four distinct roles, never conflated: **state witness** (minted by a runtime check of hardware state), **action witness** (minted by performing the required software action), **obligation** (a duty to discharge — postcondition cleanup), **capability** (authority to do X at most once — write_once). Verbs are reserved too: **validate** = the LLM pipeline judging extracted facts (s4 Validator, Constraint Validator); **check** = the runtime inspection in generated code (`check_write_ready()`, matching the grammar doc's "runtime check" and the `state_witnessed` enforceability class — not "verify", which reads as static/formal and collides with the Validator); **enforce** = what the compiler does at compile time. Use these words everywhere: grammar doc, `defs.py` docstrings, generated Rust identifiers, paper ("witness-gated", not "proof-gated"). **Both enforceable classes are compile-time witness-gated** — the operation will not compile without the witness; they differ only in what mints the witness (a fallible runtime check of hardware state → `state_witnessed`, vs the program's own action/ordering/capability → `action_witnessed`), NOT in whether enforcement is compile-time. Do not frame these as "compile-time vs runtime enforcement": both establish the condition at runtime, and both gate the use at compile time (Ramla, 2026-07-22).
 
 Replace `ConstrainedReg` + shadowing with gating **by trait bound**, so the witness-free method *does not exist* on constrained registers (mechanism validated in a scratch crate during review):
 
@@ -144,11 +144,11 @@ class FieldCondition(BaseModel):
 
 | kind          | corpus evidence                                                                                   | enforceability class                                                                         |
 | ------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `state_gate`  | the dominant class: UE=0, SPE=0, ADSTART=0, FINIT=1, WUTWF=1, LOCK …                              | compile-gate (software evidence → action token; hardware evidence → witnessed runtime check) |
-| `sequence`    | RTC_WPR 0xCA→0x53; GPIO LCKR lock; SDIO DCTRL after DTIMER+DLEN; AES key order; DBGMCU 2-word key | compile-gate — strongest linear-types fit: each step consumes the prior step's token         |
-| `write_once`  | EXTI_LOCKR.LOCK, TIM BDTR.LOCK ("written once after reset")                                       | compile-gate — affine capability consumed by value (2nd write = E0382)                       |
-| `clock_gate`  | RCC ENR before any peripheral access ("registers read 0x0 when clock inactive")                   | compile-gate at the *handle* (block accessor takes a one-time token), not per-register       |
-| `delay`       | "wait two APB clock cycles", HSE stabilization                                                    | ordering compile-gated via token; duration runtime                                           |
+| `state_gate`  | the dominant class: UE=0, SPE=0, ADSTART=0, FINIT=1, WUTWF=1, LOCK …                              | witness-gated at compile time — software-established → action witness; hardware-established → state witness (fallible runtime check) |
+| `sequence`    | RTC_WPR 0xCA→0x53; GPIO LCKR lock; SDIO DCTRL after DTIMER+DLEN; AES key order; DBGMCU 2-word key | witness-gated at compile time (action witness) — strongest linear-types fit: each step consumes the prior step's token |
+| `write_once`  | EXTI_LOCKR.LOCK, TIM BDTR.LOCK ("written once after reset")                                       | witness-gated at compile time (capability) — affine capability consumed by value (2nd write = E0382) |
+| `clock_gate`  | RCC ENR before any peripheral access ("registers read 0x0 when clock inactive")                   | witness-gated at compile time at the *handle* (block accessor takes a one-time capability), not per-register |
+| `delay`       | "wait two APB clock cycles", HSE stabilization                                                    | ordering witness-gated at compile time via token; duration is a runtime check                |
 | `read_effect` | DSI_ISR cleared-on-read; USART_DR clears RXNE                                                     | documentation-only; feeds validator + tells codegen when a verify-read perturbs state        |
 | `other`       | escape valve: real access/ordering requirements fitting no kind — corpus: "channel selection bits must remain unchanged during sample cycles", "do not change after initial programming" | documentation-only BY CONSTRUCTION (never gates, never breaks a build); the grammar-evolution discovery queue |
 
@@ -157,7 +157,7 @@ class FieldCondition(BaseModel):
 
 Drift dispositions: `target_operation:"any"` → legalized, expanded deterministically to per-op constraints at collection; `"read/write"`/`"read-write"` → normalized likewise; `"access"` (width notes) and privilege/secure notes → **not constraints** (routed out at the prompt, §6); `"enabled"` → repaired via SVD `enumeratedValues` name match, else rejected; `"equals:X then Y"` → must be a `sequence`.
 
-**Enforceability is computed, never LLM-emitted:** collection derives `enforceability ∈ {compile_gate, witnessed_runtime_check, dynamic_check, doc_only}` from `(kind, established_by, target_fields)`; codegen records `enforced_as` per constraint in the manifest. Paper metric = fraction classifiable as compile-enforceable × fraction actually enforced, measured from manifests.
+**Enforceability is computed, never LLM-emitted:** collection derives `enforceability ∈ {action_witnessed, state_witnessed, dynamic_check, doc_only}` from `(kind, established_by, target_fields)`; codegen records `enforced_as` per constraint in the manifest. `action_witnessed` and `state_witnessed` are both compile-time witness-gated (see §"Terminology"); they differ in whether the witness is minted by a software action/capability or by a fallible runtime check. Paper metric = fraction classifiable as compile-time enforceable (witness-gated) × fraction actually enforced, measured from manifests.
 
 **Evolution:** `schema_version`; mechanical lossless v1→v2 lift for all 30 existing run dirs; repair-vs-reject policy in `collect_constraints` (repair the deterministic: value parsing, `any` expansion, SVD-casing, enum-name→value; reject the judgmental: unknown kinds/states, unresolvable names, out-of-range values), with structured per-constraint errors enabling one automated re-prompt round — never aborting a peripheral.
 
@@ -648,7 +648,7 @@ Mode-gate, software evidence (`rm0091/2/usart1_brr`, ×37): *"This register can 
 
 Hardware-flag gate (`rm0430/1/rtc_wutr`): *"This register can be written only when WUTWF is set to 1 in RTC_ISR"* → same shape with `established_by: "hardware"` (a check is emitted, not a setup method). Pre+post software action (`rm0008/1/rtc_cnth`, the MTQC replacement): software-evidence precondition `RTC_CRL.CNF state="set"` plus software-evidence postcondition `CNF state="cleared"`, both `action_operation: "modify"`. OR-valued equals (legalized drift): `required_state: "equals:0b01|0b10|0b11"` → `"state": "equals", "values": [1, 2, 3]`.
 
-**Enforcement:** hardware preconditions → `witnessed_runtime_check` (composite state witness from one fresh read); software preconditions → `compile_gate` (action witness); postconditions → obligation + closure-scoped wrapper + reframe-as-precondition where the hazardous next operation is named (§3.1). Gated via the trait bound (§3, Appendix A).
+**Enforcement:** hardware preconditions → `state_witnessed` (composite state witness from one fresh runtime check); software preconditions → `action_witnessed` (action witness, no runtime check); postconditions → obligation + closure-scoped wrapper + reframe-as-precondition where the hazardous next operation is named (§3.1). Both are compile-time witness-gated via the trait bound (§3, Appendix A).
 
 #### B.2.2 `sequence` — ordered multi-step protocols
 
@@ -666,7 +666,7 @@ class Sequence(ConstraintBase):
 
 Examples: RTC write protection (`rm0383/1/rtc_dr`) — write `0xCA` then `0x53` to `RTC_WPR`, enabling protected RTC registers (today mangled into `equals:0xCA then 0x53`); I2C ADDR clearing (`rm0033`) — read `SR1` then read `SR2` (two read steps); AES key order (`rm0493/1/aes_keyr7`); GPIO LCKR lock (`rm0033/1/gpioi_lckr`); the two-word DBGMCU auth key.
 
-**Enforcement:** `compile_gate` — the strongest linear-types fit in the grammar: each generated step method consumes the previous step's token (`write_key1() -> Key1Written`, `write_key2(Key1Written) -> FlashUnlocked`), so ordering is a pure type-level property; only the writes themselves are runtime. The terminal token is the witness required by the unlocked operation.
+**Enforcement:** `action_witnessed` — the strongest linear-types fit in the grammar: each generated step method consumes the previous step's token (`write_key1() -> Key1Written`, `write_key2(Key1Written) -> FlashUnlocked`), so ordering is a pure type-level property; only the writes themselves run at runtime, and there is no runtime check. The terminal token is the witness required by the unlocked operation.
 
 #### B.2.3 `write_once` — lock bits
 
@@ -680,7 +680,7 @@ class WriteOnce(ConstraintBase):
 
 Examples: `rm0493/1/exti_lockr` (*"This bit is written once after reset"*); TIM `BDTR.LOCK` levels.
 
-**Enforcement:** `compile_gate` via a **capability**: a non-`Copy` `LckrWriteCap` minted once in the peripheral singleton; the gated write consumes it by value; a second write is E0382. Honest affinity — the datasheet property *is* "at most once."
+**Enforcement:** `action_witnessed` via a **capability**: a non-`Copy` `LckrWriteCap` minted once in the peripheral singleton; the gated write consumes it by value; a second write is E0382. Honest affinity — the datasheet property *is* "at most once."
 
 #### B.2.4 `delay` — time/cycle waits
 
@@ -698,7 +698,7 @@ class Delay(ConstraintBase):
 
 Example: *"wait at least two APB clock cycles after enabling the peripheral clock before accessing its registers."*
 
-**Enforcement:** hybrid — codegen emits `wait_after_x() -> DelayElapsed` (dummy reads / nop loop); the *ordering* is compile-gated via the token, the *duration* is runtime. With no named dependent access it degrades to `dynamic_check`.
+**Enforcement:** hybrid — codegen emits `wait_after_x() -> DelayElapsed` (dummy reads / nop loop); the *ordering* is witness-gated at compile time via the token (so with a named successor it is `state_witnessed`), the *duration* is a runtime wait. With no named dependent access it degrades to `dynamic_check` (a bare runtime wait, no compile-time gate).
 
 #### B.2.5 `read_effect` — read side-effects (documentation-only)
 
@@ -728,7 +728,7 @@ class ClockGate(ConstraintBase):
 
 Peripheral-scoped: the LLM may emit it on any register file of the peripheral; collection deduplicates and hoists it to the peripheral entry in `manifest.json`. Corpus evidence: `rm0008/1/rcc_ahbenr` (*"When the peripheral clock is not active, the peripheral register values may not be readable … the returned value is always 0x0"*).
 
-**Enforcement:** `compile_gate` at the **handle**, not per register (gating every method is an unacceptable API tax): `rcc.enable_i2c1() -> I2c1ClockEnabled`, and the I2C1 block accessor requires the token once — mirroring the HAL `.constrain()` idiom while staying inside the PAC.
+**Enforcement:** `action_witnessed` at the **handle**, not per register (gating every method is an unacceptable API tax): `rcc.enable_i2c1() -> I2c1ClockEnabled`, and the I2C1 block accessor requires the token once — mirroring the HAL `.constrain()` idiom while staying inside the PAC.
 
 #### B.2.7 `value_relation` — inter-field value relationships (documentation-only)
 
@@ -758,7 +758,7 @@ For *genuine access/ordering requirements that fit no kind* — corpus examples:
 At collection, each constraint gains:
 
 ```python
-enforceability: Literal["compile_gate", "witnessed_runtime_check", "dynamic_check", "doc_only"]
+enforceability: Literal["action_witnessed", "state_witnessed", "dynamic_check", "doc_only"]
 # derived deterministically from (kind, established_by, target_fields) — models would guess it
 ```
 
@@ -796,6 +796,7 @@ Codegen records `enforced_as` (same enum) per constraint in `manifest.json`, mak
 
 *(Record departures from this plan here as they happen, per project convention.)*
 
+- 2026-07-22 (enforceability naming, Ramla's rule): the enforceability enum's two enforceable classes are renamed `compile_gate` → **`action_witnessed`** and `witnessed_runtime_check` → **`state_witnessed`** (`dynamic_check`/`doc_only` unchanged). Reason: a witnessed runtime check is *also* compile-time gated — the operation will not compile without the state witness — so the old names implied a compile-vs-runtime distinction that does not exist. Both classes are **compile-time witness-gated**; both establish the condition at runtime (the software action and the hardware check both run at runtime). The real difference is only what mints the witness: the program's own action/ordering/capability (`action_witnessed`, no runtime check, standing guarantee) vs a fallible runtime check of hardware-controlled state (`state_witnessed`, a point-in-time observation, welded to the use). Swept through `defs.py` (enum + `derive_enforceability` + token-role comment), the grammar doc, the corpus-stats doc (numbers unchanged: 2,243 `state_witnessed` / 614 `doc_only` / 0 `action_witnessed`), the paper draft's translation subsection, and the two enforceability test files. Historical divergence-log entries keep the old names as dated records.
 - 2026-07-17 (corruption directions, Ramla's rule): `change_operation` may never corrupt **toward** `modify` — a modify performs both a read and a write, so a rule over all writes (or reads) *entails* the modify claim, and `write→modify` / `read→modify` manufacture TRUE statements a correct judge must confirm. 6 of the first calibration's 7 op-swap "escapes" were exactly this (one, LPTIM_CMP, literally restored the manual's word "modified"). Away-from-modify stays falsifying (a rule about the RMW cycle says nothing about standalone ops). The 11 affected rows regenerated deterministically as `write→read`; the judge caught all 11. Corruption catch rate corrected **92.0% → 96.0%** (144/150); `change_operation` 76.7% → 96.7%; the remaining 6 escapes: 3 retargets (now caught upstream by the target-location gate), 2 undisambiguated sibling fields, 1 write→read (IWDG). Amendment recorded in `docs/validator_calibration.md`.
 - 2026-07-17 (target location, Ramla's second rule): the location-unverified triage queue is resolved by two search refinements Ramla specified — SVD dim-template names carry a literal `%s` the manual never prints (`alrm%sr` stands for ALRMAR/ALRMBR), so the placeholder is **deleted before searching**; and the search allows **one edit** of difference, which absorbs whatever character the manual printed in the slot AND the manual's own family placeholders (`cpar4` under `DMA_CPARx`, gpioa's `idr` under `GPIOx_IDR`). Guard rails: tolerance only for names ≥ 5 chars (no drifting into prose: `calr` ≠ "call"); exact match stays primary. Measured on the 4,160-row corpus: location-unverified 17.8% → **5.1%** (673 → 194 rows, 479 recovered, zero lost); gate purpose intact — 96% of 468 deliberate retargets still rejected vs 97% with tolerance off (3 escapes bought 479 recoveries). F1 e2e stable at 19 registers, artifact byte-identical. Residue: quotes anchored in functional-description prose, CAN `f0r1`-vs-`CAN_FiRx` (two edits), doubled prefixes (`cec_cec_cr`).
 - 2026-07-17 (target verification, Ramla's rule): a self-referential quote ("This register …") cannot verify its target textually, so the anchor LOCATION vouches — matched page (or ±2 neighbors: section headers precede continuation notes, register maps follow) must mention the target, with two measured refinements: family-placeholder names count as naming (AFIO_EXTICRX names EXTICR1–4) and manual-prose name forms are searched (run-file `dma_dmardlar` = manual `ETH_DMARDLAR` — the tail-segment candidates cut corpus location-unverified from 27.9% to 15.1% of anchored rows; widening the page window alone recovered <1%). The injection gate rejects self-referential+unlocated (`target_unverified_by_location`); the calibration's three retarget misses are pinned regressions; residual 15.1% = %s-placeholder names + USART/UART-style family aliases (triage queue).

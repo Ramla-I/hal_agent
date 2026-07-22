@@ -198,7 +198,7 @@ def test_native_v2_basic(run_dir, tmp_path):
     (v2,) = data["access_constraints_v2"]
     assert v2["kind"] == "state_gate"
     # All-software preconditions -> pure action-witness ordering.
-    assert v2["enforceability"] == "compile_gate"
+    assert v2["enforceability"] == "action_witnessed"
     assert v2["preconditions"][0]["established_by"] == "software"
 
     manifest = _load_manifest(out_dir)
@@ -361,7 +361,7 @@ def test_native_non_state_gate_kinds_flow_through(run_dir, tmp_path):
     data = json.loads((out_dir / "rtc_dr.json").read_text())
     seq_json, other_json = data["access_constraints_v2"]
     assert seq_json["kind"] == "sequence"
-    assert seq_json["enforceability"] == "compile_gate"
+    assert seq_json["enforceability"] == "action_witnessed"
     assert seq_json["steps"][0]["value"] == 0xCA   # numeric normalization
     assert other_json["kind"] == "other"
     assert other_json["enforceability"] == "doc_only"
@@ -492,6 +492,6 @@ def test_native_hardware_gate_is_witnessed(run_dir, tmp_path):
     assert r["num_constraints_v2"] == 1
     data = json.loads((out_dir / "iwdg_pr.json").read_text())
     (v2,) = data["access_constraints_v2"]
-    assert v2["enforceability"] == "witnessed_runtime_check"
+    assert v2["enforceability"] == "state_witnessed"
     assert v2["preconditions"][0]["whole_register"] is True
     assert v2["preconditions"][0]["values"] == [0x5555]

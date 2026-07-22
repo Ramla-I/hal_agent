@@ -197,10 +197,11 @@ class SectionInfo(BaseModel):
 # collection-time pydantic parsing rather than spliced into generated Rust.
 #
 # Terminology (reserved verbs, plan section 3): the LLM pipeline VALIDATES
-# extracted facts; generated code CHECKS hardware state at runtime, minting
-# WITNESS tokens; the compiler ENFORCES that witnesses are presented. Four
-# token roles: state witness (minted by a runtime check of hardware state),
-# action witness (minted by performing a required software action), obligation
+# extracted facts; the compiler ENFORCES that a witness is presented before a
+# gated operation (both enforceable classes are compile-time witness-gated).
+# A witness is minted either by a runtime CHECK of hardware state (state
+# witness) or by performing a required software ACTION (action witness, no
+# runtime check). Four token roles: state witness, action witness, obligation
 # (a duty to discharge -- postcondition cleanup), capability (authority to do
 # something at most once -- write_once).
 #
@@ -489,7 +490,7 @@ RegisterList.model_rebuild()
 
 
 Enforceability = Literal[
-    "compile_gate", "witnessed_runtime_check", "dynamic_check", "doc_only"
+    "action_witnessed", "state_witnessed", "dynamic_check", "doc_only"
 ]
 
 
@@ -497,32 +498,40 @@ def derive_enforceability(constraint) -> Enforceability:
     """Derive the enforceability class of a v2 constraint.
 
     Computed, never LLM-emitted -- models would guess it. Deterministic from
-    (kind, established_by, target refs):
-      - state_gate: any hardware-established precondition needs a runtime check
-        minting a state witness -> "witnessed_runtime_check"; all-software
-        preconditions are pure action-witness ordering -> "compile_gate".
-      - sequence / write_once / clock_gate: pure token ordering/capability ->
-        "compile_gate".
-      - delay: ordering is compile-gated only if the text names the dependent
-        access (`before`); otherwise only the duration remains ->
-        "dynamic_check".
-      - read_effect / value_relation / other: "doc_only" by construction.
+    (kind, established_by, target refs). The two enforceable classes are BOTH
+    compile-time witness-gated -- the operation will not compile without the
+    witness -- and differ only in what produces the witness, NOT in whether
+    enforcement is compile-time (both establish the condition at runtime):
+      - "action_witnessed": the witness or capability is produced by the
+        program's own actions or ordering, with no runtime observation of
+        hardware. Software-established state gates (an action witness minted
+        by an infallible setup action, no error path), sequences (each step
+        mints the next step's token), write_once (a capability consumed by
+        value), and clock gates (a one-time handle capability).
+      - "state_witnessed": producing the witness requires a fallible runtime
+        CHECK that observes hardware-controlled state (a state witness).
+        Any hardware-established state-gate precondition; a delay whose
+        dependent access is named.
+      - "dynamic_check": a bare runtime check with no compile-time gate --
+        a delay with no named successor (only the duration remains).
+      - "doc_only": not enforceable in code (read_effect, value_relation,
+        other, and vacuous gates).
     """
     kind = constraint.kind
     if kind == "state_gate":
         if not constraint.preconditions and not constraint.postconditions:
             # Vacuous gate (v1 corpus has 593): nothing to check, nothing to
-            # gate — counting it as compile-enforceable would inflate the
-            # paper metric. It is documentation until re-extraction gives it
+            # gate — counting it as enforceable would inflate the paper
+            # metric. It is documentation until re-extraction gives it
             # structure.
             return "doc_only"
         if any(p.established_by == "hardware" for p in constraint.preconditions):
-            return "witnessed_runtime_check"
-        return "compile_gate"
+            return "state_witnessed"
+        return "action_witnessed"
     if kind in ("sequence", "write_once", "clock_gate"):
-        return "compile_gate"
+        return "action_witnessed"
     if kind == "delay":
-        return "witnessed_runtime_check" if constraint.before is not None else "dynamic_check"
+        return "state_witnessed" if constraint.before is not None else "dynamic_check"
     # read_effect, value_relation, other
     return "doc_only"
 

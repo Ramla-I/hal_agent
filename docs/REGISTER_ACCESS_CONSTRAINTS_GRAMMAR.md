@@ -141,9 +141,10 @@ More real shapes:
 - **OR-valued equals** (legalized v1 drift): `required_state:
   "equals:0b01|0b10|0b11"` → `"state": "equals", "values": [1, 2, 3]`.
 
-**Enforcement:** hardware preconditions → `witnessed_runtime_check` (composite
-state witness from one fresh read); software preconditions → `compile_gate`
-(action witness); postconditions → obligation + closure-scoped wrapper, and
+**Enforcement:** hardware preconditions → `state_witnessed` (composite
+state witness from one fresh runtime check); software preconditions →
+`action_witnessed` (action witness, no runtime check); postconditions →
+obligation + closure-scoped wrapper, and
 reframed as a precondition of the hazardous next operation where the text names
 one. Gated via the trait bound (plan §3 / Appendix A).
 
@@ -167,10 +168,11 @@ to `RTC_WPR`, enabling protected RTC registers (mangled in v1 into
 (two read steps); AES key order (`rm0493/1/aes_keyr7`); GPIO LCKR lock
 (`rm0033/1/gpioi_lckr`); the two-word DBGMCU auth key.
 
-**Enforcement:** `compile_gate` — the strongest linear-types fit in the
+**Enforcement:** `action_witnessed` — the strongest linear-types fit in the
 grammar: each generated step method consumes the previous step's token
 (`write_key1() -> Key1Written`, `write_key2(Key1Written) -> FlashUnlocked`), so
-ordering is a pure type-level property; only the writes themselves are runtime.
+ordering is a pure type-level property; only the writes themselves run at
+runtime, and there is no runtime check.
 The terminal token is the witness required by the unlocked operation.
 
 ### `write_once` — lock bits
@@ -186,7 +188,7 @@ class WriteOnce(ConstraintBase):
 Examples: `rm0493/1/exti_lockr` (*"This bit is written once after reset"*);
 TIM `BDTR.LOCK` levels.
 
-**Enforcement:** `compile_gate` via a **capability**: a non-`Copy`
+**Enforcement:** `action_witnessed` via a **capability**: a non-`Copy`
 `LckrWriteCap` minted once in the peripheral singleton; the gated write
 consumes it by value; a second write is E0382. Honest affinity — the datasheet
 property *is* "at most once."
@@ -209,9 +211,10 @@ Example: *"wait at least two APB clock cycles after enabling the peripheral
 clock before accessing its registers."*
 
 **Enforcement:** hybrid — codegen emits `wait_after_x() -> DelayElapsed` (dummy
-reads / nop loop); the *ordering* is compile-gated via the token, the
-*duration* is runtime. With no named dependent access it degrades to
-`dynamic_check`.
+reads / nop loop); the *ordering* is witness-gated at compile time via the
+token (with a named successor, `state_witnessed`), the *duration* is a runtime
+wait. With no named dependent access it degrades to `dynamic_check` (a bare
+runtime wait, no compile-time gate).
 
 ### `read_effect` — read side-effects (documentation-only)
 
@@ -250,7 +253,7 @@ collection deduplicates and hoists it to the peripheral entry in
 clock is not active, the peripheral register values may not be readable … the
 returned value is always 0x0"*).
 
-**Enforcement:** `compile_gate` at the **handle**, not per register (gating
+**Enforcement:** `action_witnessed` at the **handle**, not per register (gating
 every method is an unacceptable API tax): `rcc.enable_i2c1() ->
 I2c1ClockEnabled`, and the I2C1 block accessor requires the token once —
 mirroring the HAL `.constrain()` idiom while staying inside the PAC.
@@ -295,14 +298,21 @@ At collection, each constraint gains an enforceability class — derived
 deterministically by `defs.derive_enforceability` (models would guess it):
 
 ```python
-enforceability: Literal["compile_gate", "witnessed_runtime_check", "dynamic_check", "doc_only"]
+enforceability: Literal["action_witnessed", "state_witnessed", "dynamic_check", "doc_only"]
 ```
+
+`action_witnessed` and `state_witnessed` are **both compile-time
+witness-gated** (the operation will not compile without the witness); they
+differ only in what mints the witness — the program's own action/ordering/
+capability (`action_witnessed`, no runtime check) vs a fallible runtime check
+of hardware state (`state_witnessed`). This is not a compile-time-vs-runtime
+distinction: both establish the condition at runtime.
 
 | kind | derivation |
 | --- | --- |
-| `state_gate` | any hardware-established precondition → `witnessed_runtime_check`; all-software → `compile_gate` |
-| `sequence`, `write_once`, `clock_gate` | `compile_gate` |
-| `delay` | `witnessed_runtime_check` if `before` names the dependent access, else `dynamic_check` |
+| `state_gate` | any hardware-established precondition → `state_witnessed`; all-software → `action_witnessed` |
+| `sequence`, `write_once`, `clock_gate` | `action_witnessed` |
+| `delay` | `state_witnessed` if `before` names the dependent access, else `dynamic_check` |
 | `read_effect`, `value_relation`, `other` | `doc_only` |
 
 Codegen records `enforced_as` (same enum) per constraint in `manifest.json`,

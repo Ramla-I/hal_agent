@@ -154,18 +154,23 @@ Time-of-check to time-of-use is inherited from the hardware contract itself:
 memory-mapped I/O has no atomic check-and-act, so the manual's own prescribed
 procedure carries the identical window, and for hardware-cleared flags like
 STOP the race is benign in the safe direction (hardware only clears it). The
-evidence dichotomy of \S\ref{sec:enforcement:grammar} selects the witness's
-origin: \texttt{hardware} evidence produces a runtime check as above (a
-\emph{state witness}); \texttt{software} evidence produces a token minted by
-performing the required setup action (an \emph{action witness}), with no
-runtime check at all.
+\texttt{established\_by} dichotomy of \S\ref{sec:enforcement:grammar} selects
+how the witness is minted, but not \emph{whether} enforcement is compile-time:
+in both cases the gated operation will not type-check without the witness. A
+\texttt{hardware}-established condition can only be \emph{observed}, so its
+witness is minted by a runtime check (a \emph{state witness}); a
+\texttt{software}-established condition is \emph{caused} by a setup action the
+program performs, so its witness is minted by that action (an \emph{action
+witness}), with no runtime check at all. The difference is therefore the
+presence of a fallible runtime check, not the locus of enforcement---both
+establish the condition at runtime, and both gate the use at compile time.
 
 \paragraph{Results.}
-Of the 2{,}857 accepted gates, 2{,}243 translate to runtime-checked state
-witnesses and 614 remain documentation-only (they carry no checkable
-condition in the legacy corpus encoding); action witnesses appear once
-re-extraction emits the `established_by` field, making that split a direct measure
-of the re-extraction step's value.
+Of the 2{,}857 accepted gates, 2{,}243 translate to compile-gated state
+witnesses (each minted by one runtime check) and 614 remain documentation-only
+(they carry no checkable condition in the legacy corpus encoding); action
+witnesses appear once re-extraction emits the \texttt{established\_by} field,
+making that split a direct measure of the re-extraction step's value.
 
 \subsection{Applying the Changes to PAC Crates}
 \label{sec:enforcement:pac}

@@ -447,23 +447,23 @@ def test_enforceability_state_gate():
     sw = FieldCondition(register="USART_CR1", field="UE", state="cleared",
                         established_by="software", action_operation="modify")
     # Any hardware-established precondition needs a runtime check.
-    assert derive_enforceability(_gate([hw])) == "witnessed_runtime_check"
-    assert derive_enforceability(_gate([hw, sw])) == "witnessed_runtime_check"
+    assert derive_enforceability(_gate([hw])) == "state_witnessed"
+    assert derive_enforceability(_gate([hw, sw])) == "state_witnessed"
     # All-software is pure action-witness ordering.
-    assert derive_enforceability(_gate([sw])) == "compile_gate"
+    assert derive_enforceability(_gate([sw])) == "action_witnessed"
     # Vacuous gate (no conditions at all): nothing to enforce — doc_only,
-    # NOT compile_gate; counting it as enforceable inflates the paper metric
+    # NOT action_witnessed; counting it as enforceable inflates the paper metric
     # (the v1 corpus carries 593 of these).
     assert derive_enforceability(_gate([])) == "doc_only"
 
 
 def test_enforceability_other_kinds():
     objs = {k: CONSTRAINT_ADAPTER.validate_python(v) for k, v in ALL_KIND_SAMPLES.items()}
-    assert derive_enforceability(objs["sequence"]) == "compile_gate"
-    assert derive_enforceability(objs["write_once"]) == "compile_gate"
-    assert derive_enforceability(objs["clock_gate"]) == "compile_gate"
+    assert derive_enforceability(objs["sequence"]) == "action_witnessed"
+    assert derive_enforceability(objs["write_once"]) == "action_witnessed"
+    assert derive_enforceability(objs["clock_gate"]) == "action_witnessed"
     # delay: witnessed iff the text names the dependent access.
-    assert derive_enforceability(objs["delay"]) == "witnessed_runtime_check"
+    assert derive_enforceability(objs["delay"]) == "state_witnessed"
     no_before = objs["delay"].model_copy(update={"before": None})
     assert derive_enforceability(no_before) == "dynamic_check"
     assert derive_enforceability(objs["read_effect"]) == "doc_only"
@@ -644,7 +644,7 @@ def test_collect_end_to_end_without_svd(run_dir, tmp_path):
     assert iwdg["access_constraints"][0]["preconditions"][0]["field_name"] == ""
     (v2,) = iwdg["access_constraints_v2"]
     assert v2["kind"] == "state_gate"
-    assert v2["enforceability"] == "witnessed_runtime_check"
+    assert v2["enforceability"] == "state_witnessed"
     assert v2["preconditions"][0]["whole_register"] is True
     assert v2["preconditions"][0]["values"] == [0x5555]
     (report,) = iwdg["constraint_reports"]
@@ -686,7 +686,7 @@ def test_collect_end_to_end_without_svd(run_dir, tmp_path):
     assert summary["reject_rate"] == pytest.approx(3 / 5)
     assert summary["other_count"] == 0 and summary["other_rate"] == 0.0
     assert summary["kind_counts"] == {"state_gate": 2}
-    assert summary["enforceability_counts"] == {"witnessed_runtime_check": 2}
+    assert summary["enforceability_counts"] == {"state_witnessed": 2}
 
 
 def test_collect_end_to_end_with_svd(run_dir, svd_dir, tmp_path):
