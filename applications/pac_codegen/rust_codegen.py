@@ -198,11 +198,47 @@ class Precondition:
         return f"{name}NotEq{self.value}"
 
 
+class FieldGate:
+    """A field-scoped write gate (field-level gating, opt-in): setting one
+    field of the register requires a witness that its preconditions held.
+
+    Unlike a whole-register gate, the register's own `write`/`modify` stay
+    unconstrained — only the field's writer accessor `w.<field>()` is gated,
+    so writes to sibling fields are unaffected. Both write and modify go
+    through that accessor, so one gate covers both surfaces."""
+
+    def __init__(self, field: str):
+        self.field = field
+        self.field_lower = field.lower()
+        self.preconditions: list["Precondition"] = []
+        self.docs: list[str] = []
+
+    def sources(self) -> list["SourceRegister"]:
+        out, seen = [], set()
+        for p in self.preconditions:
+            if p.source and p.source.key() not in seen:
+                out.append(p.source)
+                seen.add(p.source.key())
+        return out
+
+    def witness_name(self, reg: str) -> str:
+        return f"{reg.capitalize()}{self.field.capitalize()}FieldWitness"
+
+    def check_name(self) -> str:
+        return f"check_{self.field_lower}_field_ready"
+
+
 class RegisterPlan:
     """Everything the emitter needs for one constrained register."""
 
-    def __init__(self, register_info: RegisterInfo, peripheral: str):
+    def __init__(self, register_info: RegisterInfo, peripheral: str,
+                 field_level_gating: bool = False):
         self.peripheral = peripheral.lower()
+        # Field-level gating is OPT-IN (default off). When off, the emitter's
+        # behavior is exactly as before: field-scoped constraints are skipped
+        # with a warning. When on, they are enforced by gating the per-field
+        # writer accessor (see FieldGate / patch_field_accessors).
+        self.field_level_gating = field_level_gating
         # Corpus abbreviations are often peripheral-prefixed (SPI_TXCRCR);
         # the PAC module is named by the bare register (txcrcr). Strip the
         # prefix when it names this peripheral.
@@ -218,24 +254,27 @@ class RegisterPlan:
         self.preconditions: dict[str, list[Precondition]] = {}
         # op -> constraint doc lines (datasheet text + consequence)
         self.docs: dict[str, list[str]] = {}
+        # field-lowercase -> FieldGate (populated only when field_level_gating)
+        self.field_gates: dict[str, FieldGate] = {}
 
         for c in register_info.access_constraints:
             if getattr(c, "target_fields", None):
-                # Field-scoped gating is NOT implemented yet (see the plan's
-                # "Field-level gating" section). The PAC exposes per-field
-                # writers, but the current emitter gates the whole register —
-                # which would demand this precondition for writes to UNRELATED
-                # fields of the same register: sound but over-restrictive, and
-                # for a software-established precondition it can force
-                # incorrect setup of this or another register. Until field-
-                # level gating lands, skip these rather than over-gate.
-                print(
-                    f"WARNING: {self.reg_name}: skipping field-scoped "
-                    f"constraint on {list(c.target_fields)} "
-                    f"({c.target_operation}) — field-level gating is not yet "
-                    f"supported; this constraint is NOT enforced.",
-                    file=sys.stderr,
-                )
+                if not field_level_gating:
+                    # Default: field-scoped gating disabled. Gating the whole
+                    # register would demand this precondition for writes to
+                    # UNRELATED fields — sound but over-restrictive, and for a
+                    # software-established precondition it can force incorrect
+                    # setup of this or another register. So skip rather than
+                    # over-gate. Enable with field_level_gating=True.
+                    print(
+                        f"WARNING: {self.reg_name}: skipping field-scoped "
+                        f"constraint on {list(c.target_fields)} "
+                        f"({c.target_operation}) — field-level gating is "
+                        f"disabled; this constraint is NOT enforced.",
+                        file=sys.stderr,
+                    )
+                    continue
+                self._add_field_gate(c, peripheral)
                 continue
             if c.postconditions:
                 raise NotImplementedError(
@@ -284,8 +323,49 @@ class RegisterPlan:
                 if line and line not in doc:
                     doc.append(line)
 
-        if not self.preconditions:
+        if not self.preconditions and not self.field_gates:
             raise ValueError(f"{self.reg_name}: no enforceable constraints")
+
+    def _add_field_gate(self, c, peripheral: str) -> None:
+        """Record a field-scoped constraint as one FieldGate per named field
+        (field-level gating; only reached when field_level_gating is on)."""
+        if c.postconditions:
+            raise NotImplementedError(
+                f"{self.reg_name}: field-scoped postconditions are not "
+                "supported (roadmap step I)"
+            )
+        if c.target_operation not in ("write", "modify"):
+            # Field-level gating gates the writer accessor, which serves both
+            # write and modify; a field-scoped READ gate has no writer to gate.
+            print(
+                f"WARNING: {self.reg_name}: field-scoped {c.target_operation} "
+                f"gate on {list(c.target_fields)} — field-level gating "
+                f"supports only write/modify; NOT enforced.",
+                file=sys.stderr,
+            )
+            return
+        pres = []
+        for fs in c.preconditions:
+            if _is_same_register(fs, c.target_register):
+                pres.append(Precondition(fs))
+            else:
+                pres.append(Precondition(
+                    fs, SourceRegister(fs.register_name, peripheral)))
+        if not pres:
+            raise ValueError(
+                f"{self.reg_name}: field-scoped constraint has no "
+                "preconditions — nothing to enforce"
+            )
+        doc = c.datasheet_text.strip()
+        for field in c.target_fields:
+            fg = self.field_gates.setdefault(field.lower(), FieldGate(field))
+            seen = {p.key() for p in fg.preconditions}
+            for p in pres:
+                if p.key() not in seen:
+                    fg.preconditions.append(p)
+                    seen.add(p.key())
+            if doc and doc not in fg.docs:
+                fg.docs.append(doc)
 
     def sources(self, op: str) -> list["SourceRegister"]:
         """Ordered unique cross-register sources for one operation."""
@@ -318,6 +398,16 @@ class RegisterPlan:
                 del self.preconditions[op]
                 self.docs.pop(op, None)
                 removed.append(op)
+        # Field gates set a field via the register's writer, and their same-
+        # register preconditions read it: they need a writable (and, for such
+        # preconditions, readable) register or the patched accessor / check
+        # would not compile.
+        for fname in list(self.field_gates):
+            fg = self.field_gates[fname]
+            if not writable or (not readable and any(
+                    p.source is None for p in fg.preconditions)):
+                del self.field_gates[fname]
+                removed.append(f"field:{fg.field}")
         return removed
 
     # (peripheral module, register-spec type, gated op), for the marker walk
@@ -359,6 +449,10 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         w = plan.witness_name(op)
         a(f"/// State witness authorizing one {op} of {reg}.")
         a(f"pub struct {w} {{ _priv: () }}")
+    for fname in sorted(plan.field_gates):
+        fg = plan.field_gates[fname]
+        a(f"/// State witness authorizing writes to the {fg.field} field of {reg}.")
+        a(f"pub struct {fg.witness_name(reg)} {{ _priv: () }}")
     a("")
 
     # --- Error enum (register-scoped name: peripheral module may gain more) ---
@@ -366,6 +460,11 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
     seen = set()
     for op in sorted(plan.preconditions):
         for p in plan.preconditions[op]:
+            if p.key() not in seen:
+                all_pres.append(p)
+                seen.add(p.key())
+    for fname in sorted(plan.field_gates):
+        for p in plan.field_gates[fname].preconditions:
             if p.key() not in seen:
                 all_pres.append(p)
                 seen.add(p.key())
@@ -388,10 +487,12 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("}")
     a("")
 
-    def src_params(op: str) -> str:
+    def _src_params(srcs) -> str:
         return "".join(
-            f", {s.var()}: &crate::Reg<{s.spec_path()}>" for s in plan.sources(op)
-        )
+            f", {s.var()}: &crate::Reg<{s.spec_path()}>" for s in srcs)
+
+    def src_params(op: str) -> str:
+        return _src_params(plan.sources(op))
 
     def src_args(op: str) -> str:
         return "".join(f", {s.var()}" for s in plan.sources(op))
@@ -459,6 +560,38 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a(f"    pub fn read_when_ready(&self{src_params('read')}) -> Result<crate::R<{spec}>, {err}> {{")
         a(f"        let witness = self.check_read_ready({src_args('read').lstrip(', ')})?;")
         a("        Ok(self.read_witnessed(witness))")
+        a("    }")
+        a("")
+
+    # --- Field-gate checks: mint the per-field witness the patched writer
+    # accessor `w.<field>(&witness)` requires. Unlike the whole-register
+    # gate there is no welded `_when_ready` — the field is set inside a
+    # user-controlled write/modify closure, so the witness is minted here
+    # and borrowed into that closure.
+    for fname in sorted(plan.field_gates):
+        fg = plan.field_gates[fname]
+        w = fg.witness_name(reg)
+        pres = fg.preconditions
+        needs_self_read = any(p.source is None for p in pres)
+        srcs = fg.sources()
+        a(f"    /// Check every precondition for writing the {fg.field} field "
+          f"of {reg}.")
+        a("    ///")
+        a("    /// # Constraint")
+        for doc in fg.docs:
+            a(f"    /// {doc}")
+        a("    #[inline(always)]")
+        a(f"    pub fn {fg.check_name()}(&self{_src_params(srcs)}) "
+          f"-> Result<{w}, {err}> {{")
+        if needs_self_read:
+            a("        let r = self.read();")
+        for s in srcs:
+            a(f"        let r_{s.var()} = {s.var()}.read();")
+        for p in pres:
+            a(f"        if !({p.check_expr(p.reader_var())}) {{")
+            a(f"            return Err({err}::{p.error_variant()});")
+            a("        }")
+        a(f"        Ok({w} {{ _priv: () }})")
         a("    }")
         a("")
     a("}")
@@ -789,6 +922,44 @@ def patch_generic_rs(generic_path: Path) -> None:
     generic_path.write_text(content)
 
 
+# svd2rust field-writer accessor: `pub fn <field>(&mut self) -> <FIELD>_W<...>`.
+# The `&mut self` uniquely identifies the WRITER accessor (the reader is
+# `&self`, the enum-variant setter takes `self`).
+def _field_writer_accessor_re(field_lower: str) -> "re.Pattern":
+    return re.compile(rf"(pub fn {re.escape(field_lower)}\(&mut self)(\))")
+
+
+def patch_field_accessors(device_dir: Path, plans: list[RegisterPlan]) -> int:
+    """Field-level gating (opt-in): make each gated field's writer accessor
+    require its witness. `w.stop()` becomes `w.stop(&witness)`, so a closure
+    that sets the field without a witness fails to compile (E0061) while
+    sibling fields and the register's own `write`/`modify` are untouched.
+    Returns the number of accessors patched."""
+    patched = 0
+    for plan in plans:
+        if not plan.field_gates:
+            continue
+        reg_file = device_dir / plan.peripheral / f"{plan.reg_lower}.rs"
+        if not reg_file.is_file():
+            raise FileNotFoundError(reg_file)
+        text = reg_file.read_text()
+        for fg in plan.field_gates.values():
+            witness = fg.witness_name(plan.reg_name)
+            pat = _field_writer_accessor_re(fg.field_lower)
+            new_text, n = pat.subn(
+                rf"\1, _witness: &super::constraints::{witness}\2", text)
+            if n != 1:
+                raise RuntimeError(
+                    f"{reg_file}: expected exactly one writer accessor "
+                    f"`pub fn {fg.field_lower}(&mut self)`, found {n} — "
+                    "field-level gating patch aborted"
+                )
+            text = new_text
+            patched += 1
+        reg_file.write_text(text)
+    return patched
+
+
 # --------------------------------------------------------------------------- #
 # Marker walk: every register in the device gets Unconstrained* impls except
 # the (spec, op) pairs the constraints gate.
@@ -901,7 +1072,7 @@ def prune_plans_for_device(device_dir: Path,
             print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
                   f"{removed} gate(s) — unsupported by the register's "
                   "access mode")
-        if plan.preconditions:
+        if plan.preconditions or plan.field_gates:
             kept.append(plan)
         else:
             print(f"  note: {plan.peripheral}/{plan.reg_name}: nothing left "
@@ -929,8 +1100,12 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
     n = add_marker_impls(device_dir, gated)
     for periph, periph_plans in by_periph.items():
         inject_constraints_module(device_dir / f"{periph}.rs", periph_plans)
+    # Field-level gating: patch the per-field writer accessors (no-op when no
+    # plan carries field gates, so whole-register-only injection is unchanged).
+    fields_patched = patch_field_accessors(device_dir, plans)
     kept = [p for periph_plans in by_periph.values() for p in periph_plans]
-    print(f"Patched generic.rs, added markers to {n} register files, "
+    extra = f", {fields_patched} field accessor(s)" if fields_patched else ""
+    print(f"Patched generic.rs, added markers to {n} register files{extra}, "
           f"injected constraints for: "
           + ", ".join(f"{p.peripheral}/{p.reg_name}" for p in kept))
 
@@ -939,9 +1114,11 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
 # CLI
 # --------------------------------------------------------------------------- #
 
-def _load_plan(json_path: str, peripheral: str) -> RegisterPlan:
+def _load_plan(json_path: str, peripheral: str,
+               field_level_gating: bool = False) -> RegisterPlan:
     data = json.loads(Path(json_path).read_text())
-    return RegisterPlan(RegisterInfo(**data), peripheral)
+    return RegisterPlan(RegisterInfo(**data), peripheral,
+                        field_level_gating=field_level_gating)
 
 
 def main() -> None:
@@ -958,18 +1135,23 @@ def main() -> None:
                     help="PAC crate root (e.g. vendored/pac/stm32f4) to inject into")
     ap.add_argument("--device", default="stm32f405",
                     help="device module inside the PAC (default: stm32f405)")
+    ap.add_argument("--field-level-gating", action="store_true",
+                    help="OPT-IN: enforce field-scoped constraints by gating "
+                         "the per-field writer accessor (default off: "
+                         "field-scoped constraints are skipped with a warning)")
     args = ap.parse_args()
 
+    flg = args.field_level_gating
     plans: list[RegisterPlan] = []
     if args.input:
         if not args.peripheral:
             ap.error("--peripheral is required with a positional input")
-        plans.append(_load_plan(args.input, args.peripheral))
+        plans.append(_load_plan(args.input, args.peripheral, flg))
     for spec in args.constraint:
         peripheral, _, path = spec.partition("=")
         if not path:
             ap.error(f"--constraint needs PERIPHERAL=FIXTURE.json, got {spec!r}")
-        plans.append(_load_plan(path, peripheral))
+        plans.append(_load_plan(path, peripheral, flg))
     if not plans:
         ap.error("no constraint inputs given")
 

@@ -41,13 +41,17 @@ import collect_constraints  # noqa: E402
 import rust_codegen  # noqa: E402
 
 
-def select_and_plan(collect_dir: Path, device_dir: Path) -> tuple[list, list[dict]]:
+def select_and_plan(collect_dir: Path, device_dir: Path,
+                    field_level_gating: bool = False) -> tuple[list, list[dict]]:
     """From a collection output dir, build injectable RegisterPlans.
 
     Returns (plans, report_rows). Selection is manifest-driven: only
     constraints collection accepted are considered; each register's accepted
     subset is then offered to the emitter, which may still refuse shapes it
     does not support yet — refusals become report rows, never crashes.
+
+    ``field_level_gating`` (opt-in) enables field-scoped constraints to be
+    enforced at field granularity; off by default (they are skipped).
     """
     manifest = json.loads((collect_dir / "manifest.json").read_text())
     plans, rows = [], []
@@ -90,7 +94,9 @@ def select_and_plan(collect_dir: Path, device_dir: Path) -> tuple[list, list[dic
         data.pop("access_constraints_v2", None)
         data.pop("constraint_reports", None)
         try:
-            plan = rust_codegen.RegisterPlan(RegisterInfo(**data), peripheral)
+            plan = rust_codegen.RegisterPlan(
+                RegisterInfo(**data), peripheral,
+                field_level_gating=field_level_gating)
         except NotImplementedError as e:
             row("unsupported_by_emitter", str(e))
             continue
@@ -98,7 +104,12 @@ def select_and_plan(collect_dir: Path, device_dir: Path) -> tuple[list, list[dic
             row("emitter_rejected", str(e))
             continue
         plans.append(plan)
-        row("planned", f"gates: {sorted(op for _, _, op in plan.gated_ops())}")
+        # Record enforcement granularity: whole-register gated ops and, when
+        # field-level gating is on, the per-field gates (enforced_as: field).
+        detail = f"gates: {sorted(op for _, _, op in plan.gated_ops())}"
+        if plan.field_gates:
+            detail += f"; field_gates: {sorted(plan.field_gates)}"
+        row("planned", detail)
 
     return plans, rows
 
@@ -124,6 +135,10 @@ def main() -> None:
                          "applications/pac_codegen/constraints/<device>.json")
     ap.add_argument("--dry-run", action="store_true",
                     help="select and plan, but do not touch the PAC")
+    ap.add_argument("--field-level-gating", action="store_true",
+                    help="OPT-IN: enforce field-scoped constraints at field "
+                         "granularity by gating per-field writer accessors "
+                         "(default off: field-scoped constraints are skipped)")
     args = ap.parse_args()
 
     pac_root = Path(args.pac)
@@ -138,7 +153,9 @@ def main() -> None:
             argv += ["--svd-dir", args.svd_dir]
         collect_constraints.main(argv)
 
-        plans, rows = select_and_plan(collect_dir, device_dir)
+        plans, rows = select_and_plan(
+            collect_dir, device_dir,
+            field_level_gating=args.field_level_gating)
 
         # Match the artifact and injection exactly: apply the access-mode
         # prune (write-only registers cannot carry modify/read gates) BEFORE

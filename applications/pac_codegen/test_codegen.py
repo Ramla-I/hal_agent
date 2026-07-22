@@ -140,11 +140,12 @@ def test_codegen_matches_golden():
             )
 
 
-def test_field_scoped_constraint_skipped_with_warning(tmp_path):
-    """Field-scoped constraints (non-empty ``target_fields``) are not yet
-    enforceable: the emitter skips each with a warning instead of over-gating
-    the whole register (see the plan's "Field-level gating" section). A
-    whole-register constraint on the same register is still emitted."""
+def test_field_scoped_constraint_skipped_by_default(tmp_path):
+    """By default (field-level gating OFF), field-scoped constraints
+    (non-empty ``target_fields``) are skipped with a warning instead of
+    over-gating the whole register (see the plan's "Field-level gating"
+    section). A whole-register constraint on the same register is still
+    emitted."""
     data = json.loads((CRATE_DIR / "stm32f405_i2c1.json").read_text())
     whole = data["access_constraints"][0]            # real whole-register gate
     field_scoped = json.loads(json.dumps(whole))     # a field-scoped sibling
@@ -158,7 +159,7 @@ def test_field_scoped_constraint_skipped_with_warning(tmp_path):
          "--peripheral", "i2c1", "--output", str(out)],
         check=True, capture_output=True, text=True,
     )
-    assert "field-level gating is not yet supported" in result.stderr
+    assert "field-level gating is disabled" in result.stderr
     assert "PE" in result.stderr                      # the skipped field named
     # the whole-register constraint survived; only the field-scoped one dropped
     assert out.read_text().strip()
@@ -393,6 +394,82 @@ def test_illegal_programs_rejected():
                     f"({needle!r}):\n{out[-1500:]}")
 
     assert not failures, "\n\n".join(failures)
+
+
+# --------------------------------------------------------------------------- #
+# Test 3b: field-level gating (opt-in) — gate one field, leave siblings free
+# --------------------------------------------------------------------------- #
+
+FIELD_FIXTURE = CRATE_DIR / "stm32f405_i2c1_start_field.json"
+
+
+def _snapshot_pac():
+    tmp = tempfile.TemporaryDirectory()
+    shutil.copy2(PAC_GENERIC, Path(tmp.name) / "generic.rs")
+    shutil.copytree(DEVICE_DIR, Path(tmp.name) / DEVICE)
+    return tmp, MAIN_RS.read_bytes()
+
+
+def _restore_pac(tmp, main_bytes):
+    shutil.copy2(Path(tmp.name) / "generic.rs", PAC_GENERIC)
+    shutil.rmtree(DEVICE_DIR)
+    shutil.copytree(Path(tmp.name) / DEVICE, DEVICE_DIR)
+    MAIN_RS.write_bytes(main_bytes)
+    os.utime(PAC_GENERIC)
+    for f in DEVICE_DIR.rglob("*"):
+        if f.is_file():
+            os.utime(f)
+    tmp.cleanup()
+
+
+def test_field_level_gating_compiles_and_enforces():
+    """With field-level gating ON, a field-scoped constraint gates only the
+    named field's writer: the witnessed path and sibling-field writes compile,
+    but setting the field without the witness fails (E0061). The register's
+    own write/modify stay unconstrained."""
+    if not _cargo_available():
+        _skip("test_field_level_gating_compiles_and_enforces", "cargo not on PATH")
+        return
+    if not _pac_provisioned():
+        _skip("test_field_level_gating_compiles_and_enforces",
+              f"provisioned stm32f4 PAC not found under {PAC_SRC}")
+        return
+
+    tmp, main_bytes = _snapshot_pac()
+    digest = _tree_digest(PAC_GENERIC, DEVICE_DIR)
+    try:
+        inject = subprocess.run(
+            [sys.executable, str(RUST_CODEGEN), str(FIELD_FIXTURE),
+             "--peripheral", "i2c1", "--inject-pac", str(PAC_ROOT),
+             "--device", DEVICE, "--field-level-gating"],
+            capture_output=True, text=True)
+        assert inject.returncode == 0, "injection failed:\n" + inject.stdout + inject.stderr
+        assert "field accessor" in inject.stdout
+
+        def check(body):
+            MAIN_RS.write_text(_program(body))
+            return subprocess.run(["cargo", "check"], cwd=str(CRATE_DIR),
+                                  capture_output=True, text=True)
+
+        # legal: mint the witness, set the gated field with it, and set a
+        # sibling field (PE) freely — the register's modify is unconstrained.
+        legal = check(
+            "    let wit = i2c1.cr1().check_start_field_ready().unwrap();\n"
+            "    i2c1.cr1().modify(|_, w| w.start(&wit).set_bit());\n"
+            "    i2c1.cr1().modify(|_, w| w.pe().set_bit());")
+        assert legal.returncode == 0, (
+            "legal field-gated program failed to compile:\n"
+            + legal.stdout + legal.stderr)
+
+        # illegal: set the gated field WITHOUT the witness -> compile error.
+        illegal = check("    i2c1.cr1().modify(|_, w| w.start().set_bit());")
+        out = illegal.stdout + illegal.stderr
+        assert illegal.returncode != 0, "unwitnessed field write was accepted"
+        assert "error[E0061]" in out, f"expected E0061, got:\n{out[-1200:]}"
+    finally:
+        _restore_pac(tmp, main_bytes)
+        assert _tree_digest(PAC_GENERIC, DEVICE_DIR) == digest, (
+            "PAC not restored after field-level test — re-provision with get_pac.py")
 
 
 # --------------------------------------------------------------------------- #
