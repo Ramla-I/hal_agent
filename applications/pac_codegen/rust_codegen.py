@@ -220,6 +220,23 @@ class RegisterPlan:
         self.docs: dict[str, list[str]] = {}
 
         for c in register_info.access_constraints:
+            if getattr(c, "target_fields", None):
+                # Field-scoped gating is NOT implemented yet (see the plan's
+                # "Field-level gating" section). The PAC exposes per-field
+                # writers, but the current emitter gates the whole register —
+                # which would demand this precondition for writes to UNRELATED
+                # fields of the same register: sound but over-restrictive, and
+                # for a software-established precondition it can force
+                # incorrect setup of this or another register. Until field-
+                # level gating lands, skip these rather than over-gate.
+                print(
+                    f"WARNING: {self.reg_name}: skipping field-scoped "
+                    f"constraint on {list(c.target_fields)} "
+                    f"({c.target_operation}) — field-level gating is not yet "
+                    f"supported; this constraint is NOT enforced.",
+                    file=sys.stderr,
+                )
+                continue
             if c.postconditions:
                 raise NotImplementedError(
                     f"{self.reg_name}: postconditions/action witnesses are "

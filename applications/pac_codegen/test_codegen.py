@@ -41,6 +41,7 @@ Run directly (``python test_codegen.py``) or under pytest.
 
 import difflib
 import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -137,6 +138,30 @@ def test_codegen_matches_golden():
                 f"{golden.name}. If this change is intentional, refresh the "
                 "golden's generated section (see its header).\n\n" + diff
             )
+
+
+def test_field_scoped_constraint_skipped_with_warning(tmp_path):
+    """Field-scoped constraints (non-empty ``target_fields``) are not yet
+    enforceable: the emitter skips each with a warning instead of over-gating
+    the whole register (see the plan's "Field-level gating" section). A
+    whole-register constraint on the same register is still emitted."""
+    data = json.loads((CRATE_DIR / "stm32f405_i2c1.json").read_text())
+    whole = data["access_constraints"][0]            # real whole-register gate
+    field_scoped = json.loads(json.dumps(whole))     # a field-scoped sibling
+    field_scoped["target_fields"] = ["PE"]
+    data["access_constraints"] = [whole, field_scoped]
+    fixture = tmp_path / "mixed.json"
+    fixture.write_text(json.dumps(data))
+    out = tmp_path / "constraints.rs"
+    result = subprocess.run(
+        [sys.executable, str(RUST_CODEGEN), str(fixture),
+         "--peripheral", "i2c1", "--output", str(out)],
+        check=True, capture_output=True, text=True,
+    )
+    assert "field-level gating is not yet supported" in result.stderr
+    assert "PE" in result.stderr                      # the skipped field named
+    # the whole-register constraint survived; only the field-scoped one dropped
+    assert out.read_text().strip()
 
 
 # --------------------------------------------------------------------------- #
