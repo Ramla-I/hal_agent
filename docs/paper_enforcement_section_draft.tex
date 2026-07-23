@@ -158,6 +158,44 @@ point (\texttt{write\_when\_ready}) mints and spends the witness inside one
 call, so the check-to-use window is fixed by the library, not by caller
 discipline.
 
+The examples so far all gate writes, but the same witness mechanism serves
+all three operation surfaces; only the withheld method and its consequences
+change (Table~\ref{tab:read-write}).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}l p{0.32\linewidth} p{0.32\linewidth}@{}}
+\toprule
+ & Write constraint & Read constraint \\
+\midrule
+Datasheet form & ``write $R$ only while $F$ holds'' & ``reading $R$ is unreliable, or has a side effect, while $F$ holds'' \\
+\addlinespace
+Stock method withheld & \texttt{write} \emph{and} \texttt{modify} (a modify performs a write) & \texttt{read} \\
+\addlinespace
+Absent marker & \texttt{UnconstrainedWrite} / \texttt{UnconstrainedModify} & \texttt{UnconstrainedRead} \\
+\addlinespace
+Witnessed entry point & \texttt{write\_when\_ready} & \texttt{read\_when\_ready} \\
+\addlinespace
+Corpus example & I2C\_CR1 write, needs STOP/START/PEC clear & SPI\_TXCRCR read, needs SPI\_SR.BSY clear \\
+\bottomrule
+\end{tabular}
+\caption{Read and write constraints share one witness mechanism; the
+operation surface and its consequences differ. A \texttt{modify}-only
+constraint is the middle case---it gates just \texttt{modify}.}
+\label{tab:read-write}
+\end{table}
+
+Read gates carry two wrinkles a write gate does not. First, the check must
+read a \emph{different} register than the one it guards: a same-register read
+gate would have to read the very register whose reads are constrained, which
+is self-defeating, so the generator rejects it (cross-register read gates---%
+the common case, e.g.\ gating a CRC-result read on a separate busy flag---are
+fine). Second, the register's derived \texttt{Debug} implementation is
+dropped, because printing a register performs a read. A write gate needs
+neither: its check reads the target freely, and writing is not something
+\texttt{Debug} does.
+
 Honesty about semantics: a witness is a \emph{witness}, not a proof---it
 attests that the preconditions were observed true in one fresh read.
 Time-of-check to time-of-use is inherited from the hardware contract itself:

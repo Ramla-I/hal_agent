@@ -134,6 +134,27 @@ which has its own witness type. And the recommended entry point
 (`write_when_ready`) mints and spends the witness inside one call, so the
 check-to-use window is fixed by the library, not by caller discipline.
 
+The examples so far all gate writes, but the same witness mechanism serves all
+three operation surfaces; only the withheld method and its consequences change:
+
+| | Write constraint | Read constraint |
+|---|---|---|
+| Datasheet form | "write *R* only while *F* holds" | "reading *R* is unreliable, or has a side effect, while *F* holds" |
+| Stock method withheld | `write` *and* `modify` (a modify performs a write) | `read` |
+| Absent marker | `UnconstrainedWrite` / `UnconstrainedModify` | `UnconstrainedRead` |
+| Witnessed entry point | `write_when_ready` | `read_when_ready` |
+| Corpus example | I2C_CR1 write, needs STOP/START/PEC clear | SPI_TXCRCR read, needs SPI_SR.BSY clear |
+
+(A `modify`-only constraint is the middle case — it gates just `modify`.)
+Read gates carry two wrinkles a write gate does not. First, the check must
+read a *different* register than the one it guards: a same-register read gate
+would have to read the very register whose reads are constrained, which is
+self-defeating, so the generator rejects it (cross-register read gates — the
+common case, e.g. gating a CRC-result read on a separate busy flag — are
+fine). Second, the register's derived `Debug` implementation is dropped,
+because printing a register performs a read. A write gate needs neither: its
+check reads the target freely, and writing is not something `Debug` does.
+
 Honesty about semantics: a witness is a *witness*, not a proof — it attests
 that the preconditions were observed true in one fresh read. Time-of-check to
 time-of-use is inherited from the hardware contract itself: memory-mapped I/O
