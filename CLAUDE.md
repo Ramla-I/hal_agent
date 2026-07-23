@@ -40,13 +40,46 @@ hal_agent/
 ├── utils/                      # General utilities
 ├── devices/                    # Device datasheets and SVD files
 ├── scripts/                    # Helper scripts
-├── verified_datasheet/         # Verified ground truth data
-└── openevolve_retrieval/       # OpenEvolve evolutionary retrieval optimization
-    ├── initial_program.py     # Evolvable retrieval program
-    ├── evaluator*.py          # Fitness functions (per device)
-    ├── config*.yaml           # OpenEvolve configs (per device)
-    └── output_*/              # Evolution outputs (best programs, checkpoints, logs)
+├── verified_datasheet/         # Verified ground truth data (register structure +
+│                               #   constraints/stm.csv for access constraints)
+├── openevolve_retrieval/       # OpenEvolve evolutionary retrieval optimization
+│   ├── initial_program.py     # Evolvable retrieval program
+│   ├── evaluator*.py          # Fitness functions (per device)
+│   ├── config*.yaml           # OpenEvolve configs (per device)
+│   └── output_*/              # Evolution outputs (best programs, checkpoints, logs)
+├── constraint_validator/       # ENFORCEMENT ARM — static + LLM validation of
+│                               #   extracted access constraints (quote anchoring,
+│                               #   target-location gate, gpt-oss judge, corruption)
+└── applications/pac_codegen/   # ENFORCEMENT ARM — turn access constraints into
+                                #   witness-gated PAC crates (rust_codegen.py emitter,
+                                #   inject_from_run.py driver, compile tests)
 ```
+
+## The Enforcement Arm (grammar v2 → witness-gated PAC crates)
+
+Beyond extracting register facts, the project's second arm turns *register
+access constraints* (when a register may be read/written/modified) into
+compile-time guarantees in Rust PAC crates. The authoritative design and
+status doc is **`docs/register_constraints_plan.md`** (grammar v2 spec in its
+Appendix B; enforcement mechanics in §3 and Appendix A; roadmap + divergence
+log). Key pieces:
+
+- **Grammar v2** (`defs.py`, `prompts/register_info_stm.py`): a discriminated
+  union of constraint kinds (`state_gate`, `sequence`, `write_once`,
+  `clock_gate`, `delay`, `read_effect`, `value_relation`, `other`); the
+  generator emits it natively. Enforceability is *computed*
+  (`derive_enforceability`): `action_witnessed` / `state_witnessed` (both
+  compile-time witness-gated), `dynamic_check`, or `doc_only`.
+- **Constraint Validator** (`constraint_validator/`): deterministic quote
+  anchoring + target-location gate, then a closed-book gpt-oss judge; a
+  corruption harness calibrates it. Verified ground truth accumulates in
+  `verified_datasheet/constraints/stm.csv`.
+- **Codegen** (`applications/pac_codegen/rust_codegen.py`): whole-register
+  gating via marker traits in `generic.rs`; **field-level gating is opt-in**
+  (`--field-level-gating`, default off). `inject_from_run.py` is the
+  end-to-end driver (generator run → collect → static validation → inject).
+- **Full pipeline in s0**: `core/s0_run_full_analysis.py --constraint-validation`
+  runs generator (v2) → static validation → constraint validator.
 
 ## Key Commands
 

@@ -233,12 +233,11 @@ class RegisterPlan:
 
     def __init__(self, register_info: RegisterInfo, peripheral: str,
                  field_level_gating: bool = False):
-        self.peripheral = peripheral.lower()
         # Field-level gating is OPT-IN (default off). When off, the emitter's
         # behavior is exactly as before: field-scoped constraints are skipped
         # with a warning. When on, they are enforced by gating the per-field
         # writer accessor (see FieldGate / patch_field_accessors).
-        self.field_level_gating = field_level_gating
+        self.peripheral = peripheral.lower()
         # Corpus abbreviations are often peripheral-prefixed (SPI_TXCRCR);
         # the PAC module is named by the bare register (txcrcr). Strip the
         # prefix when it names this peripheral.
