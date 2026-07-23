@@ -1,0 +1,71 @@
+{
+  "vendor": "stm",
+  "device": "rm0041",
+  "model": "gpt-5.4",
+  "config_to_freeze": {
+    "curated_examples": "curated_examples/stm.json",
+    "use_alt_name": true,
+    "objective": "precision",
+    "target_precision": 0.95
+  },
+  "deployment_threshold": 0.93,
+  "threshold_stability": {
+    "per_fold_tau": [
+      0.93,
+      0.93,
+      0.93,
+      0.98,
+      0.98
+    ],
+    "min": 0.93,
+    "max": 0.98,
+    "std": 0.0245
+  },
+  "instrument": {
+    "alpha_sensitivity": 0.7433485622144584,
+    "beta_specificity": 0.91125
+  },
+  "measured_on_dev_device": {
+    "gate_precision": 0.9511691884456671,
+    "yield_recall": 0.7433485622144584,
+    "f1": 0.8345150098054006,
+    "validated_precision": 0.9511691884456669,
+    "n_invariants": 5321,
+    "config": "curated"
+  },
+  "provenance": {
+    "source_run": "optimization_validator/experiments/stmrm0041_run/curated/gpt-5.4",
+    "seed": 0,
+    "corruption_fraction": 0.3,
+    "est_cost_usd": 29.981939499999996,
+    "note": "3-seed (0,1,2) variance recorded in seed_variance. Curated yield mean\u00b1std = 0.763\u00b10.061; curation lift \u0394yield = +0.026\u00b10.014.",
+    "seed_variance": {
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "baseline_yield": {
+        "mean": 0.7372,
+        "std": 0.0512
+      },
+      "curated_yield": {
+        "mean": 0.7632,
+        "std": 0.0609
+      },
+      "curation_delta_yield": {
+        "mean": 0.0261,
+        "std": 0.0141,
+        "range": [
+          0.0062,
+          0.0365
+        ]
+      },
+      "curation_delta_f1": {
+        "mean": 0.0156,
+        "std": 0.0081
+      },
+      "curated_precision_mean": 0.951
+    }
+  }
+}

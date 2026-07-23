@@ -122,9 +122,12 @@ def main() -> None:
     def selected(mfg_of: str) -> bool:
         return not args.only or mfg_of in args.only
 
-    want_archives = sorted(
-        a for a in archives if selected(a.split(".")[0])
-    )
+    # Restore the archives that ASSET rows reference (the source of truth), plus any
+    # archive-kind rows. Deriving from asset rows keeps --only working even when a
+    # manufacturer's archive-kind row is missing from the manifest (that row is only used
+    # to pre-verify the archive file's sha below; the assets are still verified individually).
+    all_archives = {a for a, _s, _sh in assets.values()} | set(archives)
+    want_archives = sorted(a for a in all_archives if selected(a.split(".")[0]))
     if not want_archives:
         sys.exit("no archives matched --only " + ", ".join(args.only))
     want_assets = {p: v for p, v in assets.items() if v[0] in set(want_archives)}

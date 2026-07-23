@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
-pack_device_assets.py — bundle the device datasheet binaries (PDF + SVD) into
+pack_device_assets.py — bundle the device datasheet binaries (PDF + SVD/XML) into
 per-manufacturer tar.gz archives and (optionally) publish them as GitHub Release
 assets.
 
 Why this exists
 ---------------
-`.gitignore` excludes `devices/**/*.pdf` and `devices/**/*.svd`, so ~2.4 GB of
-datasheets and SVDs do not travel with a `git clone`. Migrating the repo to a new
-server would silently drop them. This tool packages every PDF/SVD so they can be
-restored on the new machine with `scripts/unpack_device_assets.py`.
+`.gitignore` excludes `devices/**/*.pdf`, `devices/**/*.svd` and `devices/**/*.xml`
+(SVDs and device-mapping files), so ~2.4 GB of datasheets and register descriptions
+do not travel with a `git clone`. Migrating the repo to a new server would silently
+drop them. This tool packages every PDF/SVD/XML so they can be restored on the new
+machine with `scripts/unpack_device_assets.py`. Gitignored intermediate dirs
+(ddm/, chunks/, peripheral_pages_md/, other/) are skipped.
 
 What it produces
 ----------------
@@ -50,7 +52,9 @@ import subprocess
 import sys
 import tarfile
 
-ASSET_EXTS = (".pdf", ".svd")
+ASSET_EXTS = (".pdf", ".svd", ".xml")
+# Gitignored intermediate/generated dirs that may contain .xml but are NOT assets.
+SKIP_DIRS = {"ddm", "chunks", "peripheral_pages_md", "other"}
 DEFAULT_OUT = "dist/device_assets"
 DEFAULT_MANIFEST = "devices/ASSETS_MANIFEST.tsv"
 MANIFEST_HEADER = ["kind", "path", "archive", "bytes", "sha256"]
@@ -69,9 +73,13 @@ def sha256_file(path: str, _buf=1024 * 1024) -> str:
 
 
 def discover_assets(root: str) -> list[str]:
-    """Repo-root-relative paths of every PDF/SVD under devices/, sorted."""
+    """Repo-root-relative paths of every PDF/SVD/XML under devices/, sorted.
+
+    Gitignored intermediate dirs (see SKIP_DIRS) are pruned so their generated
+    .xml files never get packed."""
     out = []
-    for dirpath, _, files in os.walk(os.path.join(root, "devices")):
+    for dirpath, dirs, files in os.walk(os.path.join(root, "devices")):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         for fn in files:
             if fn.lower().endswith(ASSET_EXTS):
                 out.append(os.path.relpath(os.path.join(dirpath, fn), root))
@@ -267,7 +275,7 @@ def main() -> None:
         for p, (arc, size, sha) in prev_assets.items():
             if manufacturer(p) not in args.only:
                 asset_rows.append((p, arc, size, sha))
-        kept = {a for a, *_ in asset_rows}
+        kept = {arc for _rel, arc, _sz, _sh in asset_rows}  # archive names, not asset paths
         for arc, (size, sha) in prev_archives.items():
             if arc in kept and arc not in {r[0] for r in archive_rows}:
                 archive_rows.append((arc, size, sha))

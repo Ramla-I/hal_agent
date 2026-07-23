@@ -1,0 +1,489 @@
+"""Offline tests for the Validator cross-validation building blocks.
+
+No network / no LLM. Run in the project container:
+    scripts/docker_run.sh run -m optimization_validator.tests.test_offline
+"""
+
+from __future__ import annotations
+
+import os
+import random
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import pandas as pd
+
+from optimization_validator.corruption import (
+    ACCESS_VALUES, COMMON_SIZES, _HEX_RE, build_register_contexts, corrupt_row, corrupt_value, corrupt_field_name,
+)
+from optimization_validator.kfold import load_verified, build_corrupted_benchmark, assign_folds
+from optimization_validator.calibration import ConfusionMatrix, calibrate
+from optimization_validator.cross_validate import (
+    confusion_at, tune_threshold_precision, make_tuner,
+    build_review_queue, precision_at_k_table, reliability_table,
+)
+
+VERIFIED = "verified_datasheet/stm/rm0041_stm32f100.csv"
+
+_failures = []
+
+
+def check(cond, msg):
+    if not cond:
+        _failures.append(msg)
+        print(f"  FAIL: {msg}")
+    else:
+        print(f"  ok:   {msg}")
+
+
+def test_corruption_realism():
+    print("\n== corruption realism ==")
+    df = load_verified(VERIFIED)
+    contexts = build_register_contexts(df)
+    rng = random.Random(7)
+
+    # Corrupt every row's VALUE and check per-key constraints.
+    n = len(df)
+    bad_diff = bad_range = bad_numeric = 0
+    sizes_ok = access_ok = hex_ok = 0
+    sizes_tot = access_tot = hex_tot = 0
+    for i, row in enumerate(df.to_dict("records")):
+        ctx = contexts[(row["peripheral"], row["register"])]
+        key = row["key"]
+        field_name = "" if row["field_name"] is None else str(row["field_name"])
+        new = corrupt_value(key, row["correct_value"], ctx, field_name, rng)
+        
+        if False and i == 4:  # flip to True to eyeball one invariant's format
+            print("  -- sample invariant --")
+            print(f"     row/invariant: {row}")
+            print(f"     key:           {key}")
+            print(f"     field_name:    {field_name!r}")
+            print(f"     original:      {row['correct_value']!r}")
+            print(f"     register ctx:  {ctx}")
+            print(f"     corrupted:     {new!r}")
+
+        if str(new).strip() == str(row["correct_value"]).strip():
+            bad_diff += 1
+        if key in ("bit_offset", "bit_width"):
+            size = ctx.size or 32
+            if not new.lstrip("-").isdigit():
+                # bit corruptions must stay numeric; a non-digit result is unrealistic.
+                bad_numeric += 1
+            elif key == "bit_offset" and not (0 <= int(new) < size):
+                bad_range += 1
+            elif key == "bit_width" and not (1 <= int(new) <= size):
+                bad_range += 1
+        if key == "size":
+            sizes_tot += 1
+            if int(new) in COMMON_SIZES and new != row["correct_value"]:
+                sizes_ok += 1
+        if key == "access":
+            access_tot += 1
+            if new in ACCESS_VALUES and new != str(row["correct_value"]).strip().lower():
+                access_ok += 1
+        if key in ("address_offset", "reset_value") and _HEX_RE.match(str(row["correct_value"]).strip()):
+            hex_tot += 1
+            if _HEX_RE.match(new):
+                hex_ok += 1
+
+    check(bad_diff == 0, f"all {n} value corruptions differ from original (violations={bad_diff})")
+    check(bad_numeric == 0, f"bit_offset/width corruptions stay numeric (violations={bad_numeric})")
+    check(bad_range == 0, f"bit_offset/width corruptions stay in range (violations={bad_range})")
+    check(sizes_ok == sizes_tot, f"size corruptions in {{8,16,32,64}} & changed ({sizes_ok}/{sizes_tot})")
+    check(access_ok == access_tot, f"access corruptions valid & changed ({access_ok}/{access_tot})")
+    check(hex_ok == hex_tot, f"hex corruptions keep 0x format ({hex_ok}/{hex_tot})")
+
+
+def test_field_name_corruption():
+    print("\n== field-name corruption ==")
+    df = load_verified(VERIFIED)
+    contexts = build_register_contexts(df)
+    rng = random.Random(11)
+    field_rows = [r for r in df.to_dict("records") if str(r["field_name"]).strip()]
+    changed = sibling = 0
+    for r in field_rows[:500]:
+        ctx = contexts[(r["peripheral"], r["register"])]
+        new = corrupt_field_name(str(r["field_name"]), ctx, rng)
+        if new != r["field_name"]:
+            changed += 1
+        if new in ctx.fields:
+            sibling += 1
+    check(changed == len(field_rows[:500]), f"every field-name corruption changes the name ({changed}/{len(field_rows[:500])})")
+    check(sibling > 0, f"some field-name corruptions reuse a real sibling name ({sibling} of 500)")
+
+
+def test_folds():
+    print("\n== group k-fold ==")
+    df = load_verified(VERIFIED)
+    bench = build_corrupted_benchmark(df, corruption_fraction=0.30, seed=3)
+    frac = (~bench["is_correct"]).mean()
+    check(abs(frac - 0.30) < 0.02, f"corruption fraction ~0.30 (got {frac:.3f})")
+
+    k = 5
+    folded = assign_folds(bench, k=k, seed=3)
+    # Each (peripheral, register) in exactly one fold.
+    grp_folds = folded.groupby(["peripheral", "register"])["fold"].nunique()
+    check((grp_folds == 1).all(), "each (peripheral, register) maps to exactly one fold")
+    # Every fold has both classes.
+    both = all(
+        (folded[folded["fold"] == f]["is_correct"].sum() > 0)
+        and ((~folded[folded["fold"] == f]["is_correct"]).sum() > 0)
+        for f in range(k)
+    )
+    check(both, "every fold contains both positive and negative cases")
+    # No corrupted/original pair leakage: replacement means one row per (per,reg,field,key)
+    # within a fold partition is structurally guaranteed by grouping registers.
+    check(folded["fold"].nunique() == k, f"exactly {k} folds populated")
+    # Folds partition the benchmark: summing per-fold counts recovers every invariant.
+    total_across_folds = sum(int((folded["fold"] == f).sum()) for f in range(k))
+    check(total_across_folds == len(bench),
+          f"invariants summed across folds == original ({total_across_folds} == {len(bench)})")
+    # Corrupted invariants are spread across ALL folds, not dumped into a few: every fold's
+    # negative fraction stays near the global ~0.30 (generous band — folds are whole
+    # register groups, so exact balance isn't expected). Also confirms all negatives are
+    # accounted for across folds.
+    neg = ~folded["is_correct"]
+    global_neg_frac = neg.mean()
+    fold_neg_fracs = {f: (neg & (folded["fold"] == f)).sum() / max(1, (folded["fold"] == f).sum())
+                      for f in range(k)}
+    max_dev = max(abs(fr - global_neg_frac) for fr in fold_neg_fracs.values())
+    check(max_dev < 0.12,
+          f"each fold's corrupted fraction within 0.12 of global {global_neg_frac:.3f} "
+          f"(max dev {max_dev:.3f}; per-fold {[round(fold_neg_fracs[f], 3) for f in range(k)]})")
+    total_neg_across_folds = sum(int((neg & (folded["fold"] == f)).sum()) for f in range(k))
+    check(total_neg_across_folds == int(neg.sum()),
+          f"corrupted invariants summed across folds == total negatives "
+          f"({total_neg_across_folds} == {int(neg.sum())})")
+
+    # Peripheral-stratified corruption (bench built with the default stratify_by="peripheral"):
+    # negatives span ALL peripherals, not a clustered few — a break here keeps the global
+    # fraction at 0.30 so it would slip past the checks above.
+    per = bench.groupby("peripheral")["is_correct"].apply(lambda s: (~s).mean())
+    sizes = bench.groupby("peripheral").size()
+    big_periphs = sizes[sizes >= 4].index
+    check(all(per[p] > 0 for p in big_periphs),
+          f"every peripheral with >=4 rows gets >=1 negative ({len(big_periphs)} periphs)")
+    check(per.max() <= 0.5, f"no peripheral is mostly negatives (max frac {per.max():.2f})")
+    # Global-uniform mode (stratify_by=None) still supported and near the target fraction.
+    uni = build_corrupted_benchmark(df, corruption_fraction=0.30, seed=3, stratify_by=None)
+    check(abs((~uni["is_correct"]).mean() - 0.30) < 0.02, "stratify_by=None keeps ~0.30 global")
+
+
+def test_calibration():
+    print("\n== calibration math ==")
+    # Construct from pi=0.7, alpha=0.9, beta=0.8, N=1000.
+    cm = ConfusionMatrix(tp=630, fp=60, tn=240, fn=70)
+    check(abs(cm.alpha - 0.9) < 1e-9, f"alpha=0.9 (got {cm.alpha})")
+    check(abs(cm.beta - 0.8) < 1e-9, f"beta=0.8 (got {cm.beta})")
+    res = calibrate(cm)
+    check(abs(res.r_hat - 0.69) < 1e-9, f"r_hat=0.69 (got {res.r_hat})")
+    check(abs(res.pi - 0.7) < 1e-6, f"pi recovered = 0.7 (got {res.pi})")
+    check(abs(res.validated_precision - (630 / 690)) < 1e-6,
+          f"validated precision = tp/(tp+fp) (got {res.validated_precision})")
+    check(res.identifiable and not res.clamped, "identifiable, not clamped")
+
+    # Non-identifiable: alpha+beta = 1 (random labeler).
+    bad = calibrate(ConfusionMatrix(tp=50, fp=50, tn=50, fn=50))
+    check(not bad.identifiable, "alpha+beta<=1 flagged non-identifiable")
+
+    # Clamping: high acceptance with imperfect labeler pushes pi_raw > 1.
+    clamp = calibrate(ConfusionMatrix(tp=98, fp=2, tn=0, fn=0))  # beta undefined -> guard
+    # beta undefined here (no negatives); ensure it doesn't crash and reports a note.
+    check(clamp.pi is None and not clamp.identifiable, "empty negative class handled gracefully")
+
+    # Proper clamp case: alpha=0.9, beta=0.9, but observed r_hat very high.
+    clamp2 = calibrate(ConfusionMatrix(tp=95, fp=4, tn=1, fn=0))
+    check(clamp2.pi is not None and 0.0 <= clamp2.pi <= 1.0, f"pi clamped into [0,1] (got {clamp2.pi}, raw {clamp2.pi_raw})")
+
+
+def test_alt_name():
+    print("\n== alt_name plumbing + prompt ==")
+    from optimization_validator.kfold import make_benchmark_with_folds
+    from prompts.validator import (
+        create_batched_validator_system_prompt, create_batched_validator_user_prompt,
+    )
+
+    # load_verified carries alt_name; benchmark keeps it.
+    df = load_verified(VERIFIED)
+    check("alt_name" in df.columns, "load_verified carries an alt_name column")
+    bench = make_benchmark_with_folds(VERIFIED, k=5, seed=1)
+    check("alt_name" in bench.columns, "benchmark retains alt_name")
+
+    # On field-name corruption, alt_name is blanked (no leak / no datasheet alias).
+    name_corr = bench[(bench["corruption_type"] == "field_name")]
+    check(len(name_corr) > 0, "benchmark has some field_name corruptions")
+    check((name_corr["alt_name"].astype(str).str.strip() == "").all(),
+          "alt_name blanked on every field_name corruption")
+
+    # User prompt surfaces datasheet_name only when alt_name is present.
+    inv_with = [{"peripheral": "bkp", "register": "dr1", "field_name": "d1",
+                 "alt_name": "D", "key": "bit_offset", "value": "0"}]
+    inv_without = [{"peripheral": "bkp", "register": "dr1", "field_name": "d1",
+                    "alt_name": "", "key": "bit_offset", "value": "0"}]
+    up_with = create_batched_validator_user_prompt([("bkp", "dr1")], inv_with, "ctx")
+    up_without = create_batched_validator_user_prompt([("bkp", "dr1")], inv_without, "ctx")
+    check('datasheet_name="D"' in up_with, "user prompt renders datasheet_name when alt_name set")
+    check("datasheet_name" not in up_without, "user prompt omits datasheet_name when alt_name empty")
+
+    # System prompt includes the aliasing rule only when name_aliasing=True.
+    sp_on = create_batched_validator_system_prompt(name_aliasing=True)
+    sp_off = create_batched_validator_system_prompt(name_aliasing=False)
+    check("datasheet_name" in sp_on and "STRUCTURAL identity" in sp_on,
+          "system prompt adds name-aliasing guidance when enabled")
+    check("datasheet_name" not in sp_off,
+          "system prompt omits name-aliasing guidance when disabled")
+
+
+def test_curated_examples_render_load_export():
+    print("\n== curated examples (render / load / export) ==")
+    import json, tempfile
+    from optimization_validator.cross_validate import (
+        render_curated_examples, load_curated_examples, export_curation_candidates,
+    )
+
+    curated = [
+        {"peripheral": "usart1", "register": "sr", "field_name": "ne", "key": "access",
+         "value": "read-write", "is_true": True,
+         "datasheet_excerpt": "NE: noise error flag, rc_w0 (read, clear by writing 0)",
+         "reasoning": "rc_w0 is readable and writable -> read-write"},
+        {"peripheral": "cec", "register": "cr", "field_name": "", "key": "size",
+         "value": "4", "is_true": False,
+         "datasheet_excerpt": "CEC_CR is a 32-bit register"},
+        {"peripheral": "x", "register": "y", "key": "size", "value": "8"},  # no excerpt -> skipped
+    ]
+    block = render_curated_examples(curated)
+    check("Datasheet:" in block, "rendered block includes the datasheet excerpt")
+    check("rc_w0" in block, "datasheet text is present in the block")
+    # Count header lines only (robust if an excerpt/reasoning ever contains "Example ").
+    n_rendered = sum(1 for ln in block.splitlines() if ln.startswith("Example "))
+    check(n_rendered == 2, f"uncurated entry (no excerpt) is skipped (2 of 3, rendered {n_rendered})")
+    check("TRUE — accept" in block and "FALSE — reject" in block, "both verdicts render")
+
+    # load round-trip
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as fh:
+        json.dump({"examples": curated}, fh)
+        path = fh.name
+    check(load_curated_examples(path) == block, "load_curated_examples matches render")
+    check(load_curated_examples(None) == "", "load with no path returns empty")
+
+    # export candidates from a synthetic eval (one FP, one FN)
+    ev = pd.DataFrame({
+        "peripheral": ["p", "p"], "register": ["r1", "r2"], "field_name": ["wrongname", "f2"],
+        "key": ["bit_offset", "size"], "correct_value": ["4", "32"], "original_value": ["4", "32"],
+        "original_field_name": ["truename", "f2"],
+        "is_correct": [False, True],   # FP row is corrupted (False), FN row is correct (True)
+        "is_true": [True, False],      # validator accepted the FP, rejected the FN
+    })
+    out = os.path.join(tempfile.gettempdir(), "cand_test.json")
+    n = export_curation_candidates(ev, out)
+    check(n == 2, f"exported both mistakes as candidates (got {n})")
+    with open(out) as fh:
+        payload = json.load(fh)
+    cands = payload["examples"]
+    check(all(c["datasheet_excerpt"] == "" for c in cands), "candidates have empty excerpt for the human")
+    check({c["mistake"] for c in cands} == {"false_positive", "false_negative"},
+          "candidates tagged FP and FN")
+    fp = [c for c in cands if c["mistake"] == "false_positive"][0]
+    check(fp["is_true"] is False, "FP candidate carries the correct label (False)")
+    check(fp["ground_truth_value"] == "4", "FP candidate shows the ground-truth value")
+    check(fp["ground_truth_field_name"] == "truename",
+          "FP candidate shows the ground-truth field name")
+
+
+def test_curated_examples_fold_selection():
+    print("\n== curated examples (per-fold exclusion / equalization) ==")
+    # per-fold exclusion: a held-out fold's own examples must NOT appear in its block
+    from optimization_validator.cross_validate import curated_block_for_fold
+    bench = pd.DataFrame({
+        "peripheral": ["gpioa", "gpiob", "tim2"], "register": ["crl", "crl", "cr1"],
+        "fold": [0, 1, 2],
+    })
+    cur = [
+        {"peripheral": "gpioa", "register": "crl", "key": "size", "value": "32",
+         "is_true": True, "datasheet_excerpt": "GPIOA CRL is 32-bit"},
+        {"peripheral": "gpiob", "register": "crl", "key": "size", "value": "32",
+         "is_true": True, "datasheet_excerpt": "GPIOB CRL is 32-bit"},
+    ]
+    blk0 = curated_block_for_fold(cur, bench, 0)   # exclude gpioa.crl (fold 0)
+    check("GPIOA CRL" not in blk0 and "GPIOB CRL" in blk0,
+          "fold 0 block excludes its own register's example, keeps others")
+    blk2 = curated_block_for_fold(cur, bench, 2)   # tim2 fold; both examples are training
+    check("GPIOA CRL" in blk2 and "GPIOB CRL" in blk2,
+          "a fold with no curated examples keeps all (all are training)")
+
+    # equalization: every fold's block uses the same count N = total - max-fold-count
+    from optimization_validator.cross_validate import curated_blocks_equalized
+    # 6 examples across 3 folds with counts {0:3, 1:2, 2:1}; T=6, max=3 -> N=3
+    bench2 = pd.DataFrame({
+        "peripheral": ["p"]*6, "register": [f"r{i}" for i in range(6)],
+        "fold": [0, 0, 0, 1, 1, 2],
+    })
+    cur2 = [{"peripheral": "p", "register": f"r{i}", "key": "size", "value": "32",
+             "is_true": True, "datasheet_excerpt": f"reg r{i} is 32-bit"} for i in range(6)]
+    blocks, N, counts, sizes = curated_blocks_equalized(cur2, bench2, k=3)
+    check(counts == {0: 3, 1: 2, 2: 1}, f"per-fold counts computed ({counts})")
+    check(N == 3, f"N = total(6) - max-fold-count(3) = 3 (got {N})")
+    check(set(sizes.values()) == {3}, f"every fold uses exactly N=3 examples ({sizes})")
+    # fold 0's block must exclude r0/r1/r2 (its own), so it can only be r3/r4/r5
+    check(all(f"reg r{i}" not in blocks[0] for i in (0, 1, 2)),
+          "fold 0 block excludes all its own-fold examples")
+
+
+def test_operational_gate():
+    print("\n== operational gate / queue ==")
+    # Synthetic scored set: score increasing, with a couple of corrupted (False) rows
+    # mixed into the high-score region so precision < 1 unless the gate is raised.
+    # scores:   0.1 0.2 0.3 0.4 0.55 0.6 0.7 0.8 0.9 0.95
+    # gold(C=1): F   F   F   F    T    F   T   T   T   T     (a False at 0.6 to push tau up)
+    scores = [0.1, 0.2, 0.3, 0.4, 0.55, 0.6, 0.7, 0.8, 0.9, 0.95]
+    golds  = [False, False, False, False, True, False, True, True, True, True]
+
+    tau_p = tune_threshold_precision(scores, golds, target_precision=1.0)
+    cm_p = confusion_at(scores, golds, tau_p)
+    check(cm_p.precision >= 1.0 - 1e-9, f"precision-gate hits target=1.0 (got {cm_p.precision:.3f}, tau={tau_p})")
+    # At target 1.0 the gate must exclude the False@0.6 -> tau > 0.6, keeping the 4 top Trues.
+    check(cm_p.tp == 4 and cm_p.fp == 0, f"precision-gate keeps the 4 clean trues (tp={cm_p.tp}, fp={cm_p.fp})")
+    check(cm_p.tn == 5 and cm_p.fn == 1, f"precision-gate keeps the 5 clean falses (tn={cm_p.tn}, fn={cm_p.fn})")
+
+    # Yield-maximisation: a looser target should keep at least as many true positives.
+    tau_loose = tune_threshold_precision(scores, golds, target_precision=0.8)
+    cm_loose = confusion_at(scores, golds, tau_loose)
+    check(cm_loose.precision >= 0.8 - 1e-9, f"precision-gate hits target=0.8 (got {cm_loose.precision:.3f}, tau={tau_loose})")
+    check(cm_loose.tp >= cm_p.tp, f"looser target yields >= recall ({cm_loose.tp} >= {cm_p.tp})")
+    # make_tuner binds the target-precision tuner.
+    check(make_tuner(1.0)(scores, golds) == tau_p, "make_tuner(target) matches tune_threshold_precision")
+
+    # Build a tuned_eval-like frame (one held-out pass): needs score, tau, is_correct,
+    # confidence_score + identity cols. Survivors = score >= tau.
+    tau = tau_p
+    df = pd.DataFrame({
+        "score": scores,
+        "confidence_score": scores,  # for V=1 survivors score==confidence
+        "is_true": [s >= 0.5 for s in scores],
+        "is_correct": golds,
+        "tau": [tau] * len(scores),
+        "fold": [0] * len(scores),
+        "peripheral": ["p"] * len(scores),
+        "register": [f"r{i}" for i in range(len(scores))],
+        "field_name": [""] * len(scores),
+        "key": ["address_offset"] * len(scores),
+        "correct_value": ["0x0"] * len(scores),
+        "corruption_type": ["" if g else "value" for g in golds],
+        "reasoning": [""] * len(scores),
+    })
+    queue = build_review_queue(df)
+    check((queue["score"] >= tau).all(), "review queue contains only gate survivors")
+    check(list(queue["score"]) == sorted(queue["score"], reverse=True),
+          "review queue ranked by score descending")
+    check(int(queue["is_correct"].sum()) == cm_p.tp, "queue true-bug count matches gate tp")
+
+    pk = precision_at_k_table(queue)
+    check(abs(float(pk.iloc[-1]["precision_at_k"]) - queue["is_correct"].mean()) < 1e-9,
+          "precision@100% equals overall queue precision")
+    check((pk["precision_at_k"] <= 1.0 + 1e-9).all() and (pk["precision_at_k"] >= -1e-9).all(),
+          "precision@k within [0,1]")
+
+    rel = reliability_table(queue, n_bins=10)
+    check(int(rel["n"].sum()) == len(queue), "reliability bins cover every survivor")
+
+
+def test_c1_cross_distribution():
+    print("\n== C1 cross-distribution pi (Rogan-Gladen transfer) ==")
+    from optimization_validator.c1_cross_distribution import (
+        instrument_from_labels, rogan_gladen, cross_distribution,
+    )
+
+    def labels(tp, fp, tn, fn):
+        # (is_true, is_correct) pairs: TP=(T,T) FP=(T,F) TN=(F,F) FN=(F,T)
+        it = [True] * tp + [True] * fp + [False] * tn + [False] * fn
+        ic = [True] * tp + [False] * fp + [False] * tn + [True] * fn
+        return it, ic
+
+    # A prevalence-INVARIANT labeler: alpha=0.9, beta=0.8, applied at two prevalences.
+    calib = labels(tp=630, fp=60, tn=240, fn=70)   # pi=0.70 (700 pos / 300 neg)
+    apply = labels(tp=450, fp=100, tn=400, fn=50)  # pi=0.50 (500 pos / 500 neg)
+
+    ci = instrument_from_labels(*calib)
+    check(abs(ci["alpha"] - 0.9) < 1e-9 and abs(ci["beta"] - 0.8) < 1e-9,
+          f"instrument alpha/beta from labels (a={ci['alpha']}, b={ci['beta']})")
+    check(abs(ci["pi_true"] - 0.7) < 1e-9 and abs(ci["r_hat"] - 0.69) < 1e-9,
+          f"calib pi_true=0.70, r_hat=0.69 (got {ci['pi_true']}, {ci['r_hat']})")
+
+    # FORWARD: freeze the 0.70-run instrument, recover the 0.50-run's prevalence.
+    fwd = cross_distribution(calib, apply)
+    check(abs(fwd["pi_hat_cross"] - 0.50) < 1e-9,
+          f"forward pi_hat recovers 0.50 from a foreign (0.70) instrument (got {fwd['pi_hat_cross']})")
+    check(fwd["pi_error"] < 1e-9, f"forward |error| ~ 0 (got {fwd['pi_error']})")
+    # REVERSE: same stable instrument the other way recovers 0.70.
+    rev = cross_distribution(apply, calib)
+    check(abs(rev["pi_hat_cross"] - 0.70) < 1e-9,
+          f"reverse pi_hat recovers 0.70 (got {rev['pi_hat_cross']})")
+    # Instrument is stable, so the measured deltas are ~0.
+    st = fwd["instrument_stability"]
+    check(st["alpha_abs_delta"] < 1e-9 and st["beta_abs_delta"] < 1e-9,
+          f"instrument stable across prevalences (d_alpha={st['alpha_abs_delta']}, d_beta={st['beta_abs_delta']})")
+
+    # A DRIFTING instrument (alpha/beta change with prevalence) must NOT recover the truth,
+    # so C1 would flag it — apply a random-ish labeler's numbers.
+    drift = rogan_gladen(r_hat=0.55, alpha=0.5, beta=0.5)  # alpha+beta-1 = 0 -> not identifiable
+    check(not drift["identifiable"] and drift["pi"] is None,
+          "non-identifiable instrument (alpha+beta<=1) flagged, no pi returned")
+
+
+def test_c2_transfer():
+    print("\n== C2 per-vendor transfer (freeze device-1 tau, apply to device-2) ==")
+    from optimization_validator.c2_transfer import (
+        metrics_at, best_tau_at_precision, transfer_report,
+    )
+
+    # Device-2 scores where a frozen tau=0.98 holds precision (1.0) but leaves yield on the
+    # table vs device-2's own tuned tau=0.85 (which keeps all 3 trues cleanly).
+    scores = [0.99, 0.90, 0.85, 0.80, 0.30]
+    golds = [True, True, True, False, False]
+    rep = transfer_report(scores, golds, frozen_tau=0.98, target_precision=0.95)
+    check(rep["reaches_target"] is True, "frozen tau still clears the precision target on device-2")
+    check(abs(rep["frozen_applied"]["precision"] - 1.0) < 1e-9,
+          f"frozen-tau precision on device-2 ({rep['frozen_applied']['precision']})")
+    check(abs(rep["frozen_applied"]["yield_recall"] - 1 / 3) < 1e-9,
+          f"frozen-tau yield on device-2 = 1/3 ({rep['frozen_applied']['yield_recall']})")
+    check(abs(rep["device_own_retuned"]["tau"] - 0.85) < 1e-9,
+          f"device-2 re-tunes to tau=0.85 ({rep['device_own_retuned']['tau']})")
+    check(abs(rep["yield_gap_vs_own"] - (1.0 - 1 / 3)) < 1e-9,
+          f"transfer costs 2/3 yield vs recalibrating ({rep['yield_gap_vs_own']})")
+    # Here freezing DOES cost yield vs re-tuning, so amortization does NOT hold.
+    check(rep["amortization_holds"] is False, "amortization does not hold when freezing leaves yield on the table")
+
+    # Transfer FAILS the target: a high-score false positive on device-2 drops frozen precision.
+    rep2 = transfer_report([0.99, 0.985], [False, True], frozen_tau=0.98, target_precision=0.95)
+    check(rep2["reaches_target"] is False, "frozen tau misses the target when device-2 has a high-score FP")
+    check(abs(rep2["frozen_applied"]["precision"] - 0.5) < 1e-9,
+          f"frozen-tau precision drops to 0.5 ({rep2['frozen_applied']['precision']})")
+
+    # Amortization HOLDS but target NOT reached: device-2's ceiling sits below target (a
+    # top-score FP caps precision at 0.5), and the frozen tau costs nothing vs re-tuning
+    # (both accept the same rows) — the rm0394-shaped case.
+    rep3 = transfer_report([0.99, 0.98], [False, True], frozen_tau=0.98, target_precision=0.95)
+    check(rep3["reaches_target"] is False, "device-2 ceiling below target -> reaches_target False")
+    check(rep3["amortization_holds"] is True,
+          "amortization holds: freezing matches device-2's own tuning even below target")
+
+
+if __name__ == "__main__":
+    test_corruption_realism()
+    test_field_name_corruption()
+    test_folds()
+    test_calibration()
+    test_alt_name()
+    test_curated_examples_render_load_export()
+    test_curated_examples_fold_selection()
+    test_operational_gate()
+    test_c1_cross_distribution()
+    test_c2_transfer()
+    print("\n" + ("=" * 50))
+    if _failures:
+        print(f"{len(_failures)} FAILURE(S):")
+        for f in _failures:
+            print(f"  - {f}")
+        sys.exit(1)
+    print("ALL OFFLINE TESTS PASSED")
