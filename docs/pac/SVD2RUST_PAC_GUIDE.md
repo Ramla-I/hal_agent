@@ -225,6 +225,31 @@ where F: FnOnce(&mut W<REG>) -> &mut W<REG>,
 
 The bitmask manipulation ensures write-1-to-clear fields start at 0 (to avoid accidentally clearing them) and write-0-to-set fields start at 1.
 
+### The two levels: register methods vs. value methods
+
+The API separates into two levels, which are easy to conflate:
+
+- **Level 1 — methods on `Reg<REG>` (the register itself):** `read()`, `write()`, `modify()`, `reset()`, `write_with_zero()`. These are the only things that touch hardware — each performs a volatile read and/or write — and each is gated by the register's capability traits (the table above).
+- **Level 2 — methods on the `R<REG>` / `W<REG>` *value* that a Level-1 call hands you:** the field getters/setters and the raw `bits`/`set`. These never touch hardware; they inspect or compose an in-memory value. You only ever obtain an `R` or `W` *through* a Level-1 call — `read()` returns an `R`, and `write`/`modify` pass a `&mut W` into your closure.
+
+**The mental model for a write: `write()` hands you a scratch buffer and flushes it.** `reg.write(|w| …)` (1) creates a fresh `W<REG>` — call it `w` — pre-loaded with the reset value, (2) runs your closure so you can set fields on `w`, (3) stores whatever `w` ends up holding — the whole word — in one volatile write. `w` is **not** the register; it is a throwaway staging value. Tracing it (I2C_CR1, reset `0x0000`):
+
+```rust
+i2c1.cr1().write(|w| {
+    // w pre-loaded with RESET_VALUE:  w = 0x0000
+    w.pe().set_bit();   // set PE bit:  w = 0x0001
+    w.ack().set_bit();  // set ACK bit: w = 0x0401
+    w                   // hand w back; write() then stores 0x0401
+});
+```
+
+Level-2 writer methods come in two kinds:
+
+- **Field setters** (`w.pe().set_bit()`, `w.field().variant(..)`, …) **merge** — each changes only its own field's bits in `w`, leaving the rest. This is the normal, field-at-a-time path.
+- **Raw setters** **overwrite** the whole buffer: `w.bits(x)` is `unsafe` (available for any writable register); `w.set(x)` is safe but exists only when `Writable::Safety = Safe` (registers where every bit pattern is a valid write — typically data registers).
+
+`modify(|r, w| …)` is identical except the buffer `w` starts from the register's **current** value instead of the reset value, so fields you don't touch keep their current contents. That one difference — reset base vs. live base — *is* the whole distinction between `write` and `modify`. (The `r` it also passes you is the Level-2 `R` snapshot, with the mirror-image field *getters*.)
+
 ### `R<REG>` and `W<REG>` — Reader/Writer Value Types
 
 ```rust
