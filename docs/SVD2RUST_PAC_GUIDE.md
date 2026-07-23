@@ -193,20 +193,42 @@ pub struct Reg<REG: RegisterSpec> {
 
 `Reg` is a transparent wrapper around a `VolatileCell` — it exists at the exact memory address of the hardware register. The `REG` type parameter carries all the register's metadata (width, readable/writable, reset value) at the type level.
 
-**Methods by trait bound:**
+The `read()`/`write()`/`modify()` methods and the reader/writer value types together form the layered API described in the next section.
 
-| Bound | Method | What It Does |
-|-------|--------|-------------|
-| `RegisterSpec` | `as_ptr()` | Returns raw pointer to the register |
-| `Readable` | `read()` | Volatile read → returns `R<REG>` |
-| `Resettable + Writable` | `reset()` | Writes `RESET_VALUE` to the register |
-| `Resettable + Writable` | `write(f)` | Starts from `RESET_VALUE`, applies closure, volatile write |
-| `Resettable + Writable` | `from_write(f)` | Like `write` but closure returns a value |
-| `Writable` | `write_with_zero(f)` | Starts from 0 (unsafe), applies closure, volatile write |
-| `Readable + Writable` | `modify(f)` | Volatile read → apply closure to (R, W) → volatile write |
-| `Readable + Writable` | `from_modify(f)` | Like `modify` but closure returns a value |
+### The API levels: access path, register methods, value methods
 
-The `write()` body:
+Reaching a hardware register goes through three levels, which are easy to conflate:
+
+- **Level 0 — the access path.** The singleton `Peripherals` and the zero-sized `Periph<RB, A>` handles, whose `const fn` accessors (`dp.i2c1()`, `i2c1.cr1()`) compute addresses and hand back a `&Reg<REG>`. No volatile access happens here; this level enforces single-ownership of each peripheral.
+- **Level 1 — methods on `Reg<REG>` (the register handle itself).** These are the *only* operations that touch hardware: each performs a volatile read and/or write, and each exists only when the register's marker type carries the matching capability trait. This is where the enforcement gating in this project lives.
+- **Level 2 — methods on the `R<REG>` / `W<REG>` *value* that a Level-1 call hands you.** These are the field getters/setters and the raw whole-word accessors. They never touch hardware — they only inspect or compose an in-memory word.
+
+| Level | Operates on | Example calls | Touches hardware? | Governed by |
+|-------|-------------|---------------|-------------------|-------------|
+| **0 — access path** | `Peripherals`, `Periph<RB, A>` | `Peripherals::take()`, `dp.i2c1()`, `i2c1.cr1()` | No — computes addresses, enforces single ownership | Singleton `take()` / `unsafe steal()`; `Deref` to the register block |
+| **1 — register methods** | `Reg<REG>` | `.read()`, `.write(f)`, `.modify(f)`, `.reset()` | **Yes** — volatile read and/or write | Capability traits `Readable` / `Writable` / `Resettable` |
+| **2 — value methods** | `R<REG>`, `W<REG>` | `r.pe().bit_is_set()`, `w.pe().set_bit()`, `w.bits(x)` | No — an in-memory word | Field proxy types + `Writable::Safety` |
+
+The levels only compose downward: you reach a `Reg<REG>` (Level 1) only through a Level-0 accessor, and you obtain an `R` or `W` (Level 2) only *through* a Level-1 call — `read()` returns an `R`; `write`/`modify` build a `W` and pass `&mut W` into your closure. So each hardware interaction is a Level-1 call, reached via the Level-0 path, that brackets some Level-2 field manipulation. Level 0 is detailed below under *`Periph`* and *Device-Specific Code Format*; Levels 1 and 2 follow here.
+
+#### Level 1 — every method on `Reg<REG>`
+
+Each row is a volatile access, present only under the listed trait bound (a read-only register has no `write`; a write-only register has no `read`; and so on).
+
+| Method | Trait bound | Safety | What it does |
+|--------|-------------|--------|--------------|
+| `as_ptr()` | `RegisterSpec` | safe | Returns `*mut REG::Ux` (the register's address). Performs no access. |
+| `read()` | `Readable` | safe | One volatile read; returns an `R<REG>` snapshot. |
+| `reset()` | `Resettable + Writable` | safe | One volatile write of `REG::RESET_VALUE`. |
+| `write(f)` | `Resettable + Writable` | safe | Builds a `W` pre-loaded with the reset value, runs `f(&mut W) -> &mut W`, then one volatile write of the result. |
+| `from_write(f)` | `Resettable + Writable` | safe | Like `write`, but `f` also returns a value `T` that `from_write` returns to the caller. |
+| `modify(f)` | `Readable + Writable` | safe | One volatile read, runs `f(&R, &mut W)` with `W` pre-loaded from the **current** value, then one volatile write. Read-modify-write. |
+| `from_modify(f)` | `Readable + Writable` | safe | Like `modify`, but `f` also returns a value `T` that `from_modify` returns. |
+| `write_with_zero(f)` | `Writable` | **unsafe** | Like `write` but `W` starts from `0` instead of the reset value. `unsafe` because `0` may be an invalid content for some fields. |
+| `from_write_with_zero(f)` | `Writable` | **unsafe** | The `from_write` variant of `write_with_zero`. |
+| `set_bits(f)` / `clear_bits(f)` / `toggle_bits(f)` | `Readable + Writable` where `REG::Ux: AtomicOperations` | **unsafe** | On cores with atomics: set / clear / toggle exactly the bits the closure touched, in a single atomic read-modify-write instruction. `unsafe` because the resulting pattern may not be valid. |
+
+The `write()` body shows how the scratch value is seeded:
 
 ```rust
 pub fn write<F>(&self, f: F) -> REG::Ux
@@ -223,16 +245,9 @@ where F: FnOnce(&mut W<REG>) -> &mut W<REG>,
 }
 ```
 
-The bitmask manipulation ensures write-1-to-clear fields start at 0 (to avoid accidentally clearing them) and write-0-to-set fields start at 1.
+The bitmask manipulation makes write-1-to-clear fields start at 0 (so you don't accidentally clear them) and write-0-to-set fields start at 1.
 
-### The two levels: register methods vs. value methods
-
-The API separates into two levels, which are easy to conflate:
-
-- **Level 1 — methods on `Reg<REG>` (the register itself):** `read()`, `write()`, `modify()`, `reset()`, `write_with_zero()`. These are the only things that touch hardware — each performs a volatile read and/or write — and each is gated by the register's capability traits (the table above).
-- **Level 2 — methods on the `R<REG>` / `W<REG>` *value* that a Level-1 call hands you:** the field getters/setters and the raw `bits`/`set`. These never touch hardware; they inspect or compose an in-memory value. You only ever obtain an `R` or `W` *through* a Level-1 call — `read()` returns an `R`, and `write`/`modify` pass a `&mut W` into your closure.
-
-**The mental model for a write: `write()` hands you a scratch buffer and flushes it.** `reg.write(|w| …)` (1) creates a fresh `W<REG>` — call it `w` — pre-loaded with the reset value, (2) runs your closure so you can set fields on `w`, (3) stores whatever `w` ends up holding — the whole word — in one volatile write. `w` is **not** the register; it is a throwaway staging value. Tracing it (I2C_CR1, reset `0x0000`):
+**Mental model — `write()` hands you a scratch buffer and flushes it.** `reg.write(|w| …)` (1) creates a fresh `W<REG>` — call it `w` — pre-loaded with the reset value, (2) runs your closure so you can set fields on `w`, (3) stores whatever `w` ends up holding — the whole word — in one volatile write. `w` is **not** the register; it is a throwaway staging value. Tracing it (I2C_CR1, reset `0x0000`):
 
 ```rust
 i2c1.cr1().write(|w| {
@@ -243,73 +258,71 @@ i2c1.cr1().write(|w| {
 });
 ```
 
-Level-2 writer methods come in two kinds:
+`modify(|r, w| …)` is identical except `w` starts from the register's **current** value instead of the reset value, so fields you don't touch keep their live contents. That single difference — reset base vs. live base — *is* the whole distinction between `write` and `modify`. `reset()` is the degenerate case: the reset value written with no closure at all.
 
-- **Field setters** (`w.pe().set_bit()`, `w.field().variant(..)`, …) **merge** — each changes only its own field's bits in `w`, leaving the rest. This is the normal, field-at-a-time path.
-- **Raw setters** **overwrite** the whole buffer: `w.bits(x)` is `unsafe` (available for any writable register); `w.set(x)` is safe but exists only when `Writable::Safety = Safe` (registers where every bit pattern is a valid write — typically data registers).
+#### Level 2 — the value types `R<REG>` and `W<REG>`
 
-`modify(|r, w| …)` is identical except the buffer `w` starts from the register's **current** value instead of the reset value, so fields you don't touch keep their current contents. That one difference — reset base vs. live base — *is* the whole distinction between `write` and `modify`. (The `r` it also passes you is the Level-2 `R` snapshot, with the mirror-image field *getters*.)
-
-### `R<REG>` and `W<REG>` — Reader/Writer Value Types
+Both are transparent wrappers over one raw word:
 
 ```rust
-pub struct R<REG: RegisterSpec> {
+pub struct R<REG: RegisterSpec> {   // holds the value just read
     pub(crate) bits: REG::Ux,
     pub(crate) _reg: marker::PhantomData<REG>,
 }
 
-pub struct W<REG: RegisterSpec> {
+pub struct W<REG: RegisterSpec> {   // holds the value being built for writing
     pub(crate) bits: REG::Ux,
     pub(crate) _reg: marker::PhantomData<REG>,
 }
 ```
 
-- `R` holds the value just read from the register. Device-specific `impl R` blocks add named field accessors (e.g., `r.pe()`, `r.stop()`).
-- `W` holds the value being constructed for writing. Device-specific `impl W` blocks add named field setters (e.g., `w.pe()`, `w.stop()`).
-- `R` provides `bits()` to get the raw value.
-- `W` provides `bits(value)` for raw writes (safe or unsafe depending on `Safety`).
+Every Level-2 method is either a **raw whole-word** accessor or a **named field** accessor. The device-specific `impl R` / `impl W` blocks generate one named accessor per field; none of them touch hardware.
 
-### Field Proxies
+**Reader `R<REG>` — all methods safe.** A read can never yield an invalid value, so there is no safe/unsafe split, and every accessor is a `const fn`:
 
-Field proxies are the return types of `R` and `W` accessor methods. They provide type-safe access to individual fields within a register.
+| Accessor | Returns / proxy | Proxy methods |
+|----------|-----------------|---------------|
+| raw: `r.bits()` | `REG::Ux` | — the whole word |
+| 1-bit field: `r.<field>()` | `BitReader<FI>` | `bit()` → `bool`, `bit_is_set()`, `bit_is_clear()` |
+| multi-bit field: `r.<field>()` | `FieldReader<FI>` | `bits()` → the field's value (`FI::Ux`) |
+| enumerated field: `r.<field>()` | `BitReader` / `FieldReader` | the above, **plus** `variant()` → the field's enum, and one `is_<value>()` → `bool` per enum variant |
 
-**Readers:**
+**Writer `W<REG>` — field setters are safe; raw whole-word writes split on `Safety`.**
 
-| Type | Used For | Key Methods |
-|------|----------|-------------|
-| `BitReader<FI>` | Single-bit fields | `bit()`, `bit_is_set()`, `bit_is_clear()` |
-| `FieldReader<FI>` | Multi-bit fields | `bits()` |
-| Both | Enum fields | `variant()`, `is_<value>()` |
+Raw whole-word writers overwrite the entire buffer:
 
-**Writers:**
+| Method | Available when | Safety |
+|--------|----------------|--------|
+| `w.bits(x)` | any `Writable` register | **unsafe** — you assert `x` is a valid content |
+| `w.set(x)` | only when `Writable::Safety = Safe` | safe — every bit pattern is valid (typically data registers) |
 
-| Type | Used For | Key Methods |
-|------|----------|-------------|
-| `BitWriter<'a, REG>` | Normal read-write bit | `set_bit()`, `clear_bit()`, `bit(value)` |
-| `BitWriter1C<'a, REG>` | Write-1-to-clear bit | `clear_bit_by_one()` |
-| `BitWriter0S<'a, REG>` | Write-0-to-set bit | `set_bit_by_zero()` |
-| `BitWriter1T<'a, REG>` | Write-1-to-toggle bit | `toggle_bit()` |
-| `FieldWriter<'a, REG, WI, FI, Safety>` | Multi-bit field | `bits(value)`, `variant(enum_value)` |
+Named field setters — `w.<field>()` returns a proxy whose type encodes the field's write behavior. Each proxy method **merges** into `w` (touches only that field's bits) and returns `&mut W`, so calls chain:
 
-`FieldWriter`'s `Safety` parameter controls whether `bits()` is safe or requires `unsafe`. When the field has enumerated values (`IsEnum`), `variant()` is always safe.
+| Proxy | Used for | Methods |
+|-------|----------|---------|
+| `BitWriter<'a, REG>` | normal read-write bit | `set_bit()`, `clear_bit()`, `bit(value: bool)` |
+| `BitWriter1C<'a, REG>` | write-1-to-clear bit | `clear_bit_by_one()` |
+| `BitWriter0S<'a, REG>` | write-0-to-set bit | `set_bit_by_zero()` |
+| `BitWriter1T<'a, REG>` | write-1-to-toggle bit | `toggle_bit()` |
+| `FieldWriter<'a, REG, WI, FI, Safety>` | multi-bit field | `bits(value)` — safe or `unsafe` per the field's `Safety` — plus `variant(enum)` when the field has enumerated values (always safe) |
 
-All writer methods return `&'a mut W<REG>`, enabling chaining:
-
-```rust
-periph.reg.write(|w| w.field1().set_bit().field2().variant(SomeEnum::Value));
-```
-
-### Safety Marker Types
+**Merge vs. overwrite** is the key contrast. Field setters **merge**: `set_bit()` is `w.bits |= 1 << o`, `clear_bit()` is `w.bits &= !(1 << o)`, and a multi-bit `bits(v)` clears then ors (`w.bits &= !(mask << o); w.bits |= (v & mask) << o`). So composing several field setters accumulates. The raw `bits`/`set` instead **overwrite** the whole buffer (`w.bits = x`). Chaining a few field setters:
 
 ```rust
-pub struct Safe;                                    // Any value valid
-pub struct Unsafe;                                  // Caller must verify
-pub struct Range<const MIN: u64, const MAX: u64>;   // Runtime range check
-pub struct RangeFrom<const MIN: u64>;               // Lower bound check
-pub struct RangeTo<const MAX: u64>;                 // Upper bound check
+periph.reg().write(|w| w.field1().set_bit().field2().variant(SomeEnum::Value));
 ```
 
-These are used as the `Writable::Safety` associated type and as the `Safety` parameter on `FieldWriter`. They control whether `bits()` / `set()` are safe or unsafe, with `Range` variants adding runtime assertions.
+#### Safety marker types
+
+```rust
+pub struct Safe;                                    // any value valid
+pub struct Unsafe;                                  // caller must ensure validity
+pub struct Range<const MIN: u64, const MAX: u64>;   // runtime range check
+pub struct RangeFrom<const MIN: u64>;               // lower-bound check
+pub struct RangeTo<const MAX: u64>;                 // upper-bound check
+```
+
+These appear in two places: as the `Writable::Safety` associated type (which decides whether the register's raw `w.set()` exists — it does only for `Safety = Safe`) and as the `Safety` parameter on `FieldWriter` (which decides whether that field's `bits(value)` is safe). `Safe` needs no `unsafe`; `Unsafe` requires the caller to reach for `unsafe`; the `Range*` variants keep the setter safe but insert a runtime `assert!` that the value is in range.
 
 ### `Periph<RB, const A: usize>` — Peripheral Wrapper
 
