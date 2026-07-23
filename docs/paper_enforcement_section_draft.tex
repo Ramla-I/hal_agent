@@ -385,7 +385,13 @@ Second, the field's writer accessor in the register module is given the
 witness as a parameter---the one place the whole-register gate never
 touches:
 
-\begin{lstlisting}
+\begin{lstlisting}[caption={The field's writer accessor, before and after
+the patch. \texttt{CR1rs} is \texttt{svd2rust}'s zero-sized register-spec
+marker type for the \texttt{CR1} register---the register handle is
+\texttt{Reg<CR1rs>}, and the \texttt{rs} suffix is the tool's naming
+convention. It is distinct from our generated witness type
+\texttt{Cr1CrcenFieldWitness}, whose \texttt{Cr1} is a capitalized register
+name we chose.}]
 // svd2rust original:
 pub fn crcen(&mut self) -> CRCEN_W<CR1rs> { CRCEN_W::new(self, 13) }
 // patched:
