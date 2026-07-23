@@ -396,8 +396,11 @@ field cannot change without the witnessed accessor. But `write` and `reset`
 compose the whole register from its reset value and store all of it, so they
 write the gated field too, unchecked. We leave that path open — gating `write`
 would force every whole-register write to carry a witness, the very
-over-restriction field-level gating exists to avoid — and instead flag it
-where the crate is generated; a *per-call* warning is not expressible, because
-a concrete `write` collides with the generic one under Rust's method-coherence
-rules. It is thus an acknowledged bypass, like `unsafe`: whole-register writes
-are the place a reviewer must still check a field-scoped constraint by hand.
+over-restriction field-level gating exists to avoid — and instead flag it two
+ways: a warning when the crate is generated, and a caveat appended to the
+register's own documentation (so it surfaces in the IDE where a developer
+reaches for the register). A *per-call* warning is not expressible, because a
+concrete `write` would collide with the generic one under Rust's
+method-coherence rules. It is thus an acknowledged bypass, like `unsafe`:
+whole-register writes are the place a reviewer must still check a field-scoped
+constraint by hand.

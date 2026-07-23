@@ -448,6 +448,12 @@ def test_field_level_gating_compiles_and_enforces():
         # the generation-time warning about the ungated whole-register write
         assert "UNGATED" in inject.stderr, (
             "expected the field-gating write-bypass warning:\n" + inject.stderr)
+        # the register's own doc carries the field-constraint caveat (the
+        # generic `write` can't be annotated per-register, so it goes on the
+        # register type doc, which a developer sees in rustdoc / IDE hover).
+        assert "Field-level datasheet constraints (LIDAR)" in \
+            (DEVICE_DIR / "i2c1.rs").read_text(), \
+            "field-gated register's type doc is missing the constraint caveat"
 
         def check(body):
             MAIN_RS.write_text(_program(body))

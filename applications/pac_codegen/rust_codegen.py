@@ -1049,6 +1049,31 @@ def inject_constraints_module(peripheral_file: Path,
                 "read-gated register\n///Register block\npub struct RegisterBlock {",
                 1,
             )
+    # Field-gated registers whose whole-register write stays open (a bypass):
+    # annotate the register's own doc with the caveat, so a developer looking
+    # up how to write it sees it in rustdoc / IDE hover. The generic `write`
+    # itself cannot be annotated per-register (E0592), but the register's
+    # type-alias doc is ours to extend (the `///` lines concatenate onto the
+    # existing `/** */` block doc).
+    for p in plans:
+        if not p.field_gates or "write" in p.preconditions:
+            continue
+        reg_up = p.reg_name.upper()
+        type_line = f"pub type {reg_up} = crate::Reg<{p.reg_lower}::{reg_up}rs>;"
+        if type_line not in text:
+            continue
+        fields = ", ".join(f"`{f}`" for f in sorted(p.field_gates))
+        caveat = (
+            "///\n"
+            "///# Field-level datasheet constraints (LIDAR)\n"
+            f"///Writes to field(s) {fields} are gated (see the `constraints` "
+            f"module of [`mod@{p.reg_lower}`]). Prefer "
+            "[`modify`](crate::Reg::modify) with the witnessed field accessor "
+            "`w.<field>(&witness)`; a whole-register "
+            "[`write`](crate::Reg::write) or [`reset`](crate::Reg::reset) "
+            "writes those fields **unchecked**.\n"
+        )
+        text = text.replace(type_line, caveat + type_line, 1)
     parts = []
     for i, p in enumerate(plans):
         code = generate_constraint_module(p)
