@@ -1,7 +1,8 @@
 # Draft: Compile-Time Enforcement of Register Access Constraints
 
-> Paper-section draft (Ramla to adapt/condense). Four subsections as
-> requested, one running example threaded end to end. All numbers are
+> Paper-section draft (Ramla to adapt/condense). Four subsections thread one
+> running example end to end, plus a fifth on field-level gating (its own SPI
+> example). Kept in sync with `paper_enforcement_section_draft.tex`. All numbers are
 > reproducible: grammar/corpus figures from `docs/constraints_corpus_stats.md`
 > and `docs/quote_anchoring_stats.md`; enforcement and HAL figures pinned by
 > the test suite (`applications/pac_codegen/test_codegen.py`,
@@ -90,14 +91,22 @@ and are routed to human review.
 
 ## 2. Translating constraints to witness tokens
 
-The compiler cannot observe hardware, so it cannot enforce "STOP is clear."
-What it *can* enforce is an ordering: **the datasheet-prescribed check must
-happen before the constrained operation**. The translation makes that
-ordering a type-system fact using *witness tokens*: zero-sized values that
-can only be created by performing the prescribed check, and that the
-constrained operation consumes.
-
-For the running example the generator emits, into the PAC's I2C module:
+How strong a guarantee the type system can give depends on who establishes
+the condition, which the grammar's `established_by` field records. The easy
+case is *software*: when the driver itself must bring the condition about — it
+must disable the USART (`UE=0`) before writing the baud-rate register — the
+compiler enforces the requirement outright. The generated `disable()` returns
+a witness token that the write consumes, so code that writes the baud rate
+without first disabling the USART does not compile; and because software alone
+controls `UE`, that witness is a *standing* guarantee rather than a snapshot.
+The harder case, and our running example, is *hardware*: the compiler cannot
+observe hardware, so it cannot enforce "STOP is clear" directly. What it *can*
+enforce is an ordering — **the datasheet-prescribed check must happen before
+the constrained operation** — so that holding the witness attests the check
+was performed on a fresh read. Both cases use the same device, *witness
+tokens*: zero-sized values creatable only by performing the prescribed action
+or check, and consumed by the constrained operation. We develop the harder
+case in full; the generator emits, into the PAC's I2C module:
 
 ```rust
 /// State witness authorizing one write of CR1.
@@ -130,17 +139,21 @@ that the preconditions were observed true in one fresh read. Time-of-check to
 time-of-use is inherited from the hardware contract itself: memory-mapped I/O
 has no atomic check-and-act, so the manual's own prescribed procedure carries
 the identical window, and for hardware-cleared flags like STOP the race is
-benign in the safe direction (hardware only clears it). The `established_by`
-field from §1 selects the witness's origin: hardware-established state
-produces a runtime check as above (a *state witness*); software-established
-state produces a token minted by performing the required setup action (an
-*action witness*), with no runtime check at all.
+benign in the safe direction (hardware only clears it). In the terms of the
+opening, this is the *hardware* case, and its fresh check mints what we call a
+*state witness*; the *software* case mints an *action witness* — the setup
+action itself, with no runtime check. Naming aside, `established_by` selects
+only *how* the witness is minted, not *whether* enforcement is compile-time:
+in both cases the gated operation will not type-check without the witness, and
+in both the condition is established at runtime. The sole difference is the
+presence of a fallible runtime check.
 
-**Results.** Of the 2,857 accepted gates, 2,243 translate to runtime-checked
-state witnesses and 614 remain documentation-only (they carry no checkable
-condition in the legacy corpus encoding); action witnesses appear once
-re-extraction emits the `established_by` field, making that split a direct measure of
-the re-extraction step's value.
+**Results.** Of the 2,857 accepted gates, 2,243 translate to compile-gated
+state witnesses (each minted by one runtime check) and 614 remain
+documentation-only (they carry no checkable condition in the legacy corpus
+encoding); action witnesses appear once re-extraction emits the
+`established_by` field, making that split a direct measure of the
+re-extraction step's value.
 
 ## 3. Applying the changes to PAC crates
 
@@ -257,3 +270,95 @@ shares it — the alternative, keeping every method callable, is precisely the
 silent bypass we rejected. We therefore report adoption as two measured
 numbers rather than one claim: perfect precision on concrete driver code,
 and a small, quantified patch for trait-generic driver code.
+
+## 5. Field-level gating
+
+The running example gates a whole register: any write to `I2C_CR1` is
+constrained. But many datasheet rules name only *specific fields*. A
+constraint records this in its `target_fields` list — empty for a
+whole-register rule, otherwise the fields the rule scopes to. For the SPI
+control register, for instance, the CRC-enable bit may be changed only while
+the peripheral is disabled, and nothing is said about the register's other
+bits:
+
+```json
+{ "kind": "state_gate",
+  "target_register": "SPI_CR1",
+  "target_fields": ["CRCEN"],
+  "target_operation": "write",
+  "preconditions": [
+    {"register": "SPI_CR1", "field": "SPE", "state": "cleared"}],
+  "datasheet_text":
+    "CRCEN is written only when the SPI is disabled (SPE = 0)." }
+```
+
+Gating the whole `CR1` register here would be sound but *over-restrictive*: it
+would demand "`SPE` cleared" before writing *any* field of `CR1`, including the
+many the datasheet never mentions. That is not merely inconvenient — forcing a
+program to disable the SPI in order to touch an unrelated bit can be wrong. And
+it is not a corner case: **46% of the extracted constraints name specific
+fields rather than the whole register**, so treating them all at register
+granularity would over-constrain nearly half the corpus.
+
+The finer gate is possible because the PAC already exposes a per-field writer
+accessor — the `w.crcen()` one calls inside a `write`/`modify` closure. We
+attach the witness requirement to *that accessor* rather than to the
+register's `write`/`modify` methods, so the register's own methods stay
+unconstrained and sibling fields are untouched. Two changes realize it. First,
+the generated constraints module gains a per-field witness and its check,
+exactly as before but scoped to the field:
+
+```rust
+pub struct Cr1CrcenFieldWitness { _priv: () }
+
+impl Reg<CR1rs> {
+    /// CRCEN is written only when the SPI is disabled (SPE = 0).
+    pub fn check_crcen_field_ready(&self)
+        -> Result<Cr1CrcenFieldWitness, Cr1ConstraintError>
+    {
+        let r = self.read();                 // one fresh read
+        if !r.spe().bit_is_clear() { return Err(SpeNotCleared); }
+        Ok(Cr1CrcenFieldWitness { _priv: () })
+    }
+}
+```
+
+Second, the field's writer accessor in the register module is given the
+witness as a parameter — the one place the whole-register gate never touches:
+
+```rust
+// svd2rust original:
+pub fn crcen(&mut self) -> CRCEN_W<CR1rs> { CRCEN_W::new(self, 13) }
+// patched:
+pub fn crcen(&mut self, _witness: &constraints::Cr1CrcenFieldWitness)
+    -> CRCEN_W<CR1rs> { CRCEN_W::new(self, 13) }
+```
+
+*The field's writer accessor, before and after the patch. `CR1rs` is
+svd2rust's zero-sized register-spec marker type for the `CR1` register — the
+register handle is `Reg<CR1rs>`, and the `rs` suffix is the tool's naming
+convention. It is distinct from our generated witness type
+`Cr1CrcenFieldWitness`, whose `Cr1` is a capitalized register name we chose.*
+
+The effect is field-precise. A write to a sibling field compiles unchanged;
+the gated field compiles only with a witness; the gated field without one does
+not compile:
+
+```rust
+spi.cr1().modify(|_, w| w.mstr().set_bit());          // sibling: OK
+let wit = spi.cr1().check_crcen_field_ready()?;
+spi.cr1().modify(|_, w| w.crcen(&wit).enabled());     // witnessed: OK
+spi.cr1().modify(|_, w| w.crcen().enabled());         // error[E0061]
+```
+
+Two properties distinguish this from the whole-register gate. The failure is
+an arity error (`E0061`, "this method takes one argument") rather than the
+tailored trait-bound message, because the gate now rides on the accessor's
+signature; a trait-bound variant could recover the custom text at the cost of
+more generated code. And because the patch edits each constrained register's
+own field accessor — rather than the single shared core file the
+whole-register gate touches — it is more invasive, so it is *opt-in*: enabled
+per run, and absent it the emitter falls back to whole-register gating,
+leaving field-scoped constraints unenforced rather than over-enforced. The
+witnessed path and both compile outcomes above are pinned by a compile test
+against the generated PAC.
