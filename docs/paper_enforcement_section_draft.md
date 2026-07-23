@@ -388,3 +388,16 @@ per run, and absent it the emitter falls back to whole-register gating,
 leaving field-scoped constraints unenforced rather than over-enforced. The
 witnessed path and both compile outcomes above are pinned by a compile test
 against the generated PAC.
+
+One soundness caveat follows from leaving the register's own methods free.
+Gating the field accessor soundly covers `modify`, which reads the register
+and writes it back and so retains fields the closure never touches: the gated
+field cannot change without the witnessed accessor. But `write` and `reset`
+compose the whole register from its reset value and store all of it, so they
+write the gated field too, unchecked. We leave that path open — gating `write`
+would force every whole-register write to carry a witness, the very
+over-restriction field-level gating exists to avoid — and instead flag it
+where the crate is generated; a *per-call* warning is not expressible, because
+a concrete `write` collides with the generic one under Rust's method-coherence
+rules. It is thus an acknowledged bypass, like `unsafe`: whole-register writes
+are the place a reviewer must still check a field-scoped constraint by hand.

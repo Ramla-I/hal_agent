@@ -933,7 +933,16 @@ def patch_field_accessors(device_dir: Path, plans: list[RegisterPlan]) -> int:
     require its witness. `w.stop()` becomes `w.stop(&witness)`, so a closure
     that sets the field without a witness fails to compile (E0061) while
     sibling fields and the register's own `write`/`modify` are untouched.
-    Returns the number of accessors patched."""
+    Returns the number of accessors patched.
+
+    KNOWN GAP (see the plan's "Field-level gating" section): the field gate
+    covers the field accessor, so it soundly gates `modify` (which retains
+    untouched fields). The whole-register `write`/`reset` compose the register
+    from a base value and so write the gated field too, but they are NOT
+    gated. A per-call compile warning there is not expressible in Rust (a
+    concrete `write` collides with the generic one, E0592), so this stays an
+    acknowledged bypass---like `unsafe`---flagged loudly here at generation
+    time."""
     patched = 0
     for plan in plans:
         if not plan.field_gates:
@@ -956,6 +965,18 @@ def patch_field_accessors(device_dir: Path, plans: list[RegisterPlan]) -> int:
             text = new_text
             patched += 1
         reg_file.write_text(text)
+        if "write" not in plan.preconditions:
+            fields = ", ".join(sorted(plan.field_gates))
+            print(
+                f"WARNING: {plan.peripheral}/{plan.reg_name}: field-level "
+                f"gating enforces field(s) [{fields}] on `modify` and the "
+                f"field accessor, but this register's whole-register "
+                f"`write`/`reset` stay UNGATED and can write those fields "
+                f"unchecked (an acknowledged bypass, like `unsafe`; a per-call "
+                f"warning is not expressible in Rust). Use `modify` for "
+                f"sibling-field writes.",
+                file=sys.stderr,
+            )
     return patched
 
 

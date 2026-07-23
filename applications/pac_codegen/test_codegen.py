@@ -445,6 +445,9 @@ def test_field_level_gating_compiles_and_enforces():
             capture_output=True, text=True)
         assert inject.returncode == 0, "injection failed:\n" + inject.stdout + inject.stderr
         assert "field accessor" in inject.stdout
+        # the generation-time warning about the ungated whole-register write
+        assert "UNGATED" in inject.stderr, (
+            "expected the field-gating write-bypass warning:\n" + inject.stderr)
 
         def check(body):
             MAIN_RS.write_text(_program(body))
@@ -466,6 +469,17 @@ def test_field_level_gating_compiles_and_enforces():
         out = illegal.stdout + illegal.stderr
         assert illegal.returncode != 0, "unwitnessed field write was accepted"
         assert "error[E0061]" in out, f"expected E0061, got:\n{out[-1200:]}"
+
+        # KNOWN GAP (characterization, not a bug): a whole-register write
+        # composes CR1 from its reset value, so it writes START too — but the
+        # write surface is deliberately left ungated (a per-call warning is
+        # not expressible in Rust, E0592). This pins that it COMPILES, so any
+        # future change to the write surface is a conscious decision.
+        bypass = check("    i2c1.cr1().write(|w| w.pe().set_bit());")
+        assert bypass.returncode == 0, (
+            "whole-register write of a field-gated register no longer compiles "
+            "— if intentional, update the plan's Field-level gating section:\n"
+            + bypass.stdout + bypass.stderr)
     finally:
         _restore_pac(tmp, main_bytes)
         assert _tree_digest(PAC_GENERIC, DEVICE_DIR) == digest, (
