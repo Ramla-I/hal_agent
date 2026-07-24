@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Constraint-aware Rust code generator for svd2rust PAC crates (trait gating).
 
-Reads a RegisterInfo JSON (v1 schema from the repo-root ``defs.py``) and turns
-its ``access_constraints`` into compile-time enforcement inside a PAC crate.
+Reads a RegisterInfo JSON (grammar-v2 schema from the repo-root ``defs.py``)
+and turns its ``access_constraints_v2`` state gates into compile-time
+enforcement inside a PAC crate. (Old v1 generator output is converted first
+with ``convert_v1_to_v2.py``.)
 
 ENCODING (see docs/register_constraints_plan.md §3 + Appendix A)
 ----------------------------------------------------------------
@@ -61,9 +63,9 @@ import re
 import sys
 from pathlib import Path
 
-# Repo root (three levels up) for the shared v1 schema.
+# Repo root (three levels up) for the shared grammar schema (defs.py).
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from defs import FieldState, RegisterInfo  # noqa: E402
+from defs import RegisterInfo  # noqa: E402
 
 GENERIC_SENTINEL = "// ===== LIDAR constraint gating (generated; do not edit) ====="
 MARKER_SENTINEL = "// LIDAR-MARKERS (generated; do not edit)"
@@ -84,8 +86,8 @@ def _norm_reg_name(name: str) -> str:
     return name.upper().replace("_", "")
 
 
-def _is_same_register(field_state: FieldState, target: str) -> bool:
-    ref = _norm_reg_name(field_state.register_name)
+def _is_same_register(register_name: str, target: str) -> bool:
+    ref = _norm_reg_name(register_name)
     tgt = _norm_reg_name(target)
     return ref == tgt or ref.endswith(tgt)
 
@@ -129,42 +131,36 @@ class SourceRegister:
         return f"super::super::{self.periph_module}::{self.reg}::{spec}"
 
 
-def _parse_equals_value(state: str) -> int:
-    """Parse the value of an ``equals:<v>`` state to an int, strictly.
-
-    Raw text must never be spliced into Rust (it is an injection surface and
-    ``a|b`` silently changes meaning under Rust operator precedence).
-    """
-    raw = state.split(":", 1)[1].strip()
-    if not re.fullmatch(r"(0[xX][0-9a-fA-F]+|0[bB][01]+|\d+)", raw):
-        raise ValueError(
-            f"unsupported equals value {raw!r}: must be a single hex/bin/dec "
-            "integer literal (OR-values and sequences are a grammar-v2 concern)"
-        )
-    return int(raw, 0)
-
-
 class Precondition:
     """A field-state check, validated and value-parsed. ``source`` is None
-    for same-register conditions, else the resolved cross-register source."""
+    for same-register conditions, else the resolved cross-register source.
 
-    def __init__(self, fs: FieldState, source: "SourceRegister | None" = None):
+    ``cond`` is a grammar-v2 ``FieldCondition`` (``register``/``field``/
+    ``state``/``values``); its values are already parsed to ``int`` by the
+    grammar, so no raw text is ever spliced into Rust."""
+
+    def __init__(self, cond, source: "SourceRegister | None" = None):
         self.source = source
-        self.field = fs.field_name
+        self.field = cond.field
         if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", self.field or ""):
             raise ValueError(
                 f"field name {self.field!r} is not an SVD-style identifier "
                 "(ranges/wildcards/pseudo-fields are rejected)"
             )
-        state = fs.required_state
-        if state == "cleared":
+        if cond.state == "cleared":
             self.kind, self.value = "cleared", None
-        elif state == "set":
+        elif cond.state == "set":
             self.kind, self.value = "set", None
-        elif state.startswith("equals:"):
-            self.kind, self.value = "equals", _parse_equals_value(state)
+        elif cond.state == "equals":
+            if len(cond.values) != 1:
+                raise ValueError(
+                    f"equals condition on {self.field!r} has {len(cond.values)} "
+                    "values; the emitter supports a single value only "
+                    "(OR-values are not enforceable as one check)"
+                )
+            self.kind, self.value = "equals", cond.values[0]
         else:
-            raise ValueError(f"unsupported required_state {state!r}")
+            raise ValueError(f"unsupported condition state {cond.state!r}")
 
     def key(self):
         src = self.source.key() if self.source else None
@@ -258,8 +254,13 @@ class RegisterPlan:
         # field-lowercase -> FieldGate (populated only when field_level_gating)
         self.field_gates: dict[str, FieldGate] = {}
 
-        for c in register_info.access_constraints:
-            if getattr(c, "target_fields", None):
+        for c in register_info.access_constraints_v2:
+            if c.kind != "state_gate":
+                raise NotImplementedError(
+                    f"{self.reg_name}: constraint kind {c.kind!r} is not "
+                    "emitted (only state_gate is enforced today)"
+                )
+            if c.target_fields:
                 if not field_level_gating:
                     # Default: field-scoped gating disabled. Gating the whole
                     # register would demand this precondition for writes to
@@ -283,12 +284,12 @@ class RegisterPlan:
                     "roadmap step I; not emitted yet"
                 )
             pres = []
-            for fs in c.preconditions:
-                if _is_same_register(fs, c.target_register):
-                    pres.append(Precondition(fs))
+            for cond in c.preconditions:
+                if _is_same_register(cond.register, c.target_register):
+                    pres.append(Precondition(cond))
                 else:
                     pres.append(Precondition(
-                        fs, SourceRegister(fs.register_name, peripheral)))
+                        cond, SourceRegister(cond.register, peripheral)))
             op_raw = c.target_operation.strip().lower()
             # svd2rust modify() = one read + one write, so its obligations are
             # the UNION of the register's read and write constraints. modify is
@@ -356,12 +357,12 @@ class RegisterPlan:
             )
             return
         pres = []
-        for fs in c.preconditions:
-            if _is_same_register(fs, c.target_register):
-                pres.append(Precondition(fs))
+        for cond in c.preconditions:
+            if _is_same_register(cond.register, c.target_register):
+                pres.append(Precondition(cond))
             else:
                 pres.append(Precondition(
-                    fs, SourceRegister(fs.register_name, peripheral)))
+                    cond, SourceRegister(cond.register, peripheral)))
         if not pres:
             raise ValueError(
                 f"{self.reg_name}: field-scoped constraint has no "
@@ -1182,7 +1183,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(
         description="Generate trait-gated constraint Rust from RegisterInfo JSON"
     )
-    ap.add_argument("input", nargs="?", help="RegisterInfo JSON (v1 schema)")
+    ap.add_argument("input", nargs="?", help="RegisterInfo JSON (grammar-v2 schema)")
     ap.add_argument("--peripheral", help="peripheral name for `input`, e.g. i2c1")
     ap.add_argument("--constraint", action="append", default=[],
                     metavar="PERIPHERAL=FIXTURE.json",

@@ -147,10 +147,10 @@ def test_field_scoped_constraint_skipped_by_default(tmp_path):
     section). A whole-register constraint on the same register is still
     emitted."""
     data = json.loads((CRATE_DIR / "stm32f405_i2c1.json").read_text())
-    whole = data["access_constraints"][0]            # real whole-register gate
+    whole = data["access_constraints_v2"][0]         # real whole-register gate
     field_scoped = json.loads(json.dumps(whole))     # a field-scoped sibling
     field_scoped["target_fields"] = ["PE"]
-    data["access_constraints"] = [whole, field_scoped]
+    data["access_constraints_v2"] = [whole, field_scoped]
     fixture = tmp_path / "mixed.json"
     fixture.write_text(json.dumps(data))
     out = tmp_path / "constraints.rs"

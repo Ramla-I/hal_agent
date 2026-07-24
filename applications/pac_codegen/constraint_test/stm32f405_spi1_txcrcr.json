@@ -1,36 +1,43 @@
 {
- "datasheet_register_abbreviation": "SPI_TXCRCR",
- "address_offset": "0x18",
- "reset_value": "0x0000",
- "size": 16,
- "subfields": [
-  {
-   "name": "TXCRC[15:0]",
-   "description": "Tx CRC register",
-   "access": "read-only",
-   "bit_number": {
-    "start_bit": 0,
-    "end_bit": 15
-   },
-   "enumerated_values": []
-  }
- ],
- "access_constraints": [
-  {
-   "target_register": "SPI_TXCRCR",
-   "target_fields": [],
-   "target_operation": "read",
-   "preconditions": [
+  "datasheet_register_abbreviation": "SPI_TXCRCR",
+  "address_offset": "0x18",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
     {
-     "register_name": "SPI_SR",
-     "field_name": "BSY",
-     "required_state": "cleared"
+      "name": "TXCRC[15:0]",
+      "description": "Tx CRC register",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      },
+      "enumerated_values": []
     }
-   ],
-   "postconditions": [],
-   "severity": "warning",
-   "consequence": "Read may return incorrect value if BSY flag is set",
-   "datasheet_text": "A read to this register when the BSY Flag is set could return an incorrect value."
-  }
- ]
+  ],
+  "access_constraints": [],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "warning",
+      "consequence": "Read may return incorrect value if BSY flag is set",
+      "datasheet_text": "A read to this register when the BSY Flag is set could return an incorrect value.",
+      "target_register": "SPI_TXCRCR",
+      "target_fields": [],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register": "SPI_SR",
+          "field": "BSY",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
+        }
+      ],
+      "postconditions": []
+    }
+  ],
+  "schema_version": 2
 }

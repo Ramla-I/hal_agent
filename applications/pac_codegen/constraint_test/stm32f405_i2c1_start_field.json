@@ -271,8 +271,13 @@
       ]
     }
   ],
-  "access_constraints": [
+  "access_constraints": [],
+  "access_constraints_v2": [
     {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Risk of an unintended repeated start",
+      "datasheet_text": "The START bit must be set only when STOP is cleared.",
       "target_register": "CR1",
       "target_fields": [
         "START"
@@ -280,15 +285,17 @@
       "target_operation": "write",
       "preconditions": [
         {
-          "register_name": "CR1",
-          "field_name": "STOP",
-          "required_state": "cleared"
+          "register": "CR1",
+          "field": "STOP",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
         }
       ],
-      "postconditions": [],
-      "severity": "error",
-      "consequence": "Risk of an unintended repeated start",
-      "datasheet_text": "The START bit must be set only when STOP is cleared."
+      "postconditions": []
     }
-  ]
+  ],
+  "schema_version": 2
 }
