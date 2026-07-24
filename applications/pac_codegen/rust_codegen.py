@@ -249,7 +249,9 @@ class RegisterPlan:
                 name = rest
         self.reg_name = name  # e.g. CR1, TXCRCR
         self.reg_lower = self.reg_name.lower()
-        # op -> ordered unique preconditions; op in {"write", "modify"}
+        # svd2rust-operation -> ordered unique preconditions; op in
+        # {"write", "read", "modify"}. "modify" is the DERIVED union bucket: a
+        # write target feeds {write, modify}, a read target feeds {read, modify}.
         self.preconditions: dict[str, list[Precondition]] = {}
         # op -> constraint doc lines (datasheet text + consequence)
         self.docs: dict[str, list[str]] = {}
@@ -287,23 +289,33 @@ class RegisterPlan:
                 else:
                     pres.append(Precondition(
                         fs, SourceRegister(fs.register_name, peripheral)))
-            if c.target_operation == "write":
-                ops = ["write", "modify"]  # a modify performs a write
-            elif c.target_operation == "modify":
-                ops = ["modify"]
-            elif c.target_operation == "read":
+            op_raw = c.target_operation.strip().lower()
+            # svd2rust modify() = one read + one write, so its obligations are
+            # the UNION of the register's read and write constraints. modify is
+            # DERIVED here (a "modify" bucket fed by both surfaces), never a
+            # first-class target. Datasheet prose "modify/change a register"
+            # means writing it, so a legacy "modify" gates the write surface.
+            if op_raw in ("write", "modify"):
+                ops = ["write", "modify"]        # a modify performs a write
+            elif op_raw in ("read", "any", "read/write", "read-write"):
                 same = [p for p in pres if p.source is None]
                 if same:
+                    # A read (and a modify's RMW read) reads the target; gating
+                    # it on a condition read FROM the target is self-defeating.
                     raise ValueError(
                         f"{self.reg_name}: same-register read gate on "
                         f"{[p.field for p in same]} is self-defeating (the "
                         "check performs the constrained read); rejected"
                     )
-                ops = ["read"]
+                # read gates modify() too (a modify performs a read); "any"/
+                # "read/write" gate every surface.
+                ops = (["read", "modify"] if op_raw == "read"
+                       else ["read", "write", "modify"])
             else:
                 raise ValueError(
                     f"{self.reg_name}: unsupported target_operation "
-                    f"{c.target_operation!r} (v1 vocabulary is write/read/modify)"
+                    f"{c.target_operation!r} (expected read/write/any; "
+                    "modify is derived from read+write, not a target)"
                 )
             if not pres:
                 raise ValueError(

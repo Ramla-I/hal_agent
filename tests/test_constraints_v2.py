@@ -331,7 +331,7 @@ def test_lift_software_action_without_operation_rejected():
 
 
 @pytest.mark.parametrize("op,expected", [
-    ("any", ["read", "write", "modify"]),
+    ("any", ["read", "write"]),
     ("read/write", ["read", "write"]),
     ("read-write", ["read", "write"]),
 ])
@@ -518,9 +518,10 @@ def run_dir(tmp_path):
             "consequence": "lock sequence aborted",
             "datasheet_text": "A specific write sequence must be applied.",
         },
-        # NOTE: op is "modify", not "read" -- a same-register hardware-established
-        # READ gate is now rejected as self_defeating_read_gate (stage-0 lint,
-        # covered in tests/test_collect_lint.py).
+        # NOTE: op is "modify" (which the grammar normalizes to "write"), not
+        # "read" -- a same-register hardware-established READ gate is rejected as
+        # self_defeating_read_gate (stage-0 lint, covered in test_collect_lint.py),
+        # whereas a same-register write gate is fine.
         {
             "target_register": "GPIOA_LCKR", "target_fields": [],
             "target_operation": "modify",
@@ -656,7 +657,7 @@ def test_collect_end_to_end_without_svd(run_dir, tmp_path):
     lckr = json.loads((out_dir / "gpioa_lckr.json").read_text())
     assert len(lckr["access_constraints"]) == 2          # v1 untouched
     assert len(lckr["access_constraints_v2"]) == 1
-    assert lckr["access_constraints_v2"][0]["target_operation"] == "modify"
+    assert lckr["access_constraints_v2"][0]["target_operation"] == "write"
     bad, good = lckr["constraint_reports"]
     assert bad["kinds"] == [] and bad["rejects"][0]["reason"] == "unparseable_required_state"
     assert good["kinds"] == ["state_gate"] and good["rejects"] == []

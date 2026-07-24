@@ -86,10 +86,19 @@ descriptive behavior, status-flag semantics (how a flag is set or cleared, \
 write-1-to-clear / write-0-to-clear acknowledge notes), reset-value notes, \
 and validity or don't-care notes are NOT constraints.
 (b) encoding_faithful — does the structured encoding match the text: target \
-register, operation (read/write/modify), the fields named, the polarities \
-(set vs cleared), and any required values? A precondition or postcondition \
-that contradicts, misstates, or is absent from the text makes the encoding \
-unfaithful. Judge ONLY against the given text and context.
+register, operation, the fields named, the polarities (set vs cleared), and \
+any required values? The operation is "read" or "write" only: a datasheet \
+sentence about "modifying" or "changing" a register means WRITING it, so \
+"write" is the faithful encoding of such text -- there is no separate "modify" \
+operation. A precondition may also carry `established_by` (hardware = the \
+device brings the state about and software only observes it; software = the \
+driver must establish it first) and, when software, `action_operation` naming \
+HOW the driver does it -- "modify" (a read-modify-write that preserves the \
+register's other bits) or "write" (composing a whole-register value); this is a \
+method detail that need not appear in the quote, so flag it only if the text \
+plainly contradicts it. A precondition or postcondition that contradicts, \
+misstates, or is absent from the text makes the encoding unfaithful. Judge \
+ONLY against the given text and context.
 (c) verdict —
   "confirmed"      : genuine constraint AND the encoding is faithful.
   "encoding_error" : genuine constraint, but the encoding misstates it \

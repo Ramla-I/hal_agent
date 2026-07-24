@@ -870,7 +870,7 @@ def _write_on_read_only_reject(gate, svd_index: dict) -> Optional[dict]:
     Lenient polarity: rejects only when EVERY SVD contributor is read-only
     (all named target fields read-only, or the whole register read-only).
     """
-    if gate.kind != "state_gate" or gate.target_operation not in ("write", "modify"):
+    if gate.kind != "state_gate" or gate.target_operation != "write":
         return None
     key = _resolve_register_key(gate.target_register, svd_index)
     if key is None:
@@ -1173,18 +1173,19 @@ def _lint_native_v2_constraints(
                     and not constraint.postconditions):
                 constraint_lint.append("vacuous_no_conditions")
 
-            # "any" legal at extraction; EXPANDED to per-operation gates here
-            # (B.2.1), matching the lifted path's deterministic repair.
+            # "any" legal at extraction; EXPANDED to the two bus operations here
+            # (B.2.1), matching the lifted path's deterministic repair. modify()
+            # is NOT a gate here: it is derived as read+write in the emitter.
             if (constraint.kind == "state_gate"
                     and constraint.target_operation == "any"):
                 repairs.append(
                     "target_operation 'any' expanded to per-operation gates: "
-                    "read, write, modify"
+                    "read, write"
                 )
                 gates = [
                     constraint.model_copy(deep=True,
                                           update={"target_operation": op})
-                    for op in ("read", "write", "modify")
+                    for op in ("read", "write")
                 ]
             else:
                 gates = [constraint]

@@ -319,11 +319,11 @@ def test_native_any_expansion_and_target_register_normalization(run_dir, tmp_pat
         "USART_BRR", [gate])))
     out_dir = tmp_path / "out"
     (r,) = collect_constraints(str(run_dir), output_dir=str(out_dir))
-    assert r["num_constraints_v2"] == 3
+    assert r["num_constraints_v2"] == 2
 
     data = json.loads((out_dir / "usart1_brr.json").read_text())
     ops = [c["target_operation"] for c in data["access_constraints_v2"]]
-    assert ops == ["read", "write", "modify"]
+    assert ops == ["read", "write"]
     assert all(c["target_register"] == "USART_BRR"
                for c in data["access_constraints_v2"])
     entry = _reg_entry(_load_manifest(out_dir), "usart1_brr")

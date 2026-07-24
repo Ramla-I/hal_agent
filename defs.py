@@ -358,11 +358,31 @@ class StateGate(ConstraintBase):
     target_register: str              # must equal the containing RegisterInfo --
                                       # deliberately redundant: a free consistency check
     target_fields: list[str] = []     # empty = whole register
-    target_operation: Literal["read", "write", "modify", "any"]
-                                      # "any" legal at extraction; EXPANDED to
-                                      # per-operation gates at collection
+    target_operation: Literal["read", "write", "any"]
+                                      # Only the two bus operations a datasheet
+                                      # actually constrains, plus "any" (sugar,
+                                      # EXPANDED to read+write at collection).
+                                      # svd2rust's modify() is NEVER a target: it
+                                      # performs a read AND a write, so its
+                                      # obligations are DERIVED as read + write
+                                      # in the emitter. Datasheet prose "modify/
+                                      # change a register" means writing it, so a
+                                      # legacy "modify" is coerced to "write"
+                                      # below.
     preconditions: list[FieldCondition]    # conjunctive
     postconditions: list[FieldCondition]   # software-established ONLY (validated below)
+
+    @field_validator("target_operation", mode="before")
+    @classmethod
+    def _coerce_modify_to_write(cls, v):
+        # Datasheets say "modify/modified/change" to mean "write the register",
+        # not svd2rust's read-modify-write. Legacy data (and drift) used
+        # target_operation="modify"; normalize it to "write" so the grammar
+        # exposes only the read/write hazard axis. modify() gating is derived
+        # (read + write) in rust_codegen, never declared here.
+        if isinstance(v, str) and v.strip().lower() == "modify":
+            return "write"
+        return v
 
     @model_validator(mode="after")
     def _postconditions_software_only(self):
@@ -570,11 +590,15 @@ class LiftResult(BaseModel):
 
 # v1 target_operation -> v2 per-operation expansion (B.6). Missing keys are
 # unknown vocabulary -> reject ("clear", "access", ...).
+# The v2 target vocabulary is the two bus operations only: read and write.
+# Datasheet "modify/change" means "write", so legacy "modify" lifts to "write";
+# svd2rust modify() is gated as a DERIVED read+write union in the emitter, never
+# a first-class target. "any"/"read/write" expand to both bus operations.
 _V1_OPERATION_LIFT = {
     "write": ["write"],
     "read": ["read"],
-    "modify": ["modify"],
-    "any": ["read", "write", "modify"],
+    "modify": ["write"],
+    "any": ["read", "write"],
     "read/write": ["read", "write"],
     "read-write": ["read", "write"],
 }

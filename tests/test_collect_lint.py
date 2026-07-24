@@ -406,19 +406,21 @@ def test_self_defeating_read_gate_rejected_without_svd(tmp_path):
 
 
 def test_self_defeating_check_spares_other_expanded_operations(tmp_path):
-    # target_operation "any" expands to read+write+modify; only the READ gate
-    # is self-defeating, the write and modify gates survive.
+    # target_operation "any" expands to read+write; only the READ gate is
+    # self-defeating (its check would read the target), and the write gate
+    # survives. modify() is NOT a gate here -- the emitter derives it from
+    # the read+write union.
     files = {"spi1_txcrcr": _register_json("SPI_TXCRCR", [
         _constraint("SPI_TXCRCR", op="any",
                     pre=[_cond("SPI_TXCRCR", "BSY", "cleared")], text="q"),
     ])}
     _, manifest, out = _run(tmp_path, files)
     (rep,) = _register_entry(manifest, "spi1_txcrcr")["constraints"]
-    assert sorted(rep["kinds"]) == ["state_gate", "state_gate"]
+    assert sorted(rep["kinds"]) == ["state_gate"]
     assert [r["reason"] for r in rep["rejects"]] == ["self_defeating_read_gate"]
     data = json.loads((out / "spi1_txcrcr.json").read_text())
     assert sorted(g["target_operation"] for g in data["access_constraints_v2"]) == \
-        ["modify", "write"]
+        ["write"]
 
 
 def test_cross_register_read_gate_survives(tmp_path):
