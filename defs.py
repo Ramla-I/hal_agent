@@ -150,8 +150,9 @@ class SectionInfo(BaseModel):
 # (a duty to discharge -- postcondition cleanup), capability (authority to do
 # something at most once -- write_once).
 #
-# The v1 models above stay intact: the generator emits v1 until roadmap step F,
-# and lift_v1_constraint() below lifts the existing corpus mechanically.
+# This module is grammar-v2 only. Old grammar-v1 generator output is converted
+# to v2 by applications/pac_codegen/convert_v1_to_v2.py, which owns the retired
+# v1 models and the mechanical lift.
 
 
 # Accepted numeric syntax for constraint values, everywhere: hex, binary, or
@@ -333,8 +334,8 @@ class StateGate(ConstraintBase):
     def _postconditions_software_only(self):
         # An observed-state (hardware-established) postcondition is unenforceable
         # -- it was PR 15's silently-dropped class. v2 rejects it loudly at
-        # parse time; the lift converts such v1 postconditions into structured
-        # rejects instead (see lift_v1_constraint).
+        # parse time; the v1->v2 conversion tool (convert_v1_to_v2.py) turns
+        # such legacy postconditions into structured rejects instead.
         for i, pc in enumerate(self.postconditions):
             if pc.established_by != "software":
                 raise ValueError(

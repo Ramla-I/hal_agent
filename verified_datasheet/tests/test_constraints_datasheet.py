@@ -30,12 +30,12 @@ REAL_CSV = os.path.join(_VD, "constraints", "stm.csv")
 
 def make_constraint(**overrides):
     c = {
+        "kind": "state_gate",
         "target_register": "USART_CR1",
         "target_fields": ["UE"],
         "target_operation": "write",
         "preconditions": [
-            {"register_name": "USART_CR1", "field_name": "UE",
-             "required_state": "cleared"},
+            {"register": "USART_CR1", "field": "UE", "state": "cleared"},
         ],
         "postconditions": [],
         "severity": "error",
@@ -51,7 +51,7 @@ def write_reg(rundir, filename, constraints):
     os.makedirs(rundir, exist_ok=True)
     with open(os.path.join(rundir, filename), "w", encoding="utf-8") as f:
         json.dump({"datasheet_register_abbreviation": filename.upper(),
-                   "access_constraints": constraints}, f)
+                   "access_constraints_v2": constraints, "schema_version": 2}, f)
 
 
 @pytest.fixture
@@ -70,8 +70,7 @@ def corpus(tmp_path):
         target_operation="write",
         preconditions=[],
         postconditions=[
-            {"register_name": "RCC_CSR", "field_name": f,
-             "required_state": "cleared"}
+            {"register": "RCC_CSR", "field": f, "state": "cleared"}
             for f in ("PINRSTF", "PORRSTF", "SFTRSTF", "IWDGRSTF")
         ],
         datasheet_text="These bits are cleared by writing a '1' to the RMVF bit.",
@@ -87,8 +86,8 @@ def corpus(tmp_path):
     write_reg(str(root / "rm0002" / "1"), "rtc_wpr", [make_constraint(
         target_register="RTC_WPR",
         target_operation="read/write",
-        preconditions=[{"register_name": "RTC_WPR", "field_name": "KEY",
-                        "required_state": "equals:0xCA then 0x53"}],
+        preconditions=[{"register": "RTC_WPR", "field": "KEY",
+                        "state": "equals", "values": ["0xCA then 0x53"]}],
         datasheet_text="Write 0xCA then 0x53 into the RTC_WPR register.",
     )])
 

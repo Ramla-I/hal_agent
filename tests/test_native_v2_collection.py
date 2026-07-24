@@ -46,7 +46,6 @@ def _register_json_v2(abbrev, constraints_v2, subfields=(), schema_version=2):
         "reset_value": "0x0000",
         "size": 32,
         "subfields": list(subfields),
-        "access_constraints": [],       # the wire-format decision: kept, empty
         "access_constraints_v2": list(constraints_v2),
     }
     if schema_version is not None:

@@ -7,7 +7,7 @@ verified_datasheet/README.md reserves as the escape from its layout-only scope).
 What it does:
   * Walks a corpus root shaped like  <corpus_root>/<rm>/<run>/{peripheral}_{register}
     (e.g. hal_agent-phase-1d/agent_output/stm) and pulls every entry of each
-    register file's "access_constraints" list (v1 schema).
+    register file's "access_constraints_v2" state gates (grammar v2).
   * Dedups to ONE ROW PER UNIQUE CONSTRAINT PER REFERENCE MANUAL. Dedup key:
       (reference_manual, target_register, target_operation,
        sorted preconditions, sorted postconditions, datasheet_text)
@@ -171,6 +171,38 @@ def lint_constraint(ac: dict, source_filename: str) -> set:
 # Corpus walk
 # ---------------------------------------------------------------------------
 
+def _v2_required_state(cond: dict) -> str:
+    """v2 state (+values) -> the CSV's flat required_state string."""
+    state = str(cond.get("state", ""))
+    if state == "equals":
+        vals = cond.get("values") or []
+        return "equals:" + "|".join(hex(v) if isinstance(v, int) else str(v)
+                                    for v in vals)
+    return state
+
+
+def _normalize_v2_constraint(ac: dict) -> dict:
+    """Map a grammar-v2 state_gate to the flat (register_name/field_name/
+    required_state) shape the CSV builder works in. The envelope keys
+    (target_register/operation/fields, severity, consequence, datasheet_text)
+    are already shared with v1; only the conditions are re-keyed."""
+    def conds(lst):
+        return [{"register_name": str(c.get("register", "")),
+                 "field_name": str(c.get("field", "")),
+                 "required_state": _v2_required_state(c)}
+                for c in (lst or []) if isinstance(c, dict)]
+    return {
+        "target_register": ac.get("target_register", ""),
+        "target_operation": ac.get("target_operation", ""),
+        "target_fields": ac.get("target_fields") or [],
+        "preconditions": conds(ac.get("preconditions")),
+        "postconditions": conds(ac.get("postconditions")),
+        "severity": ac.get("severity", ""),
+        "consequence": ac.get("consequence", ""),
+        "datasheet_text": ac.get("datasheet_text", ""),
+    }
+
+
 def _run_sort_key(name: str):
     return (0, int(name)) if name.isdigit() else (1, name)
 
@@ -204,9 +236,11 @@ def iter_corpus(corpus_root: str):
                     continue
                 if not isinstance(data, dict):
                     continue
-                for ac in data.get("access_constraints") or []:
-                    if isinstance(ac, dict):
-                        yield rm, run, fn, ac
+                # Grammar v2 (state gates only fit the flat CSV triple shape;
+                # other kinds are captured by the collection manifest, not here).
+                for ac in data.get("access_constraints_v2") or []:
+                    if isinstance(ac, dict) and ac.get("kind", "state_gate") == "state_gate":
+                        yield rm, run, fn, _normalize_v2_constraint(ac)
 
 
 # ---------------------------------------------------------------------------

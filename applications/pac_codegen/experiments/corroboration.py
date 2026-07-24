@@ -231,8 +231,8 @@ def run_target(name: str, cfg: dict, use_judge: bool) -> list[dict]:
           f"{cfg['crate']} ===")
     pac_dir = get_pac.provision(crate=cfg["crate"], version=cfg["version"])
     fixture = json.loads(cfg["fixture"].read_text())
-    constraint = fixture["access_constraints"][0]
-    fields = sorted({p["field_name"].lower()
+    constraint = fixture["access_constraints_v2"][0]
+    fields = sorted({p["field"].lower()
                      for p in constraint["preconditions"]})
 
     records = []

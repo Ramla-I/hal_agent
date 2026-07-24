@@ -5,22 +5,21 @@ Dependency-invariant bridge: collect access constraints from a generator run.
 This module closes the datasheet -> extraction -> codegen data path. It scans a
 single generator-output run directory (the layout produced by the pipeline,
 ``agent_output/<manufacturer>/<device>/<run>/``, with one file per register named
-``{peripheral}_{register}``), reads each register's ``access_constraints`` list,
-and writes per-register constraints files in the exact schema that
+``{peripheral}_{register}``), reads each register's ``access_constraints_v2``
+list, and writes per-register constraints files in the exact schema that
 ``applications/pac_codegen/rust_codegen.py`` consumes (a ``RegisterInfo`` JSON,
 matching the example fixture ``applications/pac_codegen/constraint_test/stm32f405_i2c1.json``).
 
-GRAMMAR V2 (roadmap step D)
----------------------------
-On top of forwarding the v1 constraints untouched, collection now LIFTS each
-register's v1 constraints to grammar v2 (``defs.lift_v1_constraint``, table B.6
-of docs/register_constraints_plan.md) and applies the B.4 repair-vs-reject
-policy:
+GRAMMAR V2
+----------
+The generator emits grammar v2 natively; collection is grammar-v2 only. It
+LINTS each register's ``access_constraints_v2`` and applies the B.4
+repair-vs-reject policy (old grammar-v1 output must be converted first with
+``applications/pac_codegen/convert_v1_to_v2.py``):
 
 - deterministic drift is REPAIRED and logged (severity "info" -> "warning",
-  "any"/"read/write" expanded to per-operation gates, hex/bin value strings
-  normalized to int, enum state names -> values via SVD enumeratedValues,
-  empty field_name -> explicit whole_register);
+  "any" expanded to per-operation gates, target_register normalized to the
+  containing register);
 - judgment-requiring drift is REJECTED with a structured error entry
   ``{file, constraint_index, field, value, reason}`` -- per constraint, NEVER
   aborting a peripheral;
@@ -77,21 +76,18 @@ SVD-metadata lint above runs; when absent, both are skipped and registers
 carry the lint flag ``svd_unchecked`` -- SVDs are never a hard requirement, so
 corpus runs work without them.
 
-NATIVE GRAMMAR-V2 REGISTERS (roadmap step F)
---------------------------------------------
-The v2 prompt makes the generator emit grammar v2 directly: a register file
-then carries ``"access_constraints": []`` (v1 key kept, empty),
-``"access_constraints_v2": [...]`` and ``"schema_version": 2``. Collection
-detects native v2 (schema_version == 2 or a non-empty access_constraints_v2
-list), SKIPS the v1 lift, and runs the applicable stage-0 lint directly on
-the native objects: per-constraint pydantic validation (a malformed entry is
-rejected with reason ``invalid_v2_constraint``; siblings survive), exact
-dedup, %s-placeholder rejects, target_register normalization, "any"
-expansion, SVD name/width resolution, write-on-read-only, w1c postcondition
-reclassification, self-defeating read gates, cross_peripheral/read_side_effect
-flags, and the computed ``enforceability`` annotation. The manifest records
-the constraint source (``native_v2`` vs ``lifted_v1``) per register plus
-run-level counts of each.
+GRAMMAR-V2 REGISTERS
+--------------------
+The generator emits grammar v2 directly: a register file carries
+``"access_constraints_v2": [...]`` and ``"schema_version": 2``. Collection runs
+the stage-0 lint directly on those objects: per-constraint pydantic validation
+(a malformed entry is rejected with reason ``invalid_v2_constraint``; siblings
+survive), exact dedup, %s-placeholder rejects, target_register normalization,
+"any" expansion, SVD name/width resolution, write-on-read-only, w1c
+postcondition reclassification, self-defeating read gates,
+cross_peripheral/read_side_effect flags, and the computed ``enforceability``
+annotation. (Old grammar-v1 output must be converted first with
+``applications/pac_codegen/convert_v1_to_v2.py``.)
 
 NOTE ON SCOPE
 -------------
