@@ -88,7 +88,6 @@ stm_datasheet_example = """
                 ]
             }
         ],
-        "access_constraints": [],
         "access_constraints_v2": [],
         "schema_version": 2
     }
@@ -242,7 +241,6 @@ stm_datasheet_example = """
                 ]
             }
         ],
-        "access_constraints": [],
         "access_constraints_v2": [
             {
                 "kind": "state_gate",
@@ -508,7 +506,6 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints": [],
             "access_constraints_v2": [],
             "schema_version": 2
         },
@@ -529,7 +526,6 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints": [],
             "access_constraints_v2": [],
             "schema_version": 2
         },
@@ -550,7 +546,6 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints": [],
             "access_constraints_v2": [],
             "schema_version": 2
         },
@@ -607,7 +602,6 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints": [],
             "access_constraints_v2": [],
             "schema_version": 2
         },
@@ -618,7 +612,6 @@ stm_datasheet_batched_example = """
             "reset_value": null,
             "size": null,
             "subfields": null,
-            "access_constraints": null,
             "access_constraints_v2": null,
             "schema_version": 2
         }
@@ -747,7 +740,6 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints": [],
             "access_constraints_v2": [],
             "schema_version": 2
         },
@@ -768,7 +760,6 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints": [],
             "access_constraints_v2": [],
             "schema_version": 2
         },
@@ -789,7 +780,6 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints": [],
             "access_constraints_v2": [],
             "schema_version": 2
         },
@@ -846,7 +836,6 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints": [],
             "access_constraints_v2": [],
             "schema_version": 2
         },
@@ -857,7 +846,6 @@ stm_datasheet_batched_example_no_reasoning = """
             "reset_value": null,
             "size": null,
             "subfields": null,
-            "access_constraints": null,
             "access_constraints_v2": null,
             "schema_version": 2
         }

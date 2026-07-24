@@ -416,7 +416,7 @@ def test_prompt_schema_covers_v2_vocabulary():
     for state in ("cleared", "set", "equals"):
         assert f'"{state}"' in ACCESS_CONSTRAINTS_V2_SCHEMA
     # The wire-format keys themselves.
-    for key in ("schema_version", "access_constraints", "access_constraints_v2"):
+    for key in ("schema_version", "access_constraints_v2"):
         assert f"`{key}`" in ACCESS_CONSTRAINTS_V2_SCHEMA
     # established_by is explained (one sentence each) in the guidance.
     assert "established_by" in ACCESS_CONSTRAINTS_V2_GUIDANCE
@@ -482,10 +482,10 @@ def test_prompt_example_json_validates_against_models():
                     v2_entries += 1
                 if v2 is None:
                     continue
-                # The wire-format decision: v1 key present and EMPTY wherever
-                # v2 constraints appear; schema_version stamped 2.
-                assert obj.get("access_constraints") == [], \
-                    f"{name}: access_constraints must stay [] next to v2 output"
+                # The wire format is grammar-v2 only: no legacy access_constraints
+                # key, schema_version stamped 2.
+                assert "access_constraints" not in obj, \
+                    f"{name}: the retired v1 access_constraints key must be gone"
                 assert obj.get("schema_version") == 2, \
                     f"{name}: schema_version 2 missing"
                 for entry in v2:
