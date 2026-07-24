@@ -136,10 +136,8 @@ sys.path.insert(0, str(_REPO_ROOT))
 
 from defs import (  # noqa: E402  (path setup must precede import)
     ConstraintV2,
-    RegisterAccessConstraint,
     RegisterInfo,
     derive_enforceability,
-    lift_v1_constraint,
     parse_value_token,
 )
 
@@ -195,17 +193,15 @@ def split_peripheral_register(file_name: str) -> tuple[str, str]:
     return file_name, ""
 
 
-def _load_register_info(path: Path) -> Optional[tuple[RegisterInfo, list, bool]]:
-    """Load and validate a single register output file.
+def _load_register_info(path: Path) -> Optional[tuple[RegisterInfo, list]]:
+    """Load and validate a single grammar-v2 register output file.
 
-    Returns ``(register_info, raw_v2_constraints, native_v2)`` or None (with a
-    warning) if the file is not a parseable RegisterInfo JSON, so a single
-    malformed file does not abort the whole run.
+    Returns ``(register_info, raw_v2_constraints)`` or None (skipped, with a
+    warning where useful) if the file is not a parseable grammar-v2 register
+    JSON, so a single malformed file does not abort the whole run.
 
-    ``native_v2`` is True when the file carries native grammar-v2 output
-    (schema_version == 2 or a non-empty access_constraints_v2 list).
-    ``raw_v2_constraints`` is the file's raw (unvalidated) v2 constraint list:
-    the native lint validates each entry INDEPENDENTLY so one malformed
+    ``raw_v2_constraints`` is the file's raw (unvalidated) ``access_constraints_v2``
+    list: the lint validates each entry INDEPENDENTLY so one malformed
     constraint cannot take down its well-formed siblings (per-constraint
     recovery, plan section 6.1d) -- which is why the RegisterInfo parse below
     deliberately excludes the v2 list.
@@ -217,18 +213,20 @@ def _load_register_info(path: Path) -> Optional[tuple[RegisterInfo, list, bool]]
         print(f"  [skip] {path.name}: not readable JSON ({e})", file=sys.stderr)
         return None
 
-    if not isinstance(data, dict) or "access_constraints" not in data:
-        # Not a register output (e.g. a coverage report or other artifact).
+    if not isinstance(data, dict):
         return None
-
     raw_v2 = data.get("access_constraints_v2")
     if not isinstance(raw_v2, list):
-        raw_v2 = []
-    native_v2 = data.get("schema_version") == 2 or bool(raw_v2)
+        # Not a grammar-v2 register output. If it looks like OLD v1 generator
+        # output, say so -- it must be converted first.
+        if "access_constraints" in data:
+            print(f"  [skip] {path.name}: grammar-v1 output — convert first with "
+                  "convert_v1_to_v2.py", file=sys.stderr)
+        return None
 
     try:
         envelope = {k: v for k, v in data.items() if k != "access_constraints_v2"}
-        return RegisterInfo(**envelope), raw_v2, native_v2
+        return RegisterInfo(**envelope), raw_v2
     except Exception as e:  # pydantic ValidationError or similar
         print(f"  [skip] {path.name}: does not match RegisterInfo ({e})",
               file=sys.stderr)
@@ -506,55 +504,6 @@ def _lookup_enum_value(register: str, field: str, token: str, svd_index: dict) -
     return svd_index["enums"].get((key, field.strip().lower()), {}).get(token.strip().lower())
 
 
-def _repair_enum_states(
-    constraint: RegisterAccessConstraint, svd_index: dict, repairs: list
-) -> RegisterAccessConstraint:
-    """B.4 repair: enum NAMES used as states -> values via SVD enumeratedValues.
-
-    Handles the "enabled" drift case (bare enum name as required_state) and
-    enum names inside "equals:" ("equals:output"). Only applies when every
-    non-numeric token resolves to an enumeratedValue of that exact field --
-    partial matches are left untouched for the lift to reject, because a
-    half-repaired OR-list would silently change meaning.
-    """
-    c = constraint.model_copy(deep=True)
-    for where, conds in (("preconditions", c.preconditions),
-                         ("postconditions", c.postconditions)):
-        for i, fs in enumerate(conds):
-            rs = fs.required_state.strip()
-            if rs in ("cleared", "set"):
-                continue
-            if rs.startswith("equals:"):
-                parts = [p.strip() for p in rs[len("equals:"):].split("|")]
-            else:
-                parts = [rs]
-            new_parts = []
-            repaired = False
-            resolvable = True
-            for part in parts:
-                try:
-                    parse_value_token(part)
-                    new_parts.append(part)
-                    continue
-                except ValueError:
-                    pass
-                val = _lookup_enum_value(fs.register_name, fs.field_name, part, svd_index)
-                if val is None:
-                    resolvable = False
-                    break
-                new_parts.append(str(val))
-                repaired = True
-            if resolvable and repaired:
-                new_rs = "equals:" + "|".join(new_parts)
-                repairs.append(
-                    f"{where}[{i}].required_state: enum name(s) in "
-                    f"{fs.required_state!r} repaired to {new_rs!r} via SVD "
-                    "enumeratedValues"
-                )
-                fs.required_state = new_rs
-    return c
-
-
 def _constraint_name_refs(constraint) -> list[tuple[str, str, str]]:
     """Every (path, register, field) name reference of a v2 constraint.
 
@@ -612,47 +561,6 @@ def _svd_unresolved(constraint, svd_index: dict) -> list[dict]:
             out.append({"field": f"{path}.field", "value": f"{register}.{field}",
                         "reason": "unresolvable_in_svd"})
     return out
-
-
-def _v1_names_with_placeholder(c: RegisterAccessConstraint) -> list[str]:
-    """v1 name fields that carry the %s filename-plumbing placeholder."""
-    hits = []
-    if _PLACEHOLDER in c.target_register:
-        hits.append("target_register")
-    for j, f in enumerate(c.target_fields):
-        if _PLACEHOLDER in f:
-            hits.append(f"target_fields[{j}]")
-    for name in ("preconditions", "postconditions"):
-        for j, fs in enumerate(getattr(c, name)):
-            if _PLACEHOLDER in fs.register_name or _PLACEHOLDER in fs.field_name:
-                hits.append(f"{name}[{j}]")
-    return hits
-
-
-# ---------------------------------------------------------------------------
-# Stage-0 lint (roadmap step E, plan section 7.0)
-# ---------------------------------------------------------------------------
-
-
-def _v1_constraint_key(c: RegisterAccessConstraint) -> tuple:
-    """Exact-dedup key: target register + operation + conditions + quote.
-
-    Deliberately EXCLUDES target_fields (per-bit fan-out of one register-level
-    note differs only there; enforcement is currently register-granular
-    anyway) and severity/consequence (prose paraphrases of the same quote).
-    """
-    def conds(lst) -> tuple:
-        return tuple(
-            (fs.register_name.strip().lower(), fs.field_name.strip().lower(),
-             fs.required_state.strip(),
-             getattr(fs, "evidence_kind", None),
-             getattr(fs, "action_operation", None))
-            for fs in lst
-        )
-    return (c.target_register.strip().lower(),
-            c.target_operation.strip().lower(),
-            conds(c.preconditions), conds(c.postconditions),
-            c.datasheet_text.strip())
 
 
 def _v2_constraint_key(raw) -> tuple:
@@ -795,38 +703,6 @@ def _has_read_action(register: str, field: str, svd_index: dict) -> bool:
     return bool(rm and rm["read_actions"])
 
 
-def _strip_w1c_postconditions(constraint: RegisterAccessConstraint,
-                              svd_index: dict, rejects: list,
-                              lint_flags: list) -> RegisterAccessConstraint:
-    """Stage-0 w1c reclassification (plan section 5.3, FP class 1).
-
-    A postcondition "field X is cleared" on a w1c flag field merely restates
-    the hardware's flag-clear behavior -- it is not a driver obligation.
-    Dropped pre-lift with reject reason ``w1c_flag_semantics`` (more precise
-    than the generic observed-state drop the lift would emit) and lint flag
-    ``w1c_semantics``; the rest of the constraint survives.
-    """
-    kept, dropped = [], []
-    for i, fs in enumerate(constraint.postconditions):
-        if (fs.required_state.strip() == "cleared"
-                and _condition_w1c(fs.register_name, fs.field_name, svd_index)):
-            dropped.append((i, fs))
-        else:
-            kept.append(fs)
-    if not dropped:
-        return constraint
-    for i, fs in dropped:
-        rejects.append({
-            "field": f"postconditions[{i}]",
-            "value": f"{fs.register_name}.{fs.field_name} cleared",
-            "reason": "w1c_flag_semantics",
-        })
-    _add_flag(lint_flags, "w1c_semantics")
-    c = constraint.model_copy(deep=True)
-    c.postconditions = kept
-    return c
-
-
 def _value_width_rejects(gate, svd_index: dict) -> list[dict]:
     """B.4 reject: equals values exceeding the SVD field/register bit width.
 
@@ -894,151 +770,6 @@ def _write_on_read_only_reject(gate, svd_index: dict) -> Optional[dict]:
 # ---------------------------------------------------------------------------
 # Collection
 # ---------------------------------------------------------------------------
-
-
-def _lift_register_constraints(
-    register_info: RegisterInfo,
-    file_name: str,
-    svd_index: Optional[dict],
-    cross_instance_dups: Optional[set] = None,
-) -> tuple[list[dict], list[dict], list[str], int]:
-    """Lift one register's v1 constraints to v2, applying the stage-0 lint.
-
-    Order per constraint: exact dedup (keep first) -> %s-placeholder reject ->
-    SVD enum-name repair -> w1c postcondition reclassification -> B.6 lift ->
-    per-gate rejects (SVD resolution, value-vs-width, write-on-read-only,
-    self-defeating read gate) -> per-gate lint flags (w1c_semantics,
-    read_side_effect, cross_peripheral).
-
-    ``cross_instance_dups`` is the set of v1 indices this run found repeated
-    verbatim in another instance of the same peripheral family (computed by
-    the caller across the whole run; lint flag only, never dropped).
-
-    Returns (v2_constraints_json, constraint_reports, register_lint_flags,
-    duplicates_dropped). v2 constraint dicts carry the computed
-    ``enforceability`` annotation. Rejects drop individual constraints only --
-    the register (and peripheral) always survives.
-    """
-    lint_flags: list[str] = []
-    if svd_index is None:
-        lint_flags.append("svd_unchecked")
-    placeholder_in_file = _PLACEHOLDER in file_name
-    if placeholder_in_file:
-        lint_flags.append("placeholder_in_name")
-
-    file_peripheral, _ = split_peripheral_register(file_name)
-
-    v2_json: list[dict] = []
-    reports: list[dict] = []
-    seen_keys: dict = {}
-    duplicates_dropped = 0
-
-    for idx, v1c in enumerate(register_info.access_constraints):
-        repairs: list[str] = []
-        rejects: list[dict] = []
-        constraint_lint: list[str] = []
-        kinds: list[str] = []
-        enforceability: list[str] = []
-
-        if cross_instance_dups and idx in cross_instance_dups:
-            constraint_lint.append("duplicate_across_instances")
-
-        # Exact dedup within this register's list: per-bit fan-out and
-        # repeated notes produce byte-identical constraints; keep the first.
-        key = _v1_constraint_key(v1c)
-        kept_idx = seen_keys.get(key)
-        if kept_idx is not None:
-            duplicates_dropped += 1
-            constraint_lint.append("exact_duplicate")
-            reports.append({
-                "v1_index": idx,
-                "kinds": [],
-                "enforceability": [],
-                "repairs": [],
-                "rejects": [],
-                "lint_flags": constraint_lint,
-                "duplicate_of": kept_idx,
-            })
-            continue
-        seen_keys[key] = idx
-
-        placeholder_fields = _v1_names_with_placeholder(v1c)
-        if placeholder_in_file or placeholder_fields:
-            # Never guess a %s expansion (safe choice): reject, flag, move on.
-            constraint_lint.append("placeholder_in_name")
-            for field in (["source_file"] if placeholder_in_file else []) + placeholder_fields:
-                rejects.append({
-                    "field": field,
-                    "value": file_name if field == "source_file" else _PLACEHOLDER,
-                    "reason": "placeholder_in_name",
-                })
-        else:
-            c = v1c
-            if svd_index is not None:
-                c = _repair_enum_states(c, svd_index, repairs)
-                c = _strip_w1c_postconditions(c, svd_index, rejects, constraint_lint)
-            result = lift_v1_constraint(
-                c, register_info.datasheet_register_abbreviation)
-            repairs.extend(result.repairs)
-            rejects.extend(r.model_dump() for r in result.rejects)
-
-            if not v1c.preconditions and not v1c.postconditions:
-                # Lifts fine but gates nothing; flag it (v1's 729 empty
-                # constraints -- the discovery queue that motivated `other`).
-                constraint_lint.append("vacuous_no_conditions")
-
-            for gate in result.constraints:
-                gate_rejects: list[dict] = []
-                if svd_index is not None:
-                    unresolved = _svd_unresolved(gate, svd_index)
-                    if unresolved:
-                        rejects.extend(unresolved)
-                        continue
-                    gate_rejects.extend(_value_width_rejects(gate, svd_index))
-                    ro = _write_on_read_only_reject(gate, svd_index)
-                    if ro is not None:
-                        gate_rejects.append(ro)
-                if _is_self_defeating_read_gate(gate, svd_index):
-                    gate_rejects.append({
-                        "field": "target_operation",
-                        "value": gate.target_operation,
-                        "reason": "self_defeating_read_gate",
-                    })
-                if gate_rejects:
-                    rejects.extend(gate_rejects)
-                    continue
-
-                conditions = (list(getattr(gate, "preconditions", []) or [])
-                              + list(getattr(gate, "postconditions", []) or []))
-                if svd_index is not None:
-                    if any(_condition_w1c(cd.register, cd.field, svd_index)
-                           for cd in conditions):
-                        _add_flag(constraint_lint, "w1c_semantics")
-                    if getattr(gate, "target_operation", None) == "read" and (
-                            _has_read_action(gate.target_register, "", svd_index)
-                            or any(_has_read_action(cd.register, cd.field, svd_index)
-                                   for cd in conditions)):
-                        _add_flag(constraint_lint, "read_side_effect")
-                if _references_cross_peripheral(gate, file_peripheral, svd_index):
-                    _add_flag(constraint_lint, "cross_peripheral")
-
-                enforced = derive_enforceability(gate)
-                gate_json = gate.model_dump(mode="json")
-                gate_json["enforceability"] = enforced
-                v2_json.append(gate_json)
-                kinds.append(gate.kind)
-                enforceability.append(enforced)
-
-        reports.append({
-            "v1_index": idx,
-            "kinds": kinds,
-            "enforceability": enforceability,
-            "repairs": repairs,
-            "rejects": rejects,
-            "lint_flags": constraint_lint,
-        })
-
-    return v2_json, reports, lint_flags, duplicates_dropped
 
 
 def _lint_native_v2_constraints(
@@ -1313,24 +1044,19 @@ def collect_constraints(
         loaded_entry = _load_register_info(entry)
         if loaded_entry is None:
             continue
-        register_info, raw_v2, native_v2 = loaded_entry
-        loaded.append((entry.name, register_info, raw_v2, native_v2))
+        register_info, raw_v2 = loaded_entry
+        loaded.append((entry.name, register_info, raw_v2))
 
     # Cross-instance duplicate lint: the same constraint repeated verbatim
     # across a peripheral family's instances (usart1_brr vs usart2_brr). The
     # rows stay separate (step H emits per-instance paths); they only get the
-    # lint flag ``duplicate_across_instances``. Native-v2 registers
-    # participate with their own key shape (never colliding with v1 keys).
+    # lint flag ``duplicate_across_instances``.
     entry_keys: dict[str, list] = {}
     group_files: dict[tuple, set] = {}
-    for name, register_info, raw_v2, native_v2 in loaded:
+    for name, register_info, raw_v2 in loaded:
         peripheral, register = split_peripheral_register(name)
         fam = _family(peripheral)
-        if native_v2:
-            keys = [(fam, register, _v2_constraint_key(c)) for c in raw_v2]
-        else:
-            keys = [(fam, register, _v1_constraint_key(c))
-                    for c in register_info.access_constraints]
+        keys = [(fam, register, _v2_constraint_key(c)) for c in raw_v2]
         entry_keys[name] = keys
         for k in keys:
             group_files.setdefault(k, set()).add(name)
@@ -1343,71 +1069,55 @@ def collect_constraints(
     results: list[dict] = []
     manifest_registers: list[dict] = []
     totals = {
-        "constraints_v1": 0,          # raw v1 count of LIFTED registers (incl. duplicates)
-        "constraints_deduped": 0,     # exact duplicates dropped (keep-first, both sources)
-        "constraints_v1_unique": 0,   # v1 minus duplicates
-        "constraints_native_v2": 0,   # raw native-v2 count (incl. duplicates)
-        "constraints_native_v2_unique": 0,   # native minus duplicates
+        "constraints_native_v2": 0,   # raw source count (incl. duplicates)
+        "constraints_deduped": 0,     # exact duplicates dropped (keep-first)
+        "constraints_native_v2_unique": 0,   # source minus duplicates
         "constraints_v2": 0,
         "constraints_rejected": 0,    # unique source constraints with NO v2 output
         "reject_entries": 0,          # all structured reject entries (incl. dropped conditions)
         "repair_count": 0,
     }
-    # Run-level counts of the per-register constraint source (task shape:
-    # manifest records "native_v2" vs "lifted_v1" per register + counts).
-    source_counts = {"native_v2": 0, "lifted_v1": 0}
+    source_counts = {"native_v2": 0}
     kind_counts: dict = {}
     enforceability_counts: dict = {}
     reject_reasons: dict = {}
     constraint_lint_counts: dict = {}
     register_lint_counts: dict = {}
 
-    # Phase 2: lift (v1) or lint natively (v2) + write each register.
-    for entry_name, register_info, raw_v2, native_v2 in loaded:
-        num_constraints = (len(raw_v2) if native_v2
-                           else len(register_info.access_constraints))
+    # Phase 2: lint each register's grammar-v2 constraints + write each register.
+    for entry_name, register_info, raw_v2 in loaded:
+        num_constraints = len(raw_v2)
         if num_constraints == 0 and not include_empty:
             continue
 
         peripheral, register = split_peripheral_register(entry_name)
 
-        if native_v2:
-            v2_json, reports, lint_flags, dups_dropped = _lint_native_v2_constraints(
-                register_info, raw_v2, entry_name, svd_index,
-                cross_instance.get(entry_name))
-        else:
-            v2_json, reports, lint_flags, dups_dropped = _lift_register_constraints(
-                register_info, entry_name, svd_index,
-                cross_instance.get(entry_name))
-        constraint_source = "native_v2" if native_v2 else "lifted_v1"
+        v2_json, reports, lint_flags, dups_dropped = _lint_native_v2_constraints(
+            register_info, raw_v2, entry_name, svd_index,
+            cross_instance.get(entry_name))
+        constraint_source = "native_v2"
         source_counts[constraint_source] += 1
 
         # Structured reject entries, collected per register (task shape:
         # {file, constraint_index, field, reason}).
         register_rejects = [
             {"file": entry_name,
-             "constraint_index": rep.get("v1_index", rep.get("v2_index")),
+             "constraint_index": rep.get("v2_index"),
              **rej}
             for rep in reports for rej in rep["rejects"]
         ]
 
-        # Write out in the RegisterInfo schema rust_codegen.py consumes (v1
-        # key untouched -- extra keys are ignored by the pydantic parse), plus
-        # the v2 constraints and their repair/reject reports. For native-v2
-        # registers this REPLACES the raw generator constraints with their
-        # linted, enforceability-annotated forms.
+        # Write out in the RegisterInfo schema rust_codegen.py consumes, with the
+        # raw generator constraints REPLACED by their linted,
+        # enforceability-annotated forms plus the repair/reject reports.
         data = register_info.model_dump(mode="json")
         data["access_constraints_v2"] = v2_json
         data["constraint_reports"] = reports
         out_file = out_path / f"{entry_name}.json"
         out_file.write_text(json.dumps(data, indent=2))
 
-        if native_v2:
-            totals["constraints_native_v2"] += num_constraints
-            totals["constraints_native_v2_unique"] += num_constraints - dups_dropped
-        else:
-            totals["constraints_v1"] += num_constraints
-            totals["constraints_v1_unique"] += num_constraints - dups_dropped
+        totals["constraints_native_v2"] += num_constraints
+        totals["constraints_native_v2_unique"] += num_constraints - dups_dropped
         totals["constraints_deduped"] += dups_dropped
         totals["constraints_v2"] += len(v2_json)
         totals["constraints_rejected"] += sum(
@@ -1432,7 +1142,6 @@ def collect_constraints(
             "peripheral": peripheral,
             "register": register,
             "constraint_source": constraint_source,
-            "num_constraints_v1": len(register_info.access_constraints),
             "num_source_constraints": num_constraints,
             "num_constraints_v2": len(v2_json),
             "duplicates_dropped": dups_dropped,
@@ -1459,9 +1168,8 @@ def collect_constraints(
     # 0 -- native-v2 extraction is where the metric is live); the reject-rate
     # is the fraction of UNIQUE (post-dedup) source constraints (lifted v1 +
     # native v2) the grammar/lint could not hold.
-    source_total = totals["constraints_v1"] + totals["constraints_native_v2"]
-    unique_total = (totals["constraints_v1_unique"]
-                    + totals["constraints_native_v2_unique"])
+    source_total = totals["constraints_native_v2"]
+    unique_total = totals["constraints_native_v2_unique"]
     v2_total = totals["constraints_v2"]
     other_count = kind_counts.get("other", 0)
     manifest = {
@@ -1557,13 +1265,9 @@ def main(argv: list[str] | None = None) -> None:
     manifest = json.loads((out_dir / "manifest.json").read_text())
     summary = manifest["summary"]
     sources = summary["constraint_sources"]
-    print(
-        f"Constraint sources: {sources['native_v2']} native_v2 register(s), "
-        f"{sources['lifted_v1']} lifted_v1 register(s)."
-    )
-    source_total = summary["constraints_v1"] + summary["constraints_native_v2"]
-    unique_total = (summary["constraints_v1_unique"]
-                    + summary["constraints_native_v2_unique"])
+    print(f"Constrained registers: {sources['native_v2']} (grammar v2).")
+    source_total = summary["constraints_native_v2"]
+    unique_total = summary["constraints_native_v2_unique"]
     print(
         f"Stage-0 lint: {summary['constraints_deduped']} exact duplicate(s) dropped "
         f"({summary['dedup_rate']:.1%} of {source_total} source), "

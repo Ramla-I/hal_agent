@@ -54,17 +54,6 @@ def _register_json_v2(abbrev, constraints_v2, subfields=(), schema_version=2):
     return data
 
 
-def _register_json_v1(abbrev, constraints):
-    return {
-        "datasheet_register_abbreviation": abbrev,
-        "address_offset": "0x00",
-        "reset_value": "0x0000",
-        "size": 32,
-        "subfields": [],
-        "access_constraints": constraints,
-    }
-
-
 def _state_gate(target, op="write", pre=(), post=(), fields=(),
                 severity="error", text="quote", consequence="c"):
     return {
@@ -193,7 +182,7 @@ def test_native_v2_basic(run_dir, tmp_path):
     assert r["num_constraints"] == 1 and r["num_constraints_v2"] == 1
 
     data = json.loads((out_dir / "usart1_brr.json").read_text())
-    assert data["access_constraints"] == []              # v1 key kept, empty
+    assert "access_constraints" not in data              # v1 key retired
     assert data["schema_version"] == 2
     (v2,) = data["access_constraints_v2"]
     assert v2["kind"] == "state_gate"
@@ -204,14 +193,12 @@ def test_native_v2_basic(run_dir, tmp_path):
     manifest = _load_manifest(out_dir)
     entry = _reg_entry(manifest, "usart1_brr")
     assert entry["constraint_source"] == "native_v2"
-    assert entry["num_constraints_v1"] == 0
     assert entry["num_source_constraints"] == 1
     (report,) = entry["constraints"]
     assert report["v2_index"] == 0 and report["kinds"] == ["state_gate"]
     summary = manifest["summary"]
-    assert summary["constraint_sources"] == {"native_v2": 1, "lifted_v1": 0}
+    assert summary["constraint_sources"] == {"native_v2": 1}
     assert summary["constraints_native_v2"] == 1
-    assert summary["constraints_v1"] == 0
     assert summary["kind_counts"] == {"state_gate": 1}
 
 
@@ -225,37 +212,6 @@ def test_native_detected_by_nonempty_v2_without_schema_version(run_dir, tmp_path
     (r,) = collect_constraints(str(run_dir), output_dir=str(out_dir))
     assert r["constraint_source"] == "native_v2"
     assert r["num_constraints_v2"] == 1
-
-
-def test_v1_register_still_lifts_in_mixed_run(run_dir, tmp_path):
-    (run_dir / "usart1_brr").write_text(json.dumps(_register_json_v2(
-        "USART_BRR", [_state_gate("USART_BRR", pre=[SW_UE_CLEARED])],
-    )))
-    (run_dir / "iwdg_pr").write_text(json.dumps(_register_json_v1("IWDG_PR", [{
-        "target_register": "IWDG_PR", "target_fields": [],
-        "target_operation": "write",
-        "preconditions": [
-            {"register_name": "IWDG_SR", "field_name": "PVU",
-             "required_state": "cleared"},
-        ],
-        "postconditions": [], "severity": "error",
-        "consequence": "write ignored", "datasheet_text": "quote",
-    }])))
-    out_dir = tmp_path / "out"
-    results = collect_constraints(str(run_dir), output_dir=str(out_dir))
-    by_name = {f"{r['peripheral']}_{r['register']}": r for r in results}
-    assert by_name["usart1_brr"]["constraint_source"] == "native_v2"
-    assert by_name["iwdg_pr"]["constraint_source"] == "lifted_v1"
-
-    manifest = _load_manifest(out_dir)
-    summary = manifest["summary"]
-    assert summary["constraint_sources"] == {"native_v2": 1, "lifted_v1": 1}
-    # The v1 metrics only count the lifted register; native has its own.
-    assert summary["constraints_v1"] == 1
-    assert summary["constraints_native_v2"] == 1
-    assert summary["constraints_v2"] == 2
-    assert _reg_entry(manifest, "iwdg_pr")["constraints"][0]["v1_index"] == 0
-    assert _reg_entry(manifest, "usart1_brr")["constraints"][0]["v2_index"] == 0
 
 
 # ---------------------------------------------------------------------------

@@ -50,13 +50,15 @@ def _register_json(abbrev, constraints, subfields=()):
         "reset_value": "0x0000",
         "size": 32,
         "subfields": list(subfields),
-        "access_constraints": constraints,
+        "access_constraints_v2": constraints,
+        "schema_version": 2,
     }
 
 
 def _constraint(target, op="write", pre=(), post=(), text="quote", fields=(),
                 severity="error", consequence="c"):
     return {
+        "kind": "state_gate",
         "target_register": target, "target_fields": list(fields),
         "target_operation": op,
         "preconditions": list(pre), "postconditions": list(post),
@@ -66,8 +68,24 @@ def _constraint(target, op="write", pre=(), post=(), text="quote", fields=(),
 
 
 def _cond(register, field, state="cleared", **extra):
-    return {"register_name": register, "field_name": field,
-            "required_state": state, **extra}
+    # grammar-v2 FieldCondition, translating the few retired v1 spellings used
+    # by existing call sites (evidence_kind -> established_by; "equals:<v>" ->
+    # state "equals" + values; empty field -> whole_register).
+    if "evidence_kind" in extra:
+        extra["established_by"] = {"software_action": "software",
+                                   "observed_state": "hardware"}.get(
+                                       extra.pop("evidence_kind"), "hardware")
+    values = []
+    if isinstance(state, str) and state.startswith("equals:"):
+        values = [int(state.split(":", 1)[1], 0)]
+        state = "equals"
+    cond = {"register": register, "field": field, "state": state}
+    if not field:
+        cond["whole_register"] = True
+    if values:
+        cond["values"] = values
+    cond.update(extra)
+    return cond
 
 
 LINT_SVD = """<?xml version="1.0" encoding="utf-8"?>
@@ -189,9 +207,9 @@ def test_dedup_within_register_per_bit_fanout(tmp_path):
     assert other["kinds"] == ["state_gate"]
 
     summary = manifest["summary"]
-    assert summary["constraints_v1"] == 3
+    assert summary["constraints_native_v2"] == 3
     assert summary["constraints_deduped"] == 1
-    assert summary["constraints_v1_unique"] == 2
+    assert summary["constraints_native_v2_unique"] == 2
     assert summary["dedup_rate"] == pytest.approx(1 / 3)
     # A duplicate is NOT a reject; reject-rate uses the unique denominator.
     assert summary["constraints_rejected"] == 0
@@ -310,12 +328,13 @@ def test_writable_target_not_rejected(tmp_path, svd_file):
 
 
 def test_w1c_postcondition_rejected_via_modified_write_values(tmp_path, svd_file):
-    # RCC_CSR.RMVF is oneToClear: "RMVF becomes cleared" as a postcondition
-    # merely restates the flag-clear behavior (plan section 5.3, class 1).
+    # RCC_CSR.RMVF is oneToClear: a (software) "RMVF becomes cleared"
+    # postcondition merely restates the flag-clear behavior (class 1).
     files = {"rcc_csr": _register_json("RCC_CSR", [
         _constraint("RCC_CSR", op="write",
                     pre=[_cond("RCC_CR", "HSEON", "set")],
-                    post=[_cond("RCC_CSR", "RMVF", "cleared")],
+                    post=[_cond("RCC_CSR", "RMVF", "cleared",
+                               established_by="software", action_operation="modify")],
                     text="w1c note"),
     ])}
     _, manifest, _ = _run(tmp_path, files, svd=svd_file)
@@ -329,11 +348,12 @@ def test_w1c_postcondition_rejected_via_modified_write_values(tmp_path, svd_file
 
 def test_w1c_postcondition_rejected_via_register_read_action(tmp_path, svd_file):
     # USART_DR has register-level readAction=clear (status-register signal):
-    # a "DATA becomes cleared" postcondition restates read-to-clear behavior.
+    # a (software) "DATA becomes cleared" postcondition restates read-to-clear.
     files = {"usart1_cr1": _register_json("USART_CR1", [
         _constraint("USART_CR1", op="write",
                     pre=[_cond("RCC_CR", "HSEON", "set")],
-                    post=[_cond("USART_DR", "DATA", "cleared")],
+                    post=[_cond("USART_DR", "DATA", "cleared",
+                               established_by="software", action_operation="modify")],
                     text="read-clear note"),
     ])}
     _, manifest, _ = _run(tmp_path, files, svd=svd_file)
@@ -343,18 +363,20 @@ def test_w1c_postcondition_rejected_via_register_read_action(tmp_path, svd_file)
     assert rep["kinds"] == ["state_gate"]
 
 
-def test_without_svd_w1c_postcondition_falls_back_to_observed_state(tmp_path):
-    # Same constraint, no SVD: the generic observed-state drop applies.
+def test_without_svd_w1c_postcondition_not_reclassified(tmp_path):
+    # Same (software) postcondition, no SVD: w1c cannot be detected without the
+    # SVD, so the postcondition is NOT reclassified -- the gate survives intact.
     files = {"rcc_csr": _register_json("RCC_CSR", [
         _constraint("RCC_CSR", op="write",
                     pre=[_cond("RCC_CR", "HSEON", "set")],
-                    post=[_cond("RCC_CSR", "RMVF", "cleared")],
+                    post=[_cond("RCC_CSR", "RMVF", "cleared",
+                               established_by="software", action_operation="modify")],
                     text="w1c note"),
     ])}
     _, manifest, _ = _run(tmp_path, files)
     (rep,) = _register_entry(manifest, "rcc_csr")["constraints"]
-    assert [r["reason"] for r in rep["rejects"]] == [
-        "observed_state_postcondition_unenforceable"]
+    assert rep["rejects"] == []
+    assert rep["kinds"] == ["state_gate"]
     assert "w1c_semantics" not in rep["lint_flags"]
 
 

@@ -271,7 +271,6 @@
       ]
     }
   ],
-  "access_constraints": [],
   "access_constraints_v2": [
     {
       "kind": "state_gate",

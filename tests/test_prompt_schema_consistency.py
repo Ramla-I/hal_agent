@@ -22,10 +22,14 @@ from defs import (
     ConstraintBase,
     ConstraintV2,
     FieldCondition,
-    FieldState,
-    RegisterAccessConstraint,
     RegisterInfo,
     StateGate,
+)
+# The retired grammar-v1 models now live in the conversion tool.
+from applications.pac_codegen.convert_v1_to_v2 import (
+    FieldState,
+    RegisterAccessConstraint,
+    V1RegisterInfo,
 )
 from prompts.register_info_stm import (
     ACCESS_CONSTRAINTS_V2_GUIDANCE,
@@ -110,7 +114,7 @@ def test_complete_register_info_schema():
     }
 
     # This should parse without errors
-    register_info = RegisterInfo(**sample_json)
+    register_info = V1RegisterInfo(**sample_json)
 
     # Verify structure
     assert register_info.datasheet_register_abbreviation == "I2C_CR1"
@@ -132,7 +136,7 @@ def test_minimal_register_info_schema():
         "access_constraints": []
     }
 
-    register_info = RegisterInfo(**sample_json)
+    register_info = V1RegisterInfo(**sample_json)
     assert register_info.datasheet_register_abbreviation == "TEST_REG"
     assert len(register_info.subfields) == 0
     assert len(register_info.access_constraints) == 0
@@ -173,7 +177,7 @@ def test_access_constraint_with_postconditions():
         ]
     }
 
-    register_info = RegisterInfo(**sample_json)
+    register_info = V1RegisterInfo(**sample_json)
     constraint = register_info.access_constraints[0]
 
     assert constraint.target_register == "RTC_CNTH"
@@ -231,7 +235,7 @@ def test_constraint_target_fields():
         ]
     }
 
-    register_info = RegisterInfo(**sample_json)
+    register_info = V1RegisterInfo(**sample_json)
     constraint = register_info.access_constraints[0]
 
     assert constraint.target_fields == ["FIELD1", "FIELD2"]
@@ -282,7 +286,7 @@ def test_multiple_constraints():
         ]
     }
 
-    register_info = RegisterInfo(**sample_json)
+    register_info = V1RegisterInfo(**sample_json)
     assert len(register_info.access_constraints) == 2
     assert register_info.access_constraints[0].target_operation == "write"
     assert register_info.access_constraints[1].target_operation == "read"
@@ -297,12 +301,9 @@ def test_all_required_fields_present():
         "reset_value",
         "size",
         "subfields",
-        "access_constraints"
     }
-    # Optional fields with defaults -- absent from v1-era run files, so they
-    # must never become required. schema_version tags the constraint grammar
-    # version (defaults to 1; the v2-native generator stamps 2);
-    # access_constraints_v2 defaults empty so every v1 file still parses.
+    # Optional fields with defaults. access_constraints_v2 defaults empty (a
+    # register with no access rule); schema_version tags the grammar version.
     optional_fields = {"schema_version", "access_constraints_v2"}
 
     model_fields = set(RegisterInfo.model_fields.keys())
@@ -313,8 +314,8 @@ def test_all_required_fields_present():
             f"{name} must stay required"
     for name in optional_fields:
         assert not RegisterInfo.model_fields[name].is_required(), \
-            f"{name} must stay optional (v1 run files do not carry it)"
-    assert RegisterInfo.model_fields["schema_version"].default == 1
+            f"{name} must stay optional"
+    assert RegisterInfo.model_fields["schema_version"].default == 2
 
 
 def test_constraint_required_fields():
@@ -360,7 +361,6 @@ def test_native_v2_register_info_parses():
         "reset_value": "0x0000",
         "size": 32,
         "subfields": [],
-        "access_constraints": [],
         "access_constraints_v2": [
             {
                 "kind": "state_gate",
@@ -381,7 +381,6 @@ def test_native_v2_register_info_parses():
     }
     register_info = RegisterInfo(**sample_json)
     assert register_info.schema_version == 2
-    assert register_info.access_constraints == []
     (gate,) = register_info.access_constraints_v2
     assert isinstance(gate, StateGate)
     assert gate.preconditions[0].established_by == "software"
