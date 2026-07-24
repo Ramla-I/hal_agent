@@ -85,7 +85,14 @@ establishes a state — codegen cannot infer it):
 - `"hardware"` — hardware establishes the state; software can only *observe*
   it → codegen emits a runtime **check** minting a **state witness**.
 - `"software"` — the driver itself must establish the state → codegen emits a
-  setup method minting an **action witness**, performed via `action_operation`.
+  setup method minting an **action witness**, performed via `action_operation`:
+  `"modify"` (a read-modify-write that changes the needed bits and preserves the
+  register's other bits — the usual choice, e.g. clearing one enable bit) or
+  `"write"` (compose the whole register from its reset value, overwriting the
+  other bits — only when the datasheet prescribes a specific whole-register
+  value such as a key). This is a *method* choice for establishing a
+  precondition and is distinct from `target_operation` (the constrained
+  surface), where `"modify"` is not a value.
 
 The `RegisterInfo` envelope carries `schema_version` (defaults to 1; existing
 run files have no version field and are grammar v1).
@@ -103,9 +110,15 @@ class StateGate(ConstraintBase):
     target_register: str              # must equal the containing RegisterInfo —
                                       # deliberately redundant: a free consistency check
     target_fields: list[str] = []     # empty = whole register
-    target_operation: Literal["read", "write", "modify", "any"]
-                                      # "any" legal at extraction; EXPANDED to
-                                      # per-operation gates at collection
+    target_operation: Literal["read", "write", "any"]
+                                      # the two bus operations a datasheet
+                                      # constrains, plus "any" (EXPANDED to
+                                      # read+write at collection). Datasheet
+                                      # prose "modify/change a register" means
+                                      # WRITING it → encode as "write"; a legacy
+                                      # "modify" is coerced to "write". svd2rust's
+                                      # modify() is DERIVED (gated as read ∪
+                                      # write) in the emitter, never a target.
     preconditions: list[FieldCondition]    # conjunctive
     postconditions: list[FieldCondition]   # software-established ONLY: an observed-state
                                            # postcondition is unenforceable → parse error
@@ -328,8 +341,8 @@ Implemented in `applications/pac_codegen/collect_constraints.py`.
 manifest):**
 
 - hex/bin value strings → `int`;
-- `target_operation: "any"` → three per-operation constraints;
-  `"read/write"`/`"read-write"` → two;
+- `target_operation: "any"` / `"read/write"` / `"read-write"` → the two
+  bus-operation gates (read + write); legacy `"modify"` → `"write"`;
 - `severity: "info"` → `"warning"`;
 - v1 → v2 lift (table below);
 - SVD-canonical name casing; enum *names* → values via SVD `enumeratedValues`
@@ -387,7 +400,8 @@ judgment-requiring drift becomes structured `LiftResult.rejects` entries
 | `required_state: "equals:<v>"` | `state: "equals", values: [parse(v)]` |
 | `required_state: "equals:A\|B\|C"` | `state: "equals", values: [A, B, C]` |
 | `evidence_kind: "observed_state"` / `"software_action"` (absent → observed) | `established_by: "hardware"` / `"software"` |
-| `target_operation: "any"` / `"read/write"` / `"read-write"` | expanded to per-operation `state_gate`s |
+| `target_operation: "any"` / `"read/write"` / `"read-write"` | expanded to read + write `state_gate`s |
+| `target_operation: "modify"` | normalized to `"write"` (datasheet "modify" = write; `modify()` gating is derived as read ∪ write in the emitter) |
 | `severity: "info"` | `"warning"` |
 | observed-state postcondition | dropped with structured reject (gate survives) |
 | unparseable `required_state` (`"unlocked"`, `"written"`, `"equals:X then Y"` …) | reject with reason → re-prompt round (most are `sequence`/`other` in v2) |
