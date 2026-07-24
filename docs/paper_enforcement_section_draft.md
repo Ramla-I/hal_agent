@@ -34,7 +34,7 @@ mechanically validatable without any AI in the loop, and compilable into
 enforcement. Three design rules shape it.
 
 **Closed vocabularies, structured values.** Every enumerable field is a fixed
-choice set (operation ∈ {read, write, modify, any}; severity ∈ {error,
+choice set (operation ∈ {read, write, any}; severity ∈ {error,
 warning}), and numeric values are lists of integers validated against the
 SVD's field widths — never free text. An earlier iteration allowed strings
 like `equals:0b01|0b10|0b11`; free text of this kind both invites drift and,
@@ -135,17 +135,24 @@ which has its own witness type. And the recommended entry point
 check-to-use window is fixed by the library, not by caller discipline.
 
 The examples so far all gate writes, but the same witness mechanism serves all
-three operation surfaces; only the withheld method and its consequences change:
+three of svd2rust's operation surfaces. A datasheet constraint targets a *read*
+or a *write* — the two operations hardware actually distinguishes; `modify`,
+being a read-modify-write, is never a target of its own but is gated
+automatically by whichever constraint applies (its obligations are the union of
+the register's read and write constraints). Only the withheld methods and their
+consequences differ:
 
 | | Write constraint | Read constraint |
 |---|---|---|
 | Datasheet form | "write *R* only while *F* holds" | "reading *R* is unreliable, or has a side effect, while *F* holds" |
-| Stock method withheld | `write` *and* `modify` (a modify performs a write) | `read` |
-| Absent marker | `UnconstrainedWrite` / `UnconstrainedModify` | `UnconstrainedRead` |
+| Stock method withheld | `write` *and* `modify` (a modify performs a write) | `read` *and* `modify` (a modify performs a read) |
+| Absent marker | `UnconstrainedWrite` / `UnconstrainedModify` | `UnconstrainedRead` / `UnconstrainedModify` |
 | Witnessed entry point | `write_when_ready` | `read_when_ready` |
 | Corpus example | I2C_CR1 write, needs STOP/START/PEC clear | SPI_TXCRCR read, needs SPI_SR.BSY clear |
 
-(A `modify`-only constraint is the middle case — it gates just `modify`.)
+(`modify` is never a target on its own: as a read-modify-write it is gated by
+whichever read or write constraint applies, so its obligations are the union of
+the two.)
 Read gates carry two wrinkles a write gate does not. First, the check must
 read a *different* register than the one it guards: a same-register read gate
 would have to read the very register whose reads are constrained, which is

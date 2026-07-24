@@ -49,7 +49,7 @@ enforcement. Three design rules shape it.
 
 \paragraph{Closed vocabularies, structured values.}
 Every enumerable field is a fixed choice set (operation $\in$ \{read, write,
-modify, any\}; severity $\in$ \{error, warning\}), and numeric values are
+any\}; severity $\in$ \{error, warning\}), and numeric values are
 lists of integers validated against the SVD's field widths---never free
 text. An earlier iteration allowed strings such as
 \texttt{equals:0b01|0b10|0b11}; free text of this kind both invites drift
@@ -159,8 +159,13 @@ call, so the check-to-use window is fixed by the library, not by caller
 discipline.
 
 The examples so far all gate writes, but the same witness mechanism serves
-all three operation surfaces; only the withheld method and its consequences
-change (Table~\ref{tab:read-write}).
+all three of svd2rust's operation surfaces. A datasheet constraint targets a
+\emph{read} or a \emph{write}---the two operations hardware actually
+distinguishes; \texttt{modify}, being a read-modify-write, is never a target
+of its own but is gated automatically by whichever constraint applies (its
+obligations are the union of the register's read and write constraints). Only
+the withheld methods and their consequences differ
+(Table~\ref{tab:read-write}).
 
 \begin{table}[h]
 \centering
@@ -171,9 +176,9 @@ change (Table~\ref{tab:read-write}).
 \midrule
 Datasheet form & ``write $R$ only while $F$ holds'' & ``reading $R$ is unreliable, or has a side effect, while $F$ holds'' \\
 \addlinespace
-Stock method withheld & \texttt{write} \emph{and} \texttt{modify} (a modify performs a write) & \texttt{read} \\
+Stock method withheld & \texttt{write} \emph{and} \texttt{modify} (a modify performs a write) & \texttt{read} \emph{and} \texttt{modify} (a modify performs a read) \\
 \addlinespace
-Absent marker & \texttt{UnconstrainedWrite} / \texttt{UnconstrainedModify} & \texttt{UnconstrainedRead} \\
+Absent marker & \texttt{UnconstrainedWrite} / \texttt{UnconstrainedModify} & \texttt{UnconstrainedRead} / \texttt{UnconstrainedModify} \\
 \addlinespace
 Witnessed entry point & \texttt{write\_when\_ready} & \texttt{read\_when\_ready} \\
 \addlinespace
@@ -181,8 +186,9 @@ Corpus example & I2C\_CR1 write, needs STOP/START/PEC clear & SPI\_TXCRCR read, 
 \bottomrule
 \end{tabular}
 \caption{Read and write constraints share one witness mechanism; the
-operation surface and its consequences differ. A \texttt{modify}-only
-constraint is the middle case---it gates just \texttt{modify}.}
+operation surface and its consequences differ. \texttt{modify} is never a
+target on its own: as a read-modify-write it is gated by \emph{whichever} read
+or write constraint applies, so its obligations are the union of the two.}
 \label{tab:read-write}
 \end{table}
 
