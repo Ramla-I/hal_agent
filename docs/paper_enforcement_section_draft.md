@@ -151,9 +151,18 @@ read a *different* register than the one it guards: a same-register read gate
 would have to read the very register whose reads are constrained, which is
 self-defeating, so the generator rejects it (cross-register read gates — the
 common case, e.g. gating a CRC-result read on a separate busy flag — are
-fine). Second, the register's derived `Debug` implementation is dropped,
-because printing a register performs a read. A write gate needs neither: its
-check reads the target freely, and writing is not something `Debug` does.
+fine). Second, `Debug` must be withheld, because printing a register performs
+a read. A register's `Debug` is not its own derive but a single generic,
+read-based impl on `Reg<REG>`; we gate that impl behind `UnconstrainedRead`
+exactly as we gate `read` itself, so it disappears for the constrained
+register through the same missing-marker mechanism. With that register no
+longer `Debug`, the enclosing peripheral's `RegisterBlock` can no longer
+`#[derive(Debug)]` either — a derive requires every field to be `Debug` — so
+the whole block becomes non-printable. This is coarser than `svd2rust`'s own
+handling of write-only registers, which keeps the block printable by
+substituting a non-reading `"(not readable)"` stub. A write gate needs neither
+wrinkle: its check reads the target freely, and writing is not something
+`Debug` does.
 
 Honesty about semantics: a witness is a *witness*, not a proof — it attests
 that the preconditions were observed true in one fresh read. Time-of-check to

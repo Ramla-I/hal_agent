@@ -191,10 +191,19 @@ read a \emph{different} register than the one it guards: a same-register read
 gate would have to read the very register whose reads are constrained, which
 is self-defeating, so the generator rejects it (cross-register read gates---%
 the common case, e.g.\ gating a CRC-result read on a separate busy flag---are
-fine). Second, the register's derived \texttt{Debug} implementation is
-dropped, because printing a register performs a read. A write gate needs
-neither: its check reads the target freely, and writing is not something
-\texttt{Debug} does.
+fine). Second, \texttt{Debug} must be withheld, because printing a register
+performs a read. A register's \texttt{Debug} is not its own derive but a
+single generic, read-based impl on \texttt{Reg<REG>}; we gate that impl behind
+\texttt{UnconstrainedRead} exactly as we gate \texttt{read} itself, so it
+disappears for the constrained register through the same missing-marker
+mechanism. With that register no longer \texttt{Debug}, the enclosing
+peripheral's \texttt{RegisterBlock} can no longer \texttt{\#[derive(Debug)]}
+either---a derive requires every field to be \texttt{Debug}---so the whole
+block becomes non-printable. This is coarser than \texttt{svd2rust}'s own
+handling of write-only registers, which keeps the block printable by
+substituting a non-reading \texttt{"(not readable)"} stub. A write gate needs
+neither wrinkle: its check reads the target freely, and writing is not
+something \texttt{Debug} does.
 
 Honesty about semantics: a witness is a \emph{witness}, not a proof---it
 attests that the preconditions were observed true in one fresh read.
