@@ -59,39 +59,40 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
     for reg_entry in manifest["registers"]:
         peripheral = reg_entry["peripheral"]
         source = reg_entry["file"]
-        accepted_idx = [
-            c["v1_index"] for c in reg_entry["constraints"]
-            if c.get("kinds") and not any(
-                r.get("reason") for r in c.get("rejects", []))
-        ]
-
         def row(fate: str, reason: str, indices=None):
             rows.append({
                 "file": source, "peripheral": peripheral,
                 "register": reg_entry["register"], "fate": fate,
                 "reason": reason,
-                "constraints": indices if indices is not None else accepted_idx,
+                "constraints": indices if indices is not None else [],
             })
 
         for c in reg_entry["constraints"]:
             reasons = sorted({r["reason"] for r in c.get("rejects", [])})
             if reasons:
-                row("rejected_at_collection", ";".join(reasons), [c["v1_index"]])
+                row("rejected_at_collection", ";".join(reasons),
+                    [c.get("v2_index", c.get("v1_index"))])
 
-        if not accepted_idx:
+        # Collection already emits ONLY the accepted, linted grammar-v2 gates in
+        # access_constraints_v2 (rejects/duplicates are not appended), so
+        # acceptance is simply "present here". The emitter enforces state gates;
+        # `enforceability` is a collection annotation, not a grammar field.
+        out_file = collect_dir / Path(reg_entry["output_path"]).name
+        data = json.loads(out_file.read_text())
+        gates = [g for g in (data.get("access_constraints_v2") or [])
+                 if g.get("kind") == "state_gate"]
+        for g in gates:
+            g.pop("enforceability", None)
+        if not gates:
             continue
         if not (device_dir / f"{peripheral}.rs").is_file():
             row("peripheral_not_in_device",
                 f"{peripheral}.rs absent from {device_dir.name}")
             continue
 
-        # Rebuild a v1 RegisterInfo holding ONLY the accepted constraints and
-        # offer it to the emitter.
-        out_file = collect_dir / Path(reg_entry["output_path"]).name
-        data = json.loads(out_file.read_text())
-        data["access_constraints"] = [
-            data["access_constraints"][i] for i in accepted_idx]
-        data.pop("access_constraints_v2", None)
+        # Rebuild a RegisterInfo holding ONLY the accepted state gates and offer
+        # it to the emitter.
+        data["access_constraints_v2"] = gates
         data.pop("constraint_reports", None)
         try:
             plan = rust_codegen.RegisterPlan(
