@@ -17,7 +17,7 @@ the native objects. Covers:
 - manifest bookkeeping: ``constraint_source`` per register plus run-level
   ``constraint_sources`` counts, in mixed native/lifted runs.
 
-Run: .venv/bin/python -m pytest tests/test_native_v2_collection.py
+Run: .venv/bin/python -m pytest applications/pac_codegen/test_collect_constraints.py
 """
 
 import json
@@ -26,7 +26,7 @@ import sys
 
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from applications.pac_codegen.collect_constraints import collect_constraints
 

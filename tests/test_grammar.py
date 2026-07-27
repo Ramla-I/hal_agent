@@ -14,7 +14,7 @@ Covers the normative spec in docs/register_constraints_plan.md Appendix B
   including per-constraint drops (peripheral survives), %s-placeholder
   filenames, and optional SVD name resolution + enum-name repair.
 
-Run: .venv/bin/python -m pytest tests/test_constraints_v2.py
+Run: .venv/bin/python -m pytest tests/test_grammar.py
 """
 
 import json
@@ -535,7 +535,7 @@ def run_dir(tmp_path):
         },
         # NOTE: op is "modify" (which the grammar normalizes to "write"), not
         # "read" -- a same-register hardware-established READ gate is rejected as
-        # self_defeating_read_gate (stage-0 lint, covered in test_collect_lint.py),
+        # self_defeating_read_gate (stage-0 lint, covered in applications/pac_codegen/test_collect_lint.py),
         # whereas a same-register write gate is fine.
         {
             "target_register": "GPIOA_LCKR", "target_fields": [],

@@ -2,7 +2,7 @@
 Stage-0 lint tests (roadmap step E, plan section 7.0): exact dedup,
 SVD-metadata lint, and structural flags in collect_constraints.
 
-Covers, on top of tests/test_constraints_v2.py's lift/collection coverage:
+Covers, on top of tests/test_grammar.py's lift/collection coverage:
 
 - exact dedup within one register file (per-bit fan-out: identical except
   target_fields), keep-first with duplicate_of back-reference, run-level
@@ -21,7 +21,7 @@ Covers, on top of tests/test_constraints_v2.py's lift/collection coverage:
   usart/uart and gpioa/gpiob family compatibility);
 - --svd-dir accepting a single .svd file (the corpus-sweep shape).
 
-Run: .venv/bin/python -m pytest tests/test_collect_lint.py
+Run: .venv/bin/python -m pytest applications/pac_codegen/test_collect_lint.py
 """
 
 import json
@@ -30,7 +30,7 @@ import sys
 
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from applications.pac_codegen.collect_constraints import (
     _families_compatible,

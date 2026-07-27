@@ -613,7 +613,7 @@ def test_hal_demo():
 
 
 # --------------------------------------------------------------------------- #
-# Direct runner (mirrors tests/test_prompt_schema_consistency.py style)
+# Direct runner (mirrors tests/test_grammar_prompt_consistency.py style)
 # --------------------------------------------------------------------------- #
 
 if __name__ == "__main__":

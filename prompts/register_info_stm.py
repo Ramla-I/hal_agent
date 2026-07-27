@@ -10,7 +10,7 @@ from prompts.examples import stm_datasheet_example, stm_access_constraints_v2_ex
 # (optimization/generator/extraction_eval_v2.py), so the eval always tests
 # exactly the text that ships. The normative schema is defs.py (ConstraintV2)
 # / docs/register_constraints_plan.md Appendix B;
-# tests/test_prompt_schema_consistency.py checks prompt<->schema alignment.
+# tests/test_grammar_prompt_consistency.py checks prompt<->schema alignment.
 #
 # Deliberately provider-agnostic: schema enforcement is TIERED (plan section
 # 6.1) -- this text always carries the compact schema and exemplars; token-

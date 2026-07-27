@@ -40,7 +40,7 @@ jobs:
       - name: Golden diff + schema consistency
         run: |
           pytest applications/pac_codegen/test_codegen.py::test_codegen_matches_golden \
-                 tests/test_prompt_schema_consistency.py -q
+                 tests/test_grammar_prompt_consistency.py -q
 
   pac-compile:
     runs-on: ubuntu-latest
