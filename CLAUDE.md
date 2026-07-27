@@ -52,7 +52,8 @@ hal_agent/
 │                               #   target-location gate, gpt-oss judge, corruption)
 └── applications/pac_codegen/   # ENFORCEMENT ARM — turn access constraints into
                                 #   witness-gated PAC crates (rust_codegen.py emitter,
-                                #   inject_from_run.py driver, compile tests)
+                                #   inject_from_run.py driver, compile tests,
+                                #   convert_v1_to_v2.py = the one v1→v2 migration tool)
 ```
 
 ## The Enforcement Arm (grammar v2 → witness-gated PAC crates)
@@ -69,7 +70,11 @@ specified in **`docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`**. Key pieces:
   `clock_gate`, `delay`, `read_effect`, `value_relation`, `other`); the
   generator emits it natively. Enforceability is *computed*
   (`derive_enforceability`): `action_witnessed` / `state_witnessed` (both
-  compile-time witness-gated), `dynamic_check`, or `doc_only`.
+  compile-time witness-gated), `dynamic_check`, or `doc_only`. The pipeline
+  (grammar, collection, codegen) is **grammar-v2 only**; old grammar-v1
+  generator output is converted first with
+  `applications/pac_codegen/convert_v1_to_v2.py` — the single tool that still
+  parses the retired v1 access-constraint grammar.
 - **Constraint Validator** (`constraint_validator/`): deterministic quote
   anchoring + target-location gate, then a closed-book gpt-oss judge; a
   corruption harness calibrates it. Verified ground truth accumulates in
