@@ -194,7 +194,6 @@ around `RegisterInfo`:
 |-------|------|
 | `RegisterList` | A `{ "registers": [ RegisterInfo, ... ] }` wrapper for handling many registers at once. |
 | `RegisterName` / `RegisterNameList` | Name reconciliation: maps a driver's register name, the datasheet register name, and the datasheet abbreviation to one another (the datasheet and SVD do not always agree on names). |
-| `SectionInfo` | Where a peripheral's section lives in the datasheet — `peripheral_name`, `section_name`, `start_page`, `end_page`, and whether it exists — used to scope context retrieval. |
 
 For the constraint half of the same JSON object, see
 [`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md)
