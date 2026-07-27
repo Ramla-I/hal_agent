@@ -29,7 +29,7 @@ ACCESS_CONSTRAINTS_V2_SCHEMA = """\
       Kind "state_gate" -- an operation on this register is only permitted while named field conditions hold (the most common kind). Additional fields:
         - `target_register`: The register being constrained; must be the register being extracted. A string.
         - `target_fields`: The constrained field names, or [] when the whole register is constrained. A list of strings.
-        - `target_operation`: The bus operation the datasheet constrains: "read", "write", or "any" ("any" = both read and write). A string. Note: datasheets say "modify / modified / change a register" to mean WRITING it, so encode those as "write" -- there is no "modify" target here. A read-modify-write is just a read plus a write and needs no special value.
+        - `target_operation`: The bus operation the datasheet constrains: "read", "write", or "any" ("any" = both read and write). A string. (There is no "modify" target -- see the guidance's Operations rule.)
         - `preconditions`: Conditions that must ALL hold before the operation. A list of condition objects.
         - `postconditions`: Actions software must perform after the operation (every entry must have "established_by": "software"). A list of condition objects.
         Each condition object has:
@@ -39,7 +39,7 @@ ACCESS_CONSTRAINTS_V2_SCHEMA = """\
         - `state`: "cleared", "set", or "equals". A string.
         - `values`: Only with state "equals": one or more required numeric values; several values mean any one of them satisfies the condition. Numeric literals only, as hex ("0x5555"), binary ("0b01"), or decimal ("3") strings. A list.
         - `established_by`: "hardware" or "software" -- who brings the state about (see the guidance). A string.
-        - `action_operation`: How the driver PERFORMS the establishing action -- "modify" (read-modify-write: change only the needed bits and keep the register's other bits) or "write" (compose a fresh value from the reset value, overwriting the register's other bits). Choose "modify" to set or clear a bit while preserving the register's other configured state (the usual case, e.g. clearing UE to disable a peripheral); choose "write" only when the datasheet prescribes writing a specific whole-register value (e.g. a key). Required exactly when established_by is "software"; omitted otherwise. Unlike `target_operation`, "modify" IS meaningful here: it names the method used to set up the precondition, not a constrained surface.
+        - `action_operation`: "modify" or "write" -- how the driver performs the establishing action. Required exactly when established_by is "software"; omitted otherwise. (See the guidance for when to use which.)
 
       The other kinds add these fields to the envelope:
         - Kind "sequence" (ordered multi-step protocol): `steps` -- at least 2 step objects, in order, each {"register": str, "operation": "write" or "read", "value": number or null}; optional `enables` -- what the completed sequence unlocks, as a plain reference: {"register": str, "field": str} or {"register": str, "whole_register": true} (a reference, never a step -- no "operation" or "value" keys).
@@ -67,7 +67,7 @@ ACCESS_CONSTRAINTS_V2_GUIDANCE = f"""\
     - "hardware": hardware establishes the state and software can only observe it -- e.g. "before this bit is cleared by hardware", a busy or update flag the peripheral clears on its own.
     - "software": the driver itself must establish the state first -- e.g. disabling a peripheral (UE=0) or writing a key value; `action_operation` is then required and names HOW: "modify" (read-modify-write, changing the needed bits while preserving the register's other bits -- the usual choice, e.g. clearing one enable bit) or "write" (compose the whole register from its reset value, overwriting the other bits -- only when the datasheet prescribes a specific whole-register value such as a key).
 
-    Operations: `target_operation` is "read", "write", or "any" only. A datasheet sentence about "modifying" or "changing" a register is a WRITE constraint -- encode it as "write". Never emit "modify" as a `target_operation`; a read-modify-write needs no special target (it is a read plus a write, and the enforcement handles it automatically).
+    Operations: `target_operation` is "read", "write", or "any" only. A datasheet sentence about "modifying" or "changing" a register is a WRITE constraint -- encode it as "write". Never emit "modify" as a `target_operation`; a read-modify-write needs no special target (it is a read plus a write, and the enforcement handles it automatically). This is separate from a precondition's `action_operation`, where "modify" IS a valid value -- there it names the method the driver uses to establish the state (see `established_by` above), not a constrained surface.
 
     DO-NOT-EMIT rules -- the following are NOT access constraints; emit nothing for them:
     - Flag-acknowledge write semantics (w1c / rc_w): "This bit is set by hardware and cleared by software writing 1." -> nothing.
