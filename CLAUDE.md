@@ -60,9 +60,9 @@ hal_agent/
 Beyond extracting register facts, the project's second arm turns *register
 access constraints* (when a register may be read/written/modified) into
 compile-time guarantees in Rust PAC crates. The authoritative design and
-status doc is **`docs/register_constraints_plan.md`** (grammar v2 spec in its
-Appendix B; enforcement mechanics in §3 and Appendix A; roadmap + divergence
-log). Key pieces:
+status doc is **`docs/register_constraints_plan.md`** (enforcement mechanics in
+§3 and Appendix A; roadmap + divergence log); the constraint grammar itself is
+specified in **`docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`**. Key pieces:
 
 - **Grammar v2** (`defs.py`, `prompts/register_info_stm.py`): a discriminated
   union of constraint kinds (`state_gate`, `sequence`, `write_once`,

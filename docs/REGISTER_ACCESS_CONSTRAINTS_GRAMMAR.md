@@ -2,9 +2,10 @@
 
 This document specifies how datasheet access/ordering constraints — which SVDs
 cannot express — are encoded for generating constraint-enforcing Rust PAC
-(Peripheral Access Crate) code. It is the working copy of the normative spec in
-`docs/register_constraints_plan.md` Appendix B; the Pydantic implementation
-lives in `defs.py` (grammar v2 section), and collection lives in
+(Peripheral Access Crate) code. **It is the normative specification of the
+grammar** — the enforcement-arm plan (`docs/register_constraints_plan.md`)
+points here rather than restating it. The Pydantic implementation lives in
+`defs.py` (grammar v2 section), and collection lives in
 `applications/pac_codegen/collect_constraints.py`.
 
 All examples below are real, from the 30-reference-manual STM corpus.

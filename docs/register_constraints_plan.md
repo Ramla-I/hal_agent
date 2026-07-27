@@ -1,7 +1,7 @@
 # Register Constraints — Full Plan (grammar v2, encoding, PR 15, extraction quality, validator)
 
-**Status:** DRAFT for Ramla's review — nothing here is implemented yet.
-**Date:** 2026-07-15
+**Status:** LARGELY IMPLEMENTED. This began (2026-07-15) as the design plan for the enforcement arm; most of it has since shipped. The **Divergence log** at the end is the authoritative record of what was built and where the implementation departed from this plan; the constraint grammar is specified separately in **[`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md)**. The sections below give the design and its rationale (some still in the original planning voice).
+**Date:** 2026-07-15 (plan); see the Divergence log for implementation dates
 **Scope:** the enforcement arm (Phase 4): constraint grammar, PAC codegen encoding, PR 15 disposition, extraction quality on the STM corpus, and constraint validation without a verified-constraint datasheet.
 **Inputs:**
 
@@ -23,39 +23,28 @@ Turn datasheet access/ordering constraints (which SVDs cannot express) into comp
 
 
 
-## 1. Where we are
+## 1. Background: PR 15 and the chosen encoding
 
+The enforcement arm was bootstrapped from a review of PR #15
+(`cursor/stabilize-pac-codegen`), which prototyped witness-token gating with
+`ConstrainedReg` wrapper types + method shadowing. A multi-agent deep-read plus
+adversarial `cargo check` judged it **right direction, not mergeable as-is**:
+the emitted Rust did not compile; the wrapper left a safe, silent bypass through
+`Deref` (`&Reg<CR1rs>` reaches the stock `write`); enforcement had never been
+through rustc (all four tests silently skipped — the origin of the CI gate in
+§9); witnesses were not instance-bound; and `equals:` values were spliced
+verbatim into Rust (an injection surface, and `0b01|0b10` mis-parses under
+operator precedence).
 
-
-### 1.1 Baseline (main)
-
-`rust_codegen.py` swaps a constrained register's type alias to `ConstrainedReg<REG>` (Deref → `Reg`) and adds inherent `write`/`modify` shadows that demand per-field witness tokens, so a token-less `cr1().write(f)` fails with E0061. It handles only same-register preconditions on `target_operation="write"`; it silently drops postconditions, cross-register references, `target_fields`, and `severity`.
-
-### 1.2 What PR 15 adds
-
-- **Composite per-(register, operation) tokens** minted from a **single fresh read** (`verify_write_ready() -> Cr1WriteReady`; the PR calls these "proofs" — we rename to **witnesses**, see §3) — replaces per-field tokens; prevents cross-read staleness and cross-operation authorization. *Keep.*
-- **Full write-surface gating**: `write`/`reset`/`write_with_zero`/`from_write` on the write witness; `modify`/`from_modify` on a modify witness; `read` on a read witness. *Keep — closes real holes.*
-- **Schema:** `FieldState.evidence_kind: Literal["observed_state","software_action"]` + `action_operation`, with backward-compatible defaults. *Keep the fields; the dichotomy is correct and not inferable by codegen (only prose says whether hardware or software establishes a state).*
-- **Action-derived witnesses** (`set_x() -> Token`) and `#[must_use]` cleanup obligations carrying the operation's return value; cross-register checks as free functions; grouped peripheral generation + `manifest.json` in `collect_constraints.py`; honest doc retreat from "linear" to "affine". *Mixed — see §2.*
-- Prompt + consistency-test updates for the new fields. *Decouple — see §2/§6.*
-
----
-
-
-
-## 2. PR 15 verdict: right direction, not mergeable as-is
-
-All findings below were verified by generating against the real PAC and running `cargo check` on adversarial programs (branch file:line refs).
-
-1. **The emitted Rust does not compile.** The safe `write_with_zero_constrained` calls `Reg::write_with_zero`, which is `unsafe fn` in svd2rust 0.36.1 and 0.37.1 → E0133 inside the PAC (`rust_codegen.py:682-694`; the committed golden contains the same defect). Nothing the PR generates can currently build.
-2. **Safe, silent bypass via** `Deref`**.** `let r: &Reg<CR1rs> = i2c1.cr1(); r.write(f)` compiles clean — no `unsafe`, no warning. The gate is method-resolution shadowing only; type ascription, `&`**, UFCS, or any function generic over `Reg<REG>` reaches the stock API. This violates the hard condition and makes `unsafe bypass_constraints()` ceremonial.
-3. **Enforcement has never been proven.** All four cargo tests silently `SKIP` (no CI; submodule ships SVDs, not generated source), so the cross-register and action-chain Rust has never been through rustc. Golden-file diffs are change detectors, not correctness guards — which is exactly how defect 1 shipped.
-4. **Witnesses are not instance-bound.** stm32f405 shares the `i2c1` module across I2C1/2/3, so a witness from I2C1 authorizes a write to I2C2 (compiles). Fixing needs per-instance types — document as a known limit, don't fix now.
-5. **Silent semantic drops.** Observed-state postconditions are discarded with no diagnostic; `severity` is never read ("warning" hard-gates like "error"); a register whose only constraint is an observed postcondition gets its alias flipped with zero enforcement.
-6. `equals:` **values spliced verbatim into Rust** — an injection surface, and `equals:0b01|0b10|0b11` silently becomes `bits() == 0b11` (Rust `|` binds tighter than `==`).
-7. **Generator robustness:** nested-action guard false-rejects whole peripherals on vacuous constraints; injector only handles single-file `mod.rs` (real crates.io PACs are multi-file); no Rust-keyword escaping (a field named `TYPE` emits `r.type()`); ~40% of the 1,358 lines is duplication an IR would remove.
-
-**Disposition (settled 2026-07-15): PR 15 is not used at all — closed unmerged, zero code cherry-picked.** Everything is written fresh by Claude via the §10 series. The branch survives only as a *reviewed reference*: the ideas judged good above (composite per-operation witnesses, full write-surface gating, the established_by dichotomy, grouped manifest, honest affine framing) are **re-implemented from scratch** — under the settled terminology and the trait-bound encoding, neither of which the branch has — and the ideas judged bad (Deref-based gating, action chains ahead of extraction evidence, blind prompt changes) are simply not carried. This also removes all rebase/attribution complexity: no commit from `cursor/stabilize-pac-codegen` enters main's history.
+**Disposition (settled 2026-07-15):** PR 15 was closed unmerged with **zero code
+cherry-picked**. Everything was re-implemented fresh under (a) **trait-bound
+gating** — the witness-free method *does not exist* on a constrained register, so
+there is no `Deref` hole (§3, Appendix A) — and (b) the settled **witness-token
+terminology** (§3). The good ideas were kept (composite per-operation witnesses
+from one fresh read, full write-surface gating, the `established_by` dichotomy,
+grouped `manifest.json`); the bad ones dropped (Deref gating, action chains ahead
+of extraction evidence, blind prompt changes). No commit from the branch enters
+main's history.
 
 ---
 
@@ -125,41 +114,18 @@ The honest headline: *"every idiomatic constrained call site is preceded by a fr
 
 ## 4. Grammar v2
 
-A discriminated union on `kind`, sharing an envelope (`severity: Literal["error","warning"]`, `consequence`, `datasheet_text`). Few orthogonal fields; every vocabulary a `Literal`; all names/values SVD-validated at collection. *This section is the summary; the complete normative spec — every model, field, vocabulary, per-kind examples, and collection rules — is Appendix B.*
+The constraint grammar (grammar v2) is specified in full in its own document,
+**[`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md)**
+— the normative spec (the discriminated union of eight kinds, the shared
+envelope, the `FieldCondition` model, computed enforceability, collection /
+repair-vs-reject rules, the decision tree, and the v1→v2 lift). This plan does
+not restate the grammar.
 
-```python
-class FieldCondition(BaseModel):
-    register: str                       # SVD-canonical; resolved at collection
-    field: str                          # "" not allowed; whole-register via explicit flag
-    state: Literal["cleared", "set", "equals"]
-    values: list[int] = []              # equals: >=1 entries; >1 == OR-of-values
-    established_by: Literal["hardware", "software"] = "hardware"
-    action_operation: Optional[Literal["write", "modify"]] = None  # required iff software
-```
-
-`values` accepts hex/bin/dec strings, validated by regex and normalized to `int` — kills both the OR-string drift and the code-injection surface in one move.
-
-**Kinds** (each grounded in the corpus, §5):
-
-
-| kind          | corpus evidence                                                                                   | enforceability class                                                                         |
-| ------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `state_gate`  | the dominant class: UE=0, SPE=0, ADSTART=0, FINIT=1, WUTWF=1, LOCK …                              | witness-gated at compile time — software-established → action witness; hardware-established → state witness (fallible runtime check) |
-| `sequence`    | RTC_WPR 0xCA→0x53; GPIO LCKR lock; SDIO DCTRL after DTIMER+DLEN; AES key order; DBGMCU 2-word key | witness-gated at compile time (action witness) — strongest linear-types fit: each step consumes the prior step's token |
-| `write_once`  | EXTI_LOCKR.LOCK, TIM BDTR.LOCK ("written once after reset")                                       | witness-gated at compile time (capability) — affine capability consumed by value (2nd write = E0382) |
-| `clock_gate`  | RCC ENR before any peripheral access ("registers read 0x0 when clock inactive")                   | witness-gated at compile time at the *handle* (block accessor takes a one-time capability), not per-register |
-| `delay`       | "wait two APB clock cycles", HSE stabilization                                                    | ordering witness-gated at compile time via token; duration is a runtime check                |
-| `read_effect` | DSI_ISR cleared-on-read; USART_DR clears RXNE                                                     | documentation-only; feeds validator + tells codegen when a verify-read perturbs state        |
-| `other`       | escape valve: real access/ordering requirements fitting no kind — corpus: "channel selection bits must remain unchanged during sample cycles", "do not change after initial programming" | documentation-only BY CONSTRUCTION (never gates, never breaks a build); the grammar-evolution discovery queue |
-
-
-`other` carries `description: str` (the requirement in the model's own words, for clustering) and `involved: list[FieldRef]` (SVD-validated). Two guardrails keep it from becoming a dumping ground: (1) it is for *genuine requirements that fit no kind* — the routed-out non-constraints (w1c, access-width, privilege, validity notes) still emit **nothing**; (2) collection reports the **`other`-rate per device/run** — a spike is a visible prompt regression, and the steady-state number is a paper metric ("the grammar structurally covers X% of extracted constraints; the residual drives evolution"). This institutionalizes how `sequence`/`clock_gate`/`write_once` were found: mining the v1 corpus's 729 empty-pre/post constraints (~347 of them real but inexpressible — structure silently destroyed, which `other` prevents).
-
-Drift dispositions: `target_operation:"any"` → legalized, expanded deterministically to the two bus-operation gates (read + write) at collection; `"read/write"`/`"read-write"` → normalized likewise; `"modify"` → **normalized to `"write"`** (datasheet "modify/change" means writing; svd2rust `modify()` is gated as the derived read ∪ write union, never a target); `"access"` (width notes) and privilege/secure notes → **not constraints** (routed out at the prompt, §6); `"enabled"` → repaired via SVD `enumeratedValues` name match, else rejected; `"equals:X then Y"` → must be a `sequence`.
-
-**Enforceability is computed, never LLM-emitted:** collection derives `enforceability ∈ {action_witnessed, state_witnessed, dynamic_check, doc_only}` from `(kind, established_by, target_fields)`; codegen records `enforced_as` per constraint in the manifest. `action_witnessed` and `state_witnessed` are both compile-time witness-gated (see §"Terminology"); they differ in whether the witness is minted by a software action/capability or by a fallible runtime check. Paper metric = fraction classifiable as compile-time enforceable (witness-gated) × fraction actually enforced, measured from manifests.
-
-**Evolution:** `schema_version`; mechanical lossless v1→v2 lift for all 30 existing run dirs; repair-vs-reject policy in `collect_constraints` (repair the deterministic: value parsing, `any` expansion, SVD-casing, enum-name→value; reject the judgmental: unknown kinds/states, unresolvable names, out-of-range values), with structured per-constraint errors enabling one automated re-prompt round — never aborting a peripheral.
+The one plan-level point: **enforceability is computed, never LLM-emitted** —
+collection derives it from `(kind, established_by, target_fields)` and records
+`enforced_as` per constraint in the manifest. That feeds the paper's coverage
+metric: the fraction of extracted constraints that are compile-time
+witness-gated, times the fraction actually enforced.
 
 ---
 
@@ -295,13 +261,14 @@ The single most important process fix: **make the compiler the test oracle, unsk
 
 ## 10. Sequenced roadmap
 
+**Status:** steps A, B, D, E, F, G shipped; H shipped for cross-register/cross-peripheral gating (`sequence` emission partial); C reduced to "extract a naming module if needed" (not done, not needed yet); I (action chains / closure-scoped wrappers) and J (external fork + distribution) partial. Field-level gating (§12) is built and opt-in. The Divergence log has the specifics and dates.
 
 | step | content | depends on | folders touched / created |
 | --- | --- | --- | --- |
 | **A. CI/compile harness** | §9. No generator changes. | — | **create** `.github/workflows/`; edit `applications/pac_codegen/test_codegen.py` (SKIP→FAIL); `applications/pac_codegen/` (PAC-generation helper, cached under `vendored/`); `applications/pac_codegen/constraint_test/` (stub-PAC fixture) |
 | **B. Soundness re-cut** | trait-level gating (§3): composite witnesses, full write-surface gating, `unsafe`-only escape, `write_when_ready`, severity=warning→deprecated, loud failures on dropped semantics. Golden + must-fail tests. | A | `applications/pac_codegen/` (`rust_codegen.py` rewrite: generic.rs patch + per-register emission); `applications/pac_codegen/constraint_test/` (new golden, must-fail cases, `main.rs`); `test_codegen.py` (E0061→E0277 assertions) |
 | **C. Generator IR refactor** | `PeripheralPlan` IR + single naming/escaping module + dumb renderer; behavior-preserving; kills ~40% duplication, keyword bugs, repeated normalization. | B | `applications/pac_codegen/` (split `rust_codegen.py` → **new** `ir.py`, `naming.py`, `render.py`); `constraint_test/` goldens regenerate byte-identical |
-| **D. Grammar v2 schema + collection** | §4/Appendix B: kinds, Literals, structured values, v1→v2 lift, repair/reject policy, computed enforceability, per-constraint drops. No prompt changes yet. | — (parallel to A–C) | `defs.py` (repo root); `docs/` (rewrite `REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md` from Appendix B); `applications/pac_codegen/collect_constraints.py`; `tests/` (schema-consistency test) |
+| **D. Grammar v2 schema + collection** | the grammar (`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`): kinds, Literals, structured values, v1→v2 lift, repair/reject policy, computed enforceability, per-constraint drops. No prompt changes yet. | — (parallel to A–C) | `defs.py` (repo root); `docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`; `applications/pac_codegen/collect_constraints.py`; `tests/` (schema-consistency test) |
 | **E. Stage-0 lint + corpus cleanup** | §7.0 stage 0 on the 30-RM corpus; fix `%s` plumbing; dedup; publish cleaned corpus stats. | D | `applications/pac_codegen/` (lint in/next to `collect_constraints.py`, reusing `agent_tools/svd_parsing.py`); `core/` + `utils/result_saver.py` (`%s` run-dir naming fix); stats → `optimization/test_outputs/` |
 | **F. Prompt v2 + extraction eval** | §6, with a fixed-sample eval proving the model populates new fields; real-STM few-shots. | D | `prompts/` (`register_info_stm.py`, `examples.py`); `tests/`; eval harness under `optimization/generator/` with runs in `optimization/test_outputs/` |
 | **G. Constraint Validator + verified-constraints datasheet** | §7 stage 1 + quote anchoring + derived context; corruption calibration → β/F1 shipped human-free. Alongside: `build_constraints_datasheet.py` → `verified_datasheet/constraints/stm.csv` (30 RMs, `reference_manual` column) + `annotate_constraints.py`; Ramla annotates **asynchronously, never blocking**; α on real data measured retrospectively as annotations accumulate. | E | **create** `constraint_validator/` (judge, quote anchor, corruption harness — 1b-style package); `verified_datasheet/` (**new** `constraints/stm.csv`, `build_constraints_datasheet.py`, `annotate_constraints.py`; README note); `prompts/` (judge prompt); reuses only the **artifacts** of `context_retrieval/preprocessing/` (chunked markdown) + `agent_tools/md_ops.py` — context is static quote-anchored extraction, **no semantic retrieval in the judging path** (see §7.1) |
@@ -593,235 +560,14 @@ The one-line summary: **shadowing hides the door behind a curtain (name resoluti
 
 
 
-## Appendix B — Register Constraint Grammar v2, complete specification
+## Appendix B — Register Constraint Grammar v2
 
-This is the normative spec that a rewritten `docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md` and `defs.py` implement (roadmap step D). §4 is its summary. All examples below are real, from the STM corpus (§5).
-
-### B.1 Overall shape
-
-A constraint is a **discriminated union on `kind`**: the LLM picks one tag from eight, then fills a small kind-specific field set. Two shared objects are reused everywhere; there are no free-text micro-grammars anywhere. Every `Literal` is **guaranteed at collection-time pydantic parsing** (with per-constraint recovery and the B.4 repair/reject/re-prompt policy); token-level structured-output mode is a per-provider optimization on top — enabled where reliable (OpenAI), skipped for Groq OSS models, which frequently hard-error on `json_schema` mode and would turn recoverable drift into total loss (§6.1). Every register/field name and numeric value is validated against the SVD at collection.
-
-```python
-# ── shared across all kinds ─────────────────────────────────────
-class ConstraintBase(BaseModel):
-    kind: Literal["state_gate", "sequence", "write_once", "delay",
-                  "read_effect", "clock_gate", "value_relation", "other"]
-    severity: Literal["error", "warning"] = "error"
-    consequence: str                  # what happens on violation (prose)
-    datasheet_text: str               # VERBATIM, COMPLETE quote — the anchor for
-                                      # deterministic PDF verification (§7.1)
-
-class FieldRef(BaseModel):
-    register: str                     # SVD-canonical name; resolved at collection
-    field: str                        # SVD-canonical; no ranges, wildcards, or pseudo-fields
-                                      # (whole-register conditions use an explicit flag,
-                                      #  never field="")
-
-class FieldCondition(FieldRef):
-    state: Literal["cleared", "set", "equals"]
-    values: list[int] = []            # required non-empty iff state == "equals";
-                                      # >1 entry = OR-of-values; parsed from hex/bin/dec
-                                      # strings, range-checked against SVD field width
-    established_by: Literal["hardware", "software"] = "hardware"
-    action_operation: Optional[Literal["write", "modify"]] = None
-                                      # REQUIRED iff evidence == "software" (model_validator)
-```
-
-`established_by` is the load-bearing semantic distinction (kept from PR 15; renamed from `evidence_kind` via an interim `evidence`, final name settled with Ramla 2026-07-16):
-
-- `"hardware"` — hardware establishes the state; software can only *observe* it → codegen emits a runtime **check** minting a **state witness** (`check_write_ready() -> Cr1WriteWitness`).
-- `"software"` — the driver itself must establish the state → codegen emits a setup method minting an **action witness** (`set_cnf() -> CnfSetWitness`), performed via `action_operation`.
-
-The envelope carries versioning:
-
-```python
-class RegisterInfo(BaseModel):
-    ...
-    schema_version: int = 1                    # v1 files lift mechanically to v2 (B.6)
-    access_constraints: list[Constraint]       # the discriminated union
-```
-
-### B.2 The eight kinds
-
-#### B.2.1 `state_gate` — the workhorse (~all of today's true positives)
-
-An operation on a register/fields is permitted only while named field conditions hold; optionally, conditions must be re-established afterward.
-
-```python
-class StateGate(ConstraintBase):
-    kind: Literal["state_gate"]
-    target_register: str              # must equal the containing RegisterInfo —
-                                      # deliberately redundant: a free consistency check
-    target_fields: list[str] = []     # empty = whole register; currently enforced at
-                                      # register granularity, recorded as a downgrade
-    target_operation: Literal["read", "write", "any"]
-                                      # the two bus operations a datasheet constrains,
-                                      # plus "any" (EXPANDED to read+write at collection).
-                                      # Datasheet "modify/change" = write; legacy "modify"
-                                      # coerced to "write". modify() gating is DERIVED
-                                      # (read ∪ write) in the emitter, never a target.
-    preconditions: list[FieldCondition]    # conjunctive
-    postconditions: list[FieldCondition]   # software-evidence ONLY: an observed-state
-                                           # postcondition is unenforceable and was PR 15's
-                                           # silently-dropped class → v2 rejects with reason
-```
-
-Mode-gate, software evidence (`rm0091/2/usart1_brr`, ×37): *"This register can only be written when the USART is disabled (UE=0)."*
-
-```json
-{ "kind": "state_gate", "target_register": "USART_BRR", "target_fields": [],
-  "target_operation": "write",
-  "preconditions": [{ "register": "USART_CR1", "field": "UE", "state": "cleared",
-                      "established_by": "software", "action_operation": "modify" }],
-  "postconditions": [], "severity": "error",
-  "consequence": "BRR writes while the USART is enabled are ignored or corrupt the baud rate",
-  "datasheet_text": "This register can only be written when the USART is disabled (UE=0)." }
-```
-
-Hardware-flag gate (`rm0430/1/rtc_wutr`): *"This register can be written only when WUTWF is set to 1 in RTC_ISR"* → same shape with `established_by: "hardware"` (a check is emitted, not a setup method). Pre+post software action (`rm0008/1/rtc_cnth`, the MTQC replacement): software-evidence precondition `RTC_CRL.CNF state="set"` plus software-evidence postcondition `CNF state="cleared"`, both `action_operation: "modify"`. OR-valued equals (legalized drift): `required_state: "equals:0b01|0b10|0b11"` → `"state": "equals", "values": [1, 2, 3]`.
-
-**Enforcement:** hardware preconditions → `state_witnessed` (composite state witness from one fresh runtime check); software preconditions → `action_witnessed` (action witness, no runtime check); postconditions → obligation + closure-scoped wrapper + reframe-as-precondition where the hazardous next operation is named (§3.1). Both are compile-time witness-gated via the trait bound (§3, Appendix A).
-
-#### B.2.2 `sequence` — ordered multi-step protocols
-
-```python
-class Step(BaseModel):
-    register: str
-    operation: Literal["write", "read"]
-    value: Optional[int] = None       # required for writes with prescribed values
-
-class Sequence(ConstraintBase):
-    kind: Literal["sequence"]
-    steps: list[Step]                 # ≥ 2, in order (collection rejects fewer)
-    enables: Optional[FieldRef] = None  # what the completed sequence unlocks
-```
-
-Examples: RTC write protection (`rm0383/1/rtc_dr`) — write `0xCA` then `0x53` to `RTC_WPR`, enabling protected RTC registers (today mangled into `equals:0xCA then 0x53`); I2C ADDR clearing (`rm0033`) — read `SR1` then read `SR2` (two read steps); AES key order (`rm0493/1/aes_keyr7`); GPIO LCKR lock (`rm0033/1/gpioi_lckr`); the two-word DBGMCU auth key.
-
-**Enforcement:** `action_witnessed` — the strongest linear-types fit in the grammar: each generated step method consumes the previous step's token (`write_key1() -> Key1Written`, `write_key2(Key1Written) -> FlashUnlocked`), so ordering is a pure type-level property; only the writes themselves run at runtime, and there is no runtime check. The terminal token is the witness required by the unlocked operation.
-
-#### B.2.3 `write_once` — lock bits
-
-```python
-class WriteOnce(ConstraintBase):
-    kind: Literal["write_once"]
-    target_register: str
-    target_fields: list[str] = []
-    reset_scope: Literal["system_reset", "power_cycle"]
-```
-
-Examples: `rm0493/1/exti_lockr` (*"This bit is written once after reset"*); TIM `BDTR.LOCK` levels.
-
-**Enforcement:** `action_witnessed` via a **capability**: a non-`Copy` `LckrWriteCap` minted once in the peripheral singleton; the gated write consumes it by value; a second write is E0382. Honest affinity — the datasheet property *is* "at most once."
-
-#### B.2.4 `delay` — time/cycle waits
-
-```python
-class Duration(BaseModel):
-    value: int
-    unit: Literal["cycles_ahb", "cycles_apb", "us", "ms"]
-
-class Delay(ConstraintBase):
-    kind: Literal["delay"]
-    after: Step                        # the operation that starts the clock
-    duration: Duration
-    before: Optional[FieldRef] = None  # the dependent access, if the text names one
-```
-
-Example: *"wait at least two APB clock cycles after enabling the peripheral clock before accessing its registers."*
-
-**Enforcement:** hybrid — codegen emits `wait_after_x() -> DelayElapsed` (dummy reads / nop loop); the *ordering* is witness-gated at compile time via the token (so with a named successor it is `state_witnessed`), the *duration* is a runtime wait. With no named dependent access it degrades to `dynamic_check` (a bare runtime wait, no compile-time gate).
-
-#### B.2.5 `read_effect` — read side-effects (documentation-only)
-
-```python
-class Effect(BaseModel):
-    field: str
-    becomes: Literal["cleared", "set"]
-
-class ReadEffect(ConstraintBase):
-    kind: Literal["read_effect"]
-    read_register: str
-    effects: list[Effect]
-```
-
-Examples: `rm0386/1/dsi_isr1` (*"always cleared after a read"* — today misextracted as 14 postconditions); USART_DR read clears RXNE.
-
-**Enforcement:** `doc_only` — reads cannot usefully be forbidden, but this metadata (a) feeds the Constraint Validator, (b) tells codegen when a checking read would itself perturb state (the self-defeating same-register read-gate case, rejected at codegen), and (c) where a real ordering obligation exists, the decision tree routes the model to `sequence` instead.
-
-#### B.2.6 `clock_gate` — peripheral clock enable (the most common currently-inexpressible constraint)
-
-```python
-class ClockGate(ConstraintBase):
-    kind: Literal["clock_gate"]
-    clock: FieldCondition              # e.g. RCC_APB1ENR.I2C1EN, state="set",
-                                       # established_by="software", action_operation="modify"
-```
-
-Peripheral-scoped: the LLM may emit it on any register file of the peripheral; collection deduplicates and hoists it to the peripheral entry in `manifest.json`. Corpus evidence: `rm0008/1/rcc_ahbenr` (*"When the peripheral clock is not active, the peripheral register values may not be readable … the returned value is always 0x0"*).
-
-**Enforcement:** `action_witnessed` at the **handle**, not per register (gating every method is an unacceptable API tax): `rcc.enable_i2c1() -> I2c1ClockEnabled`, and the I2C1 block accessor requires the token once — mirroring the HAL `.constrain()` idiom while staying inside the PAC.
-
-#### B.2.7 `value_relation` — inter-field value relationships (documentation-only)
-
-```python
-class ValueRelation(ConstraintBase):
-    kind: Literal["value_relation"]
-    fields: list[FieldRef]             # the related fields; the relation itself stays
-                                       # in datasheet_text — an expression language would
-                                       # be unreliable for the LLM and unenforceable in the PAC
-```
-
-Examples: *"CR2.FREQ must equal the APB1 frequency in MHz"*; *"keep RXONLY clear while BIDIMODE is set"* (`rm0454/1/spi1_cr1`). Always `doc_only`.
-
-#### B.2.8 `other` — escape valve and discovery queue
-
-```python
-class Other(ConstraintBase):
-    kind: Literal["other"]
-    description: str                   # the requirement in the model's own words (clustering)
-    involved: list[FieldRef] = []      # SVD-validated like all refs
-```
-
-For *genuine access/ordering requirements that fit no kind* — corpus examples: *"channel selection bits must remain unchanged during sample cycles"* (`rm0008/1/adc2_smpr1`), *"do not make changes to this register after initial programming"* (`rm0008/1/otg_fs_device_dcfg`). **Not** the destination for routed-out non-constraints (w1c, access-width, privilege, validity notes — those emit nothing). `doc_only` **by construction** — can never gate an operation or break a build. Collection reports the **`other`-rate per device/run**: a spike is a prompt regression; the steady-state rate is the grammar-coverage paper metric. This institutionalizes how `sequence`/`clock_gate`/`write_once` were discovered (mining v1's 729 empty-pre/post constraints, ~347 of them real but inexpressible).
-
-### B.3 Computed annotations (never LLM-emitted)
-
-At collection, each constraint gains:
-
-```python
-enforceability: Literal["action_witnessed", "state_witnessed", "dynamic_check", "doc_only"]
-# derived deterministically from (kind, established_by, target_fields) — models would guess it
-```
-
-Codegen records `enforced_as` (same enum) per constraint in `manifest.json`, making downgrades visible (field-granular gate enforced at register granularity; a `delay` with no gateable successor). Paper metrics — fraction *classifiable* as compile-enforceable and fraction *actually enforced* — are computed from manifests, not hand counts.
-
-### B.4 Collection rules
-
-**Repair deterministically (lossless, logged):** hex/bin value strings → `int`; `"any"` → read + write gates; legacy `"modify"` → `"write"`; v1 → v2 lift (B.6); SVD-canonical name casing; enum *names* → values via SVD `enumeratedValues` (the `"enabled"` drift case); `%s`-placeholder filename repair.
-
-**Reject (judgment required; structured error, one automated re-prompt round, then per-constraint drop with manifest entry — never abort a peripheral):** unknown `kind`/`state`; `established_by:"software"` without `action_operation`; names unresolvable in the SVD; values exceeding field width; `sequence` with < 2 steps; observed-state postconditions; write constraints on SVD read-only fields (FP by construction).
-
-**Routed out at the prompt (not constraints; emit nothing):** w1c/rc_w flag semantics (SVD `modifiedWriteValues`), read-to-clear behavior standing alone (→ `read_effect` if worth recording), access-width requirements, secure/privileged-access notes, "value is don't-care" validity notes, reset behavior.
-
-### B.5 The decision tree (prompt)
-
-> order of operations mentioned → `sequence` · wait/time → `delay` · "before any access"/clock enable → `clock_gate` · "once until reset" → `write_once` · "reading clears/affects" → `read_effect` · a state condition on an operation → `state_gate` · pure value relationship → `value_relation` · a genuine requirement fitting none → `other` · not a requirement at all (w1c, width, privilege, validity note) → emit nothing.
-
-### B.6 v1 → v2 lift (mechanical, lossless)
-
-| v1                                                     | v2                                                                         |
-| ------------------------------------------------------ | -------------------------------------------------------------------------- |
-| `RegisterAccessConstraint`                             | `StateGate`                                                                 |
-| `FieldState.register_name` / `field_name`              | `FieldCondition.register` / `field`                                         |
-| `required_state: "cleared"` / `"set"`                  | `state: "cleared"` / `"set"`                                                |
-| `required_state: "equals:<v>"`                         | `state: "equals", values: [parse(v)]`                                       |
-| `required_state: "equals:A\|B\|C"`                     | `state: "equals", values: [A, B, C]`                                        |
-| `evidence_kind: "observed_state"` / `"software_action"`| `established_by: "hardware"` / `"software"`                                       |
-| `target_operation: "any"` / `"read/write"` / `"read-write"` | expanded to read + write `state_gate`s                                 |
-| `target_operation: "modify"`                           | normalized to `"write"` (datasheet "modify" = write; `modify()` derived as read ∪ write) |
-| `severity: "info"`                                     | `"warning"`                                                                 |
-| unparseable `required_state` (`"unlocked"`, `"written"`, `"equals:X then Y"` …) | reject with reason → re-prompt round (most are `sequence`/`other` in v2) |
+The complete normative grammar specification now lives in its own document:
+**[`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md)**
+(the eight kinds with per-kind examples, the shared envelope, computed
+enforceability, the collection repair-vs-reject rules, the decision tree, and
+the v1→v2 lift). It was formerly inlined here; it was moved out so the grammar
+has a single source of truth.
 
 ---
 
@@ -829,7 +575,7 @@ Codegen records `enforced_as` (same enum) per constraint in `manifest.json`, mak
 
 *(Record departures from this plan here as they happen, per project convention.)*
 
-- 2026-07-24 (target_operation restricted to {read, write, any}, `modify` dropped — Ramla's call): a datasheet constrains the two bus operations (read, write); svd2rust's `modify()` is a software read-modify-write, and offering "modify" as a *target* invited a category error — datasheet prose "modify/modified/change a register" means *writing* it, so nearly all corpus `modify` rows were mislabeled writes (the 2026-07-17 corruption entry already saw this: LPTIM_CMP "restored the manual's word 'modified'"). Now: `StateGate.target_operation: Literal["read","write","any"]` with a before-validator coercing legacy `"modify"`→`"write"`; the v1 lift maps `"modify"`→write and `"any"`→read+write; collection expands `"any"` to read+write. In the emitter, `modify()` gating is **derived** as the read ∪ write union — a write target feeds {write, modify}, a read target feeds {read, modify}. This also **closes a soundness gap**: a read-constrained register's `modify()` (whose RMW performs the constrained read) was previously ungated. It grounds the separate modify witness on real semantics (a modify's obligations are a superset of a write's exactly when a read constraint exists) rather than the extraction artifact it was. Swept `defs.py`, `collect_constraints.py`, `rust_codegen.py`, the generator + validator-judge prompts, both grammar docs (`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`, Appendix B here), the paper draft (read/write table + caption), and the affected tests; refreshed the `spi1_txcrcr` read-gate golden (now carries the derived modify gate). 198 Python + 6 PAC compile/golden tests green (`LIDAR_REQUIRE_PAC_TESTS=1`). `action_operation ∈ {write, modify}` is unchanged — a different axis (the method used to *establish* a software precondition), where "modify" stays meaningful.
+- 2026-07-24 (target_operation restricted to {read, write, any}, `modify` dropped — Ramla's call): a datasheet constrains the two bus operations (read, write); svd2rust's `modify()` is a software read-modify-write, and offering "modify" as a *target* invited a category error — datasheet prose "modify/modified/change a register" means *writing* it, so nearly all corpus `modify` rows were mislabeled writes (the 2026-07-17 corruption entry already saw this: LPTIM_CMP "restored the manual's word 'modified'"). Now: `StateGate.target_operation: Literal["read","write","any"]` with a before-validator coercing legacy `"modify"`→`"write"`; the v1 lift maps `"modify"`→write and `"any"`→read+write; collection expands `"any"` to read+write. In the emitter, `modify()` gating is **derived** as the read ∪ write union — a write target feeds {write, modify}, a read target feeds {read, modify}. This also **closes a soundness gap**: a read-constrained register's `modify()` (whose RMW performs the constrained read) was previously ungated. It grounds the separate modify witness on real semantics (a modify's obligations are a superset of a write's exactly when a read constraint exists) rather than the extraction artifact it was. Swept `defs.py`, `collect_constraints.py`, `rust_codegen.py`, the generator + validator-judge prompts, the grammar doc (`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`), the paper draft (read/write table + caption), and the affected tests; refreshed the `spi1_txcrcr` read-gate golden (now carries the derived modify gate). 198 Python + 6 PAC compile/golden tests green (`LIDAR_REQUIRE_PAC_TESTS=1`). `action_operation ∈ {write, modify}` is unchanged — a different axis (the method used to *establish* a software precondition), where "modify" stays meaningful.
 - 2026-07-23 (field-level gating: whole-register write bypass — Ramla's catch + call): the field gate covers `modify` and the field accessor but NOT the whole-register `write`/`reset`, which compose the register from a base value and so write the gated field unchecked. Ramla's call: warn, don't hard-gate (gating `write` would reintroduce the over-restriction). Attempted a per-call compile warning (withhold `UnconstrainedWrite` + concrete `#[deprecated] write`); it fails with **E0592** — Rust's inherent-method coherence treats the concrete `write` as a duplicate of the generic one despite the unsatisfiable `UnconstrainedWrite` bound, and there is no other per-call warning mechanism. Landed Option 2: leave `write` open, flag the gap two ways — a **generation-time** warning (`patch_field_accessors`) and a **caveat in the register's own type-alias doc** (`inject_constraints_module`, so it surfaces in rustdoc/IDE where the generic `write` can't be annotated per-register) — document it as an acknowledged bypass in §12, and pin it with a compile test (warning fires; register-doc caveat present; whole-register write compiles). No change to the default (whole-register) path, which gates write+modify together and has no such gap.
 - 2026-07-22 (field-level gating built, opt-in — Ramla): F-1–F-4 implemented behind a **default-off** flag (`--field-level-gating` on `rust_codegen.py`/`inject_from_run.py`, `RegisterPlan(field_level_gating=...)`), so the current codegen is retained exactly when disabled (Ramla's requirement, in case per-field accessor patching breaks a PAC). Design (a) chosen over the plan's recommended (b): the field writer accessor gains a witness parameter (`w.start(&wit)`), so an unwitnessed field write fails with **E0061** (not a custom E0277). Compile-verified end-to-end on stm32f4: witnessed path + sibling-field write compile, unwitnessed `w.start()` rejected, PAC restored byte-for-byte (`test_field_level_gating_compiles_and_enforces`, fixture `stm32f405_i2c1_start_field.json`). §12 rewritten to "built, opt-in"; 112 codegen+core tests green. Deferred: field-scoped reads, custom diagnostic, field-scoped postconditions.
 - 2026-07-22 (field-scoped constraints skipped, Ramla's rule): the emitter now **skips** any constraint with non-empty `target_fields` and prints a warning (`RegisterPlan.__init__`), rather than enforcing it at whole-register granularity. Reason: whole-register gating of a field-scoped constraint is sound but over-restrictive — it demands the precondition for writes to unrelated fields of the register, and for a software-established precondition can force incorrect setup of this or another register (Ramla's catch). New §12 "Field-level gating (planned)" documents the mechanism (per-field writer accessors — the PAC *does* expose them, correcting an earlier claim), the API choices, and the steps. Corpus impact measured: **46.4% (1,929/4,160) of constraints are field-scoped** and now forgone until field-level gating lands — the highest-value remaining codegen item. Golden fixtures are all whole-register (unaffected); the two `experiments/fixtures` cross-PAC fixtures are purely field-scoped and now emit nothing (their prior cross-PAC "enforcement" was the over-gating this removes). Pinned by `test_field_scoped_constraint_skipped_with_warning`.
@@ -838,7 +584,7 @@ Codegen records `enforced_as` (same enum) per constraint in `manifest.json`, mak
 - 2026-07-17 (target location, Ramla's second rule): the location-unverified triage queue is resolved by two search refinements Ramla specified — SVD dim-template names carry a literal `%s` the manual never prints (`alrm%sr` stands for ALRMAR/ALRMBR), so the placeholder is **deleted before searching**; and the search allows **one edit** of difference, which absorbs whatever character the manual printed in the slot AND the manual's own family placeholders (`cpar4` under `DMA_CPARx`, gpioa's `idr` under `GPIOx_IDR`). Guard rails: tolerance only for names ≥ 5 chars (no drifting into prose: `calr` ≠ "call"); exact match stays primary. Measured on the 4,160-row corpus: location-unverified 17.8% → **5.1%** (673 → 194 rows, 479 recovered, zero lost); gate purpose intact — 96% of 468 deliberate retargets still rejected vs 97% with tolerance off (3 escapes bought 479 recoveries). F1 e2e stable at 19 registers, artifact byte-identical. Residue: quotes anchored in functional-description prose, CAN `f0r1`-vs-`CAN_FiRx` (two edits), doubled prefixes (`cec_cec_cr`).
 - 2026-07-17 (target verification, Ramla's rule): a self-referential quote ("This register …") cannot verify its target textually, so the anchor LOCATION vouches — matched page (or ±2 neighbors: section headers precede continuation notes, register maps follow) must mention the target, with two measured refinements: family-placeholder names count as naming (AFIO_EXTICRX names EXTICR1–4) and manual-prose name forms are searched (run-file `dma_dmardlar` = manual `ETH_DMARDLAR` — the tail-segment candidates cut corpus location-unverified from 27.9% to 15.1% of anchored rows; widening the page window alone recovered <1%). The injection gate rejects self-referential+unlocated (`target_unverified_by_location`); the calibration's three retarget misses are pinned regressions; residual 15.1% = %s-placeholder names + USART/UART-style family aliases (triage queue).
 - 2026-07-17 (step F): prompt v2 landed with an eval-driven loop — the 11-register golden eval exposed three prompt weaknesses in run 1 (enables emitted as a step; per-bit quote concatenation; ellipsis-stitched quotes), each fixed with one sentence and re-run. Final: parse 11/11, kinds 7/7 (incl. a correctly recognized RTC_WPR `sequence`), negatives 4/4 (w1c and access-width emit nothing), quote-anchor 9/10, `established_by` 7/10 (all three misses footnoted: RM0008's own RTC_CR-vs-SVD-CRL naming ×2, one ambiguous golden label — no systematic hardware/software confusion). Native-v2 wire format: `access_constraints` stays empty + `access_constraints_v2` + `schema_version: 2`; collection gains a native path (per-constraint pydantic recovery, dedup, full SVD lint, `constraint_source` in the manifest). Context cap for the eval raised 8k→12k chars (the RTC_WPR unlock page fell outside 8k). Cost: ~$0.017/run. **GO for full re-extraction** — pending Ramla's spend decision; follow-ups queued: B.4 one-round re-prompt for unresolvable_in_svd, field-level repair for unresolvable target_fields.
-- 2026-07-16 (grammar naming): the v2 condition key `evidence` is renamed **`established_by`** (Ramla) — it states the extracted world-fact (who brings the state about) instead of the enforcement mechanism it feeds; values unchanged. v1's `evidence_kind` wire-format key is historical and stays; the lift maps it. Swept through defs.py, collection, tests, grammar doc, Appendix B, and the paper draft.
+- 2026-07-16 (grammar naming): the v2 condition key `evidence` is renamed **`established_by`** (Ramla) — it states the extracted world-fact (who brings the state about) instead of the enforcement mechanism it feeds; values unchanged. v1's `evidence_kind` wire-format key is historical and stays; the lift maps it. Swept through defs.py, collection, tests, the grammar doc, and the paper draft.
 - 2026-07-16 (step J, first half — the HAL demo): `eval_hal/` compiles the UNMODIFIED stm32f4xx-hal 0.23.0 (the crates.io release built against stm32f4 0.16.0) under `[patch.crates-io]` against the injected PAC; pinned as `test_hal_demo`. Result: (1) **true enforcement — 14/14**: every place the HAL touches I2C CR1 (8 in `i2c.rs`, 6 in `i2c/dma.rs`) fails with the datasheet diagnostic, zero false hits anywhere else in ~30k lines; baseline (pristine PAC) compiles clean, so adoption costs nothing where nothing is constrained. (2) **§3's "churn edge" is bigger than predicted**: the plan called generic-over-registers driver code "rare — HAL register code is macro-generated and monomorphic," but stm32f4xx-hal 0.23 moved its serial layer to trait generics (`UartRB` associated register types), and generic definitions calling read/write/modify fail to type-check without the marker bounds — 14 errors across `serial.rs`/`serial/uart_impls.rs` even though no UART register is constrained. Quantified adoption cost: ~10 mechanical one-line where-clause additions in one module. This is inherent to conditional method availability (no post-monomorphization errors in Rust); the honest paper claim splits the two numbers: monomorphic driver code = perfect precision, trait-generic driver code = small quantified patch. Second half of J (the fork + regenerate.sh + publishing) remains.
 - 2026-07-15 (step E): stage-0 lint complete; published stats live in `docs/constraints_corpus_stats.md` (not `optimization/test_outputs/` — a citable, committed snapshot beats a git-ignored one). Key dispositions: within-register exact dedup drops 91 (2.0%); cross-INSTANCE duplication (589) is flagged, not dropped — per-instance rows are what codegen injects, so the plan's "−36% dedup" mass is deliberately retained; post-dedup 4,362 unique → 2,857 v2 state_gates (2,243 witnessed_runtime_check / 614 compile_gate) + 35.6% whole-constraint rejects, dominated by SVD-unresolvable names under the one-SVD-per-RM projection (~307 of those are single-device coverage misses, 28.5% reject rate with all SVDs; per-device projection is arguably correct — a constraint is enforceable only for registers the device has). New reject classes verified genuine by spot-check: RTC_WPR 0xCA53 vs 8-bit field (width), FLASH_SR.BSY writes (read-only target), USART_SR.TC (w1c postconditions), 8 self-defeating read gates. **`%s` root cause documented, NOT fixed** (stats doc §"%s root cause"): SVD `<dim>` templates — not derivedFrom as §5.1 guessed — flow through `agent_tools/svd_parsing.py:70-77` → `core/s1a_generator.py` worklist → filenames; the coverage comparator keys the SVD side by the SAME templates, so a worklist-only fix would desync the live coverage loop and is unverifiable offline — three-call-site fix proposal recorded for a live-run session. Step C note: the IR refactor's motivation (PR-15's 40% duplication) was discarded with PR 15; the fresh emitter is ~700 lines with a Plan/emit split — C reduced to "extract a naming module if step I bloats it."
 - 2026-07-15 (step H): cross-register witnesses landed as inherent check methods taking the SOURCE register(s) as `&Reg<SRCrs>` parameters (`check_write_ready(&self, cr: &Reg<CRrs>)`), same-peripheral (`super::<reg>::`) and cross-peripheral (`super::super::<periph>::<reg>::`) resolved from the datasheet's `<PERIPHERAL>_<REGISTER>` prefix vs the target peripheral's instance-stripped base. Fixtures are verbatim generator corpus output: SPI_TXCRCR read-gate ⇐ SPI_SR.BSY (rm0008) and RCC_SSCGR ⇐ RCC_CR.PLLON (rm0368); cross-peripheral verified by a synthetic RTC_DR ⇐ PWR_CR.DBP compile probe (real corpus RTC constraints bundle the WPR key sequence, which is step I/sequence material). Read gating consequence handled: the peripheral RegisterBlock's `#[derive(Debug)]` is stripped when a read gate is present (debug-printing performs a read) — documented API divergence. Marker walk now keys (peripheral, spec, op) so same-named specs elsewhere keep their markers; injection accepts multiple constraint inputs in one shot. Compile-fail table grew to 11 rows (witness-less read of read-gated register; witness-less cross-register write).
