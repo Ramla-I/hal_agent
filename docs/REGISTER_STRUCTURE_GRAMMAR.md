@@ -59,10 +59,8 @@ One register is one `RegisterInfo` object:
     }
   ],
 
-  // --- constraint payload + envelope (specified elsewhere) ---
-  "access_constraints":    [],                     // legacy v1 list; always [] in v2
-  "access_constraints_v2": [ /* grammar-v2 objects */ ],
-  "schema_version":        2                        // 1 = v1 wire format, 2 = v2-native
+  // --- constraint payload (grammar v2; specified elsewhere) ---
+  "access_constraints_v2": [ /* grammar-v2 objects */ ]
 }
 ```
 
@@ -79,9 +77,7 @@ One register is one `RegisterInfo` object:
 | `reset_value` | string | The register's value immediately after reset, typically a hex string (`"0x0000"`). |
 | `size` | integer | Register width in **bits** (commonly `8`, `16`, or `32`). |
 | `subfields` | list of `BitField` | The named bit-fields inside the register. May be empty for a register the datasheet does not decompose. |
-| `access_constraints` | list | Legacy grammar-v1 constraints. **Always exactly `[]`** in the v2 world; v1-era run files may still populate it and are lifted at collection time. |
-| `access_constraints_v2` | list of constraint objects | The access/ordering constraints (grammar v2) — an opaque payload here; see [`register_constraints_plan.md`](register_constraints_plan.md). Empty when the datasheet states no access requirement. |
-| `schema_version` | integer (default `1`) | Wire-format version of the constraint payload: `1` for legacy run files, `2` for the v2-native generator. Structure fields are identical across both. |
+| `access_constraints_v2` | list of constraint objects | The access/ordering constraints (grammar v2) — an opaque payload here; see [`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md). Empty (the default) when the datasheet states no access requirement. |
 
 > The prompt instructs the model to emit `null` for `address_offset`,
 > `reset_value`, or `size` when the datasheet does not state them, so consumers
@@ -134,8 +130,8 @@ A multi-bit field spans the inclusive range, e.g. bits 15..12 → `{ "start_bit"
   invent one.
 - **`enumerated_values` is optional** and defaults to `[]`; most fields have
   none.
-- **`access_constraints` is always `[]`** in the current pipeline; all access
-  rules live in `access_constraints_v2`.
+- **`access_constraints_v2` defaults to `[]`** — a register with no stated
+  access/ordering rule.
 
 ---
 
@@ -161,9 +157,7 @@ whose bit 9 (`STOP`) requests a stop condition:
         { "value": "0", "name": "NoStop" },
         { "value": "1", "name": "Stop" } ] }
   ],
-  "access_constraints": [],
-  "access_constraints_v2": [ /* the STOP/START/PEC write gate, grammar v2 */ ],
-  "schema_version": 2
+  "access_constraints_v2": [ /* the STOP/START/PEC write gate, grammar v2 */ ]
 }
 ```
 
@@ -203,6 +197,6 @@ around `RegisterInfo`:
 | `SectionInfo` | Where a peripheral's section lives in the datasheet — `peripheral_name`, `section_name`, `start_page`, `end_page`, and whether it exists — used to scope context retrieval. |
 
 For the constraint half of the same JSON object, see
-[`register_constraints_plan.md`](register_constraints_plan.md) (grammar v2 spec)
-and [`SVD2RUST_PAC_GUIDE.md`](SVD2RUST_PAC_GUIDE.md) (how constraints become
-compile-time enforcement).
+[`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md)
+(grammar v2 spec) and [`SVD2RUST_PAC_GUIDE.md`](SVD2RUST_PAC_GUIDE.md) (how
+constraints become compile-time enforcement).

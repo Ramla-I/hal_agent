@@ -95,9 +95,6 @@ establishes a state — codegen cannot infer it):
   precondition and is distinct from `target_operation` (the constrained
   surface), where `"modify"` is not a value.
 
-The `RegisterInfo` envelope carries `schema_version` (defaults to 1; existing
-run files have no version field and are grammar v1).
-
 ## The eight kinds
 
 ### `state_gate` — the workhorse (~all of today's true positives)

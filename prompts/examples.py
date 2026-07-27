@@ -88,8 +88,7 @@ stm_datasheet_example = """
                 ]
             }
         ],
-        "access_constraints_v2": [],
-        "schema_version": 2
+        "access_constraints_v2": []
     }
     ```
 
@@ -272,8 +271,7 @@ stm_datasheet_example = """
                 "consequence": "Risk of setting a second STOP, START or PEC request",
                 "datasheet_text": "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
             }
-        ],
-        "schema_version": 2
+        ]
     }
     ```
 """
@@ -506,8 +504,7 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints_v2": [],
-            "schema_version": 2
+            "access_constraints_v2": []
         },
         {
             "register_name": "BKP_DR2",
@@ -526,8 +523,7 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints_v2": [],
-            "schema_version": 2
+            "access_constraints_v2": []
         },
         {
             "register_name": "BKP_CR",
@@ -546,8 +542,7 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints_v2": [],
-            "schema_version": 2
+            "access_constraints_v2": []
         },
         {
             "register_name": "BKP_CSR",
@@ -602,8 +597,7 @@ stm_datasheet_batched_example = """
                     }
                 }
             ],
-            "access_constraints_v2": [],
-            "schema_version": 2
+            "access_constraints_v2": []
         },
         {
             "register_name": "BKP_DR35",
@@ -612,8 +606,7 @@ stm_datasheet_batched_example = """
             "reset_value": null,
             "size": null,
             "subfields": null,
-            "access_constraints_v2": null,
-            "schema_version": 2
+            "access_constraints_v2": null
         }
     ]
     ```
@@ -740,8 +733,7 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints_v2": [],
-            "schema_version": 2
+            "access_constraints_v2": []
         },
         {
             "register_name": "BKP_DR2",
@@ -760,8 +752,7 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints_v2": [],
-            "schema_version": 2
+            "access_constraints_v2": []
         },
         {
             "register_name": "BKP_CR",
@@ -780,8 +771,7 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints_v2": [],
-            "schema_version": 2
+            "access_constraints_v2": []
         },
         {
             "register_name": "BKP_CSR",
@@ -836,8 +826,7 @@ stm_datasheet_batched_example_no_reasoning = """
                     }
                 }
             ],
-            "access_constraints_v2": [],
-            "schema_version": 2
+            "access_constraints_v2": []
         },
         {
             "register_name": "BKP_DR35",
@@ -846,8 +835,7 @@ stm_datasheet_batched_example_no_reasoning = """
             "reset_value": null,
             "size": null,
             "subfields": null,
-            "access_constraints_v2": null,
-            "schema_version": 2
+            "access_constraints_v2": null
         }
     ]
     ```

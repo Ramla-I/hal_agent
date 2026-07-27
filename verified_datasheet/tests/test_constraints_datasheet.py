@@ -51,7 +51,7 @@ def write_reg(rundir, filename, constraints):
     os.makedirs(rundir, exist_ok=True)
     with open(os.path.join(rundir, filename), "w", encoding="utf-8") as f:
         json.dump({"datasheet_register_abbreviation": filename.upper(),
-                   "access_constraints_v2": constraints, "schema_version": 2}, f)
+                   "access_constraints_v2": constraints}, f)
 
 
 @pytest.fixture

@@ -20,7 +20,6 @@ from prompts.examples import stm_datasheet_example, stm_access_constraints_v2_ex
 # ---------------------------------------------------------------------------
 
 ACCESS_CONSTRAINTS_V2_SCHEMA = """\
-    - `schema_version`: The constraint grammar version. Always the integer 2.
     - `access_constraints_v2`: A list of access-constraint objects; empty if the datasheet states no access or ordering requirement for the register. Every object carries this shared envelope:
         - `kind`: Which constraint schema the object uses: "state_gate", "sequence", "write_once", "delay", "read_effect", "clock_gate", "value_relation", or "other". A string.
         - `severity`: "error" (a violation corrupts state or the operation is ignored) or "warning" (degraded or unreliable behavior). A string.
@@ -368,12 +367,12 @@ def create_register_info_stm_system_prompt_batched_minimal(
     [
       {{"register_name": "BKP_DR1", "datasheet_register_abbreviation": "BKP_DR1", "address_offset": "0x04", "reset_value": "0x00000000", "size": 16,
         "subfields": [{{"name": "D", "description": "Backup data", "access": "read-write", "bit_number": {{"start_bit": 0, "end_bit": 15}}, "enumerated_values": []}}],
-        "access_constraints_v2": [], "schema_version": 2}},
+        "access_constraints_v2": []}},
       {{"register_name": "BKP_CR", "datasheet_register_abbreviation": "BKP_CR", "address_offset": "0x30", "reset_value": "0x00000000", "size": 16,
         "subfields": [{{"name": "TPE", "description": "TAMPER pin enable", "access": "read-write", "bit_number": {{"start_bit": 0, "end_bit": 0}},
           "enumerated_values": [{{"value": "0", "name": "FreeForGPIO"}}, {{"value": "1", "name": "TamperEnabled"}}]}}],
-        "access_constraints_v2": [], "schema_version": 2}},
-      {{"register_name": "BKP_DR35", "datasheet_register_abbreviation": null, "address_offset": null, "reset_value": null, "size": null, "subfields": null, "access_constraints_v2": null, "schema_version": 2}}
+        "access_constraints_v2": []}},
+      {{"register_name": "BKP_DR35", "datasheet_register_abbreviation": null, "address_offset": null, "reset_value": null, "size": null, "subfields": null, "access_constraints_v2": null}}
     ]
     ```
     """
@@ -404,7 +403,7 @@ def create_register_constraints_v2_system_prompt() -> str:
     Always follow this format:
     <reasoning>
     ```json
-    {{"register_name": "<PERIPHERAL_REGISTER>", "schema_version": 2, "access_constraints_v2": [...]}}
+    {{"register_name": "<PERIPHERAL_REGISTER>", "access_constraints_v2": [...]}}
     ```
 
     The JSON object should contain the following fields:

@@ -55,12 +55,12 @@ On top of the lift, collection now runs the deterministic stage-0 lint:
   heuristics + SVD peripheral attribution) -> flag ``cross_peripheral``
   (NOT a reject; step H emits cross-peripheral paths).
 
-Each per-register output JSON keeps the v1 ``access_constraints`` key untouched
-(codegen still consumes v1 until roadmap step B/H) and gains:
+Each per-register output JSON carries (the codegen consumes these directly):
 
-- ``access_constraints_v2``: the lifted v2 constraints, each annotated with its
-  computed ``enforceability`` (defs.derive_enforceability -- never LLM-emitted);
-- ``constraint_reports``: per-v1-constraint repair/reject/lint details.
+- ``access_constraints_v2``: the accepted, linted v2 constraints, each annotated
+  with its computed ``enforceability`` (defs.derive_enforceability -- never
+  LLM-emitted);
+- ``constraint_reports``: per-constraint repair/reject/lint details.
 
 A ``manifest.json`` is written next to the per-register files with per-register
 and per-constraint entries (kind, enforceability, repairs, rejects, lint flags,
@@ -78,8 +78,8 @@ corpus runs work without them.
 
 GRAMMAR-V2 REGISTERS
 --------------------
-The generator emits grammar v2 directly: a register file carries
-``"access_constraints_v2": [...]`` and ``"schema_version": 2``. Collection runs
+The generator emits grammar v2 directly: a register file carries an
+``"access_constraints_v2"`` list. Collection runs
 the stage-0 lint directly on those objects: per-constraint pydantic validation
 (a malformed entry is rejected with reason ``invalid_v2_constraint``; siblings
 survive), exact dedup, %s-placeholder rejects, target_register normalization,

@@ -51,7 +51,6 @@ def _register_json(abbrev, constraints, subfields=()):
         "size": 32,
         "subfields": list(subfields),
         "access_constraints_v2": constraints,
-        "schema_version": 2,
     }
 
 

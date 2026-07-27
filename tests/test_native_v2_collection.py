@@ -1,14 +1,10 @@
 """
 Native grammar-v2 collection tests (roadmap step F).
 
-The v2 prompt makes the generator emit grammar v2 directly; a register file
-then carries ``"access_constraints": []`` (v1 key, empty),
-``"access_constraints_v2": [...]`` and ``"schema_version": 2``. Collection
-must detect this, SKIP the v1 lift, and run the applicable stage-0 lint
-directly on the native objects. Covers:
+The generator emits grammar v2 directly; a register file carries an
+``"access_constraints_v2"`` list. Collection runs the stage-0 lint directly on
+the native objects. Covers:
 
-- native detection via schema_version == 2 AND via a non-empty
-  access_constraints_v2 list;
 - per-constraint pydantic validation: a malformed entry is rejected with
   reason ``invalid_v2_constraint`` while well-formed siblings survive
   (plan section 6.1d per-constraint recovery);
@@ -39,8 +35,8 @@ from applications.pac_codegen.collect_constraints import collect_constraints
 # helpers
 # ---------------------------------------------------------------------------
 
-def _register_json_v2(abbrev, constraints_v2, subfields=(), schema_version=2):
-    data = {
+def _register_json_v2(abbrev, constraints_v2, subfields=()):
+    return {
         "datasheet_register_abbreviation": abbrev,
         "address_offset": "0x00",
         "reset_value": "0x0000",
@@ -48,9 +44,6 @@ def _register_json_v2(abbrev, constraints_v2, subfields=(), schema_version=2):
         "subfields": list(subfields),
         "access_constraints_v2": list(constraints_v2),
     }
-    if schema_version is not None:
-        data["schema_version"] = schema_version
-    return data
 
 
 def _state_gate(target, op="write", pre=(), post=(), fields=(),
@@ -182,7 +175,6 @@ def test_native_v2_basic(run_dir, tmp_path):
 
     data = json.loads((out_dir / "usart1_brr.json").read_text())
     assert "access_constraints" not in data              # v1 key retired
-    assert data["schema_version"] == 2
     (v2,) = data["access_constraints_v2"]
     assert v2["kind"] == "state_gate"
     # All-software preconditions -> pure action-witness ordering.
@@ -199,18 +191,6 @@ def test_native_v2_basic(run_dir, tmp_path):
     assert summary["constraint_sources"] == {"native_v2": 1}
     assert summary["constraints_native_v2"] == 1
     assert summary["kind_counts"] == {"state_gate": 1}
-
-
-def test_native_detected_by_nonempty_v2_without_schema_version(run_dir, tmp_path):
-    # schema_version missing entirely: a non-empty v2 list is enough.
-    (run_dir / "usart1_brr").write_text(json.dumps(_register_json_v2(
-        "USART_BRR", [_state_gate("USART_BRR", pre=[SW_UE_CLEARED])],
-        schema_version=None,
-    )))
-    out_dir = tmp_path / "out"
-    (r,) = collect_constraints(str(run_dir), output_dir=str(out_dir))
-    assert r["constraint_source"] == "native_v2"
-    assert r["num_constraints_v2"] == 1
 
 
 # ---------------------------------------------------------------------------

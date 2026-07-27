@@ -111,8 +111,6 @@ class RegisterInfo(BaseModel):
     # Old grammar-v1 generator output is converted first with
     # applications/pac_codegen/convert_v1_to_v2.py.
     access_constraints_v2: list["ConstraintV2"] = []
-    # Grammar version of the constraint wire format; the v2 generator stamps 2.
-    schema_version: int = 2
 
 class RegisterList(BaseModel):
     registers: list[RegisterInfo]

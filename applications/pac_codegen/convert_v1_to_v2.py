@@ -6,8 +6,8 @@ retired v1 access-constraint grammar: point it at an old generator run
 directory (one JSON file per ``{peripheral}_{register}`` whose constraints live
 in the v1 ``access_constraints`` list) and it writes a parallel directory whose
 register files carry ``access_constraints_v2`` instead (``access_constraints``
-dropped, ``schema_version: 2``). Everything else (``info/`` subdir, non-register
-files) is copied through unchanged.
+dropped). Everything else (``info/`` subdir, non-register files) is copied
+through unchanged.
 
 The v1 models (``FieldState``/``RegisterAccessConstraint``) and the mechanical
 B.6 lift live HERE, nowhere else -- ``defs.py`` and the rest of the pipeline are
@@ -19,8 +19,8 @@ Usage:
     python applications/pac_codegen/convert_v1_to_v2.py OLD_RUN_DIR OUT_DIR
     python applications/pac_codegen/convert_v1_to_v2.py OLD_RUN_DIR --in-place
 
-A file already in v2 form (``schema_version == 2`` or a non-empty
-``access_constraints_v2``) is copied through untouched, so re-running is safe.
+A file already in v2 form (it already has an ``access_constraints_v2`` key)
+is copied through untouched, so re-running is safe.
 """
 from __future__ import annotations
 
@@ -283,8 +283,8 @@ def _is_v1_register_file(data: object) -> bool:
     too, so the whole run dir ends up uniformly v2), and is NOT already v2."""
     if not isinstance(data, dict):
         return False
-    if data.get("schema_version") == 2 or data.get("access_constraints_v2"):
-        return False  # already v2
+    if "access_constraints_v2" in data:
+        return False  # already v2 (the v2 key is present, even if empty)
     return ("access_constraints" in data
             and "datasheet_register_abbreviation" in data)
 
@@ -292,8 +292,8 @@ def _is_v1_register_file(data: object) -> bool:
 def convert_register(data: dict) -> tuple[dict, list[str]]:
     """Lift one register's v1 constraints to v2. Returns (new_data, reports).
 
-    ``new_data`` has ``access_constraints`` dropped, ``access_constraints_v2``
-    populated, ``schema_version: 2``. ``reports`` lists any per-constraint
+    ``new_data`` has ``access_constraints`` dropped and ``access_constraints_v2``
+    populated. ``reports`` lists any per-constraint
     rejects/repairs (empty when the lift was clean).
     """
     ri = V1RegisterInfo(**data)
@@ -308,7 +308,6 @@ def convert_register(data: dict) -> tuple[dict, list[str]]:
             reports.append(f"constraint[{i}] repair: {rep}")
     out = {k: v for k, v in data.items() if k != "access_constraints"}
     out["access_constraints_v2"] = gates
-    out["schema_version"] = 2
     return out, reports
 
 
@@ -331,8 +330,7 @@ def convert_dir(in_dir: Path, out_dir: Path) -> dict:
             continue
         if not _is_v1_register_file(data):
             shutil.copy2(src, dst)
-            if isinstance(data, dict) and (
-                    data.get("schema_version") == 2 or data.get("access_constraints_v2")):
+            if isinstance(data, dict) and "access_constraints_v2" in data:
                 summary["already_v2"] += 1
             else:
                 summary["copied"] += 1

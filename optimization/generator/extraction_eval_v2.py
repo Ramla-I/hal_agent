@@ -28,8 +28,8 @@ Per register it scores:
     (exact/fuzzy, RMMatcher machinery).
 
 It then writes each register's output as a run-dir-style JSON (the native-v2
-wire format: access_constraints [] + access_constraints_v2 + schema_version 2)
-and runs applications/pac_codegen/collect_constraints.py over it per RM
+wire format: an access_constraints_v2 list) and runs
+applications/pac_codegen/collect_constraints.py over it per RM
 (native-v2 path, with that RM's alphabetically-first SVD when available),
 reporting the manifest counts.
 
@@ -91,8 +91,7 @@ CONTEXT_CAP = 12000
 REPAIR_PROMPT = (
     "Your previous reply did not contain a single valid JSON object with an "
     '"access_constraints_v2" list. Respond again with ONLY the JSON object: '
-    '{"register_name": ..., "schema_version": 2, '
-    '"access_constraints_v2": [...]}'
+    '{"register_name": ..., "access_constraints_v2": [...]}'
 )
 
 
@@ -340,7 +339,7 @@ def score_case(case: dict, model_result: dict, matcher: RMMatcher) -> dict:
         "expect_zero": case["expect_zero"],
         "zero_ok": (len(raw_constraints) == 0) if case["expect_zero"] else None,
         "anchors": anchors,
-        "wire_format_ok": bool(obj) and obj.get("schema_version") == 2
+        "wire_format_ok": bool(obj) and "access_constraints_v2" in obj
         and "access_constraints" not in obj,
         "usage": model_result["usage"],
     }
@@ -364,7 +363,6 @@ def write_run_dir_file(run_dir: Path, case: dict, model_result: dict) -> Path:
         "size": 32,
         "subfields": [],
         "access_constraints_v2": obj.get("access_constraints_v2") or [],
-        "schema_version": 2,
     }
     run_dir.mkdir(parents=True, exist_ok=True)
     out = run_dir / case["file"]
