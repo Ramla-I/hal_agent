@@ -49,9 +49,9 @@ hal_agent/
 │   └── output_*/              # Evolution outputs (best programs, checkpoints, logs)
 ├── core/quote_anchor.py        # ENFORCEMENT ARM — the constraint validator:
 │   core/constraint_validator.py #   deterministic quote anchoring + target-location
-│                               #   gate + closed-book gpt-oss judge (plan §7). The
-│                               #   tuning harness + verified-constraints datasheet
-│                               #   ship in a follow-up (branch constraint_validator_tuning)
+│                               #   gate + closed-book gpt-oss judge (plan §7)
+├── tune_constraint_validator/  # tuning harness for that judge (corruption +
+│                               #   calibration); imports core/, never the reverse
 └── applications/pac_codegen/   # ENFORCEMENT ARM — turn access constraints into
                                 #   witness-gated PAC crates (rust_codegen.py emitter,
                                 #   inject_from_run.py driver, compile tests,
@@ -79,11 +79,10 @@ specified in **`docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`**. Key pieces:
   parses the retired v1 access-constraint grammar.
 - **Constraint Validator** (`core/quote_anchor.py` + `core/constraint_validator.py`):
   deterministic quote anchoring + target-location gate, then a closed-book
-  gpt-oss judge, wired into `core/s0` (`--constraint-validation`) and
-  `inject_from_run.py` (`--chunks`). Its corruption/calibration tuning harness
-  and the verified-constraints datasheet (`verified_datasheet/constraints/`) ship
-  in a follow-up PR (branch `constraint_validator_tuning`), keeping this PR
-  focused on the enforcement mechanism.
+  gpt-oss judge. Its corruption/calibration tuning harness lives in
+  `tune_constraint_validator/` (imports the validator, never the reverse —
+  the same product/tuning split as `core/s4_validator.py` ↔ `optimization_validator/`).
+  Verified ground truth accumulates in `verified_datasheet/constraints/stm.csv`.
 - **Codegen** (`applications/pac_codegen/rust_codegen.py`): whole-register
   gating via marker traits in `generic.rs`; **field-level gating is opt-in**
   (`--field-level-gating`, default off). `inject_from_run.py` is the
