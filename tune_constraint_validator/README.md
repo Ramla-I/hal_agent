@@ -1,32 +1,43 @@
-# constraint_validator
+# tune_constraint_validator
 
-The Constraint Validator's package (roadmap step G, plan §7): the
-deterministic quote-anchoring leg (§7.1), the LLM judge (§7.0 stage 1), and
-the corruption-calibration harness (§7.2).
+The **tuning half** of the Constraint Validator (roadmap step G, plan §7).
+
+The validator *itself* lives in `core/`:
+
+- `core/quote_anchor.py` — the deterministic quote-anchoring leg (§7.1),
+- `core/constraint_validator.py` — the closed-book LLM judge (§7.0 stage 1).
+
+This package holds only the **calibration harness** (§7.2) that measures that
+judge — the corruption generator (`corruption.py`) and the scorecard
+(`calibrate.py`). It imports the product, never the reverse, mirroring how
+`optimization_validator/` tunes `core/s4_validator.py`. The full validation
+workflow (anchor → judge → corrupt → calibrate) is documented end to end below
+because calibration drives all four stages.
 
 Every extracted constraint carries its own cited evidence
 (`datasheet_text`), so verification decomposes (§7.1):
 
-1. **Quote authenticity is deterministic** — `quote_anchor.py`. No LLM is
+1. **Quote authenticity is deterministic** — `core/quote_anchor.py`. No LLM is
    spent on a quote that cannot be grounded.
 2. **Context is derived, never generated** — for anchored quotes the
    surrounding paragraphs are pulled programmatically from the chunked
    markdown. This is the judge's input; it is trusted by construction and
    closes the selective-quoting blind spot.
 3. **Encoding fidelity** is then a closed, local task for the judge
-   (`judge.py`). **No semantic retrieval in the judging path.**
+   (`core/constraint_validator.py`). **No semantic retrieval in the judging
+   path.**
 
 Terminology (plan §3): the LLM **validates**; runtime Rust **checks**; the
 compiler **enforces**.
 
-## quote_anchor.py
+## core/quote_anchor.py
 
 ```bash
 source .venv/bin/activate
-python3 constraint_validator/quote_anchor.py \
+python3 core/quote_anchor.py \
     --csv verified_datasheet/constraints/stm.csv \
     --chunks /home/ramla/hal_agent-phase-1d/chunked_datasheets/stm \
-    --out constraint_validator/out/anchors.jsonl \
+    --out tune_constraint_validator/out/anchors.jsonl \
     [--rm rm0008]
 ```
 
@@ -72,10 +83,10 @@ via an offset-tracking normalizer.
 
 **Determinism:** same inputs produce a byte-identical JSONL (rows in CSV
 order, sorted JSON keys, ASCII-escaped strings, fixed float format). Run
-artifacts under `constraint_validator/out/` are git-ignored; the committed
+artifacts under `tune_constraint_validator/out/` are git-ignored; the committed
 summary of the real run lives in `docs/quote_anchoring_stats.md`.
 
-## judge.py — the LLM judge (§7.0 stage 1)
+## core/constraint_validator.py — the LLM judge (§7.0 stage 1)
 
 Closed-book validation of every ANCHORED row (tier `exact`/`fuzzy`): the
 judge sees only the verbatim quote, its derived context, and the structured
@@ -86,10 +97,10 @@ free-form completion plus robust JSON-block recovery (fenced or bare) with
 one per-item repair retry.
 
 ```bash
-python3 constraint_validator/judge.py \
-    --anchors constraint_validator/out/anchors.jsonl \
+python3 core/constraint_validator.py \
+    --anchors tune_constraint_validator/out/anchors.jsonl \
     --csv verified_datasheet/constraints/stm.csv \
-    --out constraint_validator/out/judgments.jsonl \
+    --out tune_constraint_validator/out/judgments.jsonl \
     [--limit 150 --sample-seed 7]   # deterministic stratified sample
     [--ids ids.txt]                 # or an explicit id list
     [--rows-jsonl corruptions.jsonl]  # judge pre-built rows instead
@@ -122,22 +133,22 @@ the original literal's width), retargets come from the same RM's rows.
 | --- | --- |
 | `flip_polarity` | `cleared` <-> `set` on one precondition |
 | `swap_field` | precondition field replaced with a real sibling field |
-| `change_operation` | `write` <-> `read` / `write` <-> `modify` |
+| `change_operation` | `write` -> `read`; `read`/`modify` -> `write` (never emits `modify`) |
 | `perturb_value` | `equals:` value +/-1, in-range, style preserved |
 | `retarget_register` | target register replaced with another from the same RM |
 
 ```bash
-python3 constraint_validator/corruption.py \
-    --anchors constraint_validator/out/anchors.jsonl \
+python3 tune_constraint_validator/corruption.py \
+    --anchors tune_constraint_validator/out/anchors.jsonl \
     --csv verified_datasheet/constraints/stm.csv \
-    --out constraint_validator/out/corruptions.jsonl \
+    --out tune_constraint_validator/out/corruptions.jsonl \
     --per-type 30 --seed 20260716
 ```
 
 Deterministic given `--seed` (per-row RNG keyed by seed+type+id); one
 corruption type per variant; each record carries
 `{id, corruption_type, original_id}` and is directly consumable by
-`judge.py --rows-jsonl`.
+`core/constraint_validator.py --rows-jsonl`.
 
 ## calibrate.py — the scorecard (§7.2)
 
@@ -148,9 +159,9 @@ human ground truth until the retrospective annotation lands), confidence
 distributions, parse-recovery counts, token usage and estimated cost.
 
 ```bash
-python3 constraint_validator/calibrate.py \
+python3 tune_constraint_validator/calibrate.py \
     --originals 150 --per-type 30 --seed 20260716 --concurrency 6
-# artifacts -> constraint_validator/out/calibration/ (git-ignored)
+# artifacts -> tune_constraint_validator/out/calibration/ (git-ignored)
 ```
 
 The committed results of the real run live in
@@ -159,7 +170,10 @@ The committed results of the real run live in
 ## Tests
 
 ```bash
-.venv/bin/python -m pytest constraint_validator/tests/ -q
+# tuning tests (this package)
+.venv/bin/python -m pytest tune_constraint_validator/tests/ -q
+# product tests (the validator itself, in core/)
+.venv/bin/python -m pytest tests/test_quote_anchor.py tests/test_constraint_validator.py -q
 ```
 
 Synthetic chunk trees only — the real chunked datasheets

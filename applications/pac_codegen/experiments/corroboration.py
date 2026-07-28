@@ -43,7 +43,7 @@ sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(APP_DIR))
 
 import get_pac  # noqa: E402
-from constraint_validator import judge as cv_judge  # noqa: E402
+from core import constraint_validator as cv_judge  # noqa: E402
 
 OUT_DIR = APP_DIR / "experiments" / "out"
 

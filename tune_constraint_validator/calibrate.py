@@ -13,16 +13,16 @@ anchored constraints and (b) known-bad CORRUPTIONS of anchored constraints
   * confidence distributions, parse-recovery counts, token usage,
     estimated cost, wall time.
 
-All artifacts land under --out-dir (default constraint_validator/out/
+All artifacts land under --out-dir (default tune_constraint_validator/out/
 calibration/, git-ignored); the committed narrative of the real run lives in
 docs/validator_calibration.md. The blindness rule applies: nothing here may
 be written under verified_datasheet/.
 
 CLI:
-    python3 constraint_validator/calibrate.py \
-        --anchors constraint_validator/out/anchors.jsonl \
+    python3 tune_constraint_validator/calibrate.py \
+        --anchors tune_constraint_validator/out/anchors.jsonl \
         --csv verified_datasheet/constraints/stm.csv \
-        --out-dir constraint_validator/out/calibration \
+        --out-dir tune_constraint_validator/out/calibration \
         --originals 150 --per-type 30 --seed 20260716 --concurrency 6
 """
 
@@ -37,7 +37,8 @@ from collections import Counter, defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from constraint_validator import corruption, judge  # noqa: E402
+from tune_constraint_validator import corruption
+from core import constraint_validator as judge  # noqa: E402
 
 # Groq list price for openai/gpt-oss-120b (USD per 1M tokens) as of 2026-07.
 # Estimate only — adjust here if pricing changes.
@@ -178,9 +179,9 @@ def print_scorecard(sc: dict) -> None:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--anchors", default="constraint_validator/out/anchors.jsonl")
+    ap.add_argument("--anchors", default="tune_constraint_validator/out/anchors.jsonl")
     ap.add_argument("--csv", default="verified_datasheet/constraints/stm.csv")
-    ap.add_argument("--out-dir", default="constraint_validator/out/calibration")
+    ap.add_argument("--out-dir", default="tune_constraint_validator/out/calibration")
     ap.add_argument("--originals", type=int, default=150)
     ap.add_argument("--per-type", type=int, default=30)
     ap.add_argument("--seed", default="20260716")

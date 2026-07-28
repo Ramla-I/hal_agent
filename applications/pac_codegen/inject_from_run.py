@@ -166,7 +166,7 @@ def main() -> None:
         quote_tiers = {}
         if args.chunks:
             rm = Path(args.run_dir.rstrip("/")).parent.name
-            from constraint_validator import quote_anchor as qa
+            from core import quote_anchor as qa
             matcher = qa.RMMatcher(
                 rm, str(Path(args.chunks) / rm / "chunks" / "md"))
             kept_plans = []

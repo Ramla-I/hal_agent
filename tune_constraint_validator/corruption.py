@@ -31,10 +31,10 @@ Output records mirror the CSV schema (JSON-array cells as strings) plus
 them directly.
 
 CLI:
-    python3 constraint_validator/corruption.py \
-        --anchors constraint_validator/out/anchors.jsonl \
+    python3 tune_constraint_validator/corruption.py \
+        --anchors tune_constraint_validator/out/anchors.jsonl \
         --csv verified_datasheet/constraints/stm.csv \
-        --out constraint_validator/out/corruptions.jsonl \
+        --out tune_constraint_validator/out/corruptions.jsonl \
         --per-type 30 --seed 20260716
 """
 
@@ -50,7 +50,7 @@ from collections import defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from constraint_validator.judge import (  # noqa: E402
+from core.constraint_validator import (  # noqa: E402
     JUDGEABLE_TIERS,
     load_anchors,
     load_csv_rows,
@@ -338,9 +338,9 @@ def write_records(records: list, out_path: str) -> None:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--anchors", default="constraint_validator/out/anchors.jsonl")
+    ap.add_argument("--anchors", default="tune_constraint_validator/out/anchors.jsonl")
     ap.add_argument("--csv", default="verified_datasheet/constraints/stm.csv")
-    ap.add_argument("--out", default="constraint_validator/out/corruptions.jsonl")
+    ap.add_argument("--out", default="tune_constraint_validator/out/corruptions.jsonl")
     ap.add_argument("--per-type", type=int, default=30)
     ap.add_argument("--seed", default="20260716")
     args = ap.parse_args(argv)

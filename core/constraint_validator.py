@@ -20,14 +20,14 @@ hard-error on it; instead free-form completion + robust JSON-block recovery
 (fenced or bare) with one per-item repair retry.
 
 BLINDNESS (plan §7.2): judge verdicts are never written into
-``verified_datasheet/`` — output lives under ``constraint_validator/out/``
+``verified_datasheet/`` — output lives under ``tune_constraint_validator/out/``
 (git-ignored). This module refuses out-paths under ``verified_datasheet/``.
 
 CLI:
-    python3 constraint_validator/judge.py \
-        --anchors constraint_validator/out/anchors.jsonl \
+    python3 core/constraint_validator.py \
+        --anchors tune_constraint_validator/out/anchors.jsonl \
         --csv verified_datasheet/constraints/stm.csv \
-        --out constraint_validator/out/judgments.jsonl \
+        --out tune_constraint_validator/out/judgments.jsonl \
         [--limit 150 --sample-seed 7] [--ids ids.txt] \
         [--rows-jsonl corruptions.jsonl] [--concurrency 6]
 """
@@ -611,12 +611,12 @@ def write_judgments(records: list, out_path: str) -> None:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--anchors", default="constraint_validator/out/anchors.jsonl")
+    ap.add_argument("--anchors", default="tune_constraint_validator/out/anchors.jsonl")
     ap.add_argument("--csv", default="verified_datasheet/constraints/stm.csv")
     ap.add_argument("--rows-jsonl", default=None,
                     help="judge pre-built rows (e.g. corruption.py output) "
                          "instead of the csv+anchors join")
-    ap.add_argument("--out", default="constraint_validator/out/judgments.jsonl")
+    ap.add_argument("--out", default="tune_constraint_validator/out/judgments.jsonl")
     ap.add_argument("--limit", type=int, default=None,
                     help="judge only a deterministic stratified sample of N")
     ap.add_argument("--sample-seed", default="0",

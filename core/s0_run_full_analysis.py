@@ -395,8 +395,8 @@ def run_constraint_validation_phase(
     static quote validation (deterministic) then the LLM constraint
     validator (closed-book, gated on anchoring). Writes artifacts under
     ``<run_dir>/constraint_validation/`` and returns the funnel counts."""
-    from constraint_validator.quote_anchor import run as anchor_run
-    from constraint_validator.judge import load_items, run_judge, make_client
+    from quote_anchor import run as anchor_run
+    from constraint_validator import load_items, run_judge, make_client
 
     if not chunks_root:
         raise ValueError(

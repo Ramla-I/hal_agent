@@ -12,10 +12,10 @@ import sys
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from constraint_validator import quote_anchor  # noqa: E402
-from constraint_validator.quote_anchor import (  # noqa: E402
+from core import quote_anchor  # noqa: E402
+from core.quote_anchor import (  # noqa: E402
     FUZZY_THRESHOLD,
     normalize_text,
     normalize_with_offsets,
@@ -327,7 +327,7 @@ def test_cli(tmp_path):
     out = tmp_path / "cli.jsonl"
     script = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "quote_anchor.py")
+        "core", "quote_anchor.py")
     proc = subprocess.run(
         [sys.executable, script, "--csv", str(csv_path), "--chunks", str(chunks),
          "--out", str(out), "--rm", RM],

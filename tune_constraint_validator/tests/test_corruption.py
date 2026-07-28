@@ -14,7 +14,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from constraint_validator import corruption  # noqa: E402
+from tune_constraint_validator import corruption  # noqa: E402
 
 
 def rng():

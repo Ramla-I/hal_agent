@@ -1,7 +1,11 @@
-"""Offline tests for the LLM judge + calibration math (plan §7.0/§7.2).
+"""Offline tests for the LLM constraint-validator judge
+(core/constraint_validator.py, plan §7.0 stage 1).
 
 No network: every test injects a FAKE client. The real Groq client is never
-constructed here (judge.make_client is only called when client=None).
+constructed here (make_client is only called when client=None).
+
+The calibration math (compute_scorecard, confidence stats, cost) is exercised
+separately by tune_constraint_validator/tests/test_calibrate.py.
 """
 
 import json
@@ -11,9 +15,9 @@ from types import SimpleNamespace
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from constraint_validator import calibrate, judge  # noqa: E402
+from core import constraint_validator as judge  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -21,7 +25,7 @@ from constraint_validator import calibrate, judge  # noqa: E402
 # ---------------------------------------------------------------------------
 
 class FakeClient:
-    """Mimics the OpenAI SDK surface used by judge.py.
+    """Mimics the OpenAI SDK surface used by the judge.
 
     ``script`` is a list whose entries are either response strings or
     Exception instances (raised in order). Use concurrency=1 for list-based
@@ -329,58 +333,3 @@ def test_refuses_output_under_verified_datasheet(tmp_path):
     ok = tmp_path / "out" / "j.jsonl"
     judge.write_judgments([], str(ok))           # must not raise
     assert ok.exists()
-
-
-# ---------------------------------------------------------------------------
-# Calibration math (pure, synthetic judgments)
-# ---------------------------------------------------------------------------
-
-def _rec(id_, verdict, conf=0.9, ctype=None, recovered=False):
-    rec = {"id": id_, "verdict": verdict, "confidence": conf,
-           "is_constraint": verdict != "not_constraint",
-           "encoding_faithful": verdict == "confirmed",
-           "reason": "r", "model": "m", "parse_recovered": recovered,
-           "usage": {"prompt_tokens": 100, "completion_tokens": 10,
-                     "total_tokens": 110, "calls": 1}}
-    if ctype:
-        rec["corruption_type"] = ctype
-        rec["original_id"] = id_.rsplit("-", 1)[0]
-    return rec
-
-
-def test_scorecard_math():
-    originals = [_rec("a", "confirmed"), _rec("b", "confirmed"),
-                 _rec("c", "not_constraint", conf=0.6),
-                 _rec("d", "encoding_error", recovered=True)]
-    corr = [_rec("a-flip_polarity", "encoding_error", ctype="flip_polarity"),
-            _rec("b-flip_polarity", "confirmed", ctype="flip_polarity"),
-            _rec("c-swap_field", "encoding_error", ctype="swap_field"),
-            _rec("d-swap_field", "not_constraint", ctype="swap_field")]
-    sc = calibrate.compute_scorecard(originals, corr)
-    assert sc["originals"]["n"] == 4
-    assert sc["originals"]["flag_rate"] == 0.5
-    assert "not a false-positive rate" in sc["originals"]["note"]
-    assert sc["corruptions"]["detection_rate"] == 0.75
-    pt = sc["corruptions"]["per_type"]
-    assert pt["flip_polarity"]["detection_rate"] == 0.5
-    assert pt["swap_field"]["detection_rate"] == 1.0   # any != confirmed
-    assert sc["parse"]["recovered"] == 1
-    assert sc["parse"]["failed"] == 0
-    assert sc["usage"]["total_tokens"] == 8 * 110
-    assert sc["usage"]["calls"] == 8
-
-
-def test_scorecard_confidence_stats():
-    recs = [_rec("a", "confirmed", conf=0.8), _rec("b", "confirmed", conf=1.0)]
-    stats = calibrate._confidence_stats(recs)
-    assert stats["n"] == 2
-    assert stats["mean"] == 0.9
-    assert stats["median"] == 0.9
-    assert stats["histogram_decile"]["0.8"] == 1
-    assert stats["histogram_decile"]["0.9"] == 1     # 1.0 folds into top bin
-    assert calibrate._confidence_stats([]) == {"n": 0}
-
-
-def test_cost_estimate():
-    assert calibrate.estimated_cost_usd(1_000_000, 0) == calibrate.PRICE_IN_PER_M
-    assert calibrate.estimated_cost_usd(0, 1_000_000) == calibrate.PRICE_OUT_PER_M
