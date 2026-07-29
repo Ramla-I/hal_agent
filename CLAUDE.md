@@ -80,10 +80,13 @@ specified in **`docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`**. Key pieces:
 - **Constraint Validator** (`core/quote_anchor.py` + `core/constraint_validator.py`):
   deterministic quote anchoring + target-location gate, then a closed-book
   gpt-oss judge, wired into `core/s0` (`--constraint-validation`) and
-  `inject_from_run.py` (`--chunks`). Its corruption/calibration tuning harness
-  and the verified-constraints datasheet (`verified_datasheet/constraints/`) ship
-  in a follow-up PR (branch `constraint_validator_tuning`), keeping this PR
-  focused on the enforcement mechanism.
+  `inject_from_run.py` (`--chunks`). The judge validates **all 8 grammar-v2
+  kinds** (the native constraint object, no flattening); `s0`'s Step-6 phase
+  builds items in memory (no intermediate CSV) and can batch constraints per
+  LLM call (`--constraint-batch-size`, amortizes the system prompt). Its
+  corruption/calibration tuning harness and the verified-constraints datasheet
+  (`verified_datasheet/constraints/`) ship in a follow-up PR (branch
+  `constraint_validator_tuning`), keeping this PR focused on the mechanism.
 - **Codegen** (`applications/pac_codegen/rust_codegen.py`): whole-register
   gating via marker traits in `generic.rs`; **field-level gating is opt-in**
   (`--field-level-gating`, default off). `inject_from_run.py` is the
