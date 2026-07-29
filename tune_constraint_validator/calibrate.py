@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tune_constraint_validator import corruption
 from core import constraint_validator as judge  # noqa: E402
+from tune_constraint_validator import judge_cli  # noqa: E402
 
 # Groq list price for openai/gpt-oss-120b (USD per 1M tokens) as of 2026-07.
 # Estimate only — adjust here if pricing changes.
@@ -190,13 +191,13 @@ def main(argv=None) -> int:
     ap.add_argument("--timeout", type=float, default=judge.CALL_TIMEOUT_S)
     args = ap.parse_args(argv)
 
-    judge.assert_blind_output(os.path.join(args.out_dir, "x"))
+    judge_cli.assert_blind_output(os.path.join(args.out_dir, "x"))
     os.makedirs(args.out_dir, exist_ok=True)
     t0 = time.monotonic()
 
     # 1. originals: deterministic stratified sample of anchored rows
     items = judge.load_items(args.csv, args.anchors)
-    originals = judge.stratified_sample(items, args.originals, args.seed)
+    originals = judge_cli.stratified_sample(items, args.originals, args.seed)
     print(f"originals: {len(originals)} of {len(items)} anchored rows "
           f"(seed {args.seed})", file=sys.stderr)
 
@@ -215,7 +216,7 @@ def main(argv=None) -> int:
     orig_recs, orig_totals = judge.run_judge(
         originals, client, model=args.model, concurrency=args.concurrency,
         timeout=args.timeout)
-    judge.write_judgments(orig_recs,
+    judge_cli.write_judgments(orig_recs,
                           os.path.join(args.out_dir,
                                        "judgments_originals.jsonl"))
     print(f"originals judged: {orig_totals}", file=sys.stderr)
@@ -223,7 +224,7 @@ def main(argv=None) -> int:
     corr_recs, corr_totals = judge.run_judge(
         corr_rows, client, model=args.model, concurrency=args.concurrency,
         timeout=args.timeout)
-    judge.write_judgments(corr_recs,
+    judge_cli.write_judgments(corr_recs,
                           os.path.join(args.out_dir,
                                        "judgments_corruptions.jsonl"))
     print(f"corruptions judged: {corr_totals}", file=sys.stderr)

@@ -27,7 +27,7 @@ keyed by (seed, type, original id), so row content is independent of
 selection order). Each record carries {id, corruption_type, original_id}.
 
 Output records mirror the CSV schema (JSON-array cells as strings) plus
-``context``/``tier`` from the anchor, so ``judge.py --rows-jsonl`` consumes
+``context``/``tier`` from the anchor, so ``judge_cli.py --rows-jsonl`` consumes
 them directly.
 
 CLI:
