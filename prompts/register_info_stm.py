@@ -5,11 +5,9 @@ from prompts.examples import stm_datasheet_example, stm_access_constraints_v2_ex
 # Access-constraint grammar v2: the SINGLE authoritative prompt text.
 #
 # ACCESS_CONSTRAINTS_V2_SCHEMA and ACCESS_CONSTRAINTS_V2_GUIDANCE are shared
-# VERBATIM by all three generator system-prompt builders below and by the
-# constraints-only prompt used by the extraction eval
-# (optimization/generator/extraction_eval_v2.py), so the eval always tests
-# exactly the text that ships. The normative schema is defs.py (ConstraintV2)
-# / docs/register_constraints_plan.md Appendix B;
+# VERBATIM by all three generator system-prompt builders below, so the
+# constraint text is defined in exactly one place. The normative schema is
+# defs.py (ConstraintV2) / docs/register_constraints_plan.md Appendix B;
 # tests/test_grammar_prompt_consistency.py checks prompt<->schema alignment.
 #
 # Deliberately provider-agnostic: schema enforcement is TIERED (plan section
@@ -375,48 +373,6 @@ def create_register_info_stm_system_prompt_batched_minimal(
       {{"register_name": "BKP_DR35", "datasheet_register_abbreviation": null, "address_offset": null, "reset_value": null, "size": null, "subfields": null, "access_constraints_v2": null}}
     ]
     ```
-    """
-
-
-def create_register_constraints_v2_system_prompt() -> str:
-    """Constraints-only extraction prompt (grammar v2).
-
-    Used by the extraction eval (optimization/generator/extraction_eval_v2.py)
-    to isolate PROMPT quality from retrieval quality: it shares
-    ACCESS_CONSTRAINTS_V2_SCHEMA and ACCESS_CONSTRAINTS_V2_GUIDANCE verbatim
-    with the three generator system prompts above, so the eval exercises
-    exactly the constraint text that ships, without the layout-extraction
-    surface.
-    """
-    return f"""
-    You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets.
-
-    # INPUT INFORMATION
-    You will be given the name of a register, the name of the peripheral it belongs to, and pages of a hardware datasheet in markdown format that could contain information about the register.
-    Extract ONLY the register's access constraints (requirements for safe register access). Ignore layout details (address offset, reset value, subfields).
-
-    # OUTPUT FORMAT
-    The output will have 2 parts:
-    1. Your reasoning for the output. This will be a string.
-    2. A single JSON object with the register name and its access constraints.
-
-    Always follow this format:
-    <reasoning>
-    ```json
-    {{"register_name": "<PERIPHERAL_REGISTER>", "access_constraints_v2": [...]}}
-    ```
-
-    The JSON object should contain the following fields:
-    - `register_name`: The register being extracted, as given in the input. A string.
-{ACCESS_CONSTRAINTS_V2_SCHEMA}
-
-    # ACCESS CONSTRAINTS GUIDANCE
-{ACCESS_CONSTRAINTS_V2_GUIDANCE}
-
-    # OUTPUT RESTRICTIONS
-    - Only report constraints explicitly stated in the given datasheet pages. Do not infer unstated constraints and do not use outside knowledge of the device.
-    - Only report constraints that apply to the register being extracted (its own section, or a note that names it).
-    - If the pages state no access or ordering requirement for this register, output "access_constraints_v2": [].
     """
 
 

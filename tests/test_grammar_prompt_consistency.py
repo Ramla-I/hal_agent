@@ -28,7 +28,6 @@ from defs import (
 from prompts.register_info_stm import (
     ACCESS_CONSTRAINTS_V2_GUIDANCE,
     ACCESS_CONSTRAINTS_V2_SCHEMA,
-    create_register_constraints_v2_system_prompt,
     create_register_info_stm_system_prompt,
     create_register_info_stm_system_prompt_batched,
     create_register_info_stm_system_prompt_batched_minimal,
@@ -48,7 +47,6 @@ ALL_SYSTEM_PROMPTS = {
     "batched_no_reasoning": create_register_info_stm_system_prompt_batched(
         include_reasoning=False),
     "batched_minimal": create_register_info_stm_system_prompt_batched_minimal(),
-    "constraints_only": create_register_constraints_v2_system_prompt(),
 }
 
 _JSON_FENCE_RE = re.compile(r"```json\s*(.*?)```", re.DOTALL)
