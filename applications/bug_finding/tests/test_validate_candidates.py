@@ -82,15 +82,15 @@ def test_apply_verdicts():
          "value": "3", "agent_judgement": "False", "confidence_score": "0.95"},    # -> FP
     ])
     counts = apply_verdicts(rev, cls, threshold=0.98)
-    assert counts == {"TP": 1, "FP": 1, "abstain": 0, "unmatched": 1, "candidates": 3}, counts
+    assert counts == {"TP": 1, "FP": 1, "abstain": 0, "unmatched": 1, "candidates": 3, "fallback": 0}, counts
 
     rows = {(_r["peripheral"], _r["register"]): _r for _r in csv.DictReader(open(rev, newline=""))}
-    assert rows[("flash", "acr")]["validator_verdict"] == "TP"
-    assert rows[("flash", "acr")]["validator_confidence"] == "0.99"
+    assert rows[("flash", "acr")]["structure_verdict"] == "TP"
+    assert rows[("flash", "acr")]["structure_confidence"] == "0.99"
     assert rows[("flash", "acr")]["tp_fp"] == "TP"                          # human label preserved
-    assert rows[("tim1", "smcr")]["validator_verdict"] == "FP"
-    assert rows[("spi1", "cr2")]["validator_verdict"] == ""                 # auto-FP untouched
-    assert rows[("rcc", "cr")]["validator_verdict"] == ""                   # unmatched -> blank
+    assert rows[("tim1", "smcr")]["structure_verdict"] == "FP"
+    assert rows[("spi1", "cr2")]["structure_verdict"] == ""                 # auto-FP untouched
+    assert rows[("rcc", "cr")]["structure_verdict"] == ""                   # unmatched -> blank
     print("  apply_verdicts OK")
 
 

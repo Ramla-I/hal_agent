@@ -98,17 +98,17 @@ STAGE_MODELS = {
     "generator":         ["gpt-oss-120b", "llama-3.3-70b-versatile", "gpt-5-nano"],
     "analyzer":          ["gpt-5-nano"],
     "coverage_improver": ["gpt-5.2"],
-    "validator":         ["gpt-oss-120b"],
+    "validator":         ["gpt-oss-120b", "gpt-5-nano"],  # Groq primary -> cheap OpenAI fallback
 }
 
 # MODEL_NAME = "gpt-4o"
 GENERATOR_MODEL_NAME = "gpt-oss-120b"
-GENERATOR_BATCHED = False  # Use per-peripheral batched generator (fewer LLM calls)
+GENERATOR_BATCHED = True  # per-peripheral batched generator by default (fewer LLM calls); --no-generator-batched to disable
 GENERATOR_ITER = 1 # Number of iterations for the generator agent
 
 COVERAGE_IMPROVER_MODEL_NAME = "gpt-5.2"
 COVERAGE_IMPROVER_REASONING_EFFORT = "medium"
-COVERAGE_IMPROVER_ITERATIONS = 5
+COVERAGE_IMPROVER_ITERATIONS = 0  # off by default; set >0 (or --coverage-improver-iterations N) to enable
 
 VALIDATOR_MODEL_NAME = "gpt-oss-120b"
 VALIDATOR_REASONING_EFFORT = None

@@ -863,13 +863,23 @@ def parse_args() -> argparse.Namespace:
              "retrieval program (per-device, rm0041 fallback).",
     )
     parser.add_argument(
-        "--generator-batched", action="store_true",
+        "--generator-batched", action="store_true", dest="generator_batched",
         default=config.GENERATOR_BATCHED,
-        help="Use per-peripheral batched generator (fewer LLM calls)",
+        help="Per-peripheral batched generator, fewer LLM calls (default: on)",
     )
     parser.add_argument(
-        "--validator-batched", action="store_true",
-        help="Use batched validator (groups invariants by register)",
+        "--no-generator-batched", action="store_false", dest="generator_batched",
+        help="Use the per-register generator instead of batched",
+    )
+    parser.add_argument(
+        "--validator-batched", action="store_true", dest="validator_batched",
+        default=True,
+        help="Batch the structure-validator full pass by register (default: on). "
+             "(The structure-validator candidate pass, s6, is always batched.)",
+    )
+    parser.add_argument(
+        "--no-validator-batched", action="store_false", dest="validator_batched",
+        help="Use the per-invariant structure validator instead of batched",
     )
 
     # Model overrides
@@ -920,8 +930,8 @@ def parse_args() -> argparse.Namespace:
         help="Model for the constraint validator judge (default: Groq gpt-oss-120b)",
     )
     parser.add_argument(
-        "--constraint-batch-size", type=int, default=1,
-        help="Constraints per judge call (>1 amortizes the system prompt; "
+        "--constraint-batch-size", type=int, default=8,
+        help="Constraints per judge call (default 8; amortizes the system prompt; "
              "any item the batch response omits falls back to a solo call)",
     )
 
