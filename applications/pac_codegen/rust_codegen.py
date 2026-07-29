@@ -92,6 +92,27 @@ def _is_same_register(register_name: str, target: str) -> bool:
     return ref == tgt or ref.endswith(tgt)
 
 
+def _extend_unique(bucket: list, items) -> None:
+    """Append each item whose ``.key()`` is not already present, preserving
+    order — the emitter's de-dup for preconditions across constraints."""
+    seen = {p.key() for p in bucket}
+    for p in items:
+        if p.key() not in seen:
+            bucket.append(p)
+            seen.add(p.key())
+
+
+def _unique_sources(preconditions) -> list["SourceRegister"]:
+    """Ordered, de-duplicated cross-register witness sources in a precondition
+    list (a same-register precondition has no source)."""
+    out, seen = [], set()
+    for p in preconditions:
+        if p.source and p.source.key() not in seen:
+            out.append(p.source)
+            seen.add(p.source.key())
+    return out
+
+
 class SourceRegister:
     """A cross-register witness source, resolved to a Rust path.
 
@@ -210,18 +231,27 @@ class FieldGate:
         self.docs: list[str] = []
 
     def sources(self) -> list["SourceRegister"]:
-        out, seen = [], set()
-        for p in self.preconditions:
-            if p.source and p.source.key() not in seen:
-                out.append(p.source)
-                seen.add(p.source.key())
-        return out
+        return _unique_sources(self.preconditions)
 
     def witness_name(self, reg: str) -> str:
         return f"{reg.capitalize()}{self.field.capitalize()}FieldWitness"
 
     def check_name(self) -> str:
         return f"check_{self.field_lower}_field_ready"
+
+
+def _build_preconditions(constraint, peripheral: str) -> list["Precondition"]:
+    """Resolve a state_gate's conditions to Preconditions — same-register, or a
+    cross-register ``SourceRegister``. Shared by whole-register and field
+    gates (the resolution rule is identical)."""
+    pres = []
+    for cond in constraint.preconditions:
+        if _is_same_register(cond.register, constraint.target_register):
+            pres.append(Precondition(cond))
+        else:
+            pres.append(Precondition(
+                cond, SourceRegister(cond.register, peripheral)))
+    return pres
 
 
 class RegisterPlan:
@@ -283,13 +313,7 @@ class RegisterPlan:
                     f"{self.reg_name}: postconditions/action witnesses are "
                     "roadmap step I; not emitted yet"
                 )
-            pres = []
-            for cond in c.preconditions:
-                if _is_same_register(cond.register, c.target_register):
-                    pres.append(Precondition(cond))
-                else:
-                    pres.append(Precondition(
-                        cond, SourceRegister(cond.register, peripheral)))
+            pres = _build_preconditions(c, peripheral)
             op_raw = c.target_operation.strip().lower()
             # svd2rust modify() = one read + one write, so its obligations are
             # the UNION of the register's read and write constraints. modify is
@@ -324,12 +348,7 @@ class RegisterPlan:
                     "nothing to enforce (grammar-v2 `other` material)"
                 )
             for op in ops:
-                bucket = self.preconditions.setdefault(op, [])
-                seen = {p.key() for p in bucket}
-                for p in pres:
-                    if p.key() not in seen:
-                        bucket.append(p)
-                        seen.add(p.key())
+                _extend_unique(self.preconditions.setdefault(op, []), pres)
                 doc = self.docs.setdefault(op, [])
                 line = c.datasheet_text.strip()
                 if line and line not in doc:
@@ -356,13 +375,7 @@ class RegisterPlan:
                 file=sys.stderr,
             )
             return
-        pres = []
-        for cond in c.preconditions:
-            if _is_same_register(cond.register, c.target_register):
-                pres.append(Precondition(cond))
-            else:
-                pres.append(Precondition(
-                    cond, SourceRegister(cond.register, peripheral)))
+        pres = _build_preconditions(c, peripheral)
         if not pres:
             raise ValueError(
                 f"{self.reg_name}: field-scoped constraint has no "
@@ -371,22 +384,13 @@ class RegisterPlan:
         doc = c.datasheet_text.strip()
         for field in c.target_fields:
             fg = self.field_gates.setdefault(field.lower(), FieldGate(field))
-            seen = {p.key() for p in fg.preconditions}
-            for p in pres:
-                if p.key() not in seen:
-                    fg.preconditions.append(p)
-                    seen.add(p.key())
+            _extend_unique(fg.preconditions, pres)
             if doc and doc not in fg.docs:
                 fg.docs.append(doc)
 
     def sources(self, op: str) -> list["SourceRegister"]:
         """Ordered unique cross-register sources for one operation."""
-        out, seen = [], set()
-        for p in self.preconditions[op]:
-            if p.source and p.source.key() not in seen:
-                out.append(p.source)
-                seen.add(p.source.key())
-        return out
+        return _unique_sources(self.preconditions[op])
 
     def has_read_gate(self) -> bool:
         return "read" in self.preconditions
@@ -469,17 +473,10 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
 
     # --- Error enum (register-scoped name: peripheral module may gain more) ---
     all_pres: list[Precondition] = []
-    seen = set()
     for op in sorted(plan.preconditions):
-        for p in plan.preconditions[op]:
-            if p.key() not in seen:
-                all_pres.append(p)
-                seen.add(p.key())
+        _extend_unique(all_pres, plan.preconditions[op])
     for fname in sorted(plan.field_gates):
-        for p in plan.field_gates[fname].preconditions:
-            if p.key() not in seen:
-                all_pres.append(p)
-                seen.add(p.key())
+        _extend_unique(all_pres, plan.field_gates[fname].preconditions)
     a("// === Error Type ===")
     a("/// A precondition that was not satisfied at check time.")
     a("#[derive(Debug, Clone, Copy, PartialEq, Eq)]")
@@ -509,6 +506,21 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
     def src_args(op: str) -> str:
         return "".join(f", {s.var()}" for s in plan.sources(op))
 
+    def emit_check_body(w, pres, srcs) -> None:
+        # Body shared by the whole-register and field-gate check methods: one
+        # fresh read of self (only if a same-register precondition needs it) and
+        # of each source register, a guard per precondition, then mint the ZST
+        # witness.
+        if any(p.source is None for p in pres):
+            a("        let r = self.read();")
+        for s in srcs:
+            a(f"        let r_{s.var()} = {s.var()}.read();")
+        for p in pres:
+            a(f"        if !({p.check_expr(p.reader_var())}) {{")
+            a(f"            return Err({err}::{p.error_variant()});")
+            a("        }")
+        a(f"        Ok({w} {{ _priv: () }})")
+
     # --- Check methods + welded check+use entry points ---
     a("// === Checks ===")
     a(f"impl crate::Reg<{spec}> {{")
@@ -526,15 +538,7 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
             a(f"    /// {doc}")
         a("    #[inline(always)]")
         a(f"    pub fn check_{op}_ready(&self{src_params(op)}) -> Result<{w}, {err}> {{")
-        if needs_self_read:
-            a("        let r = self.read();")
-        for s in srcs:
-            a(f"        let r_{s.var()} = {s.var()}.read();")
-        for p in pres:
-            a(f"        if !({p.check_expr(p.reader_var())}) {{")
-            a(f"            return Err({err}::{p.error_variant()});")
-            a("        }")
-        a(f"        Ok({w} {{ _priv: () }})")
+        emit_check_body(w, pres, srcs)
         a("    }")
         a("")
 
@@ -584,7 +588,6 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         fg = plan.field_gates[fname]
         w = fg.witness_name(reg)
         pres = fg.preconditions
-        needs_self_read = any(p.source is None for p in pres)
         srcs = fg.sources()
         a(f"    /// Check every precondition for writing the {fg.field} field "
           f"of {reg}.")
@@ -595,15 +598,7 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("    #[inline(always)]")
         a(f"    pub fn {fg.check_name()}(&self{_src_params(srcs)}) "
           f"-> Result<{w}, {err}> {{")
-        if needs_self_read:
-            a("        let r = self.read();")
-        for s in srcs:
-            a(f"        let r_{s.var()} = {s.var()}.read();")
-        for p in pres:
-            a(f"        if !({p.check_expr(p.reader_var())}) {{")
-            a(f"            return Err({err}::{p.error_variant()});")
-            a("        }")
-        a(f"        Ok({w} {{ _priv: () }})")
+        emit_check_body(w, pres, srcs)
         a("    }")
         a("")
     a("}")
