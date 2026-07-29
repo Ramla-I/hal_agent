@@ -118,8 +118,10 @@ once shipped; the flag makes that impossible in CI.
 
 `collect_constraints.py` scans a generator-output run directory
 (`agent_output/<mfg>/<device>/<run>/`), reads each register's
-`access_constraints`, lifts them to grammar v2 (see
+**`access_constraints_v2`** (grammar v2, emitted natively; see
 [`../../docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](../../docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md)),
-applies the repair/reject policy, and writes per-register JSON plus a grouped
-`manifest.json` with per-constraint enforceability. Validating constraints
-against the datasheet is the Constraint Validator's job (plan §7).
+validates/dedups each constraint, applies the stage-0 lint and repair/reject
+policy, computes `enforceability`, and writes per-register JSON plus a grouped
+`manifest.json`. Old **v1** runs are converted first with `convert_v1_to_v2.py`.
+Validating constraints against the datasheet is the Constraint Validator's job
+(plan §7).

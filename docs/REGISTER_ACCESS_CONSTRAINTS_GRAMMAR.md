@@ -379,15 +379,16 @@ behavior.
 > requirement fitting none → `other` · not a requirement at all (w1c, width,
 > privilege, validity note) → emit nothing.
 
-## v1 → v2 lift (mechanical)
+## v1 → v2 lift (mechanical, migration-only)
 
-`defs.lift_v1_constraint(constraint, target_register) -> LiftResult` lifts one
-v1 `RegisterAccessConstraint`; every v1 constraint is a `state_gate` by
-construction (v1 could express nothing else — richer kinds only arrive via
-re-extraction with the v2 prompt). It never raises on bad constraint content:
-judgment-requiring drift becomes structured `LiftResult.rejects` entries
-(`{field, value, reason}`), deterministic drift is repaired and logged in
-`LiftResult.repairs`.
+Grammar v1 is retired; the ONLY code that still understands it is the one-time
+migration tool `applications/pac_codegen/convert_v1_to_v2.py`. Its
+`lift_v1_constraint(constraint, target_register) -> LiftResult` lifts one v1
+`RegisterAccessConstraint`; every v1 constraint is a `state_gate` by
+construction (v1 could express nothing else). It never raises on bad constraint
+content: judgment-requiring drift becomes structured `LiftResult.rejects`
+entries (`{field, value, reason}`), deterministic drift is repaired and logged
+in `LiftResult.repairs`.
 
 | v1 | v2 |
 | --- | --- |
@@ -407,21 +408,27 @@ judgment-requiring drift becomes structured `LiftResult.rejects` entries
 Value parsing applies the regex `^(0x[0-9A-Fa-f]+|0b[01]+|\d+)$` to each
 `|`-separated part.
 
-## v1 compatibility
+## Migrating old v1 runs
 
-**Grammar v1 remains the generator wire format until roadmap step F.** The v1
-models (`FieldState`, `RegisterAccessConstraint`,
-`RegisterInfo.access_constraints`) stay intact in `defs.py` and parse the
-existing 30-RM corpus unchanged; the prompts keep emitting v1 until the prompt
-v2 + extraction eval lands. Collection
-(`applications/pac_codegen/collect_constraints.py`) bridges the two worlds: the
-per-register output JSON keeps `access_constraints` (v1, consumed by today's
-codegen) untouched and adds `access_constraints_v2` (lifted, with computed
-`enforceability`) plus `constraint_reports` (repairs/rejects), and writes a
-`manifest.json` with per-constraint kind/enforceability entries and run-level
-`other`-rate / reject-rate metrics.
+Grammar v1 is fully retired: the generator emits v2 natively, and `defs.py`,
+collection (`applications/pac_codegen/collect_constraints.py`), and codegen are
+**v2-only** — a register's output JSON carries `access_constraints_v2` (with
+computed `enforceability`), not the old `access_constraints`. The single tool
+that still reads v1 is `applications/pac_codegen/convert_v1_to_v2.py`, which
+converts an old v1 generator run to v2 using the lift above (verified to
+reproduce the v2 fixtures byte-for-byte). See the divergence log in
+[`register_constraints_plan.md`](register_constraints_plan.md) (2026-07-27).
 
-**Codegen support for v2 is phased** (plan §10): `state_gate` first (step B,
-trait-bound gating), `sequence` + cross-register paths in step H,
-`clock_gate`/`write_once`/`delay` later. `read_effect`, `value_relation`, and
-`other` are documentation-only by construction and never gate an operation.
+## Codegen vs. validation coverage
+
+Enforcing a constraint and validating one are separate jobs with different
+coverage:
+
+- The **emitter** (`applications/pac_codegen/rust_codegen.py`) enforces
+  **`state_gate`** as compile-time witness gates (whole-register and
+  cross-register). `read_effect`, `value_relation`, and `other` are
+  documentation-only by construction and never gate an operation; `sequence`,
+  `clock_gate`, `write_once`, and `delay` are carried but not yet compile-gated.
+- The **constraint validator** (`core/constraint_validator.py`, plan §7) judges
+  **all** kinds against the datasheet — it processes every kind the generator
+  emits, independent of what codegen enforces.
