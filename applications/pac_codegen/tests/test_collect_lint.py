@@ -21,7 +21,7 @@ Covers, on top of tests/test_grammar.py's lift/collection coverage:
   usart/uart and gpioa/gpiob family compatibility);
 - --svd-dir accepting a single .svd file (the corpus-sweep shape).
 
-Run: .venv/bin/python -m pytest applications/pac_codegen/test_collect_lint.py
+Run: .venv/bin/python -m pytest applications/pac_codegen/tests/test_collect_lint.py
 """
 
 import json
@@ -30,7 +30,7 @@ import sys
 
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 
 from applications.pac_codegen.collect_constraints import (
     _families_compatible,

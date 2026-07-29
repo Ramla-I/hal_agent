@@ -50,7 +50,7 @@ import tempfile
 from pathlib import Path
 
 # This application's directory: applications/pac_codegen/
-APP_DIR = Path(__file__).resolve().parent
+APP_DIR = Path(__file__).resolve().parent.parent
 
 RUST_CODEGEN = APP_DIR / "rust_codegen.py"
 CRATE_DIR = APP_DIR / "constraint_test"

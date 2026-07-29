@@ -47,9 +47,9 @@ applications/pac_codegen/
 ├── rust_codegen.py          Code generator: RegisterInfo JSON -> gated PAC
 ├── collect_constraints.py   Bridge: generator run dir -> per-register JSON + manifest
 ├── get_pac.py               Provision the generated stm32f4 PAC (crates.io, pinned+verified)
-├── test_codegen.py          Golden diff + compile tests + compile-fail enforcement table
+├── tests/                   pytest suite (golden diff, compile + enforcement, collection/lint, kind registry)
 ├── constraint_test/         no_std crate compiled against the injected PAC
-│   ├── stm32f405_i2c1.json  Constraint fixture (v1 RegisterInfo JSON)
+│   ├── stm32f405_i2c1.json  Constraint fixture (grammar-v2 RegisterInfo JSON)
 │   ├── i2c1_expected_constraints.rs   Golden emitter output
 │   └── src/main.rs          Every LEGAL access path (illegal ones live in test_codegen.py)
 ├── vendored/
@@ -95,7 +95,7 @@ around every case automatically.
 ## Testing
 
 ```sh
-python applications/pac_codegen/test_codegen.py     # or under pytest
+python applications/pac_codegen/tests/test_codegen.py     # or under pytest
 ```
 
 1. **`test_codegen_matches_golden`** (always runs, no toolchain) — emitter

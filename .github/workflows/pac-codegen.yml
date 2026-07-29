@@ -39,7 +39,7 @@ jobs:
       - run: pip install pydantic pytest
       - name: Golden diff + schema consistency
         run: |
-          pytest applications/pac_codegen/test_codegen.py::test_codegen_matches_golden \
+          pytest applications/pac_codegen/tests/test_codegen.py::test_codegen_matches_golden \
                  tests/test_grammar_prompt_consistency.py -q
 
   pac-compile:
@@ -67,4 +67,4 @@ jobs:
       - name: Compile + enforcement tests (skips forbidden)
         env:
           LIDAR_REQUIRE_PAC_TESTS: "1"
-        run: pytest applications/pac_codegen/test_codegen.py -q
+        run: pytest applications/pac_codegen/tests/test_codegen.py -q

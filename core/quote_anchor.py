@@ -3,7 +3,17 @@
 
 Every extracted constraint carries its own cited evidence (``datasheet_text``).
 This module verifies that evidence *deterministically* against the chunked
-markdown conversion of the reference manual — no LLM, no semantic retrieval:
+markdown conversion of the reference manual — no LLM, no semantic retrieval —
+and derives the judge's context from the source. Two entry points:
+
+  * ``anchor_row(matcher, item)`` — the per-item primitive, in memory. This is
+    what the PRODUCT path uses: ``core/s0`` (``--constraint-validation``) and
+    ``inject_from_run.py`` build one ``RMMatcher`` and anchor each constraint
+    directly — no files involved.
+  * ``run(csv_path, chunks_root, out_path)`` — a batch CLI that anchors every
+    row of a constraints CSV to a JSONL (the manual / calibration workflow).
+
+Each constraint's quote is classified:
 
   1. ``exact``      — the normalized quote is a substring of a page (or an
                       adjacent-page join, for quotes spanning a page break).
@@ -12,19 +22,20 @@ markdown conversion of the reference manual — no LLM, no semantic retrieval:
                       5-gram index).
   3. ``unanchored`` — neither; the constraint cannot be grounded.
 
-For anchored rows the judge's future input ("context") is DERIVED from the
-source: the match is located in the ORIGINAL (un-normalized) page text and
-expanded to the enclosing paragraph plus one paragraph before and after
-(capped at CONTEXT_CAP chars). Context is never generated.
+For anchored rows the judge's input ("context") is DERIVED from the source: the
+match is located in the ORIGINAL (un-normalized) page text and expanded to the
+enclosing paragraph plus one before and after (capped at CONTEXT_CAP chars).
+Context is never generated.
 
 Repeated boilerplate quotes are disambiguated by preferring the matched page
-that mentions the row's own register name; ``ambiguous`` is flagged when >1
-page matches and none / more than one mention it.
+that mentions a register the constraint references; ``ambiguous`` is flagged
+when >1 page matches and none / more than one mention it.
 
-Determinism: same inputs produce a byte-identical JSONL (rows in CSV order,
-sorted JSON keys, ASCII-escaped strings, fixed 4-decimal ratios).
+Determinism: same inputs produce byte-identical output (sorted JSON keys,
+ASCII-escaped strings, fixed 4-decimal ratios; the batch CLI emits rows in
+input order).
 
-CLI:
+Batch CLI:
     python3 core/quote_anchor.py \
         --csv verified_datasheet/constraints/stm.csv \
         --chunks /home/ramla/hal_agent-phase-1d/chunked_datasheets/stm \

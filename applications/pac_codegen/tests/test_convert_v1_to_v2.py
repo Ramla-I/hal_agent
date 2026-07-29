@@ -9,12 +9,12 @@ can always be converted. (The v1->v2 lift transformation itself is covered by
 tests/test_grammar.py; end-to-end convert-then-collect by
 tests/test_grammar.py::test_collect_end_to_end_*.)
 
-Run: .venv/bin/python -m pytest applications/pac_codegen/test_convert_v1_to_v2.py
+Run: .venv/bin/python -m pytest applications/pac_codegen/tests/test_convert_v1_to_v2.py
 """
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 
 from applications.pac_codegen.convert_v1_to_v2 import (
     FieldState,

@@ -4,7 +4,7 @@ never a crash, and the register keeps its other (supported) constraints.
 `rust_codegen.enabled_kinds` is the single source of truth, shared with
 `inject_from_run.select_and_plan`.
 
-Run: .venv/bin/python -m pytest applications/pac_codegen/test_kind_registry.py
+Run: .venv/bin/python -m pytest applications/pac_codegen/tests/test_kind_registry.py
 """
 
 import os
@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 
 from defs import RegisterInfo  # noqa: E402
 from applications.pac_codegen import rust_codegen as rc  # noqa: E402
