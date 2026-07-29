@@ -31,7 +31,7 @@ def run_bug_finding(
 ) -> dict[str, list[BugClass]]:
     """Find SVD bugs for every SVD file in *svd_dir* against *agent_output_dir*.
 
-    For each SVD it writes ``{results_dir}/{svd}/{svd}_review.csv`` (and the
+    For each SVD it writes ``{results_dir}/{svd}/{svd}_structure_review.csv`` (and the
     analyzer's usage/verdicts alongside) and returns ``{svd_name: [BugClass]}``.
 
     Args:
@@ -75,7 +75,7 @@ def run_bug_finding(
         bugs = analyzer_bugs + fp_bugs
         bug_classes = classify_bug_classes(bugs, svd_name)
 
-        review_path = os.path.join(out_dir, f"{svd_name}_review.csv")
+        review_path = os.path.join(out_dir, f"{svd_name}_structure_review.csv")
         n_rows = write_review_csv(bug_classes, review_path)
         logger.info(
             "Bug finding for %s: %d rows (%d analyzer-confirmed, %d auto-FP) in %d classes → %s",

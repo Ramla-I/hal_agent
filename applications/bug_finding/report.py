@@ -155,15 +155,15 @@ CONSOLIDATED_REVIEW_FIELDS = [
     "status",
     "svd_count",
     "svd_files",
-    "validator_verdict",      # advisory: datasheet validator's TP/FP call on this candidate (s6)
-    "validator_confidence",   # its calibrated confidence
+    "structure_verdict",      # advisory: datasheet validator's TP/FP call on this candidate (s6)
+    "structure_confidence",   # its calibrated confidence
     "tp_fp",
     "correct_value",  # reviewer-filled: the actual correct value (defaults to generator_value)
 ]
 
 # Columns preserved across re-runs of the consolidated file: reviewer-filled
 # (tp_fp/correct_value) + validator-written (verdict/confidence, from s6).
-_CONSOLIDATED_PRESERVE_COLS = ("tp_fp", "correct_value", "validator_verdict", "validator_confidence")
+_CONSOLIDATED_PRESERVE_COLS = ("tp_fp", "correct_value", "structure_verdict", "structure_confidence")
 
 # A bug's identity for cross-SVD dedup (the discrepancy itself; no svd_file).
 _BUG_KEY_FIELDS = ("peripheral", "register", "field", "key", "svd_value", "generator_value")
@@ -198,7 +198,7 @@ def _load_consolidated_reviewer_cols(output_path: str) -> dict[tuple, dict]:
 
 
 def write_consolidated_from_dir(results_run_dir: str) -> int:
-    """Build the run-level ``{device}_review.csv`` by deduping the per-SVD review
+    """Build the run-level ``{device}_structure_review.csv`` by deduping the per-SVD review
     CSVs across the RM's SVDs. Reads already-written per-SVD results — no LLM — so
     it can also backfill/regenerate the consolidated file standalone.
 
@@ -208,7 +208,7 @@ def write_consolidated_from_dir(results_run_dir: str) -> int:
     every SVD. Reviewer ``tp_fp`` labels are preserved across re-runs.
     """
     device = os.path.basename(os.path.dirname(os.path.normpath(results_run_dir)))
-    output_path = os.path.join(results_run_dir, f"{device}_review.csv")
+    output_path = os.path.join(results_run_dir, f"{device}_structure_review.csv")
     preserved = _load_consolidated_reviewer_cols(output_path)
 
     # Per-SVD CSVs live in {svd}/ subdirs; this glob excludes the root consolidated file.
@@ -239,8 +239,8 @@ def write_consolidated_from_dir(results_run_dir: str) -> int:
                 "status": "false_positive" if all_fp else "",
                 "svd_count": len(svds),
                 "svd_files": ";".join(svds),
-                "validator_verdict": kept.get("validator_verdict", ""),
-                "validator_confidence": kept.get("validator_confidence", ""),
+                "structure_verdict": kept.get("structure_verdict", ""),
+                "structure_confidence": kept.get("structure_confidence", ""),
                 "tp_fp": kept.get("tp_fp", ""),
                 "correct_value": kept.get("correct_value", ""),
             })

@@ -2,7 +2,7 @@
 
 Two kinds of review CSV, each re-sorted by *its own writer's* helper (single
 source of truth — no ordering logic is duplicated here):
-  * bug review         ({rm}_review.csv and {svd}/{svd}_review.csv)
+  * bug review         ({rm}_structure_review.csv and {svd}/{svd}_structure_review.csv)
         -> peripheral -> register -> field -> key
   * constraints review ({rm}_constraints_review.csv)
         -> peripheral -> target_register -> target_operation

@@ -2,8 +2,8 @@
 
 Unlike the full Step-4 validator (every register/field), this validates only the
 candidate invariants (blank-status review rows) using the generator's value, then
-writes validator_verdict / validator_confidence back into the consolidated
-{device}_review.csv (never touching tp_fp — advisory only).
+writes structure_verdict / structure_confidence back into the consolidated
+{device}_structure_review.csv (never touching tp_fp — advisory only).
 
 Calibration: run the single carded model (gpt-oss-120b) with retry-after; do NOT
 overflow to another model, because the validator_card's deployment_threshold is
@@ -160,7 +160,7 @@ def validate_run(ctx, repo_root: str, run_number: int, models: list,
                  cards_dir: str = _CARDS_DIR, reasoning_effort: str | None = None) -> dict:
     paths = resolve_device_paths(ctx, repo_root, run_number)
     device = ctx.device_name
-    review_csv = os.path.join(paths.results_dir, f"{device}_review.csv")
+    review_csv = os.path.join(paths.results_dir, f"{device}_structure_review.csv")
     if not os.path.isfile(review_csv):
         return {"device": device, "run": run_number, "skipped": "no review CSV"}
 
