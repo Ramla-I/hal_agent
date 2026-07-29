@@ -28,7 +28,7 @@ CLI:
     python3 core/quote_anchor.py \
         --csv verified_datasheet/constraints/stm.csv \
         --chunks /home/ramla/hal_agent-phase-1d/chunked_datasheets/stm \
-        --out tune_constraint_validator/out/anchors.jsonl [--rm rm0008]
+        --out out/anchors.jsonl [--rm rm0008]
 """
 
 from __future__ import annotations
@@ -816,7 +816,7 @@ def main(argv=None) -> int:
     ap.add_argument("--chunks",
                     default="/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
                     help="root of chunked markdown ({rm}/chunks/md/*.txt)")
-    ap.add_argument("--out", default="tune_constraint_validator/out/anchors.jsonl",
+    ap.add_argument("--out", default="out/anchors.jsonl",
                     help="output JSONL path")
     ap.add_argument("--rm", default=None,
                     help="restrict to one reference manual (e.g. rm0008)")

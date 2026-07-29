@@ -271,5 +271,7 @@ applications/pac_codegen/eval_hal/target/
 # tune_constraint_validator: quote-anchoring / calibration run artifacts
 tune_constraint_validator/out/
 applications/pac_codegen/experiments/out/
+# constraint-validator manual-run scratch (anchors/judgments; see core/quote_anchor.py + core/constraint_validator.py)
+/out/
 # local-only working docs (paper draft + analysis/results reports; not for the shared repo)
 temp_docs/
