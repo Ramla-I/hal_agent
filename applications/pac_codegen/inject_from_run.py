@@ -42,7 +42,8 @@ import rust_codegen  # noqa: E402
 
 
 def select_and_plan(collect_dir: Path, device_dir: Path,
-                    field_level_gating: bool = False) -> tuple[list, list[dict]]:
+                    field_level_gating: bool = False,
+                    disabled_kinds=None) -> tuple[list, list[dict]]:
     """From a collection output dir, build injectable RegisterPlans.
 
     Returns (plans, report_rows). Selection is manifest-driven: only
@@ -79,8 +80,18 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
         # `enforceability` is a collection annotation, not a grammar field.
         out_file = collect_dir / Path(reg_entry["output_path"]).name
         data = json.loads(out_file.read_text())
-        gates = [g for g in (data.get("access_constraints_v2") or [])
-                 if g.get("kind") == "state_gate"]
+        all_v2 = data.get("access_constraints_v2") or []
+        # Offer only kinds the emitter supports and are not disabled; skipped
+        # kinds become report rows (never crashes). Single source of truth:
+        # rust_codegen.enabled_kinds.
+        enabled = rust_codegen.enabled_kinds(disabled_kinds)
+        gates = [g for g in all_v2 if g.get("kind") in enabled]
+        for g in all_v2:
+            if g.get("kind") not in enabled:
+                why = ("no codegen emitter yet"
+                       if g.get("kind") not in rust_codegen.SUPPORTED_KINDS
+                       else "codegen disabled for this kind")
+                row("kind_not_emitted", f"{g.get('kind')}: {why}")
         for g in gates:
             g.pop("enforceability", None)
         if not gates:
@@ -97,7 +108,8 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
         try:
             plan = rust_codegen.RegisterPlan(
                 RegisterInfo(**data), peripheral,
-                field_level_gating=field_level_gating)
+                field_level_gating=field_level_gating,
+                disabled_kinds=disabled_kinds)
         except NotImplementedError as e:
             row("unsupported_by_emitter", str(e))
             continue
@@ -140,6 +152,11 @@ def main() -> None:
                     help="OPT-IN: enforce field-scoped constraints at field "
                          "granularity by gating per-field writer accessors "
                          "(default off: field-scoped constraints are skipped)")
+    ap.add_argument("--disable-kind", action="append", default=[],
+                    metavar="KIND",
+                    help="disable codegen for a grammar-v2 kind (repeatable); "
+                         "its constraints are skipped and reported, not "
+                         "emitted. Default: all supported kinds enabled.")
     args = ap.parse_args()
 
     pac_root = Path(args.pac)
@@ -156,7 +173,8 @@ def main() -> None:
 
         plans, rows = select_and_plan(
             collect_dir, device_dir,
-            field_level_gating=args.field_level_gating)
+            field_level_gating=args.field_level_gating,
+            disabled_kinds=set(args.disable_kind))
 
         # Match the artifact and injection exactly: apply the access-mode
         # prune (write-only registers cannot carry modify/read gates) BEFORE

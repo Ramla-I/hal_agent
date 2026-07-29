@@ -254,11 +254,29 @@ def _build_preconditions(constraint, peripheral: str) -> list["Precondition"]:
     return pres
 
 
+# --------------------------------------------------------------------------- #
+# Per-kind codegen enablement                                                  #
+# --------------------------------------------------------------------------- #
+
+# Grammar-v2 kinds the emitter can translate to Rust. Every kind listed here is
+# ENABLED by default; to stop emitting one that misbehaves, disable it (CLI
+# ``--disable-kind KIND`` or ``disabled_kinds=``). A constraint of a disabled
+# kind — or of a kind with no emitter yet — is SKIPPED with a warning, never
+# emitted. This is the single source of truth shared by the emitter
+# (``RegisterPlan``) and the driver (``inject_from_run.select_and_plan``).
+SUPPORTED_KINDS = frozenset({"state_gate"})
+
+
+def enabled_kinds(disabled=None) -> frozenset:
+    """Kinds the emitter will translate, given an optional set to disable."""
+    return SUPPORTED_KINDS - frozenset(disabled or ())
+
+
 class RegisterPlan:
     """Everything the emitter needs for one constrained register."""
 
     def __init__(self, register_info: RegisterInfo, peripheral: str,
-                 field_level_gating: bool = False):
+                 field_level_gating: bool = False, disabled_kinds=None):
         # Field-level gating is OPT-IN (default off). When off, the emitter's
         # behavior is exactly as before: field-scoped constraints are skipped
         # with a warning. When on, they are enforced by gating the per-field
@@ -283,79 +301,92 @@ class RegisterPlan:
         self.docs: dict[str, list[str]] = {}
         # field-lowercase -> FieldGate (populated only when field_level_gating)
         self.field_gates: dict[str, FieldGate] = {}
+        # Kinds this plan will emit (all supported kinds minus any disabled).
+        self._enabled_kinds = enabled_kinds(disabled_kinds)
 
         for c in register_info.access_constraints_v2:
-            if c.kind != "state_gate":
-                raise NotImplementedError(
-                    f"{self.reg_name}: constraint kind {c.kind!r} is not "
-                    "emitted (only state_gate is enforced today)"
+            if c.kind not in self._enabled_kinds:
+                why = ("no codegen emitter yet"
+                       if c.kind not in SUPPORTED_KINDS
+                       else "codegen disabled for this kind")
+                print(
+                    f"WARNING: {self.reg_name}: skipping {c.kind} constraint "
+                    f"({why}); this constraint is NOT enforced.",
+                    file=sys.stderr,
                 )
-            if c.target_fields:
-                if not field_level_gating:
-                    # Default: field-scoped gating disabled. Gating the whole
-                    # register would demand this precondition for writes to
-                    # UNRELATED fields — sound but over-restrictive, and for a
-                    # software-established precondition it can force incorrect
-                    # setup of this or another register. So skip rather than
-                    # over-gate. Enable with field_level_gating=True.
-                    print(
-                        f"WARNING: {self.reg_name}: skipping field-scoped "
-                        f"constraint on {list(c.target_fields)} "
-                        f"({c.target_operation}) — field-level gating is "
-                        f"disabled; this constraint is NOT enforced.",
-                        file=sys.stderr,
-                    )
-                    continue
-                self._add_field_gate(c, peripheral)
                 continue
-            if c.postconditions:
-                raise NotImplementedError(
-                    f"{self.reg_name}: postconditions/action witnesses are "
-                    "roadmap step I; not emitted yet"
-                )
-            pres = _build_preconditions(c, peripheral)
-            op_raw = c.target_operation.strip().lower()
-            # svd2rust modify() = one read + one write, so its obligations are
-            # the UNION of the register's read and write constraints. modify is
-            # DERIVED here (a "modify" bucket fed by both surfaces), never a
-            # first-class target. Datasheet prose "modify/change a register"
-            # means writing it, so a legacy "modify" gates the write surface.
-            if op_raw in ("write", "modify"):
-                ops = ["write", "modify"]        # a modify performs a write
-            elif op_raw in ("read", "any", "read/write", "read-write"):
-                same = [p for p in pres if p.source is None]
-                if same:
-                    # A read (and a modify's RMW read) reads the target; gating
-                    # it on a condition read FROM the target is self-defeating.
-                    raise ValueError(
-                        f"{self.reg_name}: same-register read gate on "
-                        f"{[p.field for p in same]} is self-defeating (the "
-                        "check performs the constrained read); rejected"
-                    )
-                # read gates modify() too (a modify performs a read); "any"/
-                # "read/write" gate every surface.
-                ops = (["read", "modify"] if op_raw == "read"
-                       else ["read", "write", "modify"])
-            else:
-                raise ValueError(
-                    f"{self.reg_name}: unsupported target_operation "
-                    f"{c.target_operation!r} (expected read/write/any; "
-                    "modify is derived from read+write, not a target)"
-                )
-            if not pres:
-                raise ValueError(
-                    f"{self.reg_name}: constraint has no preconditions — "
-                    "nothing to enforce (grammar-v2 `other` material)"
-                )
-            for op in ops:
-                _extend_unique(self.preconditions.setdefault(op, []), pres)
-                doc = self.docs.setdefault(op, [])
-                line = c.datasheet_text.strip()
-                if line and line not in doc:
-                    doc.append(line)
+            getattr(self, f"_emit_{c.kind}")(c, peripheral, field_level_gating)
 
         if not self.preconditions and not self.field_gates:
             raise ValueError(f"{self.reg_name}: no enforceable constraints")
+
+    def _emit_state_gate(self, c, peripheral: str,
+                         field_level_gating: bool) -> None:
+        """Emit one state_gate: a whole-register precondition gate, or (opt-in,
+        default off) a per-field gate for a field-scoped constraint."""
+        if c.target_fields:
+            if not field_level_gating:
+                # Default: field-scoped gating disabled. Gating the whole
+                # register would demand this precondition for writes to
+                # UNRELATED fields — sound but over-restrictive, and for a
+                # software-established precondition it can force incorrect
+                # setup of this or another register. So skip rather than
+                # over-gate. Enable with field_level_gating=True.
+                print(
+                    f"WARNING: {self.reg_name}: skipping field-scoped "
+                    f"constraint on {list(c.target_fields)} "
+                    f"({c.target_operation}) — field-level gating is "
+                    f"disabled; this constraint is NOT enforced.",
+                    file=sys.stderr,
+                )
+                return
+            self._add_field_gate(c, peripheral)
+            return
+        if c.postconditions:
+            raise NotImplementedError(
+                f"{self.reg_name}: postconditions/action witnesses are "
+                "roadmap step I; not emitted yet"
+            )
+        pres = _build_preconditions(c, peripheral)
+        op_raw = c.target_operation.strip().lower()
+        # svd2rust modify() = one read + one write, so its obligations are
+        # the UNION of the register's read and write constraints. modify is
+        # DERIVED here (a "modify" bucket fed by both surfaces), never a
+        # first-class target. Datasheet prose "modify/change a register"
+        # means writing it, so a legacy "modify" gates the write surface.
+        if op_raw in ("write", "modify"):
+            ops = ["write", "modify"]        # a modify performs a write
+        elif op_raw in ("read", "any", "read/write", "read-write"):
+            same = [p for p in pres if p.source is None]
+            if same:
+                # A read (and a modify's RMW read) reads the target; gating
+                # it on a condition read FROM the target is self-defeating.
+                raise ValueError(
+                    f"{self.reg_name}: same-register read gate on "
+                    f"{[p.field for p in same]} is self-defeating (the "
+                    "check performs the constrained read); rejected"
+                )
+            # read gates modify() too (a modify performs a read); "any"/
+            # "read/write" gate every surface.
+            ops = (["read", "modify"] if op_raw == "read"
+                   else ["read", "write", "modify"])
+        else:
+            raise ValueError(
+                f"{self.reg_name}: unsupported target_operation "
+                f"{c.target_operation!r} (expected read/write/any; "
+                "modify is derived from read+write, not a target)"
+            )
+        if not pres:
+            raise ValueError(
+                f"{self.reg_name}: constraint has no preconditions — "
+                "nothing to enforce (grammar-v2 `other` material)"
+            )
+        for op in ops:
+            _extend_unique(self.preconditions.setdefault(op, []), pres)
+            doc = self.docs.setdefault(op, [])
+            line = c.datasheet_text.strip()
+            if line and line not in doc:
+                doc.append(line)
 
     def _add_field_gate(self, c, peripheral: str) -> None:
         """Record a field-scoped constraint as one FieldGate per named field
@@ -1168,10 +1199,12 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
 # --------------------------------------------------------------------------- #
 
 def _load_plan(json_path: str, peripheral: str,
-               field_level_gating: bool = False) -> RegisterPlan:
+               field_level_gating: bool = False,
+               disabled_kinds=None) -> RegisterPlan:
     data = json.loads(Path(json_path).read_text())
     return RegisterPlan(RegisterInfo(**data), peripheral,
-                        field_level_gating=field_level_gating)
+                        field_level_gating=field_level_gating,
+                        disabled_kinds=disabled_kinds)
 
 
 def main() -> None:
@@ -1192,19 +1225,25 @@ def main() -> None:
                     help="OPT-IN: enforce field-scoped constraints by gating "
                          "the per-field writer accessor (default off: "
                          "field-scoped constraints are skipped with a warning)")
+    ap.add_argument("--disable-kind", action="append", default=[],
+                    metavar="KIND",
+                    help="disable codegen for a grammar-v2 kind (repeatable); "
+                         "its constraints are skipped with a warning. Default: "
+                         "all supported kinds enabled.")
     args = ap.parse_args()
 
     flg = args.field_level_gating
+    disabled = set(args.disable_kind)
     plans: list[RegisterPlan] = []
     if args.input:
         if not args.peripheral:
             ap.error("--peripheral is required with a positional input")
-        plans.append(_load_plan(args.input, args.peripheral, flg))
+        plans.append(_load_plan(args.input, args.peripheral, flg, disabled))
     for spec in args.constraint:
         peripheral, _, path = spec.partition("=")
         if not path:
             ap.error(f"--constraint needs PERIPHERAL=FIXTURE.json, got {spec!r}")
-        plans.append(_load_plan(path, peripheral, flg))
+        plans.append(_load_plan(path, peripheral, flg, disabled))
     if not plans:
         ap.error("no constraint inputs given")
 
