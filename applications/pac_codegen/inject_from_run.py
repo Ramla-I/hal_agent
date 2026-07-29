@@ -37,7 +37,7 @@ sys.path.insert(0, str(APP_DIR.parent.parent))
 sys.path.insert(0, str(APP_DIR))
 
 from defs import RegisterInfo  # noqa: E402
-import collect_constraints  # noqa: E402
+from core import collect_constraints  # noqa: E402
 import rust_codegen  # noqa: E402
 
 

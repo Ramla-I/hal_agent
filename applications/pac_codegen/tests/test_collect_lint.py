@@ -32,7 +32,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 
-from applications.pac_codegen.collect_constraints import (
+from core.collect_constraints import (
     _families_compatible,
     _load_svd_index,
     collect_constraints,

@@ -50,7 +50,7 @@ from applications.pac_codegen.convert_v1_to_v2 import (
     convert_dir,
     lift_v1_constraint,
 )
-from applications.pac_codegen.collect_constraints import collect_constraints
+from core.collect_constraints import collect_constraints
 
 
 def _convert_and_collect(run_dir, out_dir, svd_dir=None):

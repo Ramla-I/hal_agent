@@ -97,7 +97,7 @@ is faithful to the datasheet. Semantic validation is the Constraint Validator
 docs/constraints_corpus_stats.md.
 
 Usage (CLI):
-    python applications/pac_codegen/collect_constraints.py agent_output/stm/rm0041/24 \
+    python core/collect_constraints.py agent_output/stm/rm0041/24 \
         --output-dir applications/pac_codegen/constraints/rm0041_24 \
         [--svd-dir devices/stm/rm0041/svd]
 
@@ -107,7 +107,7 @@ Usage (CLI):
         --peripheral i2c1 --output applications/pac_codegen/generated/i2c1/constraints.rs
 
 Programmatic:
-    from applications.pac_codegen.collect_constraints import collect_constraints
+    from core.collect_constraints import collect_constraints
     results = collect_constraints("agent_output/stm/rm0041/24",
                                   output_dir="applications/pac_codegen/constraints/rm0041_24")
 """
@@ -123,11 +123,11 @@ from typing import Optional
 from pydantic import TypeAdapter, ValidationError
 
 # Add the repo root to sys.path so we can import the shared defs.py.
-# This file lives at applications/pac_codegen/collect_constraints.py, so the
-# repo root is three levels up.
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-# This application's own directory (applications/pac_codegen/).
-_APP_DIR = Path(__file__).resolve().parent
+# This file lives at core/collect_constraints.py, so the repo root is two levels up.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+# The pac_codegen application dir — collected constraints keep landing under its
+# constraints/collected/ so rust_codegen.py reads them unchanged after this move.
+_APP_DIR = _REPO_ROOT / "applications" / "pac_codegen"
 sys.path.insert(0, str(_REPO_ROOT))
 
 from defs import (  # noqa: E402  (path setup must precede import)
