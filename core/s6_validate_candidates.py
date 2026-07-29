@@ -5,10 +5,11 @@ candidate invariants (blank-status review rows) using the generator's value, the
 writes structure_verdict / structure_confidence back into the consolidated
 {device}_structure_review.csv (never touching tp_fp — advisory only).
 
-Calibration: run the single carded model (gpt-oss-120b) with retry-after; do NOT
-overflow to another model, because the validator_card's deployment_threshold is
-per-model — a mixed-model batch would invalidate the calibrated verdict. Slower
-under rate limits, but the verdicts stay trustworthy.
+Calibration guard: the carded (primary) model's verdicts use the card threshold;
+if a Groq rate-limit/outage forces a fall over to the cheap OpenAI fallback, those
+rows are uncalibrated and use a conservative default threshold instead (the judging
+model is recorded per row via the classification 'model' column). Resilient
+without silently invalidating the calibrated numbers.
 
     python core/s6_validate_candidates.py --devices rm0360
     python core/s6_validate_candidates.py --all --parallel 2
@@ -127,6 +128,7 @@ def run_validator_batched_resilient(models: list, invariants: list, output_dir: 
                             "peripheral_name": inv["peripheral_name"], "register_name": inv["register_name"],
                             "field_name": inv["field_name"], "key": inv["key"], "value": inv["value"],
                             "agent_judgement": is_true, "confidence_score": conf,
+                            "model": used_model,   # which model judged it (calibration guard downstream)
                         }, "classification.csv")
                         total_true += is_true
                         total_false += (not is_true)
@@ -181,14 +183,18 @@ def validate_run(ctx, repo_root: str, run_number: int, models: list,
         reasoning_effort)
 
     vendor = getattr(ctx.manufacturer, "value", str(ctx.manufacturer)).lower()
+    # The card matches the primary (carded) model = models[0]; fallback-model rows
+    # are treated as uncalibrated inside apply_verdicts.
     card, calibrated_for = load_card(vendor, device, models[0], cards_dir)
     threshold = card_threshold(card)
-    counts = apply_verdicts(review_csv, os.path.join(validator_dir, "classification.csv"), threshold)
+    counts = apply_verdicts(review_csv, os.path.join(validator_dir, "classification.csv"),
+                            threshold, carded_model=models[0])
 
     _update_manifest(paths.agent_output_dir, {
         "candidate_validator_used": True,
         "candidate_validator_vendor": vendor,
         "candidate_validator_model": models[0],
+        "candidate_validator_models": models,
         "candidate_validator_retrieval": cr_params.context_retrieval_method.value,
         "candidate_validator_calibrated_for": calibrated_for,
         "candidate_validator_threshold": threshold,
@@ -206,7 +212,9 @@ def main() -> None:
     ap.add_argument("--devices", nargs="*", help="device names (default: all in config.user_contexts)")
     ap.add_argument("--all", action="store_true", help="all devices in config.user_contexts")
     ap.add_argument("--run", type=int, default=None, help="run number (default: latest)")
-    ap.add_argument("--validator-model", default=config.VALIDATOR_MODEL_NAME)
+    ap.add_argument("--validator-model", default=None,
+                    help="pin a single model; default uses STAGE_MODELS['validator'] "
+                         "(carded primary -> cheap OpenAI fallback)")
     ap.add_argument("--cards-dir", default=_CARDS_DIR)
     ap.add_argument("--parallel", type=int, default=1)
     args = ap.parse_args()
@@ -221,7 +229,9 @@ def main() -> None:
     if not contexts:
         print("no matching devices"); return
 
-    models = [args.validator_model]     # single model — keep card calibration valid
+    # carded primary first, then cheap OpenAI fallback (calibration guard in
+    # apply_verdicts keeps the card threshold valid despite the fallback).
+    models = [args.validator_model] if args.validator_model else list(config.STAGE_MODELS["validator"])
     jobs = []
     for ctx in contexts:
         run_number = args.run if args.run is not None else resolve_run_number(repo_root, ctx)

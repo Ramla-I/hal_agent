@@ -91,7 +91,7 @@ def _parse_bool(v) -> Optional[bool]:
 
 
 def _load_classification(classification_csv_path: str) -> dict[tuple, tuple]:
-    """(peripheral,register,field,key,value) -> (is_true, confidence)."""
+    """(peripheral,register,field,key,value) -> (is_true, confidence, model)."""
     out: dict[tuple, tuple] = {}
     if not os.path.isfile(classification_csv_path):
         return out
@@ -108,14 +108,19 @@ def _load_classification(classification_csv_path: str) -> dict[tuple, tuple]:
                 conf = float(r.get("confidence_score") or 0.0)
             except ValueError:
                 conf = 0.0
-            out[key] = (_parse_bool(r.get("agent_judgement")), conf)
+            out[key] = (_parse_bool(r.get("agent_judgement")), conf, (r.get("model") or "").strip())
     return out
 
 
 def apply_verdicts(review_csv_path: str, classification_csv_path: str,
-                   threshold: float) -> dict:
+                   threshold: float, carded_model: str = "",
+                   default_threshold: float = DEFAULT_THRESHOLD) -> dict:
     """Write structure_verdict + structure_confidence into the review CSV for
-    each candidate, preserving tp_fp and every other cell. Returns counts."""
+    each candidate, preserving tp_fp and every other cell. Returns counts.
+
+    The card threshold is applied only to rows judged by the carded model; rows
+    that fell over to a fallback model are uncalibrated, so they use the
+    conservative default_threshold (counted under 'fallback')."""
     classifications = _load_classification(classification_csv_path)
 
     with open(review_csv_path, newline="", encoding="utf-8") as f:
@@ -130,7 +135,7 @@ def apply_verdicts(review_csv_path: str, classification_csv_path: str,
         else:
             fields.extend(new_cols)
 
-    counts = {"TP": 0, "FP": 0, "abstain": 0, "unmatched": 0, "candidates": 0}
+    counts = {"TP": 0, "FP": 0, "abstain": 0, "unmatched": 0, "candidates": 0, "fallback": 0}
     for row in rows:
         if (row.get("status") or "").strip():            # auto-FP: leave validator cols blank
             row.setdefault("structure_verdict", "")
@@ -145,8 +150,14 @@ def apply_verdicts(review_csv_path: str, classification_csv_path: str,
             row["structure_confidence"] = ""
             counts["unmatched"] += 1
             continue
-        is_true, conf = classifications[ck]
-        verdict = decide_verdict(is_true, conf, threshold)
+        is_true, conf, model = classifications[ck]
+        # calibration guard: the card threshold is valid only for the carded model;
+        # a fallback-model row is uncalibrated -> conservative default_threshold.
+        is_fallback = bool(carded_model) and model != "" and model != carded_model
+        thr = default_threshold if is_fallback else threshold
+        if is_fallback:
+            counts["fallback"] += 1
+        verdict = decide_verdict(is_true, conf, thr)
         row["structure_verdict"] = verdict
         row["structure_confidence"] = f"{conf:.2f}"
         counts["TP" if verdict == "TP" else "FP" if verdict == "FP" else "abstain"] += 1
