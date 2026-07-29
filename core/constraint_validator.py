@@ -26,16 +26,16 @@ The constraint under validation is the native grammar-v2 object of ANY kind
 ``read_effect``, ``value_relation``, ``other``); ``constraint_payload`` shows it
 kind-agnostically.
 
-This module is a LIBRARY: s0 (``--constraint-validation``) and the calibration
-harness call ``make_client`` / ``load_items`` / ``run_judge`` directly. The
-manual calibration CLI and its tuning-only helpers (stratified sampling,
-corruption-row loading, and judgment writing with the §7.2 blindness guard)
-live in ``tune_constraint_validator/judge_cli.py``.
+This module is an in-memory LIBRARY of the judging core: s0
+(``--constraint-validation``) builds items in memory and calls ``make_client``
+/ ``run_judge`` directly. The tuning-only pieces — reading the ``stm.csv``
+calibration dataset, the manual CLI, stratified sampling, corruption-row
+loading, and judgment writing with the §7.2 blindness guard — live in
+``tune_constraint_validator/`` (``dataset.py`` + ``judge_cli.py``).
 """
 
 from __future__ import annotations
 
-import csv
 import json
 import os
 import re
@@ -51,7 +51,6 @@ from concurrent.futures import ThreadPoolExecutor
 MODEL = "openai/gpt-oss-120b"          # Groq's model id (verified by smoke run)
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 
-JUDGEABLE_TIERS = ("exact", "fuzzy")   # plan §7.1: unanchored rows die earlier
 VERDICTS = ("confirmed", "encoding_error", "not_constraint")
 
 CALL_TIMEOUT_S = 120.0
@@ -210,87 +209,6 @@ def make_client():
     from openai import OpenAI  # lazy: tests inject a fake client instead
     return OpenAI(api_key=os.environ.get("GROQ_API_KEY"),
                   base_url=GROQ_BASE_URL)
-
-
-# ---------------------------------------------------------------------------
-# Data loading / item preparation
-# ---------------------------------------------------------------------------
-
-
-def parse_json_list(value):
-    """CSV cells hold JSON arrays as strings; corruption records may hold
-    real lists. Return a list either way ([] on blank/garbage)."""
-    if value is None or value == "":
-        return []
-    if isinstance(value, list):
-        return value
-    try:
-        out = json.loads(value)
-    except (ValueError, TypeError):
-        return []
-    return out if isinstance(out, list) else []
-
-
-def load_csv_rows(csv_path: str) -> list:
-    with open(csv_path, encoding="utf-8") as f:
-        return list(csv.DictReader(f))
-
-
-def load_anchors(anchors_path: str) -> dict:
-    """anchors.jsonl -> {id: anchor_record}."""
-    out = {}
-    with open(anchors_path, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                rec = json.loads(line)
-                out[rec["id"]] = rec
-    return out
-
-
-def _row_constraint(row: dict) -> dict:
-    """The native grammar-v2 constraint object for a CSV row. Prefer a
-    ``constraint_json`` column (any kind); fall back to synthesizing a
-    ``state_gate`` object from the legacy flat columns, so pre-migration
-    datasets (``stm.csv``) still judge until they are rebuilt."""
-    raw = row.get("constraint_json")
-    if raw:
-        try:
-            obj = json.loads(raw)
-        except (ValueError, TypeError):
-            obj = None
-        if isinstance(obj, dict):
-            return obj
-    return {
-        "kind": "state_gate",
-        "target_operation": row.get("target_operation", ""),
-        "target_fields": parse_json_list(row.get("target_fields")),
-        "preconditions": parse_json_list(row.get("preconditions")),
-        "postconditions": parse_json_list(row.get("postconditions")),
-        "severity": row.get("severity", ""),
-    }
-
-
-def load_items(csv_path: str, anchors_path: str) -> list:
-    """Join CSV rows with anchors by id; keep only judgeable tiers (exact,
-    fuzzy) that carry a derived context. Attaches the native constraint object
-    as ``item["constraint"]``. Returns item dicts sorted by id. (This is the
-    calibration reader; the product path builds items in memory instead.)"""
-    anchors = load_anchors(anchors_path)
-    items = []
-    for row in load_csv_rows(csv_path):
-        anc = anchors.get(row.get("id", ""))
-        if not anc or anc.get("tier") not in JUDGEABLE_TIERS:
-            continue
-        if not anc.get("context"):
-            continue
-        item = dict(row)
-        item["constraint"] = _row_constraint(row)
-        item["context"] = anc["context"]
-        item["tier"] = anc["tier"]
-        items.append(item)
-    items.sort(key=lambda it: it["id"])
-    return items
 
 
 # ---------------------------------------------------------------------------

@@ -138,21 +138,6 @@ def test_referenced_registers_across_kinds():
     assert judge.referenced_registers(vr) == ["TIM1_ARR", "TIM1_PSC"]
 
 
-def test_load_items_legacy_flat_columns_shim(tmp_path):
-    # a pre-migration row with no constraint_json -> synthesized state_gate
-    row = {"target_operation": "write", "target_fields": "[]",
-           "preconditions": '[{"register_name":"USART_CR1","field_name":"UE",'
-                            '"required_state":"cleared"}]',
-           "postconditions": "[]", "severity": "error"}
-    c = judge._row_constraint(row)
-    assert c["kind"] == "state_gate" and c["target_operation"] == "write"
-    assert c["preconditions"][0]["field_name"] == "UE"
-    # a row WITH constraint_json -> used verbatim (any kind)
-    native = {"kind": "delay", "after": {"register": "RCC_CR"},
-              "duration": {"value": 2, "unit": "cycles_apb"}}
-    assert judge._row_constraint({"constraint_json": json.dumps(native)}) == native
-
-
 def test_system_prompt_has_examples_and_exact_keys():
     sp = judge.SYSTEM_PROMPT
     for key in ("is_constraint", "encoding_faithful", "verdict",
@@ -371,54 +356,3 @@ def test_run_judge_batched_sorted_with_one_shared_call():
     assert totals["items"] == 3 and totals["calls"] == 1     # one shared call
     assert len(client.calls) == 1
     assert all(r["batched"] and r["verdict"] == "confirmed" for r in recs)
-
-
-# ---------------------------------------------------------------------------
-# Data loading / join / sampling
-# ---------------------------------------------------------------------------
-
-def _write_inputs(tmp_path, n_per_rm=4, rms=("rm0001", "rm0002")):
-    import csv as csv_mod
-    csv_path = tmp_path / "stm.csv"
-    anchors_path = tmp_path / "anchors.jsonl"
-    fields = ["id", "reference_manual", "run", "source_file", "peripheral",
-              "register", "target_operation", "target_fields",
-              "preconditions", "postconditions", "severity", "consequence",
-              "datasheet_text", "dup_count", "lint_flags", "status", "note"]
-    rows, anchors = [], []
-    for rm in rms:
-        for i in range(n_per_rm):
-            rid = f"{rm}x{i:02d}"
-            rows.append({
-                "id": rid, "reference_manual": rm, "run": "1",
-                "source_file": f"{rm}/1/per_reg", "peripheral": "per",
-                "register": f"reg{i}", "target_operation": "write",
-                "target_fields": "[]",
-                "preconditions": ('[{"register_name":"PER_CR","field_name":'
-                                  '"EN","required_state":"cleared"}]'),
-                "postconditions": "[]", "severity": "error",
-                "consequence": "c", "datasheet_text": f"quote {rid}",
-                "dup_count": "1", "lint_flags": "", "status": "", "note": "",
-            })
-            tier = "unanchored" if i == n_per_rm - 1 else "exact"
-            anc = {"id": rid, "tier": tier, "reference_manual": rm}
-            if tier != "unanchored":
-                anc["context"] = f"context for {rid}"
-            anchors.append(anc)
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
-        w = csv_mod.DictWriter(f, fieldnames=fields)
-        w.writeheader()
-        w.writerows(rows)
-    with open(anchors_path, "w", encoding="utf-8") as f:
-        for a in anchors:
-            f.write(json.dumps(a) + "\n")
-    return str(csv_path), str(anchors_path)
-
-
-def test_load_items_joins_and_filters_unanchored(tmp_path):
-    csv_path, anchors_path = _write_inputs(tmp_path)
-    items = judge.load_items(csv_path, anchors_path)
-    assert len(items) == 6                       # 8 rows - 2 unanchored
-    assert all(it["tier"] == "exact" for it in items)
-    assert all(it["context"].startswith("context for") for it in items)
-    assert [it["id"] for it in items] == sorted(it["id"] for it in items)
