@@ -1,0 +1,14 @@
+# The "real driver" demonstration (plan §8, roadmap step J):
+# compile the UNMODIFIED stm32f4xx-hal against the constraint-injected PAC.
+# [patch.crates-io] swaps the crates.io stm32f4 for our local copy — the HAL
+# itself is untouched, exactly as a downstream user would consume it.
+[package]
+name = "eval-hal"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stm32f4xx-hal = { version = "=0.23.0", features = ["stm32f405"] }
+
+[patch.crates-io]
+stm32f4 = { path = "../vendored/pac/stm32f4" }

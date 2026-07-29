@@ -1,0 +1,358 @@
+"""Offline tests for the LLM constraint-validator judge
+(core/constraint_validator.py, plan §7.0 stage 1).
+
+No network: every test injects a FAKE client. The real Groq client is never
+constructed here (make_client is only called when client=None).
+
+The tuning-only helpers lifted out of the judge (the calibration CLI,
+stratified sampling, corruption-row loading, judgment writing) live in
+tune_constraint_validator/judge_cli.py and are tested there; the calibration
+math is in tune_constraint_validator/tests/test_calibrate.py.
+"""
+
+import json
+import os
+import sys
+from types import SimpleNamespace
+
+import pytest
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from core import constraint_validator as judge  # noqa: E402
+
+
+# ---------------------------------------------------------------------------
+# Fake client
+# ---------------------------------------------------------------------------
+
+class FakeClient:
+    """Mimics the OpenAI SDK surface used by the judge.
+
+    ``script`` is a list whose entries are either response strings or
+    Exception instances (raised in order). Use concurrency=1 for list-based
+    scripts so pop order is deterministic.
+    """
+
+    def __init__(self, script):
+        self._script = list(script)
+        self.calls = []
+        outer = self
+
+        class _Completions:
+            def create(self, **kw):
+                outer.calls.append(kw)
+                nxt = outer._script.pop(0)
+                if isinstance(nxt, Exception):
+                    raise nxt
+                return SimpleNamespace(
+                    choices=[SimpleNamespace(
+                        message=SimpleNamespace(content=nxt))],
+                    usage=SimpleNamespace(prompt_tokens=100,
+                                          completion_tokens=20),
+                )
+
+        self.chat = SimpleNamespace(completions=_Completions())
+
+
+VALID = json.dumps({
+    "is_constraint": True, "encoding_faithful": True,
+    "verdict": "confirmed", "confidence": 0.9,
+    "reason": "matches the text.",
+})
+
+
+def make_item(id_="aaa111", rm="rm0091", **over):
+    quote = ("This register can only be written when the USART is "
+             "disabled (UE=0).")
+    item = {
+        "id": id_,
+        "reference_manual": rm,
+        "peripheral": "usart1",
+        "register": "brr",
+        "datasheet_text": quote,
+        "context": ("27.8.4 USART baud rate register (USART_BRR)\n\n"
+                    "This register can only be written when the USART is "
+                    "disabled (UE=0). It may be automatically updated by "
+                    "hardware in auto baud rate detection mode."),
+        "tier": "exact",
+        "constraint": {
+            "kind": "state_gate",
+            "severity": "error",
+            "consequence": "must disable the USART first",
+            "datasheet_text": quote,
+            "target_register": "USART_BRR",
+            "target_fields": [],
+            "target_operation": "write",
+            "preconditions": [{"register": "USART_CR1", "field": "UE",
+                               "state": "cleared",
+                               "established_by": "software",
+                               "action_operation": "modify"}],
+            "postconditions": [],
+        },
+    }
+    item.update(over)
+    return item
+
+
+# ---------------------------------------------------------------------------
+# Prompt construction
+# ---------------------------------------------------------------------------
+
+def test_user_message_contains_quote_context_and_encoding():
+    item = make_item()
+    msg = judge.build_user_message(item)
+    assert item["datasheet_text"] in msg
+    assert "auto baud rate detection" in msg      # context made it in
+    assert "USART_CR1" in msg and "cleared" in msg  # encoding made it in
+    assert "rm0091" in msg and "usart1" in msg and "brr" in msg
+    assert "QUOTE" in msg and "CONTEXT" in msg and "CONSTRAINT" in msg
+
+
+def test_encoding_shown_to_judge_excludes_consequence():
+    payload = judge.constraint_payload(make_item())
+    assert payload["kind"] == "state_gate"        # native object, kind-tagged
+    assert "consequence" not in payload           # hidden extractor commentary
+    assert "datasheet_text" not in payload        # shown as QUOTE, not here
+    assert "enforceability" not in payload         # computed, not extracted
+    assert "preconditions" in payload and "target_operation" in payload
+    assert "consequence" not in json.dumps(payload)
+
+
+def test_referenced_registers_across_kinds():
+    sg = {"kind": "state_gate", "target_register": "I2C1_CR1",
+          "preconditions": [{"register": "I2C1_SR2", "field": "BUSY",
+                             "state": "cleared"}], "postconditions": []}
+    assert judge.referenced_registers(sg) == ["I2C1_CR1", "I2C1_SR2"]
+    seq = {"kind": "sequence",
+           "steps": [{"register": "RTC_WPR", "operation": "write", "value": 202},
+                     {"register": "RTC_WPR", "operation": "write", "value": 83}],
+           "enables": {"register": "RTC_DR", "whole_register": True}}
+    assert judge.referenced_registers(seq) == ["RTC_DR", "RTC_WPR"]
+    reff = {"kind": "read_effect", "read_register": "USART_SR",
+            "effects": [{"field": "RXNE", "becomes": "cleared"}]}
+    assert judge.referenced_registers(reff) == ["USART_SR"]
+    vr = {"kind": "value_relation",
+          "fields": [{"register": "TIM1_PSC", "field": "PSC"},
+                     {"register": "TIM1_ARR", "field": "ARR"}]}
+    assert judge.referenced_registers(vr) == ["TIM1_ARR", "TIM1_PSC"]
+
+
+def test_system_prompt_has_examples_and_exact_keys():
+    sp = judge.SYSTEM_PROMPT
+    for key in ("is_constraint", "encoding_faithful", "verdict",
+                "confidence", "reason"):
+        assert key in sp
+    assert "UE=0" in sp                    # worked positive example
+    assert "not_constraint" in sp          # worked negative example
+    # terminology: the LLM validates (never "verify" as its role)
+    assert "validating" in sp.lower()
+
+
+def test_system_prompt_describes_all_kinds():
+    sp = judge.SYSTEM_PROMPT
+    for kind in ("state_gate", "sequence", "write_once", "delay",
+                 "read_effect", "clock_gate", "value_relation", "other"):
+        assert kind in sp                  # the judge is told about every kind
+    # and encoding_faithful spells out per-kind checks (order, duration, ...)
+    assert "ORDER" in sp and "duration" in sp
+
+
+# ---------------------------------------------------------------------------
+# JSON recovery
+# ---------------------------------------------------------------------------
+
+def test_extract_json_clean():
+    assert judge.extract_json_block(VALID)["verdict"] == "confirmed"
+
+
+def test_extract_json_fenced():
+    text = "Here is my answer:\n```json\n" + VALID + "\n```\nDone."
+    assert judge.extract_json_block(text)["verdict"] == "confirmed"
+
+
+def test_extract_json_prose_wrapped():
+    text = "After careful review I conclude " + VALID + " which is final."
+    obj = judge.extract_json_block(text)
+    assert obj is not None and obj["confidence"] == 0.9
+
+
+def test_extract_json_nested_braces_in_strings():
+    inner = json.dumps({"verdict": "confirmed", "is_constraint": True,
+                        "encoding_faithful": True, "confidence": 1.0,
+                        "reason": 'field {UE} must be "cleared" (see {})'})
+    assert judge.extract_json_block("x " + inner + " y") is not None
+
+
+def test_extract_json_garbage_returns_none():
+    assert judge.extract_json_block("no json here { broken") is None
+    assert judge.extract_json_block("") is None
+
+
+def test_coerce_normalizes_verdict_spelling():
+    j = judge.coerce_judgment({"is_constraint": True,
+                               "encoding_faithful": False,
+                               "verdict": "Encoding Error",
+                               "confidence": "0.8", "reason": "r"})
+    assert j["verdict"] == "encoding_error"
+    assert j["confidence"] == 0.8
+
+
+def test_coerce_derives_verdict_from_booleans():
+    j = judge.coerce_judgment({"is_constraint": False,
+                               "encoding_faithful": False,
+                               "verdict": "rejected",   # off-vocab
+                               "confidence": 1.0, "reason": "r"})
+    assert j["verdict"] == "not_constraint"
+    assert judge.coerce_judgment({"verdict": "maybe"}) is None
+
+
+def test_coerce_clamps_confidence():
+    j = judge.coerce_judgment({"is_constraint": True,
+                               "encoding_faithful": True,
+                               "verdict": "confirmed",
+                               "confidence": 1.7, "reason": "r"})
+    assert j["confidence"] == 1.0
+
+
+# ---------------------------------------------------------------------------
+# judge_one: success / retry / parse failure
+# ---------------------------------------------------------------------------
+
+def test_judge_one_first_try():
+    client = FakeClient([VALID])
+    rec = judge.judge_one(client, make_item())
+    assert rec["verdict"] == "confirmed"
+    assert rec["parse_recovered"] is False
+    assert rec["usage"] == {"prompt_tokens": 100, "completion_tokens": 20,
+                            "total_tokens": 120, "calls": 1}
+    assert rec["model"] == judge.MODEL
+    # no structured-output mode is ever requested (Groq OSS hard-errors)
+    assert "response_format" not in client.calls[0]
+    assert client.calls[0]["temperature"] == 0
+
+
+def test_judge_one_retry_recovers():
+    client = FakeClient(["I think it is fine, thanks!", VALID])
+    rec = judge.judge_one(client, make_item())
+    assert rec["verdict"] == "confirmed"
+    assert rec["parse_recovered"] is True
+    assert rec["usage"]["calls"] == 2
+    # the retry appends the bad reply + a repair instruction
+    msgs = client.calls[1]["messages"]
+    assert msgs[-1]["content"] == judge.REPAIR_PROMPT
+    assert msgs[-2]["role"] == "assistant"
+
+
+def test_judge_one_parse_failed_after_retry():
+    client = FakeClient(["garbage one", "garbage two"])
+    rec = judge.judge_one(client, make_item())
+    assert rec["verdict"] == "parse_failed"
+    assert rec["is_constraint"] is None
+    assert rec["parse_recovered"] is False
+    assert rec["usage"]["calls"] == 2
+    assert rec["raw"].startswith("garbage one")
+
+
+def test_backoff_retries_on_429_and_respects_retry_after():
+    err = Exception("rate limited")
+    err.status_code = 429
+    err.response = SimpleNamespace(headers={"retry-after": "3"})
+    client = FakeClient([err, VALID])
+    sleeps = []
+    rec = judge.judge_one(client, make_item(), sleep=sleeps.append)
+    assert rec["verdict"] == "confirmed"
+    assert sleeps == [3.0]
+    assert len(client.calls) == 2
+
+
+def test_backoff_does_not_retry_client_errors():
+    err = Exception("bad request")
+    err.status_code = 400
+    client = FakeClient([err])
+    with pytest.raises(Exception, match="bad request"):
+        judge.judge_one(client, make_item(), sleep=lambda s: None)
+
+
+# ---------------------------------------------------------------------------
+# run_judge: ordering, totals, corruption passthrough
+# ---------------------------------------------------------------------------
+
+def test_run_judge_output_sorted_by_id_with_totals():
+    items = [make_item("zzz"), make_item("aaa"), make_item("mmm")]
+    client = FakeClient([VALID, VALID, VALID])
+    recs, totals = judge.run_judge(items, client, concurrency=1, quiet=True)
+    assert [r["id"] for r in recs] == ["aaa", "mmm", "zzz"]
+    assert totals["items"] == 3
+    assert totals["total_tokens"] == 3 * 120
+    assert totals["parse_recovered"] == 0 and totals["parse_failed"] == 0
+
+
+def test_run_judge_passes_through_corruption_fields():
+    item = make_item("aaa-flip_polarity", corruption_type="flip_polarity",
+                     original_id="aaa")
+    recs, _ = judge.run_judge([item], FakeClient([VALID]), concurrency=1,
+                              quiet=True)
+    assert recs[0]["corruption_type"] == "flip_polarity"
+    assert recs[0]["original_id"] == "aaa"
+
+
+# ---------------------------------------------------------------------------
+# Batch judging (one call for many items; amortizes the system prompt)
+# ---------------------------------------------------------------------------
+
+def _batch_reply(*verdicts):
+    """A JSON array of per-id judgments: (id, verdict) pairs."""
+    return json.dumps([
+        {"id": i, "is_constraint": v != "not_constraint",
+         "encoding_faithful": v == "confirmed", "verdict": v,
+         "confidence": 0.9, "reason": "r"}
+        for i, v in verdicts
+    ])
+
+
+def test_system_prompt_batch_differs_and_asks_for_array():
+    assert judge.SYSTEM_PROMPT_BATCH != judge.SYSTEM_PROMPT   # replace matched
+    assert "JSON ARRAY" in judge.SYSTEM_PROMPT_BATCH
+    assert '"id"' in judge.SYSTEM_PROMPT_BATCH
+    assert "single JSON object" not in judge.SYSTEM_PROMPT_BATCH
+
+
+def test_judge_batch_maps_verdicts_by_id_in_one_call():
+    items = [make_item("aaa"), make_item("bbb")]
+    client = FakeClient([_batch_reply(("aaa", "confirmed"),
+                                      ("bbb", "not_constraint"))])
+    covered, usage = judge.judge_batch(client, items)
+    assert set(covered) == {"aaa", "bbb"}
+    assert covered["aaa"]["verdict"] == "confirmed"
+    assert covered["bbb"]["verdict"] == "not_constraint"
+    assert usage["calls"] == 1
+    assert len(client.calls) == 1                        # ONE call, two items
+    assert client.calls[0]["messages"][0]["content"] == judge.SYSTEM_PROMPT_BATCH
+
+
+def test_run_judge_batched_falls_back_on_missing_id():
+    items = [make_item("aaa"), make_item("bbb")]
+    # batch response omits "bbb"; its fallback judge_one gets VALID
+    client = FakeClient([_batch_reply(("aaa", "confirmed")), VALID])
+    recs, totals = judge.run_judge(items, client, concurrency=1,
+                                   batch_size=10, quiet=True)
+    by = {r["id"]: r for r in recs}
+    assert by["aaa"]["batched"] is True
+    assert by["bbb"]["batched"] is False                 # fell back to solo
+    assert by["bbb"]["verdict"] == "confirmed"           # from VALID
+    assert totals["calls"] == 2                          # 1 batch + 1 fallback
+    assert len(client.calls) == 2
+
+
+def test_run_judge_batched_sorted_with_one_shared_call():
+    items = [make_item("zzz"), make_item("aaa"), make_item("mmm")]
+    client = FakeClient([_batch_reply(("zzz", "confirmed"),
+                                      ("aaa", "confirmed"),
+                                      ("mmm", "confirmed"))])
+    recs, totals = judge.run_judge(items, client, concurrency=1,
+                                   batch_size=10, quiet=True)
+    assert [r["id"] for r in recs] == ["aaa", "mmm", "zzz"]   # sorted by id
+    assert totals["items"] == 3 and totals["calls"] == 1     # one shared call
+    assert len(client.calls) == 1
+    assert all(r["batched"] and r["verdict"] == "confirmed" for r in recs)

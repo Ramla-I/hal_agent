@@ -1,0 +1,231 @@
+{
+  "datasheet_register_abbreviation": "SPI1_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x0000",
+  "size": 16,
+  "subfields": [
+    {
+      "name": "BIDIMODE",
+      "description": "Bidirectional data mode enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "2-line unidirectional data mode selected"
+        },
+        {
+          "value": "1",
+          "name": "1-line bidirectional data mode selected"
+        }
+      ]
+    },
+    {
+      "name": "BIDIOE",
+      "description": "Output enable in bidirectional mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Output disabled (receive-only mode)"
+        },
+        {
+          "value": "1",
+          "name": "Output enabled (transmit-only mode)"
+        }
+      ]
+    },
+    {
+      "name": "CRCEN",
+      "description": "Hardware CRC calculation enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "CRC calculation disabled"
+        },
+        {
+          "value": "1",
+          "name": "CRC calculation enabled"
+        }
+      ]
+    },
+    {
+      "name": "CRCNEXT",
+      "description": "Transmit CRC next",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Next transmit value is from Tx buffer"
+        },
+        {
+          "value": "1",
+          "name": "Next transmit value is from Tx CRC register"
+        }
+      ]
+    },
+    {
+      "name": "CRCL",
+      "description": "CRC length",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "8-bit CRC length"
+        },
+        {
+          "value": "1",
+          "name": "16-bit CRC length"
+        }
+      ]
+    },
+    {
+      "name": "RXONLY",
+      "description": "Receive only mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "SSM",
+      "description": "Software slave management",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "SSI",
+      "description": "Internal slave select",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "LSBFIRST",
+      "description": "Frame format: LSB first",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "SPE",
+      "description": "SPI enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "BR",
+      "description": "Baud rate control",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 5
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "MSTR",
+      "description": "Master selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CPOL",
+      "description": "Clock polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "CPHA",
+      "description": "Clock phase",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "SPI1_CR1",
+      "target_fields": [
+        "CRCEN"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "SPI1_CR1",
+          "field_name": "SPE",
+          "required_state": "cleared"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Writing CRCEN while SPI is enabled may cause incorrect operation",
+      "datasheet_text": "This bit should be written only when SPI is disabled (SPE = ‘0’) for correct operation."
+    },
+    {
+      "target_register": "SPI1_CR1",
+      "target_fields": [
+        "CRCL"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "SPI1_CR1",
+          "field_name": "SPE",
+          "required_state": "cleared"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "Writing CRCL while SPI is enabled may cause incorrect operation",
+      "datasheet_text": "This bit should be written only when SPI is disabled (SPE = ‘0’) for correct operation."
+    }
+  ]
+}

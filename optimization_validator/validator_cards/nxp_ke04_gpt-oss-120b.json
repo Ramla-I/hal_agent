@@ -8,33 +8,33 @@
     "objective": "precision",
     "target_precision": 0.95
   },
-  "deployment_threshold": 0.1,
+  "deployment_threshold": 0.07,
   "threshold_stability": {
     "per_fold_tau": [
-      0.15,
-      0.15,
       0.07,
       0.1,
-      0.2
+      0.07,
+      0.07,
+      0.07
     ],
     "min": 0.07,
-    "max": 0.2,
-    "std": 0.045
+    "max": 0.1,
+    "std": 0.012
   },
   "instrument": {
-    "alpha_sensitivity": 0.8622816032887975,
-    "beta_specificity": 0.9008363201911589
+    "alpha_sensitivity": 0.7826278659611993,
+    "beta_specificity": 0.9198355601233299
   },
   "measured_on_dev_device": {
-    "gate_precision": 0.9528676888131743,
-    "yield_recall": 0.8622816032887975,
-    "f1": 0.9053142702994336,
-    "validated_precision": 0.9528676888131746,
-    "n_invariants": 2783,
+    "gate_precision": 0.9579060982191041,
+    "yield_recall": 0.7826278659611993,
+    "f1": 0.8614413977190002,
+    "validated_precision": 0.9579060982191041,
+    "n_invariants": 3241,
     "config": "baseline"
   },
   "provenance": {
-    "source_run": "optimization_validator/nxp_ke04_run/cross_validation/gpt-oss-120b",
+    "source_run": "optimization_validator/experiments/nxpke04_run/gpt-oss-120b",
     "seed": 0,
     "corruption_fraction": 0.3,
     "est_cost_usd": null,

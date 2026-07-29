@@ -20,7 +20,7 @@ The card captures exactly what describes the Validator and amortizes per vendor:
 
 Run (host python, no Docker):
     python3 optimization_validator/validator_card.py \
-        optimization_validator/stmrm0041_run/curated/gpt-5.4 \
+        optimization_validator/experiments/stmrm0041_run/curated/gpt-5.4 \
         --vendor stm --device rm0041 --target-precision 0.95
 -> writes optimization_validator/validator_cards/<vendor>_<device>_<model>.json
 """
@@ -166,7 +166,7 @@ def build_card(run_dir, vendor, device, target_precision=0.95, model=None):
 
 def main():
     ap = argparse.ArgumentParser(description="Build a per-device validator card")
-    ap.add_argument("run_dir", help="a model run dir, e.g. stmrm0041_run/curated/gpt-5.4")
+    ap.add_argument("run_dir", help="a model run dir, e.g. experiments/stmrm0041_run/curated/gpt-5.4")
     ap.add_argument("--vendor", required=True)
     ap.add_argument("--device", required=True)
     ap.add_argument("--model", default=None)

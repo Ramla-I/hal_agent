@@ -1,0 +1,87 @@
+{
+  "datasheet_register_abbreviation": "I2C_TIMEOUTR",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "TEXTEN",
+      "description": "Extended clock timeout enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 31
+      },
+      "enumerated_values": [
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
+      ]
+    },
+    {
+      "name": "TIMEOUTB",
+      "description": "Bus timeout B",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 27
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIMOUTEN",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIDLE",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
+      "enumerated_values": []
+    },
+    {
+      "name": "TIMEOUTA",
+      "description": "",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      },
+      "enumerated_values": []
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "I2C_TIMEOUTR",
+      "target_fields": [
+        "TIMEOUTB"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register_name": "I2C_TIMEOUTR",
+          "field_name": "TEXTEN",
+          "required_state": "cleared"
+        }
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "TIMEOUTB must not be written while TEXTEN is set",
+      "datasheet_text": "These bits can be written only when TEXTEN=0."
+    }
+  ]
+}

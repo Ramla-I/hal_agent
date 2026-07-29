@@ -8,157 +8,308 @@
       "name": "PE",
       "description": "Peripheral enable",
       "access": "rw",
-      "bit_number": {"start_bit": 0, "end_bit": 0},
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      },
       "enumerated_values": [
-        {"value": "0", "name": "Disabled"},
-        {"value": "1", "name": "Enabled"}
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
       ]
     },
     {
       "name": "SMBUS",
       "description": "SMBus mode",
       "access": "rw",
-      "bit_number": {"start_bit": 1, "end_bit": 1},
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      },
       "enumerated_values": [
-        {"value": "0", "name": "I2C"},
-        {"value": "1", "name": "SMBus"}
+        {
+          "value": "0",
+          "name": "I2C"
+        },
+        {
+          "value": "1",
+          "name": "SMBus"
+        }
       ]
     },
     {
       "name": "SMBTYPE",
       "description": "SMBus type",
       "access": "rw",
-      "bit_number": {"start_bit": 3, "end_bit": 3},
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      },
       "enumerated_values": [
-        {"value": "0", "name": "Device"},
-        {"value": "1", "name": "Host"}
+        {
+          "value": "0",
+          "name": "Device"
+        },
+        {
+          "value": "1",
+          "name": "Host"
+        }
       ]
     },
     {
       "name": "ENARP",
       "description": "ARP enable",
       "access": "rw",
-      "bit_number": {"start_bit": 4, "end_bit": 4},
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      },
       "enumerated_values": [
-        {"value": "0", "name": "Disabled"},
-        {"value": "1", "name": "Enabled"}
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
       ]
     },
     {
       "name": "ENPEC",
       "description": "PEC enable",
       "access": "rw",
-      "bit_number": {"start_bit": 5, "end_bit": 5},
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      },
       "enumerated_values": [
-        {"value": "0", "name": "Disabled"},
-        {"value": "1", "name": "Enabled"}
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
       ]
     },
     {
       "name": "ENGC",
       "description": "General call enable",
       "access": "rw",
-      "bit_number": {"start_bit": 6, "end_bit": 6},
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      },
       "enumerated_values": [
-        {"value": "0", "name": "Disabled"},
-        {"value": "1", "name": "Enabled"}
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
       ]
     },
     {
       "name": "NOSTRETCH",
       "description": "Clock stretching disable (Slave mode)",
       "access": "rw",
-      "bit_number": {"start_bit": 7, "end_bit": 7},
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      },
       "enumerated_values": [
-        {"value": "0", "name": "Enabled"},
-        {"value": "1", "name": "Disabled"}
+        {
+          "value": "0",
+          "name": "Enabled"
+        },
+        {
+          "value": "1",
+          "name": "Disabled"
+        }
       ]
     },
     {
       "name": "START",
       "description": "Start generation",
       "access": "rw",
-      "bit_number": {"start_bit": 8, "end_bit": 8},
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      },
       "enumerated_values": [
-        {"value": "0", "name": "NoStart"},
-        {"value": "1", "name": "Start"}
+        {
+          "value": "0",
+          "name": "NoStart"
+        },
+        {
+          "value": "1",
+          "name": "Start"
+        }
       ]
     },
     {
       "name": "STOP",
       "description": "Stop generation",
       "access": "rw",
-      "bit_number": {"start_bit": 9, "end_bit": 9},
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      },
       "enumerated_values": [
-        {"value": "0", "name": "NoStop"},
-        {"value": "1", "name": "Stop"}
+        {
+          "value": "0",
+          "name": "NoStop"
+        },
+        {
+          "value": "1",
+          "name": "Stop"
+        }
       ]
     },
     {
       "name": "ACK",
       "description": "Acknowledge enable",
       "access": "rw",
-      "bit_number": {"start_bit": 10, "end_bit": 10},
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      },
       "enumerated_values": [
-        {"value": "0", "name": "NAK"},
-        {"value": "1", "name": "ACK"}
+        {
+          "value": "0",
+          "name": "NAK"
+        },
+        {
+          "value": "1",
+          "name": "ACK"
+        }
       ]
     },
     {
       "name": "POS",
       "description": "Acknowledge/PEC Position (for data reception)",
       "access": "rw",
-      "bit_number": {"start_bit": 11, "end_bit": 11},
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      },
       "enumerated_values": [
-        {"value": "0", "name": "Current"},
-        {"value": "1", "name": "Next"}
+        {
+          "value": "0",
+          "name": "Current"
+        },
+        {
+          "value": "1",
+          "name": "Next"
+        }
       ]
     },
     {
       "name": "PEC",
       "description": "Packet error checking",
       "access": "rw",
-      "bit_number": {"start_bit": 12, "end_bit": 12},
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      },
       "enumerated_values": [
-        {"value": "0", "name": "Disabled"},
-        {"value": "1", "name": "Enabled"}
+        {
+          "value": "0",
+          "name": "Disabled"
+        },
+        {
+          "value": "1",
+          "name": "Enabled"
+        }
       ]
     },
     {
       "name": "ALERT",
       "description": "SMBus alert",
       "access": "rw",
-      "bit_number": {"start_bit": 13, "end_bit": 13},
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      },
       "enumerated_values": [
-        {"value": "0", "name": "Release"},
-        {"value": "1", "name": "Drive"}
+        {
+          "value": "0",
+          "name": "Release"
+        },
+        {
+          "value": "1",
+          "name": "Drive"
+        }
       ]
     },
     {
       "name": "SWRST",
       "description": "Software reset",
       "access": "rw",
-      "bit_number": {"start_bit": 15, "end_bit": 15},
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      },
       "enumerated_values": [
-        {"value": "0", "name": "NotReset"},
-        {"value": "1", "name": "Reset"}
+        {
+          "value": "0",
+          "name": "NotReset"
+        },
+        {
+          "value": "1",
+          "name": "Reset"
+        }
       ]
     }
   ],
-  "access_constraints": [
+  "access_constraints_v2": [
     {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Risk of setting second STOP, START or PEC request",
+      "datasheet_text": "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. This is to avoid setting a second STOP, START or PEC request.",
       "target_register": "CR1",
       "target_fields": [],
       "target_operation": "write",
       "preconditions": [
-        {"register_name": "CR1", "field_name": "STOP", "required_state": "cleared"},
-        {"register_name": "CR1", "field_name": "START", "required_state": "cleared"},
-        {"register_name": "CR1", "field_name": "PEC", "required_state": "cleared"}
+        {
+          "register": "CR1",
+          "field": "STOP",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
+        },
+        {
+          "register": "CR1",
+          "field": "START",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
+        },
+        {
+          "register": "CR1",
+          "field": "PEC",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
+        }
       ],
-      "postconditions": [],
-      "severity": "error",
-      "consequence": "Risk of setting second STOP, START or PEC request",
-      "datasheet_text": "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. This is to avoid setting a second STOP, START or PEC request."
+      "postconditions": []
     }
   ]
 }

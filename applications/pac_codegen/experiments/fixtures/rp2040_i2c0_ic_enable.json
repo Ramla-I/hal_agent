@@ -1,0 +1,42 @@
+{
+  "datasheet_register_abbreviation": "IC_ENABLE",
+  "address_offset": "0x6c",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ENABLE",
+      "description": "Controls whether the DW_apb_i2c is enabled",
+      "access": "rw",
+      "bit_number": {"start_bit": 0, "end_bit": 0},
+      "enumerated_values": [
+        {"value": "0", "name": "Disabled"},
+        {"value": "1", "name": "Enabled"}
+      ]
+    },
+    {
+      "name": "ABORT",
+      "description": "When set, the controller initiates the transfer abort",
+      "access": "rw",
+      "bit_number": {"start_bit": 1, "end_bit": 1},
+      "enumerated_values": [
+        {"value": "0", "name": "NoAbort"},
+        {"value": "1", "name": "AbortInProgress"}
+      ]
+    }
+  ],
+  "access_constraints": [
+    {
+      "target_register": "IC_ENABLE",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {"register_name": "IC_ENABLE", "field_name": "ABORT", "required_state": "cleared"}
+      ],
+      "postconditions": [],
+      "severity": "error",
+      "consequence": "SYNTHETIC probe constraint: writes while an ABORT is in progress would race the hardware-managed abort sequence",
+      "datasheet_text": "SYNTHETIC (mechanics probe, not a corpus extraction): The software cannot clear the ABORT bit once set; it is cleared automatically after the abort operation. IC_ENABLE must not be rewritten while ABORT is in progress."
+    }
+  ]
+}

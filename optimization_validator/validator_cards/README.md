@@ -5,6 +5,13 @@ measured on a *development* device, and the single **deployment threshold** to a
 that vendor's *unverified* devices. Built by `optimization_validator/validator_card.py`
 from a cross-validation run.
 
+**Cards are only for calibration (development) devices** — the ones you transfer *from*
+(here: STM rm0041, NXP ke04). A card's metrics are k-fold cross-validated (held-out,
+per-fold-tuned τ); only `deployment_threshold` is full-data. Devices you transfer *to*
+(rm0394, k64) do **not** get a card: the transfer experiment applies the frozen calibration
+to their *full set at the frozen threshold* (no CV), and those results live in
+`../results/transfer_and_calibration.md` + `../results/transfer_*.json`.
+
 ## What each field is for
 
 | field | meaning / use |
