@@ -4,8 +4,10 @@
 No network: every test injects a FAKE client. The real Groq client is never
 constructed here (make_client is only called when client=None).
 
-The calibration math (compute_scorecard, confidence stats, cost) is exercised
-separately by tune_constraint_validator/tests/test_calibrate.py.
+The tuning-only helpers lifted out of the judge (the calibration CLI,
+stratified sampling, corruption-row loading, judgment writing) live in
+tune_constraint_validator/judge_cli.py and are tested there; the calibration
+math is in tune_constraint_validator/tests/test_calibrate.py.
 """
 
 import json
@@ -305,31 +307,3 @@ def test_load_items_joins_and_filters_unanchored(tmp_path):
     assert all(it["tier"] == "exact" for it in items)
     assert all(it["context"].startswith("context for") for it in items)
     assert [it["id"] for it in items] == sorted(it["id"] for it in items)
-
-
-def test_stratified_sample_deterministic_and_covers_rms(tmp_path):
-    csv_path, anchors_path = _write_inputs(tmp_path, n_per_rm=6,
-                                           rms=("rm1", "rm2", "rm3"))
-    items = judge.load_items(csv_path, anchors_path)
-    s1 = judge.stratified_sample(items, 6, seed="s")
-    s2 = judge.stratified_sample(items, 6, seed="s")
-    assert [i["id"] for i in s1] == [i["id"] for i in s2]
-    assert len(s1) == 6
-    assert {i["reference_manual"] for i in s1} == {"rm1", "rm2", "rm3"}
-    s3 = judge.stratified_sample(items, 6, seed="other")
-    assert isinstance(s3, list) and len(s3) == 6  # valid under any seed
-    # n >= population returns everything
-    assert len(judge.stratified_sample(items, 999, seed="s")) == len(items)
-
-
-# ---------------------------------------------------------------------------
-# Blindness rule
-# ---------------------------------------------------------------------------
-
-def test_refuses_output_under_verified_datasheet(tmp_path):
-    bad = tmp_path / "verified_datasheet" / "constraints" / "j.jsonl"
-    with pytest.raises(SystemExit, match="blindness"):
-        judge.write_judgments([], str(bad))
-    ok = tmp_path / "out" / "j.jsonl"
-    judge.write_judgments([], str(ok))           # must not raise
-    assert ok.exists()
