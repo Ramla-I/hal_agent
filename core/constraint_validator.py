@@ -67,8 +67,8 @@ DEFAULT_CONCURRENCY = 6
 SYSTEM_PROMPT = """\
 You are validating hardware register access constraints extracted from a \
 microcontroller reference manual (datasheet). Each item gives you:
-- CONSTRAINT: the structured encoding the extractor produced for a target \
-register (operation, target fields, preconditions, postconditions, severity),
+- CONSTRAINT: a structured object the extractor produced. It has a "kind" \
+field and kind-specific fields (see below).
 - QUOTE: the verbatim datasheet sentence(s) the extractor cited as evidence,
 - CONTEXT: the true surrounding text, derived programmatically from the manual.
 
@@ -76,32 +76,49 @@ Validate the encoding against ONLY the given QUOTE and CONTEXT. Do not rely \
 on outside knowledge of any specific device; a detail the given text does not \
 support is unsupported.
 
+The "kind" is one of:
+- state_gate: an operation (target_operation "read" or "write") on \
+target_register / target_fields is permitted only while the preconditions hold \
+(postconditions must then follow). Each condition names a register + field and \
+a required state ("cleared", "set", or "equals" a value).
+- sequence: an ordered multi-step protocol (steps, each a register "write" or \
+"read" with an optional value), optionally unlocking something (enables).
+- write_once: target_register / target_fields may be written only once until a \
+reset (reset_scope).
+- delay: a required wait (duration + unit) after one access, before a \
+dependent one.
+- read_effect: reading read_register changes flags (effects: a field \
+"becomes" cleared/set).
+- clock_gate: a peripheral clock (clock) must be enabled before any access.
+- value_relation: a required relationship between field values (fields); the \
+relation itself is stated in the quote.
+- other: a genuine access/ordering requirement described in words \
+(description, involved).
+
 Answer three questions:
 (a) is_constraint — does the quoted text state a genuine access or ordering \
-REQUIREMENT that software must respect when accessing the target register \
-(e.g. "write only when X", "set A before B", unlock/key sequences)? Purely \
-descriptive behavior, status-flag semantics (how a flag is set or cleared, \
-write-1-to-clear / write-0-to-clear acknowledge notes), reset-value notes, \
-and validity or don't-care notes are NOT constraints.
-(b) encoding_faithful — does the structured encoding match the text: target \
-register, operation, the fields named, the polarities (set vs cleared), and \
-any required values? The operation is "read" or "write" only: a datasheet \
-sentence about "modifying" or "changing" a register means WRITING it, so \
-"write" is the faithful encoding of such text -- there is no separate "modify" \
-operation. A precondition may also carry `established_by` (hardware = the \
-device brings the state about and software only observes it; software = the \
-driver must establish it first) and, when software, `action_operation` naming \
-HOW the driver does it -- "modify" (a read-modify-write that preserves the \
-register's other bits) or "write" (composing a whole-register value); this is a \
-method detail that need not appear in the quote, so flag it only if the text \
-plainly contradicts it. A precondition or postcondition that contradicts, \
-misstates, or is absent from the text makes the encoding unfaithful. Judge \
-ONLY against the given text and context.
+REQUIREMENT that software must respect (e.g. "write only when X", "set A \
+before B", unlock/key sequences, "wait N cycles", "enable the clock first")? \
+Purely descriptive behavior, status-flag semantics (how a flag is set or \
+cleared, write-1-to-clear / write-0-to-clear acknowledge notes), reset-value \
+notes, and validity or don't-care notes are NOT constraints.
+(b) encoding_faithful — does EVERY field of the object match the text, for its \
+kind? For state_gate: the target register, operation, the fields named, the \
+polarities (set vs cleared), and any required values -- the operation is \
+"read" or "write" only, so datasheet text about "modifying"/"changing" a \
+register means WRITING it (established_by and action_operation are method \
+details that need not appear in the quote; flag them only if the text plainly \
+contradicts them). For sequence: the steps, their ORDER, and the values. For \
+delay: the duration, unit, and what it gates. For read_effect: the register \
+read and which flags change and how. For clock_gate: the clock/enable bit. For \
+write_once: the register/fields and reset scope. For value_relation / other: \
+the registers/fields involved and the stated relation. A field that \
+contradicts, misstates, or is absent from the text makes the encoding \
+unfaithful. Judge ONLY against the given text and context.
 (c) verdict —
   "confirmed"      : genuine constraint AND the encoding is faithful.
-  "encoding_error" : genuine constraint, but the encoding misstates it \
-(wrong register, operation, field, polarity, or value; or a condition the \
-text does not support).
+  "encoding_error" : genuine constraint, but the encoding misstates it (wrong \
+register, operation, field, polarity, value, step order, duration, ...).
   "not_constraint" : the quoted text is not an access/ordering requirement.
 If is_constraint is false, use verdict "not_constraint" and set \
 encoding_faithful to false.
@@ -113,11 +130,11 @@ Respond with a single JSON object and nothing else, keys exactly:
 "verdict": "<confirmed|encoding_error|not_constraint>", \
 "confidence": <float>, "reason": "<one sentence>"}
 
-Worked example 1 — a genuine mode-gate, faithfully encoded (target register \
+Worked example 1 — a genuine state_gate, faithfully encoded (target register \
 usart1 brr):
-CONSTRAINT: {"target_operation": "write", "target_fields": [], \
-"preconditions": [{"register_name": "USART_CR1", "field_name": "UE", \
-"required_state": "cleared"}], "postconditions": [], "severity": "error"}
+CONSTRAINT: {"kind": "state_gate", "target_operation": "write", \
+"target_fields": [], "preconditions": [{"register": "USART_CR1", "field": \
+"UE", "state": "cleared"}], "postconditions": [], "severity": "error"}
 QUOTE: This register can only be written when the USART is disabled (UE=0).
 Correct response:
 {"is_constraint": true, "encoding_faithful": true, "verdict": "confirmed", \
@@ -125,11 +142,23 @@ Correct response:
 (UE=0) before writing this register, exactly matching the encoded \
 precondition."}
 
-Worked example 2 — flag-acknowledge semantics, not a constraint (target \
+Worked example 2 — a sequence, faithfully encoded (target register rtc wpr):
+CONSTRAINT: {"kind": "sequence", "steps": [{"register": "RTC_WPR", \
+"operation": "write", "value": 202}, {"register": "RTC_WPR", "operation": \
+"write", "value": 83}], "severity": "error"}
+QUOTE: To unlock write protection, write 0xCA into the RTC_WPR register, then \
+write 0x53.
+Correct response:
+{"is_constraint": true, "encoding_faithful": true, "verdict": "confirmed", \
+"confidence": 0.95, "reason": "The text prescribes writing 0xCA (202) then \
+0x53 (83) to RTC_WPR in that order, matching the two encoded step values and \
+their sequence."}
+
+Worked example 3 — flag-acknowledge semantics, not a constraint (target \
 register wwdg sr):
-CONSTRAINT: {"target_operation": "write", "target_fields": [], \
-"preconditions": [], "postconditions": [{"register_name": "WWDG_SR", \
-"field_name": "EWIF", "required_state": "cleared"}], "severity": "error"}
+CONSTRAINT: {"kind": "state_gate", "target_operation": "write", \
+"target_fields": [], "preconditions": [], "postconditions": [{"register": \
+"WWDG_SR", "field": "EWIF", "state": "cleared"}], "severity": "error"}
 QUOTE: This bit is set by hardware when the counter has reached the value \
 0x40. It must be cleared by software by writing '0'. A write of '1' has no \
 effect.

@@ -164,6 +164,15 @@ def test_system_prompt_has_examples_and_exact_keys():
     assert "validating" in sp.lower()
 
 
+def test_system_prompt_describes_all_kinds():
+    sp = judge.SYSTEM_PROMPT
+    for kind in ("state_gate", "sequence", "write_once", "delay",
+                 "read_effect", "clock_gate", "value_relation", "other"):
+        assert kind in sp                  # the judge is told about every kind
+    # and encoding_faithful spells out per-kind checks (order, duration, ...)
+    assert "ORDER" in sp and "duration" in sp
+
+
 # ---------------------------------------------------------------------------
 # JSON recovery
 # ---------------------------------------------------------------------------

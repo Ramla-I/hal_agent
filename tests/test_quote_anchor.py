@@ -373,6 +373,24 @@ def test_target_verification_self_referential_located(tmp_path):
     assert rec["target_located"] is True      # page names I2C_CR1
 
 
+def test_target_located_via_referenced_register(tmp_path):
+    # A cross-register constraint: the quote is self-referential w.r.t. the
+    # filed register (cr1) and its page never names cr1 -- but the page DOES
+    # name a REFERENCED register (I2C1_SR2). Multi-register location (Phase 4)
+    # must vouch for it via target_registers.
+    m = _matcher_for(tmp_path,
+        "Bus status: the I2C1_SR2 register reports the bus state. "
+        "This register can be written only while the bus is free.")
+    quote = "This register can be written only while the bus is free."
+    filed = {"datasheet_text": quote, "register": "cr1", "peripheral": "i2c1"}
+    # single-register: self-referential AND not located (no cr1 on the page)
+    r0 = quote_anchor.anchor_row(m, dict(filed))
+    assert r0["self_referential"] is True and r0["target_located"] is False
+    # naming the referenced register on the page -> located
+    r1 = quote_anchor.anchor_row(m, {**filed, "target_registers": ["I2C1_SR2"]})
+    assert r1["target_located"] is True
+
+
 def test_target_verification_retarget_caught(tmp_path):
     # The calibration blind spot: a nameless quote anchored in ANOTHER
     # register's section, while the constraint claims a different target.

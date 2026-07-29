@@ -514,9 +514,24 @@ def _ratio_fmt(r: float) -> float:
     return float(f"{r:.4f}")
 
 
+def _target_registers_of(row) -> list:
+    """The full SVD register names a constraint references (``target_registers``
+    on an item, or a JSON-array cell on a CSV row) — for multi-register kinds
+    whose quote may live near a referenced register, not the filed one. Missing
+    means single-register behavior (only the filed register is checked)."""
+    tr = row.get("target_registers") or []
+    if isinstance(tr, str):
+        try:
+            tr = json.loads(tr)
+        except (ValueError, TypeError):
+            tr = []
+    return [str(t) for t in tr if t] if isinstance(tr, list) else []
+
+
 def anchor_row(matcher: RMMatcher, row: dict) -> dict:
     quote = row.get("datasheet_text", "") or ""
     nq = normalize_text(quote)
+    extra_regs = _target_registers_of(row)
     rec = {
         "id": row.get("id", ""),
         "reference_manual": matcher.rm,
@@ -545,7 +560,8 @@ def anchor_row(matcher: RMMatcher, row: dict) -> dict:
             chosen = sorted(units, key=lambda u: (-scores[u], u))[0]
         else:
             chosen = units[0]
-        _target_verification(rec, matcher, chosen, nq, per, reg)
+        _target_verification(rec, matcher, chosen, nq, per, reg,
+                             extra_registers=extra_regs)
         pos = matcher.unit_norm(chosen).find(nq)
         ctx = matcher.derive_context(chosen, pos, len(nq))
         if ctx is not None:
@@ -560,7 +576,8 @@ def anchor_row(matcher: RMMatcher, row: dict) -> dict:
         rec["tier"] = "fuzzy"
         _target_verification(rec, matcher, key, nq,
                              row.get("peripheral", "") or "",
-                             row.get("register", "") or "")
+                             row.get("register", "") or "",
+                             extra_registers=extra_regs)
         ctx = matcher.derive_context(key, s, wlen)
         if ctx is not None:
             rec["context"] = ctx
@@ -616,7 +633,8 @@ def _unit_name_tokens(matcher, key) -> dict:
 
 
 def _target_verification(rec: dict, matcher, unit, nq: str,
-                         peripheral: str, register: str) -> None:
+                         peripheral: str, register: str,
+                         extra_registers=()) -> None:
     """Verify the constraint's TARGET register, two ways (plan discussion,
     2026-07-17): a quote that names the register verifies it textually; a
     SELF-REFERENTIAL quote ("This register can be written only when ...")
@@ -705,6 +723,19 @@ def _target_verification(rec: dict, matcher, unit, nq: str,
                         break
                 if located:
                     break
+
+    # Multi-register kinds: the quote may name / sit near ANY register the
+    # constraint references (extra_registers, full SVD names), not only the one
+    # it is filed under. Naming any of them clears self_referential; any of them
+    # appearing on a matched page counts as located.
+    for full in extra_registers:
+        fn = normalize_text(full)
+        if not fn:
+            continue
+        if fn in nq:
+            rec["self_referential"] = False
+        if not located and any(fn in matcher.unit_norm((p,)) for p in unit):
+            located = True
     rec["target_located"] = located
 
 
