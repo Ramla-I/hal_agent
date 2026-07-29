@@ -63,25 +63,33 @@ VALID = json.dumps({
 
 
 def make_item(id_="aaa111", rm="rm0091", **over):
+    quote = ("This register can only be written when the USART is "
+             "disabled (UE=0).")
     item = {
         "id": id_,
         "reference_manual": rm,
         "peripheral": "usart1",
         "register": "brr",
-        "target_operation": "write",
-        "target_fields": "[]",
-        "preconditions": ('[{"register_name":"USART_CR1","field_name":"UE",'
-                          '"required_state":"cleared"}]'),
-        "postconditions": "[]",
-        "severity": "error",
-        "consequence": "must disable the USART first",
-        "datasheet_text": ("This register can only be written when the "
-                           "USART is disabled (UE=0)."),
+        "datasheet_text": quote,
         "context": ("27.8.4 USART baud rate register (USART_BRR)\n\n"
                     "This register can only be written when the USART is "
                     "disabled (UE=0). It may be automatically updated by "
                     "hardware in auto baud rate detection mode."),
         "tier": "exact",
+        "constraint": {
+            "kind": "state_gate",
+            "severity": "error",
+            "consequence": "must disable the USART first",
+            "datasheet_text": quote,
+            "target_register": "USART_BRR",
+            "target_fields": [],
+            "target_operation": "write",
+            "preconditions": [{"register": "USART_CR1", "field": "UE",
+                               "state": "cleared",
+                               "established_by": "software",
+                               "action_operation": "modify"}],
+            "postconditions": [],
+        },
     }
     item.update(over)
     return item
@@ -103,9 +111,46 @@ def test_user_message_contains_quote_context_and_encoding():
 
 def test_encoding_shown_to_judge_excludes_consequence():
     payload = judge.constraint_payload(make_item())
-    assert set(payload) == {"target_operation", "target_fields",
-                            "preconditions", "postconditions", "severity"}
+    assert payload["kind"] == "state_gate"        # native object, kind-tagged
+    assert "consequence" not in payload           # hidden extractor commentary
+    assert "datasheet_text" not in payload        # shown as QUOTE, not here
+    assert "enforceability" not in payload         # computed, not extracted
+    assert "preconditions" in payload and "target_operation" in payload
     assert "consequence" not in json.dumps(payload)
+
+
+def test_referenced_registers_across_kinds():
+    sg = {"kind": "state_gate", "target_register": "I2C1_CR1",
+          "preconditions": [{"register": "I2C1_SR2", "field": "BUSY",
+                             "state": "cleared"}], "postconditions": []}
+    assert judge.referenced_registers(sg) == ["I2C1_CR1", "I2C1_SR2"]
+    seq = {"kind": "sequence",
+           "steps": [{"register": "RTC_WPR", "operation": "write", "value": 202},
+                     {"register": "RTC_WPR", "operation": "write", "value": 83}],
+           "enables": {"register": "RTC_DR", "whole_register": True}}
+    assert judge.referenced_registers(seq) == ["RTC_DR", "RTC_WPR"]
+    reff = {"kind": "read_effect", "read_register": "USART_SR",
+            "effects": [{"field": "RXNE", "becomes": "cleared"}]}
+    assert judge.referenced_registers(reff) == ["USART_SR"]
+    vr = {"kind": "value_relation",
+          "fields": [{"register": "TIM1_PSC", "field": "PSC"},
+                     {"register": "TIM1_ARR", "field": "ARR"}]}
+    assert judge.referenced_registers(vr) == ["TIM1_ARR", "TIM1_PSC"]
+
+
+def test_load_items_legacy_flat_columns_shim(tmp_path):
+    # a pre-migration row with no constraint_json -> synthesized state_gate
+    row = {"target_operation": "write", "target_fields": "[]",
+           "preconditions": '[{"register_name":"USART_CR1","field_name":"UE",'
+                            '"required_state":"cleared"}]',
+           "postconditions": "[]", "severity": "error"}
+    c = judge._row_constraint(row)
+    assert c["kind"] == "state_gate" and c["target_operation"] == "write"
+    assert c["preconditions"][0]["field_name"] == "UE"
+    # a row WITH constraint_json -> used verbatim (any kind)
+    native = {"kind": "delay", "after": {"register": "RCC_CR"},
+              "duration": {"value": 2, "unit": "cycles_apb"}}
+    assert judge._row_constraint({"constraint_json": json.dumps(native)}) == native
 
 
 def test_system_prompt_has_examples_and_exact_keys():
@@ -256,6 +301,67 @@ def test_run_judge_passes_through_corruption_fields():
                               quiet=True)
     assert recs[0]["corruption_type"] == "flip_polarity"
     assert recs[0]["original_id"] == "aaa"
+
+
+# ---------------------------------------------------------------------------
+# Batch judging (one call for many items; amortizes the system prompt)
+# ---------------------------------------------------------------------------
+
+def _batch_reply(*verdicts):
+    """A JSON array of per-id judgments: (id, verdict) pairs."""
+    return json.dumps([
+        {"id": i, "is_constraint": v != "not_constraint",
+         "encoding_faithful": v == "confirmed", "verdict": v,
+         "confidence": 0.9, "reason": "r"}
+        for i, v in verdicts
+    ])
+
+
+def test_system_prompt_batch_differs_and_asks_for_array():
+    assert judge.SYSTEM_PROMPT_BATCH != judge.SYSTEM_PROMPT   # replace matched
+    assert "JSON ARRAY" in judge.SYSTEM_PROMPT_BATCH
+    assert '"id"' in judge.SYSTEM_PROMPT_BATCH
+    assert "single JSON object" not in judge.SYSTEM_PROMPT_BATCH
+
+
+def test_judge_batch_maps_verdicts_by_id_in_one_call():
+    items = [make_item("aaa"), make_item("bbb")]
+    client = FakeClient([_batch_reply(("aaa", "confirmed"),
+                                      ("bbb", "not_constraint"))])
+    covered, usage = judge.judge_batch(client, items)
+    assert set(covered) == {"aaa", "bbb"}
+    assert covered["aaa"]["verdict"] == "confirmed"
+    assert covered["bbb"]["verdict"] == "not_constraint"
+    assert usage["calls"] == 1
+    assert len(client.calls) == 1                        # ONE call, two items
+    assert client.calls[0]["messages"][0]["content"] == judge.SYSTEM_PROMPT_BATCH
+
+
+def test_run_judge_batched_falls_back_on_missing_id():
+    items = [make_item("aaa"), make_item("bbb")]
+    # batch response omits "bbb"; its fallback judge_one gets VALID
+    client = FakeClient([_batch_reply(("aaa", "confirmed")), VALID])
+    recs, totals = judge.run_judge(items, client, concurrency=1,
+                                   batch_size=10, quiet=True)
+    by = {r["id"]: r for r in recs}
+    assert by["aaa"]["batched"] is True
+    assert by["bbb"]["batched"] is False                 # fell back to solo
+    assert by["bbb"]["verdict"] == "confirmed"           # from VALID
+    assert totals["calls"] == 2                          # 1 batch + 1 fallback
+    assert len(client.calls) == 2
+
+
+def test_run_judge_batched_sorted_with_one_shared_call():
+    items = [make_item("zzz"), make_item("aaa"), make_item("mmm")]
+    client = FakeClient([_batch_reply(("zzz", "confirmed"),
+                                      ("aaa", "confirmed"),
+                                      ("mmm", "confirmed"))])
+    recs, totals = judge.run_judge(items, client, concurrency=1,
+                                   batch_size=10, quiet=True)
+    assert [r["id"] for r in recs] == ["aaa", "mmm", "zzz"]   # sorted by id
+    assert totals["items"] == 3 and totals["calls"] == 1     # one shared call
+    assert len(client.calls) == 1
+    assert all(r["batched"] and r["verdict"] == "confirmed" for r in recs)
 
 
 # ---------------------------------------------------------------------------

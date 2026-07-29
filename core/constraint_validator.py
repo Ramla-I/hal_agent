@@ -17,7 +17,14 @@ structured encoding — no retrieval, no file access. It answers:
 Model: openai/gpt-oss-120b via Groq (OpenAI SDK, base_url override; env
 GROQ_API_KEY). NO structured-output / json_schema mode — Groq OSS models
 hard-error on it; instead free-form completion + robust JSON-block recovery
-(fenced or bare) with one per-item repair retry.
+(fenced or bare) with one per-item repair retry. ``run_judge(batch_size=N)``
+judges N items per call (the big system prompt is sent once per batch), with a
+per-item ``judge_one`` fallback for any item the batch response omits.
+
+The constraint under validation is the native grammar-v2 object of ANY kind
+(``state_gate``, ``sequence``, ``delay``, ``clock_gate``, ``write_once``,
+``read_effect``, ``value_relation``, ``other``); ``constraint_payload`` shows it
+kind-agnostically.
 
 This module is a LIBRARY: s0 (``--constraint-validation``) and the calibration
 harness call ``make_client`` / ``load_items`` / ``run_judge`` directly. The
@@ -140,6 +147,30 @@ REPAIR_PROMPT = (
     "encoding_faithful, verdict, confidence, reason."
 )
 
+# Batch mode: the validation RULES and worked examples are identical; only the
+# output envelope changes (a JSON ARRAY keyed by id, not one object), so the
+# costly system prompt is sent ONCE per batch instead of once per item. Derived
+# by swapping the single-object instruction so the two prompts can't drift.
+_SINGLE_OUTPUT = (
+    'Respond with a single JSON object and nothing else, keys exactly:\n'
+    '{"is_constraint": <bool>, "encoding_faithful": <bool>, '
+    '"verdict": "<confirmed|encoding_error|not_constraint>", '
+    '"confidence": <float>, "reason": "<one sentence>"}'
+)
+_BATCH_OUTPUT = (
+    'You are given MULTIPLE items below, each in a block headed by '
+    '"ITEM id=<id>". Judge each INDEPENDENTLY against ONLY its own QUOTE and '
+    'CONTEXT. Respond with a single JSON ARRAY and nothing else: one object '
+    'per item, each with keys exactly:\n'
+    '{"id": "<the item id>", "is_constraint": <bool>, '
+    '"encoding_faithful": <bool>, '
+    '"verdict": "<confirmed|encoding_error|not_constraint>", '
+    '"confidence": <float>, "reason": "<one sentence>"}\n'
+    '(The worked examples below each show ONE item; in a batch you return an '
+    'array of such objects, each carrying its "id".)'
+)
+SYSTEM_PROMPT_BATCH = SYSTEM_PROMPT.replace(_SINGLE_OUTPUT, _BATCH_OUTPUT)
+
 # ---------------------------------------------------------------------------
 # Client (two-line Groq convention from config.py, replicated locally so this
 # module never imports config.py / pipeline deps)
@@ -188,10 +219,34 @@ def load_anchors(anchors_path: str) -> dict:
     return out
 
 
+def _row_constraint(row: dict) -> dict:
+    """The native grammar-v2 constraint object for a CSV row. Prefer a
+    ``constraint_json`` column (any kind); fall back to synthesizing a
+    ``state_gate`` object from the legacy flat columns, so pre-migration
+    datasets (``stm.csv``) still judge until they are rebuilt."""
+    raw = row.get("constraint_json")
+    if raw:
+        try:
+            obj = json.loads(raw)
+        except (ValueError, TypeError):
+            obj = None
+        if isinstance(obj, dict):
+            return obj
+    return {
+        "kind": "state_gate",
+        "target_operation": row.get("target_operation", ""),
+        "target_fields": parse_json_list(row.get("target_fields")),
+        "preconditions": parse_json_list(row.get("preconditions")),
+        "postconditions": parse_json_list(row.get("postconditions")),
+        "severity": row.get("severity", ""),
+    }
+
+
 def load_items(csv_path: str, anchors_path: str) -> list:
     """Join CSV rows with anchors by id; keep only judgeable tiers (exact,
-    fuzzy) that carry a derived context. Returns flat item dicts sorted by
-    id (deterministic)."""
+    fuzzy) that carry a derived context. Attaches the native constraint object
+    as ``item["constraint"]``. Returns item dicts sorted by id. (This is the
+    calibration reader; the product path builds items in memory instead.)"""
     anchors = load_anchors(anchors_path)
     items = []
     for row in load_csv_rows(csv_path):
@@ -201,6 +256,7 @@ def load_items(csv_path: str, anchors_path: str) -> list:
         if not anc.get("context"):
             continue
         item = dict(row)
+        item["constraint"] = _row_constraint(row)
         item["context"] = anc["context"]
         item["tier"] = anc["tier"]
         items.append(item)
@@ -213,18 +269,44 @@ def load_items(csv_path: str, anchors_path: str) -> list:
 # ---------------------------------------------------------------------------
 
 
+_HIDDEN_PAYLOAD_KEYS = ("consequence", "datasheet_text", "enforceability")
+
+
 def constraint_payload(item: dict) -> dict:
-    """The structured encoding shown to the judge. Deliberately excludes
-    ``consequence`` (free-text extractor commentary — showing it would let
-    the judge detect corruptions via internal inconsistency instead of
-    against the datasheet text)."""
-    return {
-        "target_operation": item.get("target_operation", ""),
-        "target_fields": parse_json_list(item.get("target_fields")),
-        "preconditions": parse_json_list(item.get("preconditions")),
-        "postconditions": parse_json_list(item.get("postconditions")),
-        "severity": item.get("severity", ""),
-    }
+    """The structured encoding shown to the judge: the native grammar-v2
+    constraint object (any ``kind``), minus three keys — ``datasheet_text``
+    (shown separately as QUOTE), ``consequence`` (free-text extractor
+    commentary; showing it would let the judge detect corruptions by internal
+    inconsistency instead of against the datasheet), and the *computed*
+    ``enforceability`` label (not an extraction to validate)."""
+    constraint = item.get("constraint") or {}
+    return {k: v for k, v in constraint.items()
+            if k not in _HIDDEN_PAYLOAD_KEYS}
+
+
+def referenced_registers(constraint: dict) -> list:
+    """Every register a grammar-v2 constraint names, across all kinds
+    (SVD-canonical). Lets anchoring verify a quote against ANY register the
+    constraint touches — cross-register ``state_gate`` conditions, ``sequence``
+    steps, ``value_relation`` fields, a ``read_effect``'s read register, etc.,
+    not only the register it is filed under. The caller adds the filed one."""
+    regs = set()
+
+    def add(ref):
+        r = ref.get("register") if isinstance(ref, dict) else ref
+        if r:
+            regs.add(str(r))
+
+    add(constraint.get("target_register"))   # state_gate, write_once
+    add(constraint.get("read_register"))     # read_effect
+    add(constraint.get("clock"))             # clock_gate (a condition object)
+    for key in ("preconditions", "postconditions", "steps", "fields",
+                "involved"):
+        for x in constraint.get(key) or []:
+            add(x)
+    for key in ("enables", "after", "before"):   # sequence / delay references
+        add(constraint.get(key))
+    return sorted(regs)
 
 
 def build_user_message(item: dict) -> str:
@@ -295,6 +377,50 @@ def extract_json_block(text):
                         return obj
                     break
         # else: unbalanced from this start; try next '{'
+    return None
+
+
+def extract_json_array(text):
+    """Best-effort extraction of one top-level JSON array (the batch response):
+    whole text, fenced block, or the first balanced [...] span."""
+    if not text:
+        return None
+    candidates = [text.strip()]
+    for m in _FENCE_RE.finditer(text):
+        candidates.append(m.group(1).strip())
+    for cand in candidates:
+        try:
+            obj = json.loads(cand)
+        except ValueError:
+            continue
+        if isinstance(obj, list):
+            return obj
+    for m in re.finditer(r"\[", text):
+        start = m.start()
+        depth, in_str, esc = 0, False, False
+        for i in range(start, len(text)):
+            ch = text[i]
+            if in_str:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    in_str = False
+            elif ch == '"':
+                in_str = True
+            elif ch == "[":
+                depth += 1
+            elif ch == "]":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        obj = json.loads(text[start:i + 1])
+                    except ValueError:
+                        break
+                    if isinstance(obj, list):
+                        return obj
+                    break
     return None
 
 
@@ -459,19 +585,88 @@ def _base_record(item, model):
 
 
 # ---------------------------------------------------------------------------
-# Batch run
+# Batch judging (one LLM call for many items; amortizes the system prompt)
+# ---------------------------------------------------------------------------
+
+
+def build_batch_user_message(items: list) -> str:
+    """One user message carrying many items; each item's block is the same
+    Register / CONSTRAINT / QUOTE / CONTEXT as the single path, headed by its
+    id so the array response can be mapped back."""
+    blocks = [f"You are given {len(items)} items to validate below."]
+    for it in items:
+        blocks += ["", f"===== ITEM id={it['id']} =====",
+                   build_user_message(it)]
+    return "\n".join(blocks)
+
+
+def _empty_usage():
+    return {"prompt_tokens": 0, "completion_tokens": 0,
+            "total_tokens": 0, "calls": 0}
+
+
+def judge_batch(client, items, model=MODEL, timeout=CALL_TIMEOUT_S,
+                sleep=time.sleep):
+    """Judge many items in ONE call. Returns (records_by_id, usage). Items the
+    array response did not carry a salvageable judgment for are ABSENT from
+    records_by_id — the caller re-judges those with judge_one."""
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT_BATCH},
+        {"role": "user", "content": build_batch_user_message(items)},
+    ]
+    content, pt, ct = _call_with_backoff(client, model, messages,
+                                         timeout=timeout, sleep=sleep)
+    by_id = {str(o["id"]): o for o in (extract_json_array(content) or [])
+             if isinstance(o, dict) and "id" in o}
+    records = {}
+    for it in items:
+        j = coerce_judgment(by_id.get(str(it["id"])))
+        if j is not None:
+            rec = _base_record(it, model)
+            rec.update(j)
+            records[it["id"]] = rec
+    return records, {"prompt_tokens": pt, "completion_tokens": ct,
+                     "total_tokens": pt + ct, "calls": 1}
+
+
+# ---------------------------------------------------------------------------
+# Run (per-item or batched)
 # ---------------------------------------------------------------------------
 
 
 def run_judge(items: list, client=None, model=MODEL,
               concurrency=DEFAULT_CONCURRENCY, timeout=CALL_TIMEOUT_S,
-              quiet=False, sleep=time.sleep):
-    """Judge all items with a small thread pool. Returns (records, totals);
-    records sorted by id (deterministic ordering regardless of completion
-    order)."""
+              quiet=False, sleep=time.sleep, batch_size=1):
+    """Judge all items. ``batch_size`` > 1 sends that many items per LLM call
+    (one shared system prompt), with a per-item judge_one fallback for any the
+    batch response omits. Returns (records, totals); records sorted by id."""
     if client is None:
         client = make_client()
     t0 = time.monotonic()
+    if batch_size and batch_size > 1:
+        records = _run_batched(items, client, model, concurrency, timeout,
+                               quiet, sleep, batch_size)
+    else:
+        records = _run_per_item(items, client, model, concurrency, timeout,
+                                quiet, sleep)
+    records.sort(key=lambda r: r["id"])
+    totals = {
+        "items": len(records),
+        "prompt_tokens": sum(r["usage"]["prompt_tokens"] for r in records),
+        "completion_tokens": sum(r["usage"]["completion_tokens"]
+                                 for r in records),
+        "calls": sum(r["usage"]["calls"] for r in records),
+        "parse_recovered": sum(1 for r in records if r.get("parse_recovered")),
+        "parse_failed": sum(1 for r in records
+                            if r["verdict"] == "parse_failed"),
+        "elapsed_s": round(time.monotonic() - t0, 1),
+    }
+    totals["total_tokens"] = (totals["prompt_tokens"]
+                              + totals["completion_tokens"])
+    return records, totals
+
+
+def _run_per_item(items, client, model, concurrency, timeout, quiet, sleep):
     done_lock = threading.Lock()
     done = [0]
 
@@ -485,22 +680,50 @@ def run_judge(items: list, client=None, model=MODEL,
         return rec
 
     if concurrency <= 1:
-        records = [work(it) for it in items]
+        return [work(it) for it in items]
+    with ThreadPoolExecutor(max_workers=concurrency) as ex:
+        return list(ex.map(work, items))
+
+
+def _run_batched(items, client, model, concurrency, timeout, quiet, sleep,
+                 batch_size):
+    batches = [items[i:i + batch_size]
+               for i in range(0, len(items), batch_size)]
+
+    def work(batch):
+        try:
+            covered, usage = judge_batch(client, batch, model=model,
+                                         timeout=timeout, sleep=sleep)
+        except Exception:  # noqa: BLE001 — a dead batch falls back per item
+            covered, usage = {}, _empty_usage()
+        out = []
+        for it in batch:
+            rec = covered.get(it["id"])
+            if rec is None:                       # missing/unparseable -> solo
+                rec = judge_one(client, it, model=model, timeout=timeout,
+                                sleep=sleep)
+                rec["batched"] = False
+            else:
+                rec["parse_recovered"] = False
+                rec["batched"] = True
+                rec["usage"] = _empty_usage()
+            out.append(rec)
+        # attribute the one batch call's tokens to the batch (on out[0]);
+        # per-record token counts aren't meaningful in batch mode, totals are.
+        if out:
+            u = out[0]["usage"]
+            out[0]["usage"] = {
+                "prompt_tokens": u["prompt_tokens"] + usage["prompt_tokens"],
+                "completion_tokens": (u["completion_tokens"]
+                                      + usage["completion_tokens"]),
+                "total_tokens": u["total_tokens"] + usage["total_tokens"],
+                "calls": u["calls"] + usage["calls"],
+            }
+        return out
+
+    if concurrency <= 1:
+        nested = [work(b) for b in batches]
     else:
         with ThreadPoolExecutor(max_workers=concurrency) as ex:
-            records = list(ex.map(work, items))
-    records.sort(key=lambda r: r["id"])
-    totals = {
-        "items": len(records),
-        "prompt_tokens": sum(r["usage"]["prompt_tokens"] for r in records),
-        "completion_tokens": sum(r["usage"]["completion_tokens"]
-                                 for r in records),
-        "calls": sum(r["usage"]["calls"] for r in records),
-        "parse_recovered": sum(1 for r in records if r["parse_recovered"]),
-        "parse_failed": sum(1 for r in records
-                            if r["verdict"] == "parse_failed"),
-        "elapsed_s": round(time.monotonic() - t0, 1),
-    }
-    totals["total_tokens"] = (totals["prompt_tokens"]
-                              + totals["completion_tokens"])
-    return records, totals
+            nested = list(ex.map(work, batches))
+    return [r for group in nested for r in group]
