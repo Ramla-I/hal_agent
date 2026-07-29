@@ -40,13 +40,59 @@ hal_agent/
 ├── utils/                      # General utilities
 ├── devices/                    # Device datasheets and SVD files
 ├── scripts/                    # Helper scripts
-├── verified_datasheet/         # Verified ground truth data
-└── openevolve_retrieval/       # OpenEvolve evolutionary retrieval optimization
-    ├── initial_program.py     # Evolvable retrieval program
-    ├── evaluator*.py          # Fitness functions (per device)
-    ├── config*.yaml           # OpenEvolve configs (per device)
-    └── output_*/              # Evolution outputs (best programs, checkpoints, logs)
+├── verified_datasheet/         # Verified ground truth data (register structure +
+│                               #   constraints/stm.csv for access constraints)
+├── openevolve_retrieval/       # OpenEvolve evolutionary retrieval optimization
+│   ├── initial_program.py     # Evolvable retrieval program
+│   ├── evaluator*.py          # Fitness functions (per device)
+│   ├── config*.yaml           # OpenEvolve configs (per device)
+│   └── output_*/              # Evolution outputs (best programs, checkpoints, logs)
+├── core/quote_anchor.py        # ENFORCEMENT ARM — the constraint validator:
+│   core/constraint_validator.py #   deterministic quote anchoring + target-location
+│                               #   gate + closed-book gpt-oss judge (plan §7). The
+│                               #   tuning harness + verified-constraints datasheet
+│                               #   ship in a follow-up (branch constraint_validator_tuning)
+└── applications/pac_codegen/   # ENFORCEMENT ARM — turn access constraints into
+                                #   witness-gated PAC crates (rust_codegen.py emitter,
+                                #   inject_from_run.py driver, compile tests,
+                                #   convert_v1_to_v2.py = the one v1→v2 migration tool)
 ```
+
+## The Enforcement Arm (grammar v2 → witness-gated PAC crates)
+
+Beyond extracting register facts, the project's second arm turns *register
+access constraints* (when a register may be read/written/modified) into
+compile-time guarantees in Rust PAC crates. The authoritative design and
+status doc is **`docs/register_constraints_plan.md`** (enforcement mechanics in
+§3 and Appendix A; roadmap + divergence log); the constraint grammar itself is
+specified in **`docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`**. Key pieces:
+
+- **Grammar v2** (`defs.py`, `prompts/register_info_stm.py`): a discriminated
+  union of constraint kinds (`state_gate`, `sequence`, `write_once`,
+  `clock_gate`, `delay`, `read_effect`, `value_relation`, `other`); the
+  generator emits it natively. Enforceability is *computed*
+  (`derive_enforceability`): `action_witnessed` / `state_witnessed` (both
+  compile-time witness-gated), `dynamic_check`, or `doc_only`. The pipeline
+  (grammar, collection, codegen) is **grammar-v2 only**; old grammar-v1
+  generator output is converted first with
+  `applications/pac_codegen/convert_v1_to_v2.py` — the single tool that still
+  parses the retired v1 access-constraint grammar.
+- **Constraint Validator** (`core/quote_anchor.py` + `core/constraint_validator.py`):
+  deterministic quote anchoring + target-location gate, then a closed-book
+  gpt-oss judge, wired into `core/s0` (`--constraint-validation`) and
+  `inject_from_run.py` (`--chunks`). The judge validates **all 8 grammar-v2
+  kinds** (the native constraint object, no flattening); `s0`'s Step-6 phase
+  builds items in memory (no intermediate CSV) and can batch constraints per
+  LLM call (`--constraint-batch-size`, amortizes the system prompt). Its
+  corruption/calibration tuning harness and the verified-constraints datasheet
+  (`verified_datasheet/constraints/`) ship in a follow-up PR (branch
+  `constraint_validator_tuning`), keeping this PR focused on the mechanism.
+- **Codegen** (`applications/pac_codegen/rust_codegen.py`): whole-register
+  gating via marker traits in `generic.rs`; **field-level gating is opt-in**
+  (`--field-level-gating`, default off). `inject_from_run.py` is the
+  end-to-end driver (generator run → collect → static validation → inject).
+- **Full pipeline in s0**: `core/s0_run_full_analysis.py --constraint-validation`
+  runs generator (v2) → static validation → constraint validator.
 
 ## Key Commands
 

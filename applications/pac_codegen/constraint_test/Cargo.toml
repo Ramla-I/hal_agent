@@ -10,4 +10,4 @@ panic = "abort"
 panic = "abort"
 
 [dependencies]
-stm32f4 = { path = "../vendored/stm32-rs/stm32f4", features = ["stm32f405"] }
+stm32f4 = { path = "../vendored/pac/stm32f4", features = ["stm32f405"] }

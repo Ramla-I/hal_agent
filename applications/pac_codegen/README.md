@@ -1,130 +1,127 @@
-# applications/pac_codegen/ — linear-types PAC application
+# applications/pac_codegen/ — witness-gated PAC application
 
 This is the **enforcement arm** of LIDAR: it turns extracted register **access
 constraints** (dependency / ordering invariants from datasheets) into
-compile-time–safe Rust for STM32 Peripheral Access Crates (PACs). The design
-uses witness tokens / linear types — a constrained register write requires proof
-tokens that the hardware preconditions hold, so an illegal access sequence fails
-to compile.
+compile-time–safe Rust for STM32 Peripheral Access Crates (PACs). A
+constrained register write requires a **witness token** minted by the
+datasheet-prescribed check, so an illegal access sequence fails to compile in
+any downstream crate.
 
-This is one application under [`../`](../); the layout arm (SVD-diff bug-finding
-and reporting) is a separate sibling. See [`../README.md`](../README.md).
+This is one application under [`../`](../); the layout arm (SVD-diff
+bug-finding and reporting) is a separate sibling. See [`../README.md`](../README.md).
 
-## Layout (separation of concerns)
+## The encoding: trait gating (no wrappers, no shadowing)
+
+Full design: [`../../docs/register_constraints_plan.md`](../../docs/register_constraints_plan.md)
+(§3 + Appendix A). In short:
+
+- The stock `Reg::write` / `modify` / `read` / `reset` / `write_with_zero` /
+  `from_*` methods in `generic.rs` gain a
+  `where REG: UnconstrainedWrite/Modify/Read` bound.
+- Every **unconstrained** register gets one-line marker impls — its API stays
+  byte-identical.
+- A **constrained** register gets NO marker for the gated operation, so the
+  witness-free method *does not exist* for it. Violations surface downstream
+  as **E0277 with a custom message** (via `#[diagnostic::on_unimplemented]`):
+  *"`CR1rs` is write-constrained by its datasheet — call
+  `write_witnessed(f, witness)` or `write_when_ready(f)` …"*.
+- Witness types ride on `WriteGate`/`ModifyGate`/`ReadGate` traits implemented
+  only by constrained registers; `check_write_ready()` mints a witness from
+  ONE fresh volatile read of all preconditions; `write_when_ready(f)` welds
+  check + write into one call (the recommended entry point — the witness never
+  escapes user code).
+- The only bypasses are `unsafe` (`write_unwitnessed`, …) — greppable, and
+  there is no `Deref` hole: an ascribed `&Reg<CR1rs>` reference or a UFCS call
+  hits the same E0277 (pinned as compile-fail regressions).
+
+Current scope (roadmap step B): same-register preconditions on write/modify;
+a `write` constraint gates both the write surface and the modify surface. A
+same-register **read** gate is rejected as self-defeating (the check performs
+the read). Cross-register witnesses = step H; postconditions / action
+witnesses = step I.
+
+## Layout
 
 ```
 applications/pac_codegen/
-├── rust_codegen.py          Code generator: RegisterInfo JSON -> Rust constraint modules
-├── collect_constraints.py   Bridge: generator run dir -> per-register constraints JSON
-├── constraint_test/         Standalone Rust crate that compiles the generated, injected code
-│   ├── stm32f405_i2c1.json  Example constraint fixture (RegisterInfo JSON) — input to rust_codegen.py
-│   ├── src/main.rs          (a no_std compile test of the safe/unsafe access paths)
-│   ├── Cargo.toml
-│   ├── Cargo.lock
-│   └── .gitignore           (ignores /target build cache)
-├── vendored/                The two upstream PACs, registered as git submodules
-│   ├── stm32-rs/            (NOT checked in; fetch on demand — see below)
-│   └── stm32f4xx-hal/
-├── constraints/             Bridge output: collected constraints (created on demand)
+├── rust_codegen.py          Code generator: RegisterInfo JSON -> gated PAC
+├── collect_constraints.py   Bridge: generator run dir -> per-register JSON + manifest
+├── get_pac.py               Provision the generated stm32f4 PAC (crates.io, pinned+verified)
+├── tests/                   pytest suite (golden diff, compile + enforcement, collection/lint, kind registry)
+├── constraint_test/         no_std crate compiled against the injected PAC
+│   ├── stm32f405_i2c1.json  Constraint fixture (grammar-v2 RegisterInfo JSON)
+│   ├── i2c1_expected_constraints.rs   Golden emitter output
+│   └── src/main.rs          Every LEGAL access path (illegal ones live in test_codegen.py)
+├── vendored/
+│   ├── pac/stm32f4/         Provisioned test PAC (git-ignored; get_pac.py creates it)
+│   ├── stm32-rs/            Reference submodules (NOT fetched by default; not
+│   └── stm32f4xx-hal/       needed for tests — kept for SVD/HAL reference work)
 ├── generated/               Runtime codegen output (created on demand)
 └── README.md                (this file)
 ```
 
-The constraint grammar/design lives at
-[`../../docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](../../docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md).
-Other PAC design docs live under [`../../docs/pac/`](../../docs/pac/):
-`SVD2RUST_PAC_GUIDE.md` and the phased change logs/plans
-(`PHASE2_CHANGES.md`, `PHASE3_CHANGES.md`, `PHASE4_PLAN.md`).
+## Provisioning the test PAC
 
-## Vendored PACs are git submodules
-
-The two PACs are pinned **submodules**, not vendored source — the ~1.5 GB of PAC
-code is *not* committed here; only commit pointers (gitlinks) are. Fetch them
-on demand:
+svd2rust PAC crates publish their **generated source**, so the pinned crates.io
+package is a byte-authentic generated PAC:
 
 ```sh
-git submodule update --init applications/pac_codegen/vendored/stm32-rs
-git submodule update --init applications/pac_codegen/vendored/stm32f4xx-hal
+python applications/pac_codegen/get_pac.py     # ~4 MB download, checksum-verified
 ```
 
-Pinned to the same commits the PAC fork used:
-`stm32-rs` @ `75790df` (v0.16.0) and `stm32f4xx-hal` @ `eca3bd5` (v0.23.0-7).
-
-`rust_codegen.py` **patches** the checked-out `stm32-rs` PAC in place (it edits
-`generic.rs` to widen field visibility and add a `ConstrainedReg<REG>` wrapper,
-and injects a `pub mod constraints { … }` into the target peripheral's
-`mod.rs`). Run it against the submodule checkout after fetching; re-run
-`git submodule update` to discard the patches.
+That is the only setup the compile tests need (plus a Rust toolchain).
 
 ## Generating constrained Rust
 
-`rust_codegen.py` reads a `RegisterInfo` JSON (shared schema from the repo-root
-`defs.py`) and emits a Rust constraints module — either standalone or injected
-into a PAC:
-
 ```sh
-# Standalone module:
+# Standalone module (what the golden test diffs):
 python applications/pac_codegen/rust_codegen.py \
     applications/pac_codegen/constraint_test/stm32f405_i2c1.json \
     --peripheral i2c1 --output applications/pac_codegen/generated/i2c1/constraints.rs
 
-# Inject into the (fetched) PAC and patch generic.rs:
+# Inject into the provisioned PAC (patches generic.rs, adds marker impls to
+# every register file, appends the constraints module to the peripheral):
 python applications/pac_codegen/rust_codegen.py \
     applications/pac_codegen/constraint_test/stm32f405_i2c1.json \
     --peripheral i2c1 \
-    --inject applications/pac_codegen/vendored/stm32-rs/stm32f4/src/stm32f405/mod.rs
+    --inject-pac applications/pac_codegen/vendored/pac/stm32f4 \
+    --device stm32f405
 ```
 
-`constraint_test/` is a minimal `no_std` crate that compiles the injected PAC and
-exercises both the safe (token-bearing) and would-be-unsafe access paths, serving
-as a compile-time regression check. Its `Cargo.toml` depends on the vendored PAC
-via the relative path `../vendored/stm32-rs/stm32f4`, so it builds once the
-submodule above is fetched.
-
-## The constraint-collection bridge
-
-`collect_constraints.py` establishes the datasheet → extraction → codegen data
-path. It scans a generator-output **run directory**
-(`agent_output/<mfg>/<device>/<run>/`, one file per register named
-`{peripheral}_{register}`), reads each register's `access_constraints`, and
-writes per-register `RegisterInfo` JSON files that `rust_codegen.py` consumes:
-
-```sh
-python applications/pac_codegen/collect_constraints.py agent_output/stm/rm0041/24 \
-    --output-dir applications/pac_codegen/constraints/rm0041_24
-```
-
-It only **collects and forwards** the dependency invariants. *Validating* them
-(consistency, satisfiability, datasheet fidelity) is later work (Phase 2/4); the
-pipeline validator in `core/s4_validator.py` is left untouched.
+Injection is **one-shot from a pristine PAC** (it refuses to run twice);
+restore with `get_pac.py --force`. The tests snapshot and restore the tree
+around every case automatically.
 
 ## Testing
 
-`test_codegen.py` is the regression guard for the code generator. Run it
-directly or under pytest:
-
 ```sh
-python applications/pac_codegen/test_codegen.py
-# or: pytest applications/pac_codegen/test_codegen.py
+python applications/pac_codegen/tests/test_codegen.py     # or under pytest
 ```
 
-- **`test_codegen_matches_golden`** (always runs) regenerates the constraints
-  module from `constraint_test/stm32f405_i2c1.json` and diffs it against the
-  committed golden `constraint_test/i2c1_expected_constraints.rs`. Any change to
-  `rust_codegen.py`'s output fails this with a diff — if the change is intended,
-  refresh the golden (see its header for the one-line command).
-- **`test_constraint_test_compiles`** injects into the PAC and `cargo check`s the
-  `constraint_test` crate (legal, token-bearing paths) — it must pass.
-- **`test_unconstrained_write_fails_to_compile`** injects and `cargo check`s a
-  token-less `cr1().write(...)` — it must be **rejected with `E0061`**, proving
-  the constraint is enforced.
+1. **`test_codegen_matches_golden`** (always runs, no toolchain) — emitter
+   output vs the committed golden.
+2. **`test_constraint_test_compiles`** — inject + `cargo check` the crate of
+   legal paths.
+3. **`test_illegal_programs_rejected`** — the enforcement table: nine
+   adversarial programs each asserted to fail with a specific error code and
+   diagnostic (witness-less calls → E0277 + datasheet message; witness reuse →
+   E0382; wrong-operation witness → E0308; the old shadowing design's safe
+   `&Reg` bypass → E0277, pinned forever).
 
-The two `cargo check` tests **skip** (they do not fail) unless `cargo` is on
-PATH **and** a *generated* `stm32f4` PAC exists at
-`vendored/stm32-rs/stm32f4/src/`. The `stm32-rs` submodule ships SVDs and the
-build system but **not** the generated crate, so fetching the submodule alone is
-not enough — the PAC must be generated first (svd2rust). They use `cargo check`
-rather than `cargo build` because the constraint enforcement is a front-end type
-error; a full build would codegen the Cortex-M PAC for the host and fail for
-unrelated target reasons. Each test backs up, restores, and verifies the PAC
-(and its own `main.rs`) so a run leaves the tree untouched.
+Skip policy: without cargo or the provisioned PAC, the compile tests SKIP so a
+fresh clone passes — except under `LIDAR_REQUIRE_PAC_TESTS=1` (CI sets it,
+`.github/workflows/pac-codegen.yml`), where any would-be skip is a hard
+failure. Silently-skipped enforcement tests are how a non-compiling generator
+once shipped; the flag makes that impossible in CI.
+
+## The constraint-collection bridge
+
+`collect_constraints.py` scans a generator-output run directory
+(`agent_output/<mfg>/<device>/<run>/`), reads each register's
+**`access_constraints_v2`** (grammar v2, emitted natively; see
+[`../../docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](../../docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md)),
+validates/dedups each constraint, applies the stage-0 lint and repair/reject
+policy, computes `enforceability`, and writes per-register JSON plus a grouped
+`manifest.json`. Old **v1** runs are converted first with `convert_v1_to_v2.py`.
+Validating constraints against the datasheet is the Constraint Validator's job
+(plan §7).

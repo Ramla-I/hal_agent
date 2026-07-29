@@ -275,33 +275,17 @@
     {
       "kind": "state_gate",
       "severity": "error",
-      "consequence": "Risk of setting second STOP, START or PEC request",
-      "datasheet_text": "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. This is to avoid setting a second STOP, START or PEC request.",
+      "consequence": "Risk of an unintended repeated start",
+      "datasheet_text": "The START bit must be set only when STOP is cleared.",
       "target_register": "CR1",
-      "target_fields": [],
+      "target_fields": [
+        "START"
+      ],
       "target_operation": "write",
       "preconditions": [
         {
           "register": "CR1",
           "field": "STOP",
-          "whole_register": false,
-          "state": "cleared",
-          "values": [],
-          "established_by": "hardware",
-          "action_operation": null
-        },
-        {
-          "register": "CR1",
-          "field": "START",
-          "whole_register": false,
-          "state": "cleared",
-          "values": [],
-          "established_by": "hardware",
-          "action_operation": null
-        },
-        {
-          "register": "CR1",
-          "field": "PEC",
           "whole_register": false,
           "state": "cleared",
           "values": [],

@@ -1,0 +1,828 @@
+# targets/stm.toml — STM device -> PAC crate -> higher-level consumers.
+#
+# One [[manual]] block per STM reference manual with assets in the repo
+# (devices/stm/<rm>/). Constraints are extracted PER MANUAL; each device is
+# that manual's projection onto one chip. `constraints_corpus = true` means
+# extraction runs for this manual exist in the 30-manual corpus today.
+#
+# PURE CONFIGURATION: no experiment results in this file (they live in
+# committed per-run reports). Fields verified against the crates.io index on
+# 2026-07-16: pac.version exists, feature names are the crate's own, and a
+# consumer `version` is only pinned where a released HAL version actually
+# depends on this PAC version ("pairing"). status vocabulary:
+#   measured  - adoption experiment has been run at least once
+#   ready     - all pieces exist, experiment not yet run
+#   no-pairing- no released HAL version depends on PAC 0.16 (use git rev later)
+#   no-pac    - family has no published PAC crate at all
+
+# ---------------------------------------------------------------------------
+# Toolchain lineage (Ramla 2026-07-16: track which svd2rust generates the PAC
+# each HAL crate consumes):
+#   - the 0.16.0 PAC release wave is generated with svd2rust 0.36.1
+#     (verified from the crates' own lib.rs stamp) — our injector targets
+#     this template generation.
+#   - POLICY: prefer a HAL crate's DEVELOPMENT branch against the newest PAC
+#     over back-porting the injector to older PAC templates (newer HAL has
+#     improvements). `dev_tracks_pac` below records what each HAL dev branch
+#     requires (checked 2026-07-16).
+#   - POLICY: a PAC self-generated from a raw ST SVD is equivalent to a
+#     stm32-rs PAC with no patch files — for `no-pac` families, generate
+#     with the same svd2rust version from the SVDs in devices/stm/<rm>/svd/.
+[toolchain]
+pac_release = "0.16.0"
+svd2rust = "0.36.1"
+
+[[manual]]
+id = "rm0008"
+constraints_corpus = true
+pac = { crate = "stm32f1", version = "0.16.0" }
+devices = [
+  { name = "stm32f101", feature = "stm32f101" },
+  { name = "stm32f102", feature = "stm32f102" },
+  { name = "stm32f103", feature = "stm32f103" },
+  { name = "stm32f107", feature = "stm32f107" },
+]
+[[manual.consumer]]
+name = "stm32f1xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.11.0" }  # depends on stm32f1 ^0.16.0
+patch_method = "patch.crates-io"
+status = "ready"
+
+[[manual]]
+id = "rm0033"
+constraints_corpus = true
+pac = { crate = "stm32f2", version = "0.16.0" }
+devices = [
+  { name = "stm32f215", feature = "stm32f215" },
+  { name = "stm32f217", feature = "stm32f217" },
+]
+# no known maintained HAL crate for stm32f2
+
+[[manual]]
+id = "rm0038"
+constraints_corpus = true
+pac = { crate = "stm32l1", version = "0.16.0" }
+devices = [
+  { name = "stm32l100", feature = "stm32l100" },
+  { name = "stm32l151", feature = "stm32l151" },
+  { name = "stm32l152", feature = "stm32l152" },
+  { name = "stm32l162", feature = "stm32l162" },
+]
+[[manual.consumer]]
+name = "stm32l1xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.5.0"  # dev branch still on PAC 0.5.0; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32l1 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0041"
+constraints_corpus = false
+pac = { crate = "stm32f1", version = "0.16.0" }
+devices = [
+  { name = "stm32f100", feature = "stm32f100" },
+]
+[[manual.consumer]]
+name = "stm32f1xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.11.0" }  # depends on stm32f1 ^0.16.0
+patch_method = "patch.crates-io"
+status = "ready"
+
+[[manual]]
+id = "rm0090"
+constraints_corpus = false
+pac = { crate = "stm32f4", version = "0.16.0" }
+devices = [
+  { name = "stm32f405", feature = "stm32f405" },
+  { name = "stm32f407", feature = "stm32f407" },
+  { name = "stm32f415", feature = "stm32f405" },  # crypto variant: stm32-rs maps it to the stm32f405 feature
+  { name = "stm32f417", feature = "stm32f407" },  # crypto variant: stm32-rs maps it to the stm32f407 feature
+  { name = "stm32f427", feature = "stm32f427" },
+  { name = "stm32f429", feature = "stm32f429" },
+  { name = "stm32f437", feature = "stm32f427" },  # crypto variant: stm32-rs maps it to the stm32f427 feature
+  { name = "stm32f439", feature = "stm32f429" },  # crypto variant: stm32-rs maps it to the stm32f429 feature
+]
+[[manual.consumer]]
+name = "stm32f4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+patch_method = "patch.crates-io"
+status = "measured"
+
+[[manual]]
+id = "rm0091"
+constraints_corpus = true
+pac = { crate = "stm32f0", version = "0.16.0" }
+devices = [
+  { name = "stm32f0x1", feature = "stm32f0x1" },
+  { name = "stm32f0x2", feature = "stm32f0x2" },
+  { name = "stm32f0x8", feature = "stm32f0x8" },
+]
+[[manual.consumer]]
+name = "stm32f0xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15"  # dev branch still on PAC 0.15; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32f0 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0313"
+constraints_corpus = true
+pac = { crate = "stm32f3", version = "0.16.0" }
+devices = [
+  { name = "stm32f373", feature = "stm32f373" },
+]
+[[manual.consumer]]
+name = "stm32f3xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15.1"  # dev branch still on PAC 0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32f3 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0316"
+constraints_corpus = true
+pac = { crate = "stm32f3", version = "0.16.0" }
+devices = [
+  { name = "stm32f303", feature = "stm32f303" },
+]
+[[manual.consumer]]
+name = "stm32f3xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15.1"  # dev branch still on PAC 0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32f3 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0351"
+constraints_corpus = false
+pac = { crate = "stm32l4", version = "0.16.0" }
+devices = [
+  { name = "stm32l476", feature = "stm32l4x6" },
+  { name = "stm32l496", feature = "stm32l4x6" },
+]
+[[manual.consumer]]
+name = "stm32l4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.14.0"  # dev branch still on PAC 0.14.0; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32l4 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0360"
+constraints_corpus = true
+pac = { crate = "stm32f0", version = "0.16.0" }
+devices = [
+  { name = "stm32f0x0", feature = "stm32f0x0" },
+]
+[[manual.consumer]]
+name = "stm32f0xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15"  # dev branch still on PAC 0.15; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32f0 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0365"
+constraints_corpus = true
+pac = { crate = "stm32f3", version = "0.16.0" }
+devices = [
+  { name = "stm32f302", feature = "stm32f302" },
+]
+[[manual.consumer]]
+name = "stm32f3xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15.1"  # dev branch still on PAC 0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32f3 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0366"
+constraints_corpus = true
+pac = { crate = "stm32f3", version = "0.16.0" }
+devices = [
+  { name = "stm32f301", feature = "stm32f301" },
+]
+[[manual.consumer]]
+name = "stm32f3xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15.1"  # dev branch still on PAC 0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32f3 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0367"
+constraints_corpus = true
+pac = { crate = "stm32l0", version = "0.16.0" }
+devices = [
+  { name = "stm32l053", feature = "stm32l0x3" },
+  { name = "stm32l063", feature = "stm32l0x3" },
+  { name = "stm32l0x3", feature = "stm32l0x3" },
+]
+[[manual.consumer]]
+name = "stm32l0xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15.1"  # dev branch still on PAC 0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32l0 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0368"
+constraints_corpus = true
+pac = { crate = "stm32f4", version = "0.16.0" }
+devices = [
+  { name = "stm32f401", feature = "stm32f401" },
+]
+[[manual.consumer]]
+name = "stm32f4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+patch_method = "patch.crates-io"
+status = "measured"
+
+[[manual]]
+id = "rm0376"
+constraints_corpus = true
+pac = { crate = "stm32l0", version = "0.16.0" }
+devices = [
+  { name = "stm32l052", feature = "stm32l0x2" },
+  { name = "stm32l062", feature = "stm32l0x2" },
+  { name = "stm32l0x2", feature = "stm32l0x2" },
+]
+[[manual.consumer]]
+name = "stm32l0xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15.1"  # dev branch still on PAC 0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32l0 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0377"
+constraints_corpus = true
+pac = { crate = "stm32l0", version = "0.16.0" }
+devices = [
+  { name = "stm32l0x1", feature = "stm32l0x1" },
+]
+[[manual.consumer]]
+name = "stm32l0xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15.1"  # dev branch still on PAC 0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32l0 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0383"
+constraints_corpus = true
+pac = { crate = "stm32f4", version = "0.16.0" }
+devices = [
+  { name = "stm32f411", feature = "stm32f411" },
+]
+[[manual.consumer]]
+name = "stm32f4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+patch_method = "patch.crates-io"
+status = "measured"
+
+[[manual]]
+id = "rm0385"
+constraints_corpus = true
+pac = { crate = "stm32f7", version = "0.16.0" }
+devices = [
+  { name = "stm32f745", feature = "stm32f745" },
+  { name = "stm32f746", feature = "stm32f746" },
+  { name = "stm32f750", feature = "stm32f750" },
+  { name = "stm32f756", feature = "stm32f756" },
+]
+[[manual.consumer]]
+name = "stm32f7xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15"  # dev branch still on PAC 0.15; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32f7 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0386"
+constraints_corpus = true
+pac = { crate = "stm32f4", version = "0.16.0" }
+devices = [
+  { name = "stm32f469", feature = "stm32f469" },
+  { name = "stm32f479", feature = "stm32f469" },  # crypto variant: stm32-rs maps it to the stm32f469 feature
+]
+[[manual.consumer]]
+name = "stm32f4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+patch_method = "patch.crates-io"
+status = "measured"
+
+[[manual]]
+id = "rm0390"
+constraints_corpus = true
+pac = { crate = "stm32f4", version = "0.16.0" }
+devices = [
+  { name = "stm32f446", feature = "stm32f446" },
+]
+[[manual.consumer]]
+name = "stm32f4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+patch_method = "patch.crates-io"
+status = "measured"
+
+[[manual]]
+id = "rm0394"
+constraints_corpus = true
+pac = { crate = "stm32l4", version = "0.16.0" }
+devices = [
+  { name = "stm32l412", feature = "stm32l412" },
+]
+[[manual.consumer]]
+name = "stm32l4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.14.0"  # dev branch still on PAC 0.14.0; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32l4 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0399"
+constraints_corpus = false
+pac = { crate = "stm32h7", version = "0.16.0" }
+devices = [
+  { name = "stm32h745cm4", feature = "stm32h745cm4" },
+  { name = "stm32h745cm7", feature = "stm32h745cm7" },
+  { name = "stm32h747cm4", feature = "stm32h747cm4" },
+  { name = "stm32h747cm7", feature = "stm32h747cm7" },
+  { name = "stm32h755cm4", feature = "stm32h755cm4" },
+  { name = "stm32h755cm7", feature = "stm32h755cm7" },
+  { name = "stm32h757cm4", feature = "stm32h757cm4" },
+  { name = "stm32h757cm7", feature = "stm32h757cm7" },
+]
+[[manual.consumer]]
+name = "stm32h7xx-hal"
+kind = "hal"
+dev_tracks_pac = "^0.15.1"  # dev branch still on PAC ^0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0401"
+constraints_corpus = true
+pac = { crate = "stm32f4", version = "0.16.0" }
+devices = [
+  { name = "stm32f410", feature = "stm32f410" },
+]
+[[manual.consumer]]
+name = "stm32f4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+patch_method = "patch.crates-io"
+status = "measured"
+
+[[manual]]
+id = "rm0402"
+constraints_corpus = true
+pac = { crate = "stm32f4", version = "0.16.0" }
+devices = [
+  { name = "stm32f412", feature = "stm32f412" },
+]
+[[manual.consumer]]
+name = "stm32f4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+patch_method = "patch.crates-io"
+status = "measured"
+
+[[manual]]
+id = "rm0410"
+constraints_corpus = true
+pac = { crate = "stm32f7", version = "0.16.0" }
+devices = [
+  { name = "stm32f765", feature = "stm32f765" },
+  { name = "stm32f767", feature = "stm32f767" },
+  { name = "stm32f768", feature = "" },  # unmapped: no matching feature in stm32f7 0.16.0
+  { name = "stm32f769", feature = "stm32f769" },
+  { name = "stm32f777", feature = "stm32f777" },
+  { name = "stm32f778", feature = "stm32f778" },
+  { name = "stm32f779", feature = "stm32f779" },
+]
+[[manual.consumer]]
+name = "stm32f7xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15"  # dev branch still on PAC 0.15; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32f7 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0430"
+constraints_corpus = true
+pac = { crate = "stm32f4", version = "0.16.0" }
+devices = [
+  { name = "stm32f413", feature = "stm32f413" },
+  { name = "stm32f423", feature = "stm32f413" },  # crypto variant: stm32-rs maps it to the stm32f413 feature
+]
+[[manual.consumer]]
+name = "stm32f4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+patch_method = "patch.crates-io"
+status = "measured"
+
+[[manual]]
+id = "rm0431"
+constraints_corpus = true
+pac = { crate = "stm32f7", version = "0.16.0" }
+devices = [
+  { name = "stm32f722", feature = "stm32f722" },
+  { name = "stm32f723", feature = "stm32f723" },
+  { name = "stm32f730", feature = "stm32f730" },
+  { name = "stm32f732", feature = "stm32f732" },
+  { name = "stm32f733", feature = "stm32f733" },
+]
+[[manual.consumer]]
+name = "stm32f7xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15"  # dev branch still on PAC 0.15; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32f7 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0432"
+constraints_corpus = false
+pac = { crate = "stm32l4", version = "0.16.0" }
+devices = [
+  { name = "stm32l4p5", feature = "stm32l4p5" },
+  { name = "stm32l4q5", feature = "" },  # unmapped: no matching feature in stm32l4 0.16.0
+  { name = "stm32l4r5", feature = "stm32l4r5" },
+  { name = "stm32l4r7", feature = "" },  # unmapped: no matching feature in stm32l4 0.16.0
+  { name = "stm32l4r9", feature = "stm32l4r9" },
+  { name = "stm32l4s5", feature = "" },  # unmapped: no matching feature in stm32l4 0.16.0
+  { name = "stm32l4s7", feature = "" },  # unmapped: no matching feature in stm32l4 0.16.0
+  { name = "stm32l4s9", feature = "" },  # unmapped: no matching feature in stm32l4 0.16.0
+]
+[[manual.consumer]]
+name = "stm32l4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.14.0"  # dev branch still on PAC 0.14.0; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32l4 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0433"
+constraints_corpus = false
+pac = { crate = "stm32h7", version = "0.16.0" }
+devices = [
+  { name = "stm32h742", feature = "stm32h742" },
+  { name = "stm32h743", feature = "stm32h743" },
+  { name = "stm32h743v", feature = "stm32h743v" },
+  { name = "stm32h750", feature = "stm32h750" },
+  { name = "stm32h753", feature = "stm32h753" },
+  { name = "stm32h753v", feature = "stm32h753v" },
+]
+[[manual.consumer]]
+name = "stm32h7xx-hal"
+kind = "hal"
+dev_tracks_pac = "^0.15.1"  # dev branch still on PAC ^0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0434"
+constraints_corpus = true
+pac = { crate = "stm32wb", version = "0.16.0" }
+devices = [
+  { name = "stm32wb35_cm4", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+  { name = "stm32wb55", feature = "stm32wb55" },
+  { name = "stm32wb55_cm0p", feature = "stm32wb55" },
+]
+[[manual.consumer]]
+name = "stm32wb-hal"
+kind = "hal"
+# dev-branch PAC requirement: could not be determined automatically
+status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0436"
+constraints_corpus = false
+pac = { crate = "stm32mp1", version = "0.16.0" }
+devices = [
+  { name = "stm32mp157", feature = "stm32mp157" },
+]
+# no known maintained HAL crate for stm32mp1
+
+[[manual]]
+id = "rm0438"
+constraints_corpus = false
+pac = { crate = "stm32l5", version = "0.16.0" }
+devices = [
+  { name = "stm32l552", feature = "stm32l552" },
+  { name = "stm32l562", feature = "stm32l562" },
+]
+[[manual.consumer]]
+name = "stm32l5xx-hal"
+kind = "hal"
+status = "no-pairing"  # no released version depends on stm32l5 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0440"
+constraints_corpus = false
+pac = { crate = "stm32g4", version = "0.16.0" }
+devices = [
+  { name = "stm32g431", feature = "stm32g431" },
+  { name = "stm32g441", feature = "stm32g441" },
+  { name = "stm32g471", feature = "stm32g471" },
+  { name = "stm32g473", feature = "stm32g473" },
+  { name = "stm32g474", feature = "stm32g474" },
+  { name = "stm32g483", feature = "stm32g483" },
+  { name = "stm32g484", feature = "stm32g484" },
+  { name = "stm32g491", feature = "stm32g491" },
+  { name = "stm32g4a1", feature = "stm32g4a1" },
+]
+[[manual.consumer]]
+name = "stm32g4xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
+source = { registry = "crates.io", version = "=0.1.0" }  # depends on stm32g4 ^0.16.0
+patch_method = "patch.crates-io"
+status = "ready"
+
+[[manual]]
+id = "rm0442"
+constraints_corpus = false
+pac = { crate = "stm32mp1", version = "0.16.0" }
+devices = [
+  { name = "stm32mp153", feature = "stm32mp153" },
+]
+# no known maintained HAL crate for stm32mp1
+
+[[manual]]
+id = "rm0444"
+constraints_corpus = true
+pac = { crate = "stm32g0", version = "0.16.0" }
+devices = [
+  { name = "stm32g031", feature = "stm32g031" },
+  { name = "stm32g041", feature = "stm32g041" },
+  { name = "stm32g051", feature = "stm32g051" },
+  { name = "stm32g061", feature = "stm32g061" },
+  { name = "stm32g071", feature = "stm32g071" },
+  { name = "stm32g081", feature = "stm32g081" },
+  { name = "stm32g0b1", feature = "stm32g0b1" },
+  { name = "stm32g0c1", feature = "stm32g0c1" },
+]
+[[manual.consumer]]
+name = "stm32g0xx-hal"
+kind = "hal"
+# dev-branch PAC requirement: could not be determined automatically
+status = "no-pairing"  # no released version depends on stm32g0 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0451"
+constraints_corpus = true
+pac = { crate = "stm32l0", version = "0.16.0" }
+devices = [
+  { name = "stm32l0x0", feature = "stm32l0x0" },
+]
+[[manual.consumer]]
+name = "stm32l0xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.15.1"  # dev branch still on PAC 0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32l0 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0453"
+constraints_corpus = false
+pac = { crate = "stm32wl", version = "0.16.0" }
+devices = [
+  { name = "stm32wl5x_cm0p", feature = "stm32wl5x_cm0p" },
+  { name = "stm32wl5x_cm4", feature = "stm32wl5x_cm4" },
+]
+[[manual.consumer]]
+name = "stm32wlxx-hal"
+kind = "hal"
+# dev-branch PAC requirement: could not be determined automatically
+status = "no-pairing"  # no released version depends on stm32wl 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0454"
+constraints_corpus = true
+pac = { crate = "stm32g0", version = "0.16.0" }
+devices = [
+  { name = "stm32g030", feature = "stm32g030" },
+  { name = "stm32g050", feature = "stm32g050" },
+  { name = "stm32g070", feature = "stm32g070" },
+  { name = "stm32g0b0", feature = "stm32g0b0" },
+]
+[[manual.consumer]]
+name = "stm32g0xx-hal"
+kind = "hal"
+# dev-branch PAC requirement: could not be determined automatically
+status = "no-pairing"  # no released version depends on stm32g0 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0455"
+constraints_corpus = false
+pac = { crate = "stm32h7", version = "0.16.0" }
+devices = [
+  { name = "stm32h7a3", feature = "stm32h7a3" },
+  { name = "stm32h7b0", feature = "stm32h7b0" },
+  { name = "stm32h7b3", feature = "stm32h7b3" },
+]
+[[manual.consumer]]
+name = "stm32h7xx-hal"
+kind = "hal"
+dev_tracks_pac = "^0.15.1"  # dev branch still on PAC ^0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0456"
+constraints_corpus = false
+pac = { crate = "stm32u5", version = "0.16.0" }
+devices = [
+  { name = "stm32u535", feature = "stm32u535" },
+  { name = "stm32u545", feature = "stm32u545" },
+  { name = "stm32u575", feature = "stm32u575" },
+  { name = "stm32u585", feature = "stm32u585" },
+  { name = "stm32u595", feature = "stm32u595" },
+  { name = "stm32u599", feature = "stm32u599" },
+  { name = "stm32u5a5", feature = "stm32u5a5" },
+  { name = "stm32u5a9", feature = "stm32u5a9" },
+  { name = "stm32u5fx", feature = "" },  # unmapped: no matching feature in stm32u5 0.16.0
+  { name = "stm32u5gx", feature = "" },  # unmapped: no matching feature in stm32u5 0.16.0
+]
+# no known maintained HAL crate for stm32u5
+
+[[manual]]
+id = "rm0461"
+constraints_corpus = false
+pac = { crate = "stm32wl", version = "0.16.0" }
+devices = [
+  { name = "stm32wle5", feature = "stm32wle5" },
+]
+[[manual.consumer]]
+name = "stm32wlxx-hal"
+kind = "hal"
+# dev-branch PAC requirement: could not be determined automatically
+status = "no-pairing"  # no released version depends on stm32wl 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0468"
+constraints_corpus = false
+pac = { crate = "stm32h7", version = "0.16.0" }
+devices = [
+  { name = "stm32h723", feature = "stm32h723" },
+  { name = "stm32h725", feature = "stm32h725" },
+  { name = "stm32h730", feature = "stm32h730" },
+  { name = "stm32h733", feature = "stm32h733" },
+  { name = "stm32h735", feature = "stm32h735" },
+  { name = "stm32h73x", feature = "" },  # unmapped: no matching feature in stm32h7 0.16.0
+]
+[[manual.consumer]]
+name = "stm32h7xx-hal"
+kind = "hal"
+dev_tracks_pac = "^0.15.1"  # dev branch still on PAC ^0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0475"
+constraints_corpus = false
+pac = { crate = "stm32mp1", version = "0.16.0" }
+devices = [
+  { name = "stm32mp13xx", feature = "" },  # unmapped: no matching feature in stm32mp1 0.16.0
+]
+# no known maintained HAL crate for stm32mp1
+
+[[manual]]
+id = "rm0477"
+constraints_corpus = false
+pac = { crate = "stm32h7", version = "0.16.0" }
+devices = [
+  { name = "stm32h7r", feature = "stm32h7r" },
+  { name = "stm32h7s", feature = "stm32h7s" },
+]
+[[manual.consumer]]
+name = "stm32h7xx-hal"
+kind = "hal"
+dev_tracks_pac = "^0.15.1"  # dev branch still on PAC ^0.15.1; wait for upstream or use an older-template profile
+status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0481"
+constraints_corpus = false
+pac = { crate = "stm32h5", version = "0.16.0" }
+devices = [
+  { name = "stm32h523", feature = "stm32h523" },
+  { name = "stm32h533", feature = "stm32h533" },
+  { name = "stm32h562", feature = "stm32h562" },
+  { name = "stm32h563", feature = "stm32h563" },
+  { name = "stm32h573", feature = "stm32h573" },
+]
+[[manual.consumer]]
+name = "stm32h5xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC
+source = { git = "https://github.com/stm32-rs/stm32h5xx-hal" }  # pin rev at first run
+patch_method = "patch.crates-io"
+status = "ready-dev"
+
+[[manual]]
+id = "rm0486"
+constraints_corpus = false
+pac = { crate = "stm32n6", version = "0.16.0" }
+devices = [
+  { name = "stm32n647", feature = "stm32n647" },
+  { name = "stm32n657", feature = "stm32n657" },
+]
+# no known maintained HAL crate for stm32n6
+
+[[manual]]
+id = "rm0490"
+constraints_corpus = true
+pac = { crate = "stm32c0", version = "0.16.0" }
+devices = [
+  { name = "stm32c011", feature = "stm32c011" },
+  { name = "stm32c031", feature = "stm32c031" },
+  { name = "stm32c051", feature = "" },  # unmapped: no matching feature in stm32c0 0.16.0
+  { name = "stm32c071", feature = "stm32c071" },
+  { name = "stm32c091", feature = "" },  # unmapped: no matching feature in stm32c0 0.16.0
+  { name = "stm32c092", feature = "" },  # unmapped: no matching feature in stm32c0 0.16.0
+]
+[[manual.consumer]]
+name = "stm32c0xx-hal"
+kind = "hal"
+status = "no-pairing"  # no released version depends on stm32c0 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0492"
+constraints_corpus = false
+pac = { crate = "stm32h5", version = "0.16.0" }
+devices = [
+  { name = "stm32h503", feature = "stm32h503" },
+]
+[[manual.consumer]]
+name = "stm32h5xx-hal"
+kind = "hal"
+dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC
+source = { git = "https://github.com/stm32-rs/stm32h5xx-hal" }  # pin rev at first run
+patch_method = "patch.crates-io"
+status = "ready-dev"
+
+[[manual]]
+id = "rm0493"
+constraints_corpus = true
+pac = { crate = "stm32wb", version = "0.16.0" }
+devices = [
+  { name = "stm32wba50", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+  { name = "stm32wba52", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+  { name = "stm32wba54", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+  { name = "stm32wba55", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+]
+[[manual.consumer]]
+name = "stm32wb-hal"
+kind = "hal"
+# dev-branch PAC requirement: could not be determined automatically
+status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0503"
+constraints_corpus = false
+pac = { crate = "stm32u0", version = "0.16.0" }
+devices = [
+  { name = "stm32u031", feature = "stm32u031" },
+  { name = "stm32u073", feature = "stm32u073" },
+  { name = "stm32u083", feature = "stm32u083" },
+]
+# no known maintained HAL crate for stm32u0
+
+[[manual]]
+id = "rm0505"
+constraints_corpus = true
+pac = { crate = "stm32wb", version = "0.16.0" }
+devices = [
+  { name = "stm32wb09", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+]
+[[manual.consumer]]
+name = "stm32wb-hal"
+kind = "hal"
+# dev-branch PAC requirement: could not be determined automatically
+status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0529"
+constraints_corpus = false
+pac = { crate = "stm32wb", version = "0.16.0" }
+devices = [
+  { name = "stm32wb05", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+]
+[[manual.consumer]]
+name = "stm32wb-hal"
+kind = "hal"
+# dev-branch PAC requirement: could not be determined automatically
+status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git rev when running
+
+[[manual]]
+id = "rm0530"
+constraints_corpus = false
+pac = { crate = "stm32wb", version = "0.16.0" }
+devices = [
+  { name = "stm32wb06", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+  { name = "stm32wb07", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+]
+[[manual.consumer]]
+name = "stm32wb-hal"
+kind = "hal"
+# dev-branch PAC requirement: could not be determined automatically
+status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git rev when running

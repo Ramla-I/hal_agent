@@ -58,3 +58,12 @@ This loop runs `config.COVERAGE_IMPROVER_ITERATIONS` times.
 
 - **Inputs:** `register_diff.csv` and `field_diff.csv`, plus verified datasheet CSV at `verified_datasheet/<device>_<svd>.csv`.
 - **Outputs:** `register_diff_verified.csv` and `field_diff_verified.csv` in `custom_results_dir`.
+
+## Step 6: Constraint validation (optional, `--constraint-validation`)
+
+The enforcement arm's validation stage. After the generator, `run_constraint_validation_phase` validates the extracted grammar-v2 access constraints — **all kinds** — against the datasheet, entirely in memory (no intermediate CSV).
+
+- **Inputs:** the generator run dir (`access_constraints_v2` per register), `--constraint-chunks-root` (the chunked datasheet, `{rm}/chunks/md`), `--constraint-judge-model`, `--constraint-batch-size`.
+- **Flow:** build one item per constraint (native v2 object) → deterministic quote anchoring (`core/quote_anchor.py`) → closed-book LLM judge (`core/constraint_validator.py`), only on anchored constraints; `--constraint-batch-size N` judges N per call (one shared system prompt).
+- **Outputs:** `<run>/constraint_validation/` — `anchors.jsonl`, `judgments.jsonl`, and `summary.json` (extracted / anchored / static_pass / confirmed counts).
+- **Why it matters:** flags constraints whose cited quote can't be grounded in the datasheet, or whose structured encoding misstates it (plan §7). Separate from codegen, which *enforces* `state_gate` constraints as compile-time gates.
