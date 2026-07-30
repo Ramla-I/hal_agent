@@ -34,8 +34,13 @@ def _run_rm(rm: str, fmt: str, backend: str, force: bool) -> dict:
         return {"rm": rm, "status": "fail", "reason": "no_pdf"}
     os.makedirs(_LOG_DIR, exist_ok=True)
     log = os.path.join(_LOG_DIR, f"{rm}.log")
+    # --output-dir MUST place chunks under chunked_datasheets/stm/{rm}/chunks (where
+    # the constraint step + config.chunk_index_path look); pipeline.py's default is
+    # {pdf_dir}/chunks (devices/...), which the constraint anchor step never reads.
+    out_dir = os.path.join("chunked_datasheets", "stm", rm, "chunks")
     cmd = [sys.executable, "context_retrieval/preprocessing/pipeline.py",
-           pdf, rm, "--format", fmt, "--embed-metadata", "--backend", backend]
+           pdf, rm, "--output-dir", out_dir,
+           "--format", fmt, "--embed-metadata", "--backend", backend]
     with open(log, "w") as lf:
         lf.write(f"==== {' '.join(cmd)}\n")
         lf.flush()
