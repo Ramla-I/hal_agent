@@ -163,6 +163,11 @@ Then the generator runs with openevolve retrieval:
 - **R9 — chunk files are `.txt`.** The `chunks/md/` dir holds `{rm}_pNNN_cNN.txt`
   files (not `.md`) plus `chunks_index.csv` + `metadata.json`. Don't glob `*.md`.
 
+- **R10 — ChromaDB add() batch cap.** A single `collection.add()` is limited to
+  ~5461 items; the big datasheets have 5.5k–7.6k chunks (rm0486: 7606) →
+  `InternalError: Batch size … greater than max batch size`. **Fixed:**
+  `vector_store.add_documents` now splits the add into ≤5000-item batches.
+
 ---
 
 ## Not yet automated (the TODO for a one-command preprocessor)
