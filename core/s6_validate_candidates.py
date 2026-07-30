@@ -2,7 +2,7 @@
 
 Unlike the full Step-4 validator (every register/field), this validates only the
 candidate invariants (blank-status review rows) using the generator's value, then
-writes structure_verdict / structure_confidence back into the consolidated
+writes validator_verdict / validator_confidence back into the consolidated
 {device}_structure_review.csv (never touching tp_fp — advisory only).
 
 Calibration guard: the carded (primary) model's verdicts use the card threshold;
