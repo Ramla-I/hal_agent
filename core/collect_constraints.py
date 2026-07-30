@@ -308,6 +308,44 @@ def _field_bit_width(field: ET.Element) -> Optional[int]:
     return None
 
 
+def _derived_fields_elem(reg, plower: str, reg_elems: dict, depth: int = 0):
+    """The ``<fields>`` element governing `reg`, following register-level
+    ``derivedFrom``.
+
+    SVD inheritance works at BOTH levels. A derived *peripheral* omits
+    ``<registers>`` entirely (handled by the caller). A derived *register*
+    keeps its own ``<name>``/``<addressOffset>`` but omits ``<fields>``::
+
+        <register derivedFrom="TIM2.CR1">
+          <name>CR1</name>
+          <addressOffset>0x0</addressOffset>
+        </register>
+
+    Without following that reference the register indexes with an EMPTY field
+    set -- the key exists, so a name resolves to it, and then every field
+    lookup against it fails. stm32f411 declares all of TIM5 this way, so a
+    correct reference like ``TIM5_CR1.CEN`` was reported unresolvable while
+    the vaguer ``TIMx_CR1`` fell through to the union key and passed.
+
+    ``derivedFrom`` may be a bare register name (same peripheral) or a
+    qualified ``PERIPH.REG`` path, and may chain; depth is capped.
+    """
+    fe = reg.find("fields")
+    if fe is not None or depth > 4:
+        return fe
+    ref = (reg.get("derivedFrom") or "").strip()
+    if not ref:
+        return None
+    parts = [s for s in ref.lower().split(".") if s]
+    if not parts:
+        return None
+    key = (parts[-2], parts[-1]) if len(parts) >= 2 else (plower, parts[-1])
+    base = reg_elems.get(key)
+    if base is None or base is reg:
+        return None
+    return _derived_fields_elem(base, key[0], reg_elems, depth + 1)
+
+
 def _load_svd_index(svd_dir: str) -> dict:
     """Build a name-resolution + metadata index from SVD file(s).
 
@@ -371,6 +409,22 @@ def _load_svd_index(svd_dir: str) -> dict:
         by_name = {
             (p.findtext("name") or "").strip(): p for p in periph_elems
         }
+        # Every register element, keyed (peripheral, register), so a
+        # register-level derivedFrom can be resolved to the block it copies.
+        reg_elems: dict = {}
+        for periph in periph_elems:
+            pn = (periph.findtext("name") or "").strip().lower()
+            rp = periph.find("registers")
+            if rp is None:
+                base_p = by_name.get(periph.get("derivedFrom", ""))
+                rp = base_p.find("registers") if base_p is not None else None
+            if not pn or rp is None:
+                continue
+            for reg in rp.iter("register"):
+                rn = (reg.findtext("name") or "").strip().lower()
+                if rn:
+                    reg_elems.setdefault((pn, rn), reg)
+
         for periph in periph_elems:
             pname = (periph.findtext("name") or "").strip()
             regs_parent = periph.find("registers")
@@ -400,7 +454,7 @@ def _load_svd_index(svd_dir: str) -> dict:
                 fields: set = set()
                 field_enums: dict = {}
                 field_infos: list = []
-                fields_elem = reg.find("fields")
+                fields_elem = _derived_fields_elem(reg, plower, reg_elems)
                 if fields_elem is not None:
                     for field in fields_elem.findall("field"):
                         fname = (field.findtext("name") or "").strip()
@@ -473,12 +527,27 @@ def _load_svd_index(svd_dir: str) -> dict:
             "peripheral_names": peripheral_names}
 
 
-def _resolve_register_key(name: str, svd_index: dict) -> Optional[str]:
+def _resolve_register_key(name: str, svd_index: dict,
+                          field: str = "") -> Optional[str]:
     """Resolve a constraint's register name to an SVD index key, or None.
 
     Tries the name as-is, then with its leading (datasheet peripheral-family)
     prefix stripped -- "USART_CR1" matches the family key "usart_cr1" directly,
     while "RCC_APB1ENR" also matches via bare "apb1enr".
+
+    Resolution is deliberately MOST-SPECIFIC-FIRST: an instance- or
+    family-qualified key wins over the bare one, which unions the fields of
+    every same-named register on the chip. Falling through to the union key
+    when the specific one lacks the field would wave real errors past the
+    lint -- `SPI_CR2.CPOL` (CPOL is in SPI_CR1), `I2C_CR2.START` (in CR1),
+    `TIM9_CR1.CMS` (basic timers have no centre-aligned mode, hence no CMS)
+    all resolve under some *other* peripheral's CR1/CR2 and would be
+    accepted. The specific key is only trustworthy because
+    ``_derived_fields_elem`` resolves SVD register inheritance; before that,
+    derived registers indexed empty and this ordering rejected correct names.
+
+    ``field`` is accepted for callers that want the key governing a specific
+    field; it does not change which key is chosen.
     """
     n = name.strip().lower()
     if not n:
@@ -549,7 +618,7 @@ def _svd_unresolved(constraint, svd_index: dict) -> list[dict]:
     """Names of a lifted constraint that do not resolve in the SVD (B.4 reject)."""
     out = []
     for path, register, field in _constraint_name_refs(constraint):
-        key = _resolve_register_key(register, svd_index)
+        key = _resolve_register_key(register, svd_index, field)
         if key is None:
             out.append({"field": f"{path}.register", "value": register,
                         "reason": "unresolvable_in_svd"})
