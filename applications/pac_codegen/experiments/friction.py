@@ -17,6 +17,13 @@ Two questions, two experiments:
      that grows with the constraints we inject -- and "inject fewer
      constraints" is not a mitigation.
 
+  C. WOULD WRITING THE CODE CONCRETELY REMOVE IT?
+     Compile the SAME body twice against the SAME injected PAC -- once
+     generically over an associated register type, once against the concrete
+     register type. If only the generic one fails, friction is a property of
+     the abstraction, not of the register or the encoding, and "monomorphize
+     the driver" is a real (if large) fix.
+
   B. HOW BIG IS THE HAL-SIDE FIX?
      Take the friction errors and apply rustc's own suggested bounds to the
      HAL source, iterating until it compiles or stops converging. The number
@@ -318,16 +325,70 @@ def experiment_b(case: dict) -> dict:
             "hal_source": str(hal_root), "workspace": str(ws)}
 
 
+_GENERIC_PROBE = """#![no_std]
+use {pac}::{device} as pac;
+// The shape stm32f4xx-hal uses: a trait with an associated register type, and
+// the body written ONCE against the placeholder.
+pub trait UartRB {{
+    type SRrs: {pac}::Readable;
+    fn sr(&self) -> &{pac}::Reg<Self::SRrs>;
+}}
+pub trait Impl: UartRB {{
+    fn poll(&self) -> bool {{ self.sr().read().bits() != 0 }}
+}}
+"""
+
+_CONCRETE_PROBE = """#![no_std]
+use {pac}::{device} as pac;
+// The same body, against the CONCRETE register type.
+pub fn poll(u: &pac::{periph}) -> bool {{ u.sr().read().bits() != 0 }}
+"""
+
+
+def experiment_c(case: dict) -> dict:
+    """Same body, same PAC, generic vs concrete."""
+    print(f"\n=== C: {case['pac']} — is friction a property of the ABSTRACTION? ===",
+          flush=True)
+    pac_dir = pac_copy(case["pac"])
+    install_encoding_only(pac_dir, case["device"])
+    ident = case["pac"].replace("-", "_")
+    out = {}
+    for label, tpl in (("generic", _GENERIC_PROBE), ("concrete", _CONCRETE_PROBE)):
+        ws = Path(tempfile.mkdtemp(prefix=f"friction_c_{label}_"))
+        (ws / "src").mkdir()
+        (ws / "src" / "lib.rs").write_text(tpl.format(
+            pac=ident, device=case["device"], periph="USART1"))
+        (ws / "Cargo.toml").write_text(
+            f'[package]\nname = "friction-c-{label}"\nversion = "0.1.0"\n'
+            'edition = "2021"\n\n[dependencies]\n'
+            f'{case["pac"]} = {{ path = "{pac_dir}", '
+            f'features = ["{case["device"]}"] }}\n')
+        run = cargo_check_json(ws)
+        if run is None:
+            out[label] = "TIMEOUT"
+            continue
+        diags = diagnostics(run)
+        witness = classify_witness(diags)["ours"]
+        out[label] = ("compiles" if run.returncode == 0
+                      else f"fails ({len(witness)} witness error(s))")
+        print(f"  {label:9s} -> {out[label]}")
+        for d in witness[:1]:
+            print(f"      {d['message'][:110]}")
+    return {"pac": case["pac"], "status": "ran", **out}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--only", choices=["A", "B"], help="run one experiment")
+    ap.add_argument("--only", choices=["A", "B", "C"], help="run one experiment")
     ap.add_argument("--hal", action="append", default=[])
     args = ap.parse_args()
     cases = [c for c in CASES if not args.hal or c["hal"] in args.hal]
 
-    res = {"A": [], "B": []}
+    res = {"A": [], "B": [], "C": []}
     if args.only in (None, "A"):
         res["A"] = [experiment_a(c) for c in cases]
+    if args.only in (None, "C"):
+        res["C"] = [experiment_c(cases[0])]
     if args.only in (None, "B"):
         res["B"] = [experiment_b(c) for c in cases]
 
@@ -357,6 +418,13 @@ def main() -> None:
                        and last.get("other_errors") == 0 else "did not converge")
             print(f"| {r['hal']} | {r['total_edits']} | {len(r['history'])} | "
                   f"{last.get('witness_errors', '—')} | {outcome} |")
+
+    for r in res["C"]:
+        print("\n## C. Same body, same injected PAC\n")
+        print("| written as | result |")
+        print("|---|---|")
+        print(f"| generic over an associated register type | {r.get('generic')} |")
+        print(f"| against the concrete register type | {r.get('concrete')} |")
 
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "friction.json").write_text(json.dumps(res, indent=1) + "\n")

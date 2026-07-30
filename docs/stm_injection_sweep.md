@@ -339,10 +339,36 @@ nothing to enforce), and the drift checks still run over every signature:
 | rm0368 → stm32f4xx-hal | 7 (unchanged) | 14 | **8** |
 | rm0008 → stm32f1xx-hal | 5 (unchanged) | 27 | **13** |
 
-What remains is irreducible under this encoding: generic code that writes or
+**4. Write the code concretely instead of generically — resolves it fully, but
+it is not our change to make.** The same body, compiled twice against the same
+injected PAC:
+
+| written as | result |
+|---|---|
+| generic over an associated register type (`Self::SRrs`) | **fails** |
+| against the concrete register type (`usart1::sr::SRrs`) | **compiles** |
+
+So friction is a property of the *abstraction*, not of the register or the
+encoding. Three independent confirmations: stm32-hal2 is concrete per-chip
+code and takes zero friction on all five targets; within stm32f4xx-hal itself
+the concrete modules absorb the gates cleanly (every one of its 17 enforcement
+hits lands in `i2c.rs`/`rtc.rs`) while only the generic serial module produces
+friction; and the probe above isolates the mechanism to a single line.
+
+The catch is who can do it. Rust type-checks a generic function ONCE against
+its declared bounds and never against its instantiations (unlike C++
+templates), so there is no flag and no codegen trick on our side — the
+expansion has to happen in the driver. For stm32f4xx-hal that means moving the
+default methods of `RegisterBlockImpl: UartRB` into per-instance impls (or a
+macro that generates them), which is an architectural change to somebody
+else's crate, larger than the 42–57 bound additions of option 2 and asking
+them to give up an abstraction they chose deliberately.
+
+What remains is therefore irreducible *for us*: generic code that writes or
 modifies registers, in a crate that really does gate writes and modifies.
-Reaching zero there needs either option 2 upstream, or a HAL written in
-stm32-hal2's concrete per-chip style, which pays nothing to begin with.
+Reaching zero needs an upstream change — either the bounds (small, but viral
+through public signatures) or concrete expansion (large, but local and with no
+API impact).
 
 This is the same split `applications/pac_codegen/eval_hal/README.md` reports
 for the stm32f4/I2C reference case, reproduced on real corpus constraints
