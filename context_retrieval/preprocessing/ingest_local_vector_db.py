@@ -32,7 +32,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import config as hal_config
 from context_retrieval.vector_db import config as vdb_config
 from context_retrieval.vector_db.vector_store import VectorStore, database_exists, create_database
-from utils.vector_store_config import load_vector_stores, save_vector_stores, VectorStoreInfo
+from utils.vector_store_config import (
+    load_vector_stores, save_vector_stores, VectorStoreInfo, DeviceVectorStores)
 
 
 def ingest_from_chunks_dir(
@@ -194,8 +195,15 @@ def ingest_from_chunks_dir(
     try:
         vs_config = load_vector_stores(str(device_dir))
     except FileNotFoundError:
-        print(f"Warning: vector_stores.json not found in {device_dir}, skipping registration")
-        return 0
+        # No vector_stores.json yet (a device set up for local retrieval only, e.g.
+        # chunked from chunked_datasheets without an OpenAI upload). Create a fresh
+        # config so the local entry is registered — the generator resolves
+        # local_db_name from here; skipping it would silently fall back to keyword
+        # search and never use this store.
+        print(f"No vector_stores.json in {device_dir} — creating one")
+        vs_config = DeviceVectorStores(
+            device_name=device_name, manufacturer=manufacturer,
+            vector_stores={}, default="", _device_dir=str(device_dir))
 
     chunks_dir_abs = chunks_dir_path.resolve()
     device_dir_abs = device_dir.resolve()
@@ -215,6 +223,8 @@ def ingest_from_chunks_dir(
         chunk_index_path=rel_csv,
         embedding_provider=embedding_provider,
     )
+    if not vs_config.default:
+        vs_config.default = entry_name  # make the local store the default retrieval source
     save_vector_stores(str(device_dir), vs_config)
     print(f"Registered '{entry_name}' in {device_dir}/vector_stores.json")
 
