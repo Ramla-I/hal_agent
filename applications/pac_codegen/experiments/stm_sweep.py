@@ -48,14 +48,24 @@ DATA = Path("/home/ramla/hal_agent-phase-1d")
 
 
 @dataclass
+class Consumer:
+    """A third-party crate that consumes the PAC and can therefore be compiled
+    against the injected one. NOT limited to the family `*xx-hal` crate: any
+    crates.io consumer whose released version depends on PAC 0.16.0 counts, and
+    a reverse-dependency sweep finds more of them than stm.toml lists."""
+    crate: str
+    version: str
+    features: list[str]
+    note: str = ""
+
+
+@dataclass
 class Target:
     rm: str
     pac: str            # crates.io PAC package
     device: str         # device module inside the PAC == cargo feature
     svd: str            # SVD basename for the collection lint
-    hal: str | None = None       # HAL crate that pairs with PAC 0.16.0
-    hal_version: str | None = None
-    hal_features: list[str] = field(default_factory=list)
+    consumers: list[Consumer] = field(default_factory=list)
 
     @property
     def run_dir(self) -> Path:
@@ -79,22 +89,29 @@ class Target:
 # One device module per RM: the RM's primary chip, preferring one a paired HAL
 # can select. (An RM projects onto several chips; injection is per device
 # module, and generic.rs is patched crate-wide, so one at a time.)
+# stm32-hal2 is a SECOND, independent HAL family covering c0/f3/f4/g0/g4/h5/
+# h7/l4/l5 -- and it is already on PAC 0.16.0. It is what makes the f3 family
+# measurable at all: stm32f3xx-hal is ~850 errors away from this PAC
+# generation (experiments/hal_gap.py), stm32-hal2 compiles against it clean.
+def _hal2(feature: str) -> Consumer:
+    return Consumer("stm32-hal2", "2.1.10", [feature],
+                    note="second HAL family, already on PAC 0.16")
+
+
 TARGETS = [
-    Target("rm0008", "stm32f1", "stm32f103", "stm32f103.svd",
-           hal="stm32f1xx-hal", hal_version="0.11.0",
-           hal_features=["stm32f103", "medium"]),
+    Target("rm0008", "stm32f1", "stm32f103", "stm32f103.svd", [
+        Consumer("stm32f1xx-hal", "0.11.0", ["stm32f103", "medium"])]),
     Target("rm0033", "stm32f2", "stm32f215", "stm32f215.svd"),
     Target("rm0038", "stm32l1", "stm32l151", "stm32l151.svd"),
     Target("rm0091", "stm32f0", "stm32f0x1", "stm32f0x1.svd"),
-    Target("rm0313", "stm32f3", "stm32f373", "stm32f373.svd"),
-    Target("rm0316", "stm32f3", "stm32f303", "stm32f303.svd"),
+    Target("rm0313", "stm32f3", "stm32f373", "stm32f373.svd", [_hal2("f373")]),
+    Target("rm0316", "stm32f3", "stm32f303", "stm32f303.svd", [_hal2("f303")]),
     Target("rm0360", "stm32f0", "stm32f0x0", "stm32f0x0.svd"),
-    Target("rm0365", "stm32f3", "stm32f302", "stm32f302.svd"),
-    Target("rm0366", "stm32f3", "stm32f301", "stm32f301.svd"),
+    Target("rm0365", "stm32f3", "stm32f302", "stm32f302.svd", [_hal2("f302")]),
+    Target("rm0366", "stm32f3", "stm32f301", "stm32f301.svd", [_hal2("f301")]),
     Target("rm0367", "stm32l0", "stm32l0x3", "stm32l0x3.svd"),
-    Target("rm0368", "stm32f4", "stm32f401", "stm32f401.svd",
-           hal="stm32f4xx-hal", hal_version="0.23.0",
-           hal_features=["stm32f401"]),
+    Target("rm0368", "stm32f4", "stm32f401", "stm32f401.svd", [
+        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f401"]), _hal2("f401")]),
     Target("rm0376", "stm32l0", "stm32l0x2", "stm32l0x2.svd"),
     Target("rm0377", "stm32l0", "stm32l0x1", "stm32l0x1.svd"),
 ]
@@ -198,23 +215,43 @@ def probe_check(t: Target, pac_dir: Path) -> tuple[str, str]:
     return "FAIL", str(ws) + "\n" + run.stderr[-3000:]
 
 
-def hal_workspace(t: Target, pac_dir: Path) -> Path:
-    ws = Path(tempfile.mkdtemp(prefix=f"stm_sweep_hal_{t.rm}_"))
+def hal_workspace(t: Target, c: Consumer, pac_dir: Path) -> Path:
+    ws = Path(tempfile.mkdtemp(prefix=f"stm_sweep_hal_{t.rm}_{c.crate}_"))
     (ws / "src").mkdir()
     (ws / "src" / "lib.rs").write_text(
-        "//! Compiling this crate compiles the UNMODIFIED HAL against the\n"
+        "//! Compiling this crate compiles the UNMODIFIED consumer against the\n"
         "//! locally patched PAC. The build itself is the experiment.\n"
         "#![no_std]\n"
-        f"pub use {t.hal.replace('-', '_')} as hal;\n")
-    feats = ", ".join(f'"{f}"' for f in t.hal_features)
+        f"pub use {c.crate.replace('-', '_')} as hal;\n")
+    feats = ", ".join(f'"{f}"' for f in c.features)
     (ws / "Cargo.toml").write_text(
         "[package]\n"
         f'name = "hal-eval-{t.rm}"\nversion = "0.1.0"\nedition = "2021"\n\n'
         "[dependencies]\n"
-        f'{t.hal} = {{ version = "={t.hal_version}", features = [{feats}] }}\n\n'
+        f'{c.crate} = {{ version = "={c.version}", features = [{feats}] }}\n\n'
         "[patch.crates-io]\n"
         f'{t.pac} = {{ path = "{pac_dir}" }}\n')
     return ws
+
+
+def patch_applied(ws: Path, pac: str) -> bool:
+    """Cargo does NOT fail when a [patch] does not apply -- it warns and
+    resolves the registry crate, so the whole experiment silently measures the
+    unpatched PAC. A path dependency has no `source` key in Cargo.lock."""
+    lock = ws / "Cargo.lock"
+    if not lock.is_file():
+        return False
+    blocks, cur = [], None
+    for line in lock.read_text().splitlines():
+        if line.strip() == "[[package]]":
+            cur = []
+            blocks.append(cur)
+        elif cur is not None:
+            cur.append(line)
+    for b in blocks:
+        if any(l.strip() == f'name = "{pac}"' for l in b):
+            return not any(l.startswith("source = ") for l in b)
+    return False
 
 
 def hal_errors(ws: Path, hal_dirname: str):
@@ -302,9 +339,10 @@ def classify(errors, gated_specs: set[str]) -> dict:
 # --------------------------------------------------------------------------- #
 
 def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict) -> dict:
-    res = {"rm": t.rm, "pac": t.pac, "device": t.device, "hal": t.hal,
+    res = {"rm": t.rm, "pac": t.pac, "device": t.device,
+           "consumers": [c.crate for c in t.consumers],
            "inject": "?", "planned": 0, "fates": {}, "gated_specs": [],
-           "probe": "-", "hal_result": None, "pristine": None, "detail": []}
+           "probe": "-", "hal_results": [], "pristine": None, "detail": []}
     print(f"\n=== {t.rm} -> {t.pac} 0.16.0 / {t.device} ===")
     if not t.run_dir.is_dir():
         res["inject"] = "NO DATA"
@@ -342,25 +380,30 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict) -
         if detail:
             res["detail"].append("probe:\n" + detail)
 
-        if t.hal and not skip_hal:
-            ws = hal_workspace(t, pac_dir)
-            hal_dirname = f"{t.hal}-{t.hal_version}"
-            base = hal_baseline_cache.get(t.rm)
-            errors = hal_errors(ws, hal_dirname)
-            res["hal_result"] = {"baseline": base, "workspace": str(ws)}
-            if errors is None:
-                res["hal_result"]["status"] = "TIMEOUT"
+        for c in (t.consumers if not skip_hal else []):
+            ws = hal_workspace(t, c, pac_dir)
+            base = hal_baseline_cache.get((t.rm, c.crate))
+            entry = {"crate": c.crate, "version": c.version,
+                     "features": c.features, "baseline": base,
+                     "workspace": str(ws)}
+            errors = hal_errors(ws, f"{c.crate}-{c.version}")
+            if not patch_applied(ws, t.pac):
+                entry["status"] = "PATCH_UNUSED"
+                print(f"  !! {c.crate}: patch not applied — result discarded")
+            elif errors is None:
+                entry["status"] = "TIMEOUT"
             else:
-                res["hal_result"].update(classify(errors, set(res["gated_specs"])))
-                res["hal_result"]["status"] = "ran"
-                h = res["hal_result"]
-                print(f"  HAL {t.hal} {t.hal_version}: "
-                      f"true_enforcement={h['true_enforcement']} "
-                      f"generic_friction={h['generic_friction']} other={h['other']}")
-                print(f"    enforcement sites: {h['files']['true_enforcement']}")
-                if h["other"]:
-                    for d in h["other_detail"]:
+                entry.update(classify(errors, set(res["gated_specs"])))
+                entry["status"] = "ran"
+                print(f"  HAL {c.crate} {c.version} (baseline {base}): "
+                      f"true_enforcement={entry['true_enforcement']} "
+                      f"generic_friction={entry['generic_friction']} "
+                      f"other={entry['other']}")
+                print(f"    enforcement sites: {entry['files']['true_enforcement']}")
+                if entry["other"]:
+                    for d in entry["other_detail"]:
                         print(f"    other: {d}")
+            res["hal_results"].append(entry)
         return res
     finally:
         if snap is not None:
@@ -372,15 +415,18 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict) -
                       file=sys.stderr)
 
 
-def hal_baseline(t: Target) -> str:
-    """The HAL must compile against the PRISTINE PAC, else the injected result
-    means nothing."""
+def hal_baseline(t: Target, c: Consumer) -> str:
+    """The consumer must compile against the PRISTINE PAC, else the injected
+    result means nothing. A patch that did not apply is also a non-result."""
     pac_dir = get_pac.provision(crate=t.pac, version=PAC_VERSION)
-    ws = hal_workspace(t, pac_dir)
+    ws = hal_workspace(t, c, pac_dir)
     run = cargo_check(ws)
+    ok_patch = patch_applied(ws, t.pac)
     shutil.rmtree(ws, ignore_errors=True)
     if run is None:
         return "TIMEOUT"
+    if not ok_patch:
+        return "PATCH_UNUSED"
     return "PASS" if run.returncode == 0 else "FAIL"
 
 
@@ -403,24 +449,28 @@ def main() -> None:
     baselines = {}
     if not args.dry_run and not args.skip_hal:
         for t in targets:
-            if t.hal:
-                print(f"baseline: {t.hal} {t.hal_version} vs pristine {t.pac} ...",
+            for c in t.consumers:
+                print(f"baseline: {c.crate} {c.version} vs pristine {t.pac} ...",
                       flush=True)
-                baselines[t.rm] = hal_baseline(t)
-                print(f"  {baselines[t.rm]}")
+                baselines[(t.rm, c.crate)] = hal_baseline(t, c)
+                print(f"  {baselines[(t.rm, c.crate)]}")
 
     results = [run_target(t, args.dry_run, args.skip_hal, baselines) for t in targets]
 
     print("\n\n## Summary\n")
-    print("| RM | PAC | device | injection | registers gated | probe | HAL | "
-          "true enforcement | generic friction | other | pristine |")
-    print("|---|---|---|---|---|---|---|---|---|---|---|")
+    print("| RM | PAC | device | injection | registers gated | probe | consumer | "
+          "baseline | true enforcement | generic friction | other | pristine |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for r in results:
-        h = r["hal_result"] or {}
-        print(f"| {r['rm']} | {r['pac']} | {r['device']} | {r['inject']} | "
-              f"{r['planned']} | {r['probe']} | {r['hal'] or '—'} | "
-              f"{h.get('true_enforcement', '—')} | {h.get('generic_friction', '—')} | "
-              f"{h.get('other', '—')} | {r['pristine']} |")
+        head = (f"| {r['rm']} | {r['pac']} | {r['device']} | {r['inject']} | "
+                f"{r['planned']} | {r['probe']} ")
+        if not r["hal_results"]:
+            print(head + f"| — | — | — | — | — | {r['pristine']} |")
+        for h in r["hal_results"]:
+            print(head + f"| {h['crate']} {h['version']} | {h.get('baseline','—')} | "
+                  f"{h.get('true_enforcement', '—')} | "
+                  f"{h.get('generic_friction', '—')} | "
+                  f"{h.get('other', '—')} | {r['pristine']} |")
 
     OUT.mkdir(parents=True, exist_ok=True)
     out = Path(args.out) if args.out else OUT / (

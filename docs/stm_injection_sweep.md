@@ -19,40 +19,85 @@ date (`experiments/build_map.py`); every field held. The 13 RMs land on **7
 chip crates**, all at the 0.16.0 release (svd2rust 0.36.1 — the template the
 injector targets), and each RM's device module exists in its crate:
 
-| RM | constraints | judge-enforce | PAC crate | device module | HAL consumer | released pairing on PAC 0.16 |
-|---|---|---|---|---|---|---|
-| rm0091 | 112 | 91 | stm32f0 | stm32f0x1 | stm32f0xx-hal | none |
-| rm0367 | 104 | 79 | stm32l0 | stm32l0x3 | stm32l0xx-hal | none |
-| rm0316 | 73 | 59 | stm32f3 | stm32f303 | stm32f3xx-hal | none |
-| rm0376 | 82 | 56 | stm32l0 | stm32l0x2 | stm32l0xx-hal | none |
-| rm0360 | 80 | 41 | stm32f0 | stm32f0x0 | stm32f0xx-hal | none |
-| rm0365 | 56 | 39 | stm32f3 | stm32f302 | stm32f3xx-hal | none |
-| rm0377 | 69 | 39 | stm32l0 | stm32l0x1 | stm32l0xx-hal | none |
-| rm0008 | 62 | 33 | stm32f1 | stm32f103 | stm32f1xx-hal | **0.11.0** |
-| rm0038 | 53 | 31 | stm32l1 | stm32l151 | stm32l1xx-hal | none |
-| rm0366 | 36 | 31 | stm32f3 | stm32f301 | stm32f3xx-hal | none |
-| rm0033 | 51 | 30 | stm32f2 | stm32f215 | — (no HAL exists) | — |
-| rm0313 | 62 | 26 | stm32f3 | stm32f373 | stm32f3xx-hal | none |
-| rm0368 | 54 | 26 | stm32f4 | stm32f401 | stm32f4xx-hal | **0.23.0** |
+| RM | constraints | judge-enforce | PAC crate | device module | consumer measurable on PAC 0.16 |
+|---|---|---|---|---|---|
+| rm0091 | 112 | 91 | stm32f0 | stm32f0x1 | — none |
+| rm0367 | 104 | 79 | stm32l0 | stm32l0x3 | — none |
+| rm0316 | 73 | 59 | stm32f3 | stm32f303 | **stm32-hal2 2.1.10** |
+| rm0376 | 82 | 56 | stm32l0 | stm32l0x2 | — none |
+| rm0360 | 80 | 41 | stm32f0 | stm32f0x0 | — none |
+| rm0365 | 56 | 39 | stm32f3 | stm32f302 | **stm32-hal2 2.1.10** |
+| rm0377 | 69 | 39 | stm32l0 | stm32l0x1 | — none |
+| rm0008 | 62 | 33 | stm32f1 | stm32f103 | **stm32f1xx-hal 0.11.0** |
+| rm0038 | 53 | 31 | stm32l1 | stm32l151 | — none |
+| rm0366 | 36 | 31 | stm32f3 | stm32f301 | **stm32-hal2 2.1.10** |
+| rm0033 | 51 | 30 | stm32f2 | stm32f215 | — none (no HAL at any version) |
+| rm0313 | 62 | 26 | stm32f3 | stm32f373 | **stm32-hal2 2.1.10** |
+| rm0368 | 54 | 26 | stm32f4 | stm32f401 | **stm32f4xx-hal 0.23.0 + stm32-hal2 2.1.10** |
 
 An RM projects onto several chips; one device module is injected at a time
 (`generic.rs` is patched crate-wide and injection is one-shot), and four RMs
 share the stm32f3 crate, so every target snapshots and restores its tree.
 
-### Why only two HAL crates can be measured
+### Which consumers can be measured — and why the rest cannot
 
-Injection needs nothing from a HAL, but the *adoption* question does. Only
-**stm32f1xx-hal 0.11.0** and **stm32f4xx-hal 0.23.0** have a released version
-that depends on PAC 0.16. Checked two ways on the run date:
+Injection needs nothing from a consumer, but the *adoption* question does.
 
-- crates.io index: the newest release of stm32f3xx-hal / stm32l0xx-hal /
-  stm32f0xx-hal / stm32l1xx-hal requires stm32f3 ^0.15.1, stm32l0 ^0.15.1,
-  stm32f0 ^0.15, stm32l1 ^0.5.0 respectively;
-- their **git master** branches (raw `Cargo.toml`): same requirements. Upstream
-  has not moved.
+**The first pass of this analysis got the answer wrong by asking too narrow a
+question.** `stm.toml` names one HAL per family — the community `*xx-hal` crate
+— and only two of those (**stm32f1xx-hal 0.11.0**, **stm32f4xx-hal 0.23.0**)
+have a release on PAC 0.16. But a PAC can have any number of downstream
+consumers, and the question that matters is whether *anything* real depends on
+the 0.16 generation. A reverse-dependency sweep of crates.io over every PAC in
+`stm.toml` answers it properly:
 
-Going the other way — injecting into the older PAC each HAL *does* pair with —
-was measured, not assumed (`experiments/old_pac_probe.py`):
+| PAC | corpus manuals | consumers already on PAC 0.16 |
+|---|---|---|
+| stm32f1 | 1 | stm32f1xx-hal 0.11.0, stm32f1-hal 0.14.1 |
+| stm32f3 | 4 | **stm32-hal2 2.1.10**, stm32-hrtim 0.2.0 |
+| stm32f4 | 7 | stm32f4xx-hal 0.23.0, **stm32-hal2 2.1.10** |
+| stm32c0 / g0 / g4 / h5 / h7 / l4 / l5 / wb | 6 (+ future) | **stm32-hal2 2.1.10** (g4 also stm32g4xx-hal 0.1.0) |
+| stm32f0, stm32f2, stm32f7, stm32l0, stm32l1 | 11 | **— none, at any version —** |
+
+**`stm32-hal2` is a second, independent HAL family** covering c0/f3/f4/g0/g4/
+h5/h7/l4/l5/wb, already on PAC 0.16, and it compiles clean against every
+pristine PAC we tested. It takes the measurable set from 2 manuals to **6 of
+13** today (the whole f3 family joins, and rm0368 gains a second independent
+consumer), and to **19 of the 30-manual corpus** as the pipeline completes.
+
+### The 11 that stay unmeasurable, and why
+
+For f0 / f2 / f7 / l0 / l1 there is **no crates.io consumer on PAC 0.16 at
+all** — checked across every published version of every reverse dependency.
+Three separate things stand in the way, each measured rather than assumed:
+
+**(a) The community HALs are a port away, not a version bump.**
+`experiments/hal_gap.py` forces each one onto the pristine PAC 0.16 (spoofing
+only the local copy's version string so `[patch.crates-io]` applies; the source
+compiled is the real 0.16.0) and counts:
+
+| consumer | errors vs PAC 0.16 | dominant class |
+|---|---|---|
+| stm32f3xx-hal 0.10.0 | 846 | 652 × E0616 *field is private* |
+| stm32l0xx-hal 0.10.0 | 703 | 595 × E0616 |
+| stm32l1xx-hal 0.1.0 | 666 | 569 × E0616 |
+| stm32f0xx-hal 0.18.0 | 446 | 408 × E0616 |
+| *stm32f1xx-hal 0.11.0* (control) | *0* | — |
+| *stm32f4xx-hal 0.23.0* (control) | *0* | — |
+
+svd2rust made register-block fields private behind accessors and renamed every
+generated enum (`CKMODE_A` → `CKMODE`) between the generation these HALs target
+and 0.36.1. Hundreds of call sites each.
+
+**(b) Most of them are dormant.** Last commit: stm32f3xx-hal 2023-11-30,
+stm32l0xx-hal 2024-01-27, stm32l1xx-hal 2020-09-11. No open PR in any of the
+four mentions 0.16. Only stm32f0xx-hal is active (2026-05-31), and its master
+has moved 0.14 → 0.15 — still one generation short. "Wait for upstream" is a
+real strategy for f0; for l0 and l1 it means waiting on dormant projects. For
+f3 it is moot, since stm32-hal2 already covers it.
+
+**(c) Going backwards is worse.** Injecting into the older PAC each HAL *does*
+pair with was measured too (`experiments/old_pac_probe.py`):
 
 | HAL crate | PAC it needs | svd2rust that generated it | injector anchors matched |
 |---|---|---|---|
@@ -61,10 +106,18 @@ was measured, not assumed (`experiments/old_pac_probe.py`):
 | stm32f0xx-hal | stm32f0 0.14.0 | 0.19.0 | 1 / 9 |
 | stm32l1xx-hal | stm32l1 0.5.0 | — (package ships no `src/generic.rs`) | — |
 
-Eight of the nine `generic.rs` anchors the injector patches are absent from the
-0.19–0.24 templates. Back-porting is a port, not a tweak — which is the
-evidence behind `stm.toml`'s standing policy of waiting for the HAL dev
-branches rather than back-porting. **stm32f2 has no maintained HAL at all.**
+Eight of nine `generic.rs` anchors the injector patches are absent from the
+0.19–0.24 templates. Back-porting the injector is itself a port — which is the
+evidence behind `stm.toml`'s standing policy. **stm32f2 has no HAL at all, on
+any PAC version.**
+
+> **Harness note.** An early version of `hal_gap.py` reported 0 errors for
+> stm32f0xx-hal. It was measuring nothing: the spoofed version did not satisfy
+> the HAL's requirement, so cargo *warned* and resolved the registry PAC
+> instead — exit code 0, empty error list, indistinguishable from success.
+> `patch_applied()` now reads the resolved `Cargo.lock` (a path dependency has
+> no `source` key) and discards any run where the swap did not take. Both
+> `hal_gap.py` and `stm_sweep.py` check it.
 
 ---
 
@@ -115,21 +168,43 @@ a generator-precision issue, not an enforcement one.
 
 ## 3. Real drivers compiled against the injected crates
 
-The two measurable families. Each compiles the **unmodified** HAL from
-crates.io, swapped onto the local injected PAC with one `[patch.crates-io]`
-line — exactly how a downstream user would consume it. Both **baselines pass
-against the pristine PAC**, so the injected result means something.
+Six manuals, three independent consumer crates, seven measured builds. Each
+compiles the **unmodified** consumer from crates.io, swapped onto the local
+injected PAC with one `[patch.crates-io]` line — exactly how a downstream user
+would consume it. **Every baseline passes against the pristine PAC**, and every
+run's patch is verified to have actually applied, so each result means
+something.
 
-| | rm0008 → stm32f1xx-hal 0.11.0 | rm0368 → stm32f4xx-hal 0.23.0 |
+| RM | device | consumer | baseline | true enforcement | generic friction | **other** |
+|---|---|---|---|---|---|---|
+| rm0008 | stm32f103 | stm32f1xx-hal 0.11.0 | PASS | 5 | 27 | **0** |
+| rm0313 | stm32f373 | stm32-hal2 2.1.10 | PASS | 11 | 0 | **0** |
+| rm0316 | stm32f303 | stm32-hal2 2.1.10 | PASS | **93** | 0 | **0** |
+| rm0365 | stm32f302 | stm32-hal2 2.1.10 | PASS | 3 | 0 | **0** |
+| rm0366 | stm32f301 | stm32-hal2 2.1.10 | PASS | 20 | 0 | **0** |
+| rm0368 | stm32f401 | stm32f4xx-hal 0.23.0 | PASS | 7 | 14 | **0** |
+| rm0368 | stm32f401 | stm32-hal2 2.1.10 | PASS | 5 | 0 | **0** |
+
+**Zero other errors anywhere.** Across seven builds of three separate driver
+libraries, every compile error the injection causes is one of our own datasheet
+diagnostics — nothing else in any of them breaks.
+
+### Generic friction is the driver's property, not the encoding's
+
+The two stm32-hal2 columns settle a question the single-family result could
+not. **rm0368 is a controlled comparison**: same chip, same manual, same five
+gated registers, two different drivers.
+
+| rm0368 / stm32f401 | true enforcement | generic friction |
 |---|---|---|
-| baseline (pristine PAC) | PASS | PASS |
-| true enforcement | **5 errors** | **7 errors** |
-| generic friction | 27 errors | 14 errors |
-| **other (collateral damage)** | **0** | **0** |
+| stm32f4xx-hal 0.23.0 | 7 | 14 |
+| stm32-hal2 2.1.10 | 5 | **0** |
 
-**Zero other errors in both.** Every single compile error the injection causes
-in ~30k lines of third-party driver code is one of our own datasheet
-diagnostics — nothing else in either library breaks.
+stm32-hal2 takes **zero friction on all five targets**. It is written as
+concrete per-chip code; the `*xx-hal` crates abstract over "any UART-ish
+register block" with traits. Friction is a cost that generic driver code pays,
+not one the witness encoding imposes on adopters generally — a driver in the
+common style pays nothing.
 
 **True enforcement** — our diagnostic naming a register we actually gated, at a
 concrete call site:
@@ -138,11 +213,16 @@ concrete call site:
 error[E0277]: `stm32f1::stm32f103::rtc::crh::CRHrs` is modify-constrained by its datasheet   @ src/rtc.rs
 error[E0277]: `PRLHrs` is write-constrained by its datasheet                                 @ src/rtc.rs
 error[E0277]: `stm32f4::stm32f401::i2c1::ccr::CCRrs` is write-constrained by its datasheet   @ src/i2c.rs
-error[E0277]: `TRISErs` is write-constrained by its datasheet                                @ src/i2c.rs
+error[E0277]: `stm32f3::stm32f303::adc1::cfgr::CFGRrs` is modify-constrained by its datasheet @ src/adc.rs
+error[E0277]: `stm32f3::stm32f373::flash::cr::CRrs` is modify-constrained by its datasheet   @ src/flash/non_trustzone.rs
 ```
 
-RM0008's RTC gates land in the HAL's RTC driver; RM0368's I2C timing gates land
-in its I2C driver. No gate hits a module unrelated to its peripheral.
+Every gate lands in the driver module for its own peripheral, never anywhere
+else: RM0008's RTC gates in the RTC driver, RM0368's I2C timing gates in the
+I2C driver, RM0316's 93 hits spread across `adc.rs`, `i2c.rs`, `rtc.rs`,
+`spi/baseline.rs` and `usart.rs` — the ADC sampling/sequence registers
+(`SMPR2rs` 32, `SQR3rs` 20, `CFGRrs` 16) doing most of the work. Not one hit is
+an associated-type projection; all name a concrete gated register.
 
 **Generic friction** — the known, documented cost. Every one of these names an
 *associated-type projection*, not a register:
@@ -157,11 +237,12 @@ requirements in its signature, and "this register needs no witness" is now one
 of them. These modules predate the markers, so they fail to type-check *even
 though no register they touch is constrained* — `CR2rs` and `SRrs` are not in
 either device's gated set. The fix is a handful of one-line bound additions in
-those modules. The plain-code majority of both libraries needs nothing.
+those modules. The plain-code majority of both libraries needs nothing, and
+stm32-hal2 needs nothing at all.
 
 This is the same split `applications/pac_codegen/eval_hal/README.md` reports
-for the stm32f4/I2C reference case, reproduced on real corpus constraints for
-two chip families.
+for the stm32f4/I2C reference case, reproduced on real corpus constraints
+across three driver libraries and three chip families.
 
 ---
 
@@ -222,6 +303,7 @@ python applications/pac_codegen/experiments/build_map.py        # map + live ind
 python applications/pac_codegen/experiments/stm_sweep.py --dry-run
 python applications/pac_codegen/experiments/stm_sweep.py        # inject + compile
 python applications/pac_codegen/experiments/old_pac_probe.py    # older-template probe
+python applications/pac_codegen/experiments/hal_gap.py          # how far each unpaired HAL is
 ```
 
 `stm_sweep.py` reads the pipeline outputs from the sibling `hal_agent-phase-1d`
