@@ -177,12 +177,12 @@ something.
 
 | RM | device | consumer | baseline | true enforcement | generic friction | **other** |
 |---|---|---|---|---|---|---|
-| rm0008 | stm32f103 | stm32f1xx-hal 0.11.0 | PASS | 5 | 27 | **0** |
+| rm0008 | stm32f103 | stm32f1xx-hal 0.11.0 | PASS | 5 | 13 | **0** |
 | rm0313 | stm32f373 | stm32-hal2 2.1.10 | PASS | 11 | 0 | **0** |
 | rm0316 | stm32f303 | stm32-hal2 2.1.10 | PASS | **93** | 0 | **0** |
 | rm0365 | stm32f302 | stm32-hal2 2.1.10 | PASS | 3 | 0 | **0** |
 | rm0366 | stm32f301 | stm32-hal2 2.1.10 | PASS | 20 | 0 | **0** |
-| rm0368 | stm32f401 | stm32f4xx-hal 0.23.0 | PASS | 7 | 14 | **0** |
+| rm0368 | stm32f401 | stm32f4xx-hal 0.23.0 | PASS | 7 | 8 | **0** |
 | rm0368 | stm32f401 | stm32-hal2 2.1.10 | PASS | 5 | 0 | **0** |
 
 **Zero other errors anywhere.** Across seven builds of three separate driver
@@ -197,7 +197,7 @@ gated registers, two different drivers.
 
 | rm0368 / stm32f401 | true enforcement | generic friction |
 |---|---|---|
-| stm32f4xx-hal 0.23.0 | 7 | 14 |
+| stm32f4xx-hal 0.23.0 | 7 | 8 |
 | stm32-hal2 2.1.10 | 5 | **0** |
 
 stm32-hal2 takes **zero friction on all five targets**. It is written as
@@ -239,6 +239,56 @@ though no register they touch is constrained* — `CR2rs` and `SRrs` are not in
 either device's gated set. The fix is a handful of one-line bound additions in
 those modules. The plain-code majority of both libraries needs nothing, and
 stm32-hal2 needs nothing at all.
+
+### Can friction be reduced? Three candidates, measured
+
+`experiments/friction.py`.
+
+**1. Inject fewer constraints — ruled out.** Install the encoding but gate
+NOTHING (patch `generic.rs`, then give *every* register *every* marker, so the
+PAC is semantically identical to pristine) and recompile: stm32f4xx-hal still
+produces 14 friction errors and stm32f1xx-hal still produces 27 — the exact
+counts the fully injected runs produced. Friction is a **fixed cost of
+installing the encoding**, not a function of how much is gated. Adding the
+101st constraint costs nothing more than the first.
+
+**2. Patch the HAL — real, but not small.** Applying rustc's own
+machine-applicable `consider further restricting …` suggestions and iterating:
+
+| HAL | round 1 | round 2 | round 3 | edits |
+|---|---|---|---|---|
+| stm32f4xx-hal | 14 | 30 | 0 witness / 32 other | 42 |
+| stm32f1xx-hal | 27 | 37 | 0 witness / 37 other | 57 |
+
+The bounds **cascade to callers**: each generic method that gains
+`where <Self as UartRB>::SRrs: UnconstrainedRead` forces every caller to
+declare it too, so round 2 surfaces more errors than round 1. It reaches zero
+witness errors, but at 42–57 edits spreading into public signatures — an
+upstream API change, not a drive-by patch. (The residual "other" errors are
+artifacts of applying suggestions verbatim — unimported trait names, two
+`where` clauses that should be comma-joined — not new design problems.)
+
+**3. Bound only the operations actually gated — free, and it roughly halves
+friction.** `patch_generic_rs` used to add `where REG: Unconstrained*` to
+read *and* write *and* modify unconditionally. But a bound on an operation no
+register gates enforces nothing — every register carries that marker — while
+still forcing every generic downstream signature to name it. Neither RM0008
+nor RM0368 gates a single **read**, yet every one of stm32f4xx-hal's 14
+friction errors was `read-constrained`.
+
+`inject_into_pac` now derives the gated operations from the plans and bounds
+only those. It cannot weaken enforcement (an operation with no gate has
+nothing to enforce), and the drift checks still run over every signature:
+
+| | true enforcement | friction before | friction after |
+|---|---|---|---|
+| rm0368 → stm32f4xx-hal | 7 (unchanged) | 14 | **8** |
+| rm0008 → stm32f1xx-hal | 5 (unchanged) | 27 | **13** |
+
+What remains is irreducible under this encoding: generic code that writes or
+modifies registers, in a crate that really does gate writes and modifies.
+Reaching zero there needs either option 2 upstream, or a HAL written in
+stm32-hal2's concrete per-chip style, which pays nothing to begin with.
 
 This is the same split `applications/pac_codegen/eval_hal/README.md` reports
 for the stm32f4/I2C reference case, reproduced on real corpus constraints

@@ -36,7 +36,7 @@ under `where the rest went` with the stage that dropped it.
 
 | RM | device | HAL crate | baseline vs pristine PAC | true enforcement errors | generic friction | other errors | enforcement sites | note (why no HAL) |
 |---|---|---|---|---|---|---|---|---|
-| rm0008 | stm32f103 | stm32f1xx-hal 0.11.0 | PASS | 5 | 27 | 0 | src/rtc.rs | — |
+| rm0008 | stm32f103 | stm32f1xx-hal 0.11.0 | PASS | 5 | 13 | 0 | src/rtc.rs | — |
 | rm0033 | stm32f215 | — | — | — | — | — | — | no HAL crate exists for stm32f2 at any PAC version, and nothing else on crates.io depends on it |
 | rm0038 | stm32l151 | — | — | — | — | — | — | stm32l1xx-hal 0.1.0 needs PAC 0.5.0; forced onto 0.16 it fails with 666 errors (569x E0616) - a port, not a version bump; no other crates.io consumer of stm32l1 is on 0.16 either |
 | rm0091 | stm32f0x1 | — | — | — | — | — | — | stm32f0xx-hal 0.18.0 needs PAC 0.14.0; forced onto 0.16 it fails with 446 errors (408x E0616) - a port, not a version bump; no other crates.io consumer of stm32f0 is on 0.16 either |
@@ -46,7 +46,7 @@ under `where the rest went` with the stage that dropped it.
 | rm0365 | stm32f302 | stm32-hal2 2.1.10 | PASS | 3 | 0 | 0 | src/rtc.rs, src/usart.rs | — |
 | rm0366 | stm32f301 | stm32-hal2 2.1.10 | PASS | 20 | 0 | 0 | src/flash/non_trustzone.rs, src/i2c.rs, src/iwdg.rs, src/usart.rs | — |
 | rm0367 | stm32l0x3 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
-| rm0368 | stm32f401 | stm32f4xx-hal 0.23.0 | PASS | 7 | 14 | 0 | src/i2c.rs, src/rtc.rs | — |
+| rm0368 | stm32f401 | stm32f4xx-hal 0.23.0 | PASS | 7 | 8 | 0 | src/i2c.rs, src/rtc.rs | — |
 | rm0368 | stm32f401 | stm32-hal2 2.1.10 | PASS | 5 | 0 | 0 | src/i2c_f4.rs, src/rtc.rs | — |
 | rm0376 | stm32l0x2 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
 | rm0377 | stm32l0x1 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |

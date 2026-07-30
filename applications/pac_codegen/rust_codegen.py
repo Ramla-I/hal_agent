@@ -912,8 +912,32 @@ impl<REG: Readable> Reg<REG> {
 """
 
 
-def patch_generic_rs(generic_path: Path) -> None:
-    """Gate the stock methods and append the witnessed/unwitnessed surface."""
+# marker trait -> the operation it gates, so a bound can be skipped when this
+# crate gates nothing of that operation.
+_BOUND_OP = {"UnconstrainedRead": "read", "UnconstrainedWrite": "write",
+             "UnconstrainedModify": "modify"}
+ALL_OPS = frozenset(_BOUND_OP.values())
+
+
+def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
+    """Gate the stock methods and append the witnessed/unwitnessed surface.
+
+    ``gated_ops`` (default: all three) is the set of operations this crate
+    ACTUALLY gates. A bound is emitted only for those.
+
+    Why it matters: a bound on an operation that no register gates enforces
+    nothing — every register carries the marker — yet every *generic*
+    downstream signature must still name it, because generic code cannot
+    prove a bound for an unresolved associated type. That is precisely the
+    "generic friction" error class. Bounding only what is gated makes the
+    friction proportional to the operations really constrained instead of a
+    flat cost of installing the encoding, and cannot weaken enforcement: an
+    operation with no gate has nothing to enforce.
+
+    The drift checks still run for every signature, gated or not — a template
+    that moved must fail loudly regardless of what this crate happens to gate.
+    """
+    ops = ALL_OPS if gated_ops is None else frozenset(gated_ops)
     content = generic_path.read_text()
     if GENERIC_SENTINEL in content:
         raise RuntimeError(
@@ -925,33 +949,37 @@ def patch_generic_rs(generic_path: Path) -> None:
     read_sig = "    pub fn read(&self) -> R<REG> {"
     if read_sig not in content:
         raise RuntimeError("generic.rs drift: stock `read` signature not found")
-    content = content.replace(
-        read_sig,
-        "    pub fn read(&self) -> R<REG>\n"
-        "    where\n"
-        "        REG: UnconstrainedRead,\n"
-        "    {",
-        1,
-    )
+    if "read" in ops:
+        content = content.replace(
+            read_sig,
+            "    pub fn read(&self) -> R<REG>\n"
+            "    where\n"
+            "        REG: UnconstrainedRead,\n"
+            "    {",
+            1,
+        )
 
     # `reset` likewise.
     reset_sig = "    pub fn reset(&self) {"
     if reset_sig not in content:
         raise RuntimeError("generic.rs drift: stock `reset` signature not found")
-    content = content.replace(
-        reset_sig,
-        "    pub fn reset(&self)\n"
-        "    where\n"
-        "        REG: UnconstrainedWrite,\n"
-        "    {",
-        1,
-    )
+    if "write" in ops:
+        content = content.replace(
+            reset_sig,
+            "    pub fn reset(&self)\n"
+            "    where\n"
+            "        REG: UnconstrainedWrite,\n"
+            "    {",
+            1,
+        )
 
     # The rest already have a where clause: require the marker first.
     for sig, bound in _GATED_METHODS:
         head, tail = sig.split("\n    where\n", 1)
         if sig not in content:
             raise RuntimeError(f"generic.rs drift: signature not found:\n{sig}")
+        if _BOUND_OP[bound] not in ops:
+            continue
         content = content.replace(
             sig,
             f"{head}\n    where\n        REG: {bound},\n{tail}",
@@ -964,14 +992,15 @@ def patch_generic_rs(generic_path: Path) -> None:
            "    R<REG>: core::fmt::Debug,")
     if dbg not in content:
         raise RuntimeError("generic.rs drift: Debug impl not found")
-    content = content.replace(
-        dbg,
-        "impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
-        "where\n"
-        "    R<REG>: core::fmt::Debug,\n"
-        "    REG: UnconstrainedRead,",
-        1,
-    )
+    if "read" in ops:
+        content = content.replace(
+            dbg,
+            "impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
+            "where\n"
+            "    R<REG>: core::fmt::Debug,\n"
+            "    REG: UnconstrainedRead,",
+            1,
+        )
 
     content += "\n" + _GENERIC_ADDITIONS
     generic_path.write_text(content)
@@ -1320,7 +1349,11 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
         by_periph.setdefault(plan.peripheral, []).append(plan)
         gated |= plan.gated_ops()
 
-    patch_generic_rs(generic)
+    # Bound only the operations this crate actually gates (see
+    # patch_generic_rs): an ungated operation has nothing to enforce, and
+    # bounding it anyway is pure friction for generic downstream code.
+    ops = {op for _, _, op in gated}
+    patch_generic_rs(generic, ops)
     n = add_marker_impls(device_dir, gated)
     for periph, periph_plans in by_periph.items():
         inject_constraints_module(device_dir / f"{periph}.rs", periph_plans)

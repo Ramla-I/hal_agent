@@ -58,7 +58,7 @@ CASES = [
      "device": "stm32f103", "features": ["stm32f103", "medium"]},
 ]
 
-MAX_ROUNDS = 12
+MAX_ROUNDS = 25
 
 
 def cargo_check_json(ws: Path):
@@ -182,6 +182,54 @@ def fetch_hal_source(hal: str, version: str) -> Path:
 
 _BOUND_RE = re.compile(r"consider further restricting", re.I)
 
+_MARKERS = ["UnconstrainedRead", "UnconstrainedWrite", "UnconstrainedModify"]
+
+
+def fixup(hal_root: Path, pac: str) -> int:
+    """Repair the two purely mechanical artifacts of applying rustc's
+    suggestions verbatim, which a human patch author would never produce:
+
+      1. two `where` clauses on one item (each suggestion adds its own) ->
+         one comma-joined clause;
+      2. the bound names a marker trait, or `Ptr`, that the module does not
+         import. NOTE the marker traits live at the PAC CRATE ROOT
+         (`stm32f4::UnconstrainedRead`), while a HAL's `crate::pac` usually
+         aliases the DEVICE MODULE (`stm32f4::stm32f401`) -- importing from
+         `crate::pac` does not resolve.
+
+    Returns the number of files touched. Without this, the run stalls on
+    scope errors and understates how far the bound approach actually gets."""
+    pac_ident = pac.replace("-", "_")
+    touched = 0
+    for f in (hal_root / "src").rglob("*.rs"):
+        text = f.read_text()
+        orig = text
+        prev = None
+        while prev != text:
+            prev = text
+            text = re.sub(r"(where\s+[^\n{]*?)\s+where\s+", r"\1, ", text)
+        needed = [m for m in _MARKERS if re.search(rf"\b{m}\b", text)]
+        inserts = []
+        if needed and not re.search(rf"use {pac_ident}::\{{[^}}]*Unconstrained", text):
+            inserts.append(f"use {pac_ident}::{{{', '.join(needed)}}};\n")
+        if (re.search(r"<\s*\w+\s+as\s+Ptr\s*>", text)
+                and not re.search(r"use crate::Ptr\b", text)
+                and not re.search(r"^\s*(pub )?trait Ptr\b", text, re.M)):
+            inserts.append("use crate::Ptr;\n")
+        if inserts:
+            lines = text.splitlines(keepends=True)
+            i = 0
+            while i < len(lines) and (lines[i].startswith("//")
+                                      or lines[i].startswith("#![")
+                                      or not lines[i].strip()):
+                i += 1
+            lines[i:i] = inserts
+            text = "".join(lines)
+        if text != orig:
+            f.write_text(text)
+            touched += 1
+    return touched
+
 
 def apply_suggestions(diags, hal_root: Path) -> int:
     """Apply rustc's `consider further restricting ...` machine-applicable
@@ -259,9 +307,10 @@ def experiment_b(case: dict) -> dict:
             break
         n = apply_suggestions(diags, hal_root)
         total_edits += n
+        fixed = fixup(hal_root, case["pac"])
         print(f"    applied {n} compiler-suggested bound(s) "
-              f"(total {total_edits})")
-        if n == 0:
+              f"(total {total_edits}); fixup touched {fixed} file(s)")
+        if n == 0 and fixed == 0:
             print("    no further machine-applicable suggestion — stuck")
             break
     return {"hal": case["hal"], "pac": case["pac"], "status": "ran",
