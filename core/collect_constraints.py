@@ -976,6 +976,7 @@ def collect_constraints(
     output_dir: Optional[str] = None,
     include_empty: bool = False,
     svd_dir: Optional[str] = None,
+    write_payload: bool = True,
 ) -> list[dict]:
     """Collect access constraints from a generator-output run directory.
 
@@ -1110,7 +1111,11 @@ def collect_constraints(
         data["access_constraints_v2"] = v2_json
         data["constraint_reports"] = reports
         out_file = out_path / f"{entry_name}.json"
-        out_file.write_text(json.dumps(data, indent=2))
+        # write_payload=False drops the per-register files (the chained
+        # constraint stage consumes the linted `data` in memory via the returned
+        # results); the manifest is always written for audit.
+        if write_payload:
+            out_file.write_text(json.dumps(data, indent=2))
 
         totals["constraints_native_v2"] += num_constraints
         totals["constraints_native_v2_unique"] += num_constraints - dups_dropped
@@ -1155,6 +1160,7 @@ def collect_constraints(
                 "num_constraints": num_constraints,
                 "num_constraints_v2": len(v2_json),
                 "output_path": str(out_file),
+                "data": data,   # linted RegisterInfo (in-memory consumers, e.g. constraint_pipeline)
             }
         )
 

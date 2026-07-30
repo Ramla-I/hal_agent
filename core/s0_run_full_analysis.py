@@ -415,111 +415,35 @@ def run_constraint_validation_phase(
     run_dir: str,
     reference_manual: str,
     chunks_root: str,
+    svd_dir=None,
     judge_model: str = "openai/gpt-oss-120b",
     batch_size: int = 1,
+    min_confidence: float = 0.0,
 ) -> dict:
-    """Step 6: the grammar-v2 constraint pipeline on a fresh generator run,
-    ALL kinds, entirely in memory (no intermediate CSV). For each extracted
-    constraint we build an item carrying the native v2 object, anchor its cited
-    quote against the chunked datasheet (deterministic), then judge the anchored
-    ones with the closed-book LLM validator (``batch_size`` > 1 amortizes the
-    system prompt). Writes ``anchors.jsonl`` / ``judgments.jsonl`` /
-    ``summary.json`` under ``<run_dir>/constraint_validation/`` and returns the
-    funnel counts."""
-    import hashlib
-    from quote_anchor import RMMatcher, anchor_row
-    from constraint_validator import (run_judge, make_client,
-                                       referenced_registers)
+    """Step 6: the CHAINED grammar-v2 constraint stage on a fresh generator run.
+
+    generator run -> collect_constraints (lint + enforceability, in-memory, no
+    payload files) -> anchor the LINTED set -> closed-book LLM judge -> one
+    ``validated.jsonl`` (+ ``anchors.jsonl`` / ``judgments.jsonl`` /
+    ``manifest.json`` / ``summary.json``) under
+    ``<run_dir>/constraint_validation/``. The judge only ever sees linted
+    constraints (deterministic lint-rejects never reach the LLM), each record
+    carries the codegen ``enforcement`` gate, and ids are minted on the linted
+    object (peripheral + operation included). See ``core/constraint_pipeline.py``
+    and ``docs/constraint_chain_refactor_plan.md``. Returns the funnel counts."""
+    from constraint_pipeline import run_stage_live
 
     if not chunks_root:
         raise ValueError(
             "--constraint-chunks-root is required with --constraint-validation "
             "(static quote validation searches the chunked datasheet)")
 
-    # 1. Build items from the run's native v2 constraints (EVERY kind).
-    items: list[dict] = []
-    for fn in sorted(os.listdir(run_dir)):
-        fp = os.path.join(run_dir, fn)
-        if os.path.isdir(fp) or "_" not in fn:
-            continue
-        try:
-            data = json.load(open(fp, encoding="utf-8"))
-        except Exception:
-            continue
-        if not isinstance(data, dict):
-            continue
-        peripheral, register = fn.split("_", 1)
-        for c in (data.get("access_constraints_v2") or []):
-            if not isinstance(c, dict):
-                continue
-            kind = c.get("kind", "state_gate")
-            text = c.get("datasheet_text", "")
-            cid = hashlib.sha1(
-                f"{reference_manual}|{register}|{kind}|{text}".encode()
-            ).hexdigest()[:12]
-            items.append({
-                "id": cid,
-                "reference_manual": reference_manual,
-                "source_file": f"{reference_manual}/{os.path.basename(run_dir)}/{fn}",
-                "peripheral": peripheral,
-                "register": register,
-                "datasheet_text": text,
-                "constraint": c,
-                "target_registers": sorted(
-                    {register} | set(referenced_registers(c))),
-            })
-    items.sort(key=lambda it: it["id"])
-
     out_dir = os.path.join(run_dir, "constraint_validation")
-    os.makedirs(out_dir, exist_ok=True)
-
-    # 2. Static validation: quote anchoring + target location, in memory.
-    #    anchor_row reads only the quote + the registers the constraint touches,
-    #    so it works for every kind.
-    md_dir = os.path.join(chunks_root, reference_manual, "chunks", "md")
-    if not os.path.isdir(md_dir):
-        raise FileNotFoundError(
-            f"no chunked markdown for {reference_manual} at {md_dir}")
-    matcher = RMMatcher(reference_manual, md_dir)
-    anchors = []
-    for it in items:
-        rec = anchor_row(matcher, it)
-        it["tier"] = rec.get("tier")
-        if rec.get("context"):
-            it["context"] = rec["context"]
-        it["_anchor"] = rec
-        anchors.append(rec)
-    with open(os.path.join(out_dir, "anchors.jsonl"), "w",
-              encoding="utf-8", newline="\n") as f:
-        for rec in anchors:
-            f.write(json.dumps(rec, sort_keys=True, ensure_ascii=True) + "\n")
-
-    anchored = [it for it in items if it.get("tier") in ("exact", "fuzzy")]
-    static_pass = [it for it in anchored
-                   if not (it["_anchor"].get("self_referential")
-                           and not it["_anchor"].get("target_located"))]
-
-    # 3. Constraint validator: closed-book LLM judge, only on anchored items
-    #    that carry a derived context.
-    judgeable = [it for it in anchored if it.get("context")]
-    confirmed = 0
-    if judgeable:
-        records, _ = run_judge(judgeable, client=make_client(),
-                               model=judge_model, quiet=True,
-                               batch_size=batch_size)
-        with open(os.path.join(out_dir, "judgments.jsonl"), "w",
-                  encoding="utf-8") as f:
-            for rec in records:
-                f.write(json.dumps(rec, sort_keys=True) + "\n")
-        confirmed = sum(1 for rec in records
-                        if rec.get("verdict") == "confirmed")
-
-    summary = {"extracted": len(items), "anchored": len(anchored),
-               "static_pass": len(static_pass), "confirmed": confirmed}
-    with open(os.path.join(out_dir, "summary.json"), "w",
-              encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
-    return summary
+    return run_stage_live(
+        rm=reference_manual, run=os.path.basename(run_dir),
+        run_dir=run_dir, svd_dir=svd_dir, chunks_root=chunks_root,
+        judge_model=judge_model, out_dir=out_dir,
+        batch_size=batch_size, min_confidence=min_confidence)
 
 
 def run_pipeline_for_device(
@@ -712,6 +636,7 @@ def run_pipeline_for_device(
                 run_dir=paths.agent_output_dir,
                 reference_manual=ctx.device_name,
                 chunks_root=args.constraint_chunks_root,
+                svd_dir=paths.svd_dir,
                 judge_model=args.constraint_judge_model,
                 batch_size=args.constraint_batch_size,
             )

@@ -38,12 +38,35 @@ sys.path.insert(0, str(APP_DIR))
 
 from defs import RegisterInfo  # noqa: E402
 from core import collect_constraints  # noqa: E402
+from core.constraint_pipeline import new_constraint_id  # noqa: E402
 import rust_codegen  # noqa: E402
+
+
+def _load_gate_map(path: Path, rm: str) -> dict:
+    """id -> effective codegen gate from a chained ``validated.jsonl`` or a
+    human-labelled ``*_constraints_review.jsonl``. The judge decision
+    (``enforcement`` = enforce|doc_only|drop) is overridden by the reviewer's
+    ``tp_fp``: ``FP`` forces drop; ``TP`` rescues a dropped row to doc_only.
+    Only ``enforce`` reaches the emitter as a compile-time gate."""
+    gate: dict = {}
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        r = json.loads(line)
+        enf = r.get("enforcement", "")
+        tp = r.get("tp_fp", "")
+        if tp == "FP":
+            enf = "drop"
+        elif tp == "TP" and enf == "drop":
+            enf = "doc_only"
+        gate[r["id"]] = enf
+    return gate
 
 
 def select_and_plan(collect_dir: Path, device_dir: Path,
                     field_level_gating: bool = False,
-                    disabled_kinds=None) -> tuple[list, list[dict]]:
+                    disabled_kinds=None, gate_map=None, rm: str = "") -> tuple[list, list[dict]]:
     """From a collection output dir, build injectable RegisterPlans.
 
     Returns (plans, report_rows). Selection is manifest-driven: only
@@ -53,6 +76,11 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
 
     ``field_level_gating`` (opt-in) enables field-scoped constraints to be
     enforced at field granularity; off by default (they are skipped).
+
+    ``gate_map`` (opt-in, from ``--validated``) keys the constraint validator's
+    codegen decision by the linted-constraint id: only ``enforce`` constraints
+    are emitted as compile-time gates; ``doc_only`` / ``drop`` / unknown are
+    excluded and reported. Without it, no validator gating is applied.
     """
     manifest = json.loads((collect_dir / "manifest.json").read_text())
     plans, rows = [], []
@@ -92,6 +120,20 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
                        if g.get("kind") not in rust_codegen.SUPPORTED_KINDS
                        else "codegen disabled for this kind")
                 row("kind_not_emitted", f"{g.get('kind')}: {why}")
+
+        # Constraint-validator gate (opt-in): keep only constraints the judge
+        # confirmed AND that are witness-enforceable (enforcement == "enforce"),
+        # honouring any human tp_fp override. doc_only/drop are documented, not
+        # compile-enforced.
+        if gate_map is not None:
+            kept = []
+            for g in gates:
+                decision = gate_map.get(new_constraint_id(rm, peripheral, reg_entry["register"], g))
+                if decision == "enforce":
+                    kept.append(g)
+                else:
+                    row("gated_out_by_validator", f"{g.get('kind')}: {decision or 'not_in_validated'}")
+            gates = kept
         for g in gates:
             g.pop("enforceability", None)
         if not gates:
@@ -140,6 +182,13 @@ def main() -> None:
                          "against the manual and UNANCHORED quotes drop their "
                          "gates (plan §7.1: no unverifiable evidence reaches a "
                          "crate)")
+    ap.add_argument("--validated", default=None, metavar="PATH",
+                    help="chained validated.jsonl (or a *_constraints_review.jsonl): "
+                         "gate codegen on the constraint validator — only "
+                         "judge-confirmed, witness-enforceable constraints "
+                         "(enforcement=='enforce', honouring human tp_fp) are "
+                         "emitted as compile-time gates; doc_only/drop are excluded "
+                         "and reported. Without it, no validator gating is applied.")
     ap.add_argument("--report", default=None, help="write the JSON report here")
     ap.add_argument("--save-constraints", default=None, metavar="PATH",
                     help="write the per-DEVICE constraints file (the durable, "
@@ -171,10 +220,13 @@ def main() -> None:
             argv += ["--svd-dir", args.svd_dir]
         collect_constraints.main(argv)
 
+        rm = Path(args.run_dir.rstrip("/")).parent.name
+        gate_map = _load_gate_map(Path(args.validated), rm) if args.validated else None
         plans, rows = select_and_plan(
             collect_dir, device_dir,
             field_level_gating=args.field_level_gating,
-            disabled_kinds=set(args.disable_kind))
+            disabled_kinds=set(args.disable_kind),
+            gate_map=gate_map, rm=rm)
 
         # Match the artifact and injection exactly: apply the access-mode
         # prune (write-only registers cannot carry modify/read gates) BEFORE
@@ -183,7 +235,6 @@ def main() -> None:
 
         quote_tiers = {}
         if args.chunks:
-            rm = Path(args.run_dir.rstrip("/")).parent.name
             from core import quote_anchor as qa
             matcher = qa.RMMatcher(
                 rm, str(Path(args.chunks) / rm / "chunks" / "md"))

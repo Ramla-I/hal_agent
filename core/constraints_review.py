@@ -138,29 +138,92 @@ def build_constraints_review(rm: str, run: str, collect_dir: str, validator_dir:
     return len(records)
 
 
+def build_review_from_validated(rm: str, run: str, validated_path: str, out_path: str,
+                                repo_root: str = _REPO_ROOT, manufacturer: str = "stm") -> int:
+    """Formatter over the chained ``validated.jsonl`` (core.constraint_pipeline):
+    the row set and verdicts are already joined there, so this only decorates each
+    record with the reviewer-owned ``devices`` (prefilled from the RM->SVD mapping,
+    trimmable) and ``tp_fp`` label, both preserved across re-runs by id. Surfaces
+    the codegen ``enforcement`` decision so the reviewer sees what the crate will do.
+    Returns the number of records."""
+    devices_default = rm_devices(rm, repo_root, manufacturer)
+
+    preserved: dict = {}
+    if os.path.isfile(out_path):
+        for line in open(out_path, encoding="utf-8"):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = json.loads(line)
+            except Exception:
+                continue
+            if r.get("id"):
+                preserved[r["id"]] = {"tp_fp": r.get("tp_fp", ""), "devices": r.get("devices")}
+
+    records: list[dict] = []
+    for line in open(validated_path, encoding="utf-8"):
+        line = line.strip()
+        if not line:
+            continue
+        v = json.loads(line)
+        prev = preserved.get(v["id"], {})
+        records.append({
+            "id": v["id"], "rm": v["rm"], "peripheral": v["peripheral"], "register": v["register"],
+            "source_file": v["source_file"],
+            "devices": prev.get("devices") if prev.get("devices") is not None else list(devices_default),
+            "constraint": v["constraint"],                 # full object; nothing duplicated
+            "anchor_tier": v.get("anchor_tier", "unanchored"),
+            "verdict": v.get("verdict", ""),
+            "confidence": v.get("confidence"),
+            "enforcement": v.get("enforcement", ""),        # codegen gate (advisory to reviewer)
+            "tp_fp": prev.get("tp_fp", ""),
+        })
+
+    records.sort(key=lambda r: (r["peripheral"], r["register"], r["id"]))
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    tmp = out_path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        for r in records:
+            f.write(json.dumps(r, ensure_ascii=True) + "\n")
+    os.replace(tmp, out_path)
+    return len(records)
+
+
 def main() -> None:
     import argparse
     ap = argparse.ArgumentParser(description="Build the per-RM constraints-review JSONL")
     ap.add_argument("--rm", required=True)
     ap.add_argument("--run", required=True)
     ap.add_argument("--manufacturer", default="stm")
-    ap.add_argument("--collect-dir", default=None,
-                    help="collect_constraints output (default constraints/collected/{rm}_{run})")
-    ap.add_argument("--validator-dir", default=None,
-                    help="constraint_validation dir (default agent_output/{mfr}/{rm}/{run}/constraint_validation)")
+    ap.add_argument("--validated", default=None,
+                    help="chained validated.jsonl (default "
+                         "agent_output/{mfr}/{rm}/{run}/constraint_validation/validated.jsonl)")
     ap.add_argument("--out", default=None,
                     help="output jsonl (default evaluation/{mfr}/{rm}/{run}/{rm}_constraints_review.jsonl)")
+    # legacy sibling-join mode (pre-chain): join collected files + validator dir by id
+    ap.add_argument("--legacy-join", action="store_true",
+                    help="build from the old collected/ + constraint_validation/ dirs instead of validated.jsonl")
+    ap.add_argument("--collect-dir", default=None)
+    ap.add_argument("--validator-dir", default=None)
     args = ap.parse_args()
 
-    collect_dir = args.collect_dir or os.path.join(
-        _REPO_ROOT, "applications", "pac_codegen", "constraints", "collected", f"{args.rm}_{args.run}")
-    validator_dir = args.validator_dir or os.path.join(
-        _REPO_ROOT, "agent_output", args.manufacturer, args.rm, args.run, "constraint_validation")
     out_path = args.out or os.path.join(
         _REPO_ROOT, "evaluation", args.manufacturer, args.rm, args.run, f"{args.rm}_constraints_review.jsonl")
 
-    n = build_constraints_review(args.rm, args.run, collect_dir, validator_dir, out_path,
-                                 manufacturer=args.manufacturer)
+    if args.legacy_join:
+        collect_dir = args.collect_dir or os.path.join(
+            _REPO_ROOT, "applications", "pac_codegen", "constraints", "collected", f"{args.rm}_{args.run}")
+        validator_dir = args.validator_dir or os.path.join(
+            _REPO_ROOT, "agent_output", args.manufacturer, args.rm, args.run, "constraint_validation")
+        n = build_constraints_review(args.rm, args.run, collect_dir, validator_dir, out_path,
+                                     manufacturer=args.manufacturer)
+    else:
+        validated = args.validated or os.path.join(
+            _REPO_ROOT, "agent_output", args.manufacturer, args.rm, args.run,
+            "constraint_validation", "validated.jsonl")
+        n = build_review_from_validated(args.rm, args.run, validated, out_path,
+                                        manufacturer=args.manufacturer)
     print(f"wrote {n} constraint(s) -> {out_path}")
 
 
