@@ -34,8 +34,13 @@ def _marker(rm: str, run: int) -> str:
 def _steps(rm: str, run: int, chunks: str):
     py = sys.executable
     return [
+        # --skip-validator: Step 4 (full structure validator) is redundant here —
+        # s6 is the candidate validator that writes the verdicts — and its retrieval
+        # path does not resolve the openevolve method (crashes). Step 5 (bug-finding
+        # -> structure_review.csv) and Step 6 (chained constraint validation ->
+        # validated.jsonl) run fine on openevolve.
         ("s0", [py, "core/s0_run_full_analysis.py", "--devices", rm,
-                "--retrieval", "openevolve", "--constraint-validation",
+                "--retrieval", "openevolve", "--skip-validator", "--constraint-validation",
                 "--constraint-chunks-root", chunks, "--constraint-batch-size", "8"]),
         ("review", [py, "core/constraints_review.py", "--rm", rm, "--run", str(run)]),
         ("s6", [py, "core/s6_validate_candidates.py", "--devices", rm, "--run", str(run)]),
