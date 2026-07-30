@@ -26,7 +26,7 @@ def _md_dir(rm: str) -> str:
     return os.path.join(_REPO, "chunked_datasheets", "stm", rm, "chunks", "md")
 
 
-def _run_rm(rm: str, fmt: str, backend: str, force: bool) -> dict:
+def _run_rm(rm: str, fmt: str, backend: str, force: bool, timeout_s: int) -> dict:
     if not force and os.path.isdir(_md_dir(rm)) and os.listdir(_md_dir(rm)):
         return {"rm": rm, "status": "skipped_has_chunks"}
     pdf = os.path.join(_REPO, "devices", "stm", rm, f"{rm}.pdf")
@@ -45,10 +45,24 @@ def _run_rm(rm: str, fmt: str, backend: str, force: bool) -> dict:
         lf.write(f"==== {' '.join(cmd)}\n")
         lf.flush()
         t0 = time.time()
-        rc = subprocess.call(cmd, cwd=_REPO, stdout=lf, stderr=subprocess.STDOUT)
+        try:
+            # start_new_session so a timeout kills the whole process group (the
+            # pdf->md converter may spawn children); giant datasheets that hang
+            # can't stall the rest of the batch.
+            rc = subprocess.run(cmd, cwd=_REPO, stdout=lf, stderr=subprocess.STDOUT,
+                                timeout=timeout_s, start_new_session=True).returncode
+        except subprocess.TimeoutExpired:
+            rc = 124
+            lf.write(f"---- TIMEOUT after {timeout_s}s — skipped (likely oversized PDF)\n")
         lf.write(f"---- rc={rc} ({time.time() - t0:.0f}s)\n")
     ok = os.path.isdir(_md_dir(rm)) and os.listdir(_md_dir(rm))
-    return {"rm": rm, "status": "ok" if (rc == 0 and ok) else "fail", "rc": rc}
+    status = "ok" if (rc == 0 and ok) else ("timeout" if rc == 124 else "fail")
+    return {"rm": rm, "status": status, "rc": rc}
+
+
+def _pdf_mb(rm: str) -> float:
+    p = os.path.join(_REPO, "devices", "stm", rm, f"{rm}.pdf")
+    return os.path.getsize(p) / 1e6 if os.path.isfile(p) else 0.0
 
 
 def main() -> None:
@@ -57,13 +71,19 @@ def main() -> None:
     ap.add_argument("--format", default="markdown")
     ap.add_argument("--backend", default="local", choices=["local", "openai", "none"])
     ap.add_argument("--parallel", type=int, default=1)
+    ap.add_argument("--timeout", type=int, default=3600,
+                    help="per-RM timeout seconds (default 3600); giant PDFs that "
+                         "exceed it are skipped so they can't stall the batch")
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
 
     os.makedirs(_LOG_DIR, exist_ok=True)
     status = os.path.join(_LOG_DIR, "status.json")
     results: list[dict] = []
-    n = len(args.devices)
+    # Smallest PDF first: quick wins complete early; the 70-94MB giants (which may
+    # hang or take hours in pdf->md conversion) go last and are timeout-bounded.
+    devices = sorted(args.devices, key=_pdf_mb)
+    n = len(devices)
     t_start = time.time()
 
     def save():
@@ -73,10 +93,11 @@ def main() -> None:
                        "results": results}, f, indent=1)
 
     save()
-    print(f"preprocess start: {n} RMs, parallel={args.parallel}", flush=True)
+    print(f"preprocess start: {n} RMs, parallel={args.parallel}, "
+          f"timeout={args.timeout}s (smallest PDF first)", flush=True)
     with ThreadPoolExecutor(max_workers=args.parallel) as ex:
-        futs = {ex.submit(_run_rm, rm, args.format, args.backend, args.force): rm
-                for rm in args.devices}
+        futs = {ex.submit(_run_rm, rm, args.format, args.backend, args.force, args.timeout): rm
+                for rm in devices}
         for fut in as_completed(futs):
             r = fut.result()
             results.append(r)
