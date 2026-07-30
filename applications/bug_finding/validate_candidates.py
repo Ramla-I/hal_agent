@@ -9,8 +9,8 @@ against the datasheet. For a bug candidate (svd_value != generator_value):
 We validate only the candidates (review rows with blank ``status``) using the
 generator's value, apply the model's calibrated card threshold, and write two
 columns back into the consolidated ``{rm}_review.csv``:
-  * ``structure_verdict``    — TP / FP / "" (abstain: leans-true but below threshold, or unclassified)
-  * ``structure_confidence`` — the validator's raw confidence (so borderline rows are visible)
+  * ``validator_verdict``    — TP / FP / "" (abstain: leans-true but below threshold, or unclassified)
+  * ``validator_confidence`` — the validator's raw confidence (so borderline rows are visible)
 
 ``tp_fp`` is NEVER touched — the verdict is advisory; the human still labels.
 
@@ -29,7 +29,7 @@ from typing import Optional
 DEFAULT_THRESHOLD = 0.9
 
 # The two columns this stage adds to the consolidated review CSV.
-VALIDATOR_COLS = ("structure_verdict", "structure_confidence")
+VALIDATOR_COLS = ("validator_verdict", "validator_confidence")
 
 
 def candidate_invariants(review_csv_path: str) -> list[dict]:
@@ -115,7 +115,7 @@ def _load_classification(classification_csv_path: str) -> dict[tuple, tuple]:
 def apply_verdicts(review_csv_path: str, classification_csv_path: str,
                    threshold: float, carded_model: str = "",
                    default_threshold: float = DEFAULT_THRESHOLD) -> dict:
-    """Write structure_verdict + structure_confidence into the review CSV for
+    """Write validator_verdict + validator_confidence into the review CSV for
     each candidate, preserving tp_fp and every other cell. Returns counts.
 
     The card threshold is applied only to rows judged by the carded model; rows
@@ -138,16 +138,16 @@ def apply_verdicts(review_csv_path: str, classification_csv_path: str,
     counts = {"TP": 0, "FP": 0, "abstain": 0, "unmatched": 0, "candidates": 0, "fallback": 0}
     for row in rows:
         if (row.get("status") or "").strip():            # auto-FP: leave validator cols blank
-            row.setdefault("structure_verdict", "")
-            row.setdefault("structure_confidence", "")
+            row.setdefault("validator_verdict", "")
+            row.setdefault("validator_confidence", "")
             continue
         counts["candidates"] += 1
         ck = ((row.get("peripheral") or "").strip(), (row.get("register") or "").strip(),
               (row.get("field") or "").strip(), (row.get("key") or "").strip(),
               (row.get("generator_value") or "").strip())
         if ck not in classifications:
-            row["structure_verdict"] = ""
-            row["structure_confidence"] = ""
+            row["validator_verdict"] = ""
+            row["validator_confidence"] = ""
             counts["unmatched"] += 1
             continue
         is_true, conf, model = classifications[ck]
@@ -158,8 +158,8 @@ def apply_verdicts(review_csv_path: str, classification_csv_path: str,
         if is_fallback:
             counts["fallback"] += 1
         verdict = decide_verdict(is_true, conf, thr)
-        row["structure_verdict"] = verdict
-        row["structure_confidence"] = f"{conf:.2f}"
+        row["validator_verdict"] = verdict
+        row["validator_confidence"] = f"{conf:.2f}"
         counts["TP" if verdict == "TP" else "FP" if verdict == "FP" else "abstain"] += 1
 
     tmp = review_csv_path + ".tmp"

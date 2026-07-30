@@ -155,15 +155,15 @@ CONSOLIDATED_REVIEW_FIELDS = [
     "status",
     "svd_count",
     "svd_files",
-    "structure_verdict",      # advisory: datasheet validator's TP/FP call on this candidate (s6)
-    "structure_confidence",   # its calibrated confidence
+    "validator_verdict",      # advisory: datasheet validator's TP/FP call on this candidate (s6)
+    "validator_confidence",   # its calibrated confidence
     "tp_fp",
     "correct_value",  # reviewer-filled: the actual correct value (defaults to generator_value)
 ]
 
 # Columns preserved across re-runs of the consolidated file: reviewer-filled
 # (tp_fp/correct_value) + validator-written (verdict/confidence, from s6).
-_CONSOLIDATED_PRESERVE_COLS = ("tp_fp", "correct_value", "structure_verdict", "structure_confidence")
+_CONSOLIDATED_PRESERVE_COLS = ("tp_fp", "correct_value", "validator_verdict", "validator_confidence")
 
 # A bug's identity for cross-SVD dedup (the discrepancy itself; no svd_file).
 _BUG_KEY_FIELDS = ("peripheral", "register", "field", "key", "svd_value", "generator_value")
@@ -239,8 +239,8 @@ def write_consolidated_from_dir(results_run_dir: str) -> int:
                 "status": "false_positive" if all_fp else "",
                 "svd_count": len(svds),
                 "svd_files": ";".join(svds),
-                "structure_verdict": kept.get("structure_verdict", ""),
-                "structure_confidence": kept.get("structure_confidence", ""),
+                "validator_verdict": kept.get("validator_verdict", ""),
+                "validator_confidence": kept.get("validator_confidence", ""),
                 "tp_fp": kept.get("tp_fp", ""),
                 "correct_value": kept.get("correct_value", ""),
             })
