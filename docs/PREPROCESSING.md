@@ -168,6 +168,14 @@ Then the generator runs with openevolve retrieval:
   `InternalError: Batch size … greater than max batch size`. **Fixed:**
   `vector_store.add_documents` now splits the add into ≤5000-item batches.
 
+- **R11 — long-running containers don't reliably pick up mid-run code edits.** A
+  container started *before* an edit kept failing on the R10 bug even for
+  subprocesses spawned after the fix (stale bytecode / import caching over the
+  bind mount), while a freshly-started container got it right. After any code fix
+  during a batch: `docker kill` the container, clear `__pycache__`, and relaunch.
+  Also: a failed ingest leaves a **partial `databases/{rm}_md_chunks`** dir, which
+  a resume-by-db-exists skips — delete it before re-running.
+
 ---
 
 ## Not yet automated (the TODO for a one-command preprocessor)
