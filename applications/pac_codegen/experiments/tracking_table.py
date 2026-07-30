@@ -68,7 +68,8 @@ KINDS = ["state_gate", "sequence", "write_once", "clock_gate", "delay",
 
 # Which sweep result files to merge (later files win per (rm, consumer)).
 SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
-               "sweep_opsel.json", "sweep_alias.json"]
+               "sweep_opsel.json", "sweep_alias.json",
+               "sweep_conflict.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -460,6 +461,10 @@ def main() -> None:
            "nothing enforceable left, or a non-identifier field name. "
            "`pruned_for_device`: not expressible against the generated PAC "
            "(access mode or field-reader shape). "
+           "`instance_conflict_dropped`: peripheral instances share one Rust "
+           "type, and they disagreed on the gate for it — two readings of one "
+           "datasheet sentence with no way to tell which is right, so no gate "
+           "is emitted at all. "
            "`target_unverified_by_location`: the supporting quote could not be "
            "anchored to the target register's section.", ""]
 

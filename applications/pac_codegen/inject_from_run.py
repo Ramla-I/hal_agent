@@ -281,25 +281,24 @@ def main() -> None:
             rows.append({
                 "file": "", "peripheral": c["module"], "register": c["register"],
                 "fate": "instance_conflict",
-                "reason": f"instances {c['instances']} disagree; kept "
-                          f"{c['kept']}'s gate — {c['detail']}",
+                "reason": f"instances {c['instances']} disagree — {c['detail']}",
                 "constraints": [],
             })
             print(f"  note: {c['module']}/{c['register']}: instances "
-                  f"{c['instances']} disagree; kept {c['kept']}'s gate")
-            # The losing instances' constraints are NOT enforced as extracted
-            # (a different precondition set is), so they must stop reading as
-            # `planned`. Agreeing instances need no such correction: their
-            # rule IS enforced, by the very same Rust type.
+                  f"{c['instances']} disagree — gate dropped entirely")
+            # EVERY contributing instance loses its gate, not just the losers:
+            # contradictory readings of one datasheet sentence buy no
+            # compile-time obligation. Agreeing instances need no correction —
+            # their rule IS enforced, by the very same Rust type.
             for r in rows:
                 if (r["fate"] == "planned"
                         and r["register"].lower() == c["register"]
-                        and r["peripheral"] in c["instances"]
-                        and r["peripheral"] != c["kept"]):
+                        and r["peripheral"] in c["instances"]):
                     r["fate"] = "instance_conflict_dropped"
-                    r["reason"] = (f"{c['module']}/{c['register']} is gated "
-                                   f"with {c['kept']}'s preconditions instead "
-                                   "(instances disagree; not unioned)")
+                    r["reason"] = (
+                        f"{c['module']}/{c['register']}: instances "
+                        f"{c['instances']} disagree on the gate; dropped "
+                        "rather than unioned or arbitrarily picked")
 
         before = {(p.peripheral, p.reg_lower): sorted(op for _, _, op in p.gated_ops())
                   for p in plans}

@@ -142,7 +142,7 @@ module) and the tree restored byte-identical afterward.
 | rm0368 | stm32f401 | 5 | PASS | yes |
 | rm0376 | stm32l0x2 | 18 | PASS | yes |
 | rm0377 | stm32l0x1 | 19 | PASS | yes |
-| | **total** | **185** | 13/13 | 13/13 |
+| | **total** | **184** | 13/13 | 13/13 |
 
 ### Peripheral instances share one register-block module
 
@@ -160,9 +160,9 @@ So `i2c2.rs` does not exist and never will — I2C2's TIMEOUTR *is*
 
 | | before | after |
 |---|---|---|
-| enforced state gates | 179 | **296** (+117 via alias) |
+| enforced state gates | 179 | **295** (+117 via alias, −1 to a conflict) |
 | dropped as "peripheral not in device" | 200 | **20** (the genuinely absent) |
-| registers gated | 170 | **185** |
+| registers gated | 170 | **184** |
 
 The 20 that remain are real: Ethernet on an F103, CAN2 on a single-CAN part,
 and one naming mismatch (`can1` where the crate calls the sole instance `CAN`).
@@ -179,11 +179,24 @@ The 32 disagreements are extraction noise on an identical quote, not
 per-instance rules. RM0008's USART_CR2 is typical — both instances quote
 *"These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter
 is enabled"*, but one extracted the precondition as `CR1.TE cleared` (correct)
-and the other as `CR1.UE cleared` (wrong). So colliding plans are **never
-unioned** — a unioned gate would demand a precondition the datasheet does not,
-turning correct code into a compile error. One plan is kept (the module
-owner's, else the lowest-numbered instance) and the conflict is reported as
-`instance_conflict`. Corpus-wide that costs 5 constraints.
+and the other as `CR1.UE cleared` (wrong).
+
+**A disagreement drops the gate entirely** — the whole group, not "keep one".
+Both alternatives are worse: unioning demands a precondition the datasheet does
+not, turning correct code into a compile error; and picking one arbitrarily
+gates every downstream user on a reading we have equal reason to think is the
+wrong one. Being the module owner is a tie-break for *agreeing* plans, not
+evidence that a reading is correct. A gate is a compile-time obligation, so
+contradictory evidence should buy no gate at all; the drop is recorded as
+`instance_conflict` with the disagreeing instances so it stays reviewable.
+
+Agreeing plans still collapse to one — that is a single rule the manual states
+once, and dropping it because two instances carry it would be perverse.
+
+Corpus cost of the strict policy: **1 constraint and 1 register** (295 enforced
+state gates instead of 296, 184 registers instead of 185). Only one conflict
+survives that far — RM0360's `usart1/tdr` across five instances — because the
+collection lint and the validator have already removed most disagreeing pairs.
 
 ### Where the other constraints went
 

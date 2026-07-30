@@ -119,35 +119,44 @@ def test_agreeing_instances_collapse_to_one_plan():
     assert kept[0].source_instance == "i2c1"      # the module owner
 
 
-def test_owner_is_preferred_when_instances_disagree():
+def test_disagreeing_instances_drop_the_whole_gate():
+    """Two readings of one datasheet sentence, and no way to tell which is
+    right. Neither survives: a gate is a compile-time obligation on every
+    downstream user, so contradictory evidence buys no gate at all."""
     plans = [_plan("i2c1", "i2c2", "UE"), _plan("i2c1", "i2c1", "TEXTEN")]
     kept, conflicts = rust_codegen.resolve_instance_collisions(plans)
-    assert len(kept) == 1
-    assert kept[0].source_instance == "i2c1"
+    assert kept == [], "a disagreeing group must not be enforced"
     assert len(conflicts) == 1
     assert conflicts[0]["instances"] == ["i2c1", "i2c2"]
+    assert "disagree" in conflicts[0]["detail"]
+
+
+def test_owner_does_not_win_a_disagreement():
+    """Being the module owner is a tie-break for AGREEING plans only — it is
+    not evidence that its reading is the correct one."""
+    plans = [_plan("i2c1", "i2c1", "TEXTEN"), _plan("i2c1", "i2c3", "UE")]
+    kept, conflicts = rust_codegen.resolve_instance_collisions(plans)
+    assert kept == [] and len(conflicts) == 1
 
 
 def test_disagreement_is_never_unioned():
-    """A unioned gate would demand BOTH preconditions — stricter than the
-    datasheet, and a false compile error for correct code."""
+    """The rejected alternative: a unioned gate would demand BOTH
+    preconditions — stricter than the datasheet, and a false compile error
+    for correct code."""
     plans = [_plan("i2c1", "i2c2", "UE"), _plan("i2c1", "i2c3", "TEXTEN")]
-    kept, conflicts = rust_codegen.resolve_instance_collisions(plans)
-    assert len(kept) == 1
-    assert conflicts and conflicts[0]["kept"] == "i2c2"   # lowest instance
-    pres = kept[0].preconditions["write"]
-    assert len(pres) == 1, "preconditions were unioned across instances"
+    kept, _ = rust_codegen.resolve_instance_collisions(plans)
+    assert kept == []
 
 
 def test_tie_break_is_numeric_not_lexicographic():
-    """A plain string sort puts usart10 before usart2, so the "lowest
-    instance" tie-break would pick the wrong one on any family with ten or
-    more. No collision group in today's corpus has a 2+-digit instance, so
-    this guards a latent bug rather than a live one."""
-    plans = [_plan("usart1", "usart10", "UE"), _plan("usart1", "usart2", "TE")]
+    """The tie-break only runs on AGREEING groups, but it still has to be
+    numeric: a plain string sort puts usart10 before usart2. No collision
+    group in today's corpus has a 2+-digit instance, so this guards a latent
+    bug rather than a live one."""
+    plans = [_plan("usart1", "usart10", "TE"), _plan("usart1", "usart2", "TE")]
     kept, conflicts = rust_codegen.resolve_instance_collisions(plans)
+    assert conflicts == []                       # they agree
     assert kept[0].source_instance == "usart2", "picked usart10 over usart2"
-    assert conflicts[0]["instances"] == ["usart2", "usart10"]
 
 
 def test_collision_input_is_already_validator_gated():

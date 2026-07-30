@@ -1349,14 +1349,20 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
     all-or-nothing per module: two plans for i2c1/TIMEOUTR (one from I2C2,
     one from I2C3) would emit the same witness types twice and not compile.
 
-    When the colliding plans agree, that is simply one rule the manual states
-    once and our per-instance iteration replicated. When they DISAGREE the
-    difference is extraction noise on the same quote, not a genuine
-    per-instance rule (measured: 92 agreeing groups vs 32 disagreeing, and
-    the disagreements cite identical datasheet sentences). We therefore keep
-    ONE plan — the module owner's if it contributed, else the
-    lowest-numbered instance — and never union the preconditions, which would
-    demand a condition the datasheet does not.
+    AGREEING plans collapse to one: that is a single rule the manual states
+    once, which our per-instance iteration replicated. Dropping those would
+    discard I2C1's own constraint merely because I2C2 carries it too.
+
+    DISAGREEING plans are DROPPED ENTIRELY — the whole group, not "keep one".
+    They are two readings of the same datasheet sentence and we cannot tell
+    which is right: rm0008's USART_CR2 has one instance extracting
+    ``CR1.TE cleared`` (correct) and another ``CR1.UE cleared`` (wrong), from
+    an identical quote. The alternatives are all worse: unioning demands a
+    precondition the datasheet does not, and picking one arbitrarily gates a
+    register on a condition we have equal reason to think is the wrong one.
+    A gate is a compile-time obligation on every downstream user, so
+    contradictory evidence should buy no gate at all. The drop is recorded
+    with the disagreeing instances so it stays reviewable.
 
     WHERE THIS SITS IN THE PIPELINE: after the constraint validator, so every
     colliding plan is already judge-``enforce``; the tie-break chooses between
@@ -1379,21 +1385,21 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
             continue
         instances = sorted((getattr(p, "source_instance", module) for p in group),
                            key=_instance_key)
-        signatures = {_plan_signature(p) for p in group}
-        owner = next((p for p in group
-                      if getattr(p, "source_instance", module) == module), None)
-        chosen = owner or min(
-            group,
-            key=lambda p: _instance_key(getattr(p, "source_instance", module)))
-        kept.append(chosen)
-        if len(signatures) > 1:
+        if len({_plan_signature(p) for p in group}) > 1:
             conflicts.append({
                 "module": module, "register": reg, "instances": instances,
-                "kept": getattr(chosen, "source_instance", module),
-                "detail": "instances disagree on the gate; kept one, did not "
-                          "union (a unioned gate would demand a precondition "
-                          "the datasheet may not)",
+                "detail": "instances disagree on the gate for the same Rust "
+                          "type; dropped rather than unioned (which would "
+                          "demand a precondition the datasheet may not) or "
+                          "picked arbitrarily (which would gate on a reading "
+                          "we have equal reason to think is the wrong one)",
             })
+            continue                       # the whole group goes
+        owner = next((p for p in group
+                      if getattr(p, "source_instance", module) == module), None)
+        kept.append(owner or min(
+            group,
+            key=lambda p: _instance_key(getattr(p, "source_instance", module))))
     return kept, conflicts
 
 
