@@ -36,6 +36,11 @@ def _chunks_dir(rm: str) -> str:
 def _ingest(rm: str, force: bool) -> dict:
     if not force and _db_exists(rm):
         return {"rm": rm, "status": "skipped_db_exists"}
+    if force and _db_exists(rm):
+        # add_documents appends by existing-count ids, so a re-ingest over a
+        # surviving DB would duplicate — wipe it first for a clean rebuild.
+        import shutil
+        shutil.rmtree(os.path.join(_REPO, "databases", f"{rm}_md_chunks"), ignore_errors=True)
     os.makedirs(_LOG_DIR, exist_ok=True)
     log = os.path.join(_LOG_DIR, f"{rm}.log")
     cmd = [sys.executable, "context_retrieval/preprocessing/ingest_local_vector_db.py",
