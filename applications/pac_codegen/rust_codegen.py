@@ -1299,6 +1299,39 @@ def _prune_plan_for_readers(shapes: ReaderShapes, plan: RegisterPlan) -> list[st
     return removed
 
 
+def add_sibling_markers(src: Path, device: str) -> int:
+    """Give every OTHER device module in the crate FULL markers.
+
+    ``generic.rs`` is patched CRATE-wide, so its bounds apply to every device
+    module the crate can build — but the marker walk covers only the injected
+    one. Without this, downstream code that selects a SIBLING chip feature gets
+    E0277 with our datasheet diagnostic for a register we never constrained:
+
+        error[E0277]: `stm32f1::stm32f101::rcc::cr::CRrs` is write-constrained
+                      by its datasheet
+
+    a false positive, and an INVISIBLE one — a generic bound is only checked at
+    a call site, so the PAC itself still compiles and no probe crate notices.
+
+    Siblings get every marker and therefore behave exactly as an unpatched PAC.
+    They are deliberately NOT gated: a manual's constraints were extracted for
+    its own chip, and one crate can serve several manuals (four RMs share
+    stm32f3), so propagating a gate sideways would enforce one chip's datasheet
+    on another's. Sibling modules are `#[cfg(feature)]`-gated anyway, so the
+    added impls are inert unless that chip is selected.
+
+    Returns the number of files patched.
+    """
+    total = 0
+    for d in sorted(src.iterdir()):
+        if not d.is_dir() or d.name == device:
+            continue
+        if not any(d.rglob("*.rs")):
+            continue
+        total += add_marker_impls(d, set())
+    return total
+
+
 def prune_plans_for_device(device_dir: Path,
                            plans: list[RegisterPlan]) -> list[RegisterPlan]:
     """Drop gates each register's real access mode cannot express, and gates
@@ -1355,6 +1388,10 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
     ops = {op for _, _, op in gated}
     patch_generic_rs(generic, ops)
     n = add_marker_impls(device_dir, gated)
+    # generic.rs is crate-wide; so must the markers be. A flat single-device
+    # crate (device ".") has no siblings — device_dir IS src.
+    siblings = 0 if device == "." else add_sibling_markers(src, device)
+    n += siblings
     for periph, periph_plans in by_periph.items():
         inject_constraints_module(device_dir / f"{periph}.rs", periph_plans)
     # Field-level gating: patch the per-field writer accessors (no-op when no
@@ -1362,7 +1399,8 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
     fields_patched = patch_field_accessors(device_dir, plans)
     kept = [p for periph_plans in by_periph.values() for p in periph_plans]
     extra = f", {fields_patched} field accessor(s)" if fields_patched else ""
-    print(f"Patched generic.rs, added markers to {n} register files{extra}, "
+    sib = f" ({siblings} in sibling device modules)" if siblings else ""
+    print(f"Patched generic.rs, added markers to {n} register files{sib}{extra}, "
           f"injected constraints for: "
           + ", ".join(f"{p.peripheral}/{p.reg_name}" for p in kept))
 

@@ -125,7 +125,10 @@ class PacSnapshot:
     def __init__(self, pac_root: Path, device: str):
         src = pac_root / "src"
         self.base = pac_root
-        self.paths = [src / "generic.rs", src / device]
+        # The WHOLE src/ tree: generic.rs is patched crate-wide and injection
+        # marks every sibling device module too, so a narrower snapshot would
+        # leave the crate modified after "restore".
+        self.paths = [src]
         self._tmp = tempfile.TemporaryDirectory(prefix="stm_sweep_snap_")
         self.digest = self._digest()
         for i, p in enumerate(self.paths):

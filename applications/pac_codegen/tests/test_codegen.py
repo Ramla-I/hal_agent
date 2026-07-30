@@ -194,15 +194,20 @@ def _tree_digest(*roots: Path) -> str:
 
 class _InjectedPac:
     """Context manager: snapshot the PAC + main.rs, inject, restore on exit,
-    and assert the restore is byte-for-byte."""
+    and assert the restore is byte-for-byte.
+
+    The snapshot covers the WHOLE src/ tree, not just generic.rs and the
+    injected device module: generic.rs is patched crate-wide, so injection
+    also marks every SIBLING device module (see add_sibling_markers). A
+    narrower snapshot would leave those modified and the next run would hit
+    the one-shot guard."""
 
     def __enter__(self):
         self._tmp = tempfile.TemporaryDirectory()
         backup = Path(self._tmp.name)
-        shutil.copy2(PAC_GENERIC, backup / "generic.rs")
-        shutil.copytree(DEVICE_DIR, backup / DEVICE)
+        shutil.copytree(PAC_SRC, backup / "src")
         self._main = MAIN_RS.read_bytes()
-        self._digest = _tree_digest(PAC_GENERIC, DEVICE_DIR)
+        self._digest = _tree_digest(PAC_SRC)
         cmd = [sys.executable, str(RUST_CODEGEN),
                str(FIXTURES[0][0]), "--peripheral", FIXTURES[0][1],
                "--inject-pac", str(PAC_ROOT), "--device", DEVICE]
@@ -225,22 +230,20 @@ class _InjectedPac:
 
     def _restore(self):
         backup = Path(self._tmp.name)
-        shutil.copy2(backup / "generic.rs", PAC_GENERIC)
-        shutil.rmtree(DEVICE_DIR)
-        shutil.copytree(backup / DEVICE, DEVICE_DIR)
+        shutil.rmtree(PAC_SRC)
+        shutil.copytree(backup / "src", PAC_SRC)
         MAIN_RS.write_bytes(self._main)
         # copy2 preserves the ORIGINAL (old) mtimes; cargo treats
         # older-than-recorded files as fresh and would replay the cached
         # diagnostics of the INJECTED build against the restored pristine
         # tree. Touch everything so the next check always re-reads sources.
-        os.utime(PAC_GENERIC)
-        for f in DEVICE_DIR.rglob("*"):
+        for f in PAC_SRC.rglob("*"):
             if f.is_file():
                 os.utime(f)
 
     def __exit__(self, *exc):
         self._restore()
-        restored = _tree_digest(PAC_GENERIC, DEVICE_DIR) == self._digest
+        restored = _tree_digest(PAC_SRC) == self._digest
         self._tmp.cleanup()
         assert restored, (
             "PAC crate was NOT restored after the test -- it has been left "
@@ -404,19 +407,20 @@ FIELD_FIXTURE = CRATE_DIR / "stm32f405_i2c1_start_field.json"
 
 
 def _snapshot_pac():
+    # The WHOLE src/ tree, for the same reason as _InjectedPac: injection
+    # patches generic.rs crate-wide and marks every sibling device module, so
+    # a device-dir-only restore silently leaves the crate modified — and the
+    # next injection then trips the one-shot guard in an unrelated test.
     tmp = tempfile.TemporaryDirectory()
-    shutil.copy2(PAC_GENERIC, Path(tmp.name) / "generic.rs")
-    shutil.copytree(DEVICE_DIR, Path(tmp.name) / DEVICE)
+    shutil.copytree(PAC_SRC, Path(tmp.name) / "src")
     return tmp, MAIN_RS.read_bytes()
 
 
 def _restore_pac(tmp, main_bytes):
-    shutil.copy2(Path(tmp.name) / "generic.rs", PAC_GENERIC)
-    shutil.rmtree(DEVICE_DIR)
-    shutil.copytree(Path(tmp.name) / DEVICE, DEVICE_DIR)
+    shutil.rmtree(PAC_SRC)
+    shutil.copytree(Path(tmp.name) / "src", PAC_SRC)
     MAIN_RS.write_bytes(main_bytes)
-    os.utime(PAC_GENERIC)
-    for f in DEVICE_DIR.rglob("*"):
+    for f in PAC_SRC.rglob("*"):
         if f.is_file():
             os.utime(f)
     tmp.cleanup()
