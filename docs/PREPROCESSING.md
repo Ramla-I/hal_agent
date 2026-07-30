@@ -137,8 +137,9 @@ Then the generator runs with openevolve retrieval:
   *skip* registration when `vector_stores.json` was absent (`return 0`) — leaving a
   built ChromaDB the generator never uses (silent fallback to keyword search,
   because `build_context_retrieval_params` resolves `local_db_name` from that
-  file). **Fixed:** it now creates the file and sets the local store as default.
-  *(Verification on the live batch in progress at time of writing.)*
+  file). **Fixed & verified:** it now creates the file and sets the local store as
+  default (rm0351/rm0432: `vector_stores.json` written with `default=local_md_chunks`,
+  `local_db_name={rm}_md_chunks` — the generator resolves LOCAL retrieval).
 
 - **R5 — Step 4 validator crashes on openevolve.** The full structure validator's
   retrieval path doesn't resolve `ContextRetrievalMethod.OPENEVOLVE` and aborts the
