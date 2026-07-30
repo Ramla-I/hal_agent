@@ -1328,6 +1328,14 @@ def peripheral_instance_map(device_dir: Path) -> dict:
             for m in _PERIPH_ALIAS_RE.finditer(mod_rs.read_text())}
 
 
+def _instance_key(name: str):
+    """Order instances NUMERICALLY, not lexicographically: a plain string sort
+    puts ``usart10`` before ``usart2``, so the "lowest instance" tie-break
+    would silently pick the wrong one on any family with ten or more."""
+    m = re.match(r"^(.*?)(\d*)$", name)
+    return (m.group(1), int(m.group(2)) if m.group(2) else -1)
+
+
 def _plan_signature(plan: "RegisterPlan"):
     return tuple(sorted(
         (op, tuple(sorted(p.describe() for p in pres)))
@@ -1350,6 +1358,15 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
     lowest-numbered instance — and never union the preconditions, which would
     demand a condition the datasheet does not.
 
+    WHERE THIS SITS IN THE PIPELINE: after the constraint validator, so every
+    colliding plan is already judge-``enforce``; the tie-break chooses between
+    two CONFIRMED extractions that disagree, never between a confirmed and an
+    unconfirmed one. It runs BEFORE the ``--chunks`` quote re-verification,
+    which is a known ordering limitation: if the kept plan's quote turns out
+    to be unanchored its gate is dropped, and a discarded twin whose quote
+    would have anchored is already gone. No case in the corpus hits this (zero
+    quote drops land on a multi-instance register), so the order stands.
+
     Returns (kept plans, conflict records).
     """
     groups: dict = {}
@@ -1360,12 +1377,14 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
         if len(group) == 1:
             kept.append(group[0])
             continue
-        instances = sorted(getattr(p, "source_instance", module) for p in group)
+        instances = sorted((getattr(p, "source_instance", module) for p in group),
+                           key=_instance_key)
         signatures = {_plan_signature(p) for p in group}
         owner = next((p for p in group
                       if getattr(p, "source_instance", module) == module), None)
         chosen = owner or min(
-            group, key=lambda p: getattr(p, "source_instance", module))
+            group,
+            key=lambda p: _instance_key(getattr(p, "source_instance", module)))
         kept.append(chosen)
         if len(signatures) > 1:
             conflicts.append({

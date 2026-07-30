@@ -139,6 +139,30 @@ def test_disagreement_is_never_unioned():
     assert len(pres) == 1, "preconditions were unioned across instances"
 
 
+def test_tie_break_is_numeric_not_lexicographic():
+    """A plain string sort puts usart10 before usart2, so the "lowest
+    instance" tie-break would pick the wrong one on any family with ten or
+    more. No collision group in today's corpus has a 2+-digit instance, so
+    this guards a latent bug rather than a live one."""
+    plans = [_plan("usart1", "usart10", "UE"), _plan("usart1", "usart2", "TE")]
+    kept, conflicts = rust_codegen.resolve_instance_collisions(plans)
+    assert kept[0].source_instance == "usart2", "picked usart10 over usart2"
+    assert conflicts[0]["instances"] == ["usart2", "usart10"]
+
+
+def test_collision_input_is_already_validator_gated():
+    """Plans reach this function only after the --validated gate, so both
+    sides of a conflict are judge-`enforce`. This pins the ordering
+    assumption the tie-break rests on (see inject_from_run.main)."""
+    src = (APP_DIR / "inject_from_run.py").read_text()
+    gate = src.index("gate_map=gate_map")
+    collide = src.index("resolve_instance_collisions")
+    chunks = src.index("if args.chunks:")
+    assert gate < collide < chunks, (
+        "pipeline order changed: collisions must be resolved after the "
+        "validator gate and before quote re-verification")
+
+
 def test_distinct_registers_do_not_collide():
     a = _plan("i2c1", "i2c2", "TEXTEN")
     b = _plan("i2c1", "i2c3", "TEXTEN")
