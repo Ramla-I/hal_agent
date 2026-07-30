@@ -114,6 +114,14 @@ TARGETS = [
         Consumer("stm32f4xx-hal", "0.23.0", ["stm32f401"]), _hal2("f401")]),
     Target("rm0376", "stm32l0", "stm32l0x2", "stm32l0x2.svd"),
     Target("rm0377", "stm32l0", "stm32l0x1", "stm32l0x1.svd"),
+    Target("rm0383", "stm32f4", "stm32f411", "stm32f411.svd", [
+        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f411"]), _hal2("f411")]),
+    # stm32f7 has no crates.io consumer on PAC 0.16 at any version.
+    Target("rm0385", "stm32f7", "stm32f746", "stm32f746.svd"),
+    Target("rm0386", "stm32f4", "stm32f469", "stm32f469.svd", [
+        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f469"]), _hal2("f469")]),
+    Target("rm0390", "stm32f4", "stm32f446", "stm32f446.svd", [
+        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f446"]), _hal2("f446")]),
 ]
 
 

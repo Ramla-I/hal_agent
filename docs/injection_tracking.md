@@ -69,6 +69,10 @@ generator  ->  collection lint  ->  judge  ->  emitter + device prune
 | rm0368 | stm32f401 | stm32f4 0.16.0 | 76 | state_gate=54, sequence=9, write_once=1, delay=9, read_effect=1, value_relation=2 | 26 | state_gate=22, sequence=4 | **12** | state_gate=12 | 7 | 7 | PASS |
 | rm0376 | stm32l0x2 | stm32l0 0.16.0 | 116 | state_gate=108, sequence=3, delay=1, read_effect=1, value_relation=2, other=1 | 56 | state_gate=56 | **27** | state_gate=27 | 9 | 21 | PASS |
 | rm0377 | stm32l0x1 | stm32l0 0.16.0 | 99 | state_gate=82, sequence=4, delay=1, read_effect=1, value_relation=2, other=9 | 39 | state_gate=39 | **22** | state_gate=22 | 3 | 19 | PASS |
+| rm0383 | stm32f411 | stm32f4 0.16.0 | 69 | state_gate=52, sequence=7, delay=6, read_effect=1, value_relation=1, other=2 | 35 | state_gate=32, sequence=3 | **14** | state_gate=14 | 6 | 10 | PASS |
+| rm0385 | stm32f746 | stm32f7 0.16.0 | 142 | state_gate=115, sequence=13, delay=3, read_effect=4, other=7 | 66 | state_gate=64, sequence=2 | **31** | state_gate=31 | 11 | 20 | PASS |
+| rm0386 | stm32f469 | stm32f4 0.16.0 | 268 | state_gate=227, sequence=14, write_once=1, delay=1, read_effect=5, value_relation=7, other=13 | 125 | state_gate=118, sequence=7 | **21** | state_gate=21 | 2 | 20 | PASS |
+| rm0390 | stm32f446 | stm32f4 0.16.0 | 76 | state_gate=54, sequence=11, write_once=1, delay=2, read_effect=4, value_relation=2, other=2 | 37 | state_gate=31, sequence=4, delay=2 | **18** | state_gate=18 | 1 | 16 | PASS |
 
 ## Compilation against real HAL crates
 
@@ -88,25 +92,45 @@ generator  ->  collection lint  ->  judge  ->  emitter + device prune
 | rm0368 | stm32f401 | stm32-hal2 2.1.10 | PASS | 9 | 0 | 0 | src/i2c_f4.rs, src/rtc.rs, src/spi/baseline.rs | — |
 | rm0376 | stm32l0x2 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
 | rm0377 | stm32l0x1 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
+| rm0383 | stm32f411 | stm32f4xx-hal 0.23.0 | PASS | 32 | 8 | 0 | src/flash.rs, src/i2c.rs, src/rtc.rs, src/spi.rs | — |
+| rm0383 | stm32f411 | stm32-hal2 2.1.10 | PASS | 29 | 0 | 0 | src/flash/non_trustzone.rs, src/i2c_f4.rs, src/rtc.rs, src/spi/baseline.rs | — |
+| rm0385 | stm32f746 | — | — | — | — | — | — | no HAL crate exists for stm32f7 at any PAC version, and nothing else on crates.io depends on it |
+| rm0386 | stm32f469 | stm32f4xx-hal 0.23.0 | PASS | 54 | 14 | 0 | src/dsi.rs, src/i2c.rs, src/i2c/dma.rs, src/qspi.rs, src/spi.rs, src/watchdog.rs | — |
+| rm0386 | stm32f469 | stm32-hal2 2.1.10 | PASS | 7 | 0 | 0 | src/i2c_f4.rs, src/spi/baseline.rs | — |
+| rm0390 | stm32f446 | stm32f4xx-hal 0.23.0 | PASS | 25 | 8 | 0 | src/flash.rs, src/fmpi2c.rs, src/qspi.rs, src/rtc.rs, src/spi.rs | — |
+| rm0390 | stm32f446 | stm32-hal2 2.1.10 | PASS | 14 | 0 | 0 | src/flash/non_trustzone.rs, src/rtc.rs, src/spi/baseline.rs | — |
 
 ## Where the non-applied constraints went
 
 | RM | stage → kinds dropped there |
 |---|---|
-| rm0008 | emitter_rejected: state_gate=7; gated_out_by_validator: state_gate=19; kind_not_emitted: sequence=7,delay=4,read_effect=2,other=1; peripheral_not_in_device: state_gate=14; rejected_at_collection: state_gate=17,clock_gate=2,delay=1 |
-| rm0033 | emitter_rejected: state_gate=15; gated_out_by_validator: state_gate=9; kind_not_emitted: sequence=12,delay=1,read_effect=1,value_relation=1; peripheral_not_in_device: state_gate=2; rejected_at_collection: state_gate=15,sequence=2,delay=3,read_effect=1,value_relation=2,other=3 |
-| rm0038 | emitter_rejected: state_gate=7; gated_out_by_validator: state_gate=19; kind_not_emitted: sequence=7,delay=2; peripheral_not_in_device: state_gate=2; pruned_for_device: state_gate=2; rejected_at_collection: state_gate=5,sequence=9,clock_gate=4,value_relation=1,other=2 |
-| rm0091 | emitter_rejected: state_gate=22; gated_out_by_validator: state_gate=17; kind_not_emitted: sequence=7; pruned_for_device: state_gate=13; rejected_at_collection: state_gate=15,read_effect=1,value_relation=2 |
-| rm0313 | emitter_rejected: state_gate=6; gated_out_by_validator: state_gate=27; kind_not_emitted: sequence=10,write_once=1,delay=1,read_effect=3,value_relation=2; rejected_at_collection: state_gate=14,read_effect=13,value_relation=1,other=2 |
-| rm0316 | emitter_rejected: state_gate=11; gated_out_by_validator: state_gate=10; kind_not_emitted: sequence=3,write_once=5,delay=1; pruned_for_device: state_gate=1; rejected_at_collection: state_gate=21,sequence=4,value_relation=1,other=1 |
-| rm0360 | emitter_rejected: state_gate=13; gated_out_by_validator: state_gate=32; instance_conflict_dropped: state_gate=6; kind_not_emitted: sequence=10,delay=1; pruned_for_device: state_gate=2; rejected_at_collection: state_gate=7,sequence=1,read_effect=1,value_relation=1 |
-| rm0365 | emitter_rejected: state_gate=6; gated_out_by_validator: state_gate=13; kind_not_emitted: sequence=2,write_once=4,read_effect=2; rejected_at_collection: state_gate=15,sequence=2,value_relation=1,other=1 |
-| rm0366 | emitter_rejected: state_gate=5; gated_out_by_validator: state_gate=3; kind_not_emitted: sequence=2,write_once=4; rejected_at_collection: state_gate=8,delay=1,value_relation=1,other=2 |
-| rm0367 | emitter_rejected: state_gate=26; gated_out_by_validator: state_gate=12; kind_not_emitted: sequence=9,write_once=1,delay=1; peripheral_not_in_device: state_gate=2; pruned_for_device: state_gate=1; rejected_at_collection: state_gate=44,sequence=2,read_effect=1,value_relation=4 |
-| rm0368 | emitter_rejected: state_gate=9; gated_out_by_validator: state_gate=19; kind_not_emitted: sequence=9,delay=3,value_relation=1; pruned_for_device: state_gate=1; rejected_at_collection: state_gate=9,write_once=1,delay=6,read_effect=1,value_relation=1 |
-| rm0376 | emitter_rejected: state_gate=16; gated_out_by_validator: state_gate=16; kind_not_emitted: sequence=2,delay=1; rejected_at_collection: state_gate=39,sequence=1,read_effect=1,value_relation=1,other=1 |
-| rm0377 | emitter_rejected: state_gate=15; gated_out_by_validator: state_gate=24; kind_not_emitted: sequence=4,delay=1,value_relation=1; pruned_for_device: state_gate=2; rejected_at_collection: state_gate=10,read_effect=1,value_relation=1,other=9 |
+| rm0008 | rejected_at_collection: state_gate=17,clock_gate=2,delay=1; kind_not_emitted: sequence=7,delay=4,read_effect=2,other=1; gated_out_by_validator: state_gate=19; peripheral_not_in_device: state_gate=14; emitter_rejected: state_gate=7 |
+| rm0033 | rejected_at_collection: state_gate=15,sequence=2,delay=3,read_effect=1,value_relation=2,other=3; kind_not_emitted: sequence=12,delay=1,read_effect=1,value_relation=1; gated_out_by_validator: state_gate=9; peripheral_not_in_device: state_gate=2; emitter_rejected: state_gate=15 |
+| rm0038 | rejected_at_collection: state_gate=5,sequence=9,clock_gate=4,value_relation=1,other=2; kind_not_emitted: sequence=7,delay=2; gated_out_by_validator: state_gate=19; peripheral_not_in_device: state_gate=2; emitter_rejected: state_gate=7; pruned_for_device: state_gate=2 |
+| rm0091 | rejected_at_collection: state_gate=15,read_effect=1,value_relation=2; kind_not_emitted: sequence=7; gated_out_by_validator: state_gate=17; emitter_rejected: state_gate=22; pruned_for_device: state_gate=13 |
+| rm0313 | rejected_at_collection: state_gate=14,read_effect=13,value_relation=1,other=2; kind_not_emitted: sequence=10,write_once=1,delay=1,read_effect=3,value_relation=2; gated_out_by_validator: state_gate=27; emitter_rejected: state_gate=6 |
+| rm0316 | rejected_at_collection: state_gate=21,sequence=4,value_relation=1,other=1; kind_not_emitted: sequence=3,write_once=5,delay=1; gated_out_by_validator: state_gate=10; emitter_rejected: state_gate=11; pruned_for_device: state_gate=1 |
+| rm0360 | rejected_at_collection: state_gate=7,sequence=1,read_effect=1,value_relation=1; kind_not_emitted: sequence=10,delay=1; gated_out_by_validator: state_gate=32; emitter_rejected: state_gate=13; instance_conflict_dropped: state_gate=6; pruned_for_device: state_gate=2 |
+| rm0365 | rejected_at_collection: state_gate=15,sequence=2,value_relation=1,other=1; kind_not_emitted: sequence=2,write_once=4,read_effect=2; gated_out_by_validator: state_gate=13; emitter_rejected: state_gate=6 |
+| rm0366 | rejected_at_collection: state_gate=8,delay=1,value_relation=1,other=2; kind_not_emitted: sequence=2,write_once=4; gated_out_by_validator: state_gate=3; emitter_rejected: state_gate=5 |
+| rm0367 | rejected_at_collection: state_gate=44,sequence=2,read_effect=1,value_relation=4; kind_not_emitted: sequence=9,write_once=1,delay=1; gated_out_by_validator: state_gate=12; peripheral_not_in_device: state_gate=2; emitter_rejected: state_gate=26; pruned_for_device: state_gate=1 |
+| rm0368 | rejected_at_collection: state_gate=9,write_once=1,delay=6,read_effect=1,value_relation=1; kind_not_emitted: sequence=9,delay=3,value_relation=1; gated_out_by_validator: state_gate=19; emitter_rejected: state_gate=9; pruned_for_device: state_gate=1 |
+| rm0376 | rejected_at_collection: state_gate=39,sequence=1,read_effect=1,value_relation=1,other=1; kind_not_emitted: sequence=2,delay=1; gated_out_by_validator: state_gate=16; emitter_rejected: state_gate=16 |
+| rm0377 | rejected_at_collection: state_gate=10,read_effect=1,value_relation=1,other=9; kind_not_emitted: sequence=4,delay=1,value_relation=1; gated_out_by_validator: state_gate=24; emitter_rejected: state_gate=15; pruned_for_device: state_gate=2 |
+| rm0383 | rejected_at_collection: state_gate=10,sequence=2,delay=6,value_relation=1,other=2; kind_not_emitted: sequence=5,read_effect=1; gated_out_by_validator: state_gate=9; emitter_rejected: state_gate=18 |
+| rm0385 | rejected_at_collection: state_gate=27,sequence=2,delay=1,read_effect=3,other=5; kind_not_emitted: sequence=10,delay=2,read_effect=1,other=1; gated_out_by_validator: state_gate=15; peripheral_not_in_device: state_gate=3; emitter_rejected: state_gate=27; pruned_for_device: state_gate=3 |
+| rm0386 | rejected_at_collection: state_gate=71,sequence=2,read_effect=3,value_relation=1,other=13; kind_not_emitted: sequence=12,write_once=1,delay=1,read_effect=2,value_relation=5; gated_out_by_validator: state_gate=27; peripheral_not_in_device: state_gate=10; emitter_rejected: state_gate=14; pruned_for_device: state_gate=54 |
+| rm0390 | rejected_at_collection: state_gate=7,sequence=3,write_once=1,read_effect=2,value_relation=2,other=2; kind_not_emitted: sequence=8,delay=2,read_effect=2; gated_out_by_validator: state_gate=8; peripheral_not_in_device: state_gate=2; emitter_rejected: state_gate=11 |
 
 ---
 
-**Fate glossary** — `rejected_at_collection`: stage-0 lint (name not resolvable in the SVD, fails grammar-v2 validation, placeholder name). `gated_out_by_validator`: the closed-book judge called it `doc_only` or `drop`. `kind_not_emitted`: no codegen emitter for that grammar kind yet. `peripheral_not_in_device`: the manual covers a family; this chip lacks that peripheral. `emitter_rejected`: nothing enforceable left, or a non-identifier field name. `pruned_for_device`: not expressible against the generated PAC (access mode or field-reader shape). `instance_conflict_dropped`: peripheral instances share one Rust type, and they disagreed on the gate for it — two readings of one datasheet sentence with no way to tell which is right, so no gate is emitted at all. `target_unverified_by_location`: the supporting quote could not be anchored to the target register's section.
+**Fate glossary**, in the order a constraint meets the stages:
+
+1. `rejected_at_collection` (stage-0 lint) — Names a register or field that cannot be resolved in the SVD, fails grammar-v2 validation outright, or carries a placeholder name.
+2. `kind_not_emitted` (emitter coverage) — The grammar kind has no code generator yet — sequence, delay, write_once, read_effect, value_relation, other. The single largest enforcement gap.
+3. `gated_out_by_validator` (closed-book judge) — The validator read the quote without the datasheet in front of it and called the constraint doc_only (genuine but not witness-enforceable) or drop (not a constraint at all).
+4. `peripheral_not_in_device` (device projection) — The manual covers a chip family; this peripheral is genuinely not on the chip injected. Instances that merely share another instance's register-block module are resolved, not dropped.
+5. `emitter_rejected` (emitter) — Nothing enforceable left after kind filtering, a field name that is not an SVD identifier, a self-defeating same-register read gate, or OR-values the emitter cannot express as one check.
+6. `instance_conflict_dropped` (instance conflict) — Peripheral instances share one Rust type and disagreed on the gate for it — two readings of one datasheet sentence with no way to tell which is right, so no gate is emitted at all.
+7. `pruned_for_device` (generated-PAC reality) — Not expressible against the generated code: the register's access mode has no such operation, or the precondition's field reader is the wrong shape (a 1-bit BitReader has no bits(); a multi-bit FieldReader has no bit_is_set()).
+8. `target_unverified_by_location` (quote anchoring) — The supporting quote never names the register and could not be anchored to the target's own section of the manual, so the evidence cannot be tied to what it claims to constrain.

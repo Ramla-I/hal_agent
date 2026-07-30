@@ -69,7 +69,7 @@ KINDS = ["state_gate", "sequence", "write_once", "clock_gate", "delay",
 # Which sweep result files to merge (later files win per (rm, consumer)).
 SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                "sweep_opsel.json", "sweep_alias.json",
-               "sweep_conflict.json"]
+               "sweep_conflict.json", "sweep_new.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -345,9 +345,11 @@ def main() -> None:
                 "generic_friction": (res or {}).get("generic_friction", "—"),
                 "other_errors": (res or {}).get("other", "—"),
                 "enforcement_sites": ", ".join((res or {}).get("files", [])) or "—",
+                # pipeline order, not alphabetical: a row should read as the
+                # path a constraint takes, so `rejected_at_collection` first.
                 "dropped_by_stage": "; ".join(
-                    f"{fate}: {kinds_str(cnt, ',')}"
-                    for fate, cnt in sorted(elsewhere.items())) or "—",
+                    f"{fate}: {kinds_str(elsewhere[fate], ',')}"
+                    for fate, _s, _d in _STAGES if fate in elsewhere) or "—",
                 "note": build_note(t, res, gaps, activity),
             })
 
@@ -452,21 +454,10 @@ def main() -> None:
         md.append(f"| {r['RM']} | {r['dropped_by_stage']} |")
 
     md += ["", "---", "",
-           "**Fate glossary** — `rejected_at_collection`: stage-0 lint (name not "
-           "resolvable in the SVD, fails grammar-v2 validation, placeholder "
-           "name). `gated_out_by_validator`: the closed-book judge called it "
-           "`doc_only` or `drop`. `kind_not_emitted`: no codegen emitter for "
-           "that grammar kind yet. `peripheral_not_in_device`: the manual covers "
-           "a family; this chip lacks that peripheral. `emitter_rejected`: "
-           "nothing enforceable left, or a non-identifier field name. "
-           "`pruned_for_device`: not expressible against the generated PAC "
-           "(access mode or field-reader shape). "
-           "`instance_conflict_dropped`: peripheral instances share one Rust "
-           "type, and they disagreed on the gate for it — two readings of one "
-           "datasheet sentence with no way to tell which is right, so no gate "
-           "is emitted at all. "
-           "`target_unverified_by_location`: the supporting quote could not be "
-           "anchored to the target register's section.", ""]
+           "**Fate glossary**, in the order a constraint meets the stages:", ""]
+    md += [f"{i}. `{fate}` ({short}) — {desc}"
+           for i, (fate, short, desc) in enumerate(_STAGES, 1)]
+    md += [""]
 
     DOC.write_text("\n".join(md))
     print(f"markdown: {DOC}")
@@ -618,6 +609,48 @@ def _kinds_html(s: str) -> str:
     return "".join(out)
 
 
+# What each fate means, IN THE ORDER A CONSTRAINT MEETS THEM -- the same order
+# inject_from_run applies them: collection lint -> emitter-kind filter ->
+# validator gate -> instance/module resolution -> emitter -> instance-collision
+# resolution -> device prune -> quote re-verification. Both the definition list
+# and the per-RM rows are rendered in this order, so a row reads as a path
+# through the pipeline rather than an alphabetical jumble.
+_STAGES = [
+    ("rejected_at_collection", "stage-0 lint",
+     "Names a register or field that cannot be resolved in the SVD, fails "
+     "grammar-v2 validation outright, or carries a placeholder name."),
+    ("kind_not_emitted", "emitter coverage",
+     "The grammar kind has no code generator yet \u2014 sequence, delay, "
+     "write_once, read_effect, value_relation, other. The single largest "
+     "enforcement gap."),
+    ("gated_out_by_validator", "closed-book judge",
+     "The validator read the quote without the datasheet in front of it and "
+     "called the constraint doc_only (genuine but not witness-enforceable) or "
+     "drop (not a constraint at all)."),
+    ("peripheral_not_in_device", "device projection",
+     "The manual covers a chip family; this peripheral is genuinely not on the "
+     "chip injected. Instances that merely share another instance's "
+     "register-block module are resolved, not dropped."),
+    ("emitter_rejected", "emitter",
+     "Nothing enforceable left after kind filtering, a field name that is not "
+     "an SVD identifier, a self-defeating same-register read gate, or "
+     "OR-values the emitter cannot express as one check."),
+    ("instance_conflict_dropped", "instance conflict",
+     "Peripheral instances share one Rust type and disagreed on the gate for "
+     "it \u2014 two readings of one datasheet sentence with no way to tell "
+     "which is right, so no gate is emitted at all."),
+    ("pruned_for_device", "generated-PAC reality",
+     "Not expressible against the generated code: the register's access mode "
+     "has no such operation, or the precondition's field reader is the wrong "
+     "shape (a 1-bit BitReader has no bits(); a multi-bit FieldReader has no "
+     "bit_is_set())."),
+    ("target_unverified_by_location", "quote anchoring",
+     "The supporting quote never names the register and could not be anchored "
+     "to the target's own section of the manual, so the evidence cannot be "
+     "tied to what it claims to constrain."),
+]
+
+
 def _pill(v: str) -> str:
     if v in ("PASS",):
         return '<span class="pill ok">PASS</span>'
@@ -632,12 +665,22 @@ def write_html(rows: list, path: Path) -> None:
         if r["RM"] not in seen:
             seen.add(r["RM"])
             per_rm.append(r)
-    tot = {k: sum(int(r[k]) for r in per_rm) for k in
+    def _n(v) -> int:
+        # A column is "—" when its artifact does not exist yet (a newly added
+        # manual whose compile sweep has not run). Pending is not zero, but it
+        # must not crash the summary either.
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return 0
+
+    tot = {k: sum(_n(r[k]) for r in per_rm) for k in
            ("constraints_found_raw", "validator_enforce", "enforced",
             "enforced_via_instance_alias", "registers_gated")}
-    hal_rows = [r for r in rows if r["hal_crate"] != "—"]
-    collateral = sum(int(r["other_errors"]) for r in hal_rows)
-    enforcement = sum(int(r["true_enforcement"]) for r in hal_rows)
+    hal_rows = [r for r in rows
+                if r["hal_crate"] != "—" and r["true_enforcement"] != "—"]
+    collateral = sum(_n(r["other_errors"]) for r in hal_rows)
+    enforcement = sum(_n(r["true_enforcement"]) for r in hal_rows)
 
     h = ['<div class="wrap">', "<header>",
          '<span class="eyebrow">LIDAR · enforcement arm</span>',
@@ -716,7 +759,15 @@ def write_html(rows: list, path: Path) -> None:
     # --- table 3 -----------------------------------------------------------
     h += ['<section><h2>Where the rest went</h2>',
           '<p class="note">Every constraint that did not become a gate, with the stage '
-          'that dropped it and the grammar kinds involved.</p>',
+          'that dropped it and the grammar kinds involved. The stages, in the order a '
+          'constraint would meet them:</p>',
+          '<div class="scroll"><table><thead><tr><th class="pin">stage</th>',
+          '<th>what it is</th><th>what lands here</th></tr></thead><tbody>']
+    for fate, short, desc in _STAGES:
+        h.append(f'<tr><td class="pin">{_esc(fate)}</td>'
+                 f'<td class="mono dim">{_esc(short)}</td>'
+                 f'<td class="wide">{_esc(desc)}</td></tr>')
+    h += ["</tbody></table></div>",
           '<div class="scroll"><table><thead><tr>',
           '<th class="pin">RM</th><th>stage → kinds dropped there</th>',
           "</tr></thead><tbody>"]
