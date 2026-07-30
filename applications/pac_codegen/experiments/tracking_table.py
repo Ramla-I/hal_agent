@@ -100,7 +100,12 @@ def raw_kinds_by_index(rm: str) -> dict:
 
 
 def judge_verdicts(rm: str) -> dict:
-    """validated.jsonl: kind -> {enforce, doc_only, drop}."""
+    """validated.jsonl: kind -> {enforce, doc_only, drop}.
+
+    NOTE the denominator: this file holds only the constraints that SURVIVED
+    the stage-0 collection lint, so its total is smaller than the raw
+    generator count. `judge says enforce` is a fraction of `reach the judge`,
+    never of `constraints found`."""
     p = DATA / f"evaluation/stm/{rm}/1/{rm}_constraints_review.jsonl"
     if not p.is_file():
         p = DATA / f"agent_output/stm/{rm}/1/constraint_validation/validated.jsonl"
@@ -285,6 +290,9 @@ def main() -> None:
                     elsewhere[r["fate"]][k] += n
 
         enforce_total = sum(v.get("enforce", 0) for v in verdicts.values())
+        enforce_kinds = collections.Counter(
+            {k: v.get("enforce", 0) for k, v in verdicts.items()
+             if v.get("enforce", 0)})
         probe = sweeps.get((t.rm, "__probe__"), {}).get("probe", "—")
 
         consumers = t.consumers or [None]
@@ -294,11 +302,12 @@ def main() -> None:
                 "RM": t.rm,
                 "device": t.device,
                 "pac_crate": f"{t.pac} 0.16.0",
-                "constraints_found": sum(found.values()),
-                "found_by_kind": kinds_str(found),
-                "judge_enforce": enforce_total,
-                "applied_to_pac": sum(applied.values()),
-                "applied_by_kind": kinds_str(applied),
+                "constraints_found_raw": sum(found.values()),
+                "found_by_kind_raw": kinds_str(found),
+                "validator_enforce": enforce_total,
+                "validator_enforce_by_kind": kinds_str(enforce_kinds),
+                "enforced": sum(applied.values()),
+                "enforced_by_kind": kinds_str(applied),
                 "registers_gated": rep.get("registers_planned", 0),
                 "pac_compiles": probe,
                 "hal_crate": (f"{c.crate} {c.version}" if c else "—"),
@@ -334,14 +343,29 @@ def main() -> None:
           "higher-level driver crate built on it (e.g. `stm32-hal2`); these are",
           "compiled UNMODIFIED against the injected PAC.",
           "",
-          "`applied to PAC` counts constraints that became **compile-time gates**.",
-          "Only `state_gate` has an emitter today, so any other kind is reported",
-          "under `where the rest went` with the stage that dropped it.",
+          "**Each column is a different stage — and they have different",
+          "denominators.** The pipeline is:",
+          "",
+          "```",
+          "generator  ->  collection lint  ->  judge  ->  emitter + device prune",
+          "```",
+          "",
+          "- `constraints found` / `found by kind` = **RAW generator output**,",
+          "  before any validation, lint, or de-duplication.",
+          "- `validator says enforce` = confirmed by the closed-book judge AND",
+          "  witness-enforceable. Its denominator is what survived the stage-0",
+          "  collection lint (SVD-resolvable name, valid grammar v2, no",
+          "  placeholder, de-duplicated) — NOT the raw count, which is always",
+          "  larger. The shortfall is itemised under `where the rest went`.",
+          "- `enforced` = what actually became **compile-time gates**,",
+          "  after the emitter (only `state_gate` has an emitter today) and the",
+          "  device-level prune. Every other kind is accounted for under",
+          "  `where the rest went`, with the stage that dropped it.",
           "",
           "## Extraction → enforcement",
           "",
-          "| RM | device | PAC crate | constraints found | found by kind | judge says enforce | applied to PAC | applied by kind | registers gated | PAC still compiles |",
-          "|---|---|---|---|---|---|---|---|---|---|"]
+          "| RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | registers gated | PAC still compiles |",
+          "|---|---|---|---|---|---|---|---|---|---|---|"]
     seen = set()
     for r in rows:
         if r["RM"] in seen:
@@ -349,10 +373,10 @@ def main() -> None:
         seen.add(r["RM"])
         md.append(
             f"| {r['RM']} | {r['device']} | {r['pac_crate']} | "
-            f"{r['constraints_found']} | {r['found_by_kind']} | "
-            f"{r['judge_enforce']} | **{r['applied_to_pac']}** | "
-            f"{r['applied_by_kind']} | {r['registers_gated']} | "
-            f"{r['pac_compiles']} |")
+            f"{r['constraints_found_raw']} | {r['found_by_kind_raw']} | "
+            f"{r['validator_enforce']} | {r['validator_enforce_by_kind']} | "
+            f"**{r['enforced']}** | {r['enforced_by_kind']} | "
+            f"{r['registers_gated']} | {r['pac_compiles']} |")
 
     md += ["", "## Compilation against real HAL crates", "",
            "| RM | device | HAL crate | baseline vs pristine PAC | true enforcement errors | generic friction | other errors | enforcement sites | note (why no HAL) |",

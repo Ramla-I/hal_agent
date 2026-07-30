@@ -10,27 +10,42 @@ script after new manuals land refreshes the table. One row per
 higher-level driver crate built on it (e.g. `stm32-hal2`); these are
 compiled UNMODIFIED against the injected PAC.
 
-`applied to PAC` counts constraints that became **compile-time gates**.
-Only `state_gate` has an emitter today, so any other kind is reported
-under `where the rest went` with the stage that dropped it.
+**Each column is a different stage — and they have different
+denominators.** The pipeline is:
+
+```
+generator  ->  collection lint  ->  judge  ->  emitter + device prune
+```
+
+- `constraints found` / `found by kind` = **RAW generator output**,
+  before any validation, lint, or de-duplication.
+- `validator says enforce` = confirmed by the closed-book judge AND
+  witness-enforceable. Its denominator is what survived the stage-0
+  collection lint (SVD-resolvable name, valid grammar v2, no
+  placeholder, de-duplicated) — NOT the raw count, which is always
+  larger. The shortfall is itemised under `where the rest went`.
+- `enforced` = what actually became **compile-time gates**,
+  after the emitter (only `state_gate` has an emitter today) and the
+  device-level prune. Every other kind is accounted for under
+  `where the rest went`, with the stage that dropped it.
 
 ## Extraction → enforcement
 
-| RM | device | PAC crate | constraints found | found by kind | judge says enforce | applied to PAC | applied by kind | registers gated | PAC still compiles |
-|---|---|---|---|---|---|---|---|---|---|
-| rm0008 | stm32f103 | stm32f1 0.16.0 | 83 | state_gate=61, sequence=7, clock_gate=7, delay=5, read_effect=2, other=1 | 33 | **6** | state_gate=6 | 6 | PASS |
-| rm0033 | stm32f215 | stm32f2 0.16.0 | 78 | state_gate=51, sequence=14, delay=5, read_effect=2, value_relation=3, other=3 | 30 | **6** | state_gate=6 | 6 | PASS |
-| rm0038 | stm32l151 | stm32l1 0.16.0 | 80 | state_gate=53, sequence=18, clock_gate=4, delay=2, value_relation=1, other=2 | 31 | **12** | state_gate=12 | 12 | PASS |
-| rm0091 | stm32f0x1 | stm32f0 0.16.0 | 195 | state_gate=181, sequence=7, read_effect=1, value_relation=2, other=4 | 91 | **19** | state_gate=19 | 18 | PASS |
-| rm0313 | stm32f373 | stm32f3 0.16.0 | 109 | state_gate=71, sequence=12, write_once=4, delay=1, read_effect=16, value_relation=3, other=2 | 26 | **9** | state_gate=9 | 9 | PASS |
-| rm0316 | stm32f303 | stm32f3 0.16.0 | 109 | state_gate=91, sequence=7, write_once=8, delay=1, value_relation=1, other=1 | 59 | **20** | state_gate=20 | 19 | PASS |
-| rm0360 | stm32f0x0 | stm32f0 0.16.0 | 97 | state_gate=82, sequence=12, delay=1, read_effect=1, value_relation=1 | 41 | **11** | state_gate=11 | 9 | PASS |
-| rm0365 | stm32f302 | stm32f3 0.16.0 | 87 | state_gate=73, sequence=4, write_once=6, read_effect=2, value_relation=1, other=1 | 39 | **12** | state_gate=12 | 11 | PASS |
-| rm0366 | stm32f301 | stm32f3 0.16.0 | 55 | state_gate=45, sequence=2, write_once=4, delay=1, value_relation=1, other=2 | 31 | **15** | state_gate=15 | 12 | PASS |
-| rm0367 | stm32l0x3 | stm32l0 0.16.0 | 148 | state_gate=130, sequence=11, write_once=1, delay=1, read_effect=1, value_relation=4 | 79 | **27** | state_gate=27 | 26 | PASS |
-| rm0368 | stm32f401 | stm32f4 0.16.0 | 76 | state_gate=54, sequence=9, write_once=1, delay=9, read_effect=1, value_relation=2 | 26 | **5** | state_gate=5 | 5 | PASS |
-| rm0376 | stm32l0x2 | stm32l0 0.16.0 | 116 | state_gate=108, sequence=3, delay=1, read_effect=1, value_relation=2, other=1 | 56 | **18** | state_gate=18 | 18 | PASS |
-| rm0377 | stm32l0x1 | stm32l0 0.16.0 | 99 | state_gate=82, sequence=4, delay=1, read_effect=1, value_relation=2, other=9 | 39 | **19** | state_gate=19 | 19 | PASS |
+| RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | registers gated | PAC still compiles |
+|---|---|---|---|---|---|---|---|---|---|---|
+| rm0008 | stm32f103 | stm32f1 0.16.0 | 83 | state_gate=61, sequence=7, clock_gate=7, delay=5, read_effect=2, other=1 | 33 | state_gate=28, sequence=5 | **6** | state_gate=6 | 6 | PASS |
+| rm0033 | stm32f215 | stm32f2 0.16.0 | 78 | state_gate=51, sequence=14, delay=5, read_effect=2, value_relation=3, other=3 | 30 | state_gate=27, sequence=3 | **6** | state_gate=6 | 6 | PASS |
+| rm0038 | stm32l151 | stm32l1 0.16.0 | 80 | state_gate=53, sequence=18, clock_gate=4, delay=2, value_relation=1, other=2 | 31 | state_gate=25, sequence=6 | **12** | state_gate=12 | 12 | PASS |
+| rm0091 | stm32f0x1 | stm32f0 0.16.0 | 195 | state_gate=181, sequence=7, read_effect=1, value_relation=2, other=4 | 91 | state_gate=88, sequence=3 | **19** | state_gate=19 | 18 | PASS |
+| rm0313 | stm32f373 | stm32f3 0.16.0 | 109 | state_gate=71, sequence=12, write_once=4, delay=1, read_effect=16, value_relation=3, other=2 | 26 | state_gate=18, sequence=7, write_once=1 | **9** | state_gate=9 | 9 | PASS |
+| rm0316 | stm32f303 | stm32f3 0.16.0 | 109 | state_gate=91, sequence=7, write_once=8, delay=1, value_relation=1, other=1 | 59 | state_gate=54, write_once=5 | **20** | state_gate=20 | 19 | PASS |
+| rm0360 | stm32f0x0 | stm32f0 0.16.0 | 97 | state_gate=82, sequence=12, delay=1, read_effect=1, value_relation=1 | 41 | state_gate=37, sequence=4 | **11** | state_gate=11 | 9 | PASS |
+| rm0365 | stm32f302 | stm32f3 0.16.0 | 87 | state_gate=73, sequence=4, write_once=6, read_effect=2, value_relation=1, other=1 | 39 | state_gate=35, write_once=4 | **12** | state_gate=12 | 11 | PASS |
+| rm0366 | stm32f301 | stm32f3 0.16.0 | 55 | state_gate=45, sequence=2, write_once=4, delay=1, value_relation=1, other=2 | 31 | state_gate=27, write_once=4 | **15** | state_gate=15 | 12 | PASS |
+| rm0367 | stm32l0x3 | stm32l0 0.16.0 | 148 | state_gate=130, sequence=11, write_once=1, delay=1, read_effect=1, value_relation=4 | 79 | state_gate=75, sequence=3, write_once=1 | **27** | state_gate=27 | 26 | PASS |
+| rm0368 | stm32f401 | stm32f4 0.16.0 | 76 | state_gate=54, sequence=9, write_once=1, delay=9, read_effect=1, value_relation=2 | 26 | state_gate=22, sequence=4 | **5** | state_gate=5 | 5 | PASS |
+| rm0376 | stm32l0x2 | stm32l0 0.16.0 | 116 | state_gate=108, sequence=3, delay=1, read_effect=1, value_relation=2, other=1 | 56 | state_gate=56 | **18** | state_gate=18 | 18 | PASS |
+| rm0377 | stm32l0x1 | stm32l0 0.16.0 | 99 | state_gate=82, sequence=4, delay=1, read_effect=1, value_relation=2, other=9 | 39 | state_gate=39 | **19** | state_gate=19 | 19 | PASS |
 
 ## Compilation against real HAL crates
 
