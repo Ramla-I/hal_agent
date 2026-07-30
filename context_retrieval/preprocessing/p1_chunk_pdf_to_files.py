@@ -91,19 +91,49 @@ def extract_text_plain(pdf_path: str) -> dict[int, str]:
     return pages
 
 
-def extract_text_markdown(pdf_path: str) -> dict[int, str]:
+def _markdown_page_range(args: tuple) -> dict[int, str]:
+    """Worker: convert a contiguous page range to markdown (process-safe — each
+    worker opens the PDF independently). Module-level so ProcessPoolExecutor can
+    pickle it."""
+    pdf_path, pages = args
+    import pymupdf4llm as _p4l
+    data = _p4l.to_markdown(pdf_path, pages=pages, page_chunks=True)
+    return {p: d.get("text", "") for p, d in zip(pages, data)}
+
+
+def extract_text_markdown(pdf_path: str, parallel_threshold: int = 200,
+                          max_workers: int | None = None) -> dict[int, str]:
     """
     Extract text from PDF as markdown (better table preservation).
 
     Returns:
         Dictionary mapping page number (0-indexed) to page text in markdown
+
+    ``pymupdf4llm.to_markdown`` does per-page layout/table analysis (~1s/page) in a
+    SINGLE whole-document call that emits nothing until it finishes — untenable for
+    the 3000-4000 page STM datasheets (rm0399: 3556 pages, ~69 min, silent). The
+    conversion is per-page independent, so for large PDFs we split the pages across
+    processes: identical markdown output, ~20x faster on a many-core host (rm0399:
+    ~3 min at 48 workers). Small PDFs keep the single call (no pool overhead).
     """
-    # Single pass: page_chunks=True returns one dict per page (with its markdown
-    # under "text"), so the PDF is parsed once. The previous implementation called
-    # to_markdown() once per page, i.e. N+1 full-document parses for an N-page PDF
-    # (~710 parses for the 709-page rm0041 datasheet), which took ~50 min.
-    page_data = pymupdf4llm.to_markdown(pdf_path, page_chunks=True)
-    return {page_num: page.get("text", "") for page_num, page in enumerate(page_data)}
+    n = len(pymupdf.open(pdf_path))
+    if max_workers is None:
+        max_workers = min(os.cpu_count() or 1, 48)
+
+    if n < parallel_threshold or max_workers <= 1:
+        # Single pass: page_chunks=True returns one dict per page, PDF parsed once.
+        page_data = pymupdf4llm.to_markdown(pdf_path, page_chunks=True)
+        return {page_num: page.get("text", "") for page_num, page in enumerate(page_data)}
+
+    import math
+    from concurrent.futures import ProcessPoolExecutor
+    size = math.ceil(n / max_workers)
+    ranges = [list(range(i, min(i + size, n))) for i in range(0, n, size)]
+    pages_dict: dict[int, str] = {}
+    with ProcessPoolExecutor(max_workers=max_workers) as ex:
+        for part in ex.map(_markdown_page_range, [(pdf_path, r) for r in ranges]):
+            pages_dict.update(part)
+    return pages_dict
 
 
 def extract_and_chunk_pdf(
