@@ -44,7 +44,7 @@ KINDS = ["state_gate", "sequence", "write_once", "clock_gate", "delay",
 
 # Which sweep result files to merge (later files win per (rm, consumer)).
 SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
-               "sweep_opsel.json"]
+               "sweep_opsel.json", "sweep_alias.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -274,6 +274,7 @@ def main() -> None:
         rep = injection_report(t.rm, t.device)
 
         applied = collections.Counter()
+        via_alias = 0
         elsewhere = collections.defaultdict(collections.Counter)
         raw_kinds = raw_kinds_by_index(t.rm)
         for r in rep.get("rows", []):
@@ -285,6 +286,8 @@ def main() -> None:
                     for i in r["constraints"] if i is not None)
             if r["fate"] == "planned":
                 applied.update(ks)
+                if r.get("via_alias"):
+                    via_alias += sum(ks.values())
             else:
                 for k, n in ks.items():
                     elsewhere[r["fate"]][k] += n
@@ -308,6 +311,7 @@ def main() -> None:
                 "validator_enforce_by_kind": kinds_str(enforce_kinds),
                 "enforced": sum(applied.values()),
                 "enforced_by_kind": kinds_str(applied),
+                "enforced_via_instance_alias": via_alias,
                 "registers_gated": rep.get("registers_planned", 0),
                 "pac_compiles": probe,
                 "hal_crate": (f"{c.crate} {c.version}" if c else "—"),
@@ -357,6 +361,13 @@ def main() -> None:
           "  collection lint (SVD-resolvable name, valid grammar v2, no",
           "  placeholder, de-duplicated) — NOT the raw count, which is always",
           "  larger. The shortfall is itemised under `where the rest went`.",
+          "- `of which via instance alias` — svd2rust gives every peripheral",
+          "  INSTANCE a type alias over one shared register-block module",
+          "  (`pub type I2C2 = crate::Periph<i2c1::RegisterBlock, ...>`), so",
+          "  `i2c2.rs` does not exist and I2C2's registers ARE `i2c1`'s types.",
+          "  Constraints extracted for a non-first instance are resolved through",
+          "  that map instead of being discarded. Because instances share the",
+          "  type, such a gate necessarily covers EVERY instance of the block.",
           "- `enforced` = what actually became **compile-time gates**,",
           "  after the emitter (only `state_gate` has an emitter today) and the",
           "  device-level prune. Every other kind is accounted for under",
@@ -364,8 +375,8 @@ def main() -> None:
           "",
           "## Extraction → enforcement",
           "",
-          "| RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | registers gated | PAC still compiles |",
-          "|---|---|---|---|---|---|---|---|---|---|---|"]
+          "| RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | of which via instance alias | registers gated | PAC still compiles |",
+          "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     seen = set()
     for r in rows:
         if r["RM"] in seen:
@@ -376,6 +387,7 @@ def main() -> None:
             f"{r['constraints_found_raw']} | {r['found_by_kind_raw']} | "
             f"{r['validator_enforce']} | {r['validator_enforce_by_kind']} | "
             f"**{r['enforced']}** | {r['enforced_by_kind']} | "
+            f"{r['enforced_via_instance_alias']} | "
             f"{r['registers_gated']} | {r['pac_compiles']} |")
 
     md += ["", "## Compilation against real HAL crates", "",

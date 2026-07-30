@@ -93,6 +93,10 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
     """
     manifest = json.loads((collect_dir / "manifest.json").read_text())
     plans, rows = [], []
+    # instance -> register-block module (I2C2 lives in i2c1.rs; see
+    # rust_codegen.peripheral_instance_map). Without it, every constraint on a
+    # non-first instance is thrown away as "peripheral not in device".
+    instance_map = rust_codegen.peripheral_instance_map(device_dir)
 
     for reg_entry in manifest["registers"]:
         peripheral = reg_entry["peripheral"]
@@ -158,11 +162,19 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
             g.pop("enforceability", None)
         if not gates:
             continue
-        if not (device_dir / f"{peripheral}.rs").is_file():
-            row("peripheral_not_in_device",
-                f"{peripheral}.rs absent from {device_dir.name}",
-                kinds=_kind_counts(gates))
-            continue
+        # Resolve the instance to the module that owns its register types.
+        module = peripheral
+        if not (device_dir / f"{module}.rs").is_file():
+            aliased = instance_map.get(peripheral)
+            if aliased and (device_dir / f"{aliased}.rs").is_file():
+                module = aliased
+            else:
+                row("peripheral_not_in_device",
+                    f"{peripheral}.rs absent from {device_dir.name}"
+                    + ("" if not instance_map else
+                       " (and no register-block alias for it)"),
+                    kinds=_kind_counts(gates))
+                continue
 
         # Rebuild a RegisterInfo holding ONLY the accepted state gates and offer
         # it to the emitter.
@@ -170,9 +182,10 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
         data.pop("constraint_reports", None)
         try:
             plan = rust_codegen.RegisterPlan(
-                RegisterInfo(**data), peripheral,
+                RegisterInfo(**data), module,
                 field_level_gating=field_level_gating,
                 disabled_kinds=disabled_kinds)
+            plan.source_instance = peripheral
         except NotImplementedError as e:
             row("unsupported_by_emitter", str(e), kinds=_kind_counts(gates))
             continue
@@ -185,7 +198,11 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
         detail = f"gates: {sorted(op for _, _, op in plan.gated_ops())}"
         if plan.field_gates:
             detail += f"; field_gates: {sorted(plan.field_gates)}"
-        row("planned", detail, kinds=_kind_counts(gates))
+        if module != peripheral:
+            detail += (f"; via instance alias {peripheral} -> {module} "
+                       "(gates every instance of this block)")
+        row("planned", detail, kinds=_kind_counts(gates),
+            via_alias=(module != peripheral))
 
     return plans, rows
 
@@ -257,6 +274,33 @@ def main() -> None:
         # (manifest register names are lowercase; plan.reg_lower is the same
         # name with any peripheral prefix stripped — key on that, and simply
         # skip any row that does not resolve rather than mislabel it.)
+        # Instances share register types, so two plans can now target one
+        # Rust type; emitting both would define the same witness twice.
+        plans, collisions = rust_codegen.resolve_instance_collisions(plans)
+        for c in collisions:
+            rows.append({
+                "file": "", "peripheral": c["module"], "register": c["register"],
+                "fate": "instance_conflict",
+                "reason": f"instances {c['instances']} disagree; kept "
+                          f"{c['kept']}'s gate — {c['detail']}",
+                "constraints": [],
+            })
+            print(f"  note: {c['module']}/{c['register']}: instances "
+                  f"{c['instances']} disagree; kept {c['kept']}'s gate")
+            # The losing instances' constraints are NOT enforced as extracted
+            # (a different precondition set is), so they must stop reading as
+            # `planned`. Agreeing instances need no such correction: their
+            # rule IS enforced, by the very same Rust type.
+            for r in rows:
+                if (r["fate"] == "planned"
+                        and r["register"].lower() == c["register"]
+                        and r["peripheral"] in c["instances"]
+                        and r["peripheral"] != c["kept"]):
+                    r["fate"] = "instance_conflict_dropped"
+                    r["reason"] = (f"{c['module']}/{c['register']} is gated "
+                                   f"with {c['kept']}'s preconditions instead "
+                                   "(instances disagree; not unioned)")
+
         before = {(p.peripheral, p.reg_lower): sorted(op for _, _, op in p.gated_ops())
                   for p in plans}
         plans = rust_codegen.prune_plans_for_device(device_dir, plans)

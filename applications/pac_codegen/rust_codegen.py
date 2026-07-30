@@ -1299,6 +1299,85 @@ def _prune_plan_for_readers(shapes: ReaderShapes, plan: RegisterPlan) -> list[st
     return removed
 
 
+_PERIPH_ALIAS_RE = re.compile(
+    r"^pub type (\w+) = crate::Periph<(\w+)::RegisterBlock", re.M)
+
+
+def peripheral_instance_map(device_dir: Path) -> dict:
+    """instance name (lowercase) -> the module owning its register types.
+
+    svd2rust gives every peripheral INSTANCE a type alias over one shared
+    register-block module, generated from the SVD's ``derivedFrom``::
+
+        pub type I2C2 = crate::Periph<i2c1::RegisterBlock, 0x4000_5800>;
+
+    So ``i2c2.rs`` does not exist and never will — I2C2's TIMEOUTR *is*
+    ``i2c1::timeoutr::TIMEOUTRrs``, the same Rust type. Without this map a
+    constraint extracted for any non-first instance is discarded as
+    "peripheral not in device" even though the peripheral is on the chip:
+    180 of 200 such drops in the STM sweep.
+
+    Identity entries are included (``i2c1 -> i2c1``), so this is a complete
+    instance->module map, not just the aliases. Empty when ``mod.rs`` is
+    absent (other PAC layouts); callers then fall back to the file check.
+    """
+    mod_rs = device_dir / "mod.rs"
+    if not mod_rs.is_file():
+        return {}
+    return {m.group(1).lower(): m.group(2).lower()
+            for m in _PERIPH_ALIAS_RE.finditer(mod_rs.read_text())}
+
+
+def _plan_signature(plan: "RegisterPlan"):
+    return tuple(sorted(
+        (op, tuple(sorted(p.describe() for p in pres)))
+        for op, pres in plan.preconditions.items()))
+
+
+def resolve_instance_collisions(plans: list) -> tuple[list, list]:
+    """Collapse plans that target the SAME register-block module + register.
+
+    Peripheral instances share their register types, so gating is
+    all-or-nothing per module: two plans for i2c1/TIMEOUTR (one from I2C2,
+    one from I2C3) would emit the same witness types twice and not compile.
+
+    When the colliding plans agree, that is simply one rule the manual states
+    once and our per-instance iteration replicated. When they DISAGREE the
+    difference is extraction noise on the same quote, not a genuine
+    per-instance rule (measured: 92 agreeing groups vs 32 disagreeing, and
+    the disagreements cite identical datasheet sentences). We therefore keep
+    ONE plan — the module owner's if it contributed, else the
+    lowest-numbered instance — and never union the preconditions, which would
+    demand a condition the datasheet does not.
+
+    Returns (kept plans, conflict records).
+    """
+    groups: dict = {}
+    for plan in plans:
+        groups.setdefault((plan.peripheral, plan.reg_lower), []).append(plan)
+    kept, conflicts = [], []
+    for (module, reg), group in groups.items():
+        if len(group) == 1:
+            kept.append(group[0])
+            continue
+        instances = sorted(getattr(p, "source_instance", module) for p in group)
+        signatures = {_plan_signature(p) for p in group}
+        owner = next((p for p in group
+                      if getattr(p, "source_instance", module) == module), None)
+        chosen = owner or min(
+            group, key=lambda p: getattr(p, "source_instance", module))
+        kept.append(chosen)
+        if len(signatures) > 1:
+            conflicts.append({
+                "module": module, "register": reg, "instances": instances,
+                "kept": getattr(chosen, "source_instance", module),
+                "detail": "instances disagree on the gate; kept one, did not "
+                          "union (a unioned gate would demand a precondition "
+                          "the datasheet may not)",
+            })
+    return kept, conflicts
+
+
 def add_sibling_markers(src: Path, device: str) -> int:
     """Give every OTHER device module in the crate FULL markers.
 

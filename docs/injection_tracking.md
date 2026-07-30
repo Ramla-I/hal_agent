@@ -24,6 +24,13 @@ generator  ->  collection lint  ->  judge  ->  emitter + device prune
   collection lint (SVD-resolvable name, valid grammar v2, no
   placeholder, de-duplicated) — NOT the raw count, which is always
   larger. The shortfall is itemised under `where the rest went`.
+- `of which via instance alias` — svd2rust gives every peripheral
+  INSTANCE a type alias over one shared register-block module
+  (`pub type I2C2 = crate::Periph<i2c1::RegisterBlock, ...>`), so
+  `i2c2.rs` does not exist and I2C2's registers ARE `i2c1`'s types.
+  Constraints extracted for a non-first instance are resolved through
+  that map instead of being discarded. Because instances share the
+  type, such a gate necessarily covers EVERY instance of the block.
 - `enforced` = what actually became **compile-time gates**,
   after the emitter (only `state_gate` has an emitter today) and the
   device-level prune. Every other kind is accounted for under
@@ -31,21 +38,21 @@ generator  ->  collection lint  ->  judge  ->  emitter + device prune
 
 ## Extraction → enforcement
 
-| RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | registers gated | PAC still compiles |
-|---|---|---|---|---|---|---|---|---|---|---|
-| rm0008 | stm32f103 | stm32f1 0.16.0 | 83 | state_gate=61, sequence=7, clock_gate=7, delay=5, read_effect=2, other=1 | 33 | state_gate=28, sequence=5 | **6** | state_gate=6 | 6 | PASS |
-| rm0033 | stm32f215 | stm32f2 0.16.0 | 78 | state_gate=51, sequence=14, delay=5, read_effect=2, value_relation=3, other=3 | 30 | state_gate=27, sequence=3 | **6** | state_gate=6 | 6 | PASS |
-| rm0038 | stm32l151 | stm32l1 0.16.0 | 80 | state_gate=53, sequence=18, clock_gate=4, delay=2, value_relation=1, other=2 | 31 | state_gate=25, sequence=6 | **12** | state_gate=12 | 12 | PASS |
-| rm0091 | stm32f0x1 | stm32f0 0.16.0 | 195 | state_gate=181, sequence=7, read_effect=1, value_relation=2, other=4 | 91 | state_gate=88, sequence=3 | **19** | state_gate=19 | 18 | PASS |
-| rm0313 | stm32f373 | stm32f3 0.16.0 | 109 | state_gate=71, sequence=12, write_once=4, delay=1, read_effect=16, value_relation=3, other=2 | 26 | state_gate=18, sequence=7, write_once=1 | **9** | state_gate=9 | 9 | PASS |
-| rm0316 | stm32f303 | stm32f3 0.16.0 | 109 | state_gate=91, sequence=7, write_once=8, delay=1, value_relation=1, other=1 | 59 | state_gate=54, write_once=5 | **20** | state_gate=20 | 19 | PASS |
-| rm0360 | stm32f0x0 | stm32f0 0.16.0 | 97 | state_gate=82, sequence=12, delay=1, read_effect=1, value_relation=1 | 41 | state_gate=37, sequence=4 | **11** | state_gate=11 | 9 | PASS |
-| rm0365 | stm32f302 | stm32f3 0.16.0 | 87 | state_gate=73, sequence=4, write_once=6, read_effect=2, value_relation=1, other=1 | 39 | state_gate=35, write_once=4 | **12** | state_gate=12 | 11 | PASS |
-| rm0366 | stm32f301 | stm32f3 0.16.0 | 55 | state_gate=45, sequence=2, write_once=4, delay=1, value_relation=1, other=2 | 31 | state_gate=27, write_once=4 | **15** | state_gate=15 | 12 | PASS |
-| rm0367 | stm32l0x3 | stm32l0 0.16.0 | 148 | state_gate=130, sequence=11, write_once=1, delay=1, read_effect=1, value_relation=4 | 79 | state_gate=75, sequence=3, write_once=1 | **27** | state_gate=27 | 26 | PASS |
-| rm0368 | stm32f401 | stm32f4 0.16.0 | 76 | state_gate=54, sequence=9, write_once=1, delay=9, read_effect=1, value_relation=2 | 26 | state_gate=22, sequence=4 | **5** | state_gate=5 | 5 | PASS |
-| rm0376 | stm32l0x2 | stm32l0 0.16.0 | 116 | state_gate=108, sequence=3, delay=1, read_effect=1, value_relation=2, other=1 | 56 | state_gate=56 | **18** | state_gate=18 | 18 | PASS |
-| rm0377 | stm32l0x1 | stm32l0 0.16.0 | 99 | state_gate=82, sequence=4, delay=1, read_effect=1, value_relation=2, other=9 | 39 | state_gate=39 | **19** | state_gate=19 | 19 | PASS |
+| RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | of which via instance alias | registers gated | PAC still compiles |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| rm0008 | stm32f103 | stm32f1 0.16.0 | 83 | state_gate=61, sequence=7, clock_gate=7, delay=5, read_effect=2, other=1 | 33 | state_gate=28, sequence=5 | **6** | state_gate=6 | 0 | 6 | PASS |
+| rm0033 | stm32f215 | stm32f2 0.16.0 | 78 | state_gate=51, sequence=14, delay=5, read_effect=2, value_relation=3, other=3 | 30 | state_gate=27, sequence=3 | **10** | state_gate=10 | 4 | 7 | PASS |
+| rm0038 | stm32l151 | stm32l1 0.16.0 | 80 | state_gate=53, sequence=18, clock_gate=4, delay=2, value_relation=1, other=2 | 31 | state_gate=25, sequence=6 | **14** | state_gate=14 | 2 | 12 | PASS |
+| rm0091 | stm32f0x1 | stm32f0 0.16.0 | 195 | state_gate=181, sequence=7, read_effect=1, value_relation=2, other=4 | 91 | state_gate=88, sequence=3 | **52** | state_gate=52 | 33 | 19 | PASS |
+| rm0313 | stm32f373 | stm32f3 0.16.0 | 109 | state_gate=71, sequence=12, write_once=4, delay=1, read_effect=16, value_relation=3, other=2 | 26 | state_gate=18, sequence=7, write_once=1 | **12** | state_gate=12 | 3 | 10 | PASS |
+| rm0316 | stm32f303 | stm32f3 0.16.0 | 109 | state_gate=91, sequence=7, write_once=8, delay=1, value_relation=1, other=1 | 59 | state_gate=54, write_once=5 | **42** | state_gate=42 | 22 | 20 | PASS |
+| rm0360 | stm32f0x0 | stm32f0 0.16.0 | 97 | state_gate=82, sequence=12, delay=1, read_effect=1, value_relation=1 | 41 | state_gate=37, sequence=4 | **17** | state_gate=17 | 6 | 10 | PASS |
+| rm0365 | stm32f302 | stm32f3 0.16.0 | 87 | state_gate=73, sequence=4, write_once=6, read_effect=2, value_relation=1, other=1 | 39 | state_gate=35, write_once=4 | **29** | state_gate=29 | 17 | 15 | PASS |
+| rm0366 | stm32f301 | stm32f3 0.16.0 | 55 | state_gate=45, sequence=2, write_once=4, delay=1, value_relation=1, other=2 | 31 | state_gate=27, write_once=4 | **22** | state_gate=22 | 7 | 13 | PASS |
+| rm0367 | stm32l0x3 | stm32l0 0.16.0 | 148 | state_gate=130, sequence=11, write_once=1, delay=1, read_effect=1, value_relation=4 | 79 | state_gate=75, sequence=3, write_once=1 | **31** | state_gate=31 | 4 | 26 | PASS |
+| rm0368 | stm32f401 | stm32f4 0.16.0 | 76 | state_gate=54, sequence=9, write_once=1, delay=9, read_effect=1, value_relation=2 | 26 | state_gate=22, sequence=4 | **12** | state_gate=12 | 7 | 7 | PASS |
+| rm0376 | stm32l0x2 | stm32l0 0.16.0 | 116 | state_gate=108, sequence=3, delay=1, read_effect=1, value_relation=2, other=1 | 56 | state_gate=56 | **27** | state_gate=27 | 9 | 21 | PASS |
+| rm0377 | stm32l0x1 | stm32l0 0.16.0 | 99 | state_gate=82, sequence=4, delay=1, read_effect=1, value_relation=2, other=9 | 39 | state_gate=39 | **22** | state_gate=22 | 3 | 19 | PASS |
 
 ## Compilation against real HAL crates
 
@@ -55,14 +62,14 @@ generator  ->  collection lint  ->  judge  ->  emitter + device prune
 | rm0033 | stm32f215 | — | — | — | — | — | — | no HAL crate exists for stm32f2 at any PAC version, and nothing else on crates.io depends on it |
 | rm0038 | stm32l151 | — | — | — | — | — | — | stm32l1xx-hal 0.1.0 needs PAC 0.5.0; forced onto 0.16 it fails with 666 errors (569x E0616) - a port, not a version bump; no other crates.io consumer of stm32l1 is on 0.16 either |
 | rm0091 | stm32f0x1 | — | — | — | — | — | — | stm32f0xx-hal 0.18.0 needs PAC 0.14.0; forced onto 0.16 it fails with 446 errors (408x E0616) - a port, not a version bump; no other crates.io consumer of stm32f0 is on 0.16 either |
-| rm0313 | stm32f373 | stm32-hal2 2.1.10 | PASS | 11 | 0 | 0 | src/flash/non_trustzone.rs, src/rtc.rs | — |
+| rm0313 | stm32f373 | stm32-hal2 2.1.10 | PASS | 12 | 0 | 0 | src/flash/non_trustzone.rs, src/rtc.rs, src/usart.rs | — |
 | rm0316 | stm32f303 | stm32-hal2 2.1.10 | PASS | 93 | 0 | 0 | src/adc.rs, src/i2c.rs, src/rtc.rs, src/spi/baseline.rs, src/usart.rs | — |
 | rm0360 | stm32f0x0 | — | — | — | — | — | — | stm32f0xx-hal 0.18.0 needs PAC 0.14.0; forced onto 0.16 it fails with 446 errors (408x E0616) - a port, not a version bump; no other crates.io consumer of stm32f0 is on 0.16 either |
-| rm0365 | stm32f302 | stm32-hal2 2.1.10 | PASS | 3 | 0 | 0 | src/rtc.rs, src/usart.rs | — |
+| rm0365 | stm32f302 | stm32-hal2 2.1.10 | PASS | 11 | 0 | 0 | src/i2c.rs, src/rtc.rs, src/usart.rs | — |
 | rm0366 | stm32f301 | stm32-hal2 2.1.10 | PASS | 20 | 0 | 0 | src/flash/non_trustzone.rs, src/i2c.rs, src/iwdg.rs, src/usart.rs | — |
 | rm0367 | stm32l0x3 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
-| rm0368 | stm32f401 | stm32f4xx-hal 0.23.0 | PASS | 7 | 8 | 0 | src/i2c.rs, src/rtc.rs | — |
-| rm0368 | stm32f401 | stm32-hal2 2.1.10 | PASS | 5 | 0 | 0 | src/i2c_f4.rs, src/rtc.rs | — |
+| rm0368 | stm32f401 | stm32f4xx-hal 0.23.0 | PASS | 17 | 8 | 0 | src/i2c.rs, src/rtc.rs, src/spi.rs | — |
+| rm0368 | stm32f401 | stm32-hal2 2.1.10 | PASS | 9 | 0 | 0 | src/i2c_f4.rs, src/rtc.rs, src/spi/baseline.rs | — |
 | rm0376 | stm32l0x2 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
 | rm0377 | stm32l0x1 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
 
@@ -70,19 +77,19 @@ generator  ->  collection lint  ->  judge  ->  emitter + device prune
 
 | RM | stage → kinds dropped there |
 |---|---|
-| rm0008 | emitter_rejected: state_gate=6; gated_out_by_validator: state_gate=19; kind_not_emitted: sequence=7,delay=4,read_effect=2,other=1; peripheral_not_in_device: state_gate=15; rejected_at_collection: state_gate=17,clock_gate=2,delay=1 |
-| rm0033 | emitter_rejected: state_gate=11; gated_out_by_validator: state_gate=9; kind_not_emitted: sequence=12,delay=1,read_effect=1,value_relation=1; peripheral_not_in_device: state_gate=10; rejected_at_collection: state_gate=15,sequence=2,delay=3,read_effect=1,value_relation=2,other=3 |
-| rm0038 | emitter_rejected: state_gate=5; gated_out_by_validator: state_gate=19; kind_not_emitted: sequence=7,delay=2; peripheral_not_in_device: state_gate=6; pruned_for_device: state_gate=2; rejected_at_collection: state_gate=5,sequence=9,clock_gate=4,value_relation=1,other=2 |
-| rm0091 | emitter_rejected: state_gate=11; gated_out_by_validator: state_gate=17; kind_not_emitted: sequence=7; peripheral_not_in_device: state_gate=44; pruned_for_device: state_gate=13; rejected_at_collection: state_gate=15,read_effect=1,value_relation=2 |
-| rm0313 | emitter_rejected: state_gate=4; gated_out_by_validator: state_gate=27; kind_not_emitted: sequence=10,write_once=1,delay=1,read_effect=3,value_relation=2; peripheral_not_in_device: state_gate=5; rejected_at_collection: state_gate=14,read_effect=13,value_relation=1,other=2 |
-| rm0316 | emitter_rejected: state_gate=7; gated_out_by_validator: state_gate=10; kind_not_emitted: sequence=3,write_once=5,delay=1; peripheral_not_in_device: state_gate=26; pruned_for_device: state_gate=1; rejected_at_collection: state_gate=21,sequence=4,value_relation=1,other=1 |
-| rm0360 | emitter_rejected: state_gate=9; gated_out_by_validator: state_gate=32; kind_not_emitted: sequence=10,delay=1; peripheral_not_in_device: state_gate=15; pruned_for_device: state_gate=2; rejected_at_collection: state_gate=7,sequence=1,read_effect=1,value_relation=1 |
-| rm0365 | emitter_rejected: state_gate=4; gated_out_by_validator: state_gate=13; kind_not_emitted: sequence=2,write_once=4,read_effect=2; peripheral_not_in_device: state_gate=19; rejected_at_collection: state_gate=15,sequence=2,value_relation=1,other=1 |
-| rm0366 | emitter_rejected: state_gate=4; gated_out_by_validator: state_gate=3; kind_not_emitted: sequence=2,write_once=4; peripheral_not_in_device: state_gate=8; rejected_at_collection: state_gate=8,delay=1,value_relation=1,other=2 |
-| rm0367 | emitter_rejected: state_gate=18; gated_out_by_validator: state_gate=12; kind_not_emitted: sequence=9,write_once=1,delay=1; peripheral_not_in_device: state_gate=14; pruned_for_device: state_gate=1; rejected_at_collection: state_gate=44,sequence=2,read_effect=1,value_relation=4 |
-| rm0368 | emitter_rejected: state_gate=6; gated_out_by_validator: state_gate=19; kind_not_emitted: sequence=9,delay=3,value_relation=1; peripheral_not_in_device: state_gate=10; pruned_for_device: state_gate=1; rejected_at_collection: state_gate=9,write_once=1,delay=6,read_effect=1,value_relation=1 |
-| rm0376 | emitter_rejected: state_gate=6; gated_out_by_validator: state_gate=16; kind_not_emitted: sequence=2,delay=1; peripheral_not_in_device: state_gate=19; rejected_at_collection: state_gate=39,sequence=1,read_effect=1,value_relation=1,other=1 |
-| rm0377 | emitter_rejected: state_gate=9; gated_out_by_validator: state_gate=24; kind_not_emitted: sequence=4,delay=1,value_relation=1; peripheral_not_in_device: state_gate=9; pruned_for_device: state_gate=2; rejected_at_collection: state_gate=10,read_effect=1,value_relation=1,other=9 |
+| rm0008 | emitter_rejected: state_gate=7; gated_out_by_validator: state_gate=19; kind_not_emitted: sequence=7,delay=4,read_effect=2,other=1; peripheral_not_in_device: state_gate=14; rejected_at_collection: state_gate=17,clock_gate=2,delay=1 |
+| rm0033 | emitter_rejected: state_gate=15; gated_out_by_validator: state_gate=9; kind_not_emitted: sequence=12,delay=1,read_effect=1,value_relation=1; peripheral_not_in_device: state_gate=2; rejected_at_collection: state_gate=15,sequence=2,delay=3,read_effect=1,value_relation=2,other=3 |
+| rm0038 | emitter_rejected: state_gate=7; gated_out_by_validator: state_gate=19; kind_not_emitted: sequence=7,delay=2; peripheral_not_in_device: state_gate=2; pruned_for_device: state_gate=2; rejected_at_collection: state_gate=5,sequence=9,clock_gate=4,value_relation=1,other=2 |
+| rm0091 | emitter_rejected: state_gate=22; gated_out_by_validator: state_gate=17; kind_not_emitted: sequence=7; pruned_for_device: state_gate=13; rejected_at_collection: state_gate=15,read_effect=1,value_relation=2 |
+| rm0313 | emitter_rejected: state_gate=6; gated_out_by_validator: state_gate=27; kind_not_emitted: sequence=10,write_once=1,delay=1,read_effect=3,value_relation=2; rejected_at_collection: state_gate=14,read_effect=13,value_relation=1,other=2 |
+| rm0316 | emitter_rejected: state_gate=11; gated_out_by_validator: state_gate=10; kind_not_emitted: sequence=3,write_once=5,delay=1; pruned_for_device: state_gate=1; rejected_at_collection: state_gate=21,sequence=4,value_relation=1,other=1 |
+| rm0360 | emitter_rejected: state_gate=13; gated_out_by_validator: state_gate=32; instance_conflict_dropped: state_gate=5; kind_not_emitted: sequence=10,delay=1; pruned_for_device: state_gate=2; rejected_at_collection: state_gate=7,sequence=1,read_effect=1,value_relation=1 |
+| rm0365 | emitter_rejected: state_gate=6; gated_out_by_validator: state_gate=13; kind_not_emitted: sequence=2,write_once=4,read_effect=2; rejected_at_collection: state_gate=15,sequence=2,value_relation=1,other=1 |
+| rm0366 | emitter_rejected: state_gate=5; gated_out_by_validator: state_gate=3; kind_not_emitted: sequence=2,write_once=4; rejected_at_collection: state_gate=8,delay=1,value_relation=1,other=2 |
+| rm0367 | emitter_rejected: state_gate=26; gated_out_by_validator: state_gate=12; kind_not_emitted: sequence=9,write_once=1,delay=1; peripheral_not_in_device: state_gate=2; pruned_for_device: state_gate=1; rejected_at_collection: state_gate=44,sequence=2,read_effect=1,value_relation=4 |
+| rm0368 | emitter_rejected: state_gate=9; gated_out_by_validator: state_gate=19; kind_not_emitted: sequence=9,delay=3,value_relation=1; pruned_for_device: state_gate=1; rejected_at_collection: state_gate=9,write_once=1,delay=6,read_effect=1,value_relation=1 |
+| rm0376 | emitter_rejected: state_gate=16; gated_out_by_validator: state_gate=16; kind_not_emitted: sequence=2,delay=1; rejected_at_collection: state_gate=39,sequence=1,read_effect=1,value_relation=1,other=1 |
+| rm0377 | emitter_rejected: state_gate=15; gated_out_by_validator: state_gate=24; kind_not_emitted: sequence=4,delay=1,value_relation=1; pruned_for_device: state_gate=2; rejected_at_collection: state_gate=10,read_effect=1,value_relation=1,other=9 |
 
 ---
 

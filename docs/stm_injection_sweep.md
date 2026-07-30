@@ -142,7 +142,48 @@ module) and the tree restored byte-identical afterward.
 | rm0368 | stm32f401 | 5 | PASS | yes |
 | rm0376 | stm32l0x2 | 18 | PASS | yes |
 | rm0377 | stm32l0x1 | 19 | PASS | yes |
-| | **total** | **170** | 13/13 | 13/13 |
+| | **total** | **185** | 13/13 | 13/13 |
+
+### Peripheral instances share one register-block module
+
+svd2rust emits ONE module per register block and gives each instance a type
+alias over it, generated from the SVD's `derivedFrom`:
+
+```rust
+pub type I2C2 = crate::Periph<i2c1::RegisterBlock, 0x4000_5800>;
+```
+
+So `i2c2.rs` does not exist and never will — I2C2's TIMEOUTR *is*
+`i2c1::timeoutr::TIMEOUTRrs`. The injector originally required
+`<peripheral>.rs` to exist and discarded everything else as
+`peripheral_not_in_device`, which was wrong for every non-first instance:
+
+| | before | after |
+|---|---|---|
+| enforced state gates | 179 | **296** (+117 via alias) |
+| dropped as "peripheral not in device" | 200 | **20** (the genuinely absent) |
+| registers gated | 170 | **185** |
+
+The 20 that remain are real: Ethernet on an F103, CAN2 on a single-CAN part,
+and one naming mismatch (`can1` where the crate calls the sole instance `CAN`).
+
+**A constraint found for one instance necessarily gates them all**, because
+they share the Rust type. That is forced by the encoding, and the corpus says
+it is also correct: instances are `derivedFrom` the same block, and when
+several instances do carry the same rule they quote the *same sentence* of the
+manual — the manual states it once and our per-instance iteration replicates
+it. Measured over the corpus: **92 register groups where instances agree
+exactly, 32 where they disagree, 536 where only one instance carried anything.**
+
+The 32 disagreements are extraction noise on an identical quote, not
+per-instance rules. RM0008's USART_CR2 is typical — both instances quote
+*"These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter
+is enabled"*, but one extracted the precondition as `CR1.TE cleared` (correct)
+and the other as `CR1.UE cleared` (wrong). So colliding plans are **never
+unioned** — a unioned gate would demand a precondition the datasheet does not,
+turning correct code into a compile error. One plan is kept (the module
+owner's, else the lowest-numbered instance) and the conflict is reported as
+`instance_conflict`. Corpus-wide that costs 5 constraints.
 
 ### Where the other constraints went
 
