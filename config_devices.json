@@ -351,6 +351,195 @@
       "run": 1,
       "file_id": "",
       "vs_id": ""
+    },
+    {
+      "device_name": "rm0351",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0399",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0432",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0433",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0436",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0438",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0440",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0442",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0453",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0455",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0456",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0461",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0468",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0475",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0477",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0481",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0486",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0492",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0503",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0529",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
+    },
+    {
+      "device_name": "rm0530",
+      "manufacturer": "STM",
+      "peripheral_name": "",
+      "driver_path": "",
+      "run": 1,
+      "file_id": "",
+      "vs_id": ""
     }
   ]
 }
