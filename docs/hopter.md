@@ -62,6 +62,60 @@ because they *are* that measurement: compiling the probe compiles the HAL.
 
 ---
 
+## Where the developer actually sees the error
+
+The counts above hide something the numbers alone do not tell you, and it
+matters more for adoption than the totals: **the application is never
+compiled at all.**
+
+Cargo builds dependencies first. `stm32f4xx-hal` fails, so the build stops:
+
+```
+   Checking enumflags2 v0.7.12
+error: could not compile `stm32f4xx-hal` (lib) due to 25 previous errors
+```
+
+`hopter`, and the example on top of it, are never type-checked. Measured on
+the probe: **0 error locations in the application's own file**, and the first
+(and every) error points into someone else's crate:
+
+```
+error[E0277]: `TRISErs` is write-constrained by its datasheet
+   --> ~/.cargo/registry/src/…/stm32f4xx-hal-0.23.0/src/i2c.rs:167:26
+    |
+167 |         self.i2c.trise().write(|w| w.trise().set(trise as u8));
+```
+
+Note what that register is: **I2C timing**, in an application that only opens
+a UART. The developer's first contact with our work is a compile error in a
+dependency they did not write, about a peripheral they are not using.
+
+The intended experience does exist — it just requires the HAL to compile
+first. An application talking to the chip crate **directly** gets exactly what
+the design promises:
+
+```
+error[E0277]: `TRISErs` is write-constrained by its datasheet
+   --> src/lib.rs:5:21
+    |
+  5 |     dp.I2C1.trise().write(|w| unsafe { w.bits(9) });
+    |                     ^^^^^ this register requires a witness: call
+    |                           `write_when_ready(f)` …
+```
+
+So there are two regimes, and today's HAL-mediated corpus is entirely in the
+first:
+
+| | what the developer sees |
+|---|---|
+| the HAL itself touches a gated register | build fails inside the HAL; **no line of theirs is implicated** |
+| the HAL does not, but the application does | error at the application's own line, naming the datasheet rule |
+
+This is the strongest practical argument for landing one of the two fixes in
+[`generic_friction.md`](generic_friction.md) upstream — not because friction
+is large (8 errors), but because **until the HAL compiles, enforcement is
+invisible to the person it is meant to protect.**
+
 ## What this does and does not show
 
 **Shows:** an OS-level consumer driving the constrained crate through a HAL

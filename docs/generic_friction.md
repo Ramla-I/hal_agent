@@ -204,6 +204,25 @@ generates them), so `Self` is concrete and the marker resolves. This is what
 - **Against:** much larger; asks the maintainers to give up an abstraction they
   chose deliberately (one implementation instead of six); grows code size.
 
+### Why this matters more than the error count suggests
+
+Cargo compiles dependencies first, so a HAL that fails to build takes the
+application with it — the application is never type-checked. Measured on a
+UART-only probe against an injected stm32f401:
+
+- **0** error locations in the application's own file;
+- the first error points into `stm32f4xx-hal-0.23.0/src/i2c.rs`, about
+  **I2C timing**, in a program that only opens a UART.
+
+An application talking to the chip crate directly gets the intended
+experience — `--> src/lib.rs:5`, naming the rule at the line that breaks it.
+But behind a HAL that itself touches a gated register, nobody ever gets there.
+
+So the case for fixing friction upstream is not that 8 errors are many. It is
+that **until the HAL compiles, the enforcement is invisible to the developer
+it is meant to protect**, and their first contact with it is a failure inside
+a crate they did not write.
+
 ### Which to propose
 
 Neither is ours to land, and the choice belongs to each driver's maintainers.
