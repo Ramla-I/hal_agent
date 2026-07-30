@@ -204,6 +204,23 @@ class Precondition:
             return f"{reader}.{accessor}().bit_is_set()"
         return f"{reader}.{accessor}().bits() == {self.value:#x}"
 
+    def reader_shape(self) -> str:
+        """The svd2rust reader shape ``check_expr`` needs: ``equals`` calls
+        ``bits()`` (FieldReader only), set/cleared call ``bit_is_*``
+        (BitReader only)."""
+        return "field" if self.kind == "equals" else "bit"
+
+    def narrow_to_bit(self) -> bool:
+        """Respell an ``equals`` check on a 1-bit field as set/cleared — the
+        same condition, in the API BitReader actually has. False when the
+        value cannot be one bit (the condition is unsatisfiable as written)."""
+        if self.kind != "equals":
+            return True
+        if self.value in (0, 1):
+            self.kind, self.value = ("set" if self.value else "cleared"), None
+            return True
+        return False
+
     def error_variant(self) -> str:
         name = self.field.capitalize()
         if self.source:
@@ -1136,14 +1153,133 @@ def inject_constraints_module(peripheral_file: Path,
     peripheral_file.write_text(text)
 
 
+# A generated field reader comes in exactly two shapes, and they share no
+# accessor: a 1-bit field reads through `BitReader` (bit/bit_is_set/
+# bit_is_clear, NO bits()), a multi-bit field through `FieldReader` (bits(),
+# no bit_is_*). A precondition whose state does not match its field's shape
+# emits a call to a method that does not exist — E0599 inside the PAC itself,
+# which breaks every downstream crate. The generated register file is the
+# ground truth, exactly as it is for the access mode above.
+_READER_DECL_RE = re.compile(
+    r"^pub type (\w+)_R = crate::(BitReader|FieldReader)\b", re.M)
+# svd2rust de-duplicates identical readers by re-export, in three shapes:
+#   pub use HSION_R as PLLON_R;                        (same file)
+#   pub use super::exticr1::EXTI0_R as EXTI4_R;        (sibling register)
+#   pub use crate::<dev>::<periph>::<reg>::X_R as Y_R; (another peripheral)
+_READER_ALIAS_RE = re.compile(
+    r"^pub use ((?:\w+::)*)(\w+)_R as (\w+)_R\s*;", re.M)
+
+
+class ReaderShapes:
+    """Resolve a generated field reader to "bit" (1-bit ``BitReader``) or
+    "field" (multi-bit ``FieldReader``) for one device module, following
+    svd2rust's de-duplicating re-exports across register files."""
+
+    def __init__(self, device_dir: Path):
+        self.device_dir = device_dir
+        self._files: dict = {}
+
+    def _parse(self, periph: str, reg: str):
+        key = (periph, reg)
+        if key not in self._files:
+            f = self.device_dir / periph / f"{reg}.rs"
+            if not f.is_file():
+                self._files[key] = None
+            else:
+                text = f.read_text()
+                decls = {m.group(1).lower():
+                         ("bit" if m.group(2) == "BitReader" else "field")
+                         for m in _READER_DECL_RE.finditer(text)}
+                aliases = {}
+                for m in _READER_ALIAS_RE.finditer(text):
+                    segs = [s for s in m.group(1).split("::") if s]
+                    if not segs:
+                        target = (periph, reg)
+                    elif len(segs) == 2 and segs[0] == "super":
+                        target = (periph, segs[1])
+                    elif len(segs) == 4 and segs[0] == "crate":
+                        target = (segs[2], segs[3])
+                    else:
+                        continue                # unknown path shape: unresolved
+                    aliases[m.group(3).lower()] = (target, m.group(2).lower())
+                self._files[key] = (decls, aliases)
+        return self._files[key]
+
+    def has_register(self, periph: str, reg: str) -> bool:
+        return self._parse(periph, reg) is not None
+
+    def shape(self, periph: str, reg: str, field: str, _depth: int = 0):
+        """"bit" | "field", or None when the register file, the field, or the
+        re-export chain cannot be resolved."""
+        parsed = self._parse(periph, reg)
+        if parsed is None or _depth > 8:
+            return None
+        decls, aliases = parsed
+        f = field.lower()
+        if f in decls:
+            return decls[f]
+        if f in aliases:
+            (p2, r2), f2 = aliases[f]
+            return self.shape(p2, r2, f2, _depth + 1)
+        return None
+
+
+def _prune_plan_for_readers(shapes: ReaderShapes, plan: RegisterPlan) -> list[str]:
+    """Reconcile every precondition with the shape of the field it reads.
+
+    ``equals 0``/``equals 1`` on a 1-bit field is RESPELLED as cleared/set (no
+    loss — same condition, compilable API). Anything the generated API cannot
+    express drops the WHOLE gate, never just the offending condition: a gate
+    missing one of its conjuncts would silently demand less than the datasheet
+    does, which is worse than no gate at all. Returns what was dropped."""
+
+    def locate(pre: Precondition) -> tuple[str, str]:
+        if pre.source is None:
+            return plan.peripheral, plan.reg_lower
+        if pre.source.same_peripheral:
+            return plan.peripheral, pre.source.reg
+        return pre.source.periph_module, pre.source.reg
+
+    def unusable(pre: Precondition) -> "str | None":
+        periph, reg = locate(pre)
+        if not shapes.has_register(periph, reg):
+            return f"{pre.describe()}: {periph}/{reg} absent from the device"
+        shape = shapes.shape(periph, reg, pre.field)
+        if shape is None:
+            return f"{pre.describe()}: field has no reader in the generated PAC"
+        if shape == "bit" and not pre.narrow_to_bit():
+            return f"{pre.describe()}: value does not fit a 1-bit field"
+        if shape != pre.reader_shape():
+            return (f"{pre.describe()}: {pre.kind} check needs a "
+                    f"{pre.reader_shape()} reader, field is {shape}")
+        return None
+
+    removed = []
+    for op in list(plan.preconditions):
+        bad = [why for why in map(unusable, plan.preconditions[op]) if why]
+        if bad:
+            del plan.preconditions[op]
+            plan.docs.pop(op, None)
+            removed.append(f"{op} [{'; '.join(bad)}]")
+    for fname in list(plan.field_gates):
+        fg = plan.field_gates[fname]
+        bad = [why for why in map(unusable, fg.preconditions) if why]
+        if bad:
+            del plan.field_gates[fname]
+            removed.append(f"field:{fg.field} [{'; '.join(bad)}]")
+    return removed
+
+
 def prune_plans_for_device(device_dir: Path,
                            plans: list[RegisterPlan]) -> list[RegisterPlan]:
-    """Drop gates each register's real access mode cannot express (checked
-    against the generated register file itself — the ground truth). Mutates
-    the plans; returns those with something left to gate. Idempotent, and
-    callable by drivers BEFORE saving artifacts so the record matches what is
-    actually injected."""
+    """Drop gates each register's real access mode cannot express, and gates
+    whose preconditions the generated field readers cannot express (both
+    checked against the generated register files themselves — the ground
+    truth). Mutates the plans; returns those with something left to gate.
+    Idempotent, and callable by drivers BEFORE saving artifacts so the record
+    matches what is actually injected."""
     kept = []
+    shapes = ReaderShapes(device_dir)
     for plan in plans:
         reg_file = device_dir / plan.peripheral / f"{plan.reg_lower}.rs"
         spec = f"{plan.reg_name.upper()}rs"
@@ -1156,6 +1292,10 @@ def prune_plans_for_device(device_dir: Path,
             print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
                   f"{removed} gate(s) — unsupported by the register's "
                   "access mode")
+        for why in _prune_plan_for_readers(shapes, plan):
+            print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
+                  f"{why} — precondition not expressible against the "
+                  "generated field reader")
         if plan.preconditions or plan.field_gates:
             kept.append(plan)
         else:

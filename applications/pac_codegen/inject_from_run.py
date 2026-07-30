@@ -228,10 +228,34 @@ def main() -> None:
             disabled_kinds=set(args.disable_kind),
             gate_map=gate_map, rm=rm)
 
-        # Match the artifact and injection exactly: apply the access-mode
-        # prune (write-only registers cannot carry modify/read gates) BEFORE
-        # saving; injection re-runs it idempotently.
+        # Match the artifact and injection exactly: apply the device-level
+        # prune (access mode + field-reader shape) BEFORE saving; injection
+        # re-runs it idempotently. Registers it empties out were reported as
+        # `planned` a moment ago, so correct their fate — a report that still
+        # calls them planned would overstate what the crate enforces.
+        # (manifest register names are lowercase; plan.reg_lower is the same
+        # name with any peripheral prefix stripped — key on that, and simply
+        # skip any row that does not resolve rather than mislabel it.)
+        before = {(p.peripheral, p.reg_lower): sorted(op for _, _, op in p.gated_ops())
+                  for p in plans}
         plans = rust_codegen.prune_plans_for_device(device_dir, plans)
+        after = {(p.peripheral, p.reg_lower): sorted(op for _, _, op in p.gated_ops())
+                 for p in plans}
+        for r in rows:
+            if r["fate"] != "planned":
+                continue
+            key = (r["peripheral"], r["register"].lower())
+            if key not in before:
+                continue
+            kept = after.get(key)
+            if not kept:
+                r["fate"] = "pruned_for_device"
+                r["reason"] = (f"gates {before[key]} dropped: not expressible "
+                               "against the generated PAC (access mode or "
+                               "field reader shape)")
+            elif kept != before[key]:
+                r["reason"] = (f"gates: {kept} (dropped "
+                               f"{sorted(set(before[key]) - set(kept))} at the device)")
 
         quote_tiers = {}
         if args.chunks:
