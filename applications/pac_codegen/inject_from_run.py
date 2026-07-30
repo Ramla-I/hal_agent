@@ -64,6 +64,15 @@ def _load_gate_map(path: Path, rm: str) -> dict:
     return gate
 
 
+def _kind_counts(gates) -> dict:
+    """grammar-v2 kind -> how many of these constraints, for report accounting."""
+    out: dict = {}
+    for g in gates:
+        k = g.get("kind", "")
+        out[k] = out.get(k, 0) + 1
+    return out
+
+
 def select_and_plan(collect_dir: Path, device_dir: Path,
                     field_level_gating: bool = False,
                     disabled_kinds=None, gate_map=None, rm: str = "") -> tuple[list, list[dict]]:
@@ -88,19 +97,27 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
     for reg_entry in manifest["registers"]:
         peripheral = reg_entry["peripheral"]
         source = reg_entry["file"]
-        def row(fate: str, reason: str, indices=None):
-            rows.append({
+        def row(fate: str, reason: str, indices=None, **extra):
+            # `kind`/`kinds` carry the grammar-v2 kind(s) STRUCTURALLY, so
+            # accounting never has to parse the human-readable reason string.
+            r = {
                 "file": source, "peripheral": peripheral,
                 "register": reg_entry["register"], "fate": fate,
                 "reason": reason,
                 "constraints": indices if indices is not None else [],
-            })
+            }
+            r.update(extra)
+            rows.append(r)
 
         for c in reg_entry["constraints"]:
             reasons = sorted({r["reason"] for r in c.get("rejects", [])})
             if reasons:
+                # `kinds` is [] when the constraint failed grammar validation
+                # outright -- there is no parsed kind to report. The tracking
+                # table recovers it from the raw generator output by index.
                 row("rejected_at_collection", ";".join(reasons),
-                    [c.get("v2_index", c.get("v1_index"))])
+                    [c.get("v2_index", c.get("v1_index"))],
+                    kind=(c.get("kinds") or [""])[0])
 
         # Collection already emits ONLY the accepted, linted grammar-v2 gates in
         # access_constraints_v2 (rejects/duplicates are not appended), so
@@ -119,7 +136,8 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
                 why = ("no codegen emitter yet"
                        if g.get("kind") not in rust_codegen.SUPPORTED_KINDS
                        else "codegen disabled for this kind")
-                row("kind_not_emitted", f"{g.get('kind')}: {why}")
+                row("kind_not_emitted", f"{g.get('kind')}: {why}",
+                    kind=g.get("kind", ""))
 
         # Constraint-validator gate (opt-in): keep only constraints the judge
         # confirmed AND that are witness-enforceable (enforcement == "enforce"),
@@ -132,7 +150,9 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
                 if decision == "enforce":
                     kept.append(g)
                 else:
-                    row("gated_out_by_validator", f"{g.get('kind')}: {decision or 'not_in_validated'}")
+                    row("gated_out_by_validator",
+                        f"{g.get('kind')}: {decision or 'not_in_validated'}",
+                        kind=g.get("kind", ""), decision=decision or "not_in_validated")
             gates = kept
         for g in gates:
             g.pop("enforceability", None)
@@ -140,7 +160,8 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
             continue
         if not (device_dir / f"{peripheral}.rs").is_file():
             row("peripheral_not_in_device",
-                f"{peripheral}.rs absent from {device_dir.name}")
+                f"{peripheral}.rs absent from {device_dir.name}",
+                kinds=_kind_counts(gates))
             continue
 
         # Rebuild a RegisterInfo holding ONLY the accepted state gates and offer
@@ -153,10 +174,10 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
                 field_level_gating=field_level_gating,
                 disabled_kinds=disabled_kinds)
         except NotImplementedError as e:
-            row("unsupported_by_emitter", str(e))
+            row("unsupported_by_emitter", str(e), kinds=_kind_counts(gates))
             continue
         except ValueError as e:
-            row("emitter_rejected", str(e))
+            row("emitter_rejected", str(e), kinds=_kind_counts(gates))
             continue
         plans.append(plan)
         # Record enforcement granularity: whole-register gated ops and, when
@@ -164,7 +185,7 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
         detail = f"gates: {sorted(op for _, _, op in plan.gated_ops())}"
         if plan.field_gates:
             detail += f"; field_gates: {sorted(plan.field_gates)}"
-        row("planned", detail)
+        row("planned", detail, kinds=_kind_counts(gates))
 
     return plans, rows
 
