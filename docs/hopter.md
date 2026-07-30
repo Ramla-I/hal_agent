@@ -134,3 +134,56 @@ real answer for all 9 HAL-using examples.
 of it that would benefit most from register constraints — the vector table it
 hand-copied from the stm32f4 crate, its interrupt plumbing — are outside the
 reach of this technique as currently scoped.
+
+
+---
+
+## Would an earlier extraction have caught Hopter?
+
+Short answer: **yes, and it would have been wrong.**
+
+`applications/pac_codegen/constraints/stm32f103.json` preserves an earlier
+RM0008 run, which gated **TIM1/CR1 and TIM2/CR1** as a *whole-register* gate:
+
+```
+tim2/CR1   gated = [write, modify]
+           preconditions: CEN cleared, CMS == 0x0
+           quote: "It is not allowed to switch from edge-aligned mode to
+                   center-aligned mode as long as the counter is enabled (CEN=1)"
+```
+
+Hopter's `examples/tests/debug/cpu_load/load_40_percent.rs` modifies TIM5's
+CR1 **eight times** — `w.cen().bit(false)`, `w.urs().set_bit()`,
+`w.cen().bit(true)`, and so on. And on stm32f1, `pub type TIM5 =
+crate::Periph<tim2::RegisterBlock, 0x4000_0c00>` — TIM5 *is* TIM2's register
+block, so the gate covers it exactly. All eight sites would have failed to
+compile, in Hopter's own file.
+
+**But that would have been a false positive.** The datasheet rule is about
+*switching the counter alignment mode* — the CMS field. Hopter never touches
+CMS; it toggles CEN and URS. A whole-register gate over-approximates the rule
+into "you may not touch CR1 at all while the counter runs", which the manual
+does not say.
+
+The current extraction gets this right. RM0383 — **stm32f411, a chip Hopter
+actually supports** — extracts the same sentence as a *field-scoped*
+constraint on `CMS` only, and therefore correctly does **not** flag Hopter.
+That is the grammar-v2 `target_fields` mechanism doing its job, and it is a
+precision improvement worth stating plainly: the newer pipeline avoids a false
+positive the older one would have raised against a real OS.
+
+### Two genuine defects the comparison surfaced
+
+**1. A correct register name is rejected; a placeholder one is not.**
+`tim5_cr1` carries `datasheet_register_abbreviation: TIM5_CR1` and is thrown
+out by the stage-0 lint as `unresolvable_in_svd` — even though TIM5 and its
+CEN field are both present in `stm32f411.svd`. The lint looks up the
+peripheral-prefixed name verbatim instead of stripping the prefix. Meanwhile
+`tim2_cr1`'s `TIMx_CR1` — a *less* correct, placeholder-shaped name — passes.
+That is backwards, and it silently loses a genuine constraint.
+
+**2. Three surviving TIM CR1 gates are unenforced by default.** With
+`--field-level-gating` (opt-in, off), `tim2/cr1`, `tim3/cr1` and `tim8/cr1`
+become field gates on `cms`; without it they are dropped as "no enforceable
+constraints". So on stm32f411 the correct, precise version of this rule exists
+in the pipeline and is simply not switched on.
