@@ -39,11 +39,17 @@ def _steps(rm: str, run: int, chunks: str):
         # path does not resolve the openevolve method (crashes). Step 5 (bug-finding
         # -> structure_review.csv) and Step 6 (chained constraint validation ->
         # validated.jsonl) run fine on openevolve.
+        # (name, cmd, timeout_s, fatal). s0/review produce the deliverables and are
+        # fatal. s6 only adds the ADVISORY validator_verdict column — on the biggest
+        # datasheets its openevolve-retrieval index build is pathologically slow
+        # (CPU-bound, 60min+), so it is timeout-bounded and NON-fatal: the RM still
+        # counts (structure_review + constraints already exist); those candidates
+        # just keep a blank validator_verdict.
         ("s0", [py, "core/s0_run_full_analysis.py", "--devices", rm,
                 "--retrieval", "openevolve", "--skip-validator", "--constraint-validation",
-                "--constraint-chunks-root", chunks, "--constraint-batch-size", "8"]),
-        ("review", [py, "core/constraints_review.py", "--rm", rm, "--run", str(run)]),
-        ("s6", [py, "core/s6_validate_candidates.py", "--devices", rm, "--run", str(run)]),
+                "--constraint-chunks-root", chunks, "--constraint-batch-size", "8"], None, True),
+        ("review", [py, "core/constraints_review.py", "--rm", rm, "--run", str(run)], 600, True),
+        ("s6", [py, "core/s6_validate_candidates.py", "--devices", rm, "--run", str(run)], 2700, False),
     ]
 
 
@@ -52,20 +58,28 @@ def _run_rm(rm: str, run: int, chunks: str, force: bool) -> dict:
         return {"rm": rm, "status": "skipped_done"}
     os.makedirs(_LOG_DIR, exist_ok=True)
     log = os.path.join(_LOG_DIR, f"{rm}.log")
+    warnings = []
     with open(log, "w") as lf:
-        for name, cmd in _steps(rm, run, chunks):
+        for name, cmd, timeout, fatal in _steps(rm, run, chunks):
             lf.write(f"\n==== {name} :: {' '.join(cmd)}\n")
             lf.flush()
             t0 = time.time()
-            rc = subprocess.call(cmd, cwd=_REPO, stdout=lf, stderr=subprocess.STDOUT)
+            try:
+                rc = subprocess.run(cmd, cwd=_REPO, stdout=lf, stderr=subprocess.STDOUT,
+                                    timeout=timeout, start_new_session=True).returncode
+            except subprocess.TimeoutExpired:
+                rc = 124
+                lf.write(f"---- {name} TIMEOUT after {timeout}s\n")
             lf.write(f"---- {name} rc={rc} ({time.time() - t0:.0f}s)\n")
             lf.flush()
             if rc != 0:
-                return {"rm": rm, "status": "fail", "step": name, "rc": rc}
+                if fatal:
+                    return {"rm": rm, "status": "fail", "step": name, "rc": rc}
+                warnings.append(f"{name}:rc={rc}")  # non-fatal (e.g. s6 timeout): keep going
     os.makedirs(os.path.dirname(_marker(rm, run)), exist_ok=True)
     with open(_marker(rm, run), "w") as f:
         f.write("ok\n")
-    return {"rm": rm, "status": "ok"}
+    return {"rm": rm, "status": "ok", **({"warnings": warnings} if warnings else {})}
 
 
 def main() -> None:
