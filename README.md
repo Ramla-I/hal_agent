@@ -11,6 +11,24 @@ The project implements a multi-stage pipeline:
 3. **Validator (S4)** — Classifies extracted invariants against the datasheet using an LLM agent
 4. **Analyzer (S5)** — Filters irrelevant differences between agent output and SVD files
 
+## Getting the Code
+
+This repo uses git submodules (including the **private** `verified_datasheet/`
+repo of verified ground-truth CSVs, which the pipeline and tests depend on).
+Clone with submodules, or initialize them after cloning:
+
+```bash
+# Fresh clone with all submodules
+git clone --recurse-submodules https://github.com/Ramla-I/hal_agent.git
+
+# Already cloned? Initialize/update submodules
+git submodule update --init --recursive
+```
+
+> Fetching the `verified_datasheet` submodule requires access to the private
+> `Ramla-I/verified_datasheets` repo. Without it, that folder stays empty and
+> pipeline/optimization steps that read the verified CSVs will fail.
+
 ## Prerequisites
 
 ```bash
