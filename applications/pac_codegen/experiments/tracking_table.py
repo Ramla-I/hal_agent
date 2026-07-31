@@ -700,10 +700,17 @@ _STAGES = [
      "The manual covers a chip family; this peripheral is genuinely not on the "
      "chip injected. Instances that merely share another instance's "
      "register-block module are resolved, not dropped."),
-    ("emitter_rejected", "emitter",
-     "Nothing enforceable left after kind filtering, a field name that is not "
-     "an SVD identifier, a self-defeating same-register read gate, or "
-     "OR-values the emitter cannot express as one check."),
+    ("field_gating_disabled", "switched-off feature",
+     "Every constraint on the register applies to a named FIELD rather than "
+     "the whole register, and field-level gating is off by default \u2014 "
+     "gating the whole register would demand the precondition for writes to "
+     "unrelated fields. The emitter builds these fine with "
+     "--field-level-gating; this is a policy default, not a codegen gap."),
+    ("emitter_rejected", "emitter cannot express it",
+     "A shape the emitter genuinely cannot translate: a field name that is "
+     "not an SVD identifier (empty, a bit range, a wildcard), OR-values it "
+     "cannot express as one check, a self-defeating same-register read gate, "
+     "or a cross-register source it cannot resolve to a module."),
     ("instance_conflict_dropped", "instance conflict",
      "Peripheral instances share one Rust type and disagreed on the gate for "
      "it \u2014 two readings of one datasheet sentence with no way to tell "

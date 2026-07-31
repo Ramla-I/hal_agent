@@ -186,6 +186,12 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
                 field_level_gating=field_level_gating,
                 disabled_kinds=disabled_kinds)
             plan.source_instance = peripheral
+        except rust_codegen.FieldGatingDisabled as e:
+            # A switched-off feature, not a codegen gap -- kept separate so the
+            # emitter's real limits are readable. (Subclasses ValueError, so it
+            # must be caught before the generic handler below.)
+            row("field_gating_disabled", str(e), kinds=_kind_counts(gates))
+            continue
         except NotImplementedError as e:
             row("unsupported_by_emitter", str(e), kinds=_kind_counts(gates))
             continue

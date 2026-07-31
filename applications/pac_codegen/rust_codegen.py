@@ -289,6 +289,20 @@ def enabled_kinds(disabled=None) -> frozenset:
     return SUPPORTED_KINDS - frozenset(disabled or ())
 
 
+class FieldGatingDisabled(ValueError):
+    """Every constraint on this register was field-scoped and field-level
+    gating is off, so nothing was emitted.
+
+    NOT an emitter limitation, which is why it is distinguishable: the
+    emitter builds these gates perfectly well with ``field_level_gating=True``
+    (CLI ``--field-level-gating``). It is switched off by DEFAULT because
+    gating a whole register for a rule about one of its fields would demand
+    the precondition for writes to unrelated fields. Reporting it as
+    "emitter_rejected" made a policy default read as a codegen gap -- and it
+    is the single largest such bucket in the corpus.
+    """
+
+
 class RegisterPlan:
     """Everything the emitter needs for one constrained register."""
 
@@ -320,6 +334,9 @@ class RegisterPlan:
         self.field_gates: dict[str, FieldGate] = {}
         # Kinds this plan will emit (all supported kinds minus any disabled).
         self._enabled_kinds = enabled_kinds(disabled_kinds)
+        # Constraints skipped ONLY because field-level gating is off; they
+        # would have produced field gates with it on.
+        self._skipped_field_scoped = 0
 
         for c in register_info.access_constraints_v2:
             if c.kind not in self._enabled_kinds:
@@ -335,6 +352,12 @@ class RegisterPlan:
             getattr(self, f"_emit_{c.kind}")(c, peripheral, field_level_gating)
 
         if not self.preconditions and not self.field_gates:
+            if self._skipped_field_scoped:
+                raise FieldGatingDisabled(
+                    f"{self.reg_name}: {self._skipped_field_scoped} "
+                    "field-scoped constraint(s) skipped because field-level "
+                    "gating is disabled; nothing left to gate "
+                    "(enable with --field-level-gating)")
             raise ValueError(f"{self.reg_name}: no enforceable constraints")
 
     def _emit_state_gate(self, c, peripheral: str,
@@ -356,6 +379,7 @@ class RegisterPlan:
                     f"disabled; this constraint is NOT enforced.",
                     file=sys.stderr,
                 )
+                self._skipped_field_scoped += 1
                 return
             self._add_field_gate(c, peripheral)
             return
