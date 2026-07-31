@@ -69,7 +69,8 @@ KINDS = ["state_gate", "sequence", "write_once", "clock_gate", "delay",
 # Which sweep result files to merge (later files win per (rm, consumer)).
 SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                "sweep_opsel.json", "sweep_alias.json",
-               "sweep_conflict.json", "sweep_new.json"]
+               "sweep_conflict.json", "sweep_new.json",
+               "sweep_full.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
