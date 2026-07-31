@@ -52,6 +52,21 @@ generator  ->  collection lint  ->  judge  ->  emitter + device prune
   device-level prune. Every other kind is accounted for under
   `where the rest went`, with the stage that dropped it.
 
+## The kinds of constraint
+
+What the grammar can express. Only `state_gate` has a code
+generator today; the rest are extracted and recorded, and appear
+under *where the rest went* as `kind_not_emitted`.
+
+- **`state_gate`** — You may only touch this register while some other bit is in the right state — “only write CR1 while the STOP bit is clear”. The workhorse kind, and the only one with a code generator today.
+- **`sequence`** — Several steps that must happen in a fixed order — write 0xCA to the key register, then 0x53. Doing them out of order does not work.
+- **`write_once`** — A lock bit you may set only once after reset. A second write is silently ignored by the hardware, so it has to be caught.
+- **`clock_gate`** — The peripheral’s clock must be switched on before any of its registers respond. Applies to the whole peripheral, not one register.
+- **`delay`** — You must wait — some clock cycles or microseconds — after one access before the next one is valid.
+- **`read_effect`** — Reading the register changes something: it clears a flag, or pops a byte. Not a rule to enforce, but it tells us a check-by-reading would disturb the very state it is checking.
+- **`value_relation`** — Two fields must agree with each other or with the outside world — “CR2.FREQ must equal the APB1 clock frequency”. Documented, not enforceable.
+- **`other`** — A genuine access rule that fits none of the shapes above. Recorded so it is not lost, never turned into a gate.
+
 ## Extraction → enforcement
 
 | RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | of which via instance alias | registers gated | PAC still compiles |

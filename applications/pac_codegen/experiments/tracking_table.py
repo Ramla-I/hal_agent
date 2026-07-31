@@ -417,6 +417,14 @@ def main() -> None:
           "  device-level prune. Every other kind is accounted for under",
           "  `where the rest went`, with the stage that dropped it.",
           "",
+          "## The kinds of constraint",
+          "",
+          "What the grammar can express. Only `state_gate` has a code",
+          "generator today; the rest are extracted and recorded, and appear",
+          "under *where the rest went* as `kind_not_emitted`.",
+          ""]
+    md += [f"- **`{k}`** — {d}" for k, d in _KIND_DEFS]
+    md += ["",
           "## Extraction → enforcement",
           "",
           "| RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | of which via instance alias | registers gated | PAC still compiles |",
@@ -609,6 +617,40 @@ def _kinds_html(s: str) -> str:
     return "".join(out)
 
 
+# What each grammar-v2 kind means, in plain terms, in the order they appear in
+# the breakdowns. Only `state_gate` has a code emitter today; the rest are
+# listed so a kind breakdown reads without opening the grammar spec.
+_KIND_DEFS = [
+    ("state_gate",
+     "You may only touch this register while some other bit is in the right "
+     "state \u2014 \u201conly write CR1 while the STOP bit is clear\u201d. "
+     "The workhorse kind, and the only one with a code generator today."),
+    ("sequence",
+     "Several steps that must happen in a fixed order \u2014 write 0xCA to "
+     "the key register, then 0x53. Doing them out of order does not work."),
+    ("write_once",
+     "A lock bit you may set only once after reset. A second write is "
+     "silently ignored by the hardware, so it has to be caught."),
+    ("clock_gate",
+     "The peripheral\u2019s clock must be switched on before any of its "
+     "registers respond. Applies to the whole peripheral, not one register."),
+    ("delay",
+     "You must wait \u2014 some clock cycles or microseconds \u2014 after "
+     "one access before the next one is valid."),
+    ("read_effect",
+     "Reading the register changes something: it clears a flag, or pops a "
+     "byte. Not a rule to enforce, but it tells us a check-by-reading would "
+     "disturb the very state it is checking."),
+    ("value_relation",
+     "Two fields must agree with each other or with the outside world "
+     "\u2014 \u201cCR2.FREQ must equal the APB1 clock frequency\u201d. "
+     "Documented, not enforceable."),
+    ("other",
+     "A genuine access rule that fits none of the shapes above. Recorded so "
+     "it is not lost, never turned into a gate."),
+]
+
+
 # What each fate means, IN THE ORDER A CONSTRAINT MEETS THEM -- the same order
 # inject_from_run applies them: collection lint -> emitter-kind filter ->
 # validator gate -> instance/module resolution -> emitter -> instance-collision
@@ -705,6 +747,18 @@ def write_html(rows: list, path: Path) -> None:
     h += ["</div></section>"]
 
     # --- table 1 -----------------------------------------------------------
+    h += ['<section><h2>The kinds of constraint</h2>',
+          '<p class="note">What the grammar can express. Only '
+          '<code>state_gate</code> has a code generator today \u2014 the rest '
+          'are extracted and recorded, and show up under '
+          '<em>where the rest went</em> as <code>kind_not_emitted</code>.</p>',
+          '<div class="scroll"><table><thead><tr><th class="pin">kind</th>'
+          '<th>what it means</th></tr></thead><tbody>']
+    for kind, desc in _KIND_DEFS:
+        h.append(f'<tr><td class="pin">{_esc(kind)}</td>'
+                 f'<td class="wide">{_esc(desc)}</td></tr>')
+    h += ["</tbody></table></div></section>"]
+
     h += ['<section><h2>Extraction → enforcement</h2>',
           '<p class="note">Columns are pipeline stages with <em>different</em> '
           'denominators: <code>found</code> is raw generator output; '

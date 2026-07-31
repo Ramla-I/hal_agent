@@ -129,6 +129,18 @@ a{color:var(--accent)}
 <div class="stat"><span class="k">driver enforcement hits</span><span class="v">328</span></div>
 <div class="stat"><span class="k">collateral errors</span><span class="v">0</span></div>
 </div></section>
+<section><h2>The kinds of constraint</h2>
+<p class="note">What the grammar can express. Only <code>state_gate</code> has a code generator today — the rest are extracted and recorded, and show up under <em>where the rest went</em> as <code>kind_not_emitted</code>.</p>
+<div class="scroll"><table><thead><tr><th class="pin">kind</th><th>what it means</th></tr></thead><tbody>
+<tr><td class="pin">state_gate</td><td class="wide">You may only touch this register while some other bit is in the right state — “only write CR1 while the STOP bit is clear”. The workhorse kind, and the only one with a code generator today.</td></tr>
+<tr><td class="pin">sequence</td><td class="wide">Several steps that must happen in a fixed order — write 0xCA to the key register, then 0x53. Doing them out of order does not work.</td></tr>
+<tr><td class="pin">write_once</td><td class="wide">A lock bit you may set only once after reset. A second write is silently ignored by the hardware, so it has to be caught.</td></tr>
+<tr><td class="pin">clock_gate</td><td class="wide">The peripheral’s clock must be switched on before any of its registers respond. Applies to the whole peripheral, not one register.</td></tr>
+<tr><td class="pin">delay</td><td class="wide">You must wait — some clock cycles or microseconds — after one access before the next one is valid.</td></tr>
+<tr><td class="pin">read_effect</td><td class="wide">Reading the register changes something: it clears a flag, or pops a byte. Not a rule to enforce, but it tells us a check-by-reading would disturb the very state it is checking.</td></tr>
+<tr><td class="pin">value_relation</td><td class="wide">Two fields must agree with each other or with the outside world — “CR2.FREQ must equal the APB1 clock frequency”. Documented, not enforceable.</td></tr>
+<tr><td class="pin">other</td><td class="wide">A genuine access rule that fits none of the shapes above. Recorded so it is not lost, never turned into a gate.</td></tr>
+</tbody></table></div></section>
 <section><h2>Extraction → enforcement</h2>
 <p class="note">Columns are pipeline stages with <em>different</em> denominators: <code>found</code> is raw generator output; <code>validator: enforce</code> counts only what survived the stage-0 collection lint. <span class="hint">— scroll →</span></p>
 <div class="scroll"><table><thead><tr>
