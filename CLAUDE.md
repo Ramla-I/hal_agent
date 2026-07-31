@@ -98,6 +98,12 @@ specified in **`docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`**. Key pieces:
 
 ### Setup
 ```bash
+# Initialize submodules (required) — includes the PRIVATE verified_datasheet/
+# repo of verified ground-truth CSVs that the pipeline, optimization sweeps,
+# and tests read. Without it that folder is empty and those steps fail.
+# Needs access to Ramla-I/verified_datasheets.
+git submodule update --init --recursive   # or clone with --recurse-submodules
+
 # Set environment variables (required)
 export OPENAI_API_KEY="your-key-here"
 export GROQ_API_KEY="your-key-here"  # if using Groq models
