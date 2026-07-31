@@ -74,7 +74,14 @@ ripples: methods like `handle_dma_interrupt(&mut self)` — declared with no
 bounds at all, implemented for concrete DMA/serial combinations — acquire a
 requirement that then has to be threaded through their own callers.
 
-**This corrects an earlier estimate.** Applying rustc's suggestions to a leaf
+**Superseded — see [`generic_friction.md`](generic_friction.md) §5.** Putting
+the bound on the trait's *associated type* rather than on each method clears
+all friction in **4 one-line edits with no cascade at all**. The costs below
+are what happens when rustc's per-method suggestions are applied verbatim,
+which is the wrong place for the bound. The 31 constraint violations above are
+unaffected — they are true enforcement, not friction.
+
+**This corrected an earlier estimate.** Applying rustc's suggestions to a leaf
 crate converged in 42–57 edits, which made "declare the bound" look purely
 mechanical. On the full HAL it is not: the bounds reach trait definitions, and
 from there the change is **semver-breaking and requires human judgement about

@@ -165,32 +165,59 @@ Both are changes to the *driver*, not to us. Rust offers no flag and no codegen
 trick that would let the chip crate resolve a bound for an unresolved
 associated type.
 
-### Option A — declare the bound
+### Option A — declare the bound (on the ASSOCIATED TYPE, not the method)
 
-Add what the compiler asks for:
+**Where the bound goes decides whether this is trivial or a rewrite.**
+
+rustc's own suggestion puts it on the *method* that trips:
 
 ```rust
 fn read_u16(&self) -> nb::Result<u16, Error>
 where <Self as UartRB>::SRrs: UnconstrainedRead { … }
 ```
 
-Measured by applying rustc's own machine-applicable suggestions and iterating
-(experiment B):
+Applying those suggestions mechanically and iterating (experiment B) *works*
+but is horrible: 42 edits for stm32f4xx-hal, 57 for stm32f1xx-hal, and the
+bounds **cascade** — each generic function that gains one forces its generic
+callers to declare it too, and an impl may not be stricter than its trait
+(E0276), so the bound has to be threaded into trait declarations anyway,
+one method at a time.
 
-| driver | round 1 | round 2 | round 3 | edits |
-|---|---|---|---|---|
-| stm32f4xx-hal | 14 | 30 | 0 witness errors | 42 |
-| stm32f1xx-hal | 27 | 37 | 0 witness errors | 57 |
+Put it where the associated type is *declared* instead, and the whole problem
+disappears:
 
-It reaches zero, but **the bounds cascade**: every generic function that gains
-one forces its generic callers to declare it too, which is why round 2 has more
-errors than round 1. Forty-two to fifty-seven edits, spreading into public
-signatures.
+```rust
+pub trait UartRB: Sealed {
+    type SRrs: reg::SrR + reg::SrW + UnconstrainedRead + UnconstrainedWrite;
+    fn sr(&self) -> &Reg<Self::SRrs>;
+    …
+}
+```
 
-- **For:** smallest diff; preserves the driver's design; purely additive.
-- **Against:** viral — it propagates through the public API, so it is a
-  semver-relevant change, and it puts our trait name in their signatures,
-  coupling them to us.
+Measured (experiment D) on stm32f4xx-hal 0.23 against an injected stm32f411:
+
+| approach | edits | friction after | cascade |
+|---|---|---|---|
+| bound on each method (rustc's suggestion) | 42 | 0, but 20 residual errors | yes — E0276 into traits |
+| **bound on the associated type** | **4** | **0** | **none** |
+
+Four lines, in one file (`src/pacext/`). Nothing cascades, because:
+
+- the bound lives *in* the trait, so no impl is ever stricter than its trait;
+- every default method body inherits it — no per-method `where` clauses;
+- callers need nothing, because the trait already guarantees it.
+
+The 32 errors that remain are all **true enforcement** — concrete registers the
+HAL really does write without establishing the precondition. Not one is a
+projection type.
+
+- **For:** four one-line changes; no cascade; no caller churn; the driver's
+  design is untouched.
+- **Against:** it is still a public API change — the trait now demands its
+  implementors' registers be unconstrained, so if a future chip *does*
+  constrain a UART status register, that implementor stops compiling. That is
+  arguably the correct outcome (the driver would then have to handle it), but
+  it is a real semantic commitment, and semver-relevant.
 
 ### Option B — write the code concretely
 
@@ -225,11 +252,17 @@ a crate they did not write.
 
 ### Which to propose
 
-Neither is ours to land, and the choice belongs to each driver's maintainers.
-If we were opening the PR: **Option A for stm32f1xx-hal and stm32f4xx-hal**,
-because it is mechanical, reviewable, and the compiler writes most of it —
-with the caveat that it is an API change. Option B is the better end state but
-is a refactor we would be asking someone else to accept on our behalf.
+**Option A, with the bound on the associated type.** It is four lines in one
+file, reviewable in a single sitting, and it cascades into nothing. That is a
+plausible upstream PR rather than a project. Option B (concrete per-chip code)
+remains the better end state — it needs no API change at all — but it is a
+refactor we would be asking someone else to accept on our behalf.
+
+Note this corrects an earlier reading of experiment B. Applying rustc's
+suggestions verbatim made Option A look like a maintainer-led API revision;
+the suggestions are simply pointed at the wrong place. The compiler reports
+the error where the bound is *used*, and the fix belongs where the type is
+*declared*.
 
 The honest framing for the paper: friction is a **one-time, fixed cost paid
 only by trait-generic driver code**, it is quantified (8 and 13 errors after
