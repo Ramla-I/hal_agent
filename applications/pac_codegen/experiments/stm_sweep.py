@@ -122,6 +122,26 @@ TARGETS = [
         Consumer("stm32f4xx-hal", "0.23.0", ["stm32f469"]), _hal2("f469")]),
     Target("rm0390", "stm32f4", "stm32f446", "stm32f446.svd", [
         Consumer("stm32f4xx-hal", "0.23.0", ["stm32f446"]), _hal2("f446")]),
+    Target("rm0394", "stm32l4", "stm32l412", "stm32l412.svd", [_hal2("l412")]),
+    Target("rm0401", "stm32f4", "stm32f410", "stm32f410.svd", [
+        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f410"]), _hal2("f410")]),
+    Target("rm0402", "stm32f4", "stm32f412", "stm32f412.svd", [
+        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f412"]), _hal2("f412")]),
+    # stm32f7 has no crates.io consumer on PAC 0.16 at any version.
+    Target("rm0410", "stm32f7", "stm32f767", "stm32f767.svd"),
+    Target("rm0430", "stm32f4", "stm32f413", "stm32f413.svd", [
+        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f413"]), _hal2("f413")]),
+    Target("rm0431", "stm32f7", "stm32f722", "stm32f722.svd"),
+    Target("rm0434", "stm32wb", "stm32wb55", "stm32wb55.svd", [_hal2("wb55")]),
+    Target("rm0444", "stm32g0", "stm32g071", "stm32g071.svd", [_hal2("g071")]),
+    # stm32l0 has no crates.io consumer on PAC 0.16 at any version.
+    Target("rm0451", "stm32l0", "stm32l0x0", "stm32l0x0.svd"),
+    Target("rm0454", "stm32g0", "stm32g070", "stm32g070.svd", [_hal2("g070")]),
+    Target("rm0490", "stm32c0", "stm32c031", "stm32c031.svd", [_hal2("c031")]),
+    # rm0493 (STM32WBA5x) and rm0505 (STM32WB09) have NO device module in
+    # stm32wb 0.16.0 -- the crate ships only stm32wb55 -- so they cannot be
+    # injected. Their constraints are extracted and validated, and will land
+    # here as soon as a PAC covers those chips.
 ]
 
 

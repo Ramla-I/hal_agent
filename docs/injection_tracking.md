@@ -88,32 +88,59 @@ under *where the rest went* as `kind_not_emitted`.
 | rm0385 | stm32f746 | stm32f7 0.16.0 | 142 | state_gate=115, sequence=13, delay=3, read_effect=4, other=7 | 66 | state_gate=64, sequence=2 | **31** | state_gate=31 | 11 | 20 | PASS |
 | rm0386 | stm32f469 | stm32f4 0.16.0 | 268 | state_gate=227, sequence=14, write_once=1, delay=1, read_effect=5, value_relation=7, other=13 | 125 | state_gate=118, sequence=7 | **21** | state_gate=21 | 2 | 20 | PASS |
 | rm0390 | stm32f446 | stm32f4 0.16.0 | 76 | state_gate=54, sequence=11, write_once=1, delay=2, read_effect=4, value_relation=2, other=2 | 37 | state_gate=31, sequence=4, delay=2 | **18** | state_gate=18 | 1 | 16 | PASS |
+| rm0394 | stm32l412 | stm32l4 0.16.0 | 157 | state_gate=131, sequence=10, write_once=1, delay=1, read_effect=1, value_relation=8, other=5 | 76 | state_gate=72, sequence=3, write_once=1 | **40** | state_gate=40 | 17 | 30 | — |
+| rm0401 | stm32f410 | stm32f4 0.16.0 | 67 | state_gate=48, sequence=9, delay=2, value_relation=6, other=2 | 33 | state_gate=29, sequence=4 | **12** | state_gate=12 | 2 | 10 | — |
+| rm0402 | stm32f412 | stm32f4 0.16.0 | 87 | state_gate=62, sequence=10, delay=3, read_effect=1, value_relation=8, other=3 | 39 | state_gate=36, sequence=3 | **20** | state_gate=20 | 3 | 17 | — |
+| rm0410 | stm32f767 | stm32f7 0.16.0 | 325 | state_gate=273, sequence=20, delay=3, read_effect=15, value_relation=2, other=12 | 161 | state_gate=150, sequence=11 | **28** | state_gate=28 | 8 | 22 | — |
+| rm0430 | stm32f413 | stm32f4 0.16.0 | 237 | state_gate=194, sequence=24, delay=6, read_effect=4, value_relation=3, other=6 | 109 | state_gate=103, sequence=6 | **55** | state_gate=55 | 5 | 48 | — |
+| rm0431 | stm32f722 | stm32f7 0.16.0 | 138 | state_gate=124, sequence=9, write_once=1, delay=2, read_effect=1, other=1 | 79 | state_gate=77, sequence=2 | **35** | state_gate=35 | 9 | 27 | — |
+| rm0434 | stm32wb55 | stm32wb 0.16.0 | 258 | state_gate=212, sequence=17, write_once=2, delay=1, value_relation=12, other=14 | 149 | state_gate=142, sequence=6, write_once=1 | **67** | state_gate=67 | 6 | 59 | — |
+| rm0444 | stm32g071 | stm32g0 0.16.0 | 165 | state_gate=135, sequence=18, delay=3, read_effect=1, value_relation=1, other=7 | 94 | state_gate=82, sequence=12 | **32** | state_gate=32 | 14 | 19 | — |
+| rm0451 | stm32l0x0 | stm32l0 0.16.0 | 65 | state_gate=46, sequence=8, write_once=2, delay=1, read_effect=3, value_relation=2, other=3 | 27 | state_gate=23, sequence=2, write_once=2 | **12** | state_gate=12 | 0 | 12 | — |
+| rm0454 | stm32g070 | stm32g0 0.16.0 | 97 | state_gate=82, sequence=4, clock_gate=1, value_relation=1, other=9 | 44 | state_gate=43, sequence=1 | **22** | state_gate=22 | 9 | 14 | — |
+| rm0490 | stm32c031 | stm32c0 0.16.0 | 126 | state_gate=110, sequence=3, delay=1, read_effect=2, value_relation=4, other=6 | 88 | state_gate=87, sequence=1 | **17** | state_gate=17 | 5 | 9 | — |
 
-## Compilation against real HAL crates
+## What each PAC enforces, and what could be compiled against it
 
-| RM | device | HAL crate | baseline vs pristine PAC | true enforcement errors | generic friction | other errors | enforcement sites | note (why no HAL) |
-|---|---|---|---|---|---|---|---|---|
-| rm0008 | stm32f103 | stm32f1xx-hal 0.11.0 | PASS | 5 | 13 | 0 | src/rtc.rs | — |
-| rm0033 | stm32f215 | — | — | — | — | — | — | no HAL crate exists for stm32f2 at any PAC version, and nothing else on crates.io depends on it |
-| rm0038 | stm32l151 | — | — | — | — | — | — | stm32l1xx-hal 0.1.0 needs PAC 0.5.0; forced onto 0.16 it fails with 666 errors (569x E0616) - a port, not a version bump; no other crates.io consumer of stm32l1 is on 0.16 either |
-| rm0091 | stm32f0x1 | — | — | — | — | — | — | stm32f0xx-hal 0.18.0 needs PAC 0.14.0; forced onto 0.16 it fails with 446 errors (408x E0616) - a port, not a version bump; no other crates.io consumer of stm32f0 is on 0.16 either |
-| rm0313 | stm32f373 | stm32-hal2 2.1.10 | PASS | 12 | 0 | 0 | src/flash/non_trustzone.rs, src/rtc.rs, src/usart.rs | — |
-| rm0316 | stm32f303 | stm32-hal2 2.1.10 | PASS | 93 | 0 | 0 | src/adc.rs, src/i2c.rs, src/rtc.rs, src/spi/baseline.rs, src/usart.rs | — |
-| rm0360 | stm32f0x0 | — | — | — | — | — | — | stm32f0xx-hal 0.18.0 needs PAC 0.14.0; forced onto 0.16 it fails with 446 errors (408x E0616) - a port, not a version bump; no other crates.io consumer of stm32f0 is on 0.16 either |
-| rm0365 | stm32f302 | stm32-hal2 2.1.10 | PASS | 11 | 0 | 0 | src/i2c.rs, src/rtc.rs, src/usart.rs | — |
-| rm0366 | stm32f301 | stm32-hal2 2.1.10 | PASS | 20 | 0 | 0 | src/flash/non_trustzone.rs, src/i2c.rs, src/iwdg.rs, src/usart.rs | — |
-| rm0367 | stm32l0x3 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
-| rm0368 | stm32f401 | stm32f4xx-hal 0.23.0 | PASS | 17 | 8 | 0 | src/i2c.rs, src/rtc.rs, src/spi.rs | — |
-| rm0368 | stm32f401 | stm32-hal2 2.1.10 | PASS | 9 | 0 | 0 | src/i2c_f4.rs, src/rtc.rs, src/spi/baseline.rs | — |
-| rm0376 | stm32l0x2 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
-| rm0377 | stm32l0x1 | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either |
-| rm0383 | stm32f411 | stm32f4xx-hal 0.23.0 | PASS | 32 | 8 | 0 | src/flash.rs, src/i2c.rs, src/rtc.rs, src/spi.rs | — |
-| rm0383 | stm32f411 | stm32-hal2 2.1.10 | PASS | 29 | 0 | 0 | src/flash/non_trustzone.rs, src/i2c_f4.rs, src/rtc.rs, src/spi/baseline.rs | — |
-| rm0385 | stm32f746 | — | — | — | — | — | — | no HAL crate exists for stm32f7 at any PAC version, and nothing else on crates.io depends on it |
-| rm0386 | stm32f469 | stm32f4xx-hal 0.23.0 | PASS | 54 | 14 | 0 | src/dsi.rs, src/i2c.rs, src/i2c/dma.rs, src/qspi.rs, src/spi.rs, src/watchdog.rs | — |
-| rm0386 | stm32f469 | stm32-hal2 2.1.10 | PASS | 7 | 0 | 0 | src/i2c_f4.rs, src/spi/baseline.rs | — |
-| rm0390 | stm32f446 | stm32f4xx-hal 0.23.0 | PASS | 25 | 8 | 0 | src/flash.rs, src/fmpi2c.rs, src/qspi.rs, src/rtc.rs, src/spi.rs | — |
-| rm0390 | stm32f446 | stm32-hal2 2.1.10 | PASS | 14 | 0 | 0 | src/flash/non_trustzone.rs, src/rtc.rs, src/spi/baseline.rs | — |
+EVERY injected chip crate is listed. The gates and the `PAC compiles` check are independent of any driver — injection needs nothing from a HAL. Where no driver crate depends on PAC 0.16, the HAL columns are empty and the note says why; the enforcement is still there.
+
+| RM | device | PAC crate | gates | registers | PAC compiles | HAL crate | baseline | true enforcement | generic friction | other | enforcement sites | note |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| rm0008 | stm32f103 | stm32f1 0.16.0 | **6** | 6 | PASS | stm32f1xx-hal 0.11.0 | PASS | 5 | 13 | 0 | src/rtc.rs | — |
+| rm0033 | stm32f215 | stm32f2 0.16.0 | **10** | 7 | PASS | — | — | — | — | — | — | no HAL crate exists for stm32f2 at any PAC version, and nothing else on crates.io depends on it |
+| rm0038 | stm32l151 | stm32l1 0.16.0 | **14** | 12 | PASS | — | — | — | — | — | — | stm32l1xx-hal 0.1.0 needs PAC 0.5.0; forced onto 0.16 it fails with 666 errors (569x E0616) - a port, not a version bump; no other crates.io consumer of stm32l1 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0091 | stm32f0x1 | stm32f0 0.16.0 | **52** | 19 | PASS | — | — | — | — | — | — | stm32f0xx-hal 0.18.0 needs PAC 0.14.0; forced onto 0.16 it fails with 446 errors (408x E0616) - a port, not a version bump; no other crates.io consumer of stm32f0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0313 | stm32f373 | stm32f3 0.16.0 | **12** | 10 | PASS | stm32-hal2 2.1.10 | PASS | 12 | 0 | 0 | src/flash/non_trustzone.rs, src/rtc.rs, src/usart.rs | — |
+| rm0316 | stm32f303 | stm32f3 0.16.0 | **42** | 20 | PASS | stm32-hal2 2.1.10 | PASS | 93 | 0 | 0 | src/adc.rs, src/i2c.rs, src/rtc.rs, src/spi/baseline.rs, src/usart.rs | — |
+| rm0360 | stm32f0x0 | stm32f0 0.16.0 | **16** | 9 | PASS | — | — | — | — | — | — | stm32f0xx-hal 0.18.0 needs PAC 0.14.0; forced onto 0.16 it fails with 446 errors (408x E0616) - a port, not a version bump; no other crates.io consumer of stm32f0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0365 | stm32f302 | stm32f3 0.16.0 | **29** | 15 | PASS | stm32-hal2 2.1.10 | PASS | 11 | 0 | 0 | src/i2c.rs, src/rtc.rs, src/usart.rs | — |
+| rm0366 | stm32f301 | stm32f3 0.16.0 | **22** | 13 | PASS | stm32-hal2 2.1.10 | PASS | 20 | 0 | 0 | src/flash/non_trustzone.rs, src/i2c.rs, src/iwdg.rs, src/usart.rs | — |
+| rm0367 | stm32l0x3 | stm32l0 0.16.0 | **32** | 26 | PASS | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0368 | stm32f401 | stm32f4 0.16.0 | **12** | 7 | PASS | stm32f4xx-hal 0.23.0 | PASS | 17 | 8 | 0 | src/i2c.rs, src/rtc.rs, src/spi.rs | — |
+| rm0368 | stm32f401 | stm32f4 0.16.0 | **12** | 7 | PASS | stm32-hal2 2.1.10 | PASS | 9 | 0 | 0 | src/i2c_f4.rs, src/rtc.rs, src/spi/baseline.rs | — |
+| rm0376 | stm32l0x2 | stm32l0 0.16.0 | **28** | 21 | PASS | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0377 | stm32l0x1 | stm32l0 0.16.0 | **22** | 19 | PASS | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0383 | stm32f411 | stm32f4 0.16.0 | **14** | 10 | PASS | stm32f4xx-hal 0.23.0 | PASS | 32 | 8 | 0 | src/flash.rs, src/i2c.rs, src/rtc.rs, src/spi.rs | — |
+| rm0383 | stm32f411 | stm32f4 0.16.0 | **14** | 10 | PASS | stm32-hal2 2.1.10 | PASS | 29 | 0 | 0 | src/flash/non_trustzone.rs, src/i2c_f4.rs, src/rtc.rs, src/spi/baseline.rs | — |
+| rm0385 | stm32f746 | stm32f7 0.16.0 | **31** | 20 | PASS | — | — | — | — | — | — | stm32f7xx-hal is on an older PAC; no other crates.io consumer of stm32f7 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0386 | stm32f469 | stm32f4 0.16.0 | **21** | 20 | PASS | stm32f4xx-hal 0.23.0 | PASS | 54 | 14 | 0 | src/dsi.rs, src/i2c.rs, src/i2c/dma.rs, src/qspi.rs, src/spi.rs, src/watchdog.rs | — |
+| rm0386 | stm32f469 | stm32f4 0.16.0 | **21** | 20 | PASS | stm32-hal2 2.1.10 | PASS | 7 | 0 | 0 | src/i2c_f4.rs, src/spi/baseline.rs | — |
+| rm0390 | stm32f446 | stm32f4 0.16.0 | **18** | 16 | PASS | stm32f4xx-hal 0.23.0 | PASS | 25 | 8 | 0 | src/flash.rs, src/fmpi2c.rs, src/qspi.rs, src/rtc.rs, src/spi.rs | — |
+| rm0390 | stm32f446 | stm32f4 0.16.0 | **18** | 16 | PASS | stm32-hal2 2.1.10 | PASS | 14 | 0 | 0 | src/flash/non_trustzone.rs, src/rtc.rs, src/spi/baseline.rs | — |
+| rm0394 | stm32l412 | stm32l4 0.16.0 | **40** | 30 | — | stm32-hal2 2.1.10 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0401 | stm32f410 | stm32f4 0.16.0 | **12** | 10 | — | stm32f4xx-hal 0.23.0 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0401 | stm32f410 | stm32f4 0.16.0 | **12** | 10 | — | stm32-hal2 2.1.10 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0402 | stm32f412 | stm32f4 0.16.0 | **20** | 17 | — | stm32f4xx-hal 0.23.0 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0402 | stm32f412 | stm32f4 0.16.0 | **20** | 17 | — | stm32-hal2 2.1.10 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0410 | stm32f767 | stm32f7 0.16.0 | **28** | 22 | — | — | — | — | — | — | — | stm32f7xx-hal is on an older PAC; no other crates.io consumer of stm32f7 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0430 | stm32f413 | stm32f4 0.16.0 | **55** | 48 | — | stm32f4xx-hal 0.23.0 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0430 | stm32f413 | stm32f4 0.16.0 | **55** | 48 | — | stm32-hal2 2.1.10 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0431 | stm32f722 | stm32f7 0.16.0 | **35** | 27 | — | — | — | — | — | — | — | stm32f7xx-hal is on an older PAC; no other crates.io consumer of stm32f7 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0434 | stm32wb55 | stm32wb 0.16.0 | **67** | 59 | — | stm32-hal2 2.1.10 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0444 | stm32g071 | stm32g0 0.16.0 | **32** | 19 | — | stm32-hal2 2.1.10 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0451 | stm32l0x0 | stm32l0 0.16.0 | **12** | 12 | — | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; no other crates.io consumer of stm32l0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
+| rm0454 | stm32g070 | stm32g0 0.16.0 | **22** | 14 | — | stm32-hal2 2.1.10 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
+| rm0490 | stm32c031 | stm32c0 0.16.0 | **17** | 9 | — | stm32-hal2 2.1.10 | — | — | — | — | — | compile measurement not run yet — a driver crate on PAC 0.16 exists for this family |
 
 ## Where the non-applied constraints went
 
@@ -136,6 +163,17 @@ under *where the rest went* as `kind_not_emitted`.
 | rm0385 | rejected_at_collection: state_gate=26,sequence=1,delay=1,read_effect=3,other=5; kind_not_emitted: sequence=11,delay=2,read_effect=1,other=1; gated_out_by_validator: state_gate=16; peripheral_not_in_device: state_gate=3; emitter_rejected: state_gate=27; pruned_for_device: state_gate=3 |
 | rm0386 | rejected_at_collection: state_gate=71,read_effect=3,value_relation=1,other=13; kind_not_emitted: sequence=14,write_once=1,delay=1,read_effect=2,value_relation=5; gated_out_by_validator: state_gate=27; peripheral_not_in_device: state_gate=10; emitter_rejected: state_gate=14; pruned_for_device: state_gate=54 |
 | rm0390 | rejected_at_collection: state_gate=6,write_once=1,read_effect=2,value_relation=2,other=2; kind_not_emitted: sequence=11,delay=2,read_effect=2; gated_out_by_validator: state_gate=9; peripheral_not_in_device: state_gate=2; emitter_rejected: state_gate=11 |
+| rm0394 | rejected_at_collection: state_gate=22,sequence=4,value_relation=3,other=5; kind_not_emitted: sequence=5,write_once=1,delay=1,read_effect=1,value_relation=1; gated_out_by_validator: state_gate=20; emitter_rejected: state_gate=27; instance_conflict_dropped: state_gate=2; pruned_for_device: state_gate=3 |
+| rm0401 | rejected_at_collection: state_gate=8,sequence=1,delay=1,value_relation=3,other=1; kind_not_emitted: sequence=8,delay=1,value_relation=3,other=1; gated_out_by_validator: state_gate=9; emitter_rejected: state_gate=16; pruned_for_device: state_gate=1 |
+| rm0402 | rejected_at_collection: state_gate=13,sequence=1,read_effect=1,other=2; kind_not_emitted: sequence=9,delay=3,value_relation=8,other=1; gated_out_by_validator: state_gate=13; peripheral_not_in_device: state_gate=1; emitter_rejected: state_gate=15 |
+| rm0410 | rejected_at_collection: state_gate=95,sequence=2,delay=1,read_effect=14,value_relation=2,other=11; kind_not_emitted: sequence=17,delay=1,read_effect=1,other=1; gated_out_by_validator: state_gate=25; peripheral_not_in_device: state_gate=5; emitter_rejected: state_gate=32; pruned_for_device: state_gate=56 |
+| rm0430 | rejected_at_collection: state_gate=61,sequence=8,delay=1,read_effect=4,value_relation=1,other=1; kind_not_emitted: sequence=16,delay=5,value_relation=1,other=1; gated_out_by_validator: state_gate=12; peripheral_not_in_device: state_gate=1; emitter_rejected: state_gate=28; pruned_for_device: state_gate=1 |
+| rm0431 | rejected_at_collection: state_gate=27,sequence=2,read_effect=1; kind_not_emitted: sequence=7,write_once=1,delay=2,other=1; gated_out_by_validator: state_gate=12; peripheral_not_in_device: state_gate=21; emitter_rejected: state_gate=17; pruned_for_device: state_gate=2 |
+| rm0434 | rejected_at_collection: state_gate=89,sequence=1,write_once=1,delay=1,value_relation=12,other=3; kind_not_emitted: sequence=13,write_once=1; gated_out_by_validator: state_gate=16; peripheral_not_in_device: state_gate=20; emitter_rejected: state_gate=10; pruned_for_device: state_gate=2 |
+| rm0444 | rejected_at_collection: state_gate=55,sequence=2,delay=1,read_effect=1,value_relation=1,other=6; kind_not_emitted: sequence=16,delay=2; gated_out_by_validator: state_gate=8; peripheral_not_in_device: state_gate=14; emitter_rejected: state_gate=14 |
+| rm0451 | rejected_at_collection: state_gate=6,sequence=1,read_effect=3,value_relation=1,other=1; kind_not_emitted: sequence=7,write_once=2,delay=1,value_relation=1,other=1; gated_out_by_validator: state_gate=9; emitter_rejected: state_gate=11 |
+| rm0454 | rejected_at_collection: state_gate=18,clock_gate=1,value_relation=1,other=8; kind_not_emitted: sequence=3; gated_out_by_validator: state_gate=15; peripheral_not_in_device: state_gate=9; emitter_rejected: state_gate=11; pruned_for_device: state_gate=1 |
+| rm0490 | rejected_at_collection: state_gate=53,read_effect=2,value_relation=4,other=4; kind_not_emitted: sequence=3; gated_out_by_validator: state_gate=12; peripheral_not_in_device: state_gate=9; emitter_rejected: state_gate=16 |
 
 ---
 

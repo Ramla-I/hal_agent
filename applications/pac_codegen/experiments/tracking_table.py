@@ -240,10 +240,17 @@ def hal_activity(no_network: bool) -> dict:
 # The community HAL each PAC family has, and whether ANY crates.io consumer is
 # on PAC 0.16 (established by the reverse-dependency sweep; see
 # docs/stm_injection_sweep.md §1).
+# The community HAL each family has, or None when none exists at any PAC
+# version. Needed for every family we inject into, not just the measured ones:
+# without an entry the note would claim "no HAL exists" for a family whose HAL
+# merely sits on an older PAC.
 FAMILY_HAL = {
     "stm32f0": "stm32f0xx-hal", "stm32f1": "stm32f1xx-hal",
     "stm32f2": None, "stm32f3": "stm32f3xx-hal", "stm32f4": "stm32f4xx-hal",
-    "stm32l0": "stm32l0xx-hal", "stm32l1": "stm32l1xx-hal",
+    "stm32f7": "stm32f7xx-hal", "stm32l0": "stm32l0xx-hal",
+    "stm32l1": "stm32l1xx-hal", "stm32l4": "stm32l4xx-hal",
+    "stm32g0": "stm32g0xx-hal", "stm32c0": "stm32c0xx-hal",
+    "stm32wb": "stm32wb-hal",
 }
 
 
@@ -255,7 +262,16 @@ def build_note(t, res, gaps, activity) -> str:
         if res.get("baseline") != "PASS":
             return f"baseline against pristine PAC: {res.get('baseline')}"
         return ""
-    hal = FAMILY_HAL.get(t.pac)
+    if t.consumers:
+        # A driver exists and is wired up; the compile sweep just has not
+        # produced a result for it yet. Saying "no HAL" here would be wrong.
+        return ("compile measurement not run yet — a driver crate on PAC 0.16 "
+                "exists for this family")
+    if t.pac not in FAMILY_HAL:
+        return (f"no driver crate on {t.pac} 0.16 — the gates are injected and "
+                "the crate compiles; there is simply nothing third-party to "
+                "compile against")
+    hal = FAMILY_HAL[t.pac]
     if hal is None:
         return (f"no HAL crate exists for {t.pac} at any PAC version, and "
                 "nothing else on crates.io depends on it")
@@ -267,7 +283,9 @@ def build_note(t, res, gaps, activity) -> str:
                 f"({g['top_n']}x {g['top_code']}) - a port, not a version bump"]
     if hal in activity:
         bits.append(f"last upstream commit {activity[hal]}")
-    bits.append(f"no other crates.io consumer of {t.pac} is on 0.16 either")
+    bits.append(f"no other crates.io consumer of {t.pac} is on 0.16 either. "
+                "The gates ARE injected and the crate compiles — only the "
+                "adoption measurement is missing")
     return "; ".join(bits)
 
 
@@ -442,12 +460,21 @@ def main() -> None:
             f"{r['enforced_via_instance_alias']} | "
             f"{r['registers_gated']} | {r['pac_compiles']} |")
 
-    md += ["", "## Compilation against real HAL crates", "",
-           "| RM | device | HAL crate | baseline vs pristine PAC | true enforcement errors | generic friction | other errors | enforcement sites | note (why no HAL) |",
-           "|---|---|---|---|---|---|---|---|---|"]
+    md += ["", "## What each PAC enforces, and what could be compiled against it",
+           "",
+           "EVERY injected chip crate is listed. The gates and the "
+           "`PAC compiles` check are independent of any driver — injection "
+           "needs nothing from a HAL. Where no driver crate depends on PAC "
+           "0.16, the HAL columns are empty and the note says why; the "
+           "enforcement is still there.",
+           "",
+           "| RM | device | PAC crate | gates | registers | PAC compiles | HAL crate | baseline | true enforcement | generic friction | other | enforcement sites | note |",
+           "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         md.append(
-            f"| {r['RM']} | {r['device']} | {r['hal_crate']} | "
+            f"| {r['RM']} | {r['device']} | {r['pac_crate']} | "
+            f"**{r['enforced']}** | {r['registers_gated']} | "
+            f"{r['pac_compiles']} | {r['hal_crate']} | "
             f"{r['hal_baseline']} | {r['true_enforcement']} | "
             f"{r['generic_friction']} | {r['other_errors']} | "
             f"{r['enforcement_sites']} | {r['note'] or '—'} |")
@@ -787,23 +814,35 @@ def write_html(rows: list, path: Path) -> None:
     h += ["</tbody></table></div></section>"]
 
     # --- table 2 -----------------------------------------------------------
-    h += ['<section><h2>Compiled against real driver crates</h2>',
-          '<p class="note">The unmodified HAL from crates.io, swapped onto the injected '
-          'PAC with one <code>[patch.crates-io]</code> line. Every baseline passes against '
-          'the pristine PAC first, so the injected result means something.</p>',
+    h += ['<section><h2>What each PAC enforces, and what could be compiled '
+          'against it</h2>',
+          '<p class="note"><strong>Every injected chip crate is listed.</strong> '
+          'The gates and the <code>PAC compiles</code> check are independent of '
+          'any driver — injection needs nothing from a HAL. Where no driver '
+          'crate depends on PAC 0.16 the HAL columns are empty and the note '
+          'says why; the enforcement is still there. The unmodified HAL, where '
+          'one exists, is swapped onto the injected PAC with one '
+          '<code>[patch.crates-io]</code> line, and its baseline must pass '
+          'against the pristine PAC first.</p>',
           '<div class="scroll"><table><thead><tr>',
-          '<th class="pin">RM</th><th>device</th><th>HAL crate</th><th>baseline</th>',
+          '<th class="pin">RM</th><th>device</th><th>PAC crate</th>',
+          '<th>gates</th><th>regs</th><th>PAC compiles</th>',
+          '<th>HAL crate</th><th>baseline</th>',
           '<th>true enforcement</th><th>generic friction</th><th>other</th>',
-          '<th>enforcement sites</th><th>why no HAL</th>',
+          '<th>enforcement sites</th><th>note</th>',
           "</tr></thead><tbody>"]
     for r in rows:
         note = r["note"] or ("" if r["hal_crate"] != "—" else "—")
         h.append(
             f'<tr><td class="pin">{_esc(r["RM"])}</td>'
             f'<td class="mono">{_esc(r["device"])}</td>'
+            f'<td class="mono dim">{_esc(r["pac_crate"])}</td>'
+            f'<td class="num lead">{_esc(r["enforced"])}</td>'
+            f'<td class="num">{_esc(r["registers_gated"])}</td>'
+            f'<td>{_pill(r["pac_compiles"])}</td>'
             f'<td class="mono">{_esc(r["hal_crate"])}</td>'
             f'<td>{_pill(r["hal_baseline"])}</td>'
-            f'<td class="num lead">{_esc(r["true_enforcement"])}</td>'
+            f'<td class="num">{_esc(r["true_enforcement"])}</td>'
             f'<td class="num">{_esc(r["generic_friction"])}</td>'
             f'<td class="num">{_esc(r["other_errors"])}</td>'
             f'<td class="mono dim">{_esc(r["enforcement_sites"])}</td>'
