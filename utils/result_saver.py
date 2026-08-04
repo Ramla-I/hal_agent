@@ -184,22 +184,23 @@ class ResultSaver:
             filepath = filepath.with_suffix('.csv')
         
         filepath_str = str(filepath)
-        write_header = filepath_str not in self._csv_headers_written or not filepath.exists()
-        
         if fieldnames is None:
             fieldnames = list(row.keys())
-        
-        mode = 'w' if write_header else 'a'
 
-        # Single open: write the header (if needed) and the row together. The
-        # previous two-open version reopened the file just to append the row,
-        # and the header branch truncated-then-reappended.
+        # Header/append is decided from DISK state, not per-instance memory: a fresh
+        # ResultSaver writing to an existing CSV (the generator's recursive retry
+        # pass, or any re-run into an existing output dir) must APPEND, not truncate
+        # — otherwise an append-style log like usage.csv loses every earlier row.
+        # Callers wanting a fresh file delete it first (see s6_validate_candidates).
+        file_has_content = filepath.exists() and filepath.stat().st_size > 0
+        mode = 'a' if file_has_content else 'w'
+
         with open(filepath, mode, newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
-            if write_header:
+            if not file_has_content:
                 writer.writeheader()
-                self._csv_headers_written[filepath_str] = True
             writer.writerow(row)
+        self._csv_headers_written[filepath_str] = True
 
         return filepath
     
@@ -228,21 +229,21 @@ class ResultSaver:
             filepath = filepath.with_suffix('.csv')
         
         filepath_str = str(filepath)
-        write_header = filepath_str not in self._csv_headers_written or not filepath.exists()
-        
         if fieldnames is None:
             fieldnames = list(rows[0].keys())
-        
-        mode = 'w' if write_header else 'a'
-        
+
+        # Disk-based header/append (see save_csv_row): a fresh ResultSaver appends to
+        # an existing CSV rather than truncating it.
+        file_has_content = filepath.exists() and filepath.stat().st_size > 0
+        mode = 'a' if file_has_content else 'w'
+
         with open(filepath, mode, newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
-            if write_header:
+            if not file_has_content:
                 writer.writeheader()
-                self._csv_headers_written[filepath_str] = True
-            
             writer.writerows(rows)
-        
+        self._csv_headers_written[filepath_str] = True
+
         return filepath
     
     def save_usage_stats(

@@ -149,7 +149,12 @@ def get_field_counts_for_peripheral(svd_file_paths, peripheral_name):
                 if name_elem is not None and name_elem.text:
                     reg_name = _strip_peripheral_prefix(name_elem.text, peripheral_name)
                     fields_elem = reg.find("fields")
-                    field_counts[reg_name] = len(fields_elem.findall("field")) if fields_elem is not None else 0
+                    count = len(fields_elem.findall("field")) if fields_elem is not None else 0
+                    # Expand <dim> arrays (EP%sR -> ep0r..ep7r) so the count is keyed
+                    # by concrete names, matching get_register_names_for_peripheral;
+                    # all instances of an array share the base register's fields.
+                    for concrete in expand_dim_register_name(reg_name, reg):
+                        field_counts[concrete] = count
 
     if not found:
         raise ValueError(f"Peripheral '{peripheral_name}' not found in any SVD file: {svd_file_paths}")
