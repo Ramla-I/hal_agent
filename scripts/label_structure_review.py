@@ -17,21 +17,18 @@ Controls per candidate:
     Enter      accept the validator's verdict (TP/FP); if none, skip
     s          skip (leave blank)
     c          set/edit correct_value (then still label t/f)
-    e          open the candidate's SVD file(s) in $EDITOR (jumps to the register)
+    e          edit the svd_files list — remove files that don't have the bug
     b          go back to the previous candidate
     g N        jump to candidate number N
     q          save & quit
 """
 import argparse
 import csv
-import glob
 import os
-import shutil
-import subprocess
 import sys
 
 _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
+_COLOR = sys.stdout.isatty()
 
 # per-field palette
 C_HEAD = "1"        # bold — [n/N] + RM
@@ -133,54 +130,37 @@ def _show(row, idx, n, cands):
         print(_c(C_DIM, f"  current: tp_fp={cur or '-'}  correct_value={cv or '-'}"))
 
 
-def _resolve_editor(override=None):
-    ed = override or os.environ.get("VISUAL") or os.environ.get("EDITOR")
-    if ed:
-        return ed
-    for cand in ("nano", "vim", "vi"):
-        if shutil.which(cand):
-            return cand
-    return "vi"
-
-
-def _edit_svd(row, manufacturer, editor):
-    """Open the SVD file(s) this candidate lives in, jumping to the register."""
-    rm = row["RM"]
-    svd_dir = os.path.join(_REPO, "devices", manufacturer, rm, "svd")
+def _edit_svd_files(row) -> bool:
+    """Trim the `svd_files` column — remove the SVD files that don't have this bug
+    (also updates `svd_count`). Returns True if changed."""
     names = [n.strip() for n in (row.get("svd_files") or "").split(";") if n.strip()]
-    files = []
-    for nm in names:
-        p = os.path.join(svd_dir, nm if nm.endswith((".svd", ".xml")) else nm + ".svd")
-        if os.path.isfile(p):
-            files.append(p)
-    if not files:  # fall back to every SVD in the device dir
-        files = sorted(glob.glob(os.path.join(svd_dir, "*.svd"))
-                       + glob.glob(os.path.join(svd_dir, "*.xml")))
-    if not files:
-        print(_c(C_FP, f"    no SVD files found under {svd_dir}"))
-        return
-    reg = (row.get("register") or "").strip().lower()
-    line = None
-    try:  # locate the register's <name>...</name> in the first file
-        with open(files[0], encoding="utf-8", errors="ignore") as fh:
-            for i, ln in enumerate(fh, 1):
-                low = ln.lower()
-                if reg and "<name>" in low and reg in low:
-                    line = i
-                    break
-    except OSError:
-        pass
-    base = os.path.basename(editor).split()[0]
-    cmd = [editor]
-    if line and base in ("vi", "vim", "nvim", "nano"):
-        cmd.append(f"+{line}")
-    cmd += files
-    print(_c(C_DIM, f"    {editor} -> {', '.join(os.path.relpath(f, _REPO) for f in files)}"
-                    + (f" (line {line})" if line else "")))
+    if not names:
+        print(_c(C_DIM, "    (no svd_files listed)"))
+        return False
+    for i, nm in enumerate(names, 1):
+        print(f"    {_c(C_SVD, str(i) + '.')} {nm}")
     try:
-        subprocess.call(cmd)
-    except OSError as e:
-        print(_c(C_FP, f"    could not launch editor ({editor}): {e}"))
+        raw = input(_c(C_PROMPT, "    remove which? (numbers, e.g. '2 3'; Enter cancels)> ")).strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return False
+    if not raw:
+        return False
+    try:
+        drop = {int(x) for x in raw.replace(",", " ").split()}
+    except ValueError:
+        print(_c(C_FP, "    numbers only"))
+        return False
+    kept = [nm for i, nm in enumerate(names, 1) if i not in drop]
+    if not kept:
+        print(_c(C_FP, "    that removes all files — cancelled (the bug must be in at least one)"))
+        return False
+    if len(kept) == len(names):
+        return False
+    row["svd_files"] = ";".join(kept)
+    row["svd_count"] = str(len(kept))
+    print(_c(C_SVD, f"    svd_files -> {row['svd_files']}  ({len(kept)} file(s))"))
+    return True
 
 
 def main():
@@ -191,14 +171,7 @@ def main():
     ap.add_argument("--manufacturer", default="stm")
     ap.add_argument("--all", action="store_true",
                     help="step through ALL candidates (default: only unlabeled)")
-    ap.add_argument("--editor", help="editor for 'e' (default: $VISUAL/$EDITOR, then nano/vim/vi)")
-    ap.add_argument("--no-color", action="store_true", help="disable colored output")
     args = ap.parse_args()
-
-    global _COLOR
-    if args.no_color:
-        _COLOR = False
-    editor = _resolve_editor(args.editor)
 
     path = _resolve_path(args)
     if not os.path.isfile(path):
@@ -244,7 +217,8 @@ def main():
                 print(); continue
             row["correct_value"] = val; _save(path, rows, fields)  # stay on this row to still label t/f
         elif low == "e":
-            _edit_svd(row, args.manufacturer, editor)  # stay on this row; re-shows after
+            if _edit_svd_files(row):   # trim svd_files list; stay on this row, re-shows after
+                _save(path, rows, fields)
         elif low.startswith("g"):
             try:
                 j = int(cmd.split()[1]) - 1
@@ -262,7 +236,7 @@ def main():
                 print(_c("2", "    no validator verdict to accept — 's' to skip"));
         else:
             print(_c(C_DIM, "    keys: t/f label · Enter accept · s skip · c correct_value · "
-                            "e edit-SVD · b back · g N jump · q quit"))
+                            "e edit-svd-files · b back · g N jump · q quit"))
 
     tp, fp, left = _tally(cands)
     print("\n" + "=" * 70)
