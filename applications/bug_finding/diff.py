@@ -163,6 +163,12 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
         prefix = peripheral_name + "_"
         return name[len(prefix):] if name.startswith(prefix) else name
 
+    # Expand <dim> arrays to match the generator (which now expands them too).
+    # Set SVD_DIM_EXPAND=0 only to regenerate reviews against LEGACY generator
+    # output that still has the collapsed `%s` files (else bcr2/3/4 would show as
+    # coverage gaps against the on-disk bcr%s).
+    expand_dim = os.environ.get("SVD_DIM_EXPAND", "1") != "0"
+
     peripherals: dict[str, dict[str, dict]] = {}
     for peripheral_name, registers_elem in resolved.items():
         registers: dict[str, dict] = {}
@@ -170,7 +176,7 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
             for reg in registers_elem.findall(f"{ns}register"):
                 base = _resolve_reg(peripheral_name, reg)
                 raw = reg.find(f"{ns}name").text.strip()
-                idxs = expand_dim_indices(reg, ns) if "%s" in raw else []
+                idxs = expand_dim_indices(reg, ns) if (expand_dim and "%s" in raw) else []
                 if idxs:
                     # Expand a <dim> array (BCR%s -> bcr2/bcr3/bcr4), each at its own
                     # offset = base + position*dimIncrement, matching the generator's

@@ -43,7 +43,13 @@ def main() -> None:
     ap.add_argument("--manufacturer", default="stm")
     ap.add_argument("--parallel", type=int, default=4)
     ap.add_argument("--exclude", nargs="*", default=[], help="RMs to skip (e.g. giants mid-backfill)")
+    ap.add_argument("--no-dim-expand", action="store_true",
+                    help="parse SVD with <dim> arrays collapsed (%%s) — required when the "
+                         "on-disk generator output predates dim-expansion")
     args = ap.parse_args()
+
+    if args.no_dim_expand:
+        os.environ["SVD_DIM_EXPAND"] = "0"
 
     rms = args.devices or sorted(
         os.path.basename(os.path.dirname(os.path.dirname(p)))
