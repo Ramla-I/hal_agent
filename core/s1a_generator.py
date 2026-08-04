@@ -316,6 +316,39 @@ def chunk_registers_adaptive(
     return batches
 
 
+def _find_empty_field_registers(agent_output_dir: str, svd_file_paths) -> Dict[str, List[str]]:
+    """Registers whose generated output has NO subfields but the SVD says it should
+    have fields -> {peripheral: [register, ...]}. These are batching drop-outs (a
+    large multi-register response truncated/omitted a register's fields); the SVD
+    field count filters out registers that are legitimately field-less."""
+    # Longest-prefix match against real peripheral names so multi-word peripherals
+    # (ethernet_dma, ethernet_ptp, ...) split correctly, not on the first "_".
+    peris = sorted((p.lower() for p in get_peripheral_names(svd_file_paths)), key=len, reverse=True)
+    empties: Dict[str, List[str]] = {}
+    for fn in sorted(os.listdir(agent_output_dir)):
+        fp = os.path.join(agent_output_dir, fn)
+        if not os.path.isfile(fp) or "_" not in fn or "." in fn:
+            continue
+        try:
+            data = json.load(open(fp, encoding="utf-8"))
+        except Exception:
+            continue
+        if isinstance(data, dict) and not (data.get("subfields") or []):
+            peripheral = next((p for p in peris if fn.startswith(p + "_")), fn.partition("_")[0])
+            register = fn[len(peripheral) + 1:]
+            empties.setdefault(peripheral, []).append(register)
+    result: Dict[str, List[str]] = {}
+    for peripheral, regs in empties.items():
+        try:
+            field_counts = get_field_counts_for_peripheral(svd_file_paths, peripheral)
+        except ValueError:
+            field_counts = {}
+        keep = [r for r in regs if field_counts.get(r.lower(), 0) > 0]
+        if keep:
+            result[peripheral] = keep
+    return result
+
+
 def run_generator_batched(
     client: OpenAI | Groq,
     model_name: str,
@@ -333,6 +366,9 @@ def run_generator_batched(
     system_prompt_override: Optional[str] = None,
     retrieval_only: bool = False,
     models: Optional[List[str]] = None,
+    empty_field_retries: int = 2,
+    force: bool = False,
+    _retrying: bool = False,
 ) -> bool:
     """Per-peripheral batched generator — one LLM call per batch of registers.
 
@@ -384,7 +420,7 @@ def run_generator_batched(
         # Determine which registers still need processing
         remaining = [
             r for r in all_registers
-            if not os.path.exists(os.path.join(agent_output_dir, f"{peripheral_name}_{r}"))
+            if force or not os.path.exists(os.path.join(agent_output_dir, f"{peripheral_name}_{r}"))
         ]
 
         # Derived peripherals (0 SVD registers) → discovery mode
@@ -636,6 +672,28 @@ def run_generator_batched(
             "Generator for %s: %d batch(es) failed and were skipped (resume to retry)",
             device_name, failed_batches,
         )
+
+    # Empty-field retry: a large batch response can truncate/omit a register's
+    # subfields, leaving it saved with 0 fields. Re-generate those ONE register per
+    # call (no truncation), overwriting in place (force=True, so a failed retry
+    # keeps the old file). Bounded rounds; skipped in retrieval-only / retry calls.
+    if not _retrying and not retrieval_only and empty_field_retries > 0:
+        for round_i in range(empty_field_retries):
+            empty = _find_empty_field_registers(agent_output_dir, svd_file_paths)
+            if not empty:
+                break
+            logger.info("Empty-field retry %d/%d: re-generating %d register(s) singly",
+                        round_i + 1, empty_field_retries, sum(len(v) for v in empty.values()))
+            run_generator_batched(
+                client, model_name, device_name, run_number, device_dir,
+                agent_output_dir, context_retrieval_parameters, manufacturer,
+                peripherals_registers_dict=empty, max_registers_per_batch=1,
+                max_fields_per_batch=max_fields_per_batch, include_reasoning=include_reasoning,
+                skip_function_followup=skip_function_followup,
+                system_prompt_override=system_prompt_override, models=models,
+                empty_field_retries=0, force=True, _retrying=True,
+            )
+
     return truncated_at_any_register
 
 
