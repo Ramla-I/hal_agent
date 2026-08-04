@@ -22,7 +22,7 @@ import os
 import xml.etree.ElementTree as ET
 from typing import Any, Optional
 
-from agent_tools.svd_parsing import resolve_peripheral_registers
+from agent_tools.svd_parsing import resolve_peripheral_registers, expand_dim_indices
 from utils.generator_facts import convert_generator_register_to_svd_like
 from .models import Diff, Presence
 
@@ -159,16 +159,35 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
             "fields": fields,
         }
 
+    def _strip(name):
+        prefix = peripheral_name + "_"
+        return name[len(prefix):] if name.startswith(prefix) else name
+
     peripherals: dict[str, dict[str, dict]] = {}
     for peripheral_name, registers_elem in resolved.items():
         registers: dict[str, dict] = {}
         if registers_elem is not None:
             for reg in registers_elem.findall(f"{ns}register"):
-                reg_name = reg.find(f"{ns}name").text.strip().lower()
-                prefix = peripheral_name + "_"
-                if reg_name.startswith(prefix):
-                    reg_name = reg_name[len(prefix):]
-                registers[reg_name] = _resolve_reg(peripheral_name, reg)
+                base = _resolve_reg(peripheral_name, reg)
+                raw = reg.find(f"{ns}name").text.strip()
+                idxs = expand_dim_indices(reg, ns) if "%s" in raw else []
+                if idxs:
+                    # Expand a <dim> array (BCR%s -> bcr2/bcr3/bcr4), each at its own
+                    # offset = base + position*dimIncrement, matching the generator's
+                    # expanded output so they compare register-for-register.
+                    inc_txt = (reg.findtext(f"{ns}dimIncrement") or "").strip()
+                    try:
+                        inc = int(inc_txt, 0) if inc_txt else 0
+                    except ValueError:
+                        inc = 0
+                    base_off = base["address_offset"] if isinstance(base["address_offset"], int) else 0
+                    tmpl = raw.replace("[%s]", "%s")
+                    for pos, ix in enumerate(idxs):
+                        inst = dict(base)
+                        inst["address_offset"] = base_off + pos * inc
+                        registers[_strip(tmpl.replace("%s", ix).lower())] = inst
+                else:
+                    registers[_strip(raw.lower())] = base
         peripherals[peripheral_name] = registers
     return peripherals
 

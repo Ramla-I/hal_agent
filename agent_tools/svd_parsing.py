@@ -54,6 +54,39 @@ def _strip_peripheral_prefix(register_name: str, peripheral_name: str) -> str:
     return name
 
 
+def expand_dim_indices(elem, ns: str = "") -> list:
+    """Index tokens for an SVD ``<dim>`` register/cluster array: from ``dimIndex``
+    (e.g. ``"2-4"`` -> ``["2","3","4"]``, ``"1,3,5"`` -> ``["1","3","5"]``) or, if
+    absent, ``0..dim-1``. ``[]`` if the element is not a dim array."""
+    dim_index = elem.findtext(f"{ns}dimIndex")
+    if dim_index:
+        s = dim_index.strip()
+        if "-" in s and "," not in s:
+            lo, hi = s.split("-", 1)
+            try:
+                return [str(i) for i in range(int(lo), int(hi) + 1)]
+            except ValueError:
+                return []
+        return [p.strip() for p in s.split(",") if p.strip()]
+    dim = elem.findtext(f"{ns}dim")
+    if dim:
+        try:
+            return [str(i) for i in range(int(dim))]
+        except ValueError:
+            return []
+    return []
+
+
+def expand_dim_register_name(name: str, elem, ns: str = "") -> list:
+    """A register name with a ``%s``/``[%s]`` placeholder -> its concrete instances
+    (``BCR%s`` dim 2-4 -> ``["BCR2","BCR3","BCR4"]``). Names without a placeholder
+    pass through unchanged."""
+    if "%s" not in name:
+        return [name]
+    base = name.replace("[%s]", "%s")
+    return [base.replace("%s", i) for i in expand_dim_indices(elem, ns)] or [name]
+
+
 def _iter_svd_roots(svd_file_paths):
     if not svd_file_paths or not isinstance(svd_file_paths, list):
         raise ValueError("svd_file_paths must be a non-empty list of file paths")
@@ -87,7 +120,11 @@ def get_register_names_for_peripheral(svd_file_paths, peripheral_name):
             for reg in registers_elem.findall("register"):
                 name_elem = reg.find("name")
                 if name_elem is not None and name_elem.text:
-                    register_names.add(_strip_peripheral_prefix(name_elem.text, peripheral_name))
+                    stripped = _strip_peripheral_prefix(name_elem.text, peripheral_name)
+                    # Expand <dim> arrays (BCR%s -> bcr2/bcr3/bcr4) so the generator
+                    # receives concrete register names, not the %s placeholder.
+                    for concrete in expand_dim_register_name(stripped, reg):
+                        register_names.add(concrete)
 
     if not found:
         raise ValueError(f"Peripheral '{peripheral_name}' not found in any SVD file: {svd_file_paths}")
