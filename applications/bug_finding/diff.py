@@ -78,49 +78,97 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
     # base peripheral's registers instead of parsing to zero.
     resolved = resolve_peripheral_registers(root, ns)
 
+    # CMSIS-SVD register properties (size/resetValue) cascade device -> peripheral
+    # -> register, and a register may inherit another via register-level
+    # derivedFrom (e.g. ADC2.CR2 derivedFrom="ADC1.CR2" — only addressOffset given).
+    # resolve_peripheral_registers only handles peripheral-level derivedFrom, so
+    # resolve register-level derivedFrom + property inheritance here (else the
+    # inheriting registers parse to None and look like spurious diffs).
+    def _int0(elem):
+        return int(elem.text.strip(), 0) if elem is not None and (elem.text or "").strip() else None
+
+    def _reset(elem):
+        e = elem.find(f"{ns}resetValue") if elem is not None else None
+        return _to_int_if_hex(e.text.strip()) if e is not None and (e.text or "").strip() else None
+
+    dev_size = _int0(root.find(f"{ns}size"))
+    dev_reset = _reset(root)
+
+    per_elem = {(p.findtext(f"{ns}name") or "").strip().lower(): p for p in root.iter(f"{ns}peripheral")}
+    reg_index: dict[tuple[str, str], Any] = {}
+    for pn, p in per_elem.items():
+        regs = p.find(f"{ns}registers")
+        if regs is None:
+            continue
+        for r in regs.findall(f"{ns}register"):
+            reg_index.setdefault((pn, (r.findtext(f"{ns}name") or "").strip().lower()), r)
+
+    def _per_defaults(pn):
+        p = per_elem.get(pn)
+        return (_int0(p.find(f"{ns}size")) if p is not None else None, _reset(p))
+
+    def _fields_of(reg):
+        fe = reg.find(f"{ns}fields")
+        if fe is None:
+            return None  # not specified locally -> inheritable
+        out = []
+        for field in fe.findall(f"{ns}field"):
+            enum_values = []
+            enum_elem = field.find(f"{ns}enumeratedValues")
+            if enum_elem is not None:
+                for enum in enum_elem.findall(f"{ns}enumeratedValue"):
+                    if enum.find(f"{ns}value") is not None:
+                        enum_values.append({
+                            "name": enum.find(f"{ns}name").text.strip().lower(),
+                            "value": enum.find(f"{ns}value").text.strip(),
+                        })
+            out.append({
+                "name": field.find(f"{ns}name").text.strip().lower(),
+                "bit_offset": int(field.find(f"{ns}bitOffset").text.strip()),
+                "bit_width": int(field.find(f"{ns}bitWidth").text.strip()),
+                "enumerated_values": enum_values,
+            })
+        return out
+
+    def _resolve_reg(pn, reg, seen=()):
+        base = None
+        df = reg.get("derivedFrom")
+        if df:
+            bp, br = df.split(".", 1) if "." in df else (pn, df)
+            key = (bp.strip().lower(), br.strip().lower())
+            if key in reg_index and key not in seen:
+                base = _resolve_reg(key[0], reg_index[key], seen + (key,))
+        ao_e = reg.find(f"{ns}addressOffset")
+        address_offset = (_to_int_if_hex(ao_e.text.strip()) if ao_e is not None and (ao_e.text or "").strip()
+                          else (base["address_offset"] if base else None))
+        size = _int0(reg.find(f"{ns}size"))
+        reset_value = _reset(reg)
+        fields = _fields_of(reg)
+        per_size, per_reset = _per_defaults(pn)
+        if size is None:
+            size = base["size"] if base and base.get("size") is not None else (per_size if per_size is not None else dev_size)
+        if reset_value is None:
+            reset_value = (base["reset_value"] if base and base.get("reset_value") not in (None, "")
+                           else (per_reset if per_reset is not None else dev_reset))
+        if fields is None:
+            fields = base["fields"] if base else []
+        return {
+            "address_offset": address_offset,
+            "reset_value": reset_value if reset_value is not None else "",
+            "size": size,
+            "fields": fields,
+        }
+
     peripherals: dict[str, dict[str, dict]] = {}
     for peripheral_name, registers_elem in resolved.items():
         registers: dict[str, dict] = {}
-
         if registers_elem is not None:
             for reg in registers_elem.findall(f"{ns}register"):
                 reg_name = reg.find(f"{ns}name").text.strip().lower()
                 prefix = peripheral_name + "_"
                 if reg_name.startswith(prefix):
                     reg_name = reg_name[len(prefix):]
-
-                address_offset = _to_int_if_hex(reg.find(f"{ns}addressOffset").text.strip())
-                reset_elem = reg.find(f"{ns}resetValue")
-                reset_value = _to_int_if_hex(reset_elem.text.strip()) if reset_elem is not None else ""
-                size_elem = reg.find(f"{ns}size")
-                size = int(size_elem.text.strip(), 0) if size_elem is not None else None
-
-                fields = []
-                fields_elem = reg.find(f"{ns}fields")
-                if fields_elem is not None:
-                    for field in fields_elem.findall(f"{ns}field"):
-                        enum_values = []
-                        enum_elem = field.find(f"{ns}enumeratedValues")
-                        if enum_elem is not None:
-                            for enum in enum_elem.findall(f"{ns}enumeratedValue"):
-                                if enum.find(f"{ns}value") is not None:
-                                    enum_values.append({
-                                        "name": enum.find(f"{ns}name").text.strip().lower(),
-                                        "value": enum.find(f"{ns}value").text.strip(),
-                                    })
-                        fields.append({
-                            "name": field.find(f"{ns}name").text.strip().lower(),
-                            "bit_offset": int(field.find(f"{ns}bitOffset").text.strip()),
-                            "bit_width": int(field.find(f"{ns}bitWidth").text.strip()),
-                            "enumerated_values": enum_values,
-                        })
-
-                registers[reg_name] = {
-                    "address_offset": address_offset,
-                    "reset_value": reset_value,
-                    "size": size,
-                    "fields": fields,
-                }
+                registers[reg_name] = _resolve_reg(peripheral_name, reg)
         peripherals[peripheral_name] = registers
     return peripherals
 
