@@ -149,6 +149,15 @@ def _format_candidates(candidates: list[Diff]) -> str:
     return "\n".join(lines)
 
 
+def _diff_key(d: Diff) -> str:
+    """Stable identity of a candidate diff (independent of list position) so the
+    analyzer verdict cache survives re-runs where the candidate set changes."""
+    return "|".join((
+        d.peripheral, d.register, d.field or "", d.key,
+        str(d.svd_value), str(d.generator_value),
+    ))
+
+
 def run_analyzer(
     svd_file_name: str,
     diffs: list[Diff],
@@ -161,6 +170,12 @@ def run_analyzer(
     representation differences) and keeps plausible mismatches. Datasheet-grounded
     verification is the (separate) validator's job, not the analyzer's. Uses the
     central call layer with ``models`` (default config.STAGE_MODELS["analyzer"]).
+
+    Incremental (like the generator and validator): each candidate's verdict is
+    cached by stable identity in ``{svd}_analyzer_cache.json``. On a re-run only
+    candidates the analyzer has never seen are sent to the LLM — an SVD whose
+    candidate set is unchanged makes no call at all. A fresh run has no cache, so
+    every candidate is judged exactly as before.
     """
     candidates = [d for d in diffs if d.is_value_mismatch]
     logger.info(
@@ -169,49 +184,71 @@ def run_analyzer(
     if not candidates:
         return []
 
-    model_list = models or config.STAGE_MODELS.get("analyzer")
     saver = ResultSaver(output_dir)
-    user_prompt = (
-        "Differences to screen:\n"
-        f"{_format_candidates(candidates)}\n\n"
-        "Return the JSON object of rows that remain plausible SVD bugs."
-    )
+    cache_name = f"{svd_file_name}_analyzer_cache.json"
+    cache_path = os.path.join(output_dir, cache_name)
+    cache: dict = {}
+    if os.path.exists(cache_path):
+        try:
+            cache = json.load(open(cache_path, encoding="utf-8"))
+        except Exception:
+            cache = {}
 
-    # Generous output budget: reasoning models share the budget between reasoning
-    # and the JSON answer; without a high cap the JSON truncates for many candidates.
-    model_max = model_costs.get(model_list[0], {}).get("max_output_tokens", 32_768)
-    response, used_model = call_llm(
-        "analyzer", models=model_list,
-        input=[
-            {"role": "developer", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        tool_choice="none",
-        truncation="auto",
-        max_output_tokens=model_max,
-    )
+    keys = [_diff_key(d) for d in candidates]
+    new_positions = [i for i, k in enumerate(keys) if k not in cache]
 
-    saver.save_usage_stats(
-        UsageStats.from_response_usage(used_model, response.usage),
-        "usage.csv",
-        additional_fields={"svd_name": svd_file_name, "candidates": len(candidates)},
-    )
-
-    verdicts = _parse_verdicts(response.output_text, svd_file_name)
-    saver.save_json(verdicts, f"{svd_file_name}_verdicts.json")
+    if new_positions:
+        new_candidates = [candidates[i] for i in new_positions]
+        logger.info("Analyzer for %s: %d new candidate(s) to judge (%d cached)",
+                    svd_file_name, len(new_candidates), len(candidates) - len(new_candidates))
+        model_list = models or config.STAGE_MODELS.get("analyzer")
+        user_prompt = (
+            "Differences to screen:\n"
+            f"{_format_candidates(new_candidates)}\n\n"
+            "Return the JSON object of rows that remain plausible SVD bugs."
+        )
+        # Generous output budget: reasoning models share the budget between reasoning
+        # and the JSON answer; without a high cap the JSON truncates for many candidates.
+        model_max = model_costs.get(model_list[0], {}).get("max_output_tokens", 32_768)
+        response, used_model = call_llm(
+            "analyzer", models=model_list,
+            input=[
+                {"role": "developer", "content": _SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            tool_choice="none",
+            truncation="auto",
+            max_output_tokens=model_max,
+        )
+        saver.save_usage_stats(
+            UsageStats.from_response_usage(used_model, response.usage),
+            "usage.csv",
+            additional_fields={"svd_name": svd_file_name, "candidates": len(new_candidates)},
+        )
+        # Verdict ids index into new_candidates; kept ids get their confidence, the
+        # rest are recorded as judged-and-dropped so they are not re-sent next run.
+        kept_conf: dict[int, float] = {}
+        for v in _parse_verdicts(response.output_text, svd_file_name):
+            idx = v.get("id")
+            if not isinstance(idx, int) or not (0 <= idx < len(new_candidates)):
+                logger.warning("Analyzer returned out-of-range id %r for %s", idx, svd_file_name)
+                continue
+            try:
+                kept_conf[idx] = float(v.get("confidence", 0.0))
+            except (TypeError, ValueError):
+                kept_conf[idx] = 0.0
+        for j, pos in enumerate(new_positions):
+            cache[keys[pos]] = {"kept": j in kept_conf, "confidence": kept_conf.get(j, 0.0)}
+        saver.save_json(cache, cache_name)
+    else:
+        logger.info("Analyzer for %s: all %d candidate(s) cached — no LLM call",
+                    svd_file_name, len(candidates))
 
     bugs: list[Bug] = []
-    for v in verdicts:
-        idx = v.get("id")
-        if not isinstance(idx, int) or not (0 <= idx < len(candidates)):
-            logger.warning("Analyzer returned out-of-range id %r for %s", idx, svd_file_name)
-            continue
-        confidence = v.get("confidence", 0.0)
-        try:
-            confidence = float(confidence)
-        except (TypeError, ValueError):
-            confidence = 0.0
-        bugs.append(Bug(diff=candidates[idx], confidence=confidence))
+    for d, k in zip(candidates, keys):
+        entry = cache.get(k)
+        if entry and entry.get("kept"):
+            bugs.append(Bug(diff=d, confidence=entry.get("confidence", 0.0)))
 
     logger.info("Analyzer for %s: kept %d/%d as bugs", svd_file_name, len(bugs), len(candidates))
     return bugs
