@@ -17,21 +17,36 @@ Controls per candidate:
     Enter      accept the validator's verdict (TP/FP); if none, skip
     s          skip (leave blank)
     c          set/edit correct_value (then still label t/f)
+    e          open the candidate's SVD file(s) in $EDITOR (jumps to the register)
     b          go back to the previous candidate
     g N        jump to candidate number N
     q          save & quit
 """
 import argparse
 import csv
+import glob
 import os
+import shutil
+import subprocess
 import sys
 
 _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_TTY = sys.stdout.isatty()
+_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
+
+# per-field palette
+C_HEAD = "1"        # bold — [n/N] + RM
+C_NAME = "1;36"     # bright cyan — peripheral.register.field
+C_KEY = "0;36"      # cyan — the key (reset_value, bit_width, ...)
+C_SVD = "1;33"      # bright yellow — SVD (ground truth) value
+C_GEN = "1;35"      # bright magenta — generator value
+C_TP = "1;32"       # green — TP
+C_FP = "1;31"       # red — FP
+C_DIM = "2"         # dim — meta (svd files, tally, current label)
+C_PROMPT = "1;37"   # bold white — prompt
 
 
 def _c(code, s):
-    return f"\033[{code}m{s}\033[0m" if _TTY else s
+    return f"\033[{code}m{s}\033[0m" if _COLOR else s
 
 
 def _resolve_path(args) -> str:
@@ -95,24 +110,77 @@ def _tally(cands):
 def _show(row, idx, n, cands):
     tp, fp, left = _tally(cands)
     name = f"{row['peripheral']}.{row['register']}" + (f".{row['field']}" if (row.get('field') or '').strip() else "")
-    print("\n" + "=" * 70)
-    print(_c("1;36", f"[{idx + 1}/{n}]  {row['RM']}  {name}  {_c('0;36', row['key'])}")
-          + _c("2", f"    (TP {tp} · FP {fp} · left {left})"))
+    print("\n" + _c(C_DIM, "=" * 70))
+    # header (each piece colored separately — nesting ANSI would reset the line early)
+    print(_c(C_HEAD, f"[{idx + 1}/{n}]  {row['RM']}") + "  "
+          + _c(C_NAME, name) + "  " + _c(C_KEY, row["key"])
+          + _c(C_DIM, f"    (TP {tp} · FP {fp} · left {left})"))
     svds = row.get("svd_files", "")
-    print(f"  SVD  {_c('2', '(' + str(row.get('svd_count','?')) + ': ' + svds + ')')}")
-    print(f"       {_c('1;33', row.get('svd_value',''))}")
-    print(f"  GEN  {_c('1;35', row.get('generator_value',''))}")
+    print(_c(C_SVD, "  SVD  " + (row.get("svd_value", "") or "(none)")))
+    print(_c(C_DIM, f"       {row.get('svd_count', '?')} file(s): {svds}"))
+    print(_c(C_GEN, "  GEN  " + (row.get("generator_value", "") or "(none)")))
     v = (row.get("validator_verdict") or "").strip()
     conf = (row.get("validator_confidence") or "").strip()
     if v:
-        col = "1;32" if v == "TP" else "1;31" if v == "FP" else "0"
-        print(f"  validator: {_c(col, v)}" + (f"  (conf {conf})" if conf else "") + _c("2", "  [Enter to accept]"))
+        col = C_TP if v == "TP" else C_FP if v == "FP" else C_DIM
+        print("  validator: " + _c(col, v) + (f"  (conf {conf})" if conf else "")
+              + _c(C_DIM, "   [Enter to accept]"))
     else:
-        print(f"  validator: {_c('2', '(none)')}")
+        print("  validator: " + _c(C_DIM, "(none)"))
     cur = (row.get("tp_fp") or "").strip()
     cv = (row.get("correct_value") or "").strip()
     if cur or cv:
-        print(_c("2", f"  current: tp_fp={cur or '-'}  correct_value={cv or '-'}"))
+        print(_c(C_DIM, f"  current: tp_fp={cur or '-'}  correct_value={cv or '-'}"))
+
+
+def _resolve_editor(override=None):
+    ed = override or os.environ.get("VISUAL") or os.environ.get("EDITOR")
+    if ed:
+        return ed
+    for cand in ("nano", "vim", "vi"):
+        if shutil.which(cand):
+            return cand
+    return "vi"
+
+
+def _edit_svd(row, manufacturer, editor):
+    """Open the SVD file(s) this candidate lives in, jumping to the register."""
+    rm = row["RM"]
+    svd_dir = os.path.join(_REPO, "devices", manufacturer, rm, "svd")
+    names = [n.strip() for n in (row.get("svd_files") or "").split(";") if n.strip()]
+    files = []
+    for nm in names:
+        p = os.path.join(svd_dir, nm if nm.endswith((".svd", ".xml")) else nm + ".svd")
+        if os.path.isfile(p):
+            files.append(p)
+    if not files:  # fall back to every SVD in the device dir
+        files = sorted(glob.glob(os.path.join(svd_dir, "*.svd"))
+                       + glob.glob(os.path.join(svd_dir, "*.xml")))
+    if not files:
+        print(_c(C_FP, f"    no SVD files found under {svd_dir}"))
+        return
+    reg = (row.get("register") or "").strip().lower()
+    line = None
+    try:  # locate the register's <name>...</name> in the first file
+        with open(files[0], encoding="utf-8", errors="ignore") as fh:
+            for i, ln in enumerate(fh, 1):
+                low = ln.lower()
+                if reg and "<name>" in low and reg in low:
+                    line = i
+                    break
+    except OSError:
+        pass
+    base = os.path.basename(editor).split()[0]
+    cmd = [editor]
+    if line and base in ("vi", "vim", "nvim", "nano"):
+        cmd.append(f"+{line}")
+    cmd += files
+    print(_c(C_DIM, f"    {editor} -> {', '.join(os.path.relpath(f, _REPO) for f in files)}"
+                    + (f" (line {line})" if line else "")))
+    try:
+        subprocess.call(cmd)
+    except OSError as e:
+        print(_c(C_FP, f"    could not launch editor ({editor}): {e}"))
 
 
 def main():
@@ -123,7 +191,14 @@ def main():
     ap.add_argument("--manufacturer", default="stm")
     ap.add_argument("--all", action="store_true",
                     help="step through ALL candidates (default: only unlabeled)")
+    ap.add_argument("--editor", help="editor for 'e' (default: $VISUAL/$EDITOR, then nano/vim/vi)")
+    ap.add_argument("--no-color", action="store_true", help="disable colored output")
     args = ap.parse_args()
+
+    global _COLOR
+    if args.no_color:
+        _COLOR = False
+    editor = _resolve_editor(args.editor)
 
     path = _resolve_path(args)
     if not os.path.isfile(path):
@@ -168,6 +243,8 @@ def main():
             except (EOFError, KeyboardInterrupt):
                 print(); continue
             row["correct_value"] = val; _save(path, rows, fields)  # stay on this row to still label t/f
+        elif low == "e":
+            _edit_svd(row, args.manufacturer, editor)  # stay on this row; re-shows after
         elif low.startswith("g"):
             try:
                 j = int(cmd.split()[1]) - 1
@@ -184,7 +261,8 @@ def main():
             else:
                 print(_c("2", "    no validator verdict to accept — 's' to skip"));
         else:
-            print(_c("2", "    keys: t/f label · Enter accept · s skip · c correct_value · b back · g N jump · q quit"))
+            print(_c(C_DIM, "    keys: t/f label · Enter accept · s skip · c correct_value · "
+                            "e edit-SVD · b back · g N jump · q quit"))
 
     tp, fp, left = _tally(cands)
     print("\n" + "=" * 70)
