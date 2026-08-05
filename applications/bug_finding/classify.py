@@ -196,6 +196,7 @@ def run_analyzer(
 
     keys = [_diff_key(d) for d in candidates]
     new_positions = [i for i, k in enumerate(keys) if k not in cache]
+    provisional_keys: set = set()  # keys kept-but-not-cached after a hard analyzer miss
 
     if new_positions:
         new_candidates = [candidates[i] for i in new_positions]
@@ -227,19 +228,29 @@ def run_analyzer(
         )
         # Verdict ids index into new_candidates; kept ids get their confidence, the
         # rest are recorded as judged-and-dropped so they are not re-sent next run.
-        kept_conf: dict[int, float] = {}
-        for v in _parse_verdicts(response.output_text, svd_file_name):
-            idx = v.get("id")
-            if not isinstance(idx, int) or not (0 <= idx < len(new_candidates)):
-                logger.warning("Analyzer returned out-of-range id %r for %s", idx, svd_file_name)
-                continue
-            try:
-                kept_conf[idx] = float(v.get("confidence", 0.0))
-            except (TypeError, ValueError):
-                kept_conf[idx] = 0.0
-        for j, pos in enumerate(new_positions):
-            cache[keys[pos]] = {"kept": j in kept_conf, "confidence": kept_conf.get(j, 0.0)}
-        saver.save_json(cache, cache_name)
+        verdicts = _parse_verdicts(response.output_text, svd_file_name)
+        if verdicts is None:
+            # Hard analyzer failure (no JSON block) — a transient LLM hiccup, not a
+            # genuine "drop everything". Do NOT cache (so a re-run re-judges) and keep
+            # this batch's candidates provisionally, so real bugs aren't silently lost.
+            logger.warning("Analyzer produced no parseable output for %s — keeping %d "
+                           "candidate(s) provisionally, not cached (re-judged next run)",
+                           svd_file_name, len(new_candidates))
+            provisional_keys.update(keys[pos] for pos in new_positions)
+        else:
+            kept_conf: dict[int, float] = {}
+            for v in verdicts:
+                idx = v.get("id")
+                if not isinstance(idx, int) or not (0 <= idx < len(new_candidates)):
+                    logger.warning("Analyzer returned out-of-range id %r for %s", idx, svd_file_name)
+                    continue
+                try:
+                    kept_conf[idx] = float(v.get("confidence", 0.0))
+                except (TypeError, ValueError):
+                    kept_conf[idx] = 0.0
+            for j, pos in enumerate(new_positions):
+                cache[keys[pos]] = {"kept": j in kept_conf, "confidence": kept_conf.get(j, 0.0)}
+            saver.save_json(cache, cache_name)
     else:
         logger.info("Analyzer for %s: all %d candidate(s) cached — no LLM call",
                     svd_file_name, len(candidates))
@@ -249,16 +260,20 @@ def run_analyzer(
         entry = cache.get(k)
         if entry and entry.get("kept"):
             bugs.append(Bug(diff=d, confidence=entry.get("confidence", 0.0)))
+        elif k in provisional_keys:  # analyzer-miss batch: keep, uncached, re-judged next run
+            bugs.append(Bug(diff=d, confidence=0.0))
 
     logger.info("Analyzer for %s: kept %d/%d as bugs", svd_file_name, len(bugs), len(candidates))
     return bugs
 
 
-def _parse_verdicts(output_text: str, svd_file_name: str) -> list[dict]:
+def _parse_verdicts(output_text: str, svd_file_name: str):
+    """Parsed verdict dicts, ``[]`` for a valid empty answer, or ``None`` for a hard
+    failure (no JSON block at all) so the caller can avoid caching a transient miss."""
     block = get_json_block_from_response(output_text)
     if not block:
         logger.error("Analyzer returned no JSON block for %s", svd_file_name)
-        return []
+        return None
     try:
         data = json.loads(block)
     except json.JSONDecodeError as e:
