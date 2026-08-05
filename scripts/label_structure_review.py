@@ -104,6 +104,13 @@ def _tally(cands):
     return tp, fp, left
 
 
+def _vsplit(rows):
+    """Split rows by the validator's advisory verdict (TP / FP / unjudged)."""
+    tp = sum(1 for r in rows if (r.get("validator_verdict") or "").strip().upper() == "TP")
+    fp = sum(1 for r in rows if (r.get("validator_verdict") or "").strip().upper() == "FP")
+    return tp, fp, len(rows) - tp - fp
+
+
 def _show(row, idx, n, cands):
     tp, fp, left = _tally(cands)
     name = f"{row['peripheral']}.{row['register']}" + (f".{row['field']}" if (row.get('field') or '').strip() else "")
@@ -246,9 +253,15 @@ def main():
                             "e edit-svd-files · b back · g N jump · q quit"))
 
     tp, fp, left = _tally(cands)
+    blanks = [r for r in cands if _blank(r.get("tp_fp"))]
+    vt, vf, vo = _vsplit(blanks)
     print("\n" + "=" * 70)
     print(_c("1", f"saved {path}"))
     print(f"  labeled: {_c('1;32', f'TP {tp}')} · {_c('1;31', f'FP {fp}')} · {left} candidate(s) still blank")
+    if blanks:
+        print(f"  those {left} blank break down by validator verdict: "
+              f"{_c(C_TP, f'{vt} TP')} · {_c(C_FP, f'{vf} FP')} · "
+              f"{_c(C_DIM, f'{vo} unjudged (abstain/none)')}")
 
 
 if __name__ == "__main__":

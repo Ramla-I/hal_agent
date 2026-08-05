@@ -250,7 +250,16 @@ def main():
             print(_c(C_DIM, "  keys: t/f label · Enter accept · s skip · b back · g N jump · q quit"))
 
     tp, fp, left = _tally(recs)
-    print(_c(C_DIM, f"\nsaved {path}  —  TP {tp} · FP {fp} · left {left}"))
+    blanks = [r for r in recs if _blank(r.get("tp_fp"))]
+    conf = sum(1 for r in blanks if str(r.get("verdict") or "").strip() == "confirmed")
+    notc = sum(1 for r in blanks if str(r.get("verdict") or "").strip() == "not_constraint")
+    other = len(blanks) - conf - notc
+    print("\n" + _c("1", f"saved {path}"))
+    print(f"  labeled: {_c(C_TP, f'TP {tp}')} · {_c(C_FP, f'FP {fp}')} · {left} constraint(s) still blank")
+    if blanks:
+        print(f"  those {left} blank break down by validator verdict: "
+              f"{_c(C_TP, f'{conf} confirmed')} · {_c(C_FP, f'{notc} not_constraint')} · "
+              f"{_c(C_DIM, f'{other} unjudged (encoding_error/none)')}")
 
 
 if __name__ == "__main__":
