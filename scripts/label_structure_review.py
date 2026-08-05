@@ -111,8 +111,10 @@ def _vsplit(rows):
     return tp, fp, len(rows) - tp - fp
 
 
-def _show(row, idx, n, cands):
-    tp, fp, left = _tally(cands)
+def _show(row, idx, n, pool):
+    # tally over the pool being stepped through (the work list), so TP+FP+left == n
+    # and `left` stays accurate under filters like --validator-tp.
+    tp, fp, left = _tally(pool)
     name = f"{row['peripheral']}.{row['register']}" + (f".{row['field']}" if (row.get('field') or '').strip() else "")
     print("\n" + _c(C_DIM, "=" * 70))
     # header (each piece colored separately — nesting ANSI would reset the line early)
@@ -207,7 +209,7 @@ def main():
     i = 0
     while 0 <= i < len(work):
         row = work[i]
-        _show(row, i, len(work), cands)
+        _show(row, i, len(work), work)
         try:
             cmd = input(_c("1", "  label> ")).strip()
         except (EOFError, KeyboardInterrupt):

@@ -135,8 +135,10 @@ def _detail_lines(c) -> list:
     return out
 
 
-def _show(rec, idx, n, recs):
-    tp, fp, left = _tally(recs)
+def _show(rec, idx, n, pool):
+    # tally over the pool being stepped through (the work list), so TP+FP+left == n
+    # and `left` stays accurate under filters like --confirmed.
+    tp, fp, left = _tally(pool)
     c = rec.get("constraint") or {}
     kind = c.get("kind", "?")
     name = f"{rec.get('peripheral', '?')}.{rec.get('register', '?')}"
@@ -218,7 +220,7 @@ def main():
     i = 0
     while 0 <= i < len(work):
         rec = work[i]
-        _show(rec, i, len(work), recs)
+        _show(rec, i, len(work), work)
         try:
             cmd = input(_c(C_PROMPT, "  label> ")).strip()
         except (EOFError, KeyboardInterrupt):
