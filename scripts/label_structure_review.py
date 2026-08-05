@@ -182,6 +182,8 @@ def main():
                     help="step through ALL candidates (default: only unlabeled)")
     ap.add_argument("--validator-tp", action="store_true",
                     help="only rows the datasheet validator flagged TP (validator_verdict==TP)")
+    ap.add_argument("--field-keys", action="store_true",
+                    help="only bit_offset / bit_width field bug candidates (both validator TP and FP)")
     args = ap.parse_args()
 
     path = _resolve_path(args)
@@ -195,13 +197,17 @@ def main():
     work = cands if args.all else [r for r in cands if _blank(r.get("tp_fp"))]
     if args.validator_tp:
         work = [r for r in work if (r.get("validator_verdict") or "").strip().upper() == "TP"]
+    if args.field_keys:
+        work = [r for r in work if (r.get("key") or "").strip().lower() in ("bit_offset", "bit_width")]
     tp0, fp0, _ = _tally(cands)
-    flags = "".join(f for f, on in ((" (all)", args.all), (" [validator-TP only]", args.validator_tp)) if on)
+    flags = "".join(f for f, on in ((" (all)", args.all),
+                                    (" [validator-TP only]", args.validator_tp),
+                                    (" [bit_offset/bit_width only]", args.field_keys)) if on)
     print(_c("1", f"{path}"))
     print(f"{len(cands)} candidates · {tp0 + fp0} already labeled · "
           f"{len(work)} to review{flags}")
     if not work:
-        msg = "no validator-TP candidates to review." if args.validator_tp \
+        msg = "no candidates match the current filters." if (args.validator_tp or args.field_keys) \
             else "nothing to review — all candidates labeled. Use --all to revisit."
         print(msg)
         return
