@@ -372,7 +372,11 @@ def preprocess_device(
         return False, 0
 
     format_subdir = "md" if fmt == "markdown" else "text"
-    base_output_dir = os.path.join(paths.device_dir, "chunks")
+    # Write chunks where the generator's openevolve retrieval and the constraint
+    # step actually read them (chunked_datasheets/{mfr}/{rm}/chunks/{md}), NOT
+    # devices/.../chunks (which nothing downstream reads). Single chunk location.
+    base_output_dir = os.path.join(_REPO_ROOT, "chunked_datasheets",
+                                   paths.manufacturer, paths.device_name, "chunks")
     chunks_dir = os.path.join(base_output_dir, format_subdir)
     metadata_dir = chunks_dir
     file_extension = ".txt"
@@ -449,6 +453,34 @@ def run_constraint_validation_phase(
         batch_size=batch_size, min_confidence=min_confidence)
 
 
+def assert_ready(paths: "DevicePaths", cr_params: ContextRetrievalParameters) -> None:
+    """Readiness gate (run after Step 1, before generation): for the retrieval
+    backends that read local chunks + the local ChromaDB (openevolve / local vector
+    DB), fail fast with a specific message if either is missing — instead of the
+    generator silently degrading to keyword search. Keyword/OpenAI backends skip."""
+    if cr_params.context_retrieval_method not in (
+            ContextRetrievalMethod.OPENEVOLVE, ContextRetrievalMethod.LOCAL_VECTOR_DB):
+        return
+    problems = []
+    chunks_md = os.path.join(_REPO_ROOT, "chunked_datasheets", paths.manufacturer,
+                             paths.device_name, "chunks", "md")
+    if not glob.glob(os.path.join(chunks_md, "*.txt")):
+        problems.append(f"no chunks at {chunks_md}/*.txt")
+    try:
+        from context_retrieval.vector_db.vector_store import database_exists
+        if not database_exists(f"{paths.device_name}_md_chunks"):
+            problems.append(f"local vector DB 'databases/{paths.device_name}_md_chunks' missing")
+    except Exception:
+        pass
+    if problems:
+        raise RuntimeError(
+            f"Readiness check failed for {paths.device_name} "
+            f"(retrieval={cr_params.context_retrieval_method.value}): "
+            + "; ".join(problems)
+            + ". Preprocessing did not produce what retrieval needs — re-run Step 1 "
+              "(s0 does this by default) or pass --skip-readiness to bypass.")
+
+
 def run_pipeline_for_device(
     ctx: UserContext,
     args: argparse.Namespace,
@@ -517,6 +549,11 @@ def run_pipeline_for_device(
         print(f"  Retrieval (effective): {cr_params.context_retrieval_method.value}")
         result.retrieval_method = cr_params.context_retrieval_method.value
         result.generator_models = list(generator_models)
+
+        # Readiness gate: preprocessing must have produced the chunks + local DB the
+        # retrieval backend reads, else generation would silently keyword-degrade.
+        if not args.skip_readiness:
+            assert_ready(paths, cr_params)
 
         # -- Step 2: Generator --
         generator_fn = run_generator_batched if args.generator_batched else run_generator
@@ -811,6 +848,10 @@ def parse_args() -> argparse.Namespace:
         "--skip-s6", action="store_true",
         help="Skip the in-process candidate validator (Step 5b/s6) that fills "
              "validator_verdict in the structure review",
+    )
+    parser.add_argument(
+        "--skip-readiness", action="store_true",
+        help="Skip the post-preprocessing readiness gate (chunks + local vector DB present)",
     )
     parser.add_argument(
         "--run-analyzer", action="store_true",
