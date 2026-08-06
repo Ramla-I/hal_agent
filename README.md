@@ -4,12 +4,14 @@ hal_agent is an AI-powered tool for extracting hardware register information fro
 
 ## Pipeline Overview
 
-The project implements a multi-stage pipeline:
+The project implements a multi-stage pipeline, all orchestrated per-device by
+`core/s0_run_full_analysis.py`:
 
-1. **Generator (S1)** — Extracts register info from datasheets using LLMs (supports single-register and batched modes)
-2. **Coverage Improver (S2)** — Iteratively adjusts context retrieval parameters based on SVD comparison
-3. **Validator (S4)** — Classifies extracted invariants against the datasheet using an LLM agent
-4. **Analyzer (S5)** — Filters irrelevant differences between agent output and SVD files
+1. **Preprocess** — chunk the PDF + build the local vector store.
+2. **Generator** — extract register info per peripheral/register (batched; expands `<dim>` arrays; retries empty-field registers).
+3. **Constraints** — extract + validate register-access constraints → `{rm}_constraints_review.jsonl`.
+4. **Bug-finding** — diff against the ground-truth SVDs; an in-memory **analyzer** drops obvious non-bugs → `{rm}_structure_review.csv`.
+5. **Validator** — one core (`core/validator_core.py`) run after the diff to fill the advisory `validator_verdict` on the bug candidates (or before the diff as a full-extraction QA pass).
 
 ## Prerequisites
 
@@ -22,29 +24,51 @@ export OPENAI_API_KEY="your-key-here"
 export GROQ_API_KEY="your-key-here"  # if using Groq models
 ```
 
-## Quick Start
+## Run a new STM datasheet (start to finish)
 
-```bash
-# Preprocess a device datasheet (chunk + enrich + ingest)
-python3 context_retrieval/preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --embed-metadata --backend local
+One host command takes a **brand-new** reference manual all the way to the two review
+files. `{rm}` is the reference-manual id (e.g. `rm0444`).
 
-# Run the full analysis pipeline
-python3 core/s0_run_full_analysis.py
+- **Add the device assets.** Put the datasheet and its SVD(s) here (the id is the RM number):
+  - `devices/stm/{rm}/{rm}.pdf`
+  - `devices/stm/{rm}/svd/*.svd`  (one or more ground-truth SVD files)
+- **Set the API keys** the models use:
+  - `export GROQ_API_KEY=...`  (generator/validator run on `gpt-oss-120b` via Groq)
+  - `export OPENAI_API_KEY=...`  (analyzer + fallbacks)
+- **Run the one command — on the HOST, not inside Docker** (it registers the device in
+  the host-owned `config_devices.json`, which the container can't write, then launches
+  the pipeline in Docker):
+  ```bash
+  python scripts/run_stm_batch.py --devices {rm} --auto-register
+  ```
+- **What it does, in order** (all automatic, per device):
+  - registers `{rm}` in `config_devices.json` (host-side)
+  - **preprocess** — converts the PDF to chunks + builds the local vector store (`chunked_datasheets/stm/{rm}/…`, `databases/{rm}_md_chunks`)
+  - **generate** — extracts register info per peripheral/register → `agent_output/stm/{rm}/1/`
+  - **constraints** — extracts + validates access constraints → `evaluation/stm/{rm}/1/{rm}_constraints_review.jsonl`
+  - **bug-finding + validate** — diffs against the SVDs, then fills the advisory verdict column → `evaluation/stm/{rm}/1/{rm}_structure_review.csv`
+- **Read the path manifest.** The first lines of the run print every input read and every
+  file written — use it to confirm each artifact landed.
+- **The two deliverables** (both under `evaluation/stm/{rm}/1/`):
+  - `{rm}_structure_review.csv` — candidate register/field bugs, with `validator_verdict`
+  - `{rm}_constraints_review.jsonl` — extracted access constraints, with the validator verdict
+- **Review them** with the interactive labelers:
+  ```bash
+  python scripts/label_structure_review.py --rm {rm}        # add --validator-tp / --field-keys to filter
+  python scripts/label_constraints_review.py --rm {rm}      # add --confirmed to filter
+  ```
+- **Re-running** is safe: a completed RM is skipped (delete `evaluation/stm/{rm}/1/.batch_done`
+  or pass `--force` to redo). Multiple RMs at once: `--devices rm0444 rm0091 --parallel 2`.
+- **Progress/logs:** per-RM log at `logs/stm_batch/{rm}.log`; batch status at `logs/stm_batch/status.json`.
 
-# Or run individual stages
-python3 core/s1a_generator.py          # Generator
-python3 core/s2_coverage_improver.py   # Coverage improver
-python3 core/s4_validator.py           # Validator
-python3 core/s5_analyzer.py            # Analyzer
-```
+> The step-by-step manual/debugging path (and the roadblocks it works around) is in
+> [docs/PREPROCESSING.md](docs/PREPROCESSING.md).
 
-## Adding a New Device
+## Running individual stages
 
-1. Add datasheet PDF and SVD files to `devices/{manufacturer}/{device_name}/`
-2. Create vector store: `python3 context_retrieval/preprocessing/pipeline.py devices/<mfg>/<dev>/<dev>.pdf <dev> --format markdown --embed-metadata`
-3. Add device entry to `config.user_contexts` with manufacturer, run number, and IDs
-4. Update `config.DEVICE_NAME` to target the new device
-5. Run `python3 core/s0_run_full_analysis.py`
+`core/s0_run_full_analysis.py` is the per-device engine the driver above launches; run it
+directly (inside Docker) to control individual steps — see its `--help` and
+[CLAUDE.md](CLAUDE.md).
 
 ## Documentation
 
