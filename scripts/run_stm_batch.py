@@ -35,7 +35,9 @@ _DOCKER_RUN = os.path.join(_REPO, "scripts", "docker_run.sh")
 
 
 def _marker(rm: str, run: int) -> str:
-    return os.path.join(_REPO, "evaluation", "stm", rm, str(run), ".batch_done")
+    # Host-owned location: this driver runs on the HOST, but evaluation/ dirs are
+    # created by the container as `nobody`, so a marker there would be un-writable.
+    return os.path.join(_LOG_DIR, f"{rm}_run{run}.done")
 
 
 # ---- host-side registration (R6: the container can't write config_devices.json) ----
@@ -87,7 +89,7 @@ def path_manifest(rm: str, run: int, mfr: str) -> str:
         f"  reviews (per SVD){ev}/<svd>/<svd>_structure_review.csv  +  <svd>_analyzer_cache.json",
         f"  reviews (final)  {ev}/{rm}_structure_review.csv  (consolidated, with verdicts)",
         f"                   {ev}/{rm}_constraints_review.jsonl",
-        f"  run metadata     {ao}/run_manifest.json   +   {ev}/.batch_done",
+        f"  run metadata     {ao}/run_manifest.json   +   logs/stm_batch/{rm}_run{run}.done (resume marker)",
         f"  log              logs/stm_batch/{rm}.log",
         "=" * 46,
     ])
