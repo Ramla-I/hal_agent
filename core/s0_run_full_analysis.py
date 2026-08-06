@@ -1,26 +1,42 @@
 #!/usr/bin/env python3
 """
-Multi-device pipeline for extracting hardware register information from datasheets.
+Per-device pipeline for extracting hardware register information from datasheets.
+This is the complete end-to-end for one device: with the flags below it produces
+BOTH review files (structure_review.csv WITH validator verdicts, and
+constraints_review.jsonl). For a fresh (unregistered) device, drive it from the host
+via ``scripts/run_stm_batch.py --devices {rm} --auto-register`` (which registers the
+device — s0 runs in-container and cannot write the host-owned config_devices.json —
+then launches this).
 
-Steps:
-  1. Preprocess — chunk + enrich + ingest into local ChromaDB (skips if DB exists)
-  2. Generator — extract register info from datasheet using LLMs
-  3. Coverage Improver — iteratively improve coverage based on SVD comparison
-  4. Validator — validate extracted info against the datasheet
-  5. Evaluation — compare with SVD files, run analyzer, generate diff tables
+Steps (executed in the order 1, 2, 3, 4, 6, 5, 5b — note constraint validation runs
+before bug-finding, and the numbering is historical):
+  1. Preprocess    — chunk + enrich + ingest into local ChromaDB, into
+                     chunked_datasheets/{mfr}/{rm}/chunks (skips if the DB exists).
+  2. Generator     — extract register info from the datasheet (batched; retries
+                     empty-subfield registers one-per-call; expands <dim> arrays).
+  3. Coverage Improver — optionally re-generate with improved retrieval params.
+  4. Validator     — (optional, --skip-validator) the BEFORE-diff full pass over
+                     every extracted invariant (core/validator_core.validate_invariants,
+                     openevolve-compatible). Skipped in the bug-finding flow; s6
+                     (Step 5b) is the after-diff candidate validator.
+  6. Constraint validation — chain constraint validator -> validated.jsonl, then
+                     format -> {rm}_constraints_review.jsonl (--constraint-validation).
+  5. Bug-finding   — diff vs SVDs, analyzer, -> {rm}_structure_review.csv.
+  5b. Candidate validator (s6, in-process, non-fatal) — fills validator_verdict in the
+                     structure review, reusing the generator's openevolve collection.
 
 Usage:
-    # Run all steps for all configured devices
-    python core/s0_run_full_analysis.py
-
-    # Single device, skip preprocessing
-    python core/s0_run_full_analysis.py --devices rm0041 --skip-preprocessing
+    # Complete end-to-end for one already-registered device (both review files):
+    python core/s0_run_full_analysis.py --devices rm0041 \
+        --retrieval openevolve --skip-validator --constraint-validation \
+        --constraint-chunks-root chunked_datasheets/stm
 
     # Multiple devices in parallel
     python core/s0_run_full_analysis.py --devices rm0041 rm0008 --max-workers 2
 
-    # Skip expensive steps
-    python core/s0_run_full_analysis.py --devices rm0041 --coverage-improver-iterations 0 --skip-validator
+    # Skip expensive/optional steps
+    python core/s0_run_full_analysis.py --devices rm0041 \
+        --coverage-improver-iterations 0 --skip-s6 --skip-preprocessing
 """
 
 import argparse

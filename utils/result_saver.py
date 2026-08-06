@@ -169,7 +169,11 @@ class ResultSaver:
         fieldnames: Optional[List[str]] = None
     ) -> Path:
         """
-        Save a single row to a CSV file. Automatically writes header if file doesn't exist.
+        Save a single row to a CSV file. Appends if the file already has content
+        (header + append/truncate decided from DISK state, not per-instance memory),
+        so a fresh ResultSaver writing to an existing CSV — e.g. the generator's
+        recursive retry pass — appends rather than truncating. Header is written only
+        when creating the file (or it is empty).
         
         Args:
             row: Dictionary with row data
@@ -211,7 +215,8 @@ class ResultSaver:
         fieldnames: Optional[List[str]] = None
     ) -> Path:
         """
-        Save multiple rows to a CSV file. Automatically writes header if file doesn't exist.
+        Save multiple rows to a CSV file. Appends if the file already has content
+        (disk-based detection, like save_csv_row); header only when creating/empty.
         
         Args:
             rows: List of dictionaries with row data

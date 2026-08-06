@@ -105,7 +105,9 @@ def get_peripheral_names(svd_file_paths):
 
 
 def get_register_names_for_peripheral(svd_file_paths, peripheral_name):
-    """Unique register names for a peripheral across all SVD files (derivedFrom-aware)."""
+    """Unique register names for a peripheral across all SVD files (derivedFrom- and
+    <dim>-aware). ``<dim>`` arrays are expanded to concrete names (``BCR%s`` ->
+    ``bcr2/bcr3/bcr4``), so the caller never sees a ``%s`` placeholder."""
     register_names = set()
     found = False
     target = peripheral_name.lower()
@@ -132,7 +134,9 @@ def get_register_names_for_peripheral(svd_file_paths, peripheral_name):
 
 
 def get_field_counts_for_peripheral(svd_file_paths, peripheral_name):
-    """Return {register_name: field_count} for a peripheral (derivedFrom-aware)."""
+    """Return {register_name: field_count} for a peripheral (derivedFrom- and
+    <dim>-aware). ``<dim>`` arrays are expanded to concrete names, each instance
+    sharing the base register's field count (``BCR%s`` -> ``bcr2/bcr3/bcr4``)."""
     field_counts = {}
     found = False
     target = peripheral_name.lower()

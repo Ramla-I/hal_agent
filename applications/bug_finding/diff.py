@@ -65,7 +65,12 @@ def _stringify(value: Any) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
-    """Parse an SVD file into ``{peripheral: {register: {...}}}`` (all lowercase).
+    """Parse an SVD file into ``{peripheral: {register: {...}}}`` (all lowercase),
+    resolving peripheral- AND register-level ``derivedFrom`` (with device/peripheral
+    size/resetValue/access property inheritance) and expanding ``<dim>`` arrays to
+    concrete names (``BCR%s`` -> ``bcr2/bcr3/bcr4``). Dim expansion is controlled by
+    env ``SVD_DIM_EXPAND`` (default on; set ``0`` to keep collapsed ``%s`` names, for
+    diffing against legacy pre-expansion generator output).
 
     Each register dict has ``address_offset`` (int), ``reset_value`` (int or ''),
     ``size`` (int or None), and ``fields`` (list of ``{name, bit_offset,

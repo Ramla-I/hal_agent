@@ -377,11 +377,22 @@ def run_generator_batched(
     """Per-peripheral batched generator — one LLM call per batch of registers.
 
     Output files are identical to ``run_generator()`` (one JSON per register),
-    so downstream pipeline steps are fully compatible.
+    so downstream pipeline steps are fully compatible. Register enumeration expands
+    ``<dim>`` arrays to concrete names (``BCR%s`` -> ``bcr2/bcr3/bcr4``) via
+    ``agent_tools.svd_parsing``, so no ``%s`` placeholder files are written.
 
     When ``retrieval_only=True``, runs only the retrieval step per batch (writing
     ``embedding_ids.jsonl``) and skips the LLM call + output parsing. Useful for
     cheap retrieval-only sweeps that pair with retrieval IR metrics.
+
+    Empty-field retry: a large batched response can truncate/omit a register's
+    subfields. After the main pass, ``empty_field_retries`` rounds (default 2)
+    re-generate — one register per call, no truncation — any register whose output
+    has empty subfields but whose SVD register has fields (``%s`` placeholder names
+    are skipped, being unretrievable). ``force=True`` re-generates even when the
+    output file already exists (used by the retry to overwrite in place); a failed
+    retry keeps the existing file. ``_retrying`` is the internal recursion guard the
+    retry pass sets so it does not recurse.
     """
     logger.info(
         "Running batched generator for device %s with run number %s",
