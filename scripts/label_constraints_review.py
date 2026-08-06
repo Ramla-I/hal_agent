@@ -178,6 +178,11 @@ def _show(rec, idx, n, pool):
     cur = str(rec.get("tp_fp") or "").strip()
     if cur:
         print(_c(C_DIM, f"  current: tp_fp={cur}"))
+    # Full constraint object (indented JSON) — nothing hidden; the summary above is
+    # just the highlights. Includes severity/enforceability + all kind-specific fields.
+    print(_c(C_DIM, "  constraint (full):"))
+    for ln in json.dumps(c, indent=2, ensure_ascii=False).splitlines():
+        print(_c(C_DIM, "    " + ln))
 
 
 def _accept_verdict(rec) -> str:
