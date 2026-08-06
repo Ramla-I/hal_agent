@@ -646,20 +646,20 @@ def run_pipeline_for_device(
 
         # -- Step 4: Validator (optional) --
         if not args.skip_validator:
-            print(f"\n--- Step 4: Validator ---")
+            print(f"\n--- Step 4: Validator (full extraction, before-diff) ---")
+            # The unified validator core (also used by s6 after the diff). Routed
+            # through retrieve_context, so it works on openevolve retrieval too
+            # (the old s4 search_context path raised on OPENEVOLVE). This is the
+            # before-diff FULL pass over every extracted invariant; s6 (Step 5b) is
+            # the after-diff candidate pass that writes the review verdicts.
+            from validator_core import validate_invariants
             invariants = build_invariants_from_agent_output(paths.agent_output_dir)
             validator_output_dir = os.path.join(paths.agent_output_dir, "validator")
-            os.makedirs(validator_output_dir, exist_ok=True)
-
-            validator_fn = run_validator_batched if args.validator_batched else run_validator
-            true_count, false_count = validator_fn(
-                client=validator_client,
-                model_name=validator_model,
-                invariants=invariants,
-                output_dir=validator_output_dir,
-                context_retrieval_parameters=cr_params,
-                reasoning_effort=validator_reasoning,
-            )
+            v_models = [args.validator_model] if args.validator_model else list(config.STAGE_MODELS["validator"])
+            true_count, false_count = validate_invariants(
+                v_models, invariants, validator_output_dir, cr_params,
+                ctx.device_name, paths.device_dir, ctx.manufacturer,
+                paths.agent_output_dir, reasoning_effort=validator_reasoning)
             result.validator_done = True
             result.true_count = true_count
             result.false_count = false_count
