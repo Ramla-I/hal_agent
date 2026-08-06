@@ -118,11 +118,14 @@ source .venv/bin/activate
 # Run the full analysis pipeline (generator + coverage improver + evaluation)
 python3 core/s0_run_full_analysis.py
 
+# One-command end-to-end for one device (host-side: registers + launches s0 in Docker)
+python3 scripts/run_stm_batch.py --devices rm0041 --auto-register
+
 # Run individual stages
 python3 core/s1a_generator.py                    # Generate register info from datasheet
 python3 core/s2_coverage_improver.py             # Improve coverage based on SVD comparison
-python3 core/s4_validator.py                     # Validate extracted information
-python3 core/s5_analyzer.py                      # Analyze differences
+python3 core/s6_validate_candidates.py --devices rm0041   # Candidate validator (writes verdicts)
+# (the analyzer is not a standalone CLI — it's applications/bug_finding/classify.py::run_analyzer)
 ```
 
 ### Optimization Scripts
@@ -173,17 +176,20 @@ All pipeline configuration is centralized in `config.py`:
 
 ### Pipeline Flow (s0_run_full_analysis.py)
 
-The main pipeline orchestrates a feedback loop:
+`s0` is the complete **per-device** end-to-end. For a fresh device, drive it from the
+host via `scripts/run_stm_batch.py --devices {rm} --auto-register` (registers the
+device in the host-owned `config_devices.json`, then launches s0 in Docker). Per
+device, in execution order (numbering is historical):
 
-1. **Vector Store Setup**: Creates/uses OpenAI vector store for datasheet context retrieval
-2. **Iterative Loop** (runs `COVERAGE_IMPROVER_ITERATIONS` times):
-   - **Generator (S1)**: Extracts register info for each peripheral/register from SVD files
-   - **Coverage Improver (S2)**: Analyzes coverage gaps and adjusts context retrieval parameters
-3. **Post-Loop Evaluation**:
-   - **Validator (S4)**: TODO - Should run once after loop exits, but currently not integrated into s0_run_full_analysis.py
-   - Compare agent output with SVD files (creates diff CSVs)
-   - Run analyzer to filter out irrelevant differences (keeps only actual agent errors)
-   - Generate diff tables and compare with verified datasheets
+1. **Preprocess (Step 1)**: chunk → enrich → ingest into `chunked_datasheets/{mfr}/{rm}/chunks` + local ChromaDB (skips if the DB exists). Followed by a readiness gate.
+2. **Generator (Step 2)**: extract register info per peripheral/register (batched; expands `<dim>` arrays; retries empty-subfield registers one-per-call).
+3. **Coverage Improver (Step 3)**: optional (off by default) — re-generate with improved retrieval params.
+4. **Validator (Step 4)**: optional (`--skip-validator`) — the BEFORE-diff full pass over every extracted invariant, via the unified `core/validator_core.py::validate_invariants` (openevolve-compatible). Skipped in the bug-finding flow; s6 is the after-diff validator.
+5. **Constraint validation (Step 6, runs before Step 5)**: chain constraint validator → `validated.jsonl`, formatted → `{rm}_constraints_review.jsonl`.
+6. **Bug-finding (Step 5)**: diff vs SVDs → analyzer → `{rm}_structure_review.csv`.
+7. **Candidate validator (Step 5b, s6, in-process, non-fatal)**: fills `validator_verdict` in the structure review, reusing the generator's openevolve collection (no index rebuild). Same `validate_invariants` core as Step 4, run after the diff on the bug candidates.
+
+Deliverables: `{rm}_structure_review.csv` (with verdicts) and `{rm}_constraints_review.jsonl`.
 
 ### Key Components
 
@@ -200,17 +206,15 @@ The main pipeline orchestrates a feedback loop:
 - Uses reasoning to suggest improved context retrieval parameters
 - Output: `coverage_improver_output.json` with updated parameters + `coverage_info.json`
 
-**Validator (s4_validator.py)**
-- Builds invariants from agent output (address offsets, reset values, bit ranges, etc.)
-- Uses an LLM agent with file search to classify each invariant as true/false based on the datasheet
-- The agent searches the datasheet and provides a confidence-based classification
-- Output: `classification.csv`, `output.txt`, `usage.csv` in validator directory
+**Validator (unified: `core/validator_core.py::validate_invariants`)**
+- One validator core, run either BEFORE the diff (s0 Step 4: all extracted invariants — address offsets, reset values, bit ranges) or AFTER the diff (s6: only the bug candidates).
+- Routes through `retrieve_context` (openevolve-compatible) and `call_llm` (retry-resilient); the calibrated batched prompt matches the validator card. `s4_validator.build_invariants_from_agent_output` builds the before-diff list; `applications/bug_finding/validate_candidates.candidate_invariants` builds the after-diff list; `apply_verdicts` writes the s6 `validator_verdict` into the review.
+- Output: `classification.csv`, `output.txt`, `usage.csv` in the validator directory.
 
-**Analyzer (s5_analyzer.py)**
-- Reviews differences between agent output and SVD files from `register_diff.csv`
-- Filters out irrelevant differences (e.g., legitimate bugs in SVD, acceptable variations)
-- Identifies which differences represent actual agent errors vs. correct deviations
-- Output: JSON with list of valid bug row IDs, plus filtered `register_diff_analyzer.csv`
+**Analyzer (`applications/bug_finding/classify.py::run_analyzer`)**
+- Screens value-mismatch diffs **in-memory** (consumes `list[Diff]` directly — no `register_diff.csv` round-trip), dropping obvious FPs (not-found placeholders, representation differences) via the LLM.
+- Incremental: caches each candidate's keep/drop verdict by stable identity in `{svd}_analyzer_cache.json`, so a re-run judges only new candidates; a hard analyzer failure (no JSON) is NOT cached (kept provisionally, re-judged next run).
+- Output: the identity cache + `list[Bug]` returned to the bug-finding pipeline.
 
 ### Context Retrieval System
 

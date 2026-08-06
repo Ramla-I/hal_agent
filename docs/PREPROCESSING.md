@@ -3,9 +3,19 @@
 **Goal:** take a raw STM reference-manual PDF and produce everything the pipeline
 needs so the generator (and the constraint chain) can run on it.
 
-This is currently a **partly-manual, multi-step process** with several sharp
-edges. This doc records the exact steps *and* the roadblocks, so it can be
-automated later. Status of each roadblock is noted inline.
+> **This is now automated by one command:**
+> ```
+> python scripts/run_stm_batch.py --devices {rm} --auto-register
+> ```
+> Run it on the **host** (it registers the device in the host-owned
+> `config_devices.json` — the container can't — then launches s0 in Docker). s0's
+> Step 1 does the chunking + ingest, writing to `chunked_datasheets/{mfr}/{rm}/chunks`
+> (the location the generator + constraint step read; R1/R7 reconciled), with a
+> readiness gate before generation. The rest of this doc is the **reference / manual
+> path** for debugging or doing a step by hand.
+
+The manual path below is a **multi-step process** with several sharp edges. It
+records the exact steps *and* the roadblocks; roadblock status is noted inline.
 
 ---
 
@@ -178,12 +188,16 @@ Then the generator runs with openevolve retrieval:
 
 ---
 
-## Not yet automated (the TODO for a one-command preprocessor)
+## Automated (previously the TODO for a one-command preprocessor)
 
-1. Auto-register (R3/R6) — ingest or a host wrapper writes the `config_devices.json`
-   entry if missing.
-2. Default chunk output to `chunked_datasheets/` (R1).
-3. One driver: PDF → chunk (parallel md) → ingest (+vector_stores.json) → verify,
-   with the whole-picture readiness check (Step 4) as the success gate.
-4. Reconcile the two chunk locations (generator vs constraint) so a single chunking
-   pass serves both, instead of s0 Step 1 re-chunking to `devices/...`.
+All four are now done by `scripts/run_stm_batch.py --auto-register` + s0:
+
+1. ✅ Auto-register (R3/R6) — the host-side driver writes the `config_devices.json`
+   entry if missing (serially, before launching the container).
+2. ✅ Default chunk output to `chunked_datasheets/` (R1) — s0 Step 1 now writes there.
+3. ✅ One driver: register → (s0) chunk → ingest (+vector_stores.json) → readiness
+   gate → generate → reviews.
+4. ✅ Reconcile the two chunk locations (R7) — s0 Step 1 writes to
+   `chunked_datasheets/`, the same place the generator + constraint step read;
+   `preprocess_stm_batch.py`/`ingest_stm_batch.py` remain only as an optional bulk
+   pre-warm.
