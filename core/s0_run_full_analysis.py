@@ -108,6 +108,9 @@ class DeviceResult:
     bug_candidates: int = 0
     auto_fp: int = 0
 
+    # Step 5b — candidate validator (s6, in-process)
+    s6_done: bool = False
+
     # Run metadata (for the manifest)
     retrieval_method: str = ""
     generator_models: list = field(default_factory=list)
@@ -649,6 +652,18 @@ def run_pipeline_for_device(
                   f"{cv['static_pass']} static-pass -> "
                   f"{cv['confirmed']} validator-confirmed")
 
+            # Format the chained validated.jsonl into the reviewable per-RM JSONL
+            # (stdlib join adapter, no LLM) so s0 emits BOTH review files.
+            from constraints_review import build_review_from_validated
+            vendor = getattr(ctx.manufacturer, "value", str(ctx.manufacturer)).lower()
+            validated_path = os.path.join(paths.agent_output_dir, "constraint_validation", "validated.jsonl")
+            constraints_review_path = os.path.join(paths.results_dir, f"{ctx.device_name}_constraints_review.jsonl")
+            os.makedirs(paths.results_dir, exist_ok=True)
+            n_cr = build_review_from_validated(
+                ctx.device_name, str(paths.run_number), validated_path,
+                constraints_review_path, repo_root=repo_root, manufacturer=vendor)
+            print(f"  Constraints review: {n_cr} record(s) -> {constraints_review_path}")
+
         # -- Step 5: Evaluation (optional) --
         if not args.skip_evaluation:
             print(f"\n--- Step 5: Bug finding ---")
@@ -670,6 +685,25 @@ def run_pipeline_for_device(
             for svd_name, classes in bug_results.items():
                 n = sum(len(bc.bugs) for bc in classes)
                 print(f"    {svd_name}: {n} bug(s) in {len(classes)} class(es)")
+
+            # -- Step 5b: candidate validator (s6), in-process + NON-FATAL --
+            # Fills validator_verdict/confidence in {rm}_structure_review.csv. Runs in
+            # THIS process, so its openevolve retrieval reuses the collection the
+            # generator already built (openevolve_search._db_cache) — no index rebuild.
+            # Wrapped non-fatal: the review files are already on disk, so an s6
+            # failure/slowness just leaves the advisory verdict column blank.
+            if not args.skip_s6:
+                print(f"\n--- Step 5b: Candidate validator (s6) ---")
+                try:
+                    from s6_validate_candidates import validate_run as _s6_validate_run
+                    s6_res = _s6_validate_run(
+                        ctx, repo_root, paths.run_number, list(config.STAGE_MODELS["validator"]))
+                    result.s6_done = True
+                    print(f"  s6: {s6_res}")
+                except Exception as _s6_err:  # non-fatal
+                    print(f"  s6 (non-fatal) failed: {_s6_err}")
+                    import traceback
+                    traceback.print_exc()
 
     except Exception as e:
         result.success = False
@@ -772,6 +806,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--skip-evaluation", action="store_true",
         help="Skip SVD comparison and diff tables (Step 5)",
+    )
+    parser.add_argument(
+        "--skip-s6", action="store_true",
+        help="Skip the in-process candidate validator (Step 5b/s6) that fills "
+             "validator_verdict in the structure review",
     )
     parser.add_argument(
         "--run-analyzer", action="store_true",
