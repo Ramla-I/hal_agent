@@ -40,7 +40,7 @@ Replace the intermediate `register_diff.csv` / `field_diff.csv` round-trips with
 - `diff.py` — in-memory compare: SVD (via `agent_tools/svd_parsing.py`) vs generator JSON (via `utils.generator_facts.convert_generator_register_to_svd_like`), returning `list[RegisterDiff]`/`list[FieldDiff]` (no CSV). Move `scripts/s2_compare_agent_output_with_svd.py`'s core logic here.
 - `classify.py` — take analyzer-confirmed bug diffs → group into `BugClass`es. (reset_value bugs cluster & merge well; structural bit_offset/bit_width/address_offset are higher-impact but merge less — see baseline.)
 - `report.py` — emit one review CSV per SVD file (schema below).
-- `pipeline.py` / `driver.py` — `find_bugs(device) -> list[BugClass]`: orchestrate generate → diff → analyze → classify → report. CLI: `python -m applications.bug_finding.driver --device rm0091`.
+- `pipeline.py` — `run_bug_finding(svd_dir, agent_output_dir, results_dir, ...) -> {svd: [BugClass]}`: orchestrate diff → analyze → classify → report. Called directly by s0 Step 5.
 
 ### CSV reduction plan
 - **Eliminate as files:** `register_diff.csv`, `field_diff.csv` (become in-memory typed diffs); the 3 `*_summary.csv` (compute on demand). Refactor `core/s5_analyzer.py` to accept in-memory diffs, and **update `core/s0_run_full_analysis.py` to use the new typed path directly** — NO parallel/old-CSV compat path to maintain (confirmed Ramla 2026-06-15). Do NOT touch the s4 validator (`core/s4_validator.py`, `prompts/validator.py`).

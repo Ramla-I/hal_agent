@@ -505,7 +505,7 @@ def run_pipeline_for_device(
     """Execute the full pipeline (steps 2-5) for a single device."""
     from s1a_generator import run_generator, run_generator_batched
     from s2_coverage_improver import run_coverage_improver
-    from s4_validator import build_invariants_from_agent_output, run_validator, run_validator_batched
+    from s4_validator import build_invariants_from_agent_output  # validator core is core/validator_core.py
     from scripts.calculate_generator_coverage import calculate_generator_coverage
     from applications.bug_finding.pipeline import run_bug_finding
 
@@ -534,7 +534,7 @@ def run_pipeline_for_device(
 
         generator_client = determine_client(generator_model)
         ci_client = determine_client(ci_model)
-        validator_client = determine_client(validator_model)
+        # (no validator_client: the unified validator core uses call_llm internally)
 
         print(f"\n{'='*70}")
         print(f"DEVICE: {ctx.device_name} (run {run_number})")
