@@ -1,95 +1,160 @@
 #!/usr/bin/env python3
-"""Batch-run the STM pipeline (structure + constraint chains) over many RMs.
+"""One-command end-to-end STM pipeline driver.
 
-Runs inside Docker (/app layout, deps present). Per RM, in order:
-  1. s0_run_full_analysis  — generator -> structure validator -> SVD diff ->
-     bug-finding (-> {rm}_structure_review.csv) -> chained constraint validation
-     (-> constraint_validation/validated.jsonl). Retrieval: openevolve.
-  2. constraints_review    — format validated.jsonl -> {rm}_constraints_review.jsonl
-  3. s6_validate_candidates — write validator_verdict/confidence into the
-     structure review CSV.
+RUNS ON THE HOST (not inside Docker): device registration writes the host-owned
+`config_devices.json`, which the container (running as `nobody`) cannot. Per RM:
 
-Bounded parallelism across RMs, one log file per RM, resume via a per-RM
-done-marker (delete it or pass --force to re-run). Run numbers auto-resolve
-(fresh device -> run 1; an interrupted RM resumes the same run).
+  0. (host, with --auto-register) register the device in config_devices.json if
+     it is missing — the one step that must be host-side.
+  1. launch s0 in the container via scripts/docker_run.sh. s0 now does EVERYTHING
+     per device: preprocess (chunk -> ingest, into chunked_datasheets) -> generator
+     -> constraint validation + constraints_review.jsonl -> SVD diff + bug-finding
+     (structure_review.csv) -> in-process s6 (fills validator_verdict). Retrieval:
+     openevolve. s0's own Step 4 (before-diff full validator) stays skipped; s6
+     (in-process Step 5b) is the after-diff candidate validator that writes verdicts.
 
-    python scripts/run_stm_batch.py --devices rm0091 rm0008 ... --parallel 2
+Before each RM it prints a full input/output PATH MANIFEST (every file read and
+written). Bounded parallelism across RMs, one log file per RM, resume via a per-RM
+done-marker (delete it or pass --force to re-run).
+
+    python scripts/run_stm_batch.py --devices rm0530 --auto-register
+    python scripts/run_stm_batch.py --devices rm0091 rm0008 --parallel 2
 """
 import argparse
+import glob
 import json
 import os
 import subprocess
-import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _LOG_DIR = os.path.join(_REPO, "logs", "stm_batch")
+_REGISTRY = os.path.join(_REPO, "config_devices.json")
+_DOCKER_RUN = os.path.join(_REPO, "scripts", "docker_run.sh")
 
 
 def _marker(rm: str, run: int) -> str:
     return os.path.join(_REPO, "evaluation", "stm", rm, str(run), ".batch_done")
 
 
-def _steps(rm: str, run: int, chunks: str):
-    py = sys.executable
-    return [
-        # --skip-validator: Step 4 (full structure validator) is redundant here —
-        # s6 is the candidate validator that writes the verdicts — and its retrieval
-        # path does not resolve the openevolve method (crashes). Step 5 (bug-finding
-        # -> structure_review.csv) and Step 6 (chained constraint validation ->
-        # validated.jsonl) run fine on openevolve.
-        # (name, cmd, timeout_s, fatal). s0/review produce the deliverables and are
-        # fatal. s6 only adds the ADVISORY validator_verdict column — on the biggest
-        # datasheets its openevolve-retrieval index build is pathologically slow
-        # (CPU-bound, 60min+), so it is timeout-bounded and NON-fatal: the RM still
-        # counts (structure_review + constraints already exist); those candidates
-        # just keep a blank validator_verdict.
-        ("s0", [py, "core/s0_run_full_analysis.py", "--devices", rm,
-                "--retrieval", "openevolve", "--skip-validator", "--constraint-validation",
-                "--constraint-chunks-root", chunks, "--constraint-batch-size", "8"], None, True),
-        ("review", [py, "core/constraints_review.py", "--rm", rm, "--run", str(run)], 600, True),
-        ("s6", [py, "core/s6_validate_candidates.py", "--devices", rm, "--run", str(run)], 2700, False),
-    ]
+# ---- host-side registration (R6: the container can't write config_devices.json) ----
+
+def _registered(rm: str) -> bool:
+    try:
+        reg = json.load(open(_REGISTRY, encoding="utf-8"))
+    except Exception:
+        return False
+    return any((d.get("device_name") or "").lower() == rm.lower() for d in reg.get("devices", []))
 
 
-def _run_rm(rm: str, run: int, chunks: str, force: bool) -> dict:
+def _register(rm: str, mfr: str) -> None:
+    """Append a minimal registry entry (same shape as update_config.update_device)."""
+    reg = json.load(open(_REGISTRY, encoding="utf-8"))
+    reg.setdefault("devices", []).append({
+        "device_name": rm, "manufacturer": mfr.upper(), "peripheral_name": "",
+        "driver_path": "", "run": 0, "file_id": "", "vs_id": "",
+    })
+    tmp = _REGISTRY + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(reg, f, indent=2)
+    os.replace(tmp, _REGISTRY)
+
+
+# ---- path manifest: every file this process reads and writes ----
+
+def path_manifest(rm: str, run: int, mfr: str) -> str:
+    dev = f"devices/{mfr}/{rm}"
+    ao = f"agent_output/{mfr}/{rm}/{run}"
+    ev = f"evaluation/{mfr}/{rm}/{run}"
+    ch = f"chunked_datasheets/{mfr}/{rm}/chunks"
+    svds = sorted(os.path.relpath(s, _REPO) for s in glob.glob(os.path.join(_REPO, dev, "svd", "*.svd")))
+    return "\n".join([
+        f"===== PATH MANIFEST: {rm} (run {run}) =====",
+        "INPUTS (read):",
+        f"  datasheet PDF    {dev}/{rm}.pdf",
+        f"  SVDs             {', '.join(svds) if svds else dev + '/svd/*.svd (none found yet)'}",
+        f"  device registry  config_devices.json",
+        f"  RM->device map   devices/{mfr}/rm_device_mapping.xml",
+        f"  OE program       openevolve_retrieval/output_{rm}/best/best_program.py (or vendor default)",
+        "OUTPUTS (written):",
+        f"  chunks           {ch}/md/*.txt  +  {ch}/md_enriched/*.txt  +  {ch}/md/metadata.json  +  {ch}/md/chunks_index.csv",
+        f"  vector DB        databases/{rm}_md_chunks/   (+ shared databases/oe_embed_cache.sqlite)",
+        f"  retrieval cfg    {dev}/vector_stores.json",
+        f"  generator        {ao}/<peripheral>_<register>   +  {ao}/info/{{summary.txt,usage.csv,reasoning.txt,reasoning.jsonl,embedding_ids.jsonl}}",
+        f"  constraints      {ao}/constraint_validation/{{validated,anchors,judgments}}.jsonl  +  manifest.json  +  summary.json",
+        f"  validator (s6)   {ao}/validator/{{classification.csv,usage.csv,output.txt}}",
+        f"  reviews (per SVD){ev}/<svd>/<svd>_structure_review.csv  +  <svd>_analyzer_cache.json",
+        f"  reviews (final)  {ev}/{rm}_structure_review.csv  (consolidated, with verdicts)",
+        f"                   {ev}/{rm}_constraints_review.jsonl",
+        f"  run metadata     {ao}/run_manifest.json   +   {ev}/.batch_done",
+        f"  log              logs/stm_batch/{rm}.log",
+        "=" * 46,
+    ])
+
+
+def _s0_cmd(rm: str, chunks: str) -> list:
+    """Launch s0 in the container. s0 does preprocessing + generator + constraints
+    (+ constraints_review) + bug-finding + in-process s6. Step 4 (before-diff full
+    validator) stays skipped; s6 in-process writes the verdicts."""
+    return [_DOCKER_RUN, "run", "core/s0_run_full_analysis.py", "--devices", rm,
+            "--retrieval", "openevolve", "--skip-validator", "--constraint-validation",
+            "--constraint-chunks-root", chunks, "--constraint-batch-size", "8"]
+
+
+def _run_rm(rm: str, run: int, chunks: str, force: bool, timeout: int | None) -> dict:
     if not force and os.path.exists(_marker(rm, run)):
         return {"rm": rm, "status": "skipped_done"}
     os.makedirs(_LOG_DIR, exist_ok=True)
     log = os.path.join(_LOG_DIR, f"{rm}.log")
-    warnings = []
+    cmd = _s0_cmd(rm, chunks)
     with open(log, "w") as lf:
-        for name, cmd, timeout, fatal in _steps(rm, run, chunks):
-            lf.write(f"\n==== {name} :: {' '.join(cmd)}\n")
-            lf.flush()
-            t0 = time.time()
-            try:
-                rc = subprocess.run(cmd, cwd=_REPO, stdout=lf, stderr=subprocess.STDOUT,
-                                    timeout=timeout, start_new_session=True).returncode
-            except subprocess.TimeoutExpired:
-                rc = 124
-                lf.write(f"---- {name} TIMEOUT after {timeout}s\n")
-            lf.write(f"---- {name} rc={rc} ({time.time() - t0:.0f}s)\n")
-            lf.flush()
-            if rc != 0:
-                if fatal:
-                    return {"rm": rm, "status": "fail", "step": name, "rc": rc}
-                warnings.append(f"{name}:rc={rc}")  # non-fatal (e.g. s6 timeout): keep going
+        lf.write(path_manifest(rm, run, "stm") + "\n\n")
+        lf.write(f"==== s0 :: {' '.join(cmd)}\n")
+        lf.flush()
+        t0 = time.time()
+        try:
+            rc = subprocess.run(cmd, cwd=_REPO, stdout=lf, stderr=subprocess.STDOUT,
+                                timeout=timeout, start_new_session=True).returncode
+        except subprocess.TimeoutExpired:
+            rc = 124
+            lf.write(f"---- s0 TIMEOUT after {timeout}s\n")
+        lf.write(f"---- s0 rc={rc} ({time.time() - t0:.0f}s)\n")
+    if rc != 0:
+        return {"rm": rm, "status": "fail", "rc": rc}
     os.makedirs(os.path.dirname(_marker(rm, run)), exist_ok=True)
     with open(_marker(rm, run), "w") as f:
         f.write("ok\n")
-    return {"rm": rm, "status": "ok", **({"warnings": warnings} if warnings else {})}
+    return {"rm": rm, "status": "ok"}
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--devices", nargs="+", required=True)
-    ap.add_argument("--run", type=int, default=1, help="run number for review/s6 (default 1)")
-    ap.add_argument("--chunks", default="chunked_datasheets/stm")
+    ap.add_argument("--run", type=int, default=1, help="run number (default 1)")
+    ap.add_argument("--manufacturer", default="stm")
+    ap.add_argument("--chunks", default="chunked_datasheets/stm",
+                    help="constraint chunks root passed to s0")
     ap.add_argument("--parallel", type=int, default=2)
     ap.add_argument("--force", action="store_true", help="ignore done-markers, re-run all")
+    ap.add_argument("--auto-register", action="store_true",
+                    help="register any unregistered device in config_devices.json (host-side)")
+    ap.add_argument("--timeout", type=int, default=None, help="per-RM s0 timeout in seconds")
     args = ap.parse_args()
+
+    # Print the manifests up front (also written to each RM's log).
+    for rm in args.devices:
+        print(path_manifest(rm, args.run, args.manufacturer), flush=True)
+
+    # Host-side registration, SERIAL (concurrent config_devices.json writes would race).
+    for rm in args.devices:
+        if _registered(rm):
+            continue
+        if args.auto_register:
+            _register(rm, args.manufacturer)
+            print(f"[register] {rm} -> config_devices.json", flush=True)
+        else:
+            print(f"[warn] {rm} not registered — pass --auto-register (or register manually)", flush=True)
 
     os.makedirs(_LOG_DIR, exist_ok=True)
     status = os.path.join(_LOG_DIR, "status.json")
@@ -100,20 +165,19 @@ def main() -> None:
     def save():
         with open(status, "w") as f:
             json.dump({"total": n, "done": len(results),
-                       "elapsed_s": round(time.time() - t_start),
-                       "results": results}, f, indent=1)
+                       "elapsed_s": round(time.time() - t_start), "results": results}, f, indent=1)
 
     save()
     print(f"batch start: {n} RMs, parallel={args.parallel}", flush=True)
     with ThreadPoolExecutor(max_workers=args.parallel) as ex:
-        futs = {ex.submit(_run_rm, rm, args.run, args.chunks, args.force): rm
+        futs = {ex.submit(_run_rm, rm, args.run, args.chunks, args.force, args.timeout): rm
                 for rm in args.devices}
         for fut in as_completed(futs):
             r = fut.result()
             results.append(r)
             save()
-            tag = r["status"] + (f"@{r.get('step')}" if r["status"] == "fail" else "")
-            print(f"[{len(results)}/{n}] {r['rm']}: {tag}", flush=True)
+            print(f"[{len(results)}/{n}] {r['rm']}: {r['status']}"
+                  + (f" rc={r.get('rc')}" if r["status"] == "fail" else ""), flush=True)
     save()
     ok = [r for r in results if r["status"] in ("ok", "skipped_done")]
     fails = [r["rm"] for r in results if r["status"] == "fail"]
