@@ -181,7 +181,8 @@ def main():
     ap.add_argument("--all", action="store_true",
                     help="step through ALL candidates (default: only unlabeled)")
     ap.add_argument("--validator-tp", action="store_true",
-                    help="only rows the datasheet validator flagged TP (validator_verdict==TP)")
+                    help="only rows the validator did NOT flag FP — i.e. TP plus abstains "
+                         "(blank validator_verdict: leans-true-but-below-threshold / unmatched)")
     ap.add_argument("--field-keys", action="store_true",
                     help="only bit_offset / bit_width field bug candidates (both validator TP and FP)")
     args = ap.parse_args()
@@ -196,12 +197,14 @@ def main():
 
     work = cands if args.all else [r for r in cands if _blank(r.get("tp_fp"))]
     if args.validator_tp:
-        work = [r for r in work if (r.get("validator_verdict") or "").strip().upper() == "TP"]
+        # TP plus abstains: everything the validator did NOT confidently call FP
+        # (abstain / unmatched are stored as a blank validator_verdict).
+        work = [r for r in work if (r.get("validator_verdict") or "").strip().upper() != "FP"]
     if args.field_keys:
         work = [r for r in work if (r.get("key") or "").strip().lower() in ("bit_offset", "bit_width")]
     tp0, fp0, _ = _tally(cands)
     flags = "".join(f for f, on in ((" (all)", args.all),
-                                    (" [validator-TP only]", args.validator_tp),
+                                    (" [validator TP+abstain]", args.validator_tp),
                                     (" [bit_offset/bit_width only]", args.field_keys)) if on)
     print(_c("1", f"{path}"))
     print(f"{len(cands)} candidates · {tp0 + fp0} already labeled · "
