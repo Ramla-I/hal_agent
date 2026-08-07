@@ -67,10 +67,13 @@ KINDS = ["state_gate", "sequence", "write_once", "clock_gate", "delay",
          "read_effect", "value_relation", "other"]
 
 # Which sweep result files to merge (later files win per (rm, consumer)).
+# The earlier files are partial runs kept for provenance; `sweep_all48.json`
+# is the whole-corpus re-measurement (every target, every consumer, one code
+# version) and must merge LAST so it wins wherever the two disagree.
 SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                "sweep_opsel.json", "sweep_alias.json",
                "sweep_conflict.json", "sweep_new.json",
-               "sweep_full.json"]
+               "sweep_full.json", "sweep_all48.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 

@@ -152,6 +152,31 @@ class SourceRegister:
         return f"super::super::{self.periph_module}::{self.reg}::{spec}"
 
 
+# Rust's reserved words, including the 2018/2021 additions and the words
+# reserved-for-future-use. svd2rust cannot name a method after one of these,
+# so when a datasheet field collides it appends an underscore:
+#
+#     pub type PRIV_R = crate::BitReader;
+#     pub fn priv_(&self) -> PRIV_R { ... }
+#
+# Emitting `r.priv()` -- the field name lowercased, which is what a precondition
+# naively spells -- is a PARSE error, so the whole chip crate dies, not just the
+# constrained register. The security-enabled families (L5, H5, H7-S) all carry a
+# PRIV bit, and all three failed exactly here.
+_RUST_KEYWORDS = frozenset("""
+as break const continue crate dyn else enum extern false fn for if impl in let
+loop match mod move mut pub ref return self Self static struct super trait true
+type unsafe use where while async await box do final macro override priv try
+typeof unsized virtual yield abstract become
+""".split())
+
+
+def field_accessor(field: str) -> str:
+    """The generated accessor method name for a datasheet field."""
+    f = field.lower()
+    return f + "_" if f in _RUST_KEYWORDS else f
+
+
 class Precondition:
     """A field-state check, validated and value-parsed. ``source`` is None
     for same-register conditions, else the resolved cross-register source.
@@ -197,7 +222,7 @@ class Precondition:
         return f"{where}{self.field} {self.kind}"
 
     def check_expr(self, reader: str = "r") -> str:
-        accessor = self.field.lower()
+        accessor = field_accessor(self.field)
         if self.kind == "cleared":
             return f"{reader}.{accessor}().bit_is_clear()"
         if self.kind == "set":
@@ -243,7 +268,7 @@ class FieldGate:
 
     def __init__(self, field: str):
         self.field = field
-        self.field_lower = field.lower()
+        self.field_lower = field_accessor(field)
         self.preconditions: list["Precondition"] = []
         self.docs: list[str] = []
 
@@ -514,6 +539,30 @@ class RegisterPlan:
 # Emitter: the per-peripheral `constraints` module
 # --------------------------------------------------------------------------- #
 
+def doc_lines(text: str, indent: str = "    ") -> list:
+    """A datasheet quote as legal Rust doc-comment lines.
+
+    Quotes are lifted verbatim from the manual and a good number of them span
+    several lines -- RM0440's FDCAN rule is "The following registers can be
+    written only when the CCE bit is cleared:" followed by a bulleted list.
+    Interpolating that into a single `/// {doc}` prefixes only the FIRST line;
+    the rest land as bare text inside an `impl` block and the crate stops
+    parsing:
+
+        error: expected item after doc comment
+           --> src/stm32g4a1/fdcan.rs:813:9
+
+    which takes down the whole chip crate, not just one register. Seven of the
+    48 sweep targets failed this way. Every line gets its own `///`, and blank
+    lines are kept as `///` so paragraphs survive.
+    """
+    out = []
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        out.append(f"{indent}///{' ' + line.strip() if line.strip() else ''}")
+    return out or [f"{indent}///"]
+
+
 def generate_constraint_module(plan: RegisterPlan) -> str:
     reg = plan.reg_name
     spec = f"super::{plan.reg_lower}::{reg.upper()}rs"
@@ -607,7 +656,8 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("    ///")
         a("    /// # Constraint")
         for doc in plan.docs.get(op, []):
-            a(f"    /// {doc}")
+            for line in doc_lines(doc):
+                a(line)
         a("    #[inline(always)]")
         a(f"    pub fn check_{op}_ready(&self{src_params(op)}) -> Result<{w}, {err}> {{")
         emit_check_body(w, pres, srcs)
@@ -666,7 +716,8 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("    ///")
         a("    /// # Constraint")
         for doc in fg.docs:
-            a(f"    /// {doc}")
+            for line in doc_lines(doc):
+                a(line)
         a("    #[inline(always)]")
         a(f"    pub fn {fg.check_name()}(&self{_src_params(srcs)}) "
           f"-> Result<{w}, {err}> {{")
