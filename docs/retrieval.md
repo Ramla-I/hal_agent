@@ -57,7 +57,7 @@ openevolve depends on** (besides the `md` text itself).
 
 - **`file_path` may be absolute `/app/...`** — `/app` is the repo's mount point inside
   Docker (`docker_run.sh -v $REPO_ROOT:/app -w /app`), **not a placeholder**. RMs chunked
-  with a relative `--output-dir` (via `preprocess_stm_batch`) record relative paths;
+  with a relative `--output-dir` record relative paths;
   RMs chunked by s0's `preprocess_device` (whose `base_output_dir` uses `_REPO_ROOT`,
   = `/app` in-container) record absolute `/app/...`. Harmless in the normal flow because
   loading prefers `chunks_dir/{chunk_id}.txt`; but `/app/...` won't resolve if the CSV is

@@ -115,12 +115,10 @@ Then the generator runs with openevolve retrieval:
 
 ## Batch tooling (current)
 
-- `scripts/preprocess_stm_batch.py` — chunk many RMs (Steps 2), smallest-PDF-first,
-  per-RM timeout, resume. Parallel markdown converter for large PDFs (R2).
-- `scripts/ingest_stm_batch.py` — build vector stores (Step 3) for many RMs,
-  parallel, resume-by-`databases/{rm}_md_chunks`.
-- Registration (Step 1) is a host-side `config_devices.json` edit — **not yet
-  scripted** (R6).
+`scripts/run_stm_batch.py --auto-register` is the one driver: per RM it registers
+the device host-side, then launches s0, which folds preprocessing (chunk → ingest →
+`vector_stores.json`) into **Step 1** before generating. There is no separate
+batch-preprocess step to run anymore.
 
 ---
 
@@ -198,6 +196,4 @@ All four are now done by `scripts/run_stm_batch.py --auto-register` + s0:
 3. ✅ One driver: register → (s0) chunk → ingest (+vector_stores.json) → readiness
    gate → generate → reviews.
 4. ✅ Reconcile the two chunk locations (R7) — s0 Step 1 writes to
-   `chunked_datasheets/`, the same place the generator + constraint step read;
-   `preprocess_stm_batch.py`/`ingest_stm_batch.py` remain only as an optional bulk
-   pre-warm.
+   `chunked_datasheets/`, the same place the generator + constraint step read.
