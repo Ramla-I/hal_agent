@@ -106,22 +106,26 @@ class Project:
 
 PROJECTS = [
     # --- track 2: PACs used directly, no HAL. Errors land on their own lines.
+    # Chip attribution here is derived from each driver crate's OWN Cargo
+    # features, not from the family in its name. Getting this wrong is not
+    # conservative: `drv/stm32xx-i2c` builds ONLY for H7 and G0, and an earlier
+    # run matched it against RM0386, an F4 manual whose I2C is a different
+    # peripheral generation (START/STOP/PEC live in CR1 there, in CR2 here).
+    # Every one of its 14 "hits" was an artefact of that mismatch.
     Project("hubris", "https://github.com/oxidecomputer/hubris", "pac_direct",
-            ["rm0368", "rm0383", "rm0386", "rm0390", "rm0402", "rm0430"],
-            "stm32f411", "stm32f4", pac_pinned="0.13.0",
+            ["rm0316", "rm0090", "rm0433", "rm0444", "rm0454"],
+            "stm32h753", "stm32h7", pac_pinned="0.14",
             subdirs=["drv"],
             chip_paths={
-                # H7 and LPC55 code: no manuals in the corpus -> skip, do not
-                # match against an F-series manual.
-                "drv/stm32h7": [], "drv/lpc55": [],
-                # G0 drivers get the G0 manuals.
+                "drv/lpc55": [],            # NXP, not STM
+                # features stm32h743/stm32h753 -> RM0433
+                "drv/stm32h7": ["rm0433"],
+                # features stm32g031/g070/g0b1 -> RM0444 (G0x1) + RM0454 (G0x0)
                 "drv/stm32g0": ["rm0444", "rm0454"],
-                # stm32fx-* and stm32xx-* are built per family; F4 is the
-                # overlap with our corpus.
-                "drv/stm32fx": ["rm0368", "rm0383", "rm0386", "rm0390",
-                                "rm0402", "rm0430"],
-                "drv/stm32xx": ["rm0368", "rm0383", "rm0386", "rm0390",
-                                "rm0402", "rm0430"],
+                # features stm32f303 + stm32f407 -> RM0316 + RM0090
+                "drv/stm32fx": ["rm0316", "rm0090"],
+                # features stm32g030/g031/g070/g0b1 + stm32h743/h753
+                "drv/stm32xx": ["rm0433", "rm0444", "rm0454"],
             },
             note="Oxide service processor. 23 STM32 driver crates; also uses "
                  "stm32f3/stm32g0/stm32h7 directly."),
@@ -134,11 +138,17 @@ PROJECTS = [
             ["rm0368", "rm0402", "rm0390", "rm0316"],
             "stm32f401", "stm32f4",
             subdirs=["chips/stm32f4xx", "chips/stm32f303xc"],
+            chip_paths={
+                # F4 chip crate: F401 / F412 / F446. NOT RM0316 -- F3's USART
+                # and I2C are a different peripheral generation.
+                "chips/stm32f4xx": ["rm0368", "rm0402", "rm0390"],
+                "chips/stm32f303xc": ["rm0316"],
+            },
             note="tock-registers, not svd2rust. Scan-only by construction."),
 
     # --- track 1: stm32f4xx-hal reverse dependencies that touch registers.
     Project("stm32-eth", "https://github.com/stm32-rs/stm32-eth", "pac_direct",
-            ["rm0386", "rm0390"], "stm32f469", "stm32f4",
+            ["rm0090", "rm0386", "rm0390"], "stm32f469", "stm32f4",
             hal="stm32f4xx-hal", hal_pinned="^0.21",
             note="Ethernet MAC/DMA driver; programs ETH registers directly."),
     Project("stm32f469i-disc", "https://github.com/tegimeki/stm32f469i-disc",
@@ -146,12 +156,12 @@ PROJECTS = [
             hal="stm32f4xx-hal", hal_pinned="^0.23",
             note="ALREADY on the HAL version that pairs with PAC 0.16."),
     Project("booster", "https://github.com/quartiq/booster", "hal_only",
-            [], "stm32f407", "stm32f4",
+            ["rm0090"], "stm32f407", "stm32f4",
             hal="stm32f4xx-hal", hal_pinned="^0.21",
-            note="RF power amplifier firmware. F407 = RM0090, NOT in the "
-                 "corpus -- scanned to size the RM0090 opportunity."),
+            note="RF power amplifier firmware. F407 = RM0090, now in the "
+                 "corpus."),
     Project("px4flow_bsp", "https://github.com/tstellanova/px4flow_bsp",
-            "hal_only", [], "stm32f407", "stm32f4",
+            "hal_only", ["rm0090"], "stm32f407", "stm32f4",
             hal="stm32f4xx-hal", hal_pinned="^0.8.3",
             note="Optical-flow sensor BSP; F407 = RM0090."),
 ]
@@ -243,11 +253,21 @@ _NOT_A_REGISTER = {
 
 
 def _rust_files(root: Path, subdirs: list) -> list:
+    """Rust sources to scan, from the declared subdirectories.
+
+    A declared subdirectory that is not in the checkout is a HARD error. A
+    scan that silently finds nothing reports zero hits, and zero hits reads
+    exactly like a clean project -- an earlier run recorded Tock as "0 .rs
+    files, 0 register accesses" and it went unquestioned. Fail loudly instead.
+    """
     roots = [root / s for s in subdirs] if subdirs else [root]
+    missing = [str(r) for r in roots if not r.is_dir()]
+    if missing:
+        raise FileNotFoundError(
+            "declared subdirs absent from the checkout (bad ref, failed "
+            f"clone, or the project moved them): {missing}")
     out = []
     for r in roots:
-        if not r.is_dir():
-            continue
         for f in r.rglob("*.rs"):
             if any(p in _SKIP_DIRS for p in f.parts):
                 continue
@@ -380,7 +400,93 @@ def match_hits(hits: list, idx: dict, periph_map: dict) -> list:
     return out
 
 
-def triage(matched: list) -> list:
+# A call that hands a closure to a helper: `self.set_cr(|| ...)`, `foo(move |x|`.
+_CLOSURE_CALL_RE = re.compile(r"(?:self\.)?(\w+)\(\s*(?:move\s*)?\|")
+# A plain method call on self: `self.disable();`
+_SELF_CALL_RE = re.compile(r"\bself\.(\w+)\s*\(")
+_FN_DEF_RE_T = r"^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?fn\s+{name}\b"
+# The helper running its closure parameter: `f();` on a line of its own.
+_CLOSURE_INVOKE_RE = re.compile(r"^\s*(\w+)\(\)\s*;\s*$")
+_MAX_INLINED = 4
+
+
+def _fn_body(path: str, name: str) -> str:
+    """Body of a same-file `fn name`, or "" if it is not defined here."""
+    src = Path(path).read_text().splitlines()
+    fn_re = re.compile(_FN_DEF_RE_T.format(name=re.escape(name)))
+    hit = next((i for i, ln in enumerate(src) if fn_re.match(ln)), None)
+    if hit is None:
+        return ""
+    _start, body = enclosing_function(path, hit + 2)
+    return body
+
+
+def guard_prologue(path: str, snippet: str, flagged_rel: int) -> dict:
+    """Code that provably runs BEFORE a flagged line but lives in a helper.
+
+    Drivers do not open-code the datasheet dance at every call site; they
+    factor it out. Both shapes appear in Tock's STM32 chip crate:
+
+    A COMBINATOR taking a closure -- the guard brackets the closure body::
+
+        fn set_cr<F>(&self, f: F) {
+            self.registers.cr1.modify(CR1::SPE::CLEAR);   // <- the guard
+            f();
+            self.registers.cr1.modify(CR1::SPE::SET);
+        }
+        fn set_polarity(&self, p: ClockPolarity) {
+            self.set_cr(|| self.registers.cr1.modify(CR1::CPOL::SET));  // flagged
+        }
+
+    A HELPER CALLED FIRST -- the guard is a preceding statement::
+
+        fn set_speed(&self, speed: I2CSpeed, mhz: usize) {
+            self.disable();                              // <- clears CR1::PE
+            self.registers.ccr.modify(...);              // flagged
+        }
+
+    Both are correct code that a frame-local scan reports as unchecked. This
+    resolves ONE level: same-file helpers only, no call graph, at most four
+    inlined. Deeper chains still read as unchecked, which is stated in the
+    report rather than hidden.
+
+    Returns {"text": prologue, "inlined": [helper names]}.
+    """
+    before = snippet.splitlines()[:flagged_rel]
+    names, closure_hosts = [], set()
+    # The closure host wraps the flagged line, so its call site is at or above.
+    for text in reversed(before):
+        m = _CLOSURE_CALL_RE.search(text)
+        if m:
+            closure_hosts.add(m.group(1))
+            names.append(m.group(1))
+            break
+    # Plain `self.foo()` statements preceding the flagged line, in order.
+    for text in before:
+        for m in _SELF_CALL_RE.finditer(text):
+            if m.group(1) not in names:
+                names.append(m.group(1))
+    chunks, inlined = [], []
+    for name in names:
+        if len(inlined) >= _MAX_INLINED:
+            break
+        body = _fn_body(path, name)
+        if not body:
+            continue
+        if name in closure_hosts:       # only the part that runs before f()
+            keep = []
+            for text in body.splitlines():
+                m = _CLOSURE_INVOKE_RE.match(text)
+                if m and m.group(1) not in ("return", "loop"):
+                    break
+                keep.append(text)
+            body = "\n".join(keep)
+        chunks.append(body)
+        inlined.append(name)
+    return {"text": "\n".join(chunks), "inlined": inlined}
+
+
+def triage(matched: list, dialect: str = "pac") -> list:
     """corroborated / unchecked, via corroboration.deterministic_scan."""
     out = []
     for h in matched:
@@ -391,7 +497,13 @@ def triage(matched: list) -> list:
         if fields:
             try:
                 start, snippet = enclosing_function(h["abs"], h["line"])
-                verdict = deterministic_scan(snippet, h["line"] - start + 1, fields)
+                rel = h["line"] - start + 1
+                pro = guard_prologue(h["abs"], snippet, rel)
+                if pro["text"]:
+                    snippet = pro["text"] + "\n" + snippet
+                    rel += len(pro["text"].splitlines())
+                verdict = deterministic_scan(snippet, rel, fields, dialect)
+                verdict["helpers_inlined"] = pro["inlined"]
             except Exception as e:                            # noqa: BLE001
                 verdict = {"verdict": "scan_error", "fields": fields,
                            "error": str(e)[:120]}
@@ -471,7 +583,7 @@ def scan_project(p: Project, root: Path, periph_map: dict) -> dict:
         idx_all.update(idx)
         matched.extend(match_hits(group, idx, periph_map))
     idx = idx_all
-    triaged = triage(matched)
+    triaged = triage(matched, "tock" if p.style == "tock" else "pac")
     regs = Counter(f"{h['peripheral']}/{h['register']}" for h in hits)
     verdicts = Counter(h["triage"]["verdict"] for h in triaged)
     return {
@@ -512,9 +624,27 @@ def write_report(results: list, path: Path) -> None:
           "extracted datasheet constraints. Nothing is compiled.",
           "",
           "**A hit is a candidate, not a bug.** `unchecked` means no precondition",
-          "field is referenced in the enclosing function before the access; a",
-          "guard one frame up reads as unchecked. `corroborated` means the",
+          "field is referenced before the access; `corroborated` means the",
           "project already performs the datasheet-prescribed check nearby.",
+          "",
+          "**Guards in a helper are followed one level.** Drivers factor the",
+          "datasheet dance into a combinator — Tock's SPI wraps every config",
+          "write in `set_cr(|| ...)`, which clears `SPE` first and restores it",
+          "after. A frame-local scan calls that correct code unchecked; six of",
+          "Tock's seventeen SPI CR1 sites are exactly this shape. When a flagged",
+          "line sits inside a closure handed to a same-file helper, the part of",
+          "that helper which runs before the closure is scanned too. Deeper",
+          "chains, and guards in a caller that is not a closure host, still read",
+          "as unchecked.",
+          "",
+          "**Guard syntax is dialect-specific.** svd2rust spells a field as an",
+          "accessor — `r.stop().bit_is_set()` — while tock-registers spells it",
+          "as a path, `CR1::STOP::SET`, and never as `.stop()`. Matching Tock",
+          "with the svd2rust pattern fails twice: it misses every real guard and",
+          "it fires on unrelated methods that share a field's name. Tock's I2C",
+          "driver calls a helper `self.stop()` beside its `CR1::STOP::SET`",
+          "writes, and that — not any datasheet check — was what marked three",
+          "sites corroborated in an earlier run.",
           "",
           "**Triage caveat: whole-register gates over-approximate.** When a",
           "constraint lists no `fields restricted`, it gates the whole register",
@@ -585,10 +715,17 @@ def write_report(results: list, path: Path) -> None:
            "- Peripheral attribution is heuristic: it comes from the receiver",
            "  expression, falling back to the module the code lives in. The",
            "  receiver text is carried in the JSON for review.",
-           "- Chip attribution is per path prefix. A repo targeting several",
-           "  families (Hubris has `drv/stm32h7-*` beside `drv/stm32fx-*`) is",
-           "  matched family by family; files whose family has no manual in the",
-           "  corpus are skipped rather than mis-matched.",
+           "- Chip attribution is per path prefix, and derived from each driver",
+           "  crate's OWN Cargo features rather than the family in its name.",
+           "  Getting this wrong is not conservative: Hubris's `drv/stm32xx-i2c`",
+           "  builds only for H7 and G0, and an earlier run matched it against",
+           "  RM0386, an F4 manual whose I2C is a different peripheral",
+           "  generation — START/STOP/PEC sit in CR1 there and in CR2 here. All",
+           "  14 of its reported hits were artefacts of that mismatch.",
+           "- A declared subdirectory missing from a checkout is now a hard",
+           "  error. Silence looked like a clean project: an earlier run",
+           "  recorded Tock as \"0 .rs files, 0 register accesses\" and the zero",
+           "  went unquestioned. It is 45 files and 1203 accesses.",
            "- A project on a manual we have not processed scans clean for the",
            "  wrong reason — that is the `missing-manual` verdict, and it is not",
            "  the same as 'no constrained registers touched'.", ""]

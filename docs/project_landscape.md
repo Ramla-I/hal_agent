@@ -6,9 +6,27 @@ extracts hardware register accesses, and cross-references our
 extracted datasheet constraints. Nothing is compiled.
 
 **A hit is a candidate, not a bug.** `unchecked` means no precondition
-field is referenced in the enclosing function before the access; a
-guard one frame up reads as unchecked. `corroborated` means the
+field is referenced before the access; `corroborated` means the
 project already performs the datasheet-prescribed check nearby.
+
+**Guards in a helper are followed one level.** Drivers factor the
+datasheet dance into a combinator — Tock's SPI wraps every config
+write in `set_cr(|| ...)`, which clears `SPE` first and restores it
+after. A frame-local scan calls that correct code unchecked; six of
+Tock's seventeen SPI CR1 sites are exactly this shape. When a flagged
+line sits inside a closure handed to a same-file helper, the part of
+that helper which runs before the closure is scanned too. Deeper
+chains, and guards in a caller that is not a closure host, still read
+as unchecked.
+
+**Guard syntax is dialect-specific.** svd2rust spells a field as an
+accessor — `r.stop().bit_is_set()` — while tock-registers spells it
+as a path, `CR1::STOP::SET`, and never as `.stop()`. Matching Tock
+with the svd2rust pattern fails twice: it misses every real guard and
+it fires on unrelated methods that share a field's name. Tock's I2C
+driver calls a helper `self.stop()` beside its `CR1::STOP::SET`
+writes, and that — not any datasheet check — was what marked three
+sites corroborated in an earlier run.
 
 **Triage caveat: whole-register gates over-approximate.** When a
 constraint lists no `fields restricted`, it gates the whole register
@@ -29,13 +47,13 @@ constraints, `field_gating_disabled`).
 
 | project | style | manuals | .rs files | register accesses | hits | unchecked | corroborated | build-readiness |
 |---|---|---|---|---|---|---|---|---|
-| [hubris](https://github.com/oxidecomputer/hubris) | pac_direct | rm0368, rm0383, rm0386, rm0390, rm0402, rm0430 | 276 | 677 | **21** | 17 | 4 | `pac-gap` |
+| [hubris](https://github.com/oxidecomputer/hubris) | pac_direct | rm0316, rm0090, rm0433, rm0444, rm0454 | 276 | 677 | **22** | 8 | 14 | `pac-gap` |
 | [anne-key](https://github.com/ah-/anne-key) | pac_direct | rm0038 | 22 | 91 | **3** | 0 | 3 | `pac-gap` |
-| [tock](https://github.com/tock/tock) | tock | rm0368, rm0402, rm0390, rm0316 | 0 | 0 | **0** | 0 | 0 | `not-applicable` |
-| [stm32-eth](https://github.com/stm32-rs/stm32-eth) | pac_direct | rm0386, rm0390 | 19 | 104 | **0** | 0 | 0 | `hal-bump` |
+| [tock](https://github.com/tock/tock) | tock | rm0368, rm0402, rm0390, rm0316 | 45 | 1203 | **51** | 23 | 28 | `not-applicable` |
+| [stm32-eth](https://github.com/stm32-rs/stm32-eth) | pac_direct | rm0090, rm0386, rm0390 | 19 | 104 | **0** | 0 | 0 | `hal-bump` |
 | [stm32f469i-disc](https://github.com/tegimeki/stm32f469i-disc) | hal_only | rm0386 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
-| [booster](https://github.com/quartiq/booster) | hal_only | — | 35 | 0 | **0** | 0 | 0 | `missing-manual` |
-| [px4flow_bsp](https://github.com/tstellanova/px4flow_bsp) | hal_only | — | 5 | 0 | **0** | 0 | 0 | `missing-manual` |
+| [booster](https://github.com/quartiq/booster) | hal_only | rm0090 | 35 | 0 | **0** | 0 | 0 | `hal-bump` |
+| [px4flow_bsp](https://github.com/tstellanova/px4flow_bsp) | hal_only | rm0090 | 5 | 0 | **0** | 0 | 0 | `hal-bump` |
 
 ## Build-readiness
 
@@ -44,13 +62,13 @@ injected chip crate — the ranked input to the build phase.
 
 | project | reachable | PAC needed | blockers |
 |---|---|---|---|
-| hubris | yes | stm32f4 0.16.0 | pins stm32f4 0.13.0, injector targets 0.16.0 |
-| anne-key | yes | stm32l1 0.16.0 | pins stm32l1 0.11.0, injector targets 0.16.0 |
 | tock | no | — | hand-written register maps; no PAC to inject into |
+| hubris | yes | stm32h7 0.16.0 | pins stm32h7 0.14, injector targets 0.16.0 |
+| anne-key | yes | stm32l1 0.16.0 | pins stm32l1 0.11.0, injector targets 0.16.0 |
 | stm32-eth | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | stm32f469i-disc | yes | stm32f4 0.16.0 | stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
-| booster | no | stm32f4 0.16.0 | no constraints for this chip (stm32f407); its manual is not in the corpus |
-| px4flow_bsp | no | stm32f4 0.16.0 | no constraints for this chip (stm32f407); its manual is not in the corpus |
+| booster | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
+| px4flow_bsp | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.8.3 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 
 Effort key:
 
@@ -60,58 +78,67 @@ Effort key:
 - `missing-manual` — its chip's reference manual is not in the corpus — nothing to check against, not a clean result
 - `not-applicable` — no PAC to inject into
 
-## hubris — 21 candidate sites
+## hubris — 22 candidate sites
 
 *Oxide service processor. 23 STM32 driver crates; also uses stm32f3/stm32g0/stm32h7 directly.*
 
-### `i2c/cr1` — 14 site(s)
-
-- **rule** (state_gate, write): I2C_CR1.STOP cleared, I2C_CR1.START cleared, I2C_CR1.PEC cleared
-- **fields restricted**: whole register
-- **datasheet** (rm0386): "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
-
-| file:line | op | fields written | verdict |
-|---|---|---|---|
-| `drv/stm32xx-i2c/src/lib.rs:388` | write | pe, smbhen | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:394` | modify | smbhen | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:406` | modify | pe | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:417` | modify | pe | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:429` | modify | pe | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:885` | write | oa1en, oa2en, pe | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:901` | modify | gcen | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:914` | modify | pe | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:961` | modify | addrie | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:966` | modify | addrie | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:1075` | modify | stopie | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:1088` | modify | stopie | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:1174` | modify | txie | **unchecked** |
-| `drv/stm32xx-i2c/src/lib.rs:1185` | modify | txie | **unchecked** |
-
-### `usart/cr1` — 4 site(s)
+### `usart/cr1` — 9 site(s)
 
 - **rule** (state_gate, write): USART_CR1.UE cleared
-- **fields restricted**: whole register
-- **datasheet** (rm0454): "This bitfield can only be written when the USART is disabled (UE = 0)."
+- **fields restricted**: fifoen, m1
+- **datasheet** (rm0433): "This bitfield can only be written when the USART is disabled (UE = 0)."
 
 | file:line | op | fields written | verdict |
 |---|---|---|---|
+| `drv/stm32h7-usart/src/lib.rs:72` | write | brr, fifoen, te | **corroborated** |
+| `drv/stm32h7-usart/src/lib.rs:79` | modify | te | **corroborated** |
+| `drv/stm32h7-usart/src/lib.rs:92` | modify | rxneie | **corroborated** |
+| `drv/stm32h7-usart/src/lib.rs:135` | modify | rxneie | **unchecked** |
+| `drv/stm32h7-usart/src/lib.rs:139` | modify | rxneie, txftie | **unchecked** |
 | `drv/stm32g0-usart/src/main.rs:75` | write | brr, te, ue | **corroborated** |
 | `drv/stm32g0-usart/src/main.rs:76` | modify | brr, te, ue | **corroborated** |
 | `drv/stm32g0-usart/src/main.rs:158` | modify | txeie | **corroborated** |
 | `drv/stm32g0-usart/src/main.rs:210` | modify | txeie | **unchecked** |
 
-### `usart/brr` — 2 site(s)
+### `usart/brr` — 5 site(s)
 
 - **rule** (state_gate, write): USART_CR1.UE cleared
-- **fields restricted**: whole register
-- **datasheet** (rm0444): "This register can only be written when the USART is disabled (UE = 0)."
+- **fields restricted**: brr
+- **datasheet** (rm0433): "This register can only be written when the USART is disabled (UE = 0)."
 
 | file:line | op | fields written | verdict |
 |---|---|---|---|
+| `drv/stm32h7-usart/src/lib.rs:76` | write | brr, te | **corroborated** |
 | `drv/stm32g0-usart/src/main.rs:74` | write | bits, brr, te, ue | **unchecked** |
 | `drv/stm32g0-usart/src/main.rs:82` | write | brr, te, ue | **corroborated** |
+| `drv/stm32fx-usart/src/main.rs:74` | write | brr, div_mantissa | **corroborated** |
+| `drv/stm32fx-usart/src/main.rs:81` | write | div_mantissa, te | **corroborated** |
 
-### `usart/tdr` — 1 site(s)
+### `i2c/txdr` — 4 site(s)
+
+- **rule** (state_gate, write): I2C_ISR.TXE set
+- **fields restricted**: whole register
+- **datasheet** (rm0433): "Note: These bits can be written only when TXE = 1."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `drv/stm32xx-i2c/src/lib.rs:658` | write | txdata | **corroborated** |
+| `drv/stm32xx-i2c/src/lib.rs:1143` | write | txdata | **corroborated** |
+| `drv/stm32xx-i2c/src/lib.rs:1159` | write | txdata | **corroborated** |
+| `drv/stm32xx-i2c/src/lib.rs:1164` | write | txdata, txie | **corroborated** |
+
+### `rcc/pll1divr` — 2 site(s)
+
+- **rule** (state_gate, write): RCC_CR.PLL1ON cleared, RCC_CR.PLL1RDY cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0433): "These bits can be written only when the PLL1 is disabled (PLL1ON = ‘0’ and PLL1RDY = ‘0’)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `drv/stm32h7-startup/src/lib.rs:266` | modify | divn1 | **unchecked** |
+| `drv/stm32h7-startup/src/lib.rs:291` | write | divp1 | **unchecked** |
+
+### `usart/tdr` — 2 site(s)
 
 - **rule** (state_gate, write): USART_CR1.TE set
 - **fields restricted**: whole register
@@ -120,6 +147,7 @@ Effort key:
 | file:line | op | fields written | verdict |
 |---|---|---|---|
 | `drv/stm32g0-usart/src/main.rs:222` | write | tdr | **unchecked** |
+| `drv/stm32fx-usart/src/main.rs:252` | write | dr, tdr | **unchecked** |
 
 
 ## anne-key — 3 candidate sites
@@ -139,15 +167,186 @@ Effort key:
 | `src/clock.rs:8` | modify | hseon, latency, lprun, pwren, syscfgen, vos | **corroborated** |
 
 
+## tock — 51 candidate sites
+
+*tock-registers, not svd2rust. Scan-only by construction.*
+
+### `spi/cr1` — 17 site(s)
+
+- **rule** (state_gate, write): SPI_CR1.SPE cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0368): "Note: This bit should be written only when SPI is disabled (SPE = ‘0’) for correct operation."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f4xx/src/spi.rs:234` | modify | spe | **corroborated** |
+| `chips/stm32f4xx/src/spi.rs:236` | modify | cpol, spe | **corroborated** |
+| `chips/stm32f4xx/src/spi.rs:243` | modify | cpol | **corroborated** |
+| `chips/stm32f4xx/src/spi.rs:244` | modify | cpol | **corroborated** |
+| `chips/stm32f4xx/src/spi.rs:260` | modify | cpha | **corroborated** |
+| `chips/stm32f4xx/src/spi.rs:261` | modify | cpha | **corroborated** |
+| `chips/stm32f4xx/src/spi.rs:350` | modify | bidimode, dff, mstr, spe, ssi, ssm | **unchecked** |
+| `chips/stm32f4xx/src/spi.rs:415` | modify | br | **corroborated** |
+| `chips/stm32f4xx/src/spi.rs:419` | modify | br | **corroborated** |
+| `chips/stm32f303xc/src/spi.rs:310` | modify | spe | **corroborated** |
+| `chips/stm32f303xc/src/spi.rs:312` | modify | cpol, spe | **corroborated** |
+| `chips/stm32f303xc/src/spi.rs:319` | modify | cpol | **corroborated** |
+| `chips/stm32f303xc/src/spi.rs:320` | modify | cpol | **corroborated** |
+| `chips/stm32f303xc/src/spi.rs:336` | modify | cpha | **corroborated** |
+| `chips/stm32f303xc/src/spi.rs:337` | modify | cpha | **corroborated** |
+| `chips/stm32f303xc/src/spi.rs:424` | modify | bidimode, bsy, mstr, spe, ssi, ssm | **unchecked** |
+| `chips/stm32f303xc/src/spi.rs:490` | modify | br | **corroborated** |
+
+### `i2c/cr1` — 11 site(s)
+
+- **rule** (state_gate, write): I2C_CR1.STOP cleared, I2C_CR1.START cleared, I2C_CR1.PEC cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0402): "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f4xx/src/i2c.rs:311` | modify | stop | **corroborated** |
+| `chips/stm32f4xx/src/i2c.rs:325` | modify | stop | **corroborated** |
+| `chips/stm32f4xx/src/i2c.rs:334` | modify | stop | **corroborated** |
+| `chips/stm32f4xx/src/i2c.rs:353` | modify | stop | **corroborated** |
+| `chips/stm32f4xx/src/i2c.rs:385` | modify | ack, itbufen, iterren, itevten, start | **unchecked** |
+| `chips/stm32f4xx/src/i2c.rs:386` | modify | ack, itbufen, iterren, itevten, start | **corroborated** |
+| `chips/stm32f4xx/src/i2c.rs:393` | modify | ack, itbufen, iterren, itevten | **unchecked** |
+| `chips/stm32f4xx/src/i2c.rs:402` | modify | ack, start | **unchecked** |
+| `chips/stm32f4xx/src/i2c.rs:403` | modify | pe, start | **corroborated** |
+| `chips/stm32f4xx/src/i2c.rs:412` | modify | pe | **unchecked** |
+| `chips/stm32f4xx/src/i2c.rs:415` | modify | pe | **unchecked** |
+
+### `rcc/pllcfgr` — 6 site(s)
+
+- **rule** (state_gate, write): RCC_CR.PLLON cleared
+- **fields restricted**: pllr, pllq, pllsrc, pllp, plln, pllm
+- **datasheet** (rm0402): "These bits should be written only if PLL is disabled."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f4xx/src/rcc.rs:882` | modify | d, pllm, pllsrc | **unchecked** |
+| `chips/stm32f4xx/src/rcc.rs:895` | modify | pllm, plln | **unchecked** |
+| `chips/stm32f4xx/src/rcc.rs:904` | modify | d, plln, pllp | **unchecked** |
+| `chips/stm32f4xx/src/rcc.rs:918` | modify | d, pllp, pllq | **unchecked** |
+| `chips/stm32f4xx/src/rcc.rs:936` | modify | hpre, pllq | **unchecked** |
+| `chips/stm32f4xx/src/rcc.rs:1029` | modify | i2c1en, pllon, pllq | **unchecked** |
+
+### `rcc/bdcr` — 4 site(s)
+
+- **rule** (state_gate, write): PWR_CR.DBP set
+- **fields restricted**: lseon, lsebyp, rtcsel, rtcen
+- **datasheet** (rm0368): "The LSEON, LSEBYP, RTCSEL and RTCEN bits in the RCC Backup domain control register (RCC_BDCR) are in the Backup domain. As a result, after Reset, these bits are write-protected and the DBP bit in the PWR power control re"
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f4xx/src/rcc.rs:1403` | modify | rtcen, rtcsel | **unchecked** |
+| `chips/stm32f4xx/src/rcc.rs:1406` | modify | rtcen, rtcsel | **unchecked** |
+| `chips/stm32f4xx/src/rcc.rs:1410` | modify | rtcen, rtcsel | **unchecked** |
+| `chips/stm32f4xx/src/rcc.rs:1411` | modify | rtcsel | **unchecked** |
+
+### `i2c/ccr` — 2 site(s)
+
+- **rule** (state_gate, write): I2C_CR1.PE cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0368): "The CCR register must be configured only when the I2C is disabled (PE = 0)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f4xx/src/i2c.rs:245` | modify | ccr, fs, trise | **corroborated** |
+| `chips/stm32f4xx/src/i2c.rs:253` | modify | ccr, fs, trise | **corroborated** |
+
+### `i2c/trise` — 2 site(s)
+
+- **rule** (state_gate, write): I2C_CR1.PE cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0368): "TRISE[5:0] must be configured only when the I2C is disabled (PE = 0)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f4xx/src/i2c.rs:248` | modify | ccr, fs, trise | **corroborated** |
+| `chips/stm32f4xx/src/i2c.rs:256` | modify | trise | **corroborated** |
+
+### `adc/cfgr` — 2 site(s)
+
+- **rule** (state_gate, write): ADC1_CR.ADSTART cleared, ADC1_CR.JADSTART cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0316): "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f303xc/src/adc.rs:569` | modify | adrdy, adrdyie, ovrmod | **unchecked** |
+| `chips/stm32f303xc/src/adc.rs:707` | modify | cont | **unchecked** |
+
+### `usart/tdr` — 2 site(s)
+
+- **rule** (state_gate, write): USART_ISR.TXE set
+- **fields restricted**: whole register
+- **datasheet** (rm0316): "Note: This register must be written only when TXE=1."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f303xc/src/usart.rs:386` | write | txeie | **corroborated** |
+| `chips/stm32f303xc/src/usart.rs:417` | write | — | **corroborated** |
+
+### `usart/brr` — 2 site(s)
+
+- **rule** (state_gate, write): USART_CR1.UE cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0316): "This register can only be written when the USART is disabled (UE=0)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f303xc/src/usart.rs:594` | modify | div_f, div_m, re, te | **unchecked** |
+| `chips/stm32f303xc/src/usart.rs:595` | modify | div_m, re, te, ue | **unchecked** |
+
+### `adc/cr2` — 1 site(s)
+
+- **rule** (state_gate, write): ADC_CR2.ADON set
+- **fields restricted**: swstart
+- **datasheet** (rm0368): "Note: This bit can be set only when ADON = 1 otherwise no conversion is launched."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f4xx/src/adc.rs:403` | modify | swstart | **corroborated** |
+
+### `adc/smpr2` — 1 site(s)
+
+- **rule** (state_gate, write): ADC1_CR.ADSTART cleared, ADC1_CR.JADSTART cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0316): "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f303xc/src/adc.rs:650` | modify | eocie, eosie, l, smp16, sq1 | **unchecked** |
+
+### `i2c/txdr` — 1 site(s)
+
+- **rule** (state_gate, write): I2C_ISR.TXE set
+- **fields restricted**: whole register
+- **datasheet** (rm0316): "These bits can be written only when TXE = 1."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `chips/stm32f303xc/src/i2c.rs:343` | write | r, txdata | **unchecked** |
+
+
 ## Limits
 
 - Peripheral attribution is heuristic: it comes from the receiver
   expression, falling back to the module the code lives in. The
   receiver text is carried in the JSON for review.
-- Chip attribution is per path prefix. A repo targeting several
-  families (Hubris has `drv/stm32h7-*` beside `drv/stm32fx-*`) is
-  matched family by family; files whose family has no manual in the
-  corpus are skipped rather than mis-matched.
+- Chip attribution is per path prefix, and derived from each driver
+  crate's OWN Cargo features rather than the family in its name.
+  Getting this wrong is not conservative: Hubris's `drv/stm32xx-i2c`
+  builds only for H7 and G0, and an earlier run matched it against
+  RM0386, an F4 manual whose I2C is a different peripheral
+  generation — START/STOP/PEC sit in CR1 there and in CR2 here. All
+  14 of its reported hits were artefacts of that mismatch.
+- A declared subdirectory missing from a checkout is now a hard
+  error. Silence looked like a clean project: an earlier run
+  recorded Tock as "0 .rs files, 0 register accesses" and the zero
+  went unquestioned. It is 45 files and 1203 accesses.
 - A project on a manual we have not processed scans clean for the
   wrong reason — that is the `missing-manual` verdict, and it is not
   the same as 'no constrained registers touched'.

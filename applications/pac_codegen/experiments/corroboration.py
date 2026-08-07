@@ -186,16 +186,35 @@ def enclosing_function(path: str, line: int, max_lines: int = 140):
     return start + 1, "\n".join(out)
 
 
+def _precondition_pattern(fields: list[str], dialect: str):
+    r"""How a precondition field is REFERENCED, which is dialect-specific.
+
+    svd2rust spells a field as an accessor method -- ``r.stop().bit_is_set()``
+    -- so ``\.stop\s*\(`` is right there. tock-registers spells it as a path
+    into the bitfield module -- ``CR1::STOP::SET``, ``sr1.is_set(SR1::BUSY)``
+    -- and never as ``.stop()``.
+
+    Using the svd2rust pattern on Tock is wrong TWICE OVER: it misses every
+    real guard, and it fires on unrelated Rust methods that happen to share the
+    field's name. Tock's I2C driver calls a helper ``self.stop()`` right beside
+    its ``CR1::STOP::SET`` writes, and that method call -- not any datasheet
+    check -- is what marked three sites "corroborated"."""
+    if dialect == "tock":
+        return re.compile("|".join(rf"::{f.upper()}\b" for f in fields))
+    return re.compile("|".join(rf"\.{f}\s*\(" for f in fields))
+
+
 def deterministic_scan(snippet: str, flagged_line_rel: int,
-                       fields: list[str]) -> dict:
+                       fields: list[str], dialect: str = "pac") -> dict:
     """Does the function reference any precondition field accessor before the
     flagged line?"""
     lines = snippet.splitlines()
-    pat = re.compile("|".join(rf"\.{f}\s*\(" for f in fields))
+    pat = _precondition_pattern(fields, dialect)
     before = [i for i, t in enumerate(lines[:flagged_line_rel]) if pat.search(t)]
     anywhere = [i for i, t in enumerate(lines) if pat.search(t)]
     return {
         "fields": fields,
+        "dialect": dialect,
         "check_before_flag": bool(before),
         "check_anywhere": bool(anywhere),
         "verdict": "corroborated" if before else "unchecked",
