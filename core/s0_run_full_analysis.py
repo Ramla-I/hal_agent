@@ -1,31 +1,45 @@
 #!/usr/bin/env python3
 """
-Multi-device pipeline for extracting hardware register information from datasheets.
+Per-device pipeline for extracting hardware register information from datasheets.
+This is the complete end-to-end for one device: with the flags below it produces
+BOTH review files (structure_review.csv WITH validator verdicts, and
+constraints_review.jsonl). For a fresh (unregistered) device, drive it from the host
+via ``scripts/run_stm_batch.py --devices {rm} --auto-register`` (which registers the
+device — s0 runs in-container and cannot write the host-owned config_devices.json —
+then launches this).
 
-Steps:
-  1. Preprocess — chunk + enrich + ingest into local ChromaDB (skips if DB exists)
-  2. Generator — extract register info from datasheet using LLMs
-  3. Coverage Improver — iteratively improve coverage based on SVD comparison
-  4. Validator — validate extracted info against the datasheet
-  5. Evaluation — compare with SVD files, run analyzer, generate diff tables
+Steps (executed in the order 1, 2, 3, 4, 6, 5, 5b — note constraint validation runs
+before bug-finding, and the numbering is historical):
+  1. Preprocess    — chunk + enrich + ingest into local ChromaDB, into
+                     chunked_datasheets/{mfr}/{rm}/chunks (skips if the DB exists).
+  2. Generator     — extract register info from the datasheet (batched; retries
+                     empty-subfield registers one-per-call; expands <dim> arrays).
+  3. Coverage Improver — optionally re-generate with improved retrieval params.
+  4. Validator     — (optional, --skip-validator) the BEFORE-diff full pass over
+                     every extracted invariant (core/validator_core.validate_invariants,
+                     openevolve-compatible). Skipped in the bug-finding flow; s6
+                     (Step 5b) is the after-diff candidate validator.
+  6. Constraint validation — chain constraint validator -> validated.jsonl, then
+                     format -> {rm}_constraints_review.jsonl (--constraint-validation).
+  5. Bug-finding   — diff vs SVDs, analyzer, -> {rm}_structure_review.csv.
+  5b. Candidate validator (s6, in-process, non-fatal) — fills validator_verdict in the
+                     structure review, reusing the generator's openevolve collection.
 
 Usage:
-    # Run all steps for all configured devices
-    python core/s0_run_full_analysis.py
-
-    # Single device, skip preprocessing
-    python core/s0_run_full_analysis.py --devices rm0041 --skip-preprocessing
+    # Complete end-to-end for one already-registered device (both review files):
+    python core/s0_run_full_analysis.py --devices rm0041 \
+        --retrieval openevolve --skip-validator --constraint-validation \
+        --constraint-chunks-root chunked_datasheets/stm
 
     # Multiple devices in parallel
     python core/s0_run_full_analysis.py --devices rm0041 rm0008 --max-workers 2
 
-    # Skip expensive steps
-    python core/s0_run_full_analysis.py --devices rm0041 --coverage-improver-iterations 0 --skip-validator
+    # Skip expensive/optional steps
+    python core/s0_run_full_analysis.py --devices rm0041 \
+        --coverage-improver-iterations 0 --skip-s6 --skip-preprocessing
 """
 
 import argparse
-import asyncio
-import csv
 import glob
 import json
 import os
@@ -103,9 +117,19 @@ class DeviceResult:
     true_count: int = 0
     false_count: int = 0
 
-    # Step 5 — evaluation
+    # Step 5 — evaluation / bug finding
     evaluation_done: bool = False
     svd_files_compared: int = 0
+    analyzer_used: bool = False
+    bug_candidates: int = 0
+    auto_fp: int = 0
+
+    # Step 5b — candidate validator (s6, in-process)
+    s6_done: bool = False
+
+    # Run metadata (for the manifest)
+    retrieval_method: str = ""
+    generator_models: list = field(default_factory=list)
 
     # Step 6 — constraint validation (v2 grammar)
     constraint_validation_done: bool = False
@@ -123,8 +147,14 @@ def determine_client(model_name: str) -> Groq | OpenAI:
     return client_groq if model_name == "gpt-oss-120b" else client_openai
 
 
-def resolve_next_run_number(repo_root: str, ctx: UserContext) -> int:
-    """Scan agent_output/{mfg}/{device}/ and return max existing + 1."""
+def resolve_run_number(repo_root: str, ctx: UserContext, new_run: bool = False) -> int:
+    """Resolve the run number for a device under agent_output/{mfg}/{device}/.
+
+    Default is to **resume the latest existing run** (the generator skips
+    registers whose output already exists, so an interrupted run continues into
+    the same directory). With ``new_run=True`` a fresh run (max + 1) is started.
+    Returns 1 when no run exists yet.
+    """
     output_base = os.path.join(
         repo_root,
         config.OUTPUT_DIR,
@@ -138,7 +168,9 @@ def resolve_next_run_number(repo_root: str, ctx: UserContext) -> int:
         for d in os.listdir(output_base)
         if d.isdigit() and os.path.isdir(os.path.join(output_base, d))
     ]
-    return max(existing) + 1 if existing else 1
+    if not existing:
+        return 1
+    return max(existing) + 1 if new_run else max(existing)
 
 
 def resolve_device_paths(
@@ -260,6 +292,64 @@ def build_context_retrieval_params(
     )
 
 
+# Per-vendor reference OpenEvolve program, used when a device has no evolution of
+# its own (NXP short-name retrieval differs enough that the STM program is a poor
+# fallback — ke04 is the NXP reference, mirroring the vendor-default validator card).
+_VENDOR_OE_DEFAULT = {"nxp": "output_ke04", "stm": "output_rm0041"}
+
+
+def resolve_openevolve_program(device_name: str, repo_root: str, manufacturer=None) -> str:
+    """Path to the device's evolved OpenEvolve best_program.py.
+
+    Device-specific evolution if present; else the vendor's reference program
+    (NXP -> ke04, STM -> rm0041); else rm0041.
+    """
+    def _prog(subdir):
+        return os.path.join(repo_root, "openevolve_retrieval", subdir, "best", "best_program.py")
+
+    device_specific = _prog(f"output_{device_name}")
+    if os.path.exists(device_specific):
+        return device_specific
+    vendor = getattr(manufacturer, "value", "").lower() if manufacturer is not None else ""
+    vendor_default = _prog(_VENDOR_OE_DEFAULT.get(vendor, "output_rm0041"))
+    if os.path.exists(vendor_default):
+        return vendor_default
+    return _prog("output_rm0041")
+
+
+def apply_retrieval_override(
+    cr_params: ContextRetrievalParameters,
+    retrieval: str,
+    device_name: str,
+    repo_root: str,
+    manufacturer=None,
+) -> ContextRetrievalParameters:
+    """Override auto-resolved retrieval params when an explicit method is requested.
+
+    ``auto`` (default) keeps whatever build_context_retrieval_params resolved
+    (local vector DB / OpenAI / keyword). ``openevolve`` switches to the evolved
+    STM retrieval program.
+    """
+    if retrieval in (None, "auto"):
+        return cr_params
+    if retrieval == "openevolve":
+        program = resolve_openevolve_program(device_name, repo_root, manufacturer)
+        if not os.path.exists(program):
+            raise FileNotFoundError(f"OpenEvolve program not found: {program}")
+        return ContextRetrievalParameters(
+            context_retrieval_method=ContextRetrievalMethod.OPENEVOLVE,
+            pages_after_keyword=0,
+            remove_tables=False,
+            number_embeddings=config.CONTEXT_RETRIEVAL_PARAMETERS.number_embeddings,
+            re_ranking=False,
+            score_threshold=0.0,
+            vs_id="",
+            regex="",
+            oe_program_path=program,
+        )
+    raise ValueError(f"Unsupported --retrieval value: {retrieval!r}")
+
+
 # ---------------------------------------------------------------------------
 # Step 1: Preprocessing
 # ---------------------------------------------------------------------------
@@ -298,7 +388,11 @@ def preprocess_device(
         return False, 0
 
     format_subdir = "md" if fmt == "markdown" else "text"
-    base_output_dir = os.path.join(paths.device_dir, "chunks")
+    # Write chunks where the generator's openevolve retrieval and the constraint
+    # step actually read them (chunked_datasheets/{mfr}/{rm}/chunks/{md}), NOT
+    # devices/.../chunks (which nothing downstream reads). Single chunk location.
+    base_output_dir = os.path.join(_REPO_ROOT, "chunked_datasheets",
+                                   paths.manufacturer, paths.device_name, "chunks")
     chunks_dir = os.path.join(base_output_dir, format_subdir)
     metadata_dir = chunks_dir
     file_extension = ".txt"
@@ -344,111 +438,63 @@ def run_constraint_validation_phase(
     run_dir: str,
     reference_manual: str,
     chunks_root: str,
+    svd_dir=None,
     judge_model: str = "openai/gpt-oss-120b",
     batch_size: int = 1,
+    min_confidence: float = 0.0,
 ) -> dict:
-    """Step 6: the grammar-v2 constraint pipeline on a fresh generator run,
-    ALL kinds, entirely in memory (no intermediate CSV). For each extracted
-    constraint we build an item carrying the native v2 object, anchor its cited
-    quote against the chunked datasheet (deterministic), then judge the anchored
-    ones with the closed-book LLM validator (``batch_size`` > 1 amortizes the
-    system prompt). Writes ``anchors.jsonl`` / ``judgments.jsonl`` /
-    ``summary.json`` under ``<run_dir>/constraint_validation/`` and returns the
-    funnel counts."""
-    import hashlib
-    from quote_anchor import RMMatcher, anchor_row
-    from constraint_validator import (run_judge, make_client,
-                                       referenced_registers)
+    """Step 6: the CHAINED grammar-v2 constraint stage on a fresh generator run.
+
+    generator run -> collect_constraints (lint + enforceability, in-memory, no
+    payload files) -> anchor the LINTED set -> closed-book LLM judge -> one
+    ``validated.jsonl`` (+ ``anchors.jsonl`` / ``judgments.jsonl`` /
+    ``manifest.json`` / ``summary.json``) under
+    ``<run_dir>/constraint_validation/``. The judge only ever sees linted
+    constraints (deterministic lint-rejects never reach the LLM), each record
+    carries the codegen ``enforcement`` gate, and ids are minted on the linted
+    object (peripheral + operation included). See ``core/constraint_pipeline.py``
+    and ``docs/constraint_chain_refactor_plan.md``. Returns the funnel counts."""
+    from constraint_pipeline import run_stage_live
 
     if not chunks_root:
         raise ValueError(
             "--constraint-chunks-root is required with --constraint-validation "
             "(static quote validation searches the chunked datasheet)")
 
-    # 1. Build items from the run's native v2 constraints (EVERY kind).
-    items: list[dict] = []
-    for fn in sorted(os.listdir(run_dir)):
-        fp = os.path.join(run_dir, fn)
-        if os.path.isdir(fp) or "_" not in fn:
-            continue
-        try:
-            data = json.load(open(fp, encoding="utf-8"))
-        except Exception:
-            continue
-        if not isinstance(data, dict):
-            continue
-        peripheral, register = fn.split("_", 1)
-        for c in (data.get("access_constraints_v2") or []):
-            if not isinstance(c, dict):
-                continue
-            kind = c.get("kind", "state_gate")
-            text = c.get("datasheet_text", "")
-            cid = hashlib.sha1(
-                f"{reference_manual}|{register}|{kind}|{text}".encode()
-            ).hexdigest()[:12]
-            items.append({
-                "id": cid,
-                "reference_manual": reference_manual,
-                "source_file": f"{reference_manual}/{os.path.basename(run_dir)}/{fn}",
-                "peripheral": peripheral,
-                "register": register,
-                "datasheet_text": text,
-                "constraint": c,
-                "target_registers": sorted(
-                    {register} | set(referenced_registers(c))),
-            })
-    items.sort(key=lambda it: it["id"])
-
     out_dir = os.path.join(run_dir, "constraint_validation")
-    os.makedirs(out_dir, exist_ok=True)
+    return run_stage_live(
+        rm=reference_manual, run=os.path.basename(run_dir),
+        run_dir=run_dir, svd_dir=svd_dir, chunks_root=chunks_root,
+        judge_model=judge_model, out_dir=out_dir,
+        batch_size=batch_size, min_confidence=min_confidence)
 
-    # 2. Static validation: quote anchoring + target location, in memory.
-    #    anchor_row reads only the quote + the registers the constraint touches,
-    #    so it works for every kind.
-    md_dir = os.path.join(chunks_root, reference_manual, "chunks", "md")
-    if not os.path.isdir(md_dir):
-        raise FileNotFoundError(
-            f"no chunked markdown for {reference_manual} at {md_dir}")
-    matcher = RMMatcher(reference_manual, md_dir)
-    anchors = []
-    for it in items:
-        rec = anchor_row(matcher, it)
-        it["tier"] = rec.get("tier")
-        if rec.get("context"):
-            it["context"] = rec["context"]
-        it["_anchor"] = rec
-        anchors.append(rec)
-    with open(os.path.join(out_dir, "anchors.jsonl"), "w",
-              encoding="utf-8", newline="\n") as f:
-        for rec in anchors:
-            f.write(json.dumps(rec, sort_keys=True, ensure_ascii=True) + "\n")
 
-    anchored = [it for it in items if it.get("tier") in ("exact", "fuzzy")]
-    static_pass = [it for it in anchored
-                   if not (it["_anchor"].get("self_referential")
-                           and not it["_anchor"].get("target_located"))]
-
-    # 3. Constraint validator: closed-book LLM judge, only on anchored items
-    #    that carry a derived context.
-    judgeable = [it for it in anchored if it.get("context")]
-    confirmed = 0
-    if judgeable:
-        records, _ = run_judge(judgeable, client=make_client(),
-                               model=judge_model, quiet=True,
-                               batch_size=batch_size)
-        with open(os.path.join(out_dir, "judgments.jsonl"), "w",
-                  encoding="utf-8") as f:
-            for rec in records:
-                f.write(json.dumps(rec, sort_keys=True) + "\n")
-        confirmed = sum(1 for rec in records
-                        if rec.get("verdict") == "confirmed")
-
-    summary = {"extracted": len(items), "anchored": len(anchored),
-               "static_pass": len(static_pass), "confirmed": confirmed}
-    with open(os.path.join(out_dir, "summary.json"), "w",
-              encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
-    return summary
+def assert_ready(paths: "DevicePaths", cr_params: ContextRetrievalParameters) -> None:
+    """Readiness gate (run after Step 1, before generation): for the retrieval
+    backends that read local chunks + the local ChromaDB (openevolve / local vector
+    DB), fail fast with a specific message if either is missing — instead of the
+    generator silently degrading to keyword search. Keyword/OpenAI backends skip."""
+    if cr_params.context_retrieval_method not in (
+            ContextRetrievalMethod.OPENEVOLVE, ContextRetrievalMethod.LOCAL_VECTOR_DB):
+        return
+    problems = []
+    chunks_md = os.path.join(_REPO_ROOT, "chunked_datasheets", paths.manufacturer,
+                             paths.device_name, "chunks", "md")
+    if not glob.glob(os.path.join(chunks_md, "*.txt")):
+        problems.append(f"no chunks at {chunks_md}/*.txt")
+    try:
+        from context_retrieval.vector_db.vector_store import database_exists
+        if not database_exists(f"{paths.device_name}_md_chunks"):
+            problems.append(f"local vector DB 'databases/{paths.device_name}_md_chunks' missing")
+    except Exception:
+        pass
+    if problems:
+        raise RuntimeError(
+            f"Readiness check failed for {paths.device_name} "
+            f"(retrieval={cr_params.context_retrieval_method.value}): "
+            + "; ".join(problems)
+            + ". Preprocessing did not produce what retrieval needs — re-run Step 1 "
+              "(s0 does this by default) or pass --skip-readiness to bypass.")
 
 
 def run_pipeline_for_device(
@@ -459,17 +505,14 @@ def run_pipeline_for_device(
     """Execute the full pipeline (steps 2-5) for a single device."""
     from s1a_generator import run_generator, run_generator_batched
     from s2_coverage_improver import run_coverage_improver
-    from s4_validator import build_invariants_from_agent_output, run_validator, run_validator_batched
-    from s5_analyzer import run_analyzer
-    from scripts.s2_compare_agent_output_with_svd import compare_agent_output_with_svd
-    from scripts.s4_generate_diff_table import generate_diff_table
-    from scripts.s5_compare_diff_with_verified_output import compare_diff_with_verified_datasheet
+    from s4_validator import build_invariants_from_agent_output  # validator core is core/validator_core.py
     from scripts.calculate_generator_coverage import calculate_generator_coverage
+    from applications.bug_finding.pipeline import run_bug_finding
 
     result = DeviceResult(device_name=ctx.device_name)
 
     try:
-        run_number = resolve_next_run_number(repo_root, ctx)
+        run_number = resolve_run_number(repo_root, ctx, new_run=args.new_run)
         paths = resolve_device_paths(ctx, repo_root, run_number)
         result.final_run_number = run_number
 
@@ -478,6 +521,10 @@ def run_pipeline_for_device(
 
         # Read settings from args (with config.py defaults)
         generator_model = args.generator_model or config.GENERATOR_MODEL_NAME
+        # Model list passed to the generator's call layer: an explicit
+        # --generator-model pins one model (no overflow); otherwise use the
+        # stage's ordered list (Groq primary, OpenAI overflow).
+        generator_models = [args.generator_model] if args.generator_model else config.STAGE_MODELS["generator"]
         ci_model = args.coverage_improver_model or config.COVERAGE_IMPROVER_MODEL_NAME
         validator_model = args.validator_model or config.VALIDATOR_MODEL_NAME
         ci_iterations = args.coverage_improver_iterations
@@ -487,7 +534,7 @@ def run_pipeline_for_device(
 
         generator_client = determine_client(generator_model)
         ci_client = determine_client(ci_model)
-        validator_client = determine_client(validator_model)
+        # (no validator_client: the unified validator core uses call_llm internally)
 
         print(f"\n{'='*70}")
         print(f"DEVICE: {ctx.device_name} (run {run_number})")
@@ -512,6 +559,18 @@ def run_pipeline_for_device(
             if done:
                 cr_params = build_context_retrieval_params(paths.device_dir, ctx)
 
+        # Apply explicit retrieval override (e.g. --retrieval openevolve) last, so
+        # it wins over the auto-resolved params above.
+        cr_params = apply_retrieval_override(cr_params, args.retrieval, ctx.device_name, repo_root, ctx.manufacturer)
+        print(f"  Retrieval (effective): {cr_params.context_retrieval_method.value}")
+        result.retrieval_method = cr_params.context_retrieval_method.value
+        result.generator_models = list(generator_models)
+
+        # Readiness gate: preprocessing must have produced the chunks + local DB the
+        # retrieval backend reads, else generation would silently keyword-degrade.
+        if not args.skip_readiness:
+            assert_ready(paths, cr_params)
+
         # -- Step 2: Generator --
         generator_fn = run_generator_batched if args.generator_batched else run_generator
         gen_mode = "batched" if args.generator_batched else "per-register"
@@ -526,13 +585,15 @@ def run_pipeline_for_device(
             context_retrieval_parameters=cr_params,
             manufacturer=ctx.manufacturer,
             peripherals_registers_dict=None,
+            models=generator_models,
         )
         result.generator_done = True
         result.truncated = truncated
 
         # -- Step 3: Coverage Improver (optional) --
         if ci_iterations > 0:
-            svd_files = sorted(glob.glob(os.path.join(paths.svd_dir, "*.svd")))
+            svd_files = sorted(glob.glob(os.path.join(paths.svd_dir, "*.svd"))
+                               + glob.glob(os.path.join(paths.svd_dir, "*.xml")))   # NXP SVDs use .xml
             if not svd_files:
                 print(f"  No SVD files in {paths.svd_dir} — skipping coverage improver")
             else:
@@ -591,6 +652,7 @@ def run_pipeline_for_device(
                         context_retrieval_parameters=current_cr_params,
                         manufacturer=ctx.manufacturer,
                         peripherals_registers_dict=None,
+                        models=generator_models,
                     )
 
                 # Update paths to the final run for subsequent steps
@@ -600,20 +662,20 @@ def run_pipeline_for_device(
 
         # -- Step 4: Validator (optional) --
         if not args.skip_validator:
-            print(f"\n--- Step 4: Validator ---")
+            print(f"\n--- Step 4: Validator (full extraction, before-diff) ---")
+            # The unified validator core (also used by s6 after the diff). Routed
+            # through retrieve_context, so it works on openevolve retrieval too
+            # (the old s4 search_context path raised on OPENEVOLVE). This is the
+            # before-diff FULL pass over every extracted invariant; s6 (Step 5b) is
+            # the after-diff candidate pass that writes the review verdicts.
+            from validator_core import validate_invariants
             invariants = build_invariants_from_agent_output(paths.agent_output_dir)
             validator_output_dir = os.path.join(paths.agent_output_dir, "validator")
-            os.makedirs(validator_output_dir, exist_ok=True)
-
-            validator_fn = run_validator_batched if args.validator_batched else run_validator
-            true_count, false_count = validator_fn(
-                client=validator_client,
-                model_name=validator_model,
-                invariants=invariants,
-                output_dir=validator_output_dir,
-                context_retrieval_parameters=cr_params,
-                reasoning_effort=validator_reasoning,
-            )
+            v_models = [args.validator_model] if args.validator_model else list(config.STAGE_MODELS["validator"])
+            true_count, false_count = validate_invariants(
+                v_models, invariants, validator_output_dir, cr_params,
+                ctx.device_name, paths.device_dir, ctx.manufacturer,
+                paths.agent_output_dir, reasoning_effort=validator_reasoning)
             result.validator_done = True
             result.true_count = true_count
             result.false_count = false_count
@@ -630,6 +692,7 @@ def run_pipeline_for_device(
                 run_dir=paths.agent_output_dir,
                 reference_manual=ctx.device_name,
                 chunks_root=args.constraint_chunks_root,
+                svd_dir=paths.svd_dir,
                 judge_model=args.constraint_judge_model,
                 batch_size=args.constraint_batch_size,
             )
@@ -642,72 +705,58 @@ def run_pipeline_for_device(
                   f"{cv['static_pass']} static-pass -> "
                   f"{cv['confirmed']} validator-confirmed")
 
+            # Format the chained validated.jsonl into the reviewable per-RM JSONL
+            # (stdlib join adapter, no LLM) so s0 emits BOTH review files.
+            from constraints_review import build_review_from_validated
+            vendor = getattr(ctx.manufacturer, "value", str(ctx.manufacturer)).lower()
+            validated_path = os.path.join(paths.agent_output_dir, "constraint_validation", "validated.jsonl")
+            constraints_review_path = os.path.join(paths.results_dir, f"{ctx.device_name}_constraints_review.jsonl")
+            os.makedirs(paths.results_dir, exist_ok=True)
+            n_cr = build_review_from_validated(
+                ctx.device_name, str(paths.run_number), validated_path,
+                constraints_review_path, repo_root=repo_root, manufacturer=vendor)
+            print(f"  Constraints review: {n_cr} record(s) -> {constraints_review_path}")
+
         # -- Step 5: Evaluation (optional) --
         if not args.skip_evaluation:
-            print(f"\n--- Step 5: Evaluation ---")
-            svd_files = sorted(glob.glob(os.path.join(paths.svd_dir, "*.svd")))
-            if not svd_files:
-                print(f"  No SVD files in {paths.svd_dir} — skipping evaluation")
-            else:
-                # 5a. Compare agent output with SVD
-                for svd_path in svd_files:
-                    svd_base = os.path.splitext(os.path.basename(svd_path))[0]
-                    custom_results_dir = os.path.join(paths.results_dir, svd_base)
-                    os.makedirs(custom_results_dir, exist_ok=True)
-                    print(f"  Comparing with SVD: {svd_base}")
-                    compare_agent_output_with_svd(svd_path, paths.agent_output_dir, custom_results_dir)
-                    result.svd_files_compared += 1
+            print(f"\n--- Step 5: Bug finding ---")
+            bug_results = run_bug_finding(
+                svd_dir=paths.svd_dir,
+                agent_output_dir=paths.agent_output_dir,
+                results_dir=paths.results_dir,
+                run_analyzer_enabled=run_analyzer_flag,
+            )
+            from applications.bug_finding.models import BugStatus
+            result.svd_files_compared = len(bug_results)
+            result.evaluation_done = True
+            result.analyzer_used = run_analyzer_flag
+            all_bugs = [b for classes in bug_results.values() for bc in classes for b in bc.bugs]
+            result.bug_candidates = sum(1 for b in all_bugs if b.status == BugStatus.PENDING)
+            result.auto_fp = sum(1 for b in all_bugs if b.status == BugStatus.FALSE_POSITIVE)
+            total_bugs = len(all_bugs)
+            print(f"  Bug finding: {len(bug_results)} SVD(s), {result.bug_candidates} candidate(s), {result.auto_fp} auto-FP")
+            for svd_name, classes in bug_results.items():
+                n = sum(len(bc.bugs) for bc in classes)
+                print(f"    {svd_name}: {n} bug(s) in {len(classes)} class(es)")
 
-                # 5b. Analyzer (optional)
-                if run_analyzer_flag:
-                    analyzer_model = args.generator_model or config.GENERATOR_MODEL_NAME
-                    for svd_path in svd_files:
-                        svd_base = os.path.splitext(os.path.basename(svd_path))[0]
-                        register_diff_csv = os.path.join(paths.results_dir, svd_base, "register_diff.csv")
-                        if not os.path.exists(register_diff_csv):
-                            continue
-                        analyzer_output_dir = os.path.join(paths.agent_output_dir, "analyzer_iteration")
-                        os.makedirs(analyzer_output_dir, exist_ok=True)
-                        print(f"  Running analyzer for: {svd_base}")
-                        asyncio.run(run_analyzer(analyzer_model, svd_base, register_diff_csv, analyzer_output_dir))
-
-                        # Filter register_diff.csv to keep only actual bugs
-                        analyzer_output_path = os.path.join(analyzer_output_dir, svd_base)
-                        if os.path.exists(analyzer_output_path):
-                            analyzer_diff_csv = register_diff_csv.replace(".csv", "_analyzer.csv")
-                            with open(analyzer_output_path, "r") as f:
-                                ids = json.load(f)["bugs"]
-                            with open(register_diff_csv, "r") as inf, open(analyzer_diff_csv, "w", newline="") as outf:
-                                reader = csv.reader(inf)
-                                writer = csv.writer(outf)
-                                writer.writerow(next(reader))  # header
-                                for row in reader:
-                                    if row and (int(row[0]) in ids or row[3] == "fields"):
-                                        writer.writerow(row)
-
-                # 5c. Generate diff tables
-                for svd_path in svd_files:
-                    svd_base = os.path.splitext(os.path.basename(svd_path))[0]
-                    custom_results_dir = os.path.join(paths.results_dir, svd_base)
-                    generate_diff_table(custom_results_dir, run_analyzer_flag)
-
-                # 5d. Compare with verified datasheet
-                for svd_path in svd_files:
-                    svd_base = os.path.splitext(os.path.basename(svd_path))[0]
-                    custom_results_dir = os.path.join(paths.results_dir, svd_base)
-                    verified_csv = os.path.join(paths.verified_dir, f"{ctx.device_name}_{svd_base}.csv")
-                    if not os.path.exists(verified_csv):
-                        print(f"  Verified CSV not found for {svd_base}")
-                        continue
-                    register_diff_csv = os.path.join(custom_results_dir, "register_diff.csv")
-                    register_diff_verified_csv = os.path.join(custom_results_dir, "register_diff_verified.csv")
-                    compare_diff_with_verified_datasheet(register_diff_csv, verified_csv, register_diff_verified_csv)
-
-                    field_diff_csv = os.path.join(custom_results_dir, "field_diff.csv")
-                    field_diff_verified_csv = os.path.join(custom_results_dir, "field_diff_verified.csv")
-                    compare_diff_with_verified_datasheet(field_diff_csv, verified_csv, field_diff_verified_csv)
-
-                result.evaluation_done = True
+            # -- Step 5b: candidate validator (s6), in-process + NON-FATAL --
+            # Fills validator_verdict/confidence in {rm}_structure_review.csv. Runs in
+            # THIS process, so its openevolve retrieval reuses the collection the
+            # generator already built (openevolve_search._db_cache) — no index rebuild.
+            # Wrapped non-fatal: the review files are already on disk, so an s6
+            # failure/slowness just leaves the advisory verdict column blank.
+            if not args.skip_s6:
+                print(f"\n--- Step 5b: Candidate validator (s6) ---")
+                try:
+                    from s6_validate_candidates import validate_run as _s6_validate_run
+                    s6_res = _s6_validate_run(
+                        ctx, repo_root, paths.run_number, list(config.STAGE_MODELS["validator"]))
+                    result.s6_done = True
+                    print(f"  s6: {s6_res}")
+                except Exception as _s6_err:  # non-fatal
+                    print(f"  s6 (non-fatal) failed: {_s6_err}")
+                    import traceback
+                    traceback.print_exc()
 
     except Exception as e:
         result.success = False
@@ -715,7 +764,66 @@ def run_pipeline_for_device(
         import traceback
         traceback.print_exc()
 
+    _write_run_manifest(result, ctx, args, repo_root)
     return result
+
+
+def _count_generated_registers(output_dir: str) -> int:
+    """Count register JSON files (one per register) in a run's output dir."""
+    if not os.path.isdir(output_dir):
+        return 0
+    skip = {"info", "coverage_improver", "validator", "analyzer_iteration"}
+    return sum(
+        1 for e in os.listdir(output_dir)
+        if e != "run_manifest.json"
+        and e not in skip
+        and os.path.isfile(os.path.join(output_dir, e))
+    )
+
+
+def _write_run_manifest(result: "DeviceResult", ctx: UserContext, args: argparse.Namespace,
+                        repo_root: str) -> None:
+    """Persist a structured manifest for this run (best-effort; never raises)."""
+    try:
+        from datetime import datetime, timezone
+        from utils.run_manifest import RunManifest, save_run_manifest
+
+        run_number = result.final_run_number or 1
+        paths = resolve_device_paths(ctx, repo_root, run_number)
+        svd_files = sorted(
+            os.path.basename(p) for p in (glob.glob(os.path.join(paths.svd_dir, "*.svd"))
+                                          + glob.glob(os.path.join(paths.svd_dir, "*.xml")))
+        )
+        registers = _count_generated_registers(paths.agent_output_dir)
+        manifest = RunManifest(
+            timestamp=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            device_name=ctx.device_name,
+            manufacturer=ctx.manufacturer.value,
+            datasheet=os.path.relpath(paths.pdf_path, repo_root),
+            svd_files=svd_files,
+            run_number=run_number,
+            output_dir=os.path.relpath(paths.agent_output_dir, repo_root),
+            results_dir=os.path.relpath(paths.results_dir, repo_root),
+            retrieval_method=result.retrieval_method,
+            generator_models=result.generator_models,
+            generator_batched=args.generator_batched,
+            coverage_improver_iterations=result.coverage_iterations,
+            analyzer_used=result.analyzer_used,
+            validator_used=result.validator_done,
+            validator_true=result.true_count,
+            validator_false=result.false_count,
+            registers_generated=registers,
+            svd_files_compared=result.svd_files_compared,
+            bug_candidates=result.bug_candidates,
+            auto_fp=result.auto_fp,
+            truncated=result.truncated,
+            success=result.success,
+            error=result.error,
+            valid=result.success and registers > 0,
+        )
+        save_run_manifest(manifest, paths.agent_output_dir)
+    except Exception as e:
+        print(f"  [manifest] could not write run manifest: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -753,18 +861,47 @@ def parse_args() -> argparse.Namespace:
         help="Skip SVD comparison and diff tables (Step 5)",
     )
     parser.add_argument(
+        "--skip-s6", action="store_true",
+        help="Skip the in-process candidate validator (Step 5b/s6) that fills "
+             "validator_verdict in the structure review",
+    )
+    parser.add_argument(
+        "--skip-readiness", action="store_true",
+        help="Skip the post-preprocessing readiness gate (chunks + local vector DB present)",
+    )
+    parser.add_argument(
         "--run-analyzer", action="store_true",
         default=config.RUN_ANALYZER,
         help=f"Run analyzer on diffs (default: {config.RUN_ANALYZER})",
     )
     parser.add_argument(
-        "--generator-batched", action="store_true",
-        default=config.GENERATOR_BATCHED,
-        help="Use per-peripheral batched generator (fewer LLM calls)",
+        "--new-run", action="store_true",
+        help="Start a fresh run (max+1) instead of resuming the latest existing run",
     )
     parser.add_argument(
-        "--validator-batched", action="store_true",
-        help="Use batched validator (groups invariants by register)",
+        "--retrieval", choices=["auto", "openevolve"], default="auto",
+        help="Context retrieval method. 'auto' (default) resolves local/OpenAI/keyword "
+             "from the device's vector_stores.json; 'openevolve' uses the evolved STM "
+             "retrieval program (per-device, rm0041 fallback).",
+    )
+    parser.add_argument(
+        "--generator-batched", action="store_true", dest="generator_batched",
+        default=config.GENERATOR_BATCHED,
+        help="Per-peripheral batched generator, fewer LLM calls (default: on)",
+    )
+    parser.add_argument(
+        "--no-generator-batched", action="store_false", dest="generator_batched",
+        help="Use the per-register generator instead of batched",
+    )
+    parser.add_argument(
+        "--validator-batched", action="store_true", dest="validator_batched",
+        default=True,
+        help="Batch the structure-validator full pass by register (default: on). "
+             "(The structure-validator candidate pass, s6, is always batched.)",
+    )
+    parser.add_argument(
+        "--no-validator-batched", action="store_false", dest="validator_batched",
+        help="Use the per-invariant structure validator instead of batched",
     )
 
     # Model overrides
@@ -815,8 +952,8 @@ def parse_args() -> argparse.Namespace:
         help="Model for the constraint validator judge (default: Groq gpt-oss-120b)",
     )
     parser.add_argument(
-        "--constraint-batch-size", type=int, default=1,
-        help="Constraints per judge call (>1 amortizes the system prompt; "
+        "--constraint-batch-size", type=int, default=8,
+        help="Constraints per judge call (default 8; amortizes the system prompt; "
              "any item the batch response omits falls back to a solo call)",
     )
 

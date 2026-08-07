@@ -99,15 +99,16 @@ def convert_generator_register_to_svd_like(register_data, include_enums=True, de
 
         enumerated_values = []
         if include_enums:
-            enum_list = field.get('enumerated_values', [])
-            for enum in enum_list:
+            for enum in (field.get('enumerated_values') or []):
+                if not enum:
+                    continue
                 enumerated_values.append({
-                    'name': enum.get('name', '').lower(),
+                    'name': (enum.get('name') or '').lower(),
                     'value': enum.get('value', '')
                 })
 
         return {
-            'name': field.get('name', '').lower(),
+            'name': (field.get('name') or '').lower(),   # generator may emit name: null
             'description': field.get('description', ''),
             'access': field.get('access', ''),
             'bit_offset': bit_offset,
@@ -116,7 +117,9 @@ def convert_generator_register_to_svd_like(register_data, include_enums=True, de
         }
 
     fields = []
-    for field in register_data.get('subfields', []):
+    for field in (register_data.get('subfields') or []):
+        if not field:
+            continue
         fields.append(bitfield_to_svd_field(field))
 
     return {
