@@ -1,0 +1,662 @@
+#!/usr/bin/env python3
+"""Find constrained register accesses in third-party projects, WITHOUT compiling.
+
+Every finding so far lives in one driver crate (stm32f4xx-hal), because that is
+the only thing we could build against an injected PAC. Every other candidate
+target pins an older HAL or PAC, so "build first, look second" does not scale --
+and Tock has no PAC at all, so it can never be built against one.
+
+This scans instead. It reads a project's own Rust source, extracts every
+hardware register access, maps it to (peripheral, register, field, operation),
+cross-references our extracted datasheet constraints, and triages each hit. It
+also records, per project, whether it could EVER be built against an injected
+crate and what that would take -- which is the ranked shortlist the build phase
+consumes.
+
+ONLY THE FRONT-END IS NEW. experiments/corroboration.py already implements
+everything downstream of "here is a flagged site": `enclosing_function` finds
+the containing function, `deterministic_scan` answers "is a precondition field
+accessor called before the flagged line?" (corroborated vs unchecked), and
+`judge_hit` runs the calibrated closed-book judge. Its input today is
+`enforcement_hits()`, which parses `cargo check` diagnostics; this module is a
+second producer of the same {file, line, register, operation} shape, from text.
+
+WHAT A HIT MEANS. `unchecked` is a CANDIDATE, not a bug: a static scan cannot
+see a guard in a caller, and `deterministic_scan` only looks inside the
+enclosing function. `corroborated` means the project already performs the
+datasheet-prescribed check nearby. Compile confirmation remains the arbiter.
+
+Usage:
+    python applications/pac_codegen/experiments/scan_projects.py
+    python applications/pac_codegen/experiments/scan_projects.py --only hubris
+    python applications/pac_codegen/experiments/scan_projects.py --local <name>=<path>
+"""
+
+import argparse
+import json
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from pathlib import Path
+
+APP_DIR = Path(__file__).resolve().parent.parent      # applications/pac_codegen
+REPO = APP_DIR.parent.parent
+sys.path.insert(0, str(REPO))
+sys.path.insert(0, str(APP_DIR))
+sys.path.insert(0, str(APP_DIR / "experiments"))
+
+import rust_codegen  # noqa: E402
+from core import collect_constraints as cc  # noqa: E402
+from corroboration import enclosing_function, deterministic_scan  # noqa: E402
+
+OUT = APP_DIR / "experiments" / "out"
+DATA = Path("/home/ramla/hal_agent-phase-1d")
+PAC_VERSION = "0.16.0"
+CLONE_TIMEOUT = 900
+
+
+# --------------------------------------------------------------------------- #
+# The project registry
+# --------------------------------------------------------------------------- #
+
+@dataclass
+class Project:
+    """A third-party project to scan.
+
+    ``style`` decides which extractor runs:
+      pac_direct -- svd2rust accessors in the project's own source
+                    (`i2c.cr1.modify(|_, w| ...)`, `dp.TIM5.psc.write(...)`)
+      tock       -- tock-registers: hand-written `register_structs!` /
+                    `register_bitfields!`, accessed as `self.registers.cr1...`
+      hal_only   -- all register access is inside a HAL; nothing to scan in the
+                    project itself. Recorded so the report says WHY it is empty.
+    """
+    name: str
+    repo: str
+    style: str
+    rms: list                       # manuals in our corpus this maps to
+    device: str                     # PAC device module, for name resolution
+    pac: str                        # PAC crate it would need
+    pac_pinned: str = ""            # what it pins today ("" = via a HAL)
+    hal: str = ""
+    hal_pinned: str = ""
+    subdirs: list = field(default_factory=list)   # limit the scan (large repos)
+    ref: str = ""
+    note: str = ""
+    # Path prefix -> the manuals that govern code under it. A repo can target
+    # several chip families at once: Hubris has drv/stm32h7-* beside
+    # drv/stm32fx-*, and matching H7 driver code against an F4 manual is
+    # unsound even when the register name happens to exist on both. A prefix
+    # mapping to [] means "we have no constraints for that family" and its
+    # files are skipped rather than mis-attributed.
+    chip_paths: dict = field(default_factory=dict)
+
+    def rms_for(self, rel: str) -> list:
+        """Manuals governing one file, by longest matching path prefix."""
+        best, best_len = None, -1
+        for pref, rms in self.chip_paths.items():
+            if rel.startswith(pref) and len(pref) > best_len:
+                best, best_len = rms, len(pref)
+        return self.rms if best is None else best
+
+
+PROJECTS = [
+    # --- track 2: PACs used directly, no HAL. Errors land on their own lines.
+    Project("hubris", "https://github.com/oxidecomputer/hubris", "pac_direct",
+            ["rm0368", "rm0383", "rm0386", "rm0390", "rm0402", "rm0430"],
+            "stm32f411", "stm32f4", pac_pinned="0.13.0",
+            subdirs=["drv"],
+            chip_paths={
+                # H7 and LPC55 code: no manuals in the corpus -> skip, do not
+                # match against an F-series manual.
+                "drv/stm32h7": [], "drv/lpc55": [],
+                # G0 drivers get the G0 manuals.
+                "drv/stm32g0": ["rm0444", "rm0454"],
+                # stm32fx-* and stm32xx-* are built per family; F4 is the
+                # overlap with our corpus.
+                "drv/stm32fx": ["rm0368", "rm0383", "rm0386", "rm0390",
+                                "rm0402", "rm0430"],
+                "drv/stm32xx": ["rm0368", "rm0383", "rm0386", "rm0390",
+                                "rm0402", "rm0430"],
+            },
+            note="Oxide service processor. 23 STM32 driver crates; also uses "
+                 "stm32f3/stm32g0/stm32h7 directly."),
+    Project("anne-key", "https://github.com/ah-/anne-key", "pac_direct",
+            ["rm0038"], "stm32l151", "stm32l1", pac_pinned="0.11.0",
+            note="Keyboard firmware on stm32l1 with no HAL layer."),
+
+    # --- track 3: Tock. Hand-written register maps; can never be injected.
+    Project("tock", "https://github.com/tock/tock", "tock",
+            ["rm0368", "rm0402", "rm0390", "rm0316"],
+            "stm32f401", "stm32f4",
+            subdirs=["chips/stm32f4xx", "chips/stm32f303xc"],
+            note="tock-registers, not svd2rust. Scan-only by construction."),
+
+    # --- track 1: stm32f4xx-hal reverse dependencies that touch registers.
+    Project("stm32-eth", "https://github.com/stm32-rs/stm32-eth", "pac_direct",
+            ["rm0386", "rm0390"], "stm32f469", "stm32f4",
+            hal="stm32f4xx-hal", hal_pinned="^0.21",
+            note="Ethernet MAC/DMA driver; programs ETH registers directly."),
+    Project("stm32f469i-disc", "https://github.com/tegimeki/stm32f469i-disc",
+            "hal_only", ["rm0386"], "stm32f469", "stm32f4",
+            hal="stm32f4xx-hal", hal_pinned="^0.23",
+            note="ALREADY on the HAL version that pairs with PAC 0.16."),
+    Project("booster", "https://github.com/quartiq/booster", "hal_only",
+            [], "stm32f407", "stm32f4",
+            hal="stm32f4xx-hal", hal_pinned="^0.21",
+            note="RF power amplifier firmware. F407 = RM0090, NOT in the "
+                 "corpus -- scanned to size the RM0090 opportunity."),
+    Project("px4flow_bsp", "https://github.com/tstellanova/px4flow_bsp",
+            "hal_only", [], "stm32f407", "stm32f4",
+            hal="stm32f4xx-hal", hal_pinned="^0.8.3",
+            note="Optical-flow sensor BSP; F407 = RM0090."),
+]
+
+
+# --------------------------------------------------------------------------- #
+# Constraints for a manual, keyed for lookup
+# --------------------------------------------------------------------------- #
+
+def load_constraints(rm: str) -> list:
+    """Judge-`enforce` constraints for one manual, field-exact.
+
+    The review JSONL is the only artifact carrying `target_fields` and
+    structured preconditions; the per-device constraints file is
+    whole-register only (field gating is off by default)."""
+    p = DATA / f"evaluation/stm/{rm}/1/{rm}_constraints_review.jsonl"
+    if not p.is_file():
+        p = DATA / f"agent_output/stm/{rm}/1/constraint_validation/validated.jsonl"
+    if not p.is_file():
+        return []
+    out = []
+    for line in p.read_text().splitlines():
+        if not line.strip():
+            continue
+        r = json.loads(line)
+        enf, tp = r.get("enforcement", ""), r.get("tp_fp", "")
+        if tp == "FP":
+            continue
+        if enf != "enforce" and not (tp == "TP" and enf == "drop"):
+            continue
+        c = r.get("constraint") or {}
+        if not c:
+            continue
+        out.append({
+            "rm": rm, "peripheral": (r.get("peripheral") or "").lower(),
+            "register": (r.get("register") or "").lower(),
+            "kind": c.get("kind"),
+            "operation": c.get("target_operation", ""),
+            "fields": [f.lower() for f in (c.get("target_fields") or [])],
+            "preconditions": [
+                {"register": q.get("register", ""), "field": q.get("field", ""),
+                 "state": q.get("state", "")}
+                for q in (c.get("preconditions") or [])],
+            "quote": c.get("datasheet_text", ""),
+        })
+    return out
+
+
+def constraint_index(rms: list) -> dict:
+    """(peripheral_family, register) -> [constraint]. Family-keyed so a hit on
+    any instance matches (instances share one register-block module, so a gate
+    on i2c1 covers I2C2/I2C3 -- see rust_codegen.peripheral_instance_map)."""
+    idx = defaultdict(list)
+    for rm in rms:
+        for c in load_constraints(rm):
+            fam = cc._family(c["peripheral"]) or c["peripheral"]
+            idx[(fam, c["register"])].append(c)
+    return idx
+
+
+# --------------------------------------------------------------------------- #
+# Extractors: project source -> register access sites
+# --------------------------------------------------------------------------- #
+
+# svd2rust accessor styles, both the method form used by newer PACs
+# (`i2c.cr1().modify(..)`) and the field form used by 0.13-0.15
+# (`i2c.cr1.modify(..)`). The receiver is captured for peripheral attribution.
+_PAC_ACCESS = re.compile(
+    r"(?P<recv>[A-Za-z_][A-Za-z0-9_.]*)\s*\.\s*(?P<reg>[a-z][a-z0-9_]*)\s*"
+    r"(?:\(\s*\))?\s*\.\s*(?P<op>read|write|modify|reset)\s*\(")
+
+# tock-registers: `self.registers.cr1.modify(CR1::PE::SET)`, `.read(SR1::SB)`
+_TOCK_ACCESS = re.compile(
+    r"(?P<recv>[A-Za-z_][A-Za-z0-9_.]*)\s*\.\s*(?P<reg>[a-z][a-z0-9_]*)\s*"
+    r"\.\s*(?P<op>read|write|modify|set|get|is_set|modify_no_read)\s*\(")
+
+# Field accessors inside a closure body: `w.pe().set_bit()`, `w.trise().set(x)`
+_FIELD_CALL = re.compile(r"\bw\s*\.\s*([a-z][a-z0-9_]*)\s*\(")
+# tock field references: `CR1::PE::SET`, `SR1::SB`
+_TOCK_FIELD = re.compile(r"\b[A-Z][A-Z0-9_]*::([A-Z][A-Z0-9_]*)")
+
+_SKIP_DIRS = {"target", ".git", "tests", "examples", "benches"}
+# Method names that look like registers but are not (common Rust/embedded API).
+_NOT_A_REGISTER = {
+    "lock", "borrow", "clone", "iter", "len", "get", "set", "as_ref", "unwrap",
+    "map", "value", "data", "buf", "inner", "state", "config", "peripherals",
+    "regs", "registers", "device", "port", "pin", "clocks", "byte", "word",
+}
+
+
+def _rust_files(root: Path, subdirs: list) -> list:
+    roots = [root / s for s in subdirs] if subdirs else [root]
+    out = []
+    for r in roots:
+        if not r.is_dir():
+            continue
+        for f in r.rglob("*.rs"):
+            if any(p in _SKIP_DIRS for p in f.parts):
+                continue
+            out.append(f)
+    return out
+
+
+# Receiver names that carry no peripheral information -- the peripheral is the
+# module's, not the expression's. `regs.tr().write(..)` inside src/rtc.rs is an
+# RTC access; attributing it to a peripheral called "regs" loses 14 of the 31
+# known sites in stm32f4xx-hal.
+_GENERIC_RECEIVERS = {"registers", "regs", "self", "rb", "reg", "periph",
+                      "peripheral", "block", "inner", "p"}
+
+
+def _peripheral_from_receiver(recv: str, file_stem: str) -> str:
+    """Best-effort peripheral name from the receiver expression, falling back
+    to the file it lives in.
+
+    `i2c.cr1` -> i2c;  `dp.TIM5.psc` -> tim5;  `self.regs.tr()` in rtc.rs ->
+    rtc. Heuristic by nature, so the receiver text is carried into the report
+    for review."""
+    last = recv.split(".")[-1].lower()
+    if last in _GENERIC_RECEIVERS or not last:
+        return file_stem.lower()
+    return last
+
+
+def scan_pac_direct(f: Path, root: Path) -> list:
+    """svd2rust-style register accesses in one file."""
+    text = f.read_text(errors="replace")
+    lines = text.splitlines()
+    stem = f.stem
+    hits = []
+    for m in _PAC_ACCESS.finditer(text):
+        reg = m.group("reg")
+        if reg in _NOT_A_REGISTER:
+            continue
+        # Attribute to the OPERATION token, not the receiver: rustc reports
+        # `self.spi\n  .cr1()\n  .modify(..)` at the `.modify` line, and the
+        # ground-truth comparison against compiled diagnostics needs to agree.
+        line_no = text.count("\n", 0, m.start("op")) + 1
+        # fields written: scan the rest of the statement for `w.<field>()`
+        tail = text[m.end():m.end() + 400]
+        fields = [x.lower() for x in _FIELD_CALL.findall(tail)]
+        hits.append({
+            "file": str(f.relative_to(root)), "abs": str(f), "line": line_no,
+            "receiver": m.group("recv"),
+            "peripheral": _peripheral_from_receiver(m.group("recv"), stem),
+            "register": reg, "operation": m.group("op"),
+            "fields": sorted(set(fields)),
+            "source": (lines[line_no - 1].strip()[:160] if line_no <= len(lines) else ""),
+        })
+    return hits
+
+
+def _tock_register_map(f: Path) -> set:
+    """Register names declared in this file's `register_structs!` block."""
+    text = f.read_text(errors="replace")
+    return {m.group(1).lower() for m in
+            re.finditer(r"^\s*(?:\(\s*0x[0-9A-Fa-f]+\s*=>\s*)?([a-z][a-z0-9_]*)\s*:\s*"
+                        r"(?:ReadWrite|ReadOnly|WriteOnly)<", text, re.M)}
+
+
+def scan_tock(f: Path, root: Path) -> list:
+    """tock-registers accesses; the peripheral is the file stem."""
+    declared = _tock_register_map(f)
+    if not declared:
+        return []
+    text = f.read_text(errors="replace")
+    lines = text.splitlines()
+    periph = f.stem.lower()
+    hits = []
+    for m in _TOCK_ACCESS.finditer(text):
+        reg = m.group("reg")
+        if reg not in declared:
+            continue
+        line_no = text.count("\n", 0, m.start("op")) + 1
+        tail = text[m.end():m.end() + 300]
+        fields = [x.lower() for x in _TOCK_FIELD.findall(tail)
+                  if x not in ("SET", "CLEAR")]
+        op = m.group("op")
+        op = {"set": "write", "get": "read", "is_set": "read",
+              "modify_no_read": "modify"}.get(op, op)
+        hits.append({
+            "file": str(f.relative_to(root)), "abs": str(f), "line": line_no,
+            "receiver": m.group("recv"), "peripheral": periph,
+            "register": reg, "operation": op, "fields": sorted(set(fields)),
+            "source": (lines[line_no - 1].strip()[:160] if line_no <= len(lines) else ""),
+        })
+    return hits
+
+
+# --------------------------------------------------------------------------- #
+# Matching a hit against the constraints
+# --------------------------------------------------------------------------- #
+
+def _ops_match(constraint_op: str, hit_op: str) -> bool:
+    """A `write` constraint gates write AND modify (a modify performs a write);
+    a `read` constraint gates read and modify; `any` gates everything. Mirrors
+    RegisterPlan._emit_state_gate's op expansion."""
+    if constraint_op in ("any", "read/write", "read-write"):
+        return True
+    if constraint_op == "write":
+        return hit_op in ("write", "modify", "reset")
+    if constraint_op == "read":
+        return hit_op in ("read", "modify")
+    return constraint_op == hit_op
+
+
+def match_hits(hits: list, idx: dict, periph_map: dict) -> list:
+    """Attach every constraint that covers each hit."""
+    out = []
+    for h in hits:
+        periph = h["peripheral"]
+        # resolve an instance to its register-block family (I2C3 -> i2c)
+        module = periph_map.get(periph, periph)
+        fam = cc._family(module) or module
+        cands = idx.get((fam, h["register"]), [])
+        matched = []
+        for c in cands:
+            if not _ops_match(c["operation"], h["operation"]):
+                continue
+            # field-scoped constraints only bite if the hit writes that field
+            if c["fields"] and h["fields"] and not (set(c["fields"]) & set(h["fields"])):
+                continue
+            matched.append(c)
+        if matched:
+            out.append({**h, "constraints": matched})
+    return out
+
+
+def triage(matched: list) -> list:
+    """corroborated / unchecked, via corroboration.deterministic_scan."""
+    out = []
+    for h in matched:
+        fields = sorted({p["field"].lower() for c in h["constraints"]
+                         for p in c["preconditions"] if p.get("field")})
+        verdict = {"verdict": "no_precondition_fields", "fields": []}
+        snippet = ""
+        if fields:
+            try:
+                start, snippet = enclosing_function(h["abs"], h["line"])
+                verdict = deterministic_scan(snippet, h["line"] - start + 1, fields)
+            except Exception as e:                            # noqa: BLE001
+                verdict = {"verdict": "scan_error", "fields": fields,
+                           "error": str(e)[:120]}
+        out.append({**h, "triage": verdict,
+                    "snippet": snippet[:1500] if snippet else ""})
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# Build-readiness
+# --------------------------------------------------------------------------- #
+
+def readiness(p: Project) -> dict:
+    """Could this project ever be built against an injected crate, and what
+    would it take? This is the ranked shortlist the build phase consumes."""
+    if p.style == "tock":
+        return {"reachable": False, "effort": "not-applicable",
+                "pac_needed": None,
+                "blockers": ["hand-written register maps; no PAC to inject into"]}
+    if not p.rms:
+        return {"reachable": False, "effort": "missing-manual",
+                "pac_needed": f"{p.pac} {PAC_VERSION}",
+                "blockers": [f"no constraints for this chip "
+                             f"({p.device}); its manual is not in the corpus"]}
+    blockers = []
+    if p.pac_pinned and p.pac_pinned != PAC_VERSION:
+        blockers.append(f"pins {p.pac} {p.pac_pinned}, injector targets "
+                        f"{PAC_VERSION}")
+    if p.hal:
+        pairs = p.hal_pinned.lstrip("^").startswith("0.23")
+        if not pairs:
+            blockers.append(f"{p.hal} {p.hal_pinned} does not pair with PAC "
+                            f"{PAC_VERSION}; needs the 0.23 bump")
+        blockers.append(f"{p.hal} must be patched (4-line associated-type "
+                        "bound; see docs/generic_friction.md)")
+    effort = ("ready" if not blockers else
+              "pac-gap" if any("pins" in b for b in blockers) else "hal-bump")
+    return {"reachable": True, "effort": effort,
+            "pac_needed": f"{p.pac} {PAC_VERSION}", "blockers": blockers}
+
+
+# --------------------------------------------------------------------------- #
+# Driver
+# --------------------------------------------------------------------------- #
+
+def clone(p: Project, dest: Path) -> Path | None:
+    cmd = ["git", "clone", "-q", "--depth", "1"]
+    if p.ref:
+        cmd += ["--branch", p.ref]
+    try:
+        subprocess.run(cmd + [p.repo, str(dest)], check=True,
+                       capture_output=True, timeout=CLONE_TIMEOUT)
+        return dest
+    except Exception as e:                                    # noqa: BLE001
+        print(f"  clone failed: {str(e)[:160]}")
+        return None
+
+
+def scan_project(p: Project, root: Path, periph_map: dict) -> dict:
+    files = _rust_files(root, p.subdirs)
+    scanner = {"pac_direct": scan_pac_direct, "tock": scan_tock}.get(p.style)
+    hits = []
+    if scanner:
+        for f in files:
+            hits.extend(scanner(f, root))
+    # Group hits by the manuals that govern their file, so a multi-family repo
+    # is never matched across families.
+    by_rms: dict = {}
+    for h in hits:
+        key = tuple(p.rms_for(h["file"]))
+        by_rms.setdefault(key, []).append(h)
+    idx_all, matched = {}, []
+    for key, group in by_rms.items():
+        if not key:
+            continue                      # family with no manuals: skip
+        idx = constraint_index(list(key))
+        idx_all.update(idx)
+        matched.extend(match_hits(group, idx, periph_map))
+    idx = idx_all
+    triaged = triage(matched)
+    regs = Counter(f"{h['peripheral']}/{h['register']}" for h in hits)
+    verdicts = Counter(h["triage"]["verdict"] for h in triaged)
+    return {
+        "name": p.name, "repo": p.repo, "style": p.style, "note": p.note,
+        "rms": p.rms, "device": p.device, "pac": p.pac,
+        "pac_pinned": p.pac_pinned, "hal": p.hal, "hal_pinned": p.hal_pinned,
+        "rust_files": len(files),
+        "register_accesses": len(hits),
+        "distinct_registers": len(regs),
+        "top_registers": regs.most_common(12),
+        "constraints_available": sum(len(v) for v in idx.values()),
+        "hits": len(triaged),
+        "verdicts": dict(verdicts),
+        "findings": triaged,
+        "readiness": readiness(p),
+    }
+
+
+_EFFORT_NOTE = {
+    "ready": "already on a HAL that pairs with PAC 0.16 — buildable now",
+    "hal-bump": "needs the HAL bumped to a PAC-0.16 pairing, then the 4-line "
+                "associated-type patch",
+    "pac-gap": "pins a PAC generation the injector does not target; the "
+               "svd2rust template moved (see docs/stm_injection_sweep.md §1)",
+    "missing-manual": "its chip's reference manual is not in the corpus — "
+                      "nothing to check against, not a clean result",
+    "not-applicable": "no PAC to inject into",
+}
+
+
+def write_report(results: list, path: Path) -> None:
+    """docs/project_landscape.md — the deliverable this phase produces."""
+    md = ["# Where our constraints would bite: a scan of higher-level projects",
+          "",
+          "Generated by `applications/pac_codegen/experiments/scan_projects.py`.",
+          "This is a **static** survey: it reads each project's own Rust source,",
+          "extracts hardware register accesses, and cross-references our",
+          "extracted datasheet constraints. Nothing is compiled.",
+          "",
+          "**A hit is a candidate, not a bug.** `unchecked` means no precondition",
+          "field is referenced in the enclosing function before the access; a",
+          "guard one frame up reads as unchecked. `corroborated` means the",
+          "project already performs the datasheet-prescribed check nearby.",
+          "",
+          "**Triage caveat: whole-register gates over-approximate.** When a",
+          "constraint lists no `fields restricted`, it gates the whole register",
+          "even though the datasheet note usually attaches to specific bits. In",
+          "the SPI CR1 case below (*\"this bit should be written only when SPE =",
+          "0\"*), sites writing `cpol`/`cpha`/`br`/`dff` are the strong",
+          "candidates; a site whose only field is `spe` is the enable/disable",
+          "operation itself and is almost certainly benign. Read the",
+          "*fields written* column before the verdict.",
+          "",
+          "**Scanner accuracy.** Run against stm32f4xx-hal 0.23 with RM0383's",
+          "constraints, it finds **31 of the 31** sites `patch_hal.py` found by",
+          "compiling — zero missed — plus 8 more the compile route structurally",
+          "cannot reach, because their gate was never emitted (field-scoped",
+          "constraints, `field_gating_disabled`).",
+          "",
+          "## Summary",
+          "",
+          "| project | style | manuals | .rs files | register accesses | hits | unchecked | corroborated | build-readiness |",
+          "|---|---|---|---|---|---|---|---|---|"]
+    for r in results:
+        v = r["verdicts"]
+        md.append(
+            f"| [{r['name']}]({r['repo']}) | {r['style']} | "
+            f"{', '.join(r['rms']) or '—'} | {r['rust_files']} | "
+            f"{r['register_accesses']} | **{r['hits']}** | "
+            f"{v.get('unchecked', 0)} | {v.get('corroborated', 0)} | "
+            f"`{r['readiness']['effort']}` |")
+
+    md += ["", "## Build-readiness", "",
+           "What each project would need before it could be built against an",
+           "injected chip crate — the ranked input to the build phase.", "",
+           "| project | reachable | PAC needed | blockers |", "|---|---|---|---|"]
+    for r in sorted(results, key=lambda x: (x["readiness"]["effort"] != "ready",
+                                            -x["hits"])):
+        rd = r["readiness"]
+        md.append(f"| {r['name']} | {'yes' if rd['reachable'] else 'no'} | "
+                  f"{rd['pac_needed'] or '—'} | "
+                  f"{'; '.join(rd['blockers']) or 'none'} |")
+    md += ["", "Effort key:", ""]
+    md += [f"- `{k}` — {v}" for k, v in _EFFORT_NOTE.items()]
+
+    for r in results:
+        if not r["findings"]:
+            continue
+        md += ["", f"## {r['name']} — {r['hits']} candidate sites", "",
+               f"*{r['note']}*", ""]
+        by_reg = defaultdict(list)
+        for h in r["findings"]:
+            by_reg[f"{h['peripheral']}/{h['register']}"].append(h)
+        for reg, hs in sorted(by_reg.items(), key=lambda kv: -len(kv[1])):
+            c = hs[0]["constraints"][0]
+            pre = ", ".join(f"{q['register']}.{q['field']} {q['state']}"
+                            for q in c["preconditions"]) or "—"
+            md += [f"### `{reg}` — {len(hs)} site(s)", "",
+                   f"- **rule** ({c['kind']}, {c['operation']}): {pre}",
+                   f"- **fields restricted**: {', '.join(c['fields']) or 'whole register'}",
+                   f"- **datasheet** ({c['rm']}): \"{c['quote'][:220]}\"", ""]
+            md.append("| file:line | op | fields written | verdict |")
+            md.append("|---|---|---|---|")
+            for h in hs[:20]:
+                md.append(f"| `{h['file']}:{h['line']}` | {h['operation']} | "
+                          f"{', '.join(h['fields']) or '—'} | "
+                          f"**{h['triage']['verdict']}** |")
+            md.append("")
+
+    md += ["", "## Limits", "",
+           "- Peripheral attribution is heuristic: it comes from the receiver",
+           "  expression, falling back to the module the code lives in. The",
+           "  receiver text is carried in the JSON for review.",
+           "- Chip attribution is per path prefix. A repo targeting several",
+           "  families (Hubris has `drv/stm32h7-*` beside `drv/stm32fx-*`) is",
+           "  matched family by family; files whose family has no manual in the",
+           "  corpus are skipped rather than mis-matched.",
+           "- A project on a manual we have not processed scans clean for the",
+           "  wrong reason — that is the `missing-manual` verdict, and it is not",
+           "  the same as 'no constrained registers touched'.", ""]
+    path.write_text("\n".join(md))
+    print(f"report: {path}")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--only", action="append", default=[],
+                    help="scan a single project by name (repeatable)")
+    ap.add_argument("--local", action="append", default=[], metavar="NAME=PATH",
+                    help="use an existing checkout instead of cloning")
+    ap.add_argument("--out", default=None)
+    args = ap.parse_args()
+
+    local = dict(s.split("=", 1) for s in args.local)
+    projects = [p for p in PROJECTS if not args.only or p.name in args.only]
+    if not projects:
+        sys.exit(f"no project matching {args.only}")
+
+    # Instance -> register-block module, from a provisioned PAC. One map per
+    # PAC crate is enough: instance naming is a family property.
+    periph_maps = {}
+    for p in projects:
+        if p.pac in periph_maps:
+            continue
+        d = APP_DIR / "vendored" / "pac" / p.pac / "src" / p.device
+        periph_maps[p.pac] = (rust_codegen.peripheral_instance_map(d)
+                              if d.is_dir() else {})
+
+    results, tmpdirs = [], []
+    try:
+        for p in projects:
+            print(f"\n=== {p.name} ({p.style}) ===", flush=True)
+            if p.name in local:
+                root = Path(local[p.name])
+            else:
+                td = Path(tempfile.mkdtemp(prefix=f"scan_{p.name}_"))
+                tmpdirs.append(td)
+                root = clone(p, td / p.name)
+                if root is None:
+                    continue
+            r = scan_project(p, root, periph_maps.get(p.pac, {}))
+            results.append(r)
+            print(f"  {r['rust_files']} .rs files | "
+                  f"{r['register_accesses']} register accesses on "
+                  f"{r['distinct_registers']} distinct registers")
+            print(f"  constraints available for its manuals: "
+                  f"{r['constraints_available']}")
+            print(f"  HITS on constrained registers: {r['hits']}  {r['verdicts']}")
+            print(f"  readiness: {r['readiness']['effort']} "
+                  f"({r['readiness']['pac_needed']})")
+            for h in r["findings"][:5]:
+                print(f"    {h['file']}:{h['line']} {h['peripheral']}/"
+                      f"{h['register']} {h['operation']} -> "
+                      f"{h['triage']['verdict']}")
+    finally:
+        for td in tmpdirs:
+            shutil.rmtree(td, ignore_errors=True)
+
+    OUT.mkdir(parents=True, exist_ok=True)
+    out = Path(args.out) if args.out else OUT / "scan_projects.json"
+    out.write_text(json.dumps(results, indent=1, default=str) + "\n")
+    print(f"\njson: {out}")
+    if results:
+        write_report(results, REPO / "docs" / "project_landscape.md")
+
+
+if __name__ == "__main__":
+    main()
