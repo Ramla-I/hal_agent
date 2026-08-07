@@ -81,8 +81,6 @@ class UserContext:
     run: int
     file_id: str
     vs_id: str
-    vs_id_text: str
-    vs_id_md: str
     
 class BitNumber(BaseModel):
     start_bit: int
