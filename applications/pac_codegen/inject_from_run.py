@@ -97,6 +97,9 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
     # rust_codegen.peripheral_instance_map). Without it, every constraint on a
     # non-first instance is thrown away as "peripheral not in device".
     instance_map = rust_codegen.peripheral_instance_map(device_dir)
+    # stm32h7 keeps peripherals in a shared src/common/ tree; DeviceLayout
+    # resolves either layout (see rust_codegen.DeviceLayout).
+    layout = rust_codegen.DeviceLayout(device_dir)
 
     for reg_entry in manifest["registers"]:
         peripheral = reg_entry["peripheral"]
@@ -164,9 +167,9 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
             continue
         # Resolve the instance to the module that owns its register types.
         module = peripheral
-        if not (device_dir / f"{module}.rs").is_file():
+        if not layout.module_file(module).is_file():
             aliased = instance_map.get(peripheral)
-            if aliased and (device_dir / f"{aliased}.rs").is_file():
+            if aliased and layout.module_file(aliased).is_file():
                 module = aliased
             else:
                 row("peripheral_not_in_device",

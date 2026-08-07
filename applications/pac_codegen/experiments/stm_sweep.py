@@ -138,10 +138,34 @@ TARGETS = [
     Target("rm0451", "stm32l0", "stm32l0x0", "stm32l0x0.svd"),
     Target("rm0454", "stm32g0", "stm32g070", "stm32g070.svd", [_hal2("g070")]),
     Target("rm0490", "stm32c0", "stm32c031", "stm32c031.svd", [_hal2("c031")]),
-    # rm0493 (STM32WBA5x) and rm0505 (STM32WB09) have NO device module in
-    # stm32wb 0.16.0 -- the crate ships only stm32wb55 -- so they cannot be
-    # injected. Their constraints are extracted and validated, and will land
-    # here as soon as a PAC covers those chips.
+    # --- the rest of the validated corpus. The device for each is chosen so
+    # --- the PAC module, the SVD file and (where one exists) a stm32-hal2
+    # --- feature all line up; without that a baseline cannot even be built.
+    Target("rm0041", "stm32f1", "stm32f100", "stm32f100.svd"),
+    Target("rm0090", "stm32f4", "stm32f429", "stm32f439.svd", [_hal2("f429")]),
+    Target("rm0351", "stm32l4", "stm32l4x6", "stm32l496.svd", [_hal2("l4x6")]),
+    Target("rm0399", "stm32h7", "stm32h747cm7", "stm32h747cm7.svd",
+           [_hal2("h747cm7")]),
+    Target("rm0432", "stm32l4", "stm32l4r9", "stm32l4r9.svd"),
+    Target("rm0433", "stm32h7", "stm32h753v", "stm32h753v.svd", [_hal2("h753v")]),
+    Target("rm0436", "stm32mp1", "stm32mp157", "stm32mp157.svd"),
+    Target("rm0438", "stm32l5", "stm32l562", "stm32l562.svd", [_hal2("l562")]),
+    Target("rm0440", "stm32g4", "stm32g4a1", "stm32g4a1.svd", [_hal2("g4a1")]),
+    Target("rm0442", "stm32mp1", "stm32mp153", "stm32mp153.svd"),
+    Target("rm0453", "stm32wl", "stm32wl5x_cm4", "stm32wl5x_cm4.svd"),
+    Target("rm0455", "stm32h7", "stm32h7b3", "stm32h7b3.svd", [_hal2("h7b3")]),
+    Target("rm0456", "stm32u5", "stm32u5a9", "stm32u5a9.svd"),
+    Target("rm0461", "stm32wl", "stm32wle5", "stm32wle5.svd", [_hal2("wle5")]),
+    Target("rm0468", "stm32h7", "stm32h735", "stm32h735.svd", [_hal2("h735")]),
+    Target("rm0477", "stm32h7", "stm32h7s", "stm32h7s.svd"),
+    Target("rm0481", "stm32h5", "stm32h573", "stm32h573.svd", [_hal2("h573")]),
+    Target("rm0486", "stm32n6", "stm32n657", "stm32n657.svd"),
+    Target("rm0492", "stm32h5", "stm32h503", "stm32h503.svd", [_hal2("h503")]),
+    Target("rm0503", "stm32u0", "stm32u083", "stm32u083.svd"),
+    # NOT injectable -- validated, but their PAC crate ships no module for the
+    # chip: rm0475 (STM32MP13xx), rm0493 (STM32WBA5x), rm0505 (STM32WB09),
+    # rm0529 (STM32WB05), rm0530 (STM32WB06/07). 978 enforce-verdict
+    # constraints waiting on a PAC that covers those parts.
 ]
 
 

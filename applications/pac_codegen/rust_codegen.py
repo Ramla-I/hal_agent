@@ -1098,21 +1098,83 @@ _READABLE_RE = re.compile(r"impl crate::Readable for (\w+) \{")
 _WRITABLE_RE = re.compile(r"impl crate::Writable for (\w+) \{")
 
 
-def add_marker_impls(device_dir: Path, gated: set[tuple[str, str, str]]) -> int:
+# stm32-rs 0.16 ships TWO device layouts, and the injector has to walk both.
+#
+#   flat            device/<periph>.rs  +  device/<periph>/<reg>.rs
+#                   -- 20 of the 21 crates we provision.
+#   deduplicated    device/mod.rs carries
+#                       #[path = "../common/<periph>/<hash>/mod.rs"]
+#                       pub mod <periph>;
+#                   and the register files sit beside that mod.rs, SHARED between
+#                   every device whose block is byte-identical. stm32h7 0.16.0 is
+#                   the only crate using it today -- and without support for it
+#                   all five H7 manuals inject ZERO registers, every peripheral
+#                   reported "not in device".
+_MOD_PATH_RE = re.compile(
+    r'#\[path\s*=\s*"([^"]+)"\]\s*(?:pub\s+)?mod\s+(\w+)\s*;')
+
+
+class DeviceLayout:
+    """Where one device module's peripheral and register files actually live."""
+
+    def __init__(self, device_dir: Path):
+        self.device_dir = device_dir
+        self.paths: dict = {}
+        mod_rs = device_dir / "mod.rs"
+        if mod_rs.is_file():
+            for m in _MOD_PATH_RE.finditer(mod_rs.read_text()):
+                rel, name = m.group(1), m.group(2)
+                target = (device_dir / rel).resolve()
+                if target.is_file():
+                    self.paths[name.lower()] = target
+
+    @property
+    def deduplicated(self) -> bool:
+        return bool(self.paths)
+
+    def module_file(self, periph: str) -> Path:
+        """The peripheral's module file -- where a constraints module is
+        appended and where marker impls for its registers are reachable."""
+        return self.paths.get(periph.lower(),
+                              self.device_dir / f"{periph}.rs")
+
+    def register_file(self, periph: str, reg: str) -> Path:
+        p = self.paths.get(periph.lower())
+        base = p.parent if p else self.device_dir / periph
+        return base / f"{reg}.rs"
+
+    def iter_register_files(self):
+        """(peripheral, file) for every .rs holding register definitions."""
+        if self.deduplicated:
+            for periph, mod_path in sorted(self.paths.items()):
+                for f in sorted(mod_path.parent.rglob("*.rs")):
+                    yield periph, f
+            return
+        for f in sorted(self.device_dir.rglob("*.rs")):
+            rel = f.relative_to(self.device_dir)
+            yield rel.parts[0].removesuffix(".rs"), f
+
+
+def add_marker_impls(device_dir: Path, gated: set[tuple[str, str, str]],
+                     skip_marked: bool = False) -> int:
     """Append Unconstrained* marker impls to every register file. Returns the
     number of files patched. ``gated`` holds (peripheral module, RegisterSpec,
     op) triples to skip — absence of the marker IS the gate. The peripheral is
     keyed by path so equally-named specs in other peripherals (CR1rs exists in
     many) keep their markers."""
     patched = 0
-    for rs_file in sorted(device_dir.rglob("*.rs")):
+    seen: set = set()
+    for periph, rs_file in DeviceLayout(device_dir).iter_register_files():
+        if rs_file in seen:
+            continue            # a shared block reachable under two names
+        seen.add(rs_file)
         text = rs_file.read_text()
         if MARKER_SENTINEL in text:
-            raise RuntimeError(
+            if skip_marked:
+                continue        # deduplicated layout: block shared with the
+            raise RuntimeError( #   injected device, already handled there
                 f"{rs_file} already carries LIDAR markers; injection is one-shot"
             )
-        rel = rs_file.relative_to(device_dir)
-        periph = rel.parts[0].removesuffix(".rs")
         readable = _READABLE_RE.findall(text)
         writable = _WRITABLE_RE.findall(text)
         if not readable and not writable:
@@ -1230,12 +1292,13 @@ class ReaderShapes:
 
     def __init__(self, device_dir: Path):
         self.device_dir = device_dir
+        self.layout = DeviceLayout(device_dir)
         self._files: dict = {}
 
     def _parse(self, periph: str, reg: str):
         key = (periph, reg)
         if key not in self._files:
-            f = self.device_dir / periph / f"{reg}.rs"
+            f = self.layout.register_file(periph, reg)
             if not f.is_file():
                 self._files[key] = None
             else:
@@ -1449,14 +1512,21 @@ def add_sibling_markers(src: Path, device: str) -> int:
     added impls are inert unless that chip is selected.
 
     Returns the number of files patched.
+
+    In the deduplicated layout (stm32h7) sibling devices SHARE register-block
+    files with the injected one. Those are skipped here rather than double
+    marked: the block is literally the same code, so the injected chip's gate
+    already applies to it. That over-applies one chip's rule to a sibling with a
+    byte-identical block -- inert in practice, since only one chip feature is
+    ever enabled.
     """
     total = 0
     for d in sorted(src.iterdir()):
-        if not d.is_dir() or d.name == device:
+        if not d.is_dir() or d.name in (device, "common"):
             continue
         if not any(d.rglob("*.rs")):
             continue
-        total += add_marker_impls(d, set())
+        total += add_marker_impls(d, set(), skip_marked=True)
     return total
 
 
@@ -1470,8 +1540,9 @@ def prune_plans_for_device(device_dir: Path,
     matches what is actually injected."""
     kept = []
     shapes = ReaderShapes(device_dir)
+    layout = shapes.layout
     for plan in plans:
-        reg_file = device_dir / plan.peripheral / f"{plan.reg_lower}.rs"
+        reg_file = layout.register_file(plan.peripheral, plan.reg_lower)
         spec = f"{plan.reg_name.upper()}rs"
         reg_text = reg_file.read_text() if reg_file.is_file() else ""
         removed = plan.prune_for_access(
@@ -1503,8 +1574,9 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
     plans = prune_plans_for_device(device_dir, plans)
     by_periph: dict[str, list[RegisterPlan]] = {}
     gated: set[tuple[str, str, str]] = set()
+    layout = DeviceLayout(device_dir)
     for plan in plans:
-        peripheral_file = device_dir / f"{plan.peripheral}.rs"
+        peripheral_file = layout.module_file(plan.peripheral)
         if not peripheral_file.is_file():
             raise FileNotFoundError(peripheral_file)
         by_periph.setdefault(plan.peripheral, []).append(plan)
@@ -1521,7 +1593,7 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
     siblings = 0 if device == "." else add_sibling_markers(src, device)
     n += siblings
     for periph, periph_plans in by_periph.items():
-        inject_constraints_module(device_dir / f"{periph}.rs", periph_plans)
+        inject_constraints_module(layout.module_file(periph), periph_plans)
     # Field-level gating: patch the per-field writer accessors (no-op when no
     # plan carries field gates, so whole-register-only injection is unchanged).
     fields_patched = patch_field_accessors(device_dir, plans)
