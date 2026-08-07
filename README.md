@@ -57,8 +57,9 @@ files. `{rm}` is the reference-manual id (e.g. `rm0444`).
   python scripts/label_structure_review.py --rm {rm}        # add --validator-tp / --field-keys to filter
   python scripts/label_constraints_review.py --rm {rm}      # add --confirmed to filter
   ```
-- **Re-running** is safe: a completed RM is skipped (delete `evaluation/stm/{rm}/1/.batch_done`
-  or pass `--force` to redo). Multiple RMs at once: `--devices rm0444 rm0091 --parallel 2`.
+- **Re-running** is safe: a completed RM is skipped (delete its resume marker
+  `logs/stm_batch/{rm}_run1.done` or pass `--force` to redo). Multiple RMs at once:
+  `--devices rm0444 rm0091 --parallel 2`.
 - **Progress/logs:** per-RM log at `logs/stm_batch/{rm}.log`; batch status at `logs/stm_batch/status.json`.
 
 > The step-by-step manual/debugging path (and the roadblocks it works around) is in

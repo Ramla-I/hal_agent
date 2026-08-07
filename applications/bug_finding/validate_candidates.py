@@ -8,7 +8,7 @@ against the datasheet. For a bug candidate (svd_value != generator_value):
 
 We validate only the candidates (review rows with blank ``status``) using the
 generator's value, apply the model's calibrated card threshold, and write two
-columns back into the consolidated ``{rm}_review.csv``:
+columns back into the consolidated ``{rm}_structure_review.csv``:
   * ``validator_verdict``    — TP / FP / "" (abstain: leans-true but below threshold, or unclassified)
   * ``validator_confidence`` — the validator's raw confidence (so borderline rows are visible)
 
