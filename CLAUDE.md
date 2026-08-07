@@ -218,6 +218,9 @@ Deliverables: `{rm}_structure_review.csv` (with verdicts) and `{rm}_constraints_
 
 ### Context Retrieval System
 
+See **`docs/retrieval.md`** for the full overview (methods, the preprocessing→chunks
+data flow, openevolve internals, chunks_index.csv, the shared embedding cache).
+
 Located in `context_retrieval/`:
 - **keyword_search.py**: Searches for register/peripheral names in markdown sections
 - **openai_file_search.py**: Uses OpenAI vector store for semantic retrieval
