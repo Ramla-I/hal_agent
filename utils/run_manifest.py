@@ -48,9 +48,12 @@ class RunManifest(BaseModel):
 
 
 def save_run_manifest(manifest: RunManifest, output_dir: str) -> str:
-    """Write the manifest into ``{output_dir}/run_manifest.json``."""
-    os.makedirs(output_dir, exist_ok=True)
-    path = os.path.join(output_dir, MANIFEST_NAME)
+    """Write the manifest into ``{output_dir}/info/run_manifest.json`` — grouped with
+    the run's other metadata (summary.txt, usage.csv, reasoning) in info/, not loose
+    at the run root. ``find_run_manifests`` globs recursively, so it still finds it."""
+    info_dir = os.path.join(output_dir, "info")
+    os.makedirs(info_dir, exist_ok=True)
+    path = os.path.join(info_dir, MANIFEST_NAME)
     with open(path, "w", encoding="utf-8") as f:
         f.write(manifest.model_dump_json(indent=2))
     return path
