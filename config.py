@@ -1,14 +1,44 @@
 from defs import UserContext, Manufacturer, ContextRetrievalParameters, ContextRetrievalMethod
 from openai import OpenAI
+import json
 import os
+from pathlib import Path
 
-client_groq = OpenAI(
-    api_key=os.environ.get("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1"
-)
+GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+
+
+def _load_groq_keys() -> list[str]:
+    """Groq API keys as a pool. Reads GROQ_API_KEYS (JSON array, also accepts
+    comma-separated); falls back to the single GROQ_API_KEY. Add keys from
+    DIFFERENT Groq accounts/orgs to multiply the effective rate limit — just
+    extend the array, no code change."""
+    raw = os.environ.get("GROQ_API_KEYS", "").strip()
+    keys: list[str] = []
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                keys = [str(k).strip() for k in parsed if str(k).strip()]
+        except json.JSONDecodeError:
+            keys = [k.strip() for k in raw.split(",") if k.strip()]
+    if not keys:
+        single = os.environ.get("GROQ_API_KEY")
+        if single:
+            keys = [single.strip()]
+    return keys
+
+
+GROQ_API_KEYS = _load_groq_keys()
+# One client per key — the call layer (utils/llm.py) round-robins across these.
+GROQ_CLIENTS = [OpenAI(api_key=k, base_url=GROQ_BASE_URL) for k in GROQ_API_KEYS]
 
 client_openai = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
+)
+
+# Backward-compat singleton (first key); prefer GROQ_CLIENTS via the call layer.
+client_groq = GROQ_CLIENTS[0] if GROQ_CLIENTS else OpenAI(
+    api_key=os.environ.get("GROQ_API_KEY"), base_url=GROQ_BASE_URL,
 )
 
 DEVICE_NAME = "rm0041"
@@ -52,14 +82,33 @@ CONTEXT_RETRIEVAL_PARAMETERS = ContextRetrievalParameters(
 #     chunk_index_path=""
 # )
 
+# --- Model routing & per-stage model lists -------------------------------
+# Models that route to the Groq key pool; every other model routes to OpenAI.
+# Groq TPM limits are PER-MODEL, so each Groq model here carries its own budget —
+# adding a second Groq model is an alternative to adding another API key.
+GROQ_MODELS = {"gpt-oss-120b", "llama-3.3-70b-versatile"}
+
+# Ordered list of acceptable models per LLM stage: the call layer tries them in
+# order and overflows to the next when one is persistently rate-limited (e.g.
+# Groq TPM exhausted → fall back to a second Groq model, then a low-cost OpenAI
+# model). EDIT THESE LISTS to change what each stage runs and its fallbacks.
+# Generator overflow: gpt-oss-120b (best quality) → llama-3.3-70b-versatile
+# (separate Groq TPM budget, slightly weaker on structure) → gpt-5-nano (OpenAI).
+STAGE_MODELS = {
+    "generator":         ["gpt-oss-120b", "llama-3.3-70b-versatile", "gpt-5-nano"],
+    "analyzer":          ["gpt-5-nano"],
+    "coverage_improver": ["gpt-5.2"],
+    "validator":         ["gpt-oss-120b", "gpt-5-nano"],  # Groq primary -> cheap OpenAI fallback
+}
+
 # MODEL_NAME = "gpt-4o"
 GENERATOR_MODEL_NAME = "gpt-oss-120b"
-GENERATOR_BATCHED = False  # Use per-peripheral batched generator (fewer LLM calls)
+GENERATOR_BATCHED = True  # per-peripheral batched generator by default (fewer LLM calls); --no-generator-batched to disable
 GENERATOR_ITER = 1 # Number of iterations for the generator agent
 
 COVERAGE_IMPROVER_MODEL_NAME = "gpt-5.2"
 COVERAGE_IMPROVER_REASONING_EFFORT = "medium"
-COVERAGE_IMPROVER_ITERATIONS = 5
+COVERAGE_IMPROVER_ITERATIONS = 0  # off by default; set >0 (or --coverage-improver-iterations N) to enable
 
 VALIDATOR_MODEL_NAME = "gpt-oss-120b"
 VALIDATOR_REASONING_EFFORT = None
@@ -73,18 +122,30 @@ DEVICE_DIRECTORY = "devices"
 # Logging configuration
 LOG_LEVEL = "ERROR"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
 LOG_FILE = "hal_agent.log"  # Path to log file (relative to project root or absolute path)
+LOG_TO_CONSOLE = True  # Also emit logs to the console (env: HAL_AGENT_LOG_TO_CONSOLE)
+# Level can be overridden per-run via env HAL_AGENT_LOG_LEVEL (e.g. INFO for progress).
 
-user_contexts = [
-    UserContext(device_name='82579', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82579/e1000_ebb2314.rs', run=0, file_id='file-Y42TiuVyte2z2TcbsXt9sv', vs_id='vs_68924fa6726481918501140c8ac86afe', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='82599', peripheral_name='', manufacturer=Manufacturer.INTEL, driver_path='devices/82599/ixgbe_4a124f4.rs', run=0, file_id='file-RdWHHvaJvfkRZ59zXGjVVS', vs_id='vs_68924fdcb9cc8191809cacd7be13a9ea', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='rm0008', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=2, file_id='file-D98Cj39QhHMHNdXLNxewq7', vs_id='vs_693a0971872881918852f40b15c29fa1', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='rm0033', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='file-CmfGB6SWzkxDpHdXSGRWY7', vs_id='vs_693a093c1ce48191a0bb9e6630f090b5', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='rm0041', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=21, file_id='file-MHtC1XNEQDa2X8jNEjfk1b', vs_id='vs_6892501067b08191ac63cc6de06ee629', vs_id_text='vs_69739f0610d8819183584c2d343e88a6', vs_id_md='vs_6973a4df01bc81919940212995712255'),
-    UserContext(device_name='rm0090', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=3, file_id='file-CjEojSnvTNU3hpXQFG6DK5', vs_id='vs_689f5188906c81919cebc07c132a8f46', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='rm0091', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=2, file_id='file-T2XMpz886q7hQNqaDhN7Fn', vs_id='vs_689f52468484819182c9c3085572ce19', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='rm0360', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='file-JT7wee34qTEUtugwxW2VAP', vs_id='vs_689f52862f5881918366547ab0417608', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='rm0490', peripheral_name='', manufacturer=Manufacturer.STM, driver_path='', run=1, file_id='file-RygxVqtujcgLnFBQGrQ1in', vs_id='vs_689f52efc4bc8191afb9b4fb05c78f6c', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='ke04', peripheral_name='', manufacturer=Manufacturer.NXP, driver_path='', run=3, file_id='file-HXurUicV6dJUZqMjbKWRWk', vs_id='vs_693b01dc21608191914afb688556c220', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='s32k1xx', peripheral_name='', manufacturer=Manufacturer.NXP, driver_path='', run=1, file_id='', vs_id='', vs_id_text='', vs_id_md=''),
-    UserContext(device_name='msp430g2', peripheral_name='', manufacturer=Manufacturer.TI, driver_path='', run=2, file_id='file-XbEecafgtidnALoE4qarHz', vs_id='vs_693b0615f51481919e951ae03d5b471e', vs_id_text='', vs_id_md=''),
-]
+# Device registry lives in config_devices.json (data, not source) so it can be
+# updated programmatically without rewriting this module — see scripts/update_config.py.
+DEVICE_REGISTRY_PATH = Path(__file__).resolve().parent / "config_devices.json"
+
+
+def load_user_contexts(registry_path: Path = DEVICE_REGISTRY_PATH) -> list[UserContext]:
+    """Build the list of UserContexts from the JSON device registry."""
+    with open(registry_path, "r", encoding="utf-8") as f:
+        registry = json.load(f)
+    return [
+        UserContext(
+            device_name=d["device_name"],
+            peripheral_name=d.get("peripheral_name", ""),
+            manufacturer=Manufacturer[d["manufacturer"]],
+            driver_path=d.get("driver_path", ""),
+            run=d.get("run", 0),
+            file_id=d.get("file_id", ""),
+            vs_id=d.get("vs_id", ""),
+        )
+        for d in registry["devices"]
+    ]
+
+
+user_contexts = load_user_contexts()

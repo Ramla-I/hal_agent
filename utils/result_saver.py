@@ -46,6 +46,29 @@ class UsageStats:
             file_search_tokens=file_search_tokens
         )
 
+    @classmethod
+    def aggregate(cls, model_name: str, usages, file_search_tokens: int = 0) -> "UsageStats":
+        """Sum a sequence of raw API response usage objects into one UsageStats.
+
+        Reuses ``from_response_usage`` per item so the defensive token-detail
+        extraction stays in one place. Replaces the hand-rolled per-field
+        summing previously duplicated across the generator's two code paths.
+        """
+        total = cls(
+            model_name=model_name,
+            input_tokens=0, cached_tokens=0, output_tokens=0,
+            reasoning_tokens=0, total_tokens=0,
+            file_search_tokens=file_search_tokens,
+        )
+        for usage in usages:
+            s = cls.from_response_usage(model_name, usage)
+            total.input_tokens += s.input_tokens
+            total.cached_tokens += s.cached_tokens
+            total.output_tokens += s.output_tokens
+            total.reasoning_tokens += s.reasoning_tokens
+            total.total_tokens += s.total_tokens
+        return total
+
 
 class ResultSaver:
     """
@@ -146,7 +169,11 @@ class ResultSaver:
         fieldnames: Optional[List[str]] = None
     ) -> Path:
         """
-        Save a single row to a CSV file. Automatically writes header if file doesn't exist.
+        Save a single row to a CSV file. Appends if the file already has content
+        (header + append/truncate decided from DISK state, not per-instance memory),
+        so a fresh ResultSaver writing to an existing CSV — e.g. the generator's
+        recursive retry pass — appends rather than truncating. Header is written only
+        when creating the file (or it is empty).
         
         Args:
             row: Dictionary with row data
@@ -161,24 +188,24 @@ class ResultSaver:
             filepath = filepath.with_suffix('.csv')
         
         filepath_str = str(filepath)
-        write_header = filepath_str not in self._csv_headers_written or not filepath.exists()
-        
         if fieldnames is None:
             fieldnames = list(row.keys())
-        
-        mode = 'w' if write_header else 'a'
-        
+
+        # Header/append is decided from DISK state, not per-instance memory: a fresh
+        # ResultSaver writing to an existing CSV (the generator's recursive retry
+        # pass, or any re-run into an existing output dir) must APPEND, not truncate
+        # — otherwise an append-style log like usage.csv loses every earlier row.
+        # Callers wanting a fresh file delete it first (see s6_validate_candidates).
+        file_has_content = filepath.exists() and filepath.stat().st_size > 0
+        mode = 'a' if file_has_content else 'w'
+
         with open(filepath, mode, newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
-            if write_header:
+            if not file_has_content:
                 writer.writeheader()
-                self._csv_headers_written[filepath_str] = True
-        
-        # Append the row
-        with open(filepath, 'a', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writerow(row)
-        
+        self._csv_headers_written[filepath_str] = True
+
         return filepath
     
     def save_csv_rows(
@@ -188,7 +215,8 @@ class ResultSaver:
         fieldnames: Optional[List[str]] = None
     ) -> Path:
         """
-        Save multiple rows to a CSV file. Automatically writes header if file doesn't exist.
+        Save multiple rows to a CSV file. Appends if the file already has content
+        (disk-based detection, like save_csv_row); header only when creating/empty.
         
         Args:
             rows: List of dictionaries with row data
@@ -206,21 +234,21 @@ class ResultSaver:
             filepath = filepath.with_suffix('.csv')
         
         filepath_str = str(filepath)
-        write_header = filepath_str not in self._csv_headers_written or not filepath.exists()
-        
         if fieldnames is None:
             fieldnames = list(rows[0].keys())
-        
-        mode = 'w' if write_header else 'a'
-        
+
+        # Disk-based header/append (see save_csv_row): a fresh ResultSaver appends to
+        # an existing CSV rather than truncating it.
+        file_has_content = filepath.exists() and filepath.stat().st_size > 0
+        mode = 'a' if file_has_content else 'w'
+
         with open(filepath, mode, newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
-            if write_header:
+            if not file_has_content:
                 writer.writeheader()
-                self._csv_headers_written[filepath_str] = True
-            
             writer.writerows(rows)
-        
+        self._csv_headers_written[filepath_str] = True
+
         return filepath
     
     def save_usage_stats(

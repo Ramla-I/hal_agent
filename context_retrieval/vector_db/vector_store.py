@@ -69,13 +69,17 @@ class VectorStore:
         existing_count = self.collection.count()
         ids = [f"doc_{existing_count + i}" for i in range(len(chunks))]
 
-        # Add to collection
-        self.collection.add(
-            ids=ids,
-            documents=texts,
-            embeddings=embeddings,
-            metadatas=metadatas,
-        )
+        # Add to collection in batches — ChromaDB rejects a single add() larger
+        # than its max batch size (~5461); the big STM datasheets have 5.5k-7.6k
+        # chunks (e.g. rm0486: 7606), which overflow a single call.
+        _MAX_ADD = 5000
+        for i in range(0, len(ids), _MAX_ADD):
+            self.collection.add(
+                ids=ids[i:i + _MAX_ADD],
+                documents=texts[i:i + _MAX_ADD],
+                embeddings=embeddings[i:i + _MAX_ADD],
+                metadatas=metadatas[i:i + _MAX_ADD],
+            )
 
         return len(chunks)
 

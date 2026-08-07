@@ -107,12 +107,17 @@ def build_ephemeral_store(processed_chunks: List[Dict[str, Any]]) -> chromadb.Co
 
     embeddings = compute_embeddings_cached(texts, provider)
     ids = [f"doc_{i}" for i in range(len(processed_chunks))]
-    collection.add(
-        ids=ids,
-        documents=texts,
-        embeddings=embeddings,
-        metadatas=metadatas,
-    )
+    # Batch the add — ChromaDB caps a single add() at ~5461 items, and the big STM
+    # datasheets have 5.5k-7.6k chunks (rm0486: 7606), which would overflow one call
+    # and abort generation/s6 retrieval.
+    _MAX_ADD = 5000
+    for _i in range(0, len(ids), _MAX_ADD):
+        collection.add(
+            ids=ids[_i:_i + _MAX_ADD],
+            documents=texts[_i:_i + _MAX_ADD],
+            embeddings=embeddings[_i:_i + _MAX_ADD],
+            metadatas=metadatas[_i:_i + _MAX_ADD],
+        )
     return collection
 
 
