@@ -57,7 +57,7 @@ from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(APP_DIR / "experiments"))
-from stm_sweep import TARGETS, DATA  # noqa: E402
+from stm_sweep import TARGETS, UNMAPPED, DATA  # noqa: E402
 
 OUT = APP_DIR / "experiments" / "out"
 DOC = APP_DIR.parent.parent / "docs" / "injection_tracking.md"
@@ -73,7 +73,12 @@ KINDS = ["state_gate", "sequence", "write_once", "clock_gate", "delay",
 SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                "sweep_opsel.json", "sweep_alias.json",
                "sweep_conflict.json", "sweep_new.json",
-               "sweep_full.json", "sweep_all48.json"]
+               "sweep_full.json", "sweep_all48.json",
+               # the seven targets re-measured after the multi-line doc-comment
+               # fix, which had failed to compile at all in the all48 run
+               "sweep_docfix.json",
+               # and the three re-measured after the keyword-field fix
+               "sweep_kwfix.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -374,6 +379,35 @@ def main() -> None:
                     for fate, _s, _d in _STAGES if fate in elsewhere) or "—",
                 "note": build_note(t, res, gaps, activity),
             })
+
+    # Manuals with no chip crate to inject into still get a row. Omitting them
+    # would make the corpus look smaller than it is, and "absent" would read
+    # identically to "enforced nothing".
+    for rm, (chip, crate, found_n, enforce_n) in sorted(UNMAPPED.items()):
+        found = constraints_found(rm)
+        verdicts = judge_verdicts(rm)
+        enforce_kinds = collections.Counter(
+            {k: v.get("enforce", 0) for k, v in verdicts.items()
+             if v.get("enforce", 0)})
+        rows.append({
+            "RM": rm, "device": chip, "pac_crate": "—",
+            "constraints_found_raw": sum(found.values()) or found_n,
+            "found_by_kind_raw": kinds_str(found),
+            "validator_enforce": (sum(v.get("enforce", 0)
+                                      for v in verdicts.values()) or enforce_n),
+            "validator_enforce_by_kind": kinds_str(enforce_kinds),
+            "enforced": 0, "enforced_by_kind": "—",
+            "enforced_via_instance_alias": 0, "registers_gated": 0,
+            "pac_compiles": "—", "hal_crate": "—", "hal_baseline": "—",
+            "true_enforcement": "—", "generic_friction": "—",
+            "other_errors": "—", "enforcement_sites": "—",
+            "dropped_by_stage": "no_chip_crate: all",
+            "note": (f"No chip crate covers {chip}. "
+                     + (f"stm32-rs ships {crate} but no {chip} device module."
+                        if crate else
+                        f"stm32-rs 0.16 has no crate for this family.")
+                     + " Extracted and judged; nothing to inject into."),
+        })
 
     OUT.mkdir(parents=True, exist_ok=True)
     csv_path = OUT / "tracking.csv"

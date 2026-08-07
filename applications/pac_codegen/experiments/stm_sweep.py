@@ -169,6 +169,23 @@ TARGETS = [
 ]
 
 
+# Validated manuals with NO chip crate to inject into. stm32-rs publishes a
+# crate per family and a device module per part; these five parts have neither,
+# so their constraints are extracted and judged but have nowhere to land. They
+# are carried in the tracking table with empty crate columns rather than
+# dropped, because "no row" and "zero enforced" look the same in a summary.
+UNMAPPED = {
+    # stm32mp1 exists but ships only stm32mp153 / stm32mp157.
+    "rm0475": ("STM32MP13x", "stm32mp1", 486, 395),
+    # No stm32wba crate at all.
+    "rm0493": ("STM32WBA5x", None, 302, 224),
+    # stm32wb ships only stm32wb55; the WB0 line is a different architecture.
+    "rm0505": ("STM32WB09", None, 36, 13),
+    "rm0529": ("STM32WB05", None, 34, 20),
+    "rm0530": ("STM32WB06/07", None, 35, 23),
+}
+
+
 # --------------------------------------------------------------------------- #
 # Snapshot / restore  (same contract as experiments/cross_pac.py)
 # --------------------------------------------------------------------------- #
