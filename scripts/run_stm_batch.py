@@ -70,28 +70,57 @@ def path_manifest(rm: str, run: int, mfr: str) -> str:
     ao = f"agent_output/{mfr}/{rm}/{run}"
     ev = f"evaluation/{mfr}/{rm}/{run}"
     ch = f"chunked_datasheets/{mfr}/{rm}/chunks"
-    svds = sorted(os.path.relpath(s, _REPO) for s in glob.glob(os.path.join(_REPO, dev, "svd", "*.svd")))
+    svds = [os.path.basename(s) for s in sorted(glob.glob(os.path.join(_REPO, dev, "svd", "*.svd")))]
+    _sh = [s.replace("stm32", "").replace(".svd", "") for s in svds]
+    svd_desc = (f"{len(svds)} SVD(s): " + ", ".join(_sh[:3])
+                + (f" +{len(svds) - 3} more" if len(svds) > 3 else "")) if svds else "no SVDs found"
+
+    # Group by base directory: print each prefix once, with short leaves indented
+    # underneath and their descriptions aligned in a column (keeps lines short).
+    def _fmt(indent, name, desc):
+        base = " " * indent + name
+        if not desc:
+            return base
+        return (f"{base:<50}{desc}" if len(base) < 49 else f"{base}   {desc}").rstrip()
+    def row(name, desc=""):          # a base dir or a standalone file (indent 2)
+        return _fmt(2, name, desc)
+    def leaf(name, desc=""):         # a file/dir under the base above (indent 6)
+        return _fmt(6, name, desc)
+
     return "\n".join([
         f"===== PATH MANIFEST: {rm} (run {run}) =====",
+        "",
         "INPUTS (read):",
-        f"  datasheet PDF    {dev}/{rm}.pdf",
-        f"  SVDs             {', '.join(svds) if svds else dev + '/svd/*.svd (none found yet)'}",
-        f"  device registry  config_devices.json",
-        f"  RM->device map   devices/{mfr}/rm_device_mapping.xml",
-        f"  OE program       openevolve_retrieval/output_{rm}/best/best_program.py (or vendor default)",
+        row(f"{dev}/"),
+        leaf(f"{rm}.pdf", "datasheet"),
+        leaf("svd/", svd_desc),
+        row("config_devices.json", "device registry"),
+        row(f"devices/{mfr}/rm_device_mapping.xml", "RM -> device stems"),
+        row(f"openevolve_retrieval/output_{rm}/best/best_program.py"),
+        leaf("", "evolved retrieval program (or vendor default)"),
+        "",
         "OUTPUTS (written):",
-        f"  chunks           {ch}/md/*.txt  +  {ch}/md_enriched/*.txt  +  {ch}/md/metadata.json  +  {ch}/md/chunks_index.csv",
-        f"  vector DB        databases/{rm}_md_chunks/   (+ shared databases/oe_embed_cache.sqlite)",
-        f"  retrieval cfg    {dev}/vector_stores.json",
-        f"  generator        {ao}/<peripheral>_<register>   +  {ao}/info/{{summary.txt,usage.csv,reasoning.txt,reasoning.jsonl,embedding_ids.jsonl}}",
-        f"  constraints      {ao}/constraint_validation/{{validated,anchors,judgments}}.jsonl  +  manifest.json  +  summary.json",
-        f"  validator (s6)   {ao}/validator/{{classification.csv,usage.csv,output.txt}}",
-        f"  reviews (per SVD){ev}/<svd>/<svd>_structure_review.csv  +  <svd>_analyzer_cache.json",
-        f"  reviews (final)  {ev}/{rm}_structure_review.csv  (consolidated, with verdicts)",
-        f"                   {ev}/{rm}_constraints_review.jsonl",
-        f"  run metadata     {ao}/run_manifest.json   +   logs/stm_batch/{rm}_run{run}.done (resume marker)",
-        f"  log              logs/stm_batch/{rm}.log",
-        "=" * 46,
+        row(f"{ch}/"),
+        leaf("md/*.txt, md_enriched/*.txt", "datasheet chunks"),
+        leaf("md/metadata.json, md/chunks_index.csv"),
+        row("databases/"),
+        leaf(f"{rm}_md_chunks/", "local ChromaDB (embeddings)"),
+        leaf("oe_embed_cache.sqlite", "shared embedding cache"),
+        row(f"{dev}/vector_stores.json", "retrieval config"),
+        row(f"{ao}/"),
+        leaf("<peripheral>_<register>", "per-register JSON (generator)"),
+        leaf("info/", "summary.txt, usage.csv, reasoning.txt/.jsonl, embedding_ids"),
+        leaf("constraint_validation/", "validated/anchors/judgments.jsonl, manifest, summary"),
+        leaf("validator/", "classification.csv, usage.csv, output.txt"),
+        leaf("run_manifest.json"),
+        row(f"{ev}/"),
+        leaf("<svd>/<svd>_structure_review.csv", "per-SVD review + analyzer_cache.json"),
+        leaf(f"{rm}_structure_review.csv", "consolidated review, with verdicts"),
+        leaf(f"{rm}_constraints_review.jsonl", "constraint review"),
+        row("logs/stm_batch/"),
+        leaf(f"{rm}.log", "run log"),
+        leaf(f"{rm}_run{run}.done", "resume marker"),
+        "=" * 62,
     ])
 
 
