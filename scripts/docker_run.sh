@@ -27,8 +27,11 @@ build() {
   docker build -t "$IMAGE" "$REPO_ROOT"
 }
 
-# Assemble the common `docker run` invocation. Host dirs are created first so
-# Docker doesn't make them root-owned. Models are cached under .docker_cache/.
+# Assemble the common `docker run` invocation. Runs as the HOST user (--user +
+# --userns=host) so every file the container writes (agent_output/, evaluation/,
+# databases/, chunked_datasheets/, logs/) is owned by you, not `nobody` — no chown
+# dance. HOME is redirected to a writable path since the host UID has no passwd
+# entry in the image. Models are cached under .docker_cache/.
 docker_run() {
   if [[ ! -f .env ]]; then
     echo "!! .env not found — copy .env.example to .env and fill in your keys" >&2
@@ -36,12 +39,15 @@ docker_run() {
   fi
   if ! image_exists; then build; fi
 
-  mkdir -p databases chunked_datasheets agent_output evaluation .docker_cache/hf .docker_cache/fastembed
+  mkdir -p databases chunked_datasheets agent_output evaluation logs .docker_cache/hf .docker_cache/fastembed
 
   local interactive=()
   [[ -t 0 && -t 1 ]] && interactive=(-it)
 
   exec docker run --rm ${interactive[@]+"${interactive[@]}"} \
+    --user "$(id -u):$(id -g)" \
+    --userns=host \
+    -e HOME=/cache \
     --env-file .env \
     -v "$REPO_ROOT":/app \
     -v "$REPO_ROOT/.docker_cache":/cache \

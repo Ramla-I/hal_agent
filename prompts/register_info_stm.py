@@ -89,7 +89,43 @@ ACCESS_CONSTRAINTS_V2_GUIDANCE = f"""\
 {stm_access_constraints_v2_examples}"""
 
 
-def create_register_info_stm_system_prompt(function_calls_description: str | None = calculate_address_offset_fn_description, examples: str | None = stm_datasheet_example) -> str:
+# Shared note: SVD names are concrete instances (I2C2) but datasheets often
+# document a peripheral once under a generic name (I2Cx / I2C / instance 1).
+INSTANCE_NAMING_NOTE = (
+    "NOTE ON MULTI-INSTANCE PERIPHERALS: peripherals often have several numbered "
+    "instances (e.g. I2C1/I2C2, USART1..8, TIM2/TIM3) that share an IDENTICAL "
+    "register layout. The datasheet frequently documents them only ONCE under a "
+    "generic name (e.g. 'I2Cx', 'USARTx', or just 'I2C'), or under instance 1. If "
+    "you are asked about instance N (e.g. I2C2) but the datasheet section uses the "
+    "generic or instance-1 name, the layout (offsets, reset values, bit fields) "
+    "still applies to instance N — use it rather than reporting the info as missing."
+)
+
+# Discipline rules that target the most common structural extraction errors
+# (false positives observed in downstream SVD diffs).
+EXTRACTION_DISCIPLINE_NOTE = (
+    "EXTRACTION DISCIPLINE (avoid these common mistakes):\n"
+    "- address_offset is the offset RELATIVE TO THE PERIPHERAL BASE (the datasheet's "
+    "'Address offset:' line or the register map's 'Offset' column), NOT the absolute "
+    "memory address. If only an absolute address is shown (e.g. 0x4000XXXX, 0xA00..., "
+    "0xE00...), subtract the peripheral base. A register offset is small (typically "
+    "< 0x400); if your value has high bits set it is almost certainly wrong.\n"
+    "- For an indexed/array register, give ONE concrete hex offset for the specific "
+    "register requested (or the first element) — never a range ('0x04 to 0x28') or a "
+    "formula ('base + 8*(x-1)').\n"
+    "- Read each subfield's bit range from its row in the register bit-layout table. "
+    "Bit numbering is 0-indexed: 'Bit n' means start_bit = n (do NOT add 1). start_bit "
+    "is the LOWEST bit of the field. These tables are usually drawn MSB (bit 31) on the "
+    "LEFT and LSB (bit 0) on the RIGHT — map columns to bit numbers carefully and make "
+    "sure each field name lines up with its own bits; do not shuffle or reorder fields.\n"
+    "- bit_width = end_bit - start_bit + 1 from the datasheet's stated range; do NOT "
+    "round it to a data-type size (8/16/32) or the register size.\n"
+    "- If a value is NOT present in the provided datasheet context, output null for that "
+    "attribute. NEVER guess, and never substitute 0x0, an empty string, or 'N/A' for a "
+    "value you could not find."
+)
+
+def create_register_info_stm_system_prompt(function_calls_description: str | None = calculate_address_offset_fn_description, examples: str | None = stm_datasheet_example, naming_note: str = INSTANCE_NAMING_NOTE, discipline_note: str = EXTRACTION_DISCIPLINE_NOTE) -> str:
     if function_calls_description is None:
         function_calls_description = "No function calls provided"
     if examples is None:
@@ -99,9 +135,13 @@ def create_register_info_stm_system_prompt(function_calls_description: str | Non
     You are an expert embedded systems engineer, highly familiar with understanding and parsing hardware datasheets. 
     
     # INPUT INFORMATION
-    You will be given the name of a register and the name of a peripheral it belongs to. 
+    You will be given the name of a register and the name of a peripheral it belongs to.
     You will also be given a section of a hardware datasheet in markdown format that could contain information about the register.
     You will be asked to extract the information about a register.
+
+    {naming_note}
+
+    {discipline_note}
 
     # OUTPUT INFORMATION
     You will need to extract the following information about the register:
@@ -184,6 +224,8 @@ def create_register_info_stm_system_prompt_batched(
     function_calls_description: str | None = calculate_address_offset_fn_description,
     examples: str | None = None,
     include_reasoning: bool = True,
+    naming_note: str = INSTANCE_NAMING_NOTE,
+    discipline_note: str = EXTRACTION_DISCIPLINE_NOTE,
 ) -> str:
     if function_calls_description is None:
         function_calls_description = "No function calls provided"
@@ -237,6 +279,10 @@ def create_register_info_stm_system_prompt_batched(
     You will be given the name of a peripheral and a list of register names belonging to that peripheral.
     You will also be given a section of a hardware datasheet in markdown format that could contain information about these registers.
     You will be asked to extract the information about each register.
+
+    {naming_note}
+
+    {discipline_note}
 
     # OUTPUT INFORMATION
     For each register, you will need to extract the following information:

@@ -840,3 +840,62 @@ stm_datasheet_batched_example_no_reasoning = """
     ]
     ```
 """
+
+# NXP / Kinetis batched example. Teaches: short register names (C1, S1) prefixed
+# with the peripheral (UART0_C1), 8-bit register size, multi-instance layout
+# documented once, and — critically — reset_value = null for a device-unique /
+# "undefined" register (NEVER the literal string "Undefined"/"unknown").
+nxp_datasheet_batched_example = """
+--- BATCHED EXAMPLE (NXP / Kinetis) ---
+# INPUT
+
+## PERIPHERAL NAME
+    Peripheral name: UART0
+
+## REGISTERS TO EXTRACT
+    - UART0_C1
+    - UART0_S1
+
+## DATASHEET INPUT
+    **UART Control Register 1 (UARTx_C1)**   (x = 0, 1, 2 — identical layout)
+    Address offset: 0x02   Reset value: 0x00   Size: 8 bits
+
+    | 7     | 6        | 5    | 4 | 3    | 2   | 1  | 0  |
+    | LOOPS | UARTSWAI | RSRC | M | WAKE | ILT | PE | PT |
+    Bit 7 LOOPS: Loop Mode Select (read/write)
+    Bit 4 M: 9-bit or 8-bit Mode Select (read/write)
+    Bit 1 PE: Parity Enable (read/write)
+    Bit 0 PT: Parity Type (read/write)
+
+    **UART Status Register 1 (UARTx_S1)**
+    Address offset: 0x04   Reset value: 0xC0   Size: 8 bits
+    Bit 7 TDRE: Transmit Data Register Empty Flag (read-only)
+    Bit 6 TC: Transmission Complete Flag (read-only)
+
+# OUTPUT
+UART0_C1 is documented once as UARTx_C1 for x=0,1,2 — the layout applies to
+instance 0. Registers are 8-bit with short names. Both offsets/resets are stated.
+
+```function_call
+{"function_calls": []}
+```
+
+```json
+[
+  {"register_name": "UART0_C1", "datasheet_register_abbreviation": "UART0_C1", "address_offset": "0x02", "reset_value": "0x00", "size": 8,
+    "subfields": [
+      {"name": "LOOPS", "description": "Loop Mode Select", "access": "read-write", "bit_number": {"start_bit": 7, "end_bit": 7}, "enumerated_values": []},
+      {"name": "M", "description": "9-bit or 8-bit Mode Select", "access": "read-write", "bit_number": {"start_bit": 4, "end_bit": 4}, "enumerated_values": []},
+      {"name": "PE", "description": "Parity Enable", "access": "read-write", "bit_number": {"start_bit": 1, "end_bit": 1}, "enumerated_values": []},
+      {"name": "PT", "description": "Parity Type", "access": "read-write", "bit_number": {"start_bit": 0, "end_bit": 0}, "enumerated_values": []}
+    ],
+    "access_constraints": []},
+  {"register_name": "UART0_S1", "datasheet_register_abbreviation": "UART0_S1", "address_offset": "0x04", "reset_value": "0xC0", "size": 8,
+    "subfields": [
+      {"name": "TDRE", "description": "Transmit Data Register Empty Flag", "access": "read-only", "bit_number": {"start_bit": 7, "end_bit": 7}, "enumerated_values": []},
+      {"name": "TC", "description": "Transmission Complete Flag", "access": "read-only", "bit_number": {"start_bit": 6, "end_bit": 6}, "enumerated_values": []}
+    ],
+    "access_constraints": []}
+]
+```
+"""

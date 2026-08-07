@@ -1,20 +1,36 @@
 import os
+import re
 import json
 from typing import Optional, Dict, List
 from defs import ContextRetrievalParameters, Manufacturer, ContextRetrievalMethod
 from agent_tools.tools import all_svd_file_paths, calculate_address_offset
 from agent_tools.svd_parsing import get_peripheral_names, get_register_names_for_peripheral, get_field_counts_for_peripheral
-from prompts.register_info_stm import create_register_info_stm_system_prompt, create_register_info_stm_user_prompt
-from utils.parse_output import get_json_block_from_response, get_reasoning_from_response
+from prompts.register_info_stm import (
+    create_register_info_stm_system_prompt,
+    create_register_info_stm_user_prompt,
+    create_register_info_stm_system_prompt_batched,
+    create_register_info_stm_user_prompt_batched,
+)
+from prompts.register_info_nxp import (
+    create_register_info_nxp_system_prompt,
+    create_register_info_nxp_system_prompt_batched,
+)
+from utils.parse_output import (
+    get_json_block_from_response,
+    get_json_array_from_response,
+    get_reasoning_from_response,
+    get_function_calls_from_response,
+)
 from utils.function_call_handler import create_default_handler
-from utils.utils import get_model_string, setup_logger
+from utils.utils import setup_logger, count_tokens
+from utils.llm import call_llm
+from utils.models import model_costs
 from utils.result_saver import ResultSaver, UsageStats
 from utils.timing import timed_operation
-from context_retrieval.retrieve_context import retrieve_context
+from context_retrieval.retrieve_context import retrieve_context, retrieve_context_for_peripheral
 from scripts.limit_context import truncate_message_by_tokens
 from groq import Groq
 from openai import OpenAI
-import tiktoken
 
 logger = setup_logger(__name__)
 def run_generator(
@@ -26,7 +42,8 @@ def run_generator(
     agent_output_dir: str,
     context_retrieval_parameters: ContextRetrievalParameters,
     manufacturer: Manufacturer,
-    peripherals_registers_dict: Optional[Dict[str, List[str]]] = None
+    peripherals_registers_dict: Optional[Dict[str, List[str]]] = None,
+    models: Optional[List[str]] = None,
 ) -> bool:
     """
     Runs the generator agent for a given device and run number.
@@ -44,8 +61,11 @@ def run_generator(
     """
     logger.info(f"Running generator for device {device_name} with run number {run_number}")
 
-    run_number = str(run_number)
+    # Model list for the call layer: explicit `models` (with overflow) or just the
+    # single requested model (back-compat for callers that pin one model).
+    gen_models = models or [model_name]
     truncated_at_any_register = False
+    failed_registers = 0
 
     saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
     saver_output = ResultSaver(agent_output_dir)
@@ -104,17 +124,14 @@ def run_generator(
                 )
 
             # Count tokens in file search results
-            try:
-                encoding = tiktoken.get_encoding("cl100k_base")
-                file_search_tokens = len(encoding.encode(datasheet_pages))
-            except Exception as e:
-                logger.warning(f"Could not count file search tokens: {e}")
-                file_search_tokens = 0
-            
+            file_search_tokens = count_tokens(datasheet_pages)
+
             input_list = [
                 {
                     "role": "developer",
-                    "content": create_register_info_stm_system_prompt()
+                    "content": (create_register_info_nxp_system_prompt()
+                                if manufacturer == Manufacturer.NXP
+                                else create_register_info_stm_system_prompt())
                 },
                 {
                     "role": "user",
@@ -127,28 +144,27 @@ def run_generator(
             if truncated:
                 logger.info(f"Truncated input list for {peripheral_name}_{register_name}")
 
-            with timed_operation("generator_llm_call"):
-                response = client.responses.create(
-                    # messages=messages,
-                    model=get_model_string(model_name),
-                    input=input_list,
-                    tool_choice = "none",
-                    truncation="auto",
-                    # tools=tools,
-                )
+            try:
+                with timed_operation("generator_llm_call"):
+                    response, used_model = call_llm(
+                        "generator", models=gen_models,
+                        input=input_list,
+                        tool_choice="none",
+                        truncation="auto",
+                    )
+            except Exception as e:
+                # Isolate per register: a terminal failure (e.g. all models
+                # rate-limited) skips this register instead of aborting the device.
+                logger.error("Generator failed for %s_%s: %s", peripheral_name, register_name, e)
+                failed_registers += 1
+                continue
 
             if response.output_text:
                 input_list.append({
                     "role": "assistant",
                     "content": response.output_text
                 })
-            
-            # logger.debug(f"Response")
-            # for el in response.output:
-            #     logger.debug(f"el: {el} \n\n")   
 
-            # input_list += [{"role": el.role, "content": el.content} for el in response.output if el.type == "message"]
-            
             reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
             json_block = get_json_block_from_response(rest_of_response)
             usage.append(response.usage)
@@ -184,32 +200,23 @@ def run_generator(
                     logger.info(f"Truncated input list for {peripheral_name}_{register_name} after function calls")
 
                 # Get response after function calls
-                with timed_operation("generator_llm_call"):
-                    response = client.responses.create(
-                        model=get_model_string(model_name),
-                        input=input_list,
-                        tool_choice = "none",
-                        truncation="auto",
-                        # tools=tools,
-                    )
+                try:
+                    with timed_operation("generator_llm_call"):
+                        response, used_model = call_llm(
+                            "generator", models=gen_models,
+                            input=input_list,
+                            tool_choice="none",
+                            truncation="auto",
+                        )
+                except Exception as e:
+                    logger.error("Generator follow-up failed for %s_%s: %s", peripheral_name, register_name, e)
+                    failed_registers += 1
+                    continue
                 reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
                 json_block = get_json_block_from_response(rest_of_response)
                 usage.append(response.usage)
 
-            total_input_tokens = sum(usage[i].input_tokens for i in range(len(usage)))
-            total_cached_tokens = sum(usage[i].input_tokens_details.cached_tokens for i in range(len(usage)))
-            total_output_tokens = sum(usage[i].output_tokens for i in range(len(usage)))
-            total_reasoning_tokens = sum(usage[i].output_tokens_details.reasoning_tokens for i in range(len(usage)))
-            total_total_tokens = sum(usage[i].total_tokens for i in range(len(usage)))
-            usage_stats = UsageStats(
-                model_name=model_name,
-                input_tokens=total_input_tokens,
-                cached_tokens=total_cached_tokens,
-                output_tokens=total_output_tokens,
-                reasoning_tokens=total_reasoning_tokens,
-                total_tokens=total_total_tokens,
-                file_search_tokens=file_search_tokens,
-            )
+            usage_stats = UsageStats.aggregate(used_model, usage, file_search_tokens)
             saver_info.save_usage_stats(
                 usage_stats,
                 "usage.csv",
@@ -222,6 +229,16 @@ def run_generator(
                 reasoning,
                 "reasoning.txt",
                 prefix=f"---{peripheral_name}_{register_name}---",
+            )
+            # Structured, per-register reasoning for clean downstream lookup
+            # (bug-finding uses this as datasheet evidence).
+            saver_info.append_text(
+                json.dumps({
+                    "peripheral": peripheral_name,
+                    "register": register_name,
+                    "reasoning": reasoning,
+                }) + "\n",
+                "reasoning.jsonl",
             )
 
             if json_block:
@@ -241,6 +258,11 @@ def run_generator(
             if json_data:
                 saver_output.save_json(json_data, output_filename)
 
+    if failed_registers:
+        logger.error(
+            "Generator for %s: %d register(s) failed and were skipped (resume to retry)",
+            device_name, failed_registers,
+        )
     return truncated_at_any_register
 
 
@@ -294,6 +316,43 @@ def chunk_registers_adaptive(
     return batches
 
 
+def _find_empty_field_registers(agent_output_dir: str, svd_file_paths) -> Dict[str, List[str]]:
+    """Registers whose generated output has NO subfields but the SVD says it should
+    have fields -> {peripheral: [register, ...]}. These are batching drop-outs (a
+    large multi-register response truncated/omitted a register's fields); the SVD
+    field count filters out registers that are legitimately field-less."""
+    # Longest-prefix match against real peripheral names so multi-word peripherals
+    # (ethernet_dma, ethernet_ptp, ...) split correctly, not on the first "_".
+    peris = sorted((p.lower() for p in get_peripheral_names(svd_file_paths)), key=len, reverse=True)
+    empties: Dict[str, List[str]] = {}
+    for fn in sorted(os.listdir(agent_output_dir)):
+        fp = os.path.join(agent_output_dir, fn)
+        if not os.path.isfile(fp) or "_" not in fn or "." in fn:
+            continue
+        try:
+            data = json.load(open(fp, encoding="utf-8"))
+        except Exception:
+            continue
+        # A "%s" filename is an un-expanded dim placeholder (e.g. rf%sr); its name
+        # is not a retrievable datasheet register, so re-genning it always comes
+        # back empty. Skip it — the concrete instances (rf0r/rf1r) are generated by
+        # a full enumeration instead.
+        if isinstance(data, dict) and not (data.get("subfields") or []) and "%s" not in fn:
+            peripheral = next((p for p in peris if fn.startswith(p + "_")), fn.partition("_")[0])
+            register = fn[len(peripheral) + 1:]
+            empties.setdefault(peripheral, []).append(register)
+    result: Dict[str, List[str]] = {}
+    for peripheral, regs in empties.items():
+        try:
+            field_counts = get_field_counts_for_peripheral(svd_file_paths, peripheral)
+        except ValueError:
+            field_counts = {}
+        keep = [r for r in regs if field_counts.get(r.lower(), 0) > 0]
+        if keep:
+            result[peripheral] = keep
+    return result
+
+
 def run_generator_batched(
     client: OpenAI | Groq,
     model_name: str,
@@ -310,30 +369,39 @@ def run_generator_batched(
     skip_function_followup: bool = False,
     system_prompt_override: Optional[str] = None,
     retrieval_only: bool = False,
+    models: Optional[List[str]] = None,
+    empty_field_retries: int = 2,
+    force: bool = False,
+    _retrying: bool = False,
 ) -> bool:
     """Per-peripheral batched generator — one LLM call per batch of registers.
 
     Output files are identical to ``run_generator()`` (one JSON per register),
-    so downstream pipeline steps are fully compatible.
+    so downstream pipeline steps are fully compatible. Register enumeration expands
+    ``<dim>`` arrays to concrete names (``BCR%s`` -> ``bcr2/bcr3/bcr4``) via
+    ``agent_tools.svd_parsing``, so no ``%s`` placeholder files are written.
 
     When ``retrieval_only=True``, runs only the retrieval step per batch (writing
     ``embedding_ids.jsonl``) and skips the LLM call + output parsing. Useful for
     cheap retrieval-only sweeps that pair with retrieval IR metrics.
-    """
-    from prompts.register_info_stm import (
-        create_register_info_stm_system_prompt_batched,
-        create_register_info_stm_user_prompt_batched,
-    )
-    from utils.parse_output import get_json_array_from_response
-    from context_retrieval.retrieve_context import retrieve_context_for_peripheral
 
+    Empty-field retry: a large batched response can truncate/omit a register's
+    subfields. After the main pass, ``empty_field_retries`` rounds (default 2)
+    re-generate — one register per call, no truncation — any register whose output
+    has empty subfields but whose SVD register has fields (``%s`` placeholder names
+    are skipped, being unretrievable). ``force=True`` re-generates even when the
+    output file already exists (used by the retry to overwrite in place); a failed
+    retry keeps the existing file. ``_retrying`` is the internal recursion guard the
+    retry pass sets so it does not recurse.
+    """
     logger.info(
         "Running batched generator for device %s with run number %s",
         device_name, run_number,
     )
 
-    run_number = str(run_number)
+    gen_models = models or [model_name]
     truncated_at_any_register = False
+    failed_batches = 0
 
     saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
     saver_output = ResultSaver(agent_output_dir)
@@ -344,7 +412,9 @@ def run_generator_batched(
     if system_prompt_override is not None:
         system_prompt = system_prompt_override
     else:
-        system_prompt = create_register_info_stm_system_prompt_batched(include_reasoning=include_reasoning)
+        system_prompt = (create_register_info_nxp_system_prompt_batched(include_reasoning=include_reasoning)
+                         if manufacturer == Manufacturer.NXP
+                         else create_register_info_stm_system_prompt_batched(include_reasoning=include_reasoning))
 
     # ---- Build peripheral→registers mapping ----
     svd_file_paths = all_svd_file_paths(device_dir)
@@ -365,7 +435,7 @@ def run_generator_batched(
         # Determine which registers still need processing
         remaining = [
             r for r in all_registers
-            if not os.path.exists(os.path.join(agent_output_dir, f"{peripheral_name}_{r}"))
+            if force or not os.path.exists(os.path.join(agent_output_dir, f"{peripheral_name}_{r}"))
         ]
 
         # Derived peripherals (0 SVD registers) → discovery mode
@@ -432,12 +502,7 @@ def run_generator_batched(
                 continue
 
             # Count tokens in context
-            try:
-                encoding = tiktoken.get_encoding("cl100k_base")
-                file_search_tokens = len(encoding.encode(datasheet_pages))
-            except Exception as e:
-                logger.warning("Could not count file search tokens: %s", e)
-                file_search_tokens = 0
+            file_search_tokens = count_tokens(datasheet_pages)
 
             # 2. Build batched prompt
             input_list = [
@@ -458,21 +523,25 @@ def run_generator_batched(
                 logger.info("Truncated input for batch %s", batch_label)
 
             # Estimate output budget: tokens/register + reasoning overhead
-            from utils.models import model_costs
             per_register_tokens = 2000 if include_reasoning else 1500
             batch_output_estimate = max(len(batch), 1) * per_register_tokens + 2000
             model_max = model_costs.get(model_name, {}).get("max_output_tokens", 65536)
             max_output_tokens = min(batch_output_estimate, model_max)
 
             # 3. LLM call
-            with timed_operation("generator_llm_call"):
-                response = client.responses.create(
-                    model=get_model_string(model_name),
-                    input=input_list,
-                    tool_choice="none",
-                    truncation="auto",
-                    max_output_tokens=max_output_tokens,
-                )
+            try:
+                with timed_operation("generator_llm_call"):
+                    response, used_model = call_llm(
+                        "generator", models=gen_models,
+                        input=input_list,
+                        tool_choice="none",
+                        truncation="auto",
+                        max_output_tokens=max_output_tokens,
+                    )
+            except Exception as e:
+                logger.error("Generator failed for batch %s: %s", batch_label, e)
+                failed_batches += 1
+                continue
 
             if response.output_text:
                 input_list.append({
@@ -502,14 +571,19 @@ def run_generator_batched(
                     truncated, input_list = truncate_message_by_tokens(input_list, model_name)
                     truncated_at_any_register = truncated_at_any_register or truncated
 
-                    with timed_operation("generator_llm_call"):
-                        response = client.responses.create(
-                            model=get_model_string(model_name),
-                            input=input_list,
-                            tool_choice="none",
-                            truncation="auto",
-                            max_output_tokens=max_output_tokens,
-                        )
+                    try:
+                        with timed_operation("generator_llm_call"):
+                            response, used_model = call_llm(
+                                "generator", models=gen_models,
+                                input=input_list,
+                                tool_choice="none",
+                                truncation="auto",
+                                max_output_tokens=max_output_tokens,
+                            )
+                    except Exception as e:
+                        logger.error("Generator follow-up failed for batch %s: %s", batch_label, e)
+                        failed_batches += 1
+                        continue
                     reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
                     usage.append(response.usage)
                 else:
@@ -526,9 +600,7 @@ def run_generator_batched(
 
             # 5b. Patch address_offset values from function call results
             if skip_function_followup and function_results and json_array:
-                import re
-                from utils.parse_output import get_function_calls_from_response as _get_fn_calls
-                fn_text = _get_fn_calls(rest_of_response)
+                fn_text = get_function_calls_from_response(rest_of_response)
                 if fn_text:
                     try:
                         fn_data = json.loads(fn_text)
@@ -585,20 +657,7 @@ def run_generator_batched(
                 logger.warning("No JSON array parsed for batch %s", batch_label)
 
             # 7. Save usage & reasoning
-            total_input_tokens = sum(u.input_tokens for u in usage)
-            total_cached_tokens = sum(u.input_tokens_details.cached_tokens for u in usage)
-            total_output_tokens = sum(u.output_tokens for u in usage)
-            total_reasoning_tokens = sum(u.output_tokens_details.reasoning_tokens for u in usage)
-            total_total_tokens = sum(u.total_tokens for u in usage)
-            usage_stats = UsageStats(
-                model_name=model_name,
-                input_tokens=total_input_tokens,
-                cached_tokens=total_cached_tokens,
-                output_tokens=total_output_tokens,
-                reasoning_tokens=total_reasoning_tokens,
-                total_tokens=total_total_tokens,
-                file_search_tokens=file_search_tokens,
-            )
+            usage_stats = UsageStats.aggregate(used_model, usage, file_search_tokens)
             batch_register_names = ", ".join(batch) if batch else "(discovery)"
             saver_info.save_usage_stats(
                 usage_stats,
@@ -612,6 +671,42 @@ def run_generator_batched(
                 reasoning,
                 "reasoning.txt",
                 prefix=f"---{peripheral_name}---",
+            )
+            # Structured reasoning (per batch / peripheral) for downstream lookup.
+            saver_info.append_text(
+                json.dumps({
+                    "peripheral": peripheral_name,
+                    "registers": batch,
+                    "reasoning": reasoning,
+                }) + "\n",
+                "reasoning.jsonl",
+            )
+
+    if failed_batches:
+        logger.error(
+            "Generator for %s: %d batch(es) failed and were skipped (resume to retry)",
+            device_name, failed_batches,
+        )
+
+    # Empty-field retry: a large batch response can truncate/omit a register's
+    # subfields, leaving it saved with 0 fields. Re-generate those ONE register per
+    # call (no truncation), overwriting in place (force=True, so a failed retry
+    # keeps the old file). Bounded rounds; skipped in retrieval-only / retry calls.
+    if not _retrying and not retrieval_only and empty_field_retries > 0:
+        for round_i in range(empty_field_retries):
+            empty = _find_empty_field_registers(agent_output_dir, svd_file_paths)
+            if not empty:
+                break
+            logger.info("Empty-field retry %d/%d: re-generating %d register(s) singly",
+                        round_i + 1, empty_field_retries, sum(len(v) for v in empty.values()))
+            run_generator_batched(
+                client, model_name, device_name, run_number, device_dir,
+                agent_output_dir, context_retrieval_parameters, manufacturer,
+                peripherals_registers_dict=empty, max_registers_per_batch=1,
+                max_fields_per_batch=max_fields_per_batch, include_reasoning=include_reasoning,
+                skip_function_followup=skip_function_followup,
+                system_prompt_override=system_prompt_override, models=models,
+                empty_field_retries=0, force=True, _retrying=True,
             )
 
     return truncated_at_any_register

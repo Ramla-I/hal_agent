@@ -8,7 +8,10 @@ import re
 import json
 import csv
 
-from scripts.s2_compare_agent_output_with_svd import parse_output_registers_from_json, parse_svd_registers
+from applications.bug_finding.diff import (
+    load_generator_registers as parse_output_registers_from_json,
+    parse_svd_registers,
+)
 
 # HACK, remove this once we have a proper package structure
 # Add the parent directory to sys.path
