@@ -126,9 +126,11 @@ a{color:var(--accent)}
 <div class="stat hi"><span class="k">compile-time gates</span><span class="v">4793</span></div>
 <div class="stat"><span class="k">via instance alias</span><span class="v">1787</span></div>
 <div class="stat"><span class="k">registers gated</span><span class="v">2485</span></div>
-<div class="stat"><span class="k">driver enforcement hits</span><span class="v">1781</span></div>
-<div class="stat"><span class="k">collateral errors</span><span class="v">2789</span></div>
-</div></section>
+<div class="stat"><span class="k">driver enforcement hits</span><span class="v">1581</span></div>
+<div class="stat"><span class="k">collateral errors</span><span class="v">0</span></div>
+</div>
+<p class="note">Driver figures cover the 32 of 35 driver pairings whose baseline compiles. The other 3 fail against the <em>pristine</em> chip crate — broken for their own reasons, so nothing measured on top of them would be attributable to injection.</p>
+</section>
 <section><h2>The kinds of constraint</h2>
 <p class="note">What the grammar can express. Only <code>state_gate</code> has a code generator today — the rest are extracted and recorded, and show up under <em>where the rest went</em> as <code>kind_not_emitted</code>.</p>
 <div class="scroll"><table><thead><tr><th class="pin">kind</th><th>what it means</th></tr></thead><tbody>

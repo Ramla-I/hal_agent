@@ -791,10 +791,18 @@ def write_html(rows: list, path: Path) -> None:
     tot = {k: sum(_n(r[k]) for r in per_rm) for k in
            ("constraints_found_raw", "validator_enforce", "enforced",
             "enforced_via_instance_alias", "registers_gated")}
+    # Only pairings whose driver compiles against the PRISTINE chip crate can
+    # be measured. Where the baseline already fails, the driver is broken for
+    # reasons of its own -- stm32-hal2 references an ADC3 that stm32h7b3 does
+    # not have -- and every error on top of it would be miscounted as ours.
+    # Three of the 35 pairings are in that state; they stay in the table with
+    # `hal_baseline = FAIL` and are excluded from these two totals.
     hal_rows = [r for r in rows
                 if r["hal_crate"] != "—" and r["true_enforcement"] != "—"]
-    collateral = sum(_n(r["other_errors"]) for r in hal_rows)
-    enforcement = sum(_n(r["true_enforcement"]) for r in hal_rows)
+    measurable = [r for r in hal_rows if r["hal_baseline"] == "PASS"]
+    unmeasurable = len(hal_rows) - len(measurable)
+    collateral = sum(_n(r["other_errors"]) for r in measurable)
+    enforcement = sum(_n(r["true_enforcement"]) for r in measurable)
 
     h = ['<div class="wrap">', "<header>",
          '<span class="eyebrow">LIDAR · enforcement arm</span>',
@@ -816,7 +824,13 @@ def write_html(rows: list, path: Path) -> None:
              f'<span class="v">{enforcement}</span></div>')
     h.append(f'<div class="stat"><span class="k">collateral errors</span>'
              f'<span class="v">{collateral}</span></div>')
-    h += ["</div></section>"]
+    h += ["</div>",
+          f'<p class="note">Driver figures cover the {len(measurable)} of '
+          f'{len(hal_rows)} driver pairings whose baseline compiles. The other '
+          f'{unmeasurable} fail against the <em>pristine</em> chip crate — '
+          "broken for their own reasons, so nothing measured on top of them "
+          "would be attributable to injection.</p>",
+          "</section>"]
 
     # --- table 1 -----------------------------------------------------------
     h += ['<section><h2>The kinds of constraint</h2>',
