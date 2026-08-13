@@ -629,6 +629,12 @@ thead th{
   color:var(--ink-dim);font-weight:600;
 }
 tbody tr:last-child td{border-bottom:none}
+tfoot td{
+  border-top:2px solid var(--accent);border-bottom:none;
+  background:var(--surface-2);font-weight:640;
+  position:sticky;bottom:0;
+}
+tfoot td.pin{background:var(--surface-2);letter-spacing:.06em}
 tbody tr:hover td{background:var(--surface-2)}
 th.pin,td.pin{
   position:sticky;left:0;z-index:1;background:var(--surface);
@@ -909,7 +915,53 @@ def write_html(rows: list, path: Path) -> None:
             f'<td class="num">{_esc(r["other_errors"])}</td>'
             f'<td class="mono dim">{_esc(r["enforcement_sites"])}</td>'
             f'<td class="wide">{_esc(note) or "—"}</td></tr>')
-    h += ["</tbody></table></div></section>"]
+
+    # ---- totals row -------------------------------------------------------
+    # Rows are one per (manual x driver crate), so the extraction columns must
+    # be de-duplicated or a manual with three drivers is counted three times.
+    # Gates and registers are per INJECTION, keyed by (manual, chip) -- RM0440
+    # is injected into two different G4 parts and both are real. The compile
+    # columns are per row and restricted to pairings whose baseline passes,
+    # since errors stacked on an already-broken build are not ours.
+    seen_rm, seen_inj = set(), set()
+    tot_gates = tot_regs = 0
+    for r in rows:
+        seen_rm.add(r["RM"])
+        if r["pac_crate"] == "—":
+            continue            # no chip crate exists; not an injection
+        key = (r["RM"], r["device"])
+        if key not in seen_inj:
+            seen_inj.add(key)
+            tot_gates += _n(r["enforced"])
+            tot_regs += _n(r["registers_gated"])
+    pac_ok = len({(r["RM"], r["device"]) for r in rows
+                  if r["pac_compiles"] == "PASS"})
+    drivers = {r["hal_crate"] for r in rows if r["hal_crate"] != "—"}
+    pairings = [r for r in rows if r["hal_crate"] != "—"]
+    ok_pairings = [r for r in pairings if r["hal_baseline"] == "PASS"]
+    t_true = sum(_n(r["true_enforcement"]) for r in ok_pairings)
+    t_fric = sum(_n(r["generic_friction"]) for r in ok_pairings)
+    t_other = sum(_n(r["other_errors"]) for r in ok_pairings)
+    h += ["</tbody><tfoot>",
+          f'<tr><td class="pin">TOTAL</td>'
+          f'<td class="mono">{len(seen_inj)} injections</td>'
+          f'<td class="mono dim">{len(seen_rm)} manuals</td>'
+          f'<td class="num lead">{tot_gates}</td>'
+          f'<td class="num">{tot_regs}</td>'
+          f'<td>{pac_ok}/{len(seen_inj)} PASS</td>'
+          f'<td class="mono">{len(drivers)} crates, {len(pairings)} pairings</td>'
+          f'<td>{len(ok_pairings)}/{len(pairings)} PASS</td>'
+          f'<td class="num lead">{t_true}</td>'
+          f'<td class="num">{t_fric}</td>'
+          f'<td class="num">{t_other}</td>'
+          f'<td class="mono dim">—</td>'
+          f'<td class="wide">Gates and registers counted once per '
+          f'(manual, chip) injection; driver figures cover only the '
+          f'{len(ok_pairings)} pairings whose baseline compiles.</td></tr>',
+          "</tfoot></table></div>",
+          '<p class="note">Driver crates measured: '
+          + ", ".join(f"<code>{_esc(d)}</code>" for d in sorted(drivers))
+          + ".</p>", "</section>"]
 
     # --- table 3 -----------------------------------------------------------
     h += ['<section><h2>Where the rest went</h2>',

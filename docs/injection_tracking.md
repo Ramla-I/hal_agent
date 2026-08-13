@@ -132,6 +132,7 @@ EVERY injected chip crate is listed. The gates and the `PAC compiles` check are 
 | RM | device | PAC crate | gates | registers | PAC compiles | HAL crate | baseline | true enforcement | generic friction | other | enforcement sites | note |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | rm0008 | stm32f103 | stm32f1 0.16.0 | **6** | 6 | PASS | stm32f1xx-hal 0.11.0 | PASS | 5 | 13 | 0 | src/rtc.rs | — |
+| rm0008 | stm32f103 | stm32f1 0.16.0 | **6** | 6 | PASS | stm32f1-hal 0.14.1 | PASS | 0 | 0 | 0 | — | — |
 | rm0033 | stm32f215 | stm32f2 0.16.0 | **10** | 7 | PASS | — | — | — | — | — | — | no HAL crate exists for stm32f2 at any PAC version, and nothing else on crates.io depends on it |
 | rm0038 | stm32l151 | stm32l1 0.16.0 | **14** | 12 | PASS | — | — | — | — | — | — | stm32l1xx-hal 0.1.0 needs PAC 0.5.0; forced onto 0.16 it fails with 666 errors (569x E0616) - a port, not a version bump; last upstream commit 2020-09-11; no other crates.io consumer of stm32l1 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
 | rm0091 | stm32f0x1 | stm32f0 0.16.0 | **52** | 19 | PASS | — | — | — | — | — | — | stm32f0xx-hal 0.18.0 needs PAC 0.14.0; forced onto 0.16 it fails with 446 errors (408x E0616) - a port, not a version bump; last upstream commit 2026-05-31; no other crates.io consumer of stm32f0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
@@ -143,6 +144,7 @@ EVERY injected chip crate is listed. The gates and the `PAC compiles` check are 
 | rm0367 | stm32l0x3 | stm32l0 0.16.0 | **32** | 26 | PASS | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; last upstream commit 2024-01-27; no other crates.io consumer of stm32l0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
 | rm0368 | stm32f401 | stm32f4 0.16.0 | **12** | 7 | PASS | stm32f4xx-hal 0.23.0 | PASS | 17 | 8 | 0 | src/i2c.rs, src/rtc.rs, src/spi.rs | — |
 | rm0368 | stm32f401 | stm32f4 0.16.0 | **12** | 7 | PASS | stm32-hal2 2.1.10 | PASS | 9 | 0 | 0 | src/i2c_f4.rs, src/rtc.rs, src/spi/baseline.rs | — |
+| rm0368 | stm32f401 | stm32f4 0.16.0 | **12** | 7 | PASS | rivet-bsp-stm32f401re 0.1.0 | PASS | 0 | 0 | 0 | — | — |
 | rm0376 | stm32l0x2 | stm32l0 0.16.0 | **28** | 21 | PASS | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; last upstream commit 2024-01-27; no other crates.io consumer of stm32l0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
 | rm0377 | stm32l0x1 | stm32l0 0.16.0 | **22** | 19 | PASS | — | — | — | — | — | — | stm32l0xx-hal 0.10.0 needs PAC 0.15.1; forced onto 0.16 it fails with 703 errors (595x E0616) - a port, not a version bump; last upstream commit 2024-01-27; no other crates.io consumer of stm32l0 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
 | rm0383 | stm32f411 | stm32f4 0.16.0 | **14** | 10 | PASS | stm32f4xx-hal 0.23.0 | PASS | 32 | 8 | 0 | src/flash.rs, src/i2c.rs, src/rtc.rs, src/spi.rs | — |
@@ -170,11 +172,16 @@ EVERY injected chip crate is listed. The gates and the `PAC compiles` check are 
 | rm0090 | stm32f429 | stm32f4 0.16.0 | **19** | 11 | PASS | stm32-hal2 2.1.10 | PASS | 4 | 0 | 0 | src/i2c_f4.rs | — |
 | rm0351 | stm32l4x6 | stm32l4 0.16.0 | **78** | 32 | PASS | stm32-hal2 2.1.10 | PASS | 124 | 0 | 0 | src/adc.rs, src/clocks/baseline.rs, src/iwdg.rs, src/rtc.rs | — |
 | rm0399 | stm32h747cm7 | stm32h7 0.16.0 | **160** | 63 | PASS | stm32-hal2 2.1.10 | PASS | 172 | 0 | 0 | src/adc.rs, src/clocks/h.rs, src/lpuart.rs, src/qspi.rs, src/rtc.rs, src/spi/h.rs, src/spi/mod.rs, src/usart.rs | — |
+| rm0399 | stm32h747cm7 | stm32h7 0.16.0 | **160** | 63 | PASS | stm32-hrtim 0.2.0 | PASS | 1 | 10 | 0 | src/timer.rs | — |
 | rm0432 | stm32l4r9 | stm32l4 0.16.0 | **111** | 68 | PASS | — | — | — | — | — | — | stm32l4xx-hal is on an older PAC; no other crates.io consumer of stm32l4 is on 0.16 either. The gates ARE injected and the crate compiles — only the adoption measurement is missing |
 | rm0433 | stm32h753v | stm32h7 0.16.0 | **165** | 82 | PASS | stm32-hal2 2.1.10 | PASS | 205 | 0 | 0 | src/adc.rs, src/clocks/h.rs, src/i2c.rs, src/lpuart.rs, src/qspi.rs, src/rtc.rs, src/spi/h.rs, src/timer.rs, src/usart.rs | — |
 | rm0436 | stm32mp157 | stm32mp1 0.16.0 | **412** | 237 | PASS | — | — | — | — | — | — | no driver crate on stm32mp1 0.16 — the gates are injected and the crate compiles; there is simply nothing third-party to compile against |
 | rm0438 | stm32l562 | stm32l5 0.16.0 | **150** | 132 | PASS | stm32-hal2 2.1.10 | PASS | 73 | 0 | 0 | src/adc.rs, src/clocks/baseline.rs, src/flash/trustzone.rs, src/gpio.rs, src/i2c.rs, src/low_power.rs, src/rtc.rs, src/usart.rs | — |
-| rm0440 | stm32g4a1 | stm32g4 0.16.0 | **71** | 41 | PASS | stm32-hal2 2.1.10 | PASS | 127 | 0 | 0 | src/adc.rs, src/i2c.rs, src/lpuart.rs, src/rtc.rs, src/usart.rs | — |
+| rm0440 | stm32g4a1 | stm32g4 0.16.0 | **71** | 41 | PASS | stm32-hal2 2.1.10 | PASS | 209 | 0 | 0 | src/adc.rs, src/i2c.rs, src/lpuart.rs, src/qspi.rs, src/rtc.rs, src/usart.rs | — |
+| rm0440 | stm32g4a1 | stm32g4 0.16.0 | **71** | 41 | PASS | stm32g4xx-hal 0.1.0 | PASS | 5 | 6 | 0 | — | — |
+| rm0440 | stm32g474 | stm32g4 0.16.0 | **81** | 38 | PASS | stm32-hal2 2.1.10 | PASS | 209 | 0 | 0 | src/adc.rs, src/i2c.rs, src/lpuart.rs, src/qspi.rs, src/rtc.rs, src/usart.rs | — |
+| rm0440 | stm32g474 | stm32g4 0.16.0 | **81** | 38 | PASS | stm32g4xx-hal 0.1.0 | PASS | 5 | 6 | 0 | — | — |
+| rm0440 | stm32g474 | stm32g4 0.16.0 | **81** | 38 | PASS | stm32-hrtim 0.2.0 | PASS | 5 | 6 | 0 | src/capture.rs, src/timer.rs | — |
 | rm0442 | stm32mp153 | stm32mp1 0.16.0 | **383** | 219 | PASS | — | — | — | — | — | — | no driver crate on stm32mp1 0.16 — the gates are injected and the crate compiles; there is simply nothing third-party to compile against |
 | rm0453 | stm32wl5x_cm4 | stm32wl 0.16.0 | **55** | 50 | PASS | — | — | — | — | — | — | no driver crate on stm32wl 0.16 — the gates are injected and the crate compiles; there is simply nothing third-party to compile against |
 | rm0455 | stm32h7b3 | stm32h7 0.16.0 | **214** | 115 | PASS | stm32-hal2 2.1.10 | FAIL | 125 | 0 | 153 | src/adc.rs, src/clocks/h.rs, src/i2c.rs, src/lpuart.rs, src/qspi.rs, src/rtc.rs, src/spi/h.rs, src/spi/mod.rs, src/usart.rs | baseline against pristine PAC: FAIL |
