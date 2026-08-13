@@ -98,9 +98,41 @@ def _hal2(feature: str) -> Consumer:
                     note="second HAL family, already on PAC 0.16")
 
 
+# WHY THE CONSUMER LIST IS SHORT, AND CANNOT SIMPLY BE LENGTHENED.
+# A consumer is only measurable if its released version depends on PAC ^0.16 --
+# the generation the injector targets. `[patch.crates-io]` does NOT error when
+# the version requirement is unsatisfiable; it silently keeps the original
+# crate, so an unpaired consumer compiles cleanly against a PRISTINE PAC and
+# reports zero enforcement. (patch_applied() reads Cargo.lock to catch that.)
+#
+# A crates.io reverse-dependency sweep over all 21 PAC crates found exactly
+# NINETEEN released consumers requiring ^0.16, and they collapse to six
+# distinct crates. The first-party family HALs are mostly NOT among them:
+#
+#   stm32h7xx-hal 0.16.0 -> stm32h7 ^0.15.1     stm32f3xx-hal -> ^0.15.1
+#   stm32f7xx-hal  0.8.0 -> stm32f7 ^0.15       stm32wlxx-hal -> ^0.15.1
+#   stm32f0xx-hal 0.18.0 -> stm32f0 ^0.14       stm32l0xx-hal -> ^0.15.1
+#   stm32l4xx-hal  0.7.1 -> stm32l4 ^0.14.0     stm32l1xx-hal -> ^0.5.0
+#   stm32g0xx-hal  0.2.0 -> stm32g0 ^0.14.0
+#
+# Their git masters do not help: h7/f7/f0/f3/l0/l4 are still on 0.14/0.15, and
+# stm32g0xx-hal master has moved PAST us to 0.17.0. Pairing them would mean
+# injecting into the 0.14/0.15 svd2rust template, whose register API differs
+# (field access vs accessor methods) -- the `pac-gap` blocker, not a config
+# change. Adding them here would produce silent zeros, which is worse than
+# an honest absence.
+def _hrtim(feature: str) -> Consumer:
+    return Consumer("stm32-hrtim", "0.2.0", [feature],
+                    note="high-resolution timer driver; drives HRTIM "
+                         "registers directly, and the most-downloaded "
+                         "PAC-0.16 consumer of all")
+
+
 TARGETS = [
     Target("rm0008", "stm32f1", "stm32f103", "stm32f103.svd", [
-        Consumer("stm32f1xx-hal", "0.11.0", ["stm32f103", "medium"])]),
+        Consumer("stm32f1xx-hal", "0.11.0", ["stm32f103", "medium"]),
+        Consumer("stm32f1-hal", "0.14.1", ["f103", "medium"],
+                 note="independent F1 HAL, also on PAC 0.16")]),
     Target("rm0033", "stm32f2", "stm32f215", "stm32f215.svd"),
     Target("rm0038", "stm32l1", "stm32l151", "stm32l151.svd"),
     Target("rm0091", "stm32f0", "stm32f0x1", "stm32f0x1.svd"),
@@ -111,7 +143,9 @@ TARGETS = [
     Target("rm0366", "stm32f3", "stm32f301", "stm32f301.svd", [_hal2("f301")]),
     Target("rm0367", "stm32l0", "stm32l0x3", "stm32l0x3.svd"),
     Target("rm0368", "stm32f4", "stm32f401", "stm32f401.svd", [
-        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f401"]), _hal2("f401")]),
+        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f401"]), _hal2("f401"),
+        Consumer("rivet-bsp-stm32f401re", "0.1.0", [],
+                 note="board support package pinned to this exact chip")]),
     Target("rm0376", "stm32l0", "stm32l0x2", "stm32l0x2.svd"),
     Target("rm0377", "stm32l0", "stm32l0x1", "stm32l0x1.svd"),
     Target("rm0383", "stm32f4", "stm32f411", "stm32f411.svd", [
@@ -145,12 +179,21 @@ TARGETS = [
     Target("rm0090", "stm32f4", "stm32f429", "stm32f439.svd", [_hal2("f429")]),
     Target("rm0351", "stm32l4", "stm32l4x6", "stm32l496.svd", [_hal2("l4x6")]),
     Target("rm0399", "stm32h7", "stm32h747cm7", "stm32h747cm7.svd",
-           [_hal2("h747cm7")]),
+           [_hal2("h747cm7"), _hrtim("stm32h747cm7")]),
     Target("rm0432", "stm32l4", "stm32l4r9", "stm32l4r9.svd"),
     Target("rm0433", "stm32h7", "stm32h753v", "stm32h753v.svd", [_hal2("h753v")]),
     Target("rm0436", "stm32mp1", "stm32mp157", "stm32mp157.svd"),
     Target("rm0438", "stm32l5", "stm32l562", "stm32l562.svd", [_hal2("l562")]),
-    Target("rm0440", "stm32g4", "stm32g4a1", "stm32g4a1.svd", [_hal2("g4a1")]),
+    Target("rm0440", "stm32g4", "stm32g4a1", "stm32g4a1.svd", [
+        _hal2("g4a1"),
+        Consumer("stm32g4xx-hal", "0.1.0", ["stm32g4a1"],
+                 note="the one first-party family HAL released against 0.16")]),
+    # A second G4 part, because the three G4 consumers do not offer the same
+    # device feature: stm32-hrtim has no g4a1, so G474 is where all three meet.
+    Target("rm0440", "stm32g4", "stm32g474", "stm32g474.svd", [
+        _hal2("g474"),
+        Consumer("stm32g4xx-hal", "0.1.0", ["stm32g474"]),
+        _hrtim("stm32g474")]),
     Target("rm0442", "stm32mp1", "stm32mp153", "stm32mp153.svd"),
     Target("rm0453", "stm32wl", "stm32wl5x_cm4", "stm32wl5x_cm4.svd"),
     Target("rm0455", "stm32h7", "stm32h7b3", "stm32h7b3.svd", [_hal2("h7b3")]),

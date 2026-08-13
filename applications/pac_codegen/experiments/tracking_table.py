@@ -78,7 +78,10 @@ SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                # fix, which had failed to compile at all in the all48 run
                "sweep_docfix.json",
                # and the three re-measured after the keyword-field fix
-               "sweep_kwfix.json"]
+               "sweep_kwfix.json",
+               # the four consumers added after the crates.io reverse-dependency
+               # sweep: stm32-hrtim, stm32g4xx-hal, stm32f1-hal, rivet-bsp
+               "sweep_newconsumers.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
