@@ -178,7 +178,21 @@ def enclosing_function(path: str, line: int, max_lines: int = 140):
         end = j
         if opened and depth <= 0:
             break
-    body = lines[start:end + 1][:max_lines]
+    # The window must CONTAIN the flagged line. Taking the first `max_lines`
+    # of the function silently drops it whenever the function is longer than
+    # that, and the triage then scans an unrelated region: embassy's
+    # `rcc/l.rs` init() starts at 178, the flagged write is at 410, and the
+    # 140-line cap meant lines 178-318 were searched for a guard that sits at
+    # 403. Every long function was mis-triaged this way. When the function
+    # does not fit, keep the tail ending at the flagged line -- a precondition
+    # has to appear BEFORE the access, so that is the half that matters.
+    body_start = start
+    if end + 1 - start > max_lines:
+        if line - start > max_lines:
+            body_start = max(start, line - max_lines)
+        end = min(end, body_start + max_lines - 1)
+    body = lines[body_start:end + 1]
+    start = body_start
     out = []
     for k, text in enumerate(body, start=start + 1):
         marker = "   // <-- FLAGGED (constrained operation)" if k == line else ""
@@ -201,6 +215,13 @@ def _precondition_pattern(fields: list[str], dialect: str):
     check -- is what marked three sites "corroborated"."""
     if dialect == "tock":
         return re.compile("|".join(rf"::{f.upper()}\b" for f in fields))
+    if dialect == "metapac":
+        # embassy's stm32-metapac spells a field WRITE `w.set_acc64(true)`,
+        # not `w.acc64().set_bit()`, so `\.acc64\s*\(` never matches the
+        # very line that establishes the precondition. Reads keep the plain
+        # `r.acc64()` form, so both spellings have to be accepted.
+        return re.compile("|".join(
+            rf"\.(?:set_)?{f}\s*\(" for f in fields))
     return re.compile("|".join(rf"\.{f}\s*\(" for f in fields))
 
 

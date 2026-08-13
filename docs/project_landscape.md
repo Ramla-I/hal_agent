@@ -47,13 +47,26 @@ constraints, `field_gating_disabled`).
 
 | project | style | manuals | .rs files | register accesses | hits | unchecked | corroborated | build-readiness |
 |---|---|---|---|---|---|---|---|---|
-| [hubris](https://github.com/oxidecomputer/hubris) | pac_direct | rm0316, rm0090, rm0433, rm0444, rm0454 | 276 | 677 | **22** | 8 | 14 | `pac-gap` |
+| [hubris](https://github.com/oxidecomputer/hubris) | pac_direct | rm0316, rm0090, rm0433, rm0444, rm0454 | 276 | 677 | **22** | 11 | 11 | `pac-gap` |
 | [anne-key](https://github.com/ah-/anne-key) | pac_direct | rm0038 | 22 | 91 | **3** | 0 | 3 | `pac-gap` |
 | [tock](https://github.com/tock/tock) | tock | rm0368, rm0402, rm0390, rm0316 | 45 | 1203 | **51** | 23 | 28 | `not-applicable` |
 | [stm32-eth](https://github.com/stm32-rs/stm32-eth) | pac_direct | rm0090, rm0386, rm0390 | 19 | 104 | **0** | 0 | 0 | `hal-bump` |
 | [stm32f469i-disc](https://github.com/tegimeki/stm32f469i-disc) | hal_only | rm0386 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
 | [booster](https://github.com/quartiq/booster) | hal_only | rm0090 | 35 | 0 | **0** | 0 | 0 | `hal-bump` |
 | [px4flow_bsp](https://github.com/tstellanova/px4flow_bsp) | hal_only | rm0090 | 5 | 0 | **0** | 0 | 0 | `hal-bump` |
+| [stm32f7-discovery](https://github.com/embed-rs/stm32f7-discovery) | pac_direct | rm0385 | 33 | 288 | **4** | 2 | 2 | `pac-gap` |
+| [fdcan](https://github.com/stm32-rs/fdcan) | pac_direct | rm0440, rm0433 | 88 | 73 | **7** | 3 | 4 | `ready` |
+| [bxcan](https://github.com/stm32-rs/bxcan) | pac_direct | rm0008 | 35 | 65 | **11** | 0 | 11 | `ready` |
+| [stm32-usbd](https://github.com/stm32-rs/stm32-usbd) | pac_direct | rm0008 | 16 | 30 | **0** | 0 | 0 | `ready` |
+| [stm32f103xx-usb](https://github.com/mvirkkunen/stm32f103xx-usb) | pac_direct | rm0008 | 4 | 21 | **0** | 0 | 0 | `ready` |
+| [stm32-fmc](https://github.com/stm32-rs/stm32-fmc) | pac_direct | rm0433 | 18 | 0 | **0** | 0 | 0 | `ready` |
+| [blethrs](https://github.com/AirborneEngineering/blethrs) | pac_direct | rm0090 | 6 | 85 | **0** | 0 | 0 | `pac-gap` |
+| [loadstone](https://github.com/absw/loadstone) | pac_direct | rm0402 | 25 | 8 | **1** | 1 | 0 | `ready` |
+| [lilos](https://github.com/cbiffle/lilos) | pac_direct | rm0090, rm0433, rm0444 | 26 | 10 | **0** | 0 | 0 | `ready` |
+| [keyboard-labs](https://github.com/rgoulter/keyboard-labs) | pac_direct | rm0368 | 53 | 2 | **0** | 0 | 0 | `ready` |
+| [stm32f3-discovery](https://github.com/rubberduck203/stm32f3-discovery) | pac_direct | rm0316 | 5 | 1 | **0** | 0 | 0 | `ready` |
+| [stm32f407g-disc](https://github.com/stm32-rs/stm32f407g-disc) | hal_only | rm0090 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
+| [embassy](https://github.com/embassy-rs/embassy) | pac_direct | rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490 | 249 | 3136 | **16** | 8 | 8 | `ready` |
 
 ## Build-readiness
 
@@ -62,13 +75,26 @@ injected chip crate — the ranked input to the build phase.
 
 | project | reachable | PAC needed | blockers |
 |---|---|---|---|
+| embassy | yes | stm32f4 0.16.0 | none |
+| bxcan | yes | stm32f1 0.16.0 | none |
+| fdcan | yes | stm32g4 0.16.0 | none |
+| loadstone | yes | stm32f4 0.16.0 | none |
+| stm32-usbd | yes | stm32f1 0.16.0 | none |
+| stm32f103xx-usb | yes | stm32f1 0.16.0 | none |
+| stm32-fmc | yes | stm32h7 0.16.0 | none |
+| lilos | yes | stm32f4 0.16.0 | none |
+| keyboard-labs | yes | stm32f4 0.16.0 | none |
+| stm32f3-discovery | yes | stm32f3 0.16.0 | none |
 | tock | no | — | hand-written register maps; no PAC to inject into |
 | hubris | yes | stm32h7 0.16.0 | pins stm32h7 0.14, injector targets 0.16.0 |
+| stm32f7-discovery | yes | stm32f7 0.16.0 | pins stm32f7 0.7, injector targets 0.16.0 |
 | anne-key | yes | stm32l1 0.16.0 | pins stm32l1 0.11.0, injector targets 0.16.0 |
 | stm32-eth | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | stm32f469i-disc | yes | stm32f4 0.16.0 | stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | booster | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | px4flow_bsp | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.8.3 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
+| blethrs | yes | stm32f4 0.16.0 | pins stm32f4 0.11, injector targets 0.16.0 |
+| stm32f407g-disc | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.14 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 
 Effort key:
 
@@ -123,9 +149,9 @@ Effort key:
 | file:line | op | fields written | verdict |
 |---|---|---|---|
 | `drv/stm32xx-i2c/src/lib.rs:658` | write | txdata | **corroborated** |
-| `drv/stm32xx-i2c/src/lib.rs:1143` | write | txdata | **corroborated** |
-| `drv/stm32xx-i2c/src/lib.rs:1159` | write | txdata | **corroborated** |
-| `drv/stm32xx-i2c/src/lib.rs:1164` | write | txdata, txie | **corroborated** |
+| `drv/stm32xx-i2c/src/lib.rs:1143` | write | txdata | **unchecked** |
+| `drv/stm32xx-i2c/src/lib.rs:1159` | write | txdata | **unchecked** |
+| `drv/stm32xx-i2c/src/lib.rs:1164` | write | txdata, txie | **unchecked** |
 
 ### `rcc/pll1divr` — 2 site(s)
 
@@ -329,6 +355,268 @@ Effort key:
 | file:line | op | fields written | verdict |
 |---|---|---|---|
 | `chips/stm32f303xc/src/i2c.rs:343` | write | r, txdata | **unchecked** |
+
+
+## stm32f7-discovery — 4 candidate sites
+
+*Board framework with its own SD, Ethernet and LCD drivers; 261 register accesses, the densest project scanned.*
+
+### `pwr/cr1` — 2 site(s)
+
+- **rule** (state_gate, write): PWR_CSR1.ODRDY set
+- **fields restricted**: odswen
+- **datasheet** (rm0385): "The ODSWEN bit must only be set when the ODRDY flag is set to switch to Over‑drive mode."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/init/mod.rs:66` | modify | latency, oden, odswen | **unchecked** |
+| `src/init/mod.rs:69` | modify | latency, odswen | **corroborated** |
+
+### `i2c/oar2` — 1 site(s)
+
+- **rule** (state_gate, write): I2C_OAR2.OA2EN cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0385): "These bits can be written only when OA2EN = 0."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/i2c.rs:468` | modify | gcen, nostretch, oa2en, pe | **unchecked** |
+
+### `rcc/pllcfgr` — 1 site(s)
+
+- **rule** (state_gate, write): RCC_CR.PLLON cleared
+- **fields restricted**: pllq
+- **datasheet** (rm0385): "These bits should be written only if PLL is disabled."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/init/mod.rs:49` | modify | pllm, plln, pllp, pllq, pllsrc | **corroborated** |
+
+
+## fdcan — 7 candidate sites
+
+*FDCAN driver carrying its OWN vendored svd2rust register module (src/pac). RM0440's CCE rule is the one whose multi-line quote broke our emitter.*
+
+### `can/test` — 2 site(s)
+
+- **rule** (state_gate, write): FDCAN_CCCR.TEST set
+- **fields restricted**: whole register
+- **datasheet** (rm0440): "Write access to this register is enabled by setting the TEST bit of the FDCAN_CCCR register."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/lib.rs:344` | modify | lbck, mon | **corroborated** |
+| `src/lib.rs:1000` | modify | tx | **unchecked** |
+
+### `can/txbc` — 1 site(s)
+
+- **rule** (state_gate, write): FDCAN_CCCR.INIT set, FDCAN_CCCR.CCE set
+- **fields restricted**: tfqm
+- **datasheet** (rm0440): "This bit is write-protected (P), which means that write access is possible only when the CCE and INIT bits of the FDCAN_CCCR register are both set."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/lib.rs:585` | write | lss, tfqm | **corroborated** |
+
+### `can/rxgfc` — 1 site(s)
+
+- **rule** (state_gate, write): FDCAN_CCCR.CCE set, FDCAN_CCCR.INIT set
+- **fields restricted**: lse, lss, f1om, f0om, anfs, anfe, rrfs, rrfe
+- **datasheet** (rm0440): "This bitfield is write-protected (P), which means that write access is possible only when the CCE and INIT bits of the FDCAN_CCCR register are both set."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/lib.rs:593` | modify | lss | **corroborated** |
+
+### `can/xidfc` — 1 site(s)
+
+- **rule** (state_gate, write): FDCAN_CCCR.CCE set, FDCAN_CCCR.INIT set
+- **fields restricted**: whole register
+- **datasheet** (rm0433): "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/lib.rs:605` | modify | lse | **corroborated** |
+
+### `can/nbtp` — 1 site(s)
+
+- **rule** (state_gate, write): FDCAN_CCCR.CCE set, FDCAN_CCCR.INIT set
+- **fields restricted**: whole register
+- **datasheet** (rm0433): "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/lib.rs:739` | write | nbrp | **unchecked** |
+
+### `can/dbtp` — 1 site(s)
+
+- **rule** (state_gate, write): FDCAN_CCCR.CCE set, FDCAN_CCCR.INIT set
+- **fields restricted**: whole register
+- **datasheet** (rm0440): "This register is only writable if the CCE and INIT bits of the FDCAN_CCCR are set."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/lib.rs:758` | write | dbrp | **unchecked** |
+
+
+## bxcan — 11 candidate sites
+
+*bxCAN driver. The filter-init FINIT rule is the constraint behind the BitReader shape bug.*
+
+### `can/btr` — 5 site(s)
+
+- **rule** (state_gate, write): CAN_MCR.INRQ set
+- **fields restricted**: whole register
+- **datasheet** (rm0008): "This register can only be accessed by the software when the CAN hardware is in initialization mode."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/lib.rs:329` | modify | lbkm, silm | **corroborated** |
+| `src/lib.rs:336` | modify | silm | **corroborated** |
+| `src/lib.rs:428` | modify | lbkm, silm | **corroborated** |
+| `src/lib.rs:435` | modify | silm | **corroborated** |
+| `src/lib.rs:532` | modify | bits | **corroborated** |
+
+### `can/fa1r` — 3 site(s)
+
+- **rule** (state_gate, write): CAN_FMR.FINIT set
+- **fields restricted**: whole register
+- **datasheet** (rm0008): "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/filter.rs:404` | modify | bits | **corroborated** |
+| `src/filter.rs:420` | modify | bits | **corroborated** |
+| `src/filter.rs:487` | modify | bits | **corroborated** |
+
+### `can/fm1r` — 1 site(s)
+
+- **rule** (state_gate, write): CAN_FMR.FINIT equals
+- **fields restricted**: whole register
+- **datasheet** (rm0008): "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/filter.rs:428` | modify | bits | **corroborated** |
+
+### `can/fs1r` — 1 site(s)
+
+- **rule** (state_gate, write): CAN_FMR.FINIT equals
+- **fields restricted**: whole register
+- **datasheet** (rm0008): "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/filter.rs:440` | modify | bits | **corroborated** |
+
+### `can/ffa1r` — 1 site(s)
+
+- **rule** (state_gate, write): CAN_FMR.FINIT set
+- **fields restricted**: whole register
+- **datasheet** (rm0008): "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/filter.rs:475` | modify | bits | **corroborated** |
+
+
+## loadstone — 1 candidate sites
+
+*Secure bootloader; F412 port plus a non-ST port.*
+
+### `pwr/csr` — 1 site(s)
+
+- **rule** (state_gate, write): PWR_CR.DBP set
+- **fields restricted**: bre
+- **datasheet** (rm0402): "The DBP bit of PWR_CR register must be set to 1 before PWR_CSR.BRE can be written."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `src/ports/stm32f412/update_signal.rs:49` | modify | bre, dbp, rtcen | **unchecked** |
+
+
+## embassy — 16 candidate sites
+
+*Async embedded framework; embassy-stm32 alone carries 4,049 register accesses, more than Tock and Hubris combined. Uses stm32-metapac, so field writes are `w.set_ff(true)` rather than `w.ff().set_bit()`. Only the paths whose family is named in the layout are scanned.*
+
+### `rcc/cr` — 4 site(s)
+
+- **rule** (state_gate, write): RCC_CR.HSEON cleared
+- **fields restricted**: hsebyp
+- **datasheet** (rm0440): "The HSEBYP bit can be written only if the HSE oscillator is disabled."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `embassy-stm32/src/rcc/g4.rs:144` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
+| `embassy-stm32/src/rcc/g4.rs:153` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
+| `embassy-stm32/src/rcc/f013.rs:196` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
+| `embassy-stm32/src/rcc/f013.rs:205` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
+
+### `flash/acr` — 4 site(s)
+
+- **rule** (state_gate, write): FLASH_ACR.ACC64 set
+- **fields restricted**: latency
+- **datasheet** (rm0038): "Latency can be set only when ACC64 is set."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `embassy-stm32/src/rcc/l.rs:206` | modify | latency, set_latency, set_vos, vos | **unchecked** |
+| `embassy-stm32/src/rcc/l.rs:403` | write | acc64, hpre, latency, ppre, prften, set_acc64, set_hpre, set_latency, set_ppre, set_prften, set_sw, sw | **corroborated** |
+| `embassy-stm32/src/rcc/l.rs:405` | modify | hpre, latency, ppre, prften, set_hpre, set_latency, set_ppre, set_prften, set_sw, sw | **corroborated** |
+| `embassy-stm32/src/rcc/l.rs:410` | modify | hpre, ppre, ppre1, ppre2, prften, set_hpre, set_ppre, set_ppre1, set_ppre2, set_prften, set_sw, sw | **corroborated** |
+
+### `pwr/cr1` — 3 site(s)
+
+- **rule** (state_gate, write): PWR_CSR1.ODRDY set
+- **fields restricted**: odswen
+- **datasheet** (rm0385): "The ODSWEN bit must only be set when the ODRDY flag is set to switch to Over‑drive mode."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `embassy-stm32/src/rcc/f247.rs:168` | modify | oden, odswen, set_oden, set_odswen, set_vos, vos | **unchecked** |
+| `embassy-stm32/src/rcc/f247.rs:174` | modify | hsion, oden, odswen, set_hsion, set_oden, set_odswen, set_sw, sw | **unchecked** |
+| `embassy-stm32/src/rcc/f247.rs:177` | modify | hsion, odswen, set_hsion, set_odswen, set_sw, sw | **corroborated** |
+
+### `flash/optcr` — 2 site(s)
+
+- **rule** (state_gate, write): FLASH_NSSR.BSY cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0481): "The FLASH_NS/SECCR, FLASH_OPTCR and FLASH_NS/SECOBKCFGR registers are not accessible in write mode when the BSY bit is set. Any attempt to write these registers while the BSY bit is set causes the AHB bus to stall until "
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `embassy-stm32/src/rcc/h.rs:785` | modify | octo1_hslv, octo2_hslv, pg_opt, set_octo1_hslv, set_octo2_hslv, set_pg_opt | **unchecked** |
+| `embassy-stm32/src/rcc/h.rs:801` | modify | iohslv, octo1_iohslv, octo2_iohslv, optlock, pg_opt, set_iohslv, set_octo1_iohslv, set_octo2_iohslv, set_optlock, set_pg_opt | **unchecked** |
+
+### `rcc/pllsaicfgr` — 1 site(s)
+
+- **rule** (state_gate, write): RCC_CR.PLLSAION cleared
+- **fields restricted**: pllsair, pllsaiq, pllsain
+- **datasheet** (rm0090): "These bits should be written when the PLLSAI is disabled."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `embassy-stm32/src/rcc/f247.rs:510` | write | — | **unchecked** |
+
+### `syscfg/cccsr` — 1 site(s)
+
+- **rule** (state_gate, write): SYSCFG_UR17.IO_HSLV set
+- **fields restricted**: hslv
+- **datasheet** (rm0433): "This bit is active only if IO_HSLV user option bit is set. It must be used only if the product supply voltage is below 2.7 V. Setting this bit when V DD is higher than 2.7 V might be destructive."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `embassy-stm32/src/rcc/h.rs:756` | modify | cs, en, hslv, set_cs, set_en, set_hslv | **unchecked** |
+
+### `i2c/txdr` — 1 site(s)
+
+- **rule** (state_gate, write): I2C_ISR.TXE set
+- **fields restricted**: whole register
+- **datasheet** (rm0091): "These bits can be written only when TXE = 1."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `embassy-stm32/src/i2c/v2.rs:904` | write | set_txdata, txdata | **unchecked** |
 
 
 ## Limits

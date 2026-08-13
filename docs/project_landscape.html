@@ -1,0 +1,855 @@
+<title>Where datasheet rules would bite</title><style>
+:root{
+  --ground:#f6f7f9; --surface:#ffffff; --surface-2:#f0f2f6;
+  --ink:#1b212b; --ink-dim:#5c6675; --rule:#dde2e9;
+  --accent:#a85b2a; --accent-soft:#f3e6dc;
+  --ok:#2e7d5b; --warn:#8a6a12; --drop:#a8443a;
+  --shadow:rgba(27,33,43,.13);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#10131a; --surface:#171b23; --surface-2:#1d222c;
+    --ink:#e2e7ef; --ink-dim:#929baa; --rule:#262c37;
+    --accent:#d8834a; --accent-soft:#2a1d14;
+    --ok:#5cbb8d; --warn:#d0a83c; --drop:#e08074;
+    --shadow:rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#10131a; --surface:#171b23; --surface-2:#1d222c;
+  --ink:#e2e7ef; --ink-dim:#929baa; --rule:#262c37;
+  --accent:#d8834a; --accent-soft:#2a1d14;
+  --ok:#5cbb8d; --warn:#d0a83c; --drop:#e08074;
+  --shadow:rgba(0,0,0,.5);
+}
+:root[data-theme="light"]{
+  --ground:#f6f7f9; --surface:#ffffff; --surface-2:#f0f2f6;
+  --ink:#1b212b; --ink-dim:#5c6675; --rule:#dde2e9;
+  --accent:#a85b2a; --accent-soft:#f3e6dc;
+  --ok:#2e7d5b; --warn:#8a6a12; --drop:#a8443a;
+  --shadow:rgba(27,33,43,.13);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 72px;
+      display:flex;flex-direction:column;gap:38px}
+header{display:flex;flex-direction:column;gap:10px;
+       border-left:3px solid var(--accent);padding-left:16px}
+h1{margin:0;font-size:27px;line-height:1.2;letter-spacing:-.015em;
+   text-wrap:balance;font-weight:640}
+.sub{margin:0;color:var(--ink-dim);max-width:68ch}
+.eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);}
+section{display:flex;flex-direction:column;gap:12px}
+h2{margin:0;font-size:17px;font-weight:640;letter-spacing:-.01em}
+h3{margin:26px 0 0;font-size:15.5px;font-weight:640;letter-spacing:-.005em;
+   display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h3 .sm{font-size:12.5px;font-weight:400;color:var(--ink-dim)}
+.note{margin:0;color:var(--ink-dim);font-size:13.5px;max-width:76ch}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.stat{background:var(--surface);border:1px solid var(--rule);border-radius:7px;
+      padding:11px 15px;min-width:124px;flex:1 1 124px}
+.stat .k{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim)}
+.stat .v{display:block;font-size:24px;font-weight:660;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;margin-top:3px}
+.stat.hi .v{color:var(--accent)}
+.stat.warn .v{color:var(--warn)}
+.stat.ok .v{color:var(--ok)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;
+        background:var(--surface)}
+table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+th,td{padding:9px 13px;text-align:left;white-space:nowrap;
+  border-bottom:1px solid var(--rule);font-size:13px;vertical-align:top}
+thead th{position:sticky;top:0;z-index:2;background:var(--surface-2);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-dim);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface-2)}
+th.pin,td.pin{position:sticky;left:0;z-index:1;background:var(--surface);
+  box-shadow:1px 0 0 var(--rule),6px 0 10px -8px var(--shadow);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:600}
+thead th.pin{z-index:3;background:var(--surface-2)}
+tbody tr:hover td.pin{background:var(--surface-2)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.num{text-align:right;font-variant-numeric:tabular-nums;
+     font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.num.lead{font-weight:680;color:var(--accent)}
+.dim{color:var(--ink-dim)}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;
+  font-weight:640;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  letter-spacing:.02em}
+.pill.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 13%,transparent)}
+.pill.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.pill.no{color:var(--drop);background:color-mix(in srgb,var(--drop) 13%,transparent)}
+.pill.none{color:var(--ink-dim);background:var(--surface-2)}
+.rule{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--accent);
+      border-radius:0 8px 8px 0;padding:13px 16px;display:flex;flex-direction:column;gap:7px}
+.rule .hd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px;font-weight:640}
+.rule .meta{font-size:12px;color:var(--ink-dim);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.quote{margin:0;font-size:13.5px;line-height:1.55;color:var(--ink);
+  border-left:2px solid var(--rule);padding-left:12px;max-width:80ch}
+.quote .who{display:block;font-size:11px;color:var(--ink-dim);margin-top:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.06em}
+.proj{display:flex;flex-direction:column;gap:14px;padding-top:6px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;
+      padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.card h4{margin:0;font-size:13.5px;font-weight:640}
+.card p{margin:0;font-size:13px;color:var(--ink-dim);max-width:78ch}
+td.wide{white-space:normal;min-width:300px;max-width:460px;color:var(--ink-dim);
+        font-size:12.5px;line-height:1.5}
+footer{color:var(--ink-dim);font-size:12.5px;border-top:1px solid var(--rule);
+       padding-top:16px;display:flex;flex-direction:column;gap:6px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+     background:var(--surface-2);padding:1px 5px;border-radius:4px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:640px){
+  .wrap{padding:26px 14px 56px;gap:28px}
+  h1{font-size:22px}
+}
+</style>
+<div class="wrap">
+<header>
+<span class="eyebrow">LIDAR · enforcement arm</span>
+<h1>Where our datasheet rules would bite: a scan of higher-level projects</h1>
+<p class="sub">20 open-source embedded projects read against constraints extracted from their chips' reference manuals. This is a <b>static</b> survey &mdash; each project's own Rust source is parsed for hardware register accesses and cross-referenced. Nothing is compiled.</p>
+</header>
+<section><h2>Across all projects</h2>
+<div class="row">
+<div class="stat"><span class="k">projects</span><span class="v">20</span></div>
+<div class="stat"><span class="k">register accesses</span><span class="v">5794</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">115</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">48</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">67</span></div>
+</div>
+<p class="note"><b>A hit is a candidate, not a bug.</b> <i>unchecked</i> means no precondition field is referenced before the access; <i>corroborated</i> means the project already performs the datasheet-prescribed check nearby. Guards factored into a same-file helper are followed one level, both the wrap-in-a-closure idiom and a plain call beforehand; deeper chains still read as unchecked.</p>
+</section>
+<section><h2>Summary</h2>
+<div class="scroll"><table><thead><tr><th class="pin">project</th><th>how it reaches the chip</th><th>manuals</th><th>files</th><th>accesses</th><th>candidates</th><th>unchecked</th><th>corroborated</th><th>build-readiness</th></tr></thead><tbody>
+<tr><td class="pin"><a href="#tock">tock</a></td><td class="dim">hand-written register maps</td><td class="mono dim">rm0368, rm0402, rm0390, rm0316</td><td class="num">45</td><td class="num">1203</td><td class="num lead">51</td><td class="num">23</td><td class="num">28</td><td><span class="pill none">not-applicable</span></td></tr>
+<tr><td class="pin"><a href="#hubris">hubris</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0316, rm0090, rm0433, rm0444, rm0454</td><td class="num">276</td><td class="num">677</td><td class="num lead">22</td><td class="num">11</td><td class="num">11</td><td><span class="pill warn">pac-gap</span></td></tr>
+<tr><td class="pin"><a href="#embassy">embassy</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490</td><td class="num">249</td><td class="num">3136</td><td class="num lead">16</td><td class="num">8</td><td class="num">8</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#bxcan">bxcan</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008</td><td class="num">35</td><td class="num">65</td><td class="num lead">11</td><td class="num">0</td><td class="num">11</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#fdcan">fdcan</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0440, rm0433</td><td class="num">88</td><td class="num">73</td><td class="num lead">7</td><td class="num">3</td><td class="num">4</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#stm32f7-discovery">stm32f7-discovery</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0385</td><td class="num">33</td><td class="num">288</td><td class="num lead">4</td><td class="num">2</td><td class="num">2</td><td><span class="pill warn">pac-gap</span></td></tr>
+<tr><td class="pin"><a href="#anne-key">anne-key</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0038</td><td class="num">22</td><td class="num">91</td><td class="num lead">3</td><td class="num">0</td><td class="num">3</td><td><span class="pill warn">pac-gap</span></td></tr>
+<tr><td class="pin"><a href="#loadstone">loadstone</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0402</td><td class="num">25</td><td class="num">8</td><td class="num lead">1</td><td class="num">1</td><td class="num">0</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#blethrs">blethrs</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0090</td><td class="num">6</td><td class="num">85</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">pac-gap</span></td></tr>
+<tr><td class="pin"><a href="#booster">booster</a></td><td class="dim">everything through a driver</td><td class="mono dim">rm0090</td><td class="num">35</td><td class="num">0</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">hal-bump</span></td></tr>
+<tr><td class="pin"><a href="#keyboard-labs">keyboard-labs</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0368</td><td class="num">53</td><td class="num">2</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#lilos">lilos</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0090, rm0433, rm0444</td><td class="num">26</td><td class="num">10</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#px4flow_bsp">px4flow_bsp</a></td><td class="dim">everything through a driver</td><td class="mono dim">rm0090</td><td class="num">5</td><td class="num">0</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">hal-bump</span></td></tr>
+<tr><td class="pin"><a href="#stm32-eth">stm32-eth</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0090, rm0386, rm0390</td><td class="num">19</td><td class="num">104</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">hal-bump</span></td></tr>
+<tr><td class="pin"><a href="#stm32-fmc">stm32-fmc</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0433</td><td class="num">18</td><td class="num">0</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#stm32-usbd">stm32-usbd</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008</td><td class="num">16</td><td class="num">30</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#stm32f103xx-usb">stm32f103xx-usb</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008</td><td class="num">4</td><td class="num">21</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#stm32f3-discovery">stm32f3-discovery</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0316</td><td class="num">5</td><td class="num">1</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill ok">ready</span></td></tr>
+<tr><td class="pin"><a href="#stm32f407g-disc">stm32f407g-disc</a></td><td class="dim">everything through a driver</td><td class="mono dim">rm0090</td><td class="num">4</td><td class="num">0</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">hal-bump</span></td></tr>
+<tr><td class="pin"><a href="#stm32f469i-disc">stm32f469i-disc</a></td><td class="dim">everything through a driver</td><td class="mono dim">rm0386</td><td class="num">4</td><td class="num">0</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">hal-bump</span></td></tr>
+</tbody></table></div>
+<p class="note"><code>ready</code> already on a driver version that pairs with our chip crate &middot; <code>hal-bump</code> needs the driver bumped, then a four-line patch &middot; <code>pac-gap</code> pins a chip-crate generation the injector does not target &middot; <code>not-applicable</code> no chip crate to inject into.</p>
+</section>
+<section><h2>Project by project</h2>
+<section id="tock">
+<h3><a href="https://github.com/tock/tock">tock</a><span class="sm">hand-written register maps · rm0368, rm0402, rm0390, rm0316</span></h3>
+<p class="note">tock-registers, not svd2rust. Scan-only by construction.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">45</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">1203</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">108</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">144</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">51</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">23</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">28</span></div>
+</div>
+<p class="note"><span class="pill none">not-applicable</span> &nbsp;no chip crate to inject into &mdash; hand-written register maps; no PAC to inject into</p>
+<div class="rule">
+<div class="hd">spi/cr1 <span class="dim">&mdash; 17 sites</span></div>
+<div class="meta">state_gate · write · requires SPI_CR1.SPE cleared · fields restricted: whole register</div>
+<p class="quote">Note: This bit should be written only when SPI is disabled (SPE = ‘0’) for correct operation.<span class="who">rm0368</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f4xx/src/spi.rs:234</td><td class="mono">modify</td><td class="mono dim">spe</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/spi.rs:236</td><td class="mono">modify</td><td class="mono dim">cpol, spe</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/spi.rs:243</td><td class="mono">modify</td><td class="mono dim">cpol</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/spi.rs:244</td><td class="mono">modify</td><td class="mono dim">cpol</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/spi.rs:260</td><td class="mono">modify</td><td class="mono dim">cpha</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/spi.rs:261</td><td class="mono">modify</td><td class="mono dim">cpha</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/spi.rs:350</td><td class="mono">modify</td><td class="mono dim">bidimode, dff, mstr, spe, ssi, ssm</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on SPE</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/spi.rs:415</td><td class="mono">modify</td><td class="mono dim">br</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/spi.rs:419</td><td class="mono">modify</td><td class="mono dim">br</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/spi.rs:310</td><td class="mono">modify</td><td class="mono dim">spe</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/spi.rs:312</td><td class="mono">modify</td><td class="mono dim">cpol, spe</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/spi.rs:319</td><td class="mono">modify</td><td class="mono dim">cpol</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/spi.rs:320</td><td class="mono">modify</td><td class="mono dim">cpol</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/spi.rs:336</td><td class="mono">modify</td><td class="mono dim">cpha</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/spi.rs:337</td><td class="mono">modify</td><td class="mono dim">cpha</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/spi.rs:424</td><td class="mono">modify</td><td class="mono dim">bidimode, bsy, mstr, spe, ssi, ssm</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on SPE</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/spi.rs:490</td><td class="mono">modify</td><td class="mono dim">br</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_cr</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">i2c/cr1 <span class="dim">&mdash; 11 sites</span></div>
+<div class="meta">state_gate · write · requires I2C_CR1.STOP cleared, I2C_CR1.START cleared, I2C_CR1.PEC cleared · fields restricted: whole register</div>
+<p class="quote">When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware.<span class="who">rm0402</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:311</td><td class="mono">modify</td><td class="mono dim">stop</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:325</td><td class="mono">modify</td><td class="mono dim">stop</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in stop</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:334</td><td class="mono">modify</td><td class="mono dim">stop</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in stop</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:353</td><td class="mono">modify</td><td class="mono dim">stop</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in stop, start_read</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:385</td><td class="mono">modify</td><td class="mono dim">ack, itbufen, iterren, itevten, start</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PEC/START/STOP</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:386</td><td class="mono">modify</td><td class="mono dim">ack, itbufen, iterren, itevten, start</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:393</td><td class="mono">modify</td><td class="mono dim">ack, itbufen, iterren, itevten</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PEC/START/STOP</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:402</td><td class="mono">modify</td><td class="mono dim">ack, start</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PEC/START/STOP</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:403</td><td class="mono">modify</td><td class="mono dim">pe, start</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:412</td><td class="mono">modify</td><td class="mono dim">pe</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PEC/START/STOP</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:415</td><td class="mono">modify</td><td class="mono dim">pe</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PEC/START/STOP</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">rcc/pllcfgr <span class="dim">&mdash; 6 sites</span></div>
+<div class="meta">state_gate · write · requires RCC_CR.PLLON cleared · fields restricted: pllr, pllq, pllsrc, pllp, plln, pllm</div>
+<p class="quote">These bits should be written only if PLL is disabled.<span class="who">rm0402</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:882</td><td class="mono">modify</td><td class="mono dim">d, pllm, pllsrc</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PLLON</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:895</td><td class="mono">modify</td><td class="mono dim">pllm, plln</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PLLON</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:904</td><td class="mono">modify</td><td class="mono dim">d, plln, pllp</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PLLON</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:918</td><td class="mono">modify</td><td class="mono dim">d, pllp, pllq</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PLLON</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:936</td><td class="mono">modify</td><td class="mono dim">hpre, pllq</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PLLON</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:1029</td><td class="mono">modify</td><td class="mono dim">i2c1en, pllon, pllq</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PLLON</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">rcc/bdcr <span class="dim">&mdash; 4 sites</span></div>
+<div class="meta">state_gate · write · requires PWR_CR.DBP set · fields restricted: lseon, lsebyp, rtcsel, rtcen</div>
+<p class="quote">The LSEON, LSEBYP, RTCSEL and RTCEN bits in the RCC Backup domain control register (RCC_BDCR) are in the Backup domain. As a result, after Reset, these bits are write-protected and the DBP bit in the PWR power control register (PWR_CR) has to be set before these can be modified.<span class="who">rm0368</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:1403</td><td class="mono">modify</td><td class="mono dim">rtcen, rtcsel</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in enable_lsi_clock</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:1406</td><td class="mono">modify</td><td class="mono dim">rtcen, rtcsel</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in enable_lsi_clock</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:1410</td><td class="mono">modify</td><td class="mono dim">rtcen, rtcsel</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on DBP</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/rcc.rs:1411</td><td class="mono">modify</td><td class="mono dim">rtcsel</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on DBP</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">i2c/ccr <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires I2C_CR1.PE cleared · fields restricted: whole register</div>
+<p class="quote">The CCR register must be configured only when the I2C is disabled (PE = 0).<span class="who">rm0368</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:245</td><td class="mono">modify</td><td class="mono dim">ccr, fs, trise</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in disable</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:253</td><td class="mono">modify</td><td class="mono dim">ccr, fs, trise</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in disable</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">i2c/trise <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires I2C_CR1.PE cleared · fields restricted: whole register</div>
+<p class="quote">TRISE[5:0] must be configured only when the I2C is disabled (PE = 0).<span class="who">rm0368</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:248</td><td class="mono">modify</td><td class="mono dim">ccr, fs, trise</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in disable</td></tr>
+<tr><td class="pin">chips/stm32f4xx/src/i2c.rs:256</td><td class="mono">modify</td><td class="mono dim">trise</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in disable</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc/cfgr <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires ADC1_CR.ADSTART cleared, ADC1_CR.JADSTART cleared · fields restricted: whole register</div>
+<p class="quote">Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing).<span class="who">rm0316</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f303xc/src/adc.rs:569</td><td class="mono">modify</td><td class="mono dim">adrdy, adrdyie, ovrmod</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in enable_clock</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/adc.rs:707</td><td class="mono">modify</td><td class="mono dim">cont</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART/JADSTART</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">usart/tdr <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires USART_ISR.TXE set · fields restricted: whole register</div>
+<p class="quote">Note: This register must be written only when TXE=1.<span class="who">rm0316</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f303xc/src/usart.rs:386</td><td class="mono">write</td><td class="mono dim">txeie</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/usart.rs:417</td><td class="mono">write</td><td class="mono dim">—</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in disable_transmit_interrupt</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">usart/brr <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires USART_CR1.UE cleared · fields restricted: whole register</div>
+<p class="quote">This register can only be written when the USART is disabled (UE=0).<span class="who">rm0316</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f303xc/src/usart.rs:594</td><td class="mono">modify</td><td class="mono dim">div_f, div_m, re, te</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on UE</td></tr>
+<tr><td class="pin">chips/stm32f303xc/src/usart.rs:595</td><td class="mono">modify</td><td class="mono dim">div_m, re, te, ue</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on UE</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc/cr2 <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires ADC_CR2.ADON set · fields restricted: swstart</div>
+<p class="quote">Note: This bit can be set only when ADON = 1 otherwise no conversion is launched.<span class="who">rm0368</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f4xx/src/adc.rs:403</td><td class="mono">modify</td><td class="mono dim">swstart</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in enable, enable_temperature</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc/smpr2 <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires ADC1_CR.ADSTART cleared, ADC1_CR.JADSTART cleared · fields restricted: whole register</div>
+<p class="quote">Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing).<span class="who">rm0316</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f303xc/src/adc.rs:650</td><td class="mono">modify</td><td class="mono dim">eocie, eosie, l, smp16, sq1</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in enable_special_channels</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">i2c/txdr <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires I2C_ISR.TXE set · fields restricted: whole register</div>
+<p class="quote">These bits can be written only when TXE = 1.<span class="who">rm0316</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">chips/stm32f303xc/src/i2c.rs:343</td><td class="mono">write</td><td class="mono dim">r, txdata</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on TXE</td></tr>
+</tbody></table></div></div>
+</section>
+<section id="hubris">
+<h3><a href="https://github.com/oxidecomputer/hubris">hubris</a><span class="sm">talks to the chip crate directly · rm0316, rm0090, rm0433, rm0444, rm0454</span></h3>
+<p class="note">Oxide service processor. 23 STM32 driver crates; also uses stm32f3/stm32g0/stm32h7 directly.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">276</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">677</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">253</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">411</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">22</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">11</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">11</span></div>
+</div>
+<p class="note"><span class="pill warn">pac-gap</span> &nbsp;stm32h7 0.16.0 &mdash; pins stm32h7 0.14, injector targets 0.16.0</p>
+<div class="rule">
+<div class="hd">usart/cr1 <span class="dim">&mdash; 9 sites</span></div>
+<div class="meta">state_gate · write · requires USART_CR1.UE cleared · fields restricted: fifoen, m1</div>
+<p class="quote">This bitfield can only be written when the USART is disabled (UE = 0).<span class="who">rm0433</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">drv/stm32h7-usart/src/lib.rs:72</td><td class="mono">write</td><td class="mono dim">brr, fifoen, te</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">drv/stm32h7-usart/src/lib.rs:79</td><td class="mono">modify</td><td class="mono dim">te</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">drv/stm32h7-usart/src/lib.rs:92</td><td class="mono">modify</td><td class="mono dim">rxneie</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">drv/stm32h7-usart/src/lib.rs:135</td><td class="mono">modify</td><td class="mono dim">rxneie</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on UE</td></tr>
+<tr><td class="pin">drv/stm32h7-usart/src/lib.rs:139</td><td class="mono">modify</td><td class="mono dim">rxneie, txftie</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on UE</td></tr>
+<tr><td class="pin">drv/stm32g0-usart/src/main.rs:75</td><td class="mono">write</td><td class="mono dim">brr, te, ue</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">drv/stm32g0-usart/src/main.rs:76</td><td class="mono">modify</td><td class="mono dim">brr, te, ue</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">drv/stm32g0-usart/src/main.rs:158</td><td class="mono">modify</td><td class="mono dim">txeie</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">drv/stm32g0-usart/src/main.rs:210</td><td class="mono">modify</td><td class="mono dim">txeie</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on UE</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">usart/brr <span class="dim">&mdash; 5 sites</span></div>
+<div class="meta">state_gate · write · requires USART_CR1.UE cleared · fields restricted: brr</div>
+<p class="quote">This register can only be written when the USART is disabled (UE = 0).<span class="who">rm0433</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">drv/stm32h7-usart/src/lib.rs:76</td><td class="mono">write</td><td class="mono dim">brr, te</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">drv/stm32g0-usart/src/main.rs:74</td><td class="mono">write</td><td class="mono dim">bits, brr, te, ue</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on UE</td></tr>
+<tr><td class="pin">drv/stm32g0-usart/src/main.rs:82</td><td class="mono">write</td><td class="mono dim">brr, te, ue</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">drv/stm32fx-usart/src/main.rs:74</td><td class="mono">write</td><td class="mono dim">brr, div_mantissa</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">drv/stm32fx-usart/src/main.rs:81</td><td class="mono">write</td><td class="mono dim">div_mantissa, te</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">i2c/txdr <span class="dim">&mdash; 4 sites</span></div>
+<div class="meta">state_gate · write · requires I2C_ISR.TXE set · fields restricted: whole register</div>
+<p class="quote">Note: These bits can be written only when TXE = 1.<span class="who">rm0433</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">drv/stm32xx-i2c/src/lib.rs:658</td><td class="mono">write</td><td class="mono dim">txdata</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in wait_until_notbusy, check_errors, wfi</td></tr>
+<tr><td class="pin">drv/stm32xx-i2c/src/lib.rs:1143</td><td class="mono">write</td><td class="mono dim">txdata</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on TXE</td></tr>
+<tr><td class="pin">drv/stm32xx-i2c/src/lib.rs:1159</td><td class="mono">write</td><td class="mono dim">txdata</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on TXE</td></tr>
+<tr><td class="pin">drv/stm32xx-i2c/src/lib.rs:1164</td><td class="mono">write</td><td class="mono dim">txdata, txie</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on TXE</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">rcc/pll1divr <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires RCC_CR.PLL1ON cleared, RCC_CR.PLL1RDY cleared · fields restricted: whole register</div>
+<p class="quote">These bits can be written only when the PLL1 is disabled (PLL1ON = ‘0’ and PLL1RDY = ‘0’).<span class="who">rm0433</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">drv/stm32h7-startup/src/lib.rs:266</td><td class="mono">modify</td><td class="mono dim">divn1</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PLL1ON/PLL1RDY</td></tr>
+<tr><td class="pin">drv/stm32h7-startup/src/lib.rs:291</td><td class="mono">write</td><td class="mono dim">divp1</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PLL1ON/PLL1RDY</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">usart/tdr <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires USART_CR1.TE set · fields restricted: whole register</div>
+<p class="quote">_Note:_ _The TE bit must be set before writing the data to be transmitted to the USART_TDR._<span class="who">rm0444</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">drv/stm32g0-usart/src/main.rs:222</td><td class="mono">write</td><td class="mono dim">tdr</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on TE</td></tr>
+<tr><td class="pin">drv/stm32fx-usart/src/main.rs:252</td><td class="mono">write</td><td class="mono dim">dr, tdr</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on TXE</td></tr>
+</tbody></table></div></div>
+</section>
+<section id="embassy">
+<h3><a href="https://github.com/embassy-rs/embassy">embassy</a><span class="sm">talks to the chip crate directly · rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490</span></h3>
+<p class="note">Async embedded framework; embassy-stm32 alone carries 4,049 register accesses, more than Tock and Hubris combined. Uses stm32-metapac, so field writes are `w.set_ff(true)` rather than `w.ff().set_bit()`. Only the paths whose family is named in the layout are scanned.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">249</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">3136</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">714</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">3012</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">16</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">8</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">8</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32f4 0.16.0 &mdash; none</p>
+<div class="rule">
+<div class="hd">rcc/cr <span class="dim">&mdash; 4 sites</span></div>
+<div class="meta">state_gate · write · requires RCC_CR.HSEON cleared · fields restricted: hsebyp</div>
+<p class="quote">The HSEBYP bit can be written only if the HSE oscillator is disabled.<span class="who">rm0440</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">embassy-stm32/src/rcc/g4.rs:144</td><td class="mono">modify</td><td class="mono dim">hsebyp, hseon, set_hsebyp, set_hseon</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">embassy-stm32/src/rcc/g4.rs:153</td><td class="mono">modify</td><td class="mono dim">hsebyp, hseon, set_hsebyp, set_hseon</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">embassy-stm32/src/rcc/f013.rs:196</td><td class="mono">modify</td><td class="mono dim">hsebyp, hseon, set_hsebyp, set_hseon</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">embassy-stm32/src/rcc/f013.rs:205</td><td class="mono">modify</td><td class="mono dim">hsebyp, hseon, set_hsebyp, set_hseon</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">flash/acr <span class="dim">&mdash; 4 sites</span></div>
+<div class="meta">state_gate · write · requires FLASH_ACR.ACC64 set · fields restricted: latency</div>
+<p class="quote">Latency can be set only when ACC64 is set.<span class="who">rm0038</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">embassy-stm32/src/rcc/l.rs:206</td><td class="mono">modify</td><td class="mono dim">latency, set_latency, set_vos, vos</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ACC64</td></tr>
+<tr><td class="pin">embassy-stm32/src/rcc/l.rs:403</td><td class="mono">write</td><td class="mono dim">acc64, hpre, latency, ppre, prften, set_acc64, set_hpre, set_latency, set_ppre, set_prften, set_sw, sw</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">embassy-stm32/src/rcc/l.rs:405</td><td class="mono">modify</td><td class="mono dim">hpre, latency, ppre, prften, set_hpre, set_latency, set_ppre, set_prften, set_sw, sw</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">embassy-stm32/src/rcc/l.rs:410</td><td class="mono">modify</td><td class="mono dim">hpre, ppre, ppre1, ppre2, prften, set_hpre, set_ppre, set_ppre1, set_ppre2, set_prften, set_sw, sw</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">pwr/cr1 <span class="dim">&mdash; 3 sites</span></div>
+<div class="meta">state_gate · write · requires PWR_CSR1.ODRDY set · fields restricted: odswen</div>
+<p class="quote">The ODSWEN bit must only be set when the ODRDY flag is set to switch to Over‑drive mode.<span class="who">rm0385</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">embassy-stm32/src/rcc/f247.rs:168</td><td class="mono">modify</td><td class="mono dim">oden, odswen, set_oden, set_odswen, set_vos, vos</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ODRDY</td></tr>
+<tr><td class="pin">embassy-stm32/src/rcc/f247.rs:174</td><td class="mono">modify</td><td class="mono dim">hsion, oden, odswen, set_hsion, set_oden, set_odswen, set_sw, sw</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ODRDY</td></tr>
+<tr><td class="pin">embassy-stm32/src/rcc/f247.rs:177</td><td class="mono">modify</td><td class="mono dim">hsion, odswen, set_hsion, set_odswen, set_sw, sw</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">flash/optcr <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires FLASH_NSSR.BSY cleared · fields restricted: whole register</div>
+<p class="quote">The FLASH_NS/SECCR, FLASH_OPTCR and FLASH_NS/SECOBKCFGR registers are not accessible in write mode when the BSY bit is set. Any attempt to write these registers while the BSY bit is set causes the AHB bus to stall until SEC/NSBSY bit is cleared.<span class="who">rm0481</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">embassy-stm32/src/rcc/h.rs:785</td><td class="mono">modify</td><td class="mono dim">octo1_hslv, octo2_hslv, pg_opt, set_octo1_hslv, set_octo2_hslv, set_pg_opt</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on BSY</td></tr>
+<tr><td class="pin">embassy-stm32/src/rcc/h.rs:801</td><td class="mono">modify</td><td class="mono dim">iohslv, octo1_iohslv, octo2_iohslv, optlock, pg_opt, set_iohslv, set_octo1_iohslv, set_octo2_iohslv, set_optlock, set_pg_opt</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on BSY</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">rcc/pllsaicfgr <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires RCC_CR.PLLSAION cleared · fields restricted: pllsair, pllsaiq, pllsain</div>
+<p class="quote">These bits should be written when the PLLSAI is disabled.<span class="who">rm0090</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">embassy-stm32/src/rcc/f247.rs:510</td><td class="mono">write</td><td class="mono dim">—</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on PLLSAION</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">syscfg/cccsr <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires SYSCFG_UR17.IO_HSLV set · fields restricted: hslv</div>
+<p class="quote">This bit is active only if IO_HSLV user option bit is set. It must be used only if the product supply voltage is below 2.7 V. Setting this bit when V DD is higher than 2.7 V might be destructive.<span class="who">rm0433</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">embassy-stm32/src/rcc/h.rs:756</td><td class="mono">modify</td><td class="mono dim">cs, en, hslv, set_cs, set_en, set_hslv</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on IO_HSLV</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">i2c/txdr <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires I2C_ISR.TXE set · fields restricted: whole register</div>
+<p class="quote">These bits can be written only when TXE = 1.<span class="who">rm0091</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">embassy-stm32/src/i2c/v2.rs:904</td><td class="mono">write</td><td class="mono dim">set_txdata, txdata</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in write, write_internal, master_stop, wait_txis</td></tr>
+</tbody></table></div></div>
+</section>
+<section id="bxcan">
+<h3><a href="https://github.com/stm32-rs/bxcan">bxcan</a><span class="sm">talks to the chip crate directly · rm0008</span></h3>
+<p class="note">bxCAN driver. The filter-init FINIT rule is the constraint behind the BitReader shape bug.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">35</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">65</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">24</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">33</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">11</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">11</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32f1 0.16.0 &mdash; none</p>
+<div class="rule">
+<div class="hd">can/btr <span class="dim">&mdash; 5 sites</span></div>
+<div class="meta">state_gate · write · requires CAN_MCR.INRQ set · fields restricted: whole register</div>
+<p class="quote">This register can only be accessed by the software when the CAN hardware is in initialization mode.<span class="who">rm0008</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/lib.rs:329</td><td class="mono">modify</td><td class="mono dim">lbkm, silm</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by CanConfig, released in its Drop</td></tr>
+<tr><td class="pin">src/lib.rs:336</td><td class="mono">modify</td><td class="mono dim">silm</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by CanConfig, released in its Drop</td></tr>
+<tr><td class="pin">src/lib.rs:428</td><td class="mono">modify</td><td class="mono dim">lbkm, silm</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by CanConfig, released in its Drop</td></tr>
+<tr><td class="pin">src/lib.rs:435</td><td class="mono">modify</td><td class="mono dim">silm</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by CanConfig, released in its Drop</td></tr>
+<tr><td class="pin">src/lib.rs:532</td><td class="mono">modify</td><td class="mono dim">bits</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by CanConfig, released in its Drop</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">can/fa1r <span class="dim">&mdash; 3 sites</span></div>
+<div class="meta">state_gate · write · requires CAN_FMR.FINIT set · fields restricted: whole register</div>
+<p class="quote">This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register.<span class="who">rm0008</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/filter.rs:404</td><td class="mono">modify</td><td class="mono dim">bits</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by MasterFilters, released in its Drop</td></tr>
+<tr><td class="pin">src/filter.rs:420</td><td class="mono">modify</td><td class="mono dim">bits</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by MasterFilters, released in its Drop</td></tr>
+<tr><td class="pin">src/filter.rs:487</td><td class="mono">modify</td><td class="mono dim">bits</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by MasterFilters, released in its Drop</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">can/fm1r <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires CAN_FMR.FINIT equals · fields restricted: whole register</div>
+<p class="quote">This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register.<span class="who">rm0008</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/filter.rs:428</td><td class="mono">modify</td><td class="mono dim">bits</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by MasterFilters, released in its Drop</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">can/fs1r <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires CAN_FMR.FINIT equals · fields restricted: whole register</div>
+<p class="quote">This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register.<span class="who">rm0008</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/filter.rs:440</td><td class="mono">modify</td><td class="mono dim">bits</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by MasterFilters, released in its Drop</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">can/ffa1r <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires CAN_FMR.FINIT set · fields restricted: whole register</div>
+<p class="quote">This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register.<span class="who">rm0008</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/filter.rs:475</td><td class="mono">modify</td><td class="mono dim">bits</td><td><span class="pill ok">corroborated</span></td><td class="wide">held open by MasterFilters, released in its Drop</td></tr>
+</tbody></table></div></div>
+</section>
+<section id="fdcan">
+<h3><a href="https://github.com/stm32-rs/fdcan">fdcan</a><span class="sm">talks to the chip crate directly · rm0440, rm0433</span></h3>
+<p class="note">FDCAN driver carrying its OWN vendored svd2rust register module (src/pac). RM0440&#x27;s CCE rule is the one whose multi-line quote broke our emitter.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">88</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">73</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">29</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">380</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">7</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">3</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">4</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32g4 0.16.0 &mdash; none</p>
+<div class="rule">
+<div class="hd">can/test <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires FDCAN_CCCR.TEST set · fields restricted: whole register</div>
+<p class="quote">Write access to this register is enabled by setting the TEST bit of the FDCAN_CCCR register.<span class="who">rm0440</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/lib.rs:344</td><td class="mono">modify</td><td class="mono dim">lbck, mon</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_test_mode, set_bus_monitoring_mode, registers</td></tr>
+<tr><td class="pin">src/lib.rs:1000</td><td class="mono">modify</td><td class="mono dim">tx</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in registers</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">can/txbc <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires FDCAN_CCCR.INIT set, FDCAN_CCCR.CCE set · fields restricted: tfqm</div>
+<p class="quote">This bit is write-protected (P), which means that write access is possible only when the CCE and INIT bits of the FDCAN_CCCR register are both set.<span class="who">rm0440</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/lib.rs:585</td><td class="mono">write</td><td class="mono dim">lss, tfqm</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_power_down_mode, enter_init_mode, reset_msg_ram, registers</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">can/rxgfc <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires FDCAN_CCCR.CCE set, FDCAN_CCCR.INIT set · fields restricted: lse, lss, f1om, f0om, anfs, anfe, rrfs, rrfe</div>
+<p class="quote">This bitfield is write-protected (P), which means that write access is possible only when the CCE and INIT bits of the FDCAN_CCCR register are both set.<span class="who">rm0440</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/lib.rs:593</td><td class="mono">modify</td><td class="mono dim">lss</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_power_down_mode, enter_init_mode, reset_msg_ram, registers</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">can/xidfc <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires FDCAN_CCCR.CCE set, FDCAN_CCCR.INIT set · fields restricted: whole register</div>
+<p class="quote">These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1.<span class="who">rm0433</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/lib.rs:605</td><td class="mono">modify</td><td class="mono dim">lse</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in set_power_down_mode, enter_init_mode, reset_msg_ram, registers</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">can/nbtp <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires FDCAN_CCCR.CCE set, FDCAN_CCCR.INIT set · fields restricted: whole register</div>
+<p class="quote">These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1.<span class="who">rm0433</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/lib.rs:739</td><td class="mono">write</td><td class="mono dim">nbrp</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in registers</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">can/dbtp <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires FDCAN_CCCR.CCE set, FDCAN_CCCR.INIT set · fields restricted: whole register</div>
+<p class="quote">This register is only writable if the CCE and INIT bits of the FDCAN_CCCR are set.<span class="who">rm0440</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/lib.rs:758</td><td class="mono">write</td><td class="mono dim">dbrp</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in registers</td></tr>
+</tbody></table></div></div>
+</section>
+<section id="stm32f7-discovery">
+<h3><a href="https://github.com/embed-rs/stm32f7-discovery">stm32f7-discovery</a><span class="sm">talks to the chip crate directly · rm0385</span></h3>
+<p class="note">Board framework with its own SD, Ethernet and LCD drivers; 261 register accesses, the densest project scanned.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">33</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">288</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">150</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">66</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">4</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">2</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">2</span></div>
+</div>
+<p class="note"><span class="pill warn">pac-gap</span> &nbsp;stm32f7 0.16.0 &mdash; pins stm32f7 0.7, injector targets 0.16.0</p>
+<div class="rule">
+<div class="hd">pwr/cr1 <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires PWR_CSR1.ODRDY set · fields restricted: odswen</div>
+<p class="quote">The ODSWEN bit must only be set when the ODRDY flag is set to switch to Over‑drive mode.<span class="who">rm0385</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/init/mod.rs:66</td><td class="mono">modify</td><td class="mono dim">latency, oden, odswen</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ODRDY</td></tr>
+<tr><td class="pin">src/init/mod.rs:69</td><td class="mono">modify</td><td class="mono dim">latency, odswen</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">i2c/oar2 <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires I2C_OAR2.OA2EN cleared · fields restricted: whole register</div>
+<p class="quote">These bits can be written only when OA2EN = 0.<span class="who">rm0385</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/i2c.rs:468</td><td class="mono">modify</td><td class="mono dim">gcen, nostretch, oa2en, pe</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on OA2EN</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">rcc/pllcfgr <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires RCC_CR.PLLON cleared · fields restricted: pllq</div>
+<p class="quote">These bits should be written only if PLL is disabled.<span class="who">rm0385</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/init/mod.rs:49</td><td class="mono">modify</td><td class="mono dim">pllm, plln, pllp, pllq, pllsrc</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+</tbody></table></div></div>
+</section>
+<section id="anne-key">
+<h3><a href="https://github.com/ah-/anne-key">anne-key</a><span class="sm">talks to the chip crate directly · rm0038</span></h3>
+<p class="note">Keyboard firmware on stm32l1 with no HAL layer.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">22</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">91</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">30</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">31</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">3</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">3</span></div>
+</div>
+<p class="note"><span class="pill warn">pac-gap</span> &nbsp;stm32l1 0.16.0 &mdash; pins stm32l1 0.11.0, injector targets 0.16.0</p>
+<div class="rule">
+<div class="hd">flash/acr <span class="dim">&mdash; 3 sites</span></div>
+<div class="meta">state_gate · write · requires FLASH_ACR.ACC64 set · fields restricted: prften</div>
+<p class="quote">Prefetch can be enabled only when ACC64 is set.<span class="who">rm0038</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/clock.rs:6</td><td class="mono">modify</td><td class="mono dim">acc64, hseon, latency, lprun, prften, pwren, syscfgen</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">src/clock.rs:7</td><td class="mono">modify</td><td class="mono dim">hseon, latency, lprun, prften, pwren, syscfgen, vos</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+<tr><td class="pin">src/clock.rs:8</td><td class="mono">modify</td><td class="mono dim">hseon, latency, lprun, pwren, syscfgen, vos</td><td><span class="pill ok">corroborated</span></td><td class="wide">check precedes the access</td></tr>
+</tbody></table></div></div>
+</section>
+<section id="loadstone">
+<h3><a href="https://github.com/absw/loadstone">loadstone</a><span class="sm">talks to the chip crate directly · rm0402</span></h3>
+<p class="note">Secure bootloader; F412 port plus a non-ST port.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">25</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">8</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">6</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">39</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">1</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">1</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32f4 0.16.0 &mdash; none</p>
+<div class="rule">
+<div class="hd">pwr/csr <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires PWR_CR.DBP set · fields restricted: bre</div>
+<p class="quote">The DBP bit of PWR_CR register must be set to 1 before PWR_CSR.BRE can be written.<span class="who">rm0402</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">src/ports/stm32f412/update_signal.rs:49</td><td class="mono">modify</td><td class="mono dim">bre, dbp, rtcen</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on DBP</td></tr>
+</tbody></table></div></div>
+</section>
+<section id="blethrs">
+<h3><a href="https://github.com/AirborneEngineering/blethrs">blethrs</a><span class="sm">talks to the chip crate directly · rm0090</span></h3>
+<p class="note">Ethernet bootloader on F407, stm32f4 PAC with no HAL. 85 register accesses in 7 files.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">6</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">85</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">47</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">66</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill warn">pac-gap</span> &nbsp;stm32f4 0.16.0 &mdash; pins stm32f4 0.11, injector targets 0.16.0</p>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="booster">
+<h3><a href="https://github.com/quartiq/booster">booster</a><span class="sm">everything through a driver · rm0090</span></h3>
+<p class="note">RF power amplifier firmware. F407 = RM0090, now in the corpus.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">35</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">0</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">0</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">0</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill warn">hal-bump</span> &nbsp;stm32f4 0.16.0 &mdash; stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)</p>
+<div class="card">
+<h4>Traced through the driver</h4>
+<p>Its own source touches no registers, so the question is whether a rule survives the driver. Of the driver entry points it calls that reach a gated register, <b>0</b> are absorbed inside a single call and <b>3</b> would reach this application. Ambiguous method names, not claimed either way: <code>enable, erase, init</code>.</p>
+</div>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="keyboard-labs">
+<h3><a href="https://github.com/rgoulter/keyboard-labs">keyboard-labs</a><span class="sm">talks to the chip crate directly · rm0368</span></h3>
+<p class="note">Keyboard firmware on F401.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">53</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">2</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">2</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">26</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32f4 0.16.0 &mdash; none</p>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="lilos">
+<h3><a href="https://github.com/cbiffle/lilos">lilos</a><span class="sm">talks to the chip crate directly · rm0090, rm0433, rm0444</span></h3>
+<p class="note">Cliff Biffle&#x27;s async RTOS; examples drive three families.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">26</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">10</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">6</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">0</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32f4 0.16.0 &mdash; none</p>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="px4flow_bsp">
+<h3><a href="https://github.com/tstellanova/px4flow_bsp">px4flow_bsp</a><span class="sm">everything through a driver · rm0090</span></h3>
+<p class="note">Optical-flow sensor BSP; F407 = RM0090.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">5</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">0</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">0</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">0</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill warn">hal-bump</span> &nbsp;stm32f4 0.16.0 &mdash; stm32f4xx-hal ^0.8.3 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)</p>
+<div class="card">
+<h4>Traced through the driver</h4>
+<p>Its own source touches no registers, so the question is whether a rule survives the driver. Of the driver entry points it calls that reach a gated register, <b>0</b> are absorbed inside a single call and <b>0</b> would reach this application. Ambiguous method names, not claimed either way: <code>enable</code>.</p>
+</div>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="stm32-eth">
+<h3><a href="https://github.com/stm32-rs/stm32-eth">stm32-eth</a><span class="sm">talks to the chip crate directly · rm0090, rm0386, rm0390</span></h3>
+<p class="note">Ethernet MAC/DMA driver; programs ETH registers directly.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">19</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">104</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">37</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">228</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill warn">hal-bump</span> &nbsp;stm32f4 0.16.0 &mdash; stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)</p>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="stm32-fmc">
+<h3><a href="https://github.com/stm32-rs/stm32-fmc">stm32-fmc</a><span class="sm">talks to the chip crate directly · rm0433</span></h3>
+<p class="note">FMC/FSMC memory-controller driver (SDRAM init).</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">18</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">0</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">0</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">0</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32h7 0.16.0 &mdash; none</p>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="stm32-usbd">
+<h3><a href="https://github.com/stm32-rs/stm32-usbd">stm32-usbd</a><span class="sm">talks to the chip crate directly · rm0008</span></h3>
+<p class="note">usb-device implementation; drives the USB peripheral directly on F0/F1/F3/L0/L4/WB.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">16</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">30</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">7</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">33</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32f1 0.16.0 &mdash; none</p>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="stm32f103xx-usb">
+<h3><a href="https://github.com/mvirkkunen/stm32f103xx-usb">stm32f103xx-usb</a><span class="sm">talks to the chip crate directly · rm0008</span></h3>
+<p class="note">USB device stack for F103.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">4</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">21</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">6</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">33</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32f1 0.16.0 &mdash; none</p>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="stm32f3-discovery">
+<h3><a href="https://github.com/rubberduck203/stm32f3-discovery">stm32f3-discovery</a><span class="sm">talks to the chip crate directly · rm0316</span></h3>
+<p class="note">F3DISCOVERY board support.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">5</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">1</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">1</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">59</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill ok">ready</span> &nbsp;stm32f3 0.16.0 &mdash; none</p>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="stm32f407g-disc">
+<h3><a href="https://github.com/stm32-rs/stm32f407g-disc">stm32f407g-disc</a><span class="sm">everything through a driver · rm0090</span></h3>
+<p class="note">F4DISCOVERY board support; re-exports the HAL.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">4</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">0</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">0</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">0</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill warn">hal-bump</span> &nbsp;stm32f4 0.16.0 &mdash; stm32f4xx-hal ^0.14 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)</p>
+<p class="note dim">No candidate sites.</p>
+</section>
+<section id="stm32f469i-disc">
+<h3><a href="https://github.com/tegimeki/stm32f469i-disc">stm32f469i-disc</a><span class="sm">everything through a driver · rm0386</span></h3>
+<p class="note">ALREADY on the HAL version that pairs with PAC 0.16.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">4</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">0</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">0</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">0</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill warn">hal-bump</span> &nbsp;stm32f4 0.16.0 &mdash; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)</p>
+<div class="card">
+<h4>Traced through the driver</h4>
+<p>Its own source touches no registers, so the question is whether a rule survives the driver. Of the driver entry points it calls that reach a gated register, <b>0</b> are absorbed inside a single call and <b>0</b> would reach this application. Ambiguous method names, not claimed either way: <code>erase, init</code>.</p>
+</div>
+<p class="note dim">No candidate sites.</p>
+</section>
+</section>
+<section><h2>Looked at, not scanned</h2>
+<p class="note">Recorded because a project absent from a report is indistinguishable from one that scanned clean.</p>
+<div class="card">
+<h4><a href="https://github.com/ariel-os/ariel-os">ariel-os</a></h4>
+<p>Embedded OS, 362 Rust files, 7 register accesses. It delegates hardware access to Embassy, which is scanned directly instead.</p>
+</div>
+<div class="card">
+<h4><a href="https://github.com/drone-os/drone-stm32-map">drone-stm32-map</a></h4>
+<p>Drone OS&#x27;s STM32 register maps. 118 Rust files and ZERO register accesses: it generates maps through macros and ships no driver code, so there is nothing for a register scanner to read.</p>
+</div>
+<div class="card">
+<h4><a href="https://github.com/rtic-rs/rtic">rtic</a></h4>
+<p>Real-time concurrency framework. 267 files, 133 accesses -- but it is a scheduler, not a driver layer: the accesses are timer-monotonic code and some of it targets Silicon Labs parts, not ST.</p>
+</div>
+<div class="card">
+<h4><a href="https://github.com/nviennot/stm32-emulator">stm32-emulator</a></h4>
+<p>Emulates an STM32 rather than running on one: 28 files, 9 accesses. It MODELS register behaviour, which makes it a possible cross-check on our extracted rules -- a different experiment, not a scan target.</p>
+</div>
+<div class="card">
+<h4><a href="https://github.com/trezor/trezor-firmware">trezor-firmware</a></h4>
+<p>Hardware wallet. 491 Rust files but only 4 register accesses: the Rust portion is the UI layer and the drivers are C. Nothing for a register scanner to find.</p>
+</div>
+<div class="card">
+<h4><a href="https://github.com/nviennot/turbo-resin">turbo-resin</a></h4>
+<p>Resin 3D-printer firmware, 86 register accesses -- but through embassy-stm32 (stm32-metapac), a different generator with different register naming, and its default target is a GigaDevice GD32F307 clone rather than an ST part. Scanning it with the svd2rust extractor would attribute accesses we cannot check.</p>
+</div>
+</section>
+<section><h2>What this cannot see</h2>
+<p class="note">A static scan sees no runtime guards, so <i>unchecked</i> means candidate, not bug; compile confirmation is the eventual arbiter. Peripheral attribution is heuristic &mdash; it comes from the receiver expression, falling back to the module the code lives in. Chip attribution is per path prefix and derived from each driver crate's own build features, not the family in its name; getting that wrong is not conservative, and an earlier run matched Hubris's shared I&sup2;C driver against an F4 manual whose I&sup2;C is a different peripheral generation, manufacturing 14 findings. Whole-register gates over-approximate: when a rule lists no restricted fields it gates the whole register, though the datasheet note usually attaches to specific bits &mdash; read the <i>fields written</i> column before the verdict.</p>
+</section>
+<footer>
+<div>Generated by <code>applications/pac_codegen/experiments/landscape_page.py</code> from <code>out/scan_projects.json</code> and <code>out/trace_hal.json</code>.</div>
+<div>Scanner accuracy: run against stm32f4xx-hal 0.23 with RM0383's constraints it finds all 31 sites the compile route found, plus 8 the compiler structurally cannot reach because their gate was never emitted.</div>
+</footer>
+</div>

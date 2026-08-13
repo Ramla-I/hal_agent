@@ -94,6 +94,16 @@ class Project:
     # mapping to [] means "we have no constraints for that family" and its
     # files are skipped rather than mis-attributed.
     chip_paths: dict = field(default_factory=dict)
+    # Peripheral name the project uses -> the name our constraints use. A
+    # project vendoring its own register module names it whatever it likes:
+    # `fdcan` ships `src/pac/fdcan.rs` reached through a field called `can`,
+    # so every access reads as `can/<reg>` while every constraint says
+    # `fdcan/<reg>` and nothing ever joins -- 380 rules available, 0 hits.
+    periph_alias: dict = field(default_factory=dict)
+    # How this project spells a field access, for guard detection. "pac" is
+    # svd2rust (`r.acc64()`), "tock" is tock-registers (`ACR::ACC64`),
+    # "metapac" is embassy (`w.set_acc64(true)` for writes).
+    dialect: str = ""
 
     def rms_for(self, rel: str) -> list:
         """Manuals governing one file, by longest matching path prefix."""
@@ -164,7 +174,172 @@ PROJECTS = [
             "hal_only", ["rm0090"], "stm32f407", "stm32f4",
             hal="stm32f4xx-hal", hal_pinned="^0.8.3",
             note="Optical-flow sensor BSP; F407 = RM0090."),
+
+    # --- peripheral drivers that exist BECAUSE the HAL does not cover their
+    # peripheral, so they drive registers themselves. Highest density of the
+    # set, and on exactly the peripherals where constraints cluster.
+    Project("stm32f7-discovery", "https://github.com/embed-rs/stm32f7-discovery",
+            "pac_direct", ["rm0385"], "stm32f7x6", "stm32f7",
+            pac_pinned="0.7", subdirs=["src"],
+            note="Board framework with its own SD, Ethernet and LCD drivers; "
+                 "261 register accesses, the densest project scanned."),
+    Project("fdcan", "https://github.com/stm32-rs/fdcan", "pac_direct",
+            ["rm0440", "rm0433"], "stm32g4a1", "stm32g4",
+            subdirs=["src"], periph_alias={"can": "fdcan"},
+            note="FDCAN driver carrying its OWN vendored svd2rust register "
+                 "module (src/pac). RM0440's CCE rule is the one whose "
+                 "multi-line quote broke our emitter."),
+    Project("bxcan", "https://github.com/stm32-rs/bxcan", "pac_direct",
+            ["rm0008"], "stm32f103", "stm32f1", subdirs=["src"],
+            note="bxCAN driver. The filter-init FINIT rule is the constraint "
+                 "behind the BitReader shape bug."),
+    Project("stm32-usbd", "https://github.com/stm32-rs/stm32-usbd",
+            "pac_direct", ["rm0008"], "stm32f103", "stm32f1",
+            subdirs=["src"],
+            note="usb-device implementation; drives the USB peripheral "
+                 "directly on F0/F1/F3/L0/L4/WB."),
+    Project("stm32f103xx-usb", "https://github.com/mvirkkunen/stm32f103xx-usb",
+            "pac_direct", ["rm0008"], "stm32f103", "stm32f1",
+            subdirs=["src"], note="USB device stack for F103."),
+    Project("stm32-fmc", "https://github.com/stm32-rs/stm32-fmc", "pac_direct",
+            ["rm0433"], "stm32h753v", "stm32h7", subdirs=["src"],
+            note="FMC/FSMC memory-controller driver (SDRAM init)."),
+
+    # --- bootloaders: they do nothing but program flash, and flash is where
+    # four of the thirty-one stm32f4xx-hal violations landed.
+    Project("blethrs", "https://github.com/AirborneEngineering/blethrs",
+            "pac_direct", ["rm0090"], "stm32f429", "stm32f4",
+            pac_pinned="0.11", subdirs=["src"],
+            note="Ethernet bootloader on F407, stm32f4 PAC with no HAL. "
+                 "85 register accesses in 7 files."),
+    Project("loadstone", "https://github.com/absw/loadstone", "pac_direct",
+            ["rm0402"], "stm32f412", "stm32f4", subdirs=["src"],
+            chip_paths={
+                # wgm160p is a Silicon Labs part, not ST -- skip, do not
+                # match it against an STM32 manual.
+                "src/ports/wgm160p": [],
+                "src/ports/stm32f412": ["rm0402"],
+                "src/devices": ["rm0402"],
+            },
+            note="Secure bootloader; F412 port plus a non-ST port."),
+
+    # --- application firmware and RTOSes
+    Project("lilos", "https://github.com/cbiffle/lilos", "pac_direct",
+            ["rm0090", "rm0433", "rm0444"], "stm32f429", "stm32f4",
+            chip_paths={
+                "examples/stm32f4": ["rm0090"],
+                "examples/stm32h7": ["rm0433"],
+                "examples/stm32g0": ["rm0444"],
+                # os/ and testsuite/ are chip-agnostic cortex-m code.
+                "os": [], "testsuite": [], "extra": [],
+            },
+            note="Cliff Biffle's async RTOS; examples drive three families."),
+    Project("keyboard-labs", "https://github.com/rgoulter/keyboard-labs",
+            "pac_direct", ["rm0368"], "stm32f401", "stm32f4",
+            subdirs=["firmware"],
+            note="Keyboard firmware on F401."),
+
+    # --- board support packages: mostly re-export, scanned to confirm that
+    Project("stm32f3-discovery",
+            "https://github.com/rubberduck203/stm32f3-discovery", "pac_direct",
+            ["rm0316"], "stm32f303", "stm32f3", subdirs=["src"],
+            note="F3DISCOVERY board support."),
+    Project("stm32f407g-disc", "https://github.com/stm32-rs/stm32f407g-disc",
+            "hal_only", ["rm0090"], "stm32f407", "stm32f4",
+            hal="stm32f4xx-hal", hal_pinned="^0.14",
+            note="F4DISCOVERY board support; re-exports the HAL."),
+
+    # --- the largest register surface in the ecosystem, and the reason it is
+    # scannable at all: embassy encodes the peripheral GENERATION and the chip
+    # family in its file layout. `i2c/v1.rs` vs `i2c/v2.rs` is exactly the
+    # old-vs-new I2C split that manufactured 14 false findings in Hubris when
+    # it was inferred from a crate name instead. Here the project states it.
+    #
+    # Attribution is therefore an ALLOW-LIST: the "" prefix maps to [], so any
+    # path not named below is skipped rather than matched against whatever the
+    # project's default manuals happen to be.
+    Project("embassy", "https://github.com/embassy-rs/embassy", "pac_direct",
+            ["rm0008", "rm0033", "rm0038", "rm0090", "rm0091", "rm0316",
+             "rm0367", "rm0385", "rm0394", "rm0433", "rm0438", "rm0440",
+             "rm0444", "rm0456", "rm0481", "rm0486", "rm0490"],
+            "stm32f429", "stm32f4", subdirs=["embassy-stm32/src"],
+            chip_paths={
+                "": [],                       # allow-list: skip by default
+                # I2C: v1 is the old peripheral (START/STOP/PEC in CR1),
+                # v2 the new one (they live in CR2). Different rules entirely.
+                "embassy-stm32/src/i2c/v1.rs": ["rm0008", "rm0033", "rm0090", "rm0038"],
+                "embassy-stm32/src/i2c/v2.rs": ["rm0091", "rm0316", "rm0385", "rm0444",
+                                 "rm0440", "rm0433", "rm0367", "rm0394",
+                                 "rm0438", "rm0456"],
+                # RCC, split by family in the filename.
+                "embassy-stm32/src/rcc/f013.rs": ["rm0091", "rm0008", "rm0316"],
+                "embassy-stm32/src/rcc/f247.rs": ["rm0033", "rm0090", "rm0385"],
+                "embassy-stm32/src/rcc/g0.rs": ["rm0444"],
+                "embassy-stm32/src/rcc/g4.rs": ["rm0440"],
+                "embassy-stm32/src/rcc/h.rs": ["rm0433", "rm0481"],
+                "embassy-stm32/src/rcc/l.rs": ["rm0367", "rm0038", "rm0394", "rm0438"],
+                "embassy-stm32/src/rcc/u5.rs": ["rm0456"],
+                "embassy-stm32/src/rcc/c0.rs": ["rm0490"],
+                "embassy-stm32/src/rcc/n6.rs": ["rm0486"],
+                # CAN, split by controller generation.
+                "embassy-stm32/src/can/bxcan": ["rm0008", "rm0090", "rm0385"],
+                "embassy-stm32/src/can/fd": ["rm0440", "rm0433"],
+                "embassy-stm32/src/can/fdcan.rs": ["rm0440", "rm0433"],
+                # ADC: only the family-named files. v1..v4 and adc4 are
+                # generation-numbered with no documented family mapping, and
+                # guessing it is how the earlier attribution bugs happened.
+                "embassy-stm32/src/adc/f1.rs": ["rm0008"],
+                "embassy-stm32/src/adc/f3.rs": ["rm0316"],
+                "embassy-stm32/src/adc/g4.rs": ["rm0440"],
+                "embassy-stm32/src/adc/l1.rs": ["rm0038"],
+                "embassy-stm32/src/adc/c0.rs": ["rm0490"],
+                # Ethernet.
+                "embassy-stm32/src/eth/v1": ["rm0090", "rm0385"],
+                "embassy-stm32/src/eth/v2": ["rm0433"],
+            },
+            dialect="metapac",
+            note="Async embedded framework; embassy-stm32 alone carries 4,049 "
+                 "register accesses, more than Tock and Hubris combined. Uses "
+                 "stm32-metapac, so field writes are `w.set_ff(true)` rather "
+                 "than `w.ff().set_bit()`. Only the paths whose family is "
+                 "named in the layout are scanned."),
 ]
+
+# Looked at and deliberately NOT scanned. Recorded because a project absent
+# from the report is indistinguishable from one that scanned clean.
+EXCLUDED = {
+    "turbo-resin": (
+        "https://github.com/nviennot/turbo-resin",
+        "Resin 3D-printer firmware, 86 register accesses -- but through "
+        "embassy-stm32 (stm32-metapac), a different generator with different "
+        "register naming, and its default target is a GigaDevice GD32F307 "
+        "clone rather than an ST part. Scanning it with the svd2rust "
+        "extractor would attribute accesses we cannot check."),
+    "drone-stm32-map": (
+        "https://github.com/drone-os/drone-stm32-map",
+        "Drone OS's STM32 register maps. 118 Rust files and ZERO register "
+        "accesses: it generates maps through macros and ships no driver code, "
+        "so there is nothing for a register scanner to read."),
+    "ariel-os": (
+        "https://github.com/ariel-os/ariel-os",
+        "Embedded OS, 362 Rust files, 7 register accesses. It delegates "
+        "hardware access to Embassy, which is scanned directly instead."),
+    "rtic": (
+        "https://github.com/rtic-rs/rtic",
+        "Real-time concurrency framework. 267 files, 133 accesses -- but it "
+        "is a scheduler, not a driver layer: the accesses are timer-monotonic "
+        "code and some of it targets Silicon Labs parts, not ST."),
+    "stm32-emulator": (
+        "https://github.com/nviennot/stm32-emulator",
+        "Emulates an STM32 rather than running on one: 28 files, 9 accesses. "
+        "It MODELS register behaviour, which makes it a possible cross-check "
+        "on our extracted rules -- a different experiment, not a scan target."),
+    "trezor-firmware": (
+        "https://github.com/trezor/trezor-firmware",
+        "Hardware wallet. 491 Rust files but only 4 register accesses: the "
+        "Rust portion is the UI layer and the drivers are C. Nothing for a "
+        "register scanner to find."),
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -312,7 +487,12 @@ def scan_pac_direct(f: Path, root: Path) -> list:
         line_no = text.count("\n", 0, m.start("op")) + 1
         # fields written: scan the rest of the statement for `w.<field>()`
         tail = text[m.end():m.end() + 400]
-        fields = [x.lower() for x in _FIELD_CALL.findall(tail)]
+        raw = [x.lower() for x in _FIELD_CALL.findall(tail)]
+        # svd2rust writes a field as `w.ff().set_bit()`; embassy's metapac
+        # writes it as `w.set_ff(true)`. Emitting BOTH spellings costs nothing
+        # on svd2rust (no field is named `set_*` there) and is what lets a
+        # field-scoped rule bite on metapac code at all.
+        fields = raw + [x[4:] for x in raw if x.startswith("set_") and len(x) > 4]
         hits.append({
             "file": str(f.relative_to(root)), "abs": str(f), "line": line_no,
             "receiver": m.group("recv"),
@@ -378,11 +558,13 @@ def _ops_match(constraint_op: str, hit_op: str) -> bool:
     return constraint_op == hit_op
 
 
-def match_hits(hits: list, idx: dict, periph_map: dict) -> list:
+def match_hits(hits: list, idx: dict, periph_map: dict,
+               alias: dict = None) -> list:
     """Attach every constraint that covers each hit."""
+    alias = alias or {}
     out = []
     for h in hits:
-        periph = h["peripheral"]
+        periph = alias.get(h["peripheral"], h["peripheral"])
         # resolve an instance to its register-block family (I2C3 -> i2c)
         module = periph_map.get(periph, periph)
         fam = cc._family(module) or module
@@ -421,7 +603,68 @@ def _fn_body(path: str, name: str) -> str:
     return body
 
 
-def guard_prologue(path: str, snippet: str, flagged_rel: int) -> dict:
+_IMPL_HDR_RE = re.compile(
+    r"^\s*impl(?:\s*<[^>]*>)?\s+(?:[\w:<>, '\$]+\s+for\s+)?(?P<ty>\$?\w+)")
+_CTOR_RE = r"^\s*(?:pub(?:\([^)]*\))?\s+)?(?:const\s+|unsafe\s+)*fn\s+(?:new|new_\w+|acquire|enter|begin|start)\b"
+
+
+def owning_type(path: str, line: int) -> str:
+    """The type whose impl block contains `line`, or ''."""
+    src = Path(path).read_text(errors="replace").splitlines()
+    for j in range(min(line, len(src)) - 1, -1, -1):
+        m = _IMPL_HDR_RE.match(src[j])
+        if m:
+            return m.group("ty").lstrip("$")
+    return ""
+
+
+def scope_guard(path: str, fields: list) -> str:
+    """Does this file implement an RAII scope guard over `fields`?
+
+    THE SHAPE. A project can hold a datasheet precondition open for the
+    lifetime of a value. bxcan does it twice:
+
+        MasterFilters::new()  sets CAN_FMR.FINIT ... Drop clears it
+        Can::modify_config()  sets CAN_MCR.INRQ  ... Drop clears it
+
+    Every filter-bank and bit-timing write happens while one of those values
+    is alive, so the borrow checker guarantees the precondition for the whole
+    borrow. The constraint is enforced by the type system, by hand -- which is
+    exactly what witness gating automates, and the strongest evidence in this
+    corpus that these rules are real and that careful projects already encode
+    them.
+
+    Nothing frame-local can see it. The precondition is not established before
+    the access in any function; it is established before the VALUE exists, and
+    the value is often not even the type performing the access -- bxcan writes
+    through a `FilterBanks` view handed out by `MasterFilters`. Chasing that
+    ownership properly needs type inference.
+
+    So the test is file-scoped and deliberately explicit, three conditions:
+
+      1. the file contains an `impl Drop for T`   -- something owns a scope
+      2. every precondition field is SET somewhere in the file
+      3. and CLEARED somewhere in the file        -- it is held, then released
+
+    Set-and-cleared-and-Drop is the idiom and little else looks like it. A
+    constructor that merely reads the field would not qualify. Returns the
+    guard type, or "".
+    """
+    src = Path(path).read_text(errors="replace")
+    guards = re.findall(r"^\s*impl(?:\s*<[^>]*>)?\s+Drop\s+for\s+(\$?\w+)",
+                        src, re.M)
+    if not guards or not fields:
+        return ""
+    for f in fields:
+        setp = re.search(rf"\.{re.escape(f)}\s*\(\s*\)\s*\.\s*(set_bit|enabled)", src)
+        clrp = re.search(rf"\.{re.escape(f)}\s*\(\s*\)\s*\.\s*(clear_bit|disabled)", src)
+        if not (setp and clrp):
+            return ""
+    return guards[0].lstrip("$")
+
+
+def guard_prologue(path: str, snippet: str, flagged_rel: int,
+                   abs_line: int = 0) -> dict:
     """Code that provably runs BEFORE a flagged line but lives in a helper.
 
     Drivers do not open-code the datasheet dance at every call site; they
@@ -498,12 +741,17 @@ def triage(matched: list, dialect: str = "pac") -> list:
             try:
                 start, snippet = enclosing_function(h["abs"], h["line"])
                 rel = h["line"] - start + 1
-                pro = guard_prologue(h["abs"], snippet, rel)
+                pro = guard_prologue(h["abs"], snippet, rel, h["line"])
                 if pro["text"]:
                     snippet = pro["text"] + "\n" + snippet
                     rel += len(pro["text"].splitlines())
                 verdict = deterministic_scan(snippet, rel, fields, dialect)
                 verdict["helpers_inlined"] = pro["inlined"]
+                if verdict["verdict"] == "unchecked":
+                    g = scope_guard(h["abs"], fields)
+                    if g:
+                        verdict["verdict"] = "corroborated"
+                        verdict["scope_guard"] = g
             except Exception as e:                            # noqa: BLE001
                 verdict = {"verdict": "scan_error", "fields": fields,
                            "error": str(e)[:120]}
@@ -581,9 +829,11 @@ def scan_project(p: Project, root: Path, periph_map: dict) -> dict:
             continue                      # family with no manuals: skip
         idx = constraint_index(list(key))
         idx_all.update(idx)
-        matched.extend(match_hits(group, idx, periph_map))
+        matched.extend(match_hits(group, idx, periph_map,
+                                  p.periph_alias))
     idx = idx_all
-    triaged = triage(matched, "tock" if p.style == "tock" else "pac")
+    triaged = triage(matched,
+                     p.dialect or ("tock" if p.style == "tock" else "pac"))
     regs = Counter(f"{h['peripheral']}/{h['register']}" for h in hits)
     verdicts = Counter(h["triage"]["verdict"] for h in triaged)
     return {
