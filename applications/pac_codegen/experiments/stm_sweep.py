@@ -26,6 +26,7 @@ Usage:
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -387,12 +388,20 @@ def hal_errors(ws: Path, hal_dirname: str):
         if d.get("level") != "error":
             continue
         files: set[str] = set()
+        # (absolute path, line) for every span inside the HAL. Keeping the LINE
+        # is what makes the hits triageable at all: without it an enforcement
+        # count says a rule bit somewhere in a file, and there is no way to ask
+        # whether the driver already establishes the precondition there.
+        sites: set = set()
 
         def _walk(spans):
             for s in spans:
                 fn = s.get("file_name", "")
                 if hal_dirname in fn:
                     files.add(fn.split(f"{hal_dirname}/")[-1])
+                    ln = s.get("line_start")
+                    if ln:
+                        sites.add((fn, int(ln)))
                 exp = s.get("expansion")
                 if exp and exp.get("span"):
                     _walk([exp["span"]])
@@ -401,15 +410,111 @@ def hal_errors(ws: Path, hal_dirname: str):
         for ch in d.get("children", []):
             _walk(ch.get("spans", []))
         out.append({"code": (d.get("code") or {}).get("code", ""),
-                    "message": d.get("message", ""), "hal_files": sorted(files)})
+                    "message": d.get("message", ""), "hal_files": sorted(files),
+                    "sites": sorted(sites)})
     return out
 
 
-def classify(errors, gated_specs: set[str]) -> dict:
+# --------------------------------------------------------------------------- #
+# Static triage of the enforcement hits
+# --------------------------------------------------------------------------- #
+#
+# An enforcement hit means the gate FIRED at a named constrained register: the
+# driver performed that operation through the stock API, without a witness. It
+# does NOT mean the driver is wrong. The gate demands a witness -- a value
+# proving the precondition was observed true in one fresh read -- so code that
+# obeys the datasheet by some other route still fails to compile.
+#
+# stm32f1xx-hal is the clearest case. RM0008 says RTC_CRH cannot be written
+# while a previous write is in flight (RTOFF=0), and four of its five hits are
+# `crh().modify(..)` calls sitting inside:
+#
+#     fn perform_write(&mut self, func: impl Fn(&mut Self)) {
+#         while !self.regs.crl().read().rtoff().bit() {}   // waits for RTOFF
+#         ...
+#         func(self);                                      // the flagged writes
+#
+# It waits for exactly the flag the datasheet names. Correct, and it would
+# still fail to compile. Counting those as findings would overstate the result
+# badly, so every hit is triaged the same way the scan arm triages its own:
+# the enclosing function, one level of helper (closure host or preceding call),
+# and the RAII scope-guard test.
+
+_SPEC_REG_RE = re.compile(r"(\w+)rs$")
+
+
+def _gate_fields(constraints_path: Path) -> dict:
+    """register (lower) -> operation -> [precondition field names].
+
+    Read from the constraints file the injection was driven by, so the fields
+    triage looks for are exactly the ones the gate was built from.
+    """
+    if not constraints_path.is_file():
+        return {}
+    try:
+        data = json.loads(constraints_path.read_text())
+    except Exception:                                     # noqa: BLE001
+        return {}
+    entries = data.get("registers", data) if isinstance(data, dict) else data
+    if isinstance(entries, dict):
+        entries = list(entries.values())
+    out = {}
+    for e in entries or []:
+        if not isinstance(e, dict):
+            continue
+        reg = (e.get("register") or "").lower()
+        if not reg:
+            continue
+        per_op = {}
+        for op, pres in (e.get("preconditions") or {}).items():
+            fields = []
+            for text in pres or []:
+                # "CAN_FMR.FINIT set" -> finit
+                m = re.search(r"\.(\w+)", str(text))
+                if m:
+                    fields.append(m.group(1).lower())
+            if fields:
+                per_op[op] = sorted(set(fields))
+        if per_op:
+            out[reg] = per_op
+    return out
+
+
+def triage_hit(abs_path: str, line: int, fields: list) -> dict:
+    """corroborated / unchecked for one enforcement hit, statically."""
+    try:
+        from scan_projects import guard_prologue, scope_guard
+        from corroboration import enclosing_function, deterministic_scan
+    except Exception as exc:                              # noqa: BLE001
+        return {"verdict": "scan_error", "error": str(exc)[:120]}
+    if not fields:
+        return {"verdict": "no_precondition_fields", "fields": []}
+    try:
+        start, snippet = enclosing_function(abs_path, line)
+        rel = line - start + 1
+        pro = guard_prologue(abs_path, snippet, rel, line)
+        if pro["text"]:
+            snippet = pro["text"] + "\n" + snippet
+            rel += len(pro["text"].splitlines())
+        v = deterministic_scan(snippet, rel, fields, "pac")
+        v["helpers_inlined"] = pro["inlined"]
+        if v["verdict"] == "unchecked":
+            g = scope_guard(abs_path, fields)
+            if g:
+                v["verdict"] = "corroborated"
+                v["scope_guard"] = g
+        return v
+    except Exception as exc:                              # noqa: BLE001
+        return {"verdict": "scan_error", "error": str(exc)[:120]}
+
+
+def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
     """Split HAL errors into: TRUE ENFORCEMENT (our diagnostic naming a register
     we actually gated), GENERIC FRICTION (our diagnostic in generic code that
     never names a gated register), OTHER (anything else -- collateral damage)."""
+    gate_fields = gate_fields or {}
     res = {"true_enforcement": 0, "generic_friction": 0, "other": 0,
+           "guarded": 0, "candidate": 0, "untriaged": 0, "triage": [],
            "files": {"true_enforcement": set(), "generic_friction": set(),
                      "other": set()},
            "specs": {}, "samples": {"true_enforcement": [],
@@ -434,6 +539,34 @@ def classify(errors, gated_specs: set[str]) -> dict:
             for s in named:
                 res["specs"][s] = res["specs"].get(s, 0) + 1
             sample("true_enforcement", e)
+            # --- static triage: does the driver already establish it here?
+            reg = ""
+            m = _SPEC_REG_RE.search(named[0].split("::")[-1])
+            if m:
+                reg = m.group(1).lower()
+            op = ("write" if "write-constrained" in e["message"] else
+                  "modify" if "modify-constrained" in e["message"] else "read")
+            fields = (gate_fields.get(reg, {}).get(op)
+                      or sorted({f for v in gate_fields.get(reg, {}).values()
+                                 for f in v}))
+            site = e["sites"][0] if e.get("sites") else None
+            if site and fields:
+                v = triage_hit(site[0], site[1], fields)
+                if v["verdict"] == "corroborated":
+                    res["guarded"] += 1
+                elif v["verdict"] == "unchecked":
+                    res["candidate"] += 1
+                else:
+                    res["untriaged"] += 1
+                if len(res["triage"]) < 40:
+                    res["triage"].append({
+                        "file": e["hal_files"][0] if e["hal_files"] else "",
+                        "line": site[1], "register": reg, "operation": op,
+                        "fields": fields, "verdict": v["verdict"],
+                        "helpers": v.get("helpers_inlined") or [],
+                        "scope_guard": v.get("scope_guard", "")})
+            else:
+                res["untriaged"] += 1
         elif witness:
             res["generic_friction"] += 1
             res["files"]["generic_friction"] |= set(e["hal_files"])
@@ -508,10 +641,16 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict) -
             elif errors is None:
                 entry["status"] = "TIMEOUT"
             else:
-                entry.update(classify(errors, set(res["gated_specs"])))
+                entry.update(classify(
+                    errors, set(res["gated_specs"]),
+                    _gate_fields(OUT / "constraints" /
+                                 f"{t.rm}_{t.device}.json")))
                 entry["status"] = "ran"
                 print(f"  HAL {c.crate} {c.version} (baseline {base}): "
                       f"true_enforcement={entry['true_enforcement']} "
+                      f"(guarded={entry['guarded']} "
+                      f"candidate={entry['candidate']} "
+                      f"untriaged={entry['untriaged']}) "
                       f"generic_friction={entry['generic_friction']} "
                       f"other={entry['other']}")
                 print(f"    enforcement sites: {entry['files']['true_enforcement']}")

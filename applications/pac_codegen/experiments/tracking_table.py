@@ -194,6 +194,9 @@ def sweep_results() -> dict:
                     "baseline": h.get("baseline"),
                     "status": h.get("status", "ran"),
                     "true_enforcement": h.get("true_enforcement"),
+                    "guarded": h.get("guarded"),
+                    "candidate": h.get("candidate"),
+                    "untriaged": h.get("untriaged"),
                     "generic_friction": h.get("generic_friction"),
                     "other": h.get("other"),
                     "files": (h.get("files") or {}).get("true_enforcement", []),
@@ -372,6 +375,8 @@ def main() -> None:
                 "hal_crate": (f"{c.crate} {c.version}" if c else "—"),
                 "hal_baseline": (res or {}).get("baseline", "—"),
                 "true_enforcement": (res or {}).get("true_enforcement", "—"),
+                "guarded": (res or {}).get("guarded", "—"),
+                "candidate": (res or {}).get("candidate", "—"),
                 "generic_friction": (res or {}).get("generic_friction", "—"),
                 "other_errors": (res or {}).get("other", "—"),
                 "enforcement_sites": ", ".join((res or {}).get("files", [])) or "—",
@@ -402,7 +407,8 @@ def main() -> None:
             "enforced": 0, "enforced_by_kind": "—",
             "enforced_via_instance_alias": 0, "registers_gated": 0,
             "pac_compiles": "—", "hal_crate": "—", "hal_baseline": "—",
-            "true_enforcement": "—", "generic_friction": "—",
+            "true_enforcement": "—", "guarded": "—", "candidate": "—",
+            "generic_friction": "—",
             "other_errors": "—", "enforcement_sites": "—",
             "dropped_by_stage": "no_chip_crate: all",
             "note": (f"No chip crate covers {chip}. "
@@ -517,6 +523,7 @@ def main() -> None:
             f"**{r['enforced']}** | {r['registers_gated']} | "
             f"{r['pac_compiles']} | {r['hal_crate']} | "
             f"{r['hal_baseline']} | {r['true_enforcement']} | "
+            f"{r['guarded']} | {r['candidate']} | "
             f"{r['generic_friction']} | {r['other_errors']} | "
             f"{r['enforcement_sites']} | {r['note'] or '—'} |")
 
@@ -646,6 +653,7 @@ tbody tr:hover td.pin{background:var(--surface-2)}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
 .num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .num.lead{font-weight:680;color:var(--accent)}
+.num.ok{color:var(--ok);font-weight:640}
 .dim{color:var(--ink-dim)}
 .kind{
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
@@ -834,6 +842,18 @@ def write_html(rows: list, path: Path) -> None:
     h.append(f'<div class="stat"><span class="k">collateral errors</span>'
              f'<span class="v">{collateral}</span></div>')
     h += ["</div>",
+          '<p class="note"><b>gate fired</b> is a compile error naming a '
+          "constrained register: the driver performed that operation without "
+          "a witness. That is not a bug by itself &mdash; the gate demands a "
+          "witness, so code obeying the datasheet another way still fails to "
+          "compile. Every hit is then triaged the way the project scan "
+          "triages its own: <b>guarded</b> means the driver does establish "
+          "the precondition (in the enclosing function, in a helper one level "
+          "up, or via an RAII scope guard); <b>possible bug</b> means it does "
+          "not, and is the column worth reading. stm32f1xx-hal is why the "
+          "split exists &mdash; four of its five hits sit inside a "
+          "<code>perform_write</code> that waits for the exact flag RM0008 "
+          "names.</p>",
           f'<p class="note">Driver figures cover the {len(measurable)} of '
           f'{len(hal_rows)} driver pairings whose baseline compiles. The other '
           f'{unmeasurable} fail against the <em>pristine</em> chip crate — '
@@ -896,7 +916,8 @@ def write_html(rows: list, path: Path) -> None:
           '<th class="pin">RM</th><th>device</th><th>PAC crate</th>',
           '<th>gates</th><th>regs</th><th>PAC compiles</th>',
           '<th>HAL crate</th><th>baseline</th>',
-          '<th>true enforcement</th><th>generic friction</th><th>other</th>',
+          '<th>gate fired</th><th>guarded</th><th>possible bug</th>',
+          '<th>generic friction</th><th>other</th>',
           '<th>enforcement sites</th><th>note</th>',
           "</tr></thead><tbody>"]
     for r in rows:
@@ -911,6 +932,8 @@ def write_html(rows: list, path: Path) -> None:
             f'<td class="mono">{_esc(r["hal_crate"])}</td>'
             f'<td>{_pill(r["hal_baseline"])}</td>'
             f'<td class="num">{_esc(r["true_enforcement"])}</td>'
+            f'<td class="num ok">{_esc(r["guarded"])}</td>'
+            f'<td class="num lead">{_esc(r["candidate"])}</td>'
             f'<td class="num">{_esc(r["generic_friction"])}</td>'
             f'<td class="num">{_esc(r["other_errors"])}</td>'
             f'<td class="mono dim">{_esc(r["enforcement_sites"])}</td>'
@@ -940,6 +963,8 @@ def write_html(rows: list, path: Path) -> None:
     pairings = [r for r in rows if r["hal_crate"] != "—"]
     ok_pairings = [r for r in pairings if r["hal_baseline"] == "PASS"]
     t_true = sum(_n(r["true_enforcement"]) for r in ok_pairings)
+    t_guard = sum(_n(r["guarded"]) for r in ok_pairings)
+    t_cand = sum(_n(r["candidate"]) for r in ok_pairings)
     t_fric = sum(_n(r["generic_friction"]) for r in ok_pairings)
     t_other = sum(_n(r["other_errors"]) for r in ok_pairings)
     h += ["</tbody><tfoot>",
@@ -951,7 +976,9 @@ def write_html(rows: list, path: Path) -> None:
           f'<td>{pac_ok}/{len(seen_inj)} PASS</td>'
           f'<td class="mono">{len(drivers)} crates, {len(pairings)} pairings</td>'
           f'<td>{len(ok_pairings)}/{len(pairings)} PASS</td>'
-          f'<td class="num lead">{t_true}</td>'
+          f'<td class="num">{t_true}</td>'
+          f'<td class="num ok">{t_guard}</td>'
+          f'<td class="num lead">{t_cand}</td>'
           f'<td class="num">{t_fric}</td>'
           f'<td class="num">{t_other}</td>'
           f'<td class="mono dim">—</td>'
