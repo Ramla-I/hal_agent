@@ -81,7 +81,10 @@ SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                "sweep_kwfix.json",
                # the four consumers added after the crates.io reverse-dependency
                # sweep: stm32-hrtim, stm32g4xx-hal, stm32f1-hal, rivet-bsp
-               "sweep_newconsumers.json"]
+               "sweep_newconsumers.json",
+               # the whole-consumer re-run that added static triage of every
+               # enforcement hit (guarded vs possible bug)
+               "sweep_triage.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -177,7 +180,12 @@ def injection_report(rm: str, device: str) -> dict:
 
 
 def sweep_results() -> dict:
-    """(rm, consumer crate) -> classified compile result."""
+    """(rm, device, consumer crate) -> classified compile result.
+
+    The device belongs in the key. RM0440 is injected into two different G4
+    parts and each is measured against its own consumers; keying on (rm,
+    crate) alone silently collapsed them, so one chip's numbers overwrote the
+    other's depending on file order."""
     out = {}
     for name in SWEEP_FILES:
         p = OUT / name
@@ -189,7 +197,7 @@ def sweep_results() -> dict:
                 if not h:
                     continue
                 crate = h.get("crate") or r.get("hal")
-                out[(r["rm"], crate)] = {
+                out[(r["rm"], r.get("device", ""), crate)] = {
                     "version": h.get("version", ""),
                     "baseline": h.get("baseline"),
                     "status": h.get("status", "ran"),
@@ -202,7 +210,8 @@ def sweep_results() -> dict:
                     "files": (h.get("files") or {}).get("true_enforcement", []),
                 }
             if r.get("probe") and r["probe"] != "-":
-                out.setdefault((r["rm"], "__probe__"), {})["probe"] = r["probe"]
+                out.setdefault((r["rm"], r.get("device", ""),
+                               "__probe__"), {})["probe"] = r["probe"]
     return out
 
 
@@ -354,11 +363,11 @@ def main() -> None:
         enforce_kinds = collections.Counter(
             {k: v.get("enforce", 0) for k, v in verdicts.items()
              if v.get("enforce", 0)})
-        probe = sweeps.get((t.rm, "__probe__"), {}).get("probe", "—")
+        probe = sweeps.get((t.rm, t.device, "__probe__"), {}).get("probe", "—")
 
         consumers = t.consumers or [None]
         for c in consumers:
-            res = sweeps.get((t.rm, c.crate)) if c else None
+            res = sweeps.get((t.rm, t.device, c.crate)) if c else None
             rows.append({
                 "RM": t.rm,
                 "device": t.device,
@@ -965,6 +974,11 @@ def write_html(rows: list, path: Path) -> None:
     t_true = sum(_n(r["true_enforcement"]) for r in ok_pairings)
     t_guard = sum(_n(r["guarded"]) for r in ok_pairings)
     t_cand = sum(_n(r["candidate"]) for r in ok_pairings)
+    # Hits the static pass could not reach: the diagnostic named a register
+    # whose precondition fields did not resolve, or the span carried no line.
+    # Reported rather than folded into either column -- an untriaged hit is
+    # not evidence of a guard and it is not evidence of a bug.
+    t_untri = max(0, t_true - t_guard - t_cand)
     t_fric = sum(_n(r["generic_friction"]) for r in ok_pairings)
     t_other = sum(_n(r["other_errors"]) for r in ok_pairings)
     h += ["</tbody><tfoot>",
@@ -984,7 +998,10 @@ def write_html(rows: list, path: Path) -> None:
           f'<td class="mono dim">—</td>'
           f'<td class="wide">Gates and registers counted once per '
           f'(manual, chip) injection; driver figures cover only the '
-          f'{len(ok_pairings)} pairings whose baseline compiles.</td></tr>',
+          f'{len(ok_pairings)} pairings whose baseline compiles. '
+          f'{t_untri} hits are untriaged &mdash; the static pass could not '
+          f'resolve their precondition fields, and an untriaged hit is '
+          f'neither a guard nor a bug.</td></tr>',
           "</tfoot></table></div>",
           '<p class="note">Driver crates measured: '
           + ", ".join(f"<code>{_esc(d)}</code>" for d in sorted(drivers))
