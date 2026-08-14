@@ -302,6 +302,7 @@ def _compare_register(peripheral: str, register: str,
             diffs.append(Diff(
                 peripheral=peripheral, register=register, key=key,
                 svd_value=svd_disp, generator_value=gen_disp, presence=Presence.BOTH,
+                reg_size=svd_reg.get("size"),
             ))
     diffs.extend(_compare_fields(peripheral, register,
                                  svd_reg.get("fields", []), gen_reg.get("fields", [])))

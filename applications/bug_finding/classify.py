@@ -89,6 +89,13 @@ def mechanical_fp_reason(diff: Diff, shift_classes: dict[tuple[str, str], str]) 
     if g.lower() in _NOT_FOUND_TOKENS:
         return "generator value empty / not-found"
     gi = _as_int(g)
+    if diff.key == "reset_value":
+        # A reset value that needs more bits than the register is wide is impossible
+        # (svdtools rejects it: "doesn't fit in N bits") -> a generator misread, not a
+        # real bug. e.g. USART SR svd=0xC0 (correct: TXE+TC) vs generator 0xC00000.
+        if gi is not None and diff.reg_size and gi.bit_length() > diff.reg_size:
+            return f"reset value 0x{gi:X} exceeds register width ({diff.reg_size} bits)"
+        return None
     if diff.key == "address_offset":
         if "%" in diff.register:
             return "array/template register reported as range/formula"
