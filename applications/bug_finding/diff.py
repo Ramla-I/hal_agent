@@ -33,16 +33,20 @@ _HEX_KEYS = ("address_offset", "reset_value")
 # grounded) rather than by the context-free analyzer — see pipeline.run_bug_finding.
 _FIELD_KEYS = ("bit_offset", "bit_width", "access")
 
-# Access vocabulary: generator and SVD both use read-write/read-only/write-only;
-# a couple of SVD variants normalize onto the core three so they compare cleanly.
-_ACCESS_NORM = {"read-write": "read-write", "read-only": "read-only",
-                "write-only": "write-only", "writeonce": "write-only",
-                "read-writeonce": "read-write"}
+# Access is canonicalized to read-write/read-only/write-only via the SAME shared
+# notation map the validator uses (optimization_validator/access_notations.json),
+# so vocabulary variants (rw, write, rc_w1, write-1-to-clear, …) collapse and don't
+# become spurious diffs. Unicode hyphens (U+2011 etc.) -> ASCII first, since the
+# generator sometimes emits them. An unrecognized token falls back to its cleaned
+# form so a genuinely novel value still compares.
+from optimization_validator.access_notation import canonical_access  # noqa: E402
+
+_UNI_HYPHENS = str.maketrans({c: "-" for c in "‐‑‒–—−"})
 
 
 def _norm_access(a) -> str:
-    s = str(a or "").strip().lower().replace("_", "-")
-    return _ACCESS_NORM.get(s, s)
+    s = str(a or "").strip().lower().translate(_UNI_HYPHENS)
+    return canonical_access(s) or s
 
 
 # ---------------------------------------------------------------------------
