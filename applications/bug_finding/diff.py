@@ -98,6 +98,7 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
 
     dev_size = _int0(root.find(f"{ns}size"))
     dev_reset = _reset(root)
+    dev_access = (root.findtext(f"{ns}access") or "").strip().lower()
 
     per_elem = {(p.findtext(f"{ns}name") or "").strip().lower(): p for p in root.iter(f"{ns}peripheral")}
     reg_index: dict[tuple[str, str], Any] = {}
@@ -112,7 +113,11 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
         p = per_elem.get(pn)
         return (_int0(p.find(f"{ns}size")) if p is not None else None, _reset(p))
 
-    def _fields_of(reg):
+    def _per_access(pn):
+        p = per_elem.get(pn)
+        return ((p.findtext(f"{ns}access") or "").strip().lower() if p is not None else "") or dev_access
+
+    def _fields_of(reg, fallback_access=""):
         fe = reg.find(f"{ns}fields")
         if fe is None:
             return None  # not specified locally -> inheritable
@@ -132,6 +137,8 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
                 "bit_offset": int(field.find(f"{ns}bitOffset").text.strip()),
                 "bit_width": int(field.find(f"{ns}bitWidth").text.strip()),
                 "enumerated_values": enum_values,
+                # access cascades field -> register -> peripheral -> device (CMSIS).
+                "access": (field.findtext(f"{ns}access") or "").strip().lower() or fallback_access,
             })
         return out
 
@@ -148,7 +155,8 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
                           else (base["address_offset"] if base else None))
         size = _int0(reg.find(f"{ns}size"))
         reset_value = _reset(reg)
-        fields = _fields_of(reg)
+        reg_access = (reg.findtext(f"{ns}access") or "").strip().lower() or _per_access(pn)
+        fields = _fields_of(reg, reg_access)
         per_size, per_reset = _per_defaults(pn)
         if size is None:
             size = base["size"] if base and base.get("size") is not None else (per_size if per_size is not None else dev_size)

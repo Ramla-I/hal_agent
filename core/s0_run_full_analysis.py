@@ -126,6 +126,8 @@ class DeviceResult:
 
     # Step 5b — candidate validator (s6, in-process)
     s6_done: bool = False
+    # Step 5c — field-access review (diff + validator, in-process)
+    access_review_done: bool = False
 
     # Run metadata (for the manifest)
     retrieval_method: str = ""
@@ -758,6 +760,29 @@ def run_pipeline_for_device(
                     import traceback
                     traceback.print_exc()
 
+            # -- Step 5c: field-ACCESS review (diff + validator), in-process + NON-FATAL --
+            # Separate deliverable {rm}_access_review.csv (same layout as the structure
+            # review). Diffs generator vs SVD access, then validates the mismatches with
+            # the same s6 core (reusing the generator's openevolve collection).
+            if not args.skip_access_review:
+                print(f"\n--- Step 5c: Access review (diff + validator) ---")
+                try:
+                    from applications.bug_finding.access import write_access_review
+                    from s6_validate_candidates import validate_run as _s6_validate_run
+                    _mfr = getattr(ctx.manufacturer, "value", str(ctx.manufacturer)).lower()
+                    _ap, _n = write_access_review(ctx.device_name, _mfr, paths.run_number, repo_root)
+                    print(f"  access diffs: {_n} -> {os.path.relpath(_ap, repo_root)}")
+                    if _n:
+                        acc_res = _s6_validate_run(
+                            ctx, repo_root, paths.run_number, list(config.STAGE_MODELS["validator"]),
+                            review_suffix="access_review", validator_subdir="access_validator")
+                        result.access_review_done = True
+                        print(f"  access validator: {acc_res}")
+                except Exception as _acc_err:  # non-fatal
+                    print(f"  access review (non-fatal) failed: {_acc_err}")
+                    import traceback
+                    traceback.print_exc()
+
     except Exception as e:
         result.success = False
         result.error = str(e)
@@ -864,6 +889,11 @@ def parse_args() -> argparse.Namespace:
         "--skip-s6", action="store_true",
         help="Skip the in-process candidate validator (Step 5b/s6) that fills "
              "validator_verdict in the structure review",
+    )
+    parser.add_argument(
+        "--skip-access-review", action="store_true",
+        help="Skip Step 5c: the field-access review (diff + validator) that writes "
+             "{rm}_access_review.csv",
     )
     parser.add_argument(
         "--skip-readiness", action="store_true",
