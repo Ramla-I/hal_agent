@@ -22,10 +22,11 @@ import os
 from .diff import parse_svd_registers, load_generator_registers
 
 # Structure-review layout, verbatim (so the labeler + apply_verdicts match). The
-# validator inserts validator_verdict/validator_confidence before tp_fp.
+# validator columns are written blank here and filled by apply_verdicts, so even a
+# zero-diff access file has the identical 14-column header.
 REVIEW_HEADER = ["RM", "peripheral", "register", "field", "key", "svd_value",
                  "generator_value", "status", "svd_count", "svd_files",
-                 "tp_fp", "correct_value"]
+                 "validator_verdict", "validator_confidence", "tp_fp", "correct_value"]
 
 _ACCESS_NORM = {
     "read-write": "read-write", "read-only": "read-only", "write-only": "write-only",
