@@ -25,10 +25,9 @@ from utils.llm import call_llm
 from utils.result_saver import ResultSaver, UsageStats
 from utils.utils import setup_logger
 from utils.parse_output import get_json_block_from_response
-from prompts.validator import (
-    create_batched_validator_system_prompt,
-    create_batched_validator_user_prompt,
-)
+from prompts.validator import create_batched_validator_user_prompt
+# Access-aware system prompt (layers access-case guidance on the edit-protected base).
+from prompts.validator_access import create_batched_validator_system_prompt
 from optimization_validator.access_notation import access_legend
 
 logger = setup_logger(__name__)
