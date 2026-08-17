@@ -79,15 +79,10 @@ def _update_manifest(agent_output_dir: str, fields: dict) -> None:
 
 
 def validate_run(ctx, repo_root: str, run_number: int, models: list,
-                 cards_dir: str = _CARDS_DIR, reasoning_effort: str | None = None,
-                 review_suffix: str = "structure_review",
-                 validator_subdir: str = "validator") -> dict:
-    """Fill validator_verdict/confidence on a review CSV's candidates. Defaults to
-    the structure review; pass review_suffix='access_review' (+ a distinct
-    validator_subdir) to validate the access review with the same core/card."""
+                 cards_dir: str = _CARDS_DIR, reasoning_effort: str | None = None) -> dict:
     paths = resolve_device_paths(ctx, repo_root, run_number)
     device = ctx.device_name
-    review_csv = os.path.join(paths.results_dir, f"{device}_{review_suffix}.csv")
+    review_csv = os.path.join(paths.results_dir, f"{device}_structure_review.csv")
     if not os.path.isfile(review_csv):
         return {"device": device, "run": run_number, "skipped": "no review CSV"}
 
@@ -101,7 +96,7 @@ def validate_run(ctx, repo_root: str, run_number: int, models: list,
     cr_params = build_context_retrieval_params(paths.device_dir, ctx)
     cr_params = apply_retrieval_override(cr_params, "openevolve", device, repo_root, ctx.manufacturer)
 
-    validator_dir = os.path.join(paths.agent_output_dir, validator_subdir)
+    validator_dir = os.path.join(paths.agent_output_dir, "validator")
     true_count, false_count = run_validator_batched_resilient(
         models, invs, validator_dir, cr_params,
         device, paths.device_dir, ctx.manufacturer, paths.agent_output_dir,

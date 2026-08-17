@@ -29,8 +29,20 @@ from .models import Diff, Presence
 # Register-level attributes compared (in a stable order).
 _REGISTER_KEYS = ("address_offset", "reset_value", "size")
 _HEX_KEYS = ("address_offset", "reset_value")
-# Field-level attributes compared.
-_FIELD_KEYS = ("bit_offset", "bit_width")
+# Field-level attributes compared. `access` is validated downstream (s6, datasheet-
+# grounded) rather than by the context-free analyzer — see pipeline.run_bug_finding.
+_FIELD_KEYS = ("bit_offset", "bit_width", "access")
+
+# Access vocabulary: generator and SVD both use read-write/read-only/write-only;
+# a couple of SVD variants normalize onto the core three so they compare cleanly.
+_ACCESS_NORM = {"read-write": "read-write", "read-only": "read-only",
+                "write-only": "write-only", "writeonce": "write-only",
+                "read-writeonce": "read-write"}
+
+
+def _norm_access(a) -> str:
+    s = str(a or "").strip().lower().replace("_", "-")
+    return _ACCESS_NORM.get(s, s)
 
 
 # ---------------------------------------------------------------------------
@@ -284,6 +296,8 @@ def _compare_fields(peripheral: str, register: str,
         sf, gf = svd_by[name], gen_by[name]
         for key in _FIELD_KEYS:
             sv, gv = sf.get(key), gf.get(key)
+            if key == "access":
+                sv, gv = _norm_access(sv), _norm_access(gv)
             if sv != gv:
                 diffs.append(Diff(
                     peripheral=peripheral, register=register, field=name, key=key,
