@@ -4,8 +4,9 @@
 layers the access-case improvements on top of its batched system prompt:
   1. the `value` field doc names the access vocabulary (read-only/write-only/read-write);
   2. a dedicated ACCESS validation rule (read the specific field, translate the
-     datasheet notation via the legend BEFORE comparing, default-read-write when the
-     field is unannotated — the class that was otherwise a confident FP);
+     datasheet notation via the legend BEFORE comparing, and — like every other
+     invariant — mark it false when the access can't be found in the datasheet text,
+     no default assumed);
   3. two access few-shot examples (a status flag that is read-only, and an `rc_w0`
      field that translates to read-write) — the model has zero access examples otherwise.
 
@@ -22,9 +23,9 @@ _ACCESS_RULE = (
     "that field's row in the register's bit-description table (an access column such as "
     "r / rw / w / rc_w0). Translate the datasheet's notation to its canonical type using "
     "the notation key above BEFORE comparing — e.g. rc_w0 / rc_w1 / rt_w are read-write, "
-    "a status flag shown as `r` is read-only, `w` is write-only. A field the datasheet "
-    "does not explicitly annotate defaults to read-write, so do NOT reject a `read-write` "
-    "claim merely because no explicit access marker is printed."
+    "a status flag shown as `r` is read-only, `w` is write-only. If the field's access is "
+    "not explicitly stated in the retrieved datasheet text, treat it like any other "
+    "unfound fact — set is_true=false with confidence 1.0; do NOT assume a default."
 )
 
 _EX_INV_4 = ('      4. peripheral="FTM0", register="FTM0_C7SC", field_name="Xyfka", '
