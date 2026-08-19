@@ -89,6 +89,30 @@ files. `{rm}` is the reference-manual id (e.g. `rm0444`).
 directly (inside Docker) to control individual steps — see its `--help` and
 [CLAUDE.md](CLAUDE.md).
 
+## Counting bugs (register structure)
+
+We count one bug as a unique *incorrect structural attribute* of a register or field
+within a single reference manual (RM) — the tuple `(RM, peripheral, register, field,
+key)`, where `key` is one of `address_offset`, `reset_value`, `size`, `bit_offset`,
+`bit_width`, or `access`. The count is keyed on **identity, not value**: it ignores
+both the SVD's wrong value and the datasheet's correct value. So a bug that appears
+across many SVD files collapses to one — even when the wrong value differs between
+silicon families (e.g. a field width mis-specified as 5/6/8 across chips) or the
+correct value is genuinely chip-specific (e.g. a per-device ID-code reset value). Two
+facts are distinct bugs only if they differ in location or attribute.
+
+This is deliberately anti-inflationary. The per-SVD, per-value rows kept in
+`bug_reports/bug_tracker.csv` for patching and de-duplication are **not** counted as
+separate bugs, and facts already fixed upstream before we submitted them (no PR link +
+`Patched`) are excluded. The reported number is the count of distinct structural errors
+a maintainer would recognize as separate issues — not the number of individual edits,
+affected device files, or value variants. Compute it with:
+
+```bash
+python scripts/count_bugs.py                 # distinct bugs, upstream-patched excluded
+python scripts/count_bugs.py --by pr         # broken down by PR (--by rm|status too)
+```
+
 ## Documentation
 
 See [CLAUDE.md](CLAUDE.md) for detailed architecture, configuration, data models, and directory structure documentation.
