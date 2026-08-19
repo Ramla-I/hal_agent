@@ -25,8 +25,9 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 
 _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# matches the classifier threshold in applications/bug_finding/classify.py
+# match the classifier in applications/bug_finding/classify.py
 _MIN_REGS = 3
+_ALIGN = 0x100
 
 
 def _as_int(v: str | None):
@@ -70,8 +71,8 @@ def scan(review: str) -> tuple[list[str], list[str]]:
         if s is not None and g is not None:
             by_per[(r.get("peripheral") or "")].append((r.get("register") or "", g - s))
 
-    dropped: list[str] = []   # >=3 regs: the classifier now auto-drops as FP
-    keep: list[str] = []      # <3 regs: kept as candidates — verify (may be real)
+    dropped: list[str] = []   # base convention proven: the classifier auto-drops as FP
+    keep: list[str] = []      # uniform shift but base doesn't prove it — verify (may be real)
     for per, regs in sorted(by_per.items()):
         deltas = {d for _, d in regs}
         if len(deltas) != 1:
@@ -79,13 +80,17 @@ def scan(review: str) -> tuple[list[str], list[str]]:
         delta = next(iter(deltas))
         if delta == 0:
             continue
-        base_list = bases.get(per.upper(), [])
-        base_str = ", ".join(hex(b) for b in sorted(set(base_list))) or "?"
+        base_list = sorted(set(bases.get(per.upper(), [])))
+        base_str = ", ".join(hex(b) for b in base_list) or "?"
+        # same proof the classifier uses: a base is a convention artifact iff it is
+        # non-aligned and removing the shift re-aligns it (BKP 0x40006C04 - 4).
+        convention = (len(regs) >= _MIN_REGS and abs(delta) < _ALIGN and base_list
+                      and all(b % _ALIGN != 0 and (b - delta) % _ALIGN == 0 for b in base_list))
         sign = "+" if delta > 0 else "-"
         head = (f"  {rm:8} {per.upper():10} shift={sign}0x{abs(delta):X} "
                 f"regs={len(regs)} base={base_str}")
         body = f"           registers: {', '.join(rg for rg, _ in regs)}"
-        (dropped if len(regs) >= _MIN_REGS else keep).extend([head, body])
+        (dropped if convention else keep).extend([head, body])
     return dropped, keep
 
 
@@ -100,11 +105,11 @@ def main() -> None:
         keep += k
 
     print("=== Uniform whole-peripheral address shifts in TP'd address_offset rows ===\n")
-    print(f">= {_MIN_REGS} registers — the classifier now DROPS these as systematic FPs")
-    print("(baseAddress convention or wrong register bank; the SVD is correct — do NOT submit):\n")
+    print("Base convention PROVEN — the classifier DROPS these as FPs")
+    print("(non-aligned baseAddress absorbs the shift; absolute address matches — do NOT submit):\n")
     print("\n".join(dropped) if dropped else "  none")
-    print(f"\n< {_MIN_REGS} registers — the classifier KEEPS these as candidates")
-    print("(too few to be sure it's systematic; may be REAL bugs — verify each):\n")
+    print("\nUniform shift but base does NOT prove a convention — the classifier KEEPS these")
+    print("(aligned base => likely a real bug, e.g. an SVD carrying another variant's bank — verify each):\n")
     print("\n".join(keep) if keep else "  none")
     nd = sum(1 for l in dropped if l.startswith("  rm"))
     nk = sum(1 for l in keep if l.startswith("  rm"))

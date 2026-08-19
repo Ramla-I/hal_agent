@@ -200,10 +200,13 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
 
     peripherals: dict[str, dict[str, dict]] = {}
     for peripheral_name, registers_elem in resolved.items():
+        pel = per_elem.get(peripheral_name)
+        per_base = _int0(pel.find(f"{ns}baseAddress")) if pel is not None else None
         registers: dict[str, dict] = {}
         if registers_elem is not None:
             for reg in registers_elem.findall(f"{ns}register"):
                 base = _resolve_reg(peripheral_name, reg)
+                base["_peripheral_base"] = per_base
                 raw = reg.find(f"{ns}name").text.strip()
                 idxs = expand_dim_indices(reg, ns) if (expand_dim and "%s" in raw) else []
                 if idxs:
@@ -329,6 +332,7 @@ def _compare_register(peripheral: str, register: str,
                 peripheral=peripheral, register=register, key=key,
                 svd_value=svd_disp, generator_value=gen_disp, presence=Presence.BOTH,
                 reg_size=svd_reg.get("size"),
+                peripheral_base=svd_reg.get("_peripheral_base"),
             ))
     diffs.extend(_compare_fields(peripheral, register,
                                  svd_reg.get("fields", []), gen_reg.get("fields", [])))

@@ -46,39 +46,58 @@ def test_existing_signatures_intact():
     print("  existing signatures OK")
 
 
-def _addr(peripheral, register, svd, gen) -> Diff:
+def _addr(peripheral, register, svd, gen, base=None) -> Diff:
     return _d(peripheral=peripheral, register=register, key="address_offset",
-              svd_value=svd, generator_value=gen)
+              svd_value=svd, generator_value=gen, peripheral_base=base)
 
 
 def test_peripheral_uniform_address_shift():
-    # STM32 BKP-style: the SVD bakes +4 into baseAddress, so every register's
-    # offset differs from the datasheet's by the same constant. Absolute address
-    # matches -> representation difference, not a bug.
-    bkp = [_addr("BKP", f"DR{i}", "0x0", "0x4") for i in range(1, 11)]
-    bkp += [_addr("BKP", "CR", "0x2C", "0x30"),
-            _addr("BKP", "CSR", "0x30", "0x34"),
-            _addr("BKP", "RTCCR", "0x28", "0x2C")]
+    # STM32 BKP: the SVD bakes +4 into baseAddress (0x40006C04), so every register
+    # offset is 4 less than the datasheet. The base is non-aligned and removing the
+    # shift re-aligns it (0x40006C04 - 4 == 0x40006C00) -> proven base convention,
+    # absolute address matches, not a bug.
+    B = 0x40006C04
+    bkp = [_addr("BKP", f"DR{i}", "0x0", "0x4", base=B) for i in range(1, 11)]
+    bkp += [_addr("BKP", "CR", "0x2C", "0x30", base=B),
+            _addr("BKP", "CSR", "0x30", "0x34", base=B),
+            _addr("BKP", "RTCCR", "0x28", "0x2C", base=B)]
     cls = _peripheral_address_shift_classes(bkp)
     assert cls == {"BKP": 4}, cls
     r = mechanical_fp_reason(bkp[0], {}, cls)
     assert r and "uniform address shift" in r and "+0x4" in r, r
 
+    # rm0090 f417 HASH: same uniform-shift signature, but the base is ALIGNED
+    # (0x50060400) so it does NOT prove a base convention -> real bug (the SVD
+    # carries the F43x-only 0x310 digest bank). Must stay a candidate, NOT dropped.
+    hash_ = [_addr("HASH", f"HR{i}", "0x310", "0xC", base=0x50060400) for i in range(5)]
+    assert _peripheral_address_shift_classes(hash_) == {}, "aligned base must not be dropped"
+    assert mechanical_fp_reason(hash_[0], {}, {}) is None
+
+    # unknown base -> cannot prove the convention, keep as candidate
+    nob = [_addr("Z", f"R{i}", "0x0", "0x4", base=None) for i in range(3)]
+    assert _peripheral_address_shift_classes(nob) == {}
+
     # a single shifted register is an isolated bug, not a peripheral convention
-    one = [_addr("TIM2", "ARR", "0x2C", "0x30")]
+    one = [_addr("TIM2", "ARR", "0x2C", "0x30", base=0x40000404)]
     assert _peripheral_address_shift_classes(one) == {}
     assert mechanical_fp_reason(one[0], {}, {}) is None
 
     # mixed deltas within a peripheral -> real bugs, left as candidates
-    mixed = [_addr("X", "A", "0x0", "0x4"), _addr("X", "B", "0x4", "0x8"),
-             _addr("X", "C", "0x8", "0x10")]  # +4, +4, +8
+    mixed = [_addr("X", "A", "0x0", "0x4", base=0x40000004),
+             _addr("X", "B", "0x4", "0x8", base=0x40000004),
+             _addr("X", "C", "0x8", "0x10", base=0x40000004)]  # +4, +4, +8
     assert _peripheral_address_shift_classes(mixed) == {}
 
-    # negative uniform shift is handled too
-    neg = [_addr("Y", f"R{i}", "0x10", "0xC") for i in range(3)]
+    # negative base-convention shift: base 0x400003FC is non-aligned and removing
+    # the -4 shift re-aligns it (0x400003FC + 4 == 0x40000400).
+    neg = [_addr("Y", f"R{i}", "0x10", "0xC", base=0x400003FC) for i in range(3)]
     cls_neg = _peripheral_address_shift_classes(neg)
     assert cls_neg == {"Y": -4}, cls_neg
     assert "-0x4" in (mechanical_fp_reason(neg[0], {}, cls_neg) or "")
+
+    # uniform shift whose base does NOT re-align (aligned base) -> kept, even small shift
+    aligned = [_addr("W", f"R{i}", "0x0", "0x4", base=0x40000000) for i in range(3)]
+    assert _peripheral_address_shift_classes(aligned) == {}
     print("  peripheral uniform address shift OK")
 
 

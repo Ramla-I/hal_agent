@@ -28,12 +28,22 @@ import sys
 _REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # (rm, peripheral) -> Notes tag, for key==address_offset TP rows.
+# Only BKP qualifies: the SVD baseAddress absorbs a +4, so both values encode the
+# same absolute address. Two other uniform-shift peripherals were investigated and
+# are NOT tagged here:
+#   rm0090 HASH  — genuine TP: the f417 SVD carries the F43x-only 0x310 digest bank
+#                  (datasheet: HR0-4 @0x0C-0x1C for F415/417, 0x310-0x32C for F43x).
+#   rm0316 ADC3  — genuine FP already labelled FP: the F303 SVD's JDR @0x80 is
+#                  correct (0x3C is the old-ADC layout / SQR4 on F303), so the FP
+#                  label already says "not a bug" — no note needed.
 ANNOTATIONS: dict[tuple[str, str], str] = {
     ("rm0008", "bkp"): "GEN_AND_SVD_CORRECT",
     ("rm0041", "bkp"): "GEN_AND_SVD_CORRECT",
-    ("rm0090", "hash"): "SVD_CORRECT_GEN_WRONG",
-    ("rm0316", "adc3"): "SVD_CORRECT_GEN_WRONG",
 }
+
+# Tags this script owns; it may overwrite/clear these but never a hand-written note.
+# SVD_CORRECT_GEN_WRONG is retained so re-running clears any stale copies we wrote.
+_OUR_TAGS = {"GEN_AND_SVD_CORRECT", "SVD_CORRECT_GEN_WRONG"}
 
 
 def _note_for(row: dict) -> str | None:
@@ -56,10 +66,16 @@ def annotate(review: str) -> int:
     tagged = 0
     for r in rows:
         r.setdefault("Notes", "")
-        note = _note_for(r)
-        if note and not (r.get("Notes") or "").strip():
+        current = (r.get("Notes") or "").strip()
+        note = _note_for(r) or ""
+        # authoritative over our own tags (so removing a mapping clears stale tags);
+        # never clobber a hand-written note we don't own.
+        if current and current not in _OUR_TAGS:
+            continue
+        if note != current:
             r["Notes"] = note
-            tagged += 1
+            if note:
+                tagged += 1
 
     with open(review, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fields)

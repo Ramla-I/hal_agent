@@ -80,36 +80,49 @@ def _register_bit_shift_classes(diffs: list[Diff]) -> dict[tuple[str, str], str]
 
 # Min registers for a whole-peripheral address shift to be trusted as a base-convention artifact.
 _PERIPHERAL_ADDR_SHIFT_MIN_REGS = 3
+# Peripheral baseAddresses are aligned to at least this; a base off by less has
+# absorbed a register offset (the base-convention signature).
+_PERIPHERAL_BASE_ALIGN = 0x100
 
 
 def _peripheral_address_shift_classes(diffs: list[Diff]) -> dict[str, int]:
-    """Peripherals whose address_offset diffs are ALL the same nonzero shift.
+    """Peripherals whose address_offset diffs are a base-convention artifact.
 
     The generator reports register offsets relative to the datasheet's peripheral
-    base; an SVD is free to bake part of that offset into `baseAddress` instead
-    (e.g. STM32 BKP: base 0x40006C04 + offset 0x0 == datasheet base 0x40006C00 +
-    offset 0x4). That makes every register of the peripheral differ by the same
-    constant even though the *absolute* addresses match — a representation
-    difference, not a bug. The same uniform-shift signature also catches the
-    generator anchoring a whole peripheral to the WRONG register bank/generation
-    (e.g. HASH digest HR0-4 @0x310 given the main bank's 0xC; F3 ADC JDR @0x80
-    given F1-style 0x3C) — again the SVD is right and the rows are false
-    positives. We can't recompute the absolute address (the generator emits no
-    base), but a uniform shift across >=3 registers is the signature, so we treat
-    the whole peripheral as a false positive (analogous to the whole-register
-    uniform bit shift). Mixed deltas => real isolated bugs, left as candidates.
+    base; an SVD may bake part of that offset into `baseAddress` instead (STM32
+    BKP: base 0x40006C04 + offset 0x0 == datasheet base 0x40006C00 + offset 0x4).
+    Then every register differs from the datasheet by the same constant while the
+    *absolute* address matches — a representation difference, not a bug.
+
+    A uniform whole-peripheral shift is NOT enough on its own: the generator
+    anchoring a peripheral to the wrong register bank produces the same signature
+    but is a REAL bug (rm0090 f417 HASH: the SVD carries the F43x-only digest bank
+    at 0x310, which does not exist on the f417 — the generator's 0xC is correct).
+    So we require the SVD baseAddress to actually prove the convention: it must be
+    non-aligned and removing the uniform shift must re-align it (0x40006C04 - 4 ==
+    0x40006C00). A peripheral with an already-aligned base is left as a candidate.
     """
     by_per: dict[str, list[int]] = {}
+    base_of: dict[str, int] = {}
     for d in diffs:
         if d.key == "address_offset":
             s, g = _as_int(d.svd_value), _as_int(d.generator_value)
             if s is not None and g is not None:
                 by_per.setdefault(d.peripheral, []).append(g - s)
+                if d.peripheral_base is not None:
+                    base_of[d.peripheral] = d.peripheral_base
     classes: dict[str, int] = {}
     for per, deltas in by_per.items():
-        uniq = set(deltas)
-        if len(deltas) >= _PERIPHERAL_ADDR_SHIFT_MIN_REGS and uniq == {deltas[0]} and deltas[0] != 0:
-            classes[per] = deltas[0]
+        if len(deltas) < _PERIPHERAL_ADDR_SHIFT_MIN_REGS:
+            continue
+        if set(deltas) != {deltas[0]} or deltas[0] == 0:
+            continue
+        shift, base = deltas[0], base_of.get(per)
+        # Base-convention proof: an aligned "real" base + the shift == the SVD base.
+        if (base is not None and abs(shift) < _PERIPHERAL_BASE_ALIGN
+                and base % _PERIPHERAL_BASE_ALIGN != 0
+                and (base - shift) % _PERIPHERAL_BASE_ALIGN == 0):
+            classes[per] = shift
     return classes
 
 
@@ -146,8 +159,7 @@ def mechanical_fp_reason(
         if delta is not None:
             sign = "+" if delta > 0 else "-"
             return (f"whole-peripheral uniform address shift ({sign}0x{abs(delta):X}) "
-                    "— systematic generator mis-anchoring (baseAddress convention or "
-                    "wrong register bank), not per-register SVD bugs")
+                    "— SVD baseAddress absorbs it (absolute address matches), not a bug")
         return None
     if diff.key in ("bit_offset", "bit_width"):
         if gi is None:
