@@ -8,7 +8,10 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 
-from applications.bug_finding.classify import mechanical_fp_reason
+from applications.bug_finding.classify import (
+    mechanical_fp_reason,
+    _peripheral_address_shift_classes,
+)
 from applications.bug_finding.models import Diff
 
 
@@ -43,7 +46,44 @@ def test_existing_signatures_intact():
     print("  existing signatures OK")
 
 
+def _addr(peripheral, register, svd, gen) -> Diff:
+    return _d(peripheral=peripheral, register=register, key="address_offset",
+              svd_value=svd, generator_value=gen)
+
+
+def test_peripheral_uniform_address_shift():
+    # STM32 BKP-style: the SVD bakes +4 into baseAddress, so every register's
+    # offset differs from the datasheet's by the same constant. Absolute address
+    # matches -> representation difference, not a bug.
+    bkp = [_addr("BKP", f"DR{i}", "0x0", "0x4") for i in range(1, 11)]
+    bkp += [_addr("BKP", "CR", "0x2C", "0x30"),
+            _addr("BKP", "CSR", "0x30", "0x34"),
+            _addr("BKP", "RTCCR", "0x28", "0x2C")]
+    cls = _peripheral_address_shift_classes(bkp)
+    assert cls == {"BKP": 4}, cls
+    r = mechanical_fp_reason(bkp[0], {}, cls)
+    assert r and "uniform address shift" in r and "+0x4" in r, r
+
+    # a single shifted register is an isolated bug, not a peripheral convention
+    one = [_addr("TIM2", "ARR", "0x2C", "0x30")]
+    assert _peripheral_address_shift_classes(one) == {}
+    assert mechanical_fp_reason(one[0], {}, {}) is None
+
+    # mixed deltas within a peripheral -> real bugs, left as candidates
+    mixed = [_addr("X", "A", "0x0", "0x4"), _addr("X", "B", "0x4", "0x8"),
+             _addr("X", "C", "0x8", "0x10")]  # +4, +4, +8
+    assert _peripheral_address_shift_classes(mixed) == {}
+
+    # negative uniform shift is handled too
+    neg = [_addr("Y", f"R{i}", "0x10", "0xC") for i in range(3)]
+    cls_neg = _peripheral_address_shift_classes(neg)
+    assert cls_neg == {"Y": -4}, cls_neg
+    assert "-0x4" in (mechanical_fp_reason(neg[0], {}, cls_neg) or "")
+    print("  peripheral uniform address shift OK")
+
+
 if __name__ == "__main__":
     test_reset_value_width()
     test_existing_signatures_intact()
+    test_peripheral_uniform_address_shift()
     print("classify tests OK")

@@ -78,7 +78,46 @@ def _register_bit_shift_classes(diffs: list[Diff]) -> dict[tuple[str, str], str]
     return classes
 
 
-def mechanical_fp_reason(diff: Diff, shift_classes: dict[tuple[str, str], str]) -> Optional[str]:
+# Min registers for a whole-peripheral address shift to be trusted as a base-convention artifact.
+_PERIPHERAL_ADDR_SHIFT_MIN_REGS = 3
+
+
+def _peripheral_address_shift_classes(diffs: list[Diff]) -> dict[str, int]:
+    """Peripherals whose address_offset diffs are ALL the same nonzero shift.
+
+    The generator reports register offsets relative to the datasheet's peripheral
+    base; an SVD is free to bake part of that offset into `baseAddress` instead
+    (e.g. STM32 BKP: base 0x40006C04 + offset 0x0 == datasheet base 0x40006C00 +
+    offset 0x4). That makes every register of the peripheral differ by the same
+    constant even though the *absolute* addresses match — a representation
+    difference, not a bug. The same uniform-shift signature also catches the
+    generator anchoring a whole peripheral to the WRONG register bank/generation
+    (e.g. HASH digest HR0-4 @0x310 given the main bank's 0xC; F3 ADC JDR @0x80
+    given F1-style 0x3C) — again the SVD is right and the rows are false
+    positives. We can't recompute the absolute address (the generator emits no
+    base), but a uniform shift across >=3 registers is the signature, so we treat
+    the whole peripheral as a false positive (analogous to the whole-register
+    uniform bit shift). Mixed deltas => real isolated bugs, left as candidates.
+    """
+    by_per: dict[str, list[int]] = {}
+    for d in diffs:
+        if d.key == "address_offset":
+            s, g = _as_int(d.svd_value), _as_int(d.generator_value)
+            if s is not None and g is not None:
+                by_per.setdefault(d.peripheral, []).append(g - s)
+    classes: dict[str, int] = {}
+    for per, deltas in by_per.items():
+        uniq = set(deltas)
+        if len(deltas) >= _PERIPHERAL_ADDR_SHIFT_MIN_REGS and uniq == {deltas[0]} and deltas[0] != 0:
+            classes[per] = deltas[0]
+    return classes
+
+
+def mechanical_fp_reason(
+    diff: Diff,
+    shift_classes: dict[tuple[str, str], str],
+    addr_shift_classes: Optional[dict[str, int]] = None,
+) -> Optional[str]:
     """Reason string if *diff* is a clear generator false positive, else None.
 
     Deterministic signatures only (no LLM): not-found placeholders, absolute
@@ -103,6 +142,12 @@ def mechanical_fp_reason(diff: Diff, shift_classes: dict[tuple[str, str], str]) 
             return "address_offset is a range/formula, not a single offset"
         if gi >= _OFFSET_ABS_THRESHOLD:
             return "absolute address emitted instead of peripheral offset"
+        delta = (addr_shift_classes or {}).get(diff.peripheral)
+        if delta is not None:
+            sign = "+" if delta > 0 else "-"
+            return (f"whole-peripheral uniform address shift ({sign}0x{abs(delta):X}) "
+                    "— systematic generator mis-anchoring (baseAddress convention or "
+                    "wrong register bank), not per-register SVD bugs")
         return None
     if diff.key in ("bit_offset", "bit_width"):
         if gi is None:
@@ -125,10 +170,11 @@ def split_mechanical_fps(diffs: list[Diff]) -> tuple[list[tuple[Diff, str]], lis
     """
     mism = [d for d in diffs if d.is_value_mismatch]
     shift_classes = _register_bit_shift_classes(mism)
+    addr_shift_classes = _peripheral_address_shift_classes(mism)
     fps: list[tuple[Diff, str]] = []
     candidates: list[Diff] = []
     for d in mism:
-        reason = mechanical_fp_reason(d, shift_classes)
+        reason = mechanical_fp_reason(d, shift_classes, addr_shift_classes)
         (fps.append((d, reason)) if reason else candidates.append(d))
     return fps, candidates
 
