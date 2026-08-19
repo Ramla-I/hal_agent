@@ -63,3 +63,20 @@ stm32f100,stm32-rs,rm0041,"USART1_DR: reset value: svd = 0x0, agent = 0xXXXX_XXX
 "stm32f0x0",stm32-rs,rm0360,"tim15_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
 "stm32f0x0",stm32-rs,rm0360,"tim16_arr: reset_value: svd = 0x0, agent = 0xFFFF, RM = ",https://github.com/stm32-rs/stm32-rs/pull/1277,Merged
 "stm32f0x0",stm32-rs,rm0360,"crc_init: address_offset: svd = 0xC, agent = 0x10, RM = ",,Patched
+“stm32c011,stm32c031,stm32c051,stm32c071,stm32c091,stm32c092”,stm32-rs,rm0490,"FLASH_WRP1AR_WRP1A_STRT: bit width: svd = , agent = 7",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c051,stm32c071,stm32c091,stm32c092”,stm32-rs,rm0490,"FLASH_WRP1AR_WRP1A_END: bit width: svd = , agent = 7",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c051,stm32c071,stm32c091,stm32c092”,stm32-rs,rm0490,"FLASH_WRP1BR_WRP1B_STRT: bit width: svd = , agent = 7",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c051,stm32c071,stm32c091,stm32c092”,stm32-rs,rm0490,"FLASH_WRP1BR_WRP1B_END: bit width: svd = , agent = 7",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c051,stm32c071,stm32c091,stm32c092”,stm32-rs,rm0490,"FLASH_SECR_SEC_SIZE: bit width: svd = , agent = 7",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c051,stm32c071,stm32c091,stm32c092”,stm32-rs,rm0490,"FLASH_PCROP1ASR_PCROP1A_STRT: bit width: svd = , agent = 9",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c051,stm32c071,stm32c091,stm32c092”stm32-rs,rm0490,"FLASH_PCROP1BSR_PCROP1B_STRT: bit width: svd = 6, agent = 9",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c051,stm32c071,stm32c091,stm32c092”,stm32-rs,rm0490,"FLASH_PCROP1AER_PCROP1A_END: bit width: svd = 6, agent = 9",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c051,stm32c071,stm32c091,stm32c092”,stm32-rs,rm0490,"FLASH_PCROP1BER_PCROP1B_END: bit width: svd = 6, agent = 9",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+stm32c011,stm32-rs,rm0490,"RCC_CSR1_LSEDRV: bit width: svd = 2, agent = 1",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c071”,stm32-rs,rm0490,"RCC_IOPSMENR: reset value: svd = , agent = 0x2F",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c071”;stm32c031,stm32-rs,rm0490,"RCC_CR: reset value: svd = , agent = 0x1540",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c071”,stm32-rs,rm0490,"RCC_AHBSMENR: reset value: svd = , agent = 0x1301",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c011,stm32c031,stm32c071”,stm32-rs,rm0490,"RCC_APBSMENR1: reset value: svd = , agent = 0x186F7C03",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c051”,stm32-rs,rm0490,"DBG_IDCODE: reset value: svd = , agent = 0x1000044C",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c071”,stm32-rs,rm0490,"DBG_IDCODE: reset value: svd = , agent = 0x10000493",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
+“stm32c091, stm32c092”,stm32-rs,rm0490,"DBG_IDCODE: reset value: svd = , agent = 0x1000044D",https://github.com/stm32-rs/stm32-rs/pull/1282,Merged
