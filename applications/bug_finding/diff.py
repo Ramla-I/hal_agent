@@ -24,7 +24,10 @@ from typing import Any, Optional
 
 from agent_tools.svd_parsing import resolve_peripheral_registers, expand_dim_indices
 from utils.generator_facts import convert_generator_register_to_svd_like
+from utils.utils import setup_logger
 from .models import Diff, Presence
+
+logger = setup_logger(__name__)
 
 # Register-level attributes compared (in a stable order).
 _REGISTER_KEYS = ("address_offset", "reset_value", "size")
@@ -192,6 +195,16 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
         prefix = peripheral_name + "_"
         return name[len(prefix):] if name.startswith(prefix) else name
 
+    def _assign(registers, collisions, key, value):
+        # Registers are keyed by prefix-stripped name; if two SVD registers strip
+        # to the same key with different offsets (e.g. HASH `HR0` @0xC vs
+        # `HASH_HR0` @0x310), one silently overwrites the other. Record it so the
+        # diff can warn — the kept register may be mispaired against the generator.
+        prev = registers.get(key)
+        if prev is not None and prev.get("address_offset") != value.get("address_offset"):
+            collisions.append((key, value.get("address_offset"), prev.get("address_offset")))
+        registers[key] = value
+
     # Expand <dim> arrays to match the generator (which now expands them too).
     # Set SVD_DIM_EXPAND=0 only to regenerate reviews against LEGACY generator
     # output that still has the collapsed `%s` files (else bcr2/3/4 would show as
@@ -203,6 +216,7 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
         pel = per_elem.get(peripheral_name)
         per_base = _int0(pel.find(f"{ns}baseAddress")) if pel is not None else None
         registers: dict[str, dict] = {}
+        collisions: list = []
         if registers_elem is not None:
             for reg in registers_elem.findall(f"{ns}register"):
                 base = _resolve_reg(peripheral_name, reg)
@@ -223,9 +237,17 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
                     for pos, ix in enumerate(idxs):
                         inst = dict(base)
                         inst["address_offset"] = base_off + pos * inc
-                        registers[_strip(tmpl.replace("%s", ix).lower())] = inst
+                        _assign(registers, collisions, _strip(tmpl.replace("%s", ix).lower()), inst)
                 else:
-                    registers[_strip(raw.lower())] = base
+                    _assign(registers, collisions, _strip(raw.lower()), base)
+        if collisions:
+            detail = ", ".join(f"{k} (kept {_hex_display(new)}, dropped {_hex_display(old)})"
+                               for k, new, old in collisions)
+            logger.warning(
+                "%s peripheral '%s': %d register name collision(s) after prefix-stripping; "
+                "the diff keeps one register per name and may mispair it against the generator "
+                "-- verify these manually: %s",
+                os.path.basename(svd_path), peripheral_name, len(collisions), detail)
         peripherals[peripheral_name] = registers
     return peripherals
 
