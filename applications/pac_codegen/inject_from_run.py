@@ -303,6 +303,9 @@ def main() -> None:
                 "file": "", "peripheral": c["module"], "register": c["register"],
                 "fate": "instance_conflict",
                 "reason": f"instances {c['instances']} disagree — {c['detail']}",
+                # what each instance claimed, so the row is reviewable
+                "readings": c.get("readings", []),
+                "same_datasheet_text": c.get("same_datasheet_text"),
                 "constraints": [],
             })
             print(f"  note: {c['module']}/{c['register']}: instances "

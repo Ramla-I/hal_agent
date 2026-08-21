@@ -1493,6 +1493,11 @@ _PLACEHOLDER_RE = re.compile(r"(?<=[A-Za-z])[Xx](?=_)")
 def _norm_source_register(name: str) -> str:
     """TIM4_CR1, TIMX_CR1 and TIM_CR1 all collapse to TIM_CR1."""
     s = _PLACEHOLDER_RE.sub("", _INST_NUM_RE.sub("", (name or "").upper()))
+    # UART4 and USART1 are different peripherals that svd2rust gives ONE
+    # register-block module, which is why their constraints collide at all.
+    # Inside such a group `UART_CR1.UE` and `USART_CR1.UE` name the same bit
+    # in the same Rust type; only the spelling of the family differs.
+    s = re.sub(r"\bUART_", "USART_", s)
     return s
 
 
@@ -1532,6 +1537,44 @@ def _plan_quotes(plan: "RegisterPlan"):
     return frozenset(" ".join(d.split())
                      for docs in (getattr(plan, "docs", {}) or {}).values()
                      for d in docs)
+
+
+_QUOTE_NOISE_RE = re.compile(r"[*`_]")
+_QUOTE_CORE_MIN = 40
+
+
+def _norm_quote(q: str) -> str:
+    """Strip everything that is transcription, not sentence.
+
+    Markdown emphasis comes from the PDF->markdown conversion and the curly
+    quotes come from the PDF itself; neither is part of what the manual says."""
+    s = (q or "").lower()
+    for a, b in (("\u2018", "'"), ("\u2019", "'"), ("\u201c", '"'), ("\u201d", '"')):
+        s = s.replace(a, b)
+    s = _QUOTE_NOISE_RE.sub(" ", s)
+    return re.sub(r"\s+", " ", s).strip(" .:")
+
+
+def _quotes_are_one_sentence(readings) -> bool:
+    """Do these instances cite the SAME sentence, quoted differently?
+
+    Extractions capture different windows around one sentence -- "Note: This
+    bit should be written only when SPI is disabled", the same without the
+    "Note:", and the same again with "Bit 13 CRCEN:" in front. Comparing the
+    strings for equality reads three quotations of one rule as three rules.
+
+    The test is containment, not similarity: the shortest quote in the group
+    must appear verbatim inside a quote from every instance. That is strong
+    evidence of one sentence and weak evidence of nothing else -- a short
+    fragment cannot sit inside two genuinely different sentences by accident.
+    The length floor stops a stub like "Note:" from matching everything."""
+    sets = [[_norm_quote(q) for q in qs] for qs in readings]
+    if any(not s for s in sets):
+        return False
+    core = min((q for s in sets for q in s), key=len)
+    if len(core) < _QUOTE_CORE_MIN:
+        return False
+    return all(any(core in q for q in s) for s in sets)
 
 
 def _rule_quotes(plan: "RegisterPlan"):
@@ -1650,9 +1693,9 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
         # by one instance and not another may be an incomplete extraction, or a
         # real difference between siblings (a UART is not quite a USART), and
         # only the manual settles which.
-        quotes = {_rule_quotes(p) for p in group}
+        quotes = [_rule_quotes(p) for p in group]
         conds = {_rule_conditions(p) for p in group}
-        if len(quotes) == 1 and len(conds) == 1 and quotes != {frozenset()}:
+        if _quotes_are_one_sentence(quotes) and len(conds) == 1:
             # The NARROWEST reading wins, not the widest. When one instance
             # named fields and another named none, the two are not a narrow
             # claim and a broad one -- they are one datasheet sentence
@@ -1691,8 +1734,23 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
             })
             continue
 
+        # A dropped group is exactly the pile a person has to adjudicate, so
+        # the row has to say what each instance actually claimed. Without the
+        # readings side by side, "these disagree" is not reviewable.
+        readings = []
+        for pl in group:
+            readings.append({
+                "instance": getattr(pl, "source_instance", "?"),
+                "fields": sorted(getattr(pl, "field_gates", {}) or {})
+                          or ["(whole register)"],
+                "conditions": sorted(_rule_conditions(pl)),
+                "quotes": sorted(_rule_quotes(pl)),
+            })
+        same_quote = len({r["quotes"] and tuple(r["quotes"]) for r in readings}) == 1
         conflicts.append({
             "module": module, "register": reg, "instances": instances,
+            "readings": readings,
+            "same_datasheet_text": same_quote,
             "detail": "instances disagree on the gate for the same Rust "
                       "type after normalising instance-qualified register "
                       "names and equals/set conditions; dropped rather than "

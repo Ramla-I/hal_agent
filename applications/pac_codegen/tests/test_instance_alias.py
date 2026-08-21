@@ -255,3 +255,72 @@ def test_different_quotes_still_conflict():
     ]
     kept, conflicts, merges = rust_codegen.resolve_instance_collisions(plans)
     assert kept == [] and merges == [] and len(conflicts) == 1
+
+
+def test_one_sentence_quoted_three_ways_is_one_rule():
+    """The same sentence with different amounts of surrounding text.
+
+    Measured on the corpus: comparing quote strings for equality left 138
+    groups "disagreeing" when what actually differed was where the extraction
+    started and stopped reading."""
+    plans = [
+        _plan("spi1", "spi1", "SPE", targets=["CRCEN", "DFF"], field_gating=True,
+              quote="Note: This bit should be written only when SPI is "
+                    "disabled (SPE = 0) for correct operation."),
+        _plan("spi1", "spi2", "SPE", targets=["CRCEN"], field_gating=True,
+              quote="This bit should be written only when SPI is disabled "
+                    "(SPE = 0) for correct operation"),
+        _plan("spi1", "spi3", "SPE", targets=["DFF"], field_gating=True,
+              quote="Bit 13 **CRCEN:** ... This bit should be written only "
+                    "when SPI is disabled (SPE = 0) for correct operation."),
+    ]
+    kept, conflicts, merges = rust_codegen.resolve_instance_collisions(plans)
+    assert len(kept) == 1 and conflicts == [] and len(merges) == 1
+    assert sorted(kept[0].field_gates) == ["crcen", "dff"]
+
+
+def test_a_short_fragment_does_not_match_everything():
+    """Containment needs a real sentence under it, or "Note:" would merge
+    every group in the corpus."""
+    plans = [
+        _plan("spi1", "spi1", "SPE", targets=["CRCEN"], quote="Note:",
+              field_gating=True),
+        _plan("spi1", "spi2", "SPE", targets=["DFF"],
+              quote="Note: the receiver must be idle.", field_gating=True),
+    ]
+    kept, conflicts, merges = rust_codegen.resolve_instance_collisions(plans)
+    assert merges == [] and kept == [] and len(conflicts) == 1
+
+
+def test_uart_and_usart_name_the_same_bit():
+    """UART4 and USART1 are different peripherals sharing ONE svd2rust module,
+    so inside a collision group `UART_CR1.UE` and `USART_CR1.UE` are the same
+    condition spelled two ways."""
+    q = "This register can only be written when the USART is disabled (UE = 0)."
+    a = _plan("usart1", "usart1", "UE", targets=["BRR"], quote=q, field_gating=True)
+    b = _plan("usart1", "uart4", "UE", targets=["BRR"], quote=q, field_gating=True)
+    for pl, reg in ((a, "USART_CR1"), (b, "UART_CR1")):
+        for fg in pl.field_gates.values():
+            for pc in fg.preconditions:
+                pc.register = reg
+    kept, conflicts, _merges = rust_codegen.resolve_instance_collisions([a, b])
+    assert conflicts == [], "the same bit spelled two ways is not a disagreement"
+    # they now agree OUTRIGHT, so they collapse on the agreeing path and need
+    # no review row at all -- without the alias this group was dropped.
+    assert len(kept) == 1
+
+
+def test_conflict_rows_carry_the_readings_for_review():
+    """A dropped group is a person's to adjudicate, so the row must say what
+    each instance actually claimed."""
+    plans = [
+        _plan("i2c1", "i2c1", "TEXTEN", quote="These bits need TEXTEN = 0 "
+              "before any write is accepted by the peripheral."),
+        _plan("i2c1", "i2c2", "UE", quote="These bits need the port disabled "
+              "before any write is accepted by the peripheral."),
+    ]
+    _kept, conflicts, _m = rust_codegen.resolve_instance_collisions(plans)
+    assert len(conflicts) == 1
+    rd = conflicts[0]["readings"]
+    assert {r["instance"] for r in rd} == {"i2c1", "i2c2"}
+    assert all(r["conditions"] and r["quotes"] for r in rd)
