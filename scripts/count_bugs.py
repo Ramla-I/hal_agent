@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
-"""Count distinct bugs from bug_tracker.csv (the tracker over-counts on purpose).
+"""Count distinct bugs from bug_tracker.csv + the reviewed reports in bug_reports/checked/.
 
-Each row is one (fact x svd-value variant) — the right grain for dedup, but the same
-field+attribute wrong with different original values across SVD families is ONE bug.
-This collapses rows to distinct (RM, location, key).
+Every CSV row (tracker and each checked ``{rm}_bug_report.csv``, same columns) is one
+(fact x svd-value variant) — the right grain for dedup, but the same field+attribute
+wrong with different original values across SVD families is ONE bug. This unions all
+rows and collapses them to distinct (RM, location, key); a bug that appears in BOTH the
+tracker and a checked report is counted once.
 
-EXCLUDED from the count by default: rows with NO PR link and Status=Patched — those
-were already patched upstream before we caught them, so they aren't our discoveries.
-Pass --include-upstream to count them too.
+EXCLUDED from the count by default: rows with NO PR link and Status=Patched — those were
+already patched upstream before we caught them, so they aren't our discoveries. Pass
+--include-upstream to count them too.
 
-  python scripts/count_bugs.py [bug_reports/bug_tracker.csv] [--by rm|pr|status]
-                               [--family] [--include-upstream]
+  python scripts/count_bugs.py [--by rm|pr|status] [--family] [--include-upstream]
+  python scripts/count_bugs.py --no-checked            # tracker only (old behaviour)
+  python scripts/count_bugs.py <tracker.csv> --checked-dir <dir>
 """
-import argparse, csv, collections, os, re
+import argparse, csv, collections, glob, os, re
+
+_REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def parse_desc(desc: str):
@@ -31,17 +36,37 @@ def already_upstream(r: dict) -> bool:
     return not (r.get("PR") or "").strip() and (r.get("Status") or "").strip().lower() == "patched"
 
 
+def _read(path: str) -> list:
+    try:
+        with open(path, newline="", encoding="utf-8") as f:
+            return [r for r in csv.DictReader(f) if (r.get("Bug Description") or "").strip()]
+    except FileNotFoundError:
+        return []
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("tracker", nargs="?",
-                    default=os.path.join(os.path.dirname(__file__), "..", "bug_reports", "bug_tracker.csv"))
+                    default=os.path.join(_REPO, "bug_reports", "bug_tracker.csv"))
+    ap.add_argument("--checked-dir", default=os.path.join(_REPO, "bug_reports", "checked"),
+                    help="folder of reviewed {rm}_bug_report.csv files (default bug_reports/checked)")
+    ap.add_argument("--no-checked", action="store_true", help="count the tracker only")
     ap.add_argument("--by", choices=["rm", "pr", "status"])
     ap.add_argument("--family", action="store_true")
     ap.add_argument("--include-upstream", action="store_true",
                     help="also count the already-patched-upstream (no-PR + Patched) rows")
     args = ap.parse_args()
 
-    rows = list(csv.DictReader(open(args.tracker, newline="", encoding="utf-8")))
+    sources = [("tracker", args.tracker)]
+    if not args.no_checked:
+        sources += [("checked", p) for p in sorted(glob.glob(os.path.join(args.checked_dir, "*.csv")))]
+
+    rows, per_source = [], collections.Counter()
+    for tag, path in sources:
+        rs = _read(path)
+        per_source[tag] += len(rs)
+        rows += rs
+
     upstream = [r for r in rows if already_upstream(r)]
     ours = rows if args.include_upstream else [r for r in rows if not already_upstream(r)]
 
@@ -54,13 +79,21 @@ def main():
             k = {"rm": r.get("RM", ""), "pr": r.get("PR", ""), "status": r.get("Status", "")}[args.by].strip()
             breakdown[k].add(bug)
 
-    print(f"  tracker rows total:                 {len(rows)}")
-    print(f"  excluded (already patched upstream):{len(upstream):>4}   (no PR + Patched)"
-          if not args.include_upstream else "")
-    print(f"  counted rows (facts x svd-variant): {len(ours)}")
-    print(f"  distinct bugs (RM, location, key):  {len(bugs)}")
+    n_checked_files = sum(1 for tag, _ in sources if tag == "checked")
+
+    def line(label, n, extra=""):
+        print(f"  {label:<37}{n:>5}{extra}")
+
+    line("tracker rows:", per_source["tracker"])
+    if not args.no_checked:
+        line(f"checked rows ({n_checked_files} files):", per_source["checked"])
+    line("total rows:", len(rows))
+    if not args.include_upstream:
+        line("excluded (already patched upstream):", len(upstream), "   (no PR + Patched)")
+    line("counted rows (facts x svd-variant):", len(ours))
+    line("distinct bugs (RM, location, key):", len(bugs))
     if args.family:
-        print(f"  ~root-cause families (heuristic):   {len(fams)}")
+        line("~root-cause families (heuristic):", len(fams))
     if args.by:
         print(f"\n  distinct bugs by {args.by}:")
         for k, s in sorted(breakdown.items(), key=lambda kv: -len(kv[1])):

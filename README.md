@@ -106,10 +106,15 @@ This is deliberately anti-inflationary. The per-SVD, per-value rows kept in
 separate bugs, and facts already fixed upstream before we submitted them (no PR link +
 `Patched`) are excluded. The reported number is the count of distinct structural errors
 a maintainer would recognize as separate issues — not the number of individual edits,
-affected device files, or value variants. Compute it with:
+affected device files, or value variants.
+
+The count unions `bug_reports/bug_tracker.csv` with every reviewed
+`bug_reports/checked/{rm}_bug_report.csv` (same columns); a bug appearing in both is
+counted once. Compute it with:
 
 ```bash
-python scripts/count_bugs.py                 # distinct bugs, upstream-patched excluded
+python scripts/count_bugs.py                 # tracker + checked, upstream-patched excluded
+python scripts/count_bugs.py --no-checked    # tracker only
 python scripts/count_bugs.py --by pr         # broken down by PR (--by rm|status too)
 ```
 
