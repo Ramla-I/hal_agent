@@ -70,11 +70,13 @@ def main():
     upstream = [r for r in rows if already_upstream(r)]
     ours = rows if args.include_upstream else [r for r in rows if not already_upstream(r)]
 
-    bugs, fams, breakdown = set(), set(), collections.defaultdict(set)
+    bugs, fams = set(), set()
+    breakdown, by_key = collections.defaultdict(set), collections.defaultdict(set)
     for r in ours:
         loc, key = parse_desc(r.get("Bug Description", ""))
         bug = (r.get("RM", "").strip(), loc, key)
         bugs.add(bug); fams.add((r.get("RM", "").strip(), family(loc), key))
+        by_key[key or "(none)"].add(bug)
         if args.by:
             k = {"rm": r.get("RM", ""), "pr": r.get("PR", ""), "status": r.get("Status", "")}[args.by].strip()
             breakdown[k].add(bug)
@@ -94,6 +96,11 @@ def main():
     line("distinct bugs (RM, location, key):", len(bugs))
     if args.family:
         line("~root-cause families (heuristic):", len(fams))
+
+    print("\n  distinct bugs by key:")
+    for k, s in sorted(by_key.items(), key=lambda kv: -len(kv[1])):
+        print(f"    {k:<18} {len(s)}")
+
     if args.by:
         print(f"\n  distinct bugs by {args.by}:")
         for k, s in sorted(breakdown.items(), key=lambda kv: -len(kv[1])):
