@@ -86,15 +86,17 @@ def test_missing_mod_rs_yields_empty_map():
         assert rust_codegen.peripheral_instance_map(d) == {}
 
 
-def _plan(module: str, instance: str, field: str, state: str = "cleared"):
+def _plan(module: str, instance: str, field: str, state: str = "cleared",
+          targets=(), quote: str = "These bits can be written only when TEXTEN = 0.",
+          field_gating: bool = False):
     info = RegisterInfo(**{
         "datasheet_register_abbreviation": "TIMEOUTR",
         "address_offset": "0x0", "reset_value": "0x0", "size": 32,
         "subfields": [],
         "access_constraints_v2": [{
             "kind": "state_gate", "severity": "error", "consequence": "x",
-            "datasheet_text": "These bits can be written only when TEXTEN = 0.",
-            "target_register": "TIMEOUTR", "target_fields": [],
+            "datasheet_text": quote,
+            "target_register": "TIMEOUTR", "target_fields": list(targets),
             "target_operation": "write",
             "preconditions": [{
                 "register": "TIMEOUTR", "field": field, "whole_register": False,
@@ -104,7 +106,7 @@ def _plan(module: str, instance: str, field: str, state: str = "cleared"):
             "postconditions": [],
         }],
     })
-    p = rust_codegen.RegisterPlan(info, module)
+    p = rust_codegen.RegisterPlan(info, module, field_level_gating=field_gating)
     p.source_instance = instance
     return p
 
@@ -113,7 +115,7 @@ def test_agreeing_instances_collapse_to_one_plan():
     """I2C1/I2C2/I2C3 all carrying the same rule is ONE rule the manual states
     once — it must emit one gate, not three colliding ones."""
     plans = [_plan("i2c1", i, "TEXTEN") for i in ("i2c1", "i2c2", "i2c3")]
-    kept, conflicts = rust_codegen.resolve_instance_collisions(plans)
+    kept, conflicts, _merges = rust_codegen.resolve_instance_collisions(plans)
     assert len(kept) == 1
     assert conflicts == []
     assert kept[0].source_instance == "i2c1"      # the module owner
@@ -124,7 +126,7 @@ def test_disagreeing_instances_drop_the_whole_gate():
     right. Neither survives: a gate is a compile-time obligation on every
     downstream user, so contradictory evidence buys no gate at all."""
     plans = [_plan("i2c1", "i2c2", "UE"), _plan("i2c1", "i2c1", "TEXTEN")]
-    kept, conflicts = rust_codegen.resolve_instance_collisions(plans)
+    kept, conflicts, _merges = rust_codegen.resolve_instance_collisions(plans)
     assert kept == [], "a disagreeing group must not be enforced"
     assert len(conflicts) == 1
     assert conflicts[0]["instances"] == ["i2c1", "i2c2"]
@@ -135,7 +137,7 @@ def test_owner_does_not_win_a_disagreement():
     """Being the module owner is a tie-break for AGREEING plans only — it is
     not evidence that its reading is the correct one."""
     plans = [_plan("i2c1", "i2c1", "TEXTEN"), _plan("i2c1", "i2c3", "UE")]
-    kept, conflicts = rust_codegen.resolve_instance_collisions(plans)
+    kept, conflicts, _merges = rust_codegen.resolve_instance_collisions(plans)
     assert kept == [] and len(conflicts) == 1
 
 
@@ -144,7 +146,7 @@ def test_disagreement_is_never_unioned():
     preconditions — stricter than the datasheet, and a false compile error
     for correct code."""
     plans = [_plan("i2c1", "i2c2", "UE"), _plan("i2c1", "i2c3", "TEXTEN")]
-    kept, _ = rust_codegen.resolve_instance_collisions(plans)
+    kept, _, _ = rust_codegen.resolve_instance_collisions(plans)
     assert kept == []
 
 
@@ -154,7 +156,7 @@ def test_tie_break_is_numeric_not_lexicographic():
     group in today's corpus has a 2+-digit instance, so this guards a latent
     bug rather than a live one."""
     plans = [_plan("usart1", "usart10", "TE"), _plan("usart1", "usart2", "TE")]
-    kept, conflicts = rust_codegen.resolve_instance_collisions(plans)
+    kept, conflicts, _merges = rust_codegen.resolve_instance_collisions(plans)
     assert conflicts == []                       # they agree
     assert kept[0].source_instance == "usart2", "picked usart10 over usart2"
 
@@ -176,7 +178,7 @@ def test_distinct_registers_do_not_collide():
     a = _plan("i2c1", "i2c2", "TEXTEN")
     b = _plan("i2c1", "i2c3", "TEXTEN")
     b.reg_name, b.reg_lower = "OAR1", "oar1"
-    kept, conflicts = rust_codegen.resolve_instance_collisions([a, b])
+    kept, conflicts, _merges = rust_codegen.resolve_instance_collisions([a, b])
     assert len(kept) == 2 and conflicts == []
 
 
@@ -195,3 +197,61 @@ if __name__ == "__main__":
     print(f"\n{'=' * 60}\nResults: {passed} passed, {failed} failed\n{'=' * 60}")
     if failed:
         sys.exit(1)
+
+
+def test_same_rule_at_two_precisions_merges_to_the_named_fields():
+    """One instance named the bits, another named none -- ONE sentence pulled
+    out at two precisions, not two different claims.
+
+    Before this merge the whole group was dropped as a conflict, and with it a
+    real finding: Hubris writes USART1.CR1.FIFOEN while the port is enabled,
+    which RM0433 forbids, and four sibling instances disagreeing about how
+    precisely to say so was enough to lose it."""
+    q = "This bitfield can only be written when the USART is disabled."
+    plans = [
+        _plan("usart1", "usart1", "UE", targets=["FIFOEN", "M1"],
+              quote=q, field_gating=True),
+        _plan("usart1", "usart2", "UE", targets=["FIFOEN"],
+              quote=q, field_gating=True),
+        _plan("usart1", "usart6", "UE", targets=[],
+              quote=q, field_gating=True),
+    ]
+    kept, conflicts, merges = rust_codegen.resolve_instance_collisions(plans)
+    assert len(kept) == 1 and conflicts == []
+    assert len(merges) == 1
+    assert sorted(kept[0].field_gates) == ["fifoen", "m1"]
+
+
+def test_the_narrowest_reading_wins_not_the_widest():
+    """The instance that named NO fields must not widen the gate to the whole
+    register.
+
+    Its sentence says "this bitfield", so naming nothing is a precision
+    failure, not a broader claim. Adopting it would gate every sibling field
+    in CR1 -- TE, RE, RXNEIE -- and each one is a false compile error against
+    correct code. Losing a gate costs a finding; inventing one costs trust."""
+    q = "This bitfield can only be written when the USART is disabled."
+    plans = [
+        _plan("usart1", "usart1", "UE", targets=["FIFOEN"],
+              quote=q, field_gating=True),
+        _plan("usart1", "usart6", "UE", targets=[], quote=q, field_gating=True),
+    ]
+    kept, _conflicts, _merges = rust_codegen.resolve_instance_collisions(plans)
+    assert len(kept) == 1
+    assert sorted(kept[0].field_gates) == ["fifoen"]
+    assert not kept[0].preconditions, "must not become a whole-register gate"
+
+
+def test_different_quotes_still_conflict():
+    """The merge is licensed by the instances citing the SAME sentence. Two
+    different sentences are two claims, and those still buy no gate."""
+    plans = [
+        _plan("usart1", "usart1", "UE", targets=["FIFOEN"],
+              quote="Writable only when the USART is disabled.",
+              field_gating=True),
+        _plan("usart1", "usart2", "UE", targets=["M1"],
+              quote="Writable only when the receiver is idle.",
+              field_gating=True),
+    ]
+    kept, conflicts, merges = rust_codegen.resolve_instance_collisions(plans)
+    assert kept == [] and merges == [] and len(conflicts) == 1

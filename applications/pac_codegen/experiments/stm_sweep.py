@@ -275,7 +275,8 @@ class PacSnapshot:
 # Steps
 # --------------------------------------------------------------------------- #
 
-def run_inject(t: Target, pac_dir: Path, report: Path, dry: bool) -> subprocess.CompletedProcess:
+def run_inject(t: Target, pac_dir: Path, report: Path, dry: bool,
+               field_gating: bool = False) -> subprocess.CompletedProcess:
     argv = [
         sys.executable, str(INJECT), str(t.run_dir),
         "--pac", str(pac_dir), "--device", t.device,
@@ -287,6 +288,7 @@ def run_inject(t: Target, pac_dir: Path, report: Path, dry: bool) -> subprocess.
         # never point at the committed applications/pac_codegen/constraints/
         # tree; the sweep's artifacts stay in the gitignored out/ dir.
         "--save-constraints", str(OUT / "constraints" / f"{t.rm}_{t.device}.json"),
+        *(["--field-level-gating"] if field_gating else []),
     ]
     if dry:
         argv.append("--dry-run")
@@ -586,7 +588,8 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
 # One target
 # --------------------------------------------------------------------------- #
 
-def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict) -> dict:
+def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
+               field_gating: bool = False) -> dict:
     res = {"rm": t.rm, "pac": t.pac, "device": t.device,
            "consumers": [c.crate for c in t.consumers],
            "inject": "?", "planned": 0, "fates": {}, "gated_specs": [],
@@ -603,7 +606,7 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict) -
 
     snap = None if dry else PacSnapshot(pac_dir, t.device)
     try:
-        run = run_inject(t, pac_dir, report, dry)
+        run = run_inject(t, pac_dir, report, dry, field_gating)
         if run.returncode != 0:
             res["inject"] = "FAILED"
             res["detail"].append((run.stderr or run.stdout)[-4000:])
@@ -691,6 +694,9 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true",
                     help="selection + planning only; never touch a PAC")
     ap.add_argument("--skip-hal", action="store_true")
+    ap.add_argument("--field-level-gating", action="store_true",
+                    help="gate individual field writer accessors as well as "
+                         "whole registers (opt-in; changes which fates fire)")
     ap.add_argument("--out", default=None, help="write the JSON summary here")
     args = ap.parse_args()
 
@@ -709,7 +715,8 @@ def main() -> None:
                 baselines[(t.rm, c.crate)] = hal_baseline(t, c)
                 print(f"  {baselines[(t.rm, c.crate)]}")
 
-    results = [run_target(t, args.dry_run, args.skip_hal, baselines) for t in targets]
+    results = [run_target(t, args.dry_run, args.skip_hal, baselines,
+                          args.field_level_gating) for t in targets]
 
     print("\n\n## Summary\n")
     print("| RM | PAC | device | injection | registers gated | probe | consumer | "

@@ -285,7 +285,19 @@ def main() -> None:
         # skip any row that does not resolve rather than mislabel it.)
         # Instances share register types, so two plans can now target one
         # Rust type; emitting both would define the same witness twice.
-        plans, collisions = rust_codegen.resolve_instance_collisions(plans)
+        plans, collisions, merges = rust_codegen.resolve_instance_collisions(plans)
+        for m in merges:
+            rows.append({
+                "file": "", "peripheral": m["module"], "register": m["register"],
+                "fate": "instance_merged_for_review",
+                "reason": f"instances {m['instances']} named different fields "
+                          f"{m['field_sets']} for the same rule — "
+                          f"{m['resolution']}; {m['detail']}",
+                "constraints": [],
+            })
+            print(f"  note: {m['module']}/{m['register']}: instances "
+                  f"{m['instances']} named different fields {m['field_sets']} "
+                  f"— {m['resolution']}, FLAGGED FOR REVIEW")
         for c in collisions:
             rows.append({
                 "file": "", "peripheral": c["module"], "register": c["register"],

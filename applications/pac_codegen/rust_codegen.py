@@ -1104,10 +1104,16 @@ def patch_field_accessors(device_dir: Path, plans: list[RegisterPlan]) -> int:
     acknowledged bypass---like `unsafe`---flagged loudly here at generation
     time."""
     patched = 0
+    # Resolve through DeviceLayout: stm32h7 keeps its register files in a
+    # shared src/common/<periph>/<hash>/ tree, so the flat
+    # device_dir/<periph>/<reg>.rs guess is a FileNotFoundError there. The
+    # whole-register path was converted when that layout was first supported;
+    # this one is reached only under --field-level-gating and was missed.
+    layout = DeviceLayout(device_dir)
     for plan in plans:
         if not plan.field_gates:
             continue
-        reg_file = device_dir / plan.peripheral / f"{plan.reg_lower}.rs"
+        reg_file = layout.register_file(plan.peripheral, plan.reg_lower)
         if not reg_file.is_file():
             raise FileNotFoundError(reg_file)
         text = reg_file.read_text()
@@ -1474,10 +1480,104 @@ def _instance_key(name: str):
     return (m.group(1), int(m.group(2)) if m.group(2) else -1)
 
 
+# A precondition names its source register the way the manual happened to
+# write it, and the manual writes it differently for each instance: TIM4_CR1
+# for TIM4, TIM5_CR1 for TIM5, and TIMx_CR1 where it uses its own placeholder.
+# All three are the same relative reference -- "this peripheral's CR1" -- but
+# compared literally they never match, so every rule whose precondition points
+# at its own peripheral looked like a cross-instance disagreement.
+_INST_NUM_RE = re.compile(r"(?<=[A-Za-z])\d+(?=_)")
+_PLACEHOLDER_RE = re.compile(r"(?<=[A-Za-z])[Xx](?=_)")
+
+
+def _norm_source_register(name: str) -> str:
+    """TIM4_CR1, TIMX_CR1 and TIM_CR1 all collapse to TIM_CR1."""
+    s = _PLACEHOLDER_RE.sub("", _INST_NUM_RE.sub("", (name or "").upper()))
+    return s
+
+
+def _norm_condition(text: str) -> str:
+    """`FINIT == 0x1` and `FINIT set` are the same condition on a 1-bit field.
+
+    Codegen already respells these when it knows the reader shape; conflict
+    detection ran before that and so saw them as different readings."""
+    s = _norm_source_register(text)
+    s = re.sub(r"\s*==\s*0X1\b", " SET", s)
+    s = re.sub(r"\s*==\s*0X0\b", " CLEARED", s)
+    return s.strip()
+
+
 def _plan_signature(plan: "RegisterPlan"):
-    return tuple(sorted(
-        (op, tuple(sorted(p.describe() for p in pres)))
+    """What two plans must agree on to be one rule stated twice.
+
+    Field gates are part of it: with --field-level-gating two instances can
+    carry the same precondition but different field lists, and merging those
+    silently would gate fields one instance never claimed."""
+    pre = tuple(sorted(
+        (op, tuple(sorted(_norm_condition(p.describe()) for p in pres)))
         for op, pres in plan.preconditions.items()))
+    fields = tuple(sorted(getattr(plan, "field_gates", {}) or {}))
+    return (pre, fields)
+
+
+def _precondition_signature(plan: "RegisterPlan"):
+    """The signature ignoring field gates -- "same rule, maybe different
+    precision"."""
+    return tuple(sorted(
+        (op, tuple(sorted(_norm_condition(p.describe()) for p in pres)))
+        for op, pres in plan.preconditions.items()))
+
+
+def _plan_quotes(plan: "RegisterPlan"):
+    return frozenset(" ".join(d.split())
+                     for docs in (getattr(plan, "docs", {}) or {}).values()
+                     for d in docs)
+
+
+def _rule_quotes(plan: "RegisterPlan"):
+    """Every datasheet sentence behind this plan, wherever it is stored.
+
+    A whole-register gate keeps its quotes on the plan; a field gate keeps them
+    on the FieldGate. A group can hold both -- one instance whose extraction
+    named the bits and one whose did not -- so the comparison has to look in
+    both places or the two never appear to be the same rule."""
+    qs = set(_plan_quotes(plan))
+    for fg in (getattr(plan, "field_gates", {}) or {}).values():
+        qs |= {" ".join(d.split()) for d in fg.docs}
+    return frozenset(qs)
+
+
+_SELF_QUAL_RE = re.compile(r"\b([A-Z0-9]+(?:_[A-Z0-9]+)*)\.([A-Z0-9_]+)\b")
+
+
+def _drop_self_qualifier(cond: str, reg_name: str) -> str:
+    """`UART_CR1.UE CLEARED` and `UE CLEARED` are the same condition.
+
+    One instance's extraction spelled the field with its own register in front
+    of it and the others did not. A qualifier naming a DIFFERENT register is
+    left alone -- that one really is a cross-register condition."""
+    reg = (reg_name or "").upper()
+    if not reg:
+        return cond
+
+    def sub(m):
+        qual = m.group(1)
+        if qual == reg or qual.rsplit("_", 1)[-1] == reg:
+            return m.group(2)
+        return m.group(0)
+
+    return _SELF_QUAL_RE.sub(sub, cond)
+
+
+def _rule_conditions(plan: "RegisterPlan"):
+    """Every precondition behind this plan, normalised, from both places."""
+    reg = getattr(plan, "reg_name", "")
+    conds = set()
+    for pres in (getattr(plan, "preconditions", {}) or {}).values():
+        conds |= {_norm_condition(pc.describe()) for pc in pres}
+    for fg in (getattr(plan, "field_gates", {}) or {}).values():
+        conds |= {_norm_condition(pc.describe()) for pc in fg.preconditions}
+    return frozenset(_drop_self_qualifier(c, reg) for c in conds)
 
 
 def resolve_instance_collisions(plans: list) -> tuple[list, list]:
@@ -1516,29 +1616,92 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
     groups: dict = {}
     for plan in plans:
         groups.setdefault((plan.peripheral, plan.reg_lower), []).append(plan)
-    kept, conflicts = [], []
+    kept, conflicts, reviews = [], [], []
     for (module, reg), group in groups.items():
         if len(group) == 1:
             kept.append(group[0])
             continue
         instances = sorted((getattr(p, "source_instance", module) for p in group),
                            key=_instance_key)
-        if len({_plan_signature(p) for p in group}) > 1:
-            conflicts.append({
+        sigs = {_plan_signature(p) for p in group}
+        if len(sigs) == 1:
+            owner = next((p for p in group
+                          if getattr(p, "source_instance", module) == module), None)
+            kept.append(owner or min(
+                group,
+                key=lambda p: _instance_key(getattr(p, "source_instance", module))))
+            continue
+
+        # Same rule, differing precision. Two instances of one peripheral are
+        # the same hardware block, described once in the manual, so a rule
+        # extracted for one applies to all. When they differ it is almost
+        # always precision, not disagreement: one extraction named the bits and
+        # another named fewer or none.
+        #
+        # The test for "same rule" is per FIELD, because under field gating the
+        # rule lives on the field gates -- plan.preconditions and plan.docs are
+        # both empty there, so a plan-level comparison can never fire. For every
+        # field two instances share, they must agree on its preconditions and
+        # cite the same datasheet sentence. If they do, the merge is the UNION
+        # of the field sets: the widest reading, which cannot miss a site a
+        # narrower one would have caught.
+        #
+        # It is recorded for review rather than merged silently. A field named
+        # by one instance and not another may be an incomplete extraction, or a
+        # real difference between siblings (a UART is not quite a USART), and
+        # only the manual settles which.
+        quotes = {_rule_quotes(p) for p in group}
+        conds = {_rule_conditions(p) for p in group}
+        if len(quotes) == 1 and len(conds) == 1 and quotes != {frozenset()}:
+            # The NARROWEST reading wins, not the widest. When one instance
+            # named fields and another named none, the two are not a narrow
+            # claim and a broad one -- they are one datasheet sentence
+            # extracted at two precisions, and the sentence itself ("this
+            # bitfield can only be written when...") is field-scoped. Adopting
+            # the whole-register reading would gate sibling fields the sentence
+            # never mentions, and every one of those is a false report against
+            # downstream code. Under-gating loses a finding; over-gating
+            # invents one.
+            named = [p for p in group if (getattr(p, "field_gates", {}) or {})]
+            if named:
+                winner = max(named,
+                             key=lambda p: len(getattr(p, "field_gates", {}) or {}))
+                for pl in named:
+                    for name, fg in (getattr(pl, "field_gates", {}) or {}).items():
+                        winner.field_gates.setdefault(name, fg)
+                how = ("merged to the union of the named fields [%s]"
+                       % ", ".join(sorted(winner.field_gates)))
+                if len(named) != len(group):
+                    how += ("; %d instance(s) named no fields and were narrowed "
+                            "to that union" % (len(group) - len(named)))
+            else:
+                winner = group[0]
+                how = "merged as whole-register (no instance named fields)"
+            kept.append(winner)
+            reviews.append({
                 "module": module, "register": reg, "instances": instances,
-                "detail": "instances disagree on the gate for the same Rust "
-                          "type; dropped rather than unioned (which would "
-                          "demand a precondition the datasheet may not) or "
-                          "picked arbitrarily (which would gate on a reading "
-                          "we have equal reason to think is the wrong one)",
+                "resolution": how,
+                "field_sets": sorted(
+                    ",".join(sorted(getattr(p, "field_gates", {}) or {}))
+                    or "(whole register)" for p in group),
+                "detail": "the instances cite the same datasheet sentence and "
+                          "the same preconditions, so this is one rule "
+                          "extracted at different precision. A person should "
+                          "confirm the manual grants it to every instance.",
             })
-            continue                       # the whole group goes
-        owner = next((p for p in group
-                      if getattr(p, "source_instance", module) == module), None)
-        kept.append(owner or min(
-            group,
-            key=lambda p: _instance_key(getattr(p, "source_instance", module))))
-    return kept, conflicts
+            continue
+
+        conflicts.append({
+            "module": module, "register": reg, "instances": instances,
+            "detail": "instances disagree on the gate for the same Rust "
+                      "type after normalising instance-qualified register "
+                      "names and equals/set conditions; dropped rather than "
+                      "unioned (which would demand a precondition the "
+                      "datasheet may not) or picked arbitrarily (which would "
+                      "gate on a reading we have equal reason to think is "
+                      "the wrong one)",
+        })
+    return kept, conflicts, reviews
 
 
 def add_sibling_markers(src: Path, device: str) -> int:
