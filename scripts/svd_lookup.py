@@ -169,22 +169,39 @@ def _label(path: str) -> str:
 
 
 def resolve_svds(args) -> list[tuple[str, str]]:
-    ext = ".svd.patched" if args.patched else ".svd"
     pairs: list[tuple[str, str]] = []
+    fellback: list[str] = []
+
+    def pick(base_svd: str) -> str:
+        """Path to read: the .svd.patched when --patched and it exists, else fall
+        back to the base .svd (recording the fallback so we can warn about it)."""
+        if args.patched:
+            patched = base_svd + ".patched"
+            if os.path.exists(patched):
+                return patched
+            fellback.append(_label(base_svd))
+        return base_svd
+
     directory = args.dir or ("." if args.files else None)
     if directory:
         frags = [f.strip() for f in (args.files or "").split(",") if f.strip()] or ["*"]
         for frag in frags:
-            for m in sorted(glob.glob(os.path.join(directory, f"*{frag}*{ext}"))):
-                pairs.append((_label(m), m))
+            for base in sorted(glob.glob(os.path.join(directory, f"*{frag}*.svd"))):
+                pairs.append((_label(base), pick(base)))
     for p in args.svd:
-        path = p + ".patched" if (args.patched and not p.endswith(".patched")) else p
-        pairs.append((_label(path), path))
+        if p.endswith(".patched"):        # explicit patched path — respect it as given
+            pairs.append((_label(p), p))
+        else:
+            pairs.append((_label(p), pick(p)))
+
     seen, out = set(), []
     for lbl, pth in pairs:
         if pth not in seen:
             seen.add(pth)
             out.append((lbl, pth))
+    if fellback:
+        print(f"note: no .svd.patched for {', '.join(sorted(set(fellback)))} — used the raw .svd",
+              file=sys.stderr)
     return out
 
 
@@ -335,7 +352,8 @@ def main() -> None:
     ap.add_argument("svd", nargs="*", help="one or more .svd paths (or use -d/-f)")
     ap.add_argument("-d", "--dir", help="directory to select SVDs from")
     ap.add_argument("-f", "--files", help="comma-separated name fragments to pick from --dir")
-    ap.add_argument("--patched", action="store_true", help="use the .svd.patched variants")
+    ap.add_argument("--patched", action="store_true",
+                    help="use the .svd.patched variants (falls back to the raw .svd if missing)")
     ap.add_argument("-p", "--peripheral", help="peripheral name (e.g. bkp, hash)")
     ap.add_argument("-r", "--register", help="register name (e.g. dr1, hr0)")
     ap.add_argument("-k", "--key", choices=_REGISTER_KEYS + _FIELD_KEYS, help="show only this attribute")
