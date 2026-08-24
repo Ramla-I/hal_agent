@@ -279,3 +279,7 @@ temp_docs/
 # Generated figures. Reproducible from scripts/stm_*_statistics.py, so
 # tracking them only creates binary churn and a second source of truth.
 docs/figures/*.pdf
+
+# Vendored HAL sources upgraded to PAC 0.16 by experiments/port_hal.py.
+# Regenerated from the registry cache; never hand-edited, so never committed.
+applications/pac_codegen/experiments/ported/
