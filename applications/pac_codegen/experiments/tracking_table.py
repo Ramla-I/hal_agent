@@ -84,7 +84,15 @@ SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                "sweep_newconsumers.json",
                # the whole-consumer re-run that added static triage of every
                # enforcement hit (guarded vs possible bug)
-               "sweep_triage.json"]
+               "sweep_triage.json",
+               # the full 49-target re-measurement taken alongside the
+               # field-level run, so the two columns compare gating modes
+               # rather than two vintages of the injector. Last in the list,
+               # so it wins for every target it covers.
+               "sweep_wholereg_build.json",
+               # RM0041 gained a driver after the build sweep: stm32f1xx-hal
+               # already supported the F1 value line, it just had no entry.
+               "sweep_rm0041_wholereg.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -166,12 +174,20 @@ def judge_verdicts(rm: str) -> dict:
     return out
 
 
-def injection_report(rm: str, device: str) -> dict:
-    """The most RECENT report for this target. A dry run and a real run produce
-    identical selection (the prune runs either way), so freshness is what
-    matters — an older file predates report-schema changes and would silently
-    report zeros."""
-    cands = [OUT / f"{rm}_{device}.json", OUT / f"{rm}_{device}_dry.json"]
+def injection_report(rm: str, device: str, field_gating: bool = False) -> dict:
+    """The most RECENT report for this target IN THIS GATING MODE.
+
+    The mode is part of the filename, not a tiebreak on mtime. The two modes
+    plan different gate sets, and while they shared a name a field-gating run
+    overwrote the default run's reports -- after which the table published one
+    mode's registers and kinds under the other's heading.
+
+    Within a mode, a dry run and a real run select identically (the prune runs
+    either way), so freshness is what matters: an older file predates report
+    schema changes and would silently report zeros."""
+    mode = "_fieldgate" if field_gating else ""
+    cands = [OUT / f"{rm}_{device}{mode}.json",
+             OUT / f"{rm}_{device}{mode}_dry.json"]
     cands = [p for p in cands if p.is_file()]
     if not cands:
         return {}
@@ -179,7 +195,14 @@ def injection_report(rm: str, device: str) -> dict:
     return json.loads(newest.read_text())
 
 
-def sweep_results() -> dict:
+# Field-level gating is a SECOND configuration of the same injector, not a
+# newer measurement of the first, so its results are read from their own file
+# and shown beside the default rather than merged into it. Both columns are
+# live numbers from a real 49-target build.
+FIELD_SWEEP_FILES = ["sweep_fieldgate_49.json", "sweep_rm0041_field.json"]
+
+
+def sweep_results(files=None) -> dict:
     """(rm, device, consumer crate) -> classified compile result.
 
     The device belongs in the key. RM0440 is injected into two different G4
@@ -187,7 +210,7 @@ def sweep_results() -> dict:
     crate) alone silently collapsed them, so one chip's numbers overwrote the
     other's depending on file order."""
     out = {}
-    for name in SWEEP_FILES:
+    for name in (files if files is not None else SWEEP_FILES):
         p = OUT / name
         if not p.is_file():
             continue
@@ -212,6 +235,12 @@ def sweep_results() -> dict:
             if r.get("probe") and r["probe"] != "-":
                 out.setdefault((r["rm"], r.get("device", ""),
                                "__probe__"), {})["probe"] = r["probe"]
+            # The injection report on disk belongs to whichever mode ran last,
+            # so the register count has to come from the sweep row itself or
+            # the two columns would share one number.
+            if r.get("planned") is not None:
+                out.setdefault((r["rm"], r.get("device", ""),
+                                "__planned__"), {})["planned"] = r["planned"]
     return out
 
 
@@ -331,6 +360,7 @@ def main() -> None:
     args = ap.parse_args()
 
     sweeps = sweep_results()
+    fsweeps = sweep_results(FIELD_SWEEP_FILES)
     gaps = gap_notes()
     activity = hal_activity(args.no_network)
 
@@ -365,9 +395,27 @@ def main() -> None:
              if v.get("enforce", 0)})
         probe = sweeps.get((t.rm, t.device, "__probe__"), {}).get("probe", "—")
 
+        fg_probe = fsweeps.get((t.rm, t.device, "__probe__"), {}).get("probe", "—")
+        fg_rep = injection_report(t.rm, t.device, field_gating=True)
+        fg_regs = fg_rep.get("registers_planned", "—")
+        # Counted exactly as the default column is, so the two are comparable:
+        # constraint instances on `planned` rows, with the kind recovered from
+        # the raw generator output when the row did not carry one.
+        fg_applied = 0
+        for r in fg_rep.get("rows", []):
+            if r["fate"] != "planned":
+                continue
+            ks = r.get("kinds") or ({r["kind"]: 1} if r.get("kind") else {})
+            if not ks and r.get("constraints"):
+                ks = collections.Counter(
+                    raw_kinds.get((r["file"], i), "unparseable")
+                    for i in r["constraints"] if i is not None)
+            fg_applied += sum(ks.values())
+
         consumers = t.consumers or [None]
         for c in consumers:
             res = sweeps.get((t.rm, t.device, c.crate)) if c else None
+            fres = fsweeps.get((t.rm, t.device, c.crate)) if c else None
             rows.append({
                 "RM": t.rm,
                 "device": t.device,
@@ -389,6 +437,14 @@ def main() -> None:
                 "generic_friction": (res or {}).get("generic_friction", "—"),
                 "other_errors": (res or {}).get("other", "—"),
                 "enforcement_sites": ", ".join((res or {}).get("files", [])) or "—",
+                # --- the same driver, measured with field-level gating on ---
+                "fg_gates": fg_applied,
+                "fg_registers_gated": fg_regs,
+                "fg_pac_compiles": fg_probe,
+                "fg_true_enforcement": (fres or {}).get("true_enforcement", "—"),
+                "fg_guarded": (fres or {}).get("guarded", "—"),
+                "fg_candidate": (fres or {}).get("candidate", "—"),
+                "fg_generic_friction": (fres or {}).get("generic_friction", "—"),
                 # pipeline order, not alphabetical: a row should read as the
                 # path a constraint takes, so `rejected_at_collection` first.
                 "dropped_by_stage": "; ".join(
@@ -418,6 +474,9 @@ def main() -> None:
             "pac_compiles": "—", "hal_crate": "—", "hal_baseline": "—",
             "true_enforcement": "—", "guarded": "—", "candidate": "—",
             "generic_friction": "—",
+            "fg_gates": "—", "fg_registers_gated": "—", "fg_pac_compiles": "—",
+            "fg_true_enforcement": "—", "fg_guarded": "—",
+            "fg_candidate": "—", "fg_generic_friction": "—",
             "other_errors": "—", "enforcement_sites": "—",
             "dropped_by_stage": "no_chip_crate: all",
             "note": (f"No chip crate covers {chip}. "
@@ -524,8 +583,18 @@ def main() -> None:
            "0.16, the HAL columns are empty and the note says why; the "
            "enforcement is still there.",
            "",
-           "| RM | device | PAC crate | gates | registers | PAC compiles | HAL crate | baseline | true enforcement | generic friction | other | enforcement sites | note |",
-           "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+           "Two gating modes are shown. The default gates a whole register; "
+           "`--field-level-gating` (opt-in) gates individual bitfields "
+           "instead, reaching constraints the datasheet states about single "
+           "bits at the cost of asking less of the driver elsewhere.",
+           "",
+           "| RM | device | PAC crate | gates | registers | PAC compiles | "
+           "HAL crate | baseline | true enforcement | guarded | possible bug | "
+           "generic friction | other | "
+           "field: gates | field: registers | field: gate fired | "
+           "field: possible bug | field: generic friction | "
+           "enforcement sites | note |",
+           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         md.append(
             f"| {r['RM']} | {r['device']} | {r['pac_crate']} | "
@@ -534,6 +603,9 @@ def main() -> None:
             f"{r['hal_baseline']} | {r['true_enforcement']} | "
             f"{r['guarded']} | {r['candidate']} | "
             f"{r['generic_friction']} | {r['other_errors']} | "
+            f"{r['fg_gates']} | {r['fg_registers_gated']} | "
+            f"{r['fg_true_enforcement']} | {r['fg_candidate']} | "
+            f"{r['fg_generic_friction']} | "
             f"{r['enforcement_sites']} | {r['note'] or '—'} |")
 
     md += ["", "## Where the non-applied constraints went", "",
@@ -663,6 +735,18 @@ tbody tr:hover td.pin{background:var(--surface-2)}
 .num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .num.lead{font-weight:680;color:var(--accent)}
 .num.ok{color:var(--ok);font-weight:640}
+/* The two gating modes sit side by side, so the second one needs a tint that
+   separates it without competing with the accent used for lead figures. */
+th.alt,td.alt{background:color-mix(in oklab,var(--accent) 7%,transparent)}
+tbody tr:hover td.alt{background:color-mix(in oklab,var(--accent) 13%,transparent)}
+tfoot td.alt{background:color-mix(in oklab,var(--accent) 12%,var(--surface-2))}
+th.grp{
+  text-align:center;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink-dim);font-weight:640;border-bottom:1px solid var(--rule);
+  padding-top:10px;padding-bottom:6px;
+}
+th.grp.mode{color:var(--ink)}
+th.grp code{font-size:10.5px;text-transform:none;letter-spacing:0}
 .dim{color:var(--ink-dim)}
 .kind{
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
@@ -814,9 +898,22 @@ def write_html(rows: list, path: Path) -> None:
         except (TypeError, ValueError):
             return 0
 
+    # Extraction figures are per MANUAL: one datasheet, read once. Injection
+    # figures are per (manual, chip) -- RM0440 is injected into two different
+    # G4 parts and each gets its own gates. Deduplicating both by manual, as
+    # this block used to, silently dropped the second chip of every manual that
+    # has one, and disagreed with the table's own TOTAL row.
+    per_inj, seen_inj_h = [], set()
+    for r in rows:
+        if r["pac_crate"] == "\u2014":
+            continue
+        if (r["RM"], r["device"]) not in seen_inj_h:
+            seen_inj_h.add((r["RM"], r["device"]))
+            per_inj.append(r)
     tot = {k: sum(_n(r[k]) for r in per_rm) for k in
-           ("constraints_found_raw", "validator_enforce", "enforced",
-            "enforced_via_instance_alias", "registers_gated")}
+           ("constraints_found_raw", "validator_enforce")}
+    tot.update({k: sum(_n(r[k]) for r in per_inj) for k in
+                ("enforced", "enforced_via_instance_alias", "registers_gated")})
     # Only pairings whose driver compiles against the PRISTINE chip crate can
     # be measured. Where the baseline already fails, the driver is broken for
     # reasons of its own -- stm32-hal2 references an ADC3 that stm32h7b3 does
@@ -829,6 +926,9 @@ def write_html(rows: list, path: Path) -> None:
     unmeasurable = len(hal_rows) - len(measurable)
     collateral = sum(_n(r["other_errors"]) for r in measurable)
     enforcement = sum(_n(r["true_enforcement"]) for r in measurable)
+    fg_enforcement = sum(_n(r["fg_true_enforcement"]) for r in measurable)
+    fg_regs_tot = sum(_n(r["fg_registers_gated"]) for r in per_inj)
+    fg_gates_tot = sum(_n(r["fg_gates"]) for r in per_inj)
 
     h = ['<div class="wrap">', "<header>",
          '<span class="eyebrow">LIDAR · enforcement arm</span>',
@@ -850,6 +950,25 @@ def write_html(rows: list, path: Path) -> None:
              f'<span class="v">{enforcement}</span></div>')
     h.append(f'<div class="stat"><span class="k">collateral errors</span>'
              f'<span class="v">{collateral}</span></div>')
+    h.append("</div>")
+    h.append('<p class="note">Those are the default, <b>whole-register</b> '
+             "gating. The injector can also gate individual bitfields "
+             "(<code>--field-level-gating</code>, opt-in), which is a "
+             "different trade rather than a better one: it gates fewer "
+             "registers and asks less of the driver, so it fires on fewer "
+             "sites, but it reaches constraints the datasheet states about "
+             "single bits. Both are measured over the same 49 injections and "
+             "the same drivers; the table below carries both.</p>")
+    h.append('<div class="funnel">')
+    h.append(f'<div class="stat"><span class="k">compile-time gates '
+             f'<em>(field-level)</em></span>'
+             f'<span class="v">{fg_gates_tot}</span></div>')
+    h.append(f'<div class="stat"><span class="k">registers gated '
+             f'<em>(field-level)</em></span>'
+             f'<span class="v">{fg_regs_tot}</span></div>')
+    h.append(f'<div class="stat"><span class="k">driver enforcement hits '
+             f'<em>(field-level)</em></span>'
+             f'<span class="v">{fg_enforcement}</span></div>')
     h += ["</div>",
           '<p class="note"><b>gate fired</b> is a compile error naming a '
           "constrained register: the driver performed that operation without "
@@ -921,12 +1040,21 @@ def write_html(rows: list, path: Path) -> None:
           'one exists, is swapped onto the injected PAC with one '
           '<code>[patch.crates-io]</code> line, and its baseline must pass '
           'against the pristine PAC first.</p>',
-          '<div class="scroll"><table><thead><tr>',
+          '<div class="scroll"><table><thead>',
+          '<tr><th class="pin grp" colspan="8"></th>',
+          '<th class="grp mode" colspan="5">whole-register gating (default)</th>',
+          '<th class="grp mode alt" colspan="5">field-level gating '
+          '(<code>--field-level-gating</code>)</th>',
+          '<th class="grp" colspan="2"></th></tr>',
+          '<tr>',
           '<th class="pin">RM</th><th>device</th><th>PAC crate</th>',
           '<th>gates</th><th>regs</th><th>PAC compiles</th>',
           '<th>HAL crate</th><th>baseline</th>',
           '<th>gate fired</th><th>guarded</th><th>possible bug</th>',
           '<th>generic friction</th><th>other</th>',
+          '<th class="alt">gates</th><th class="alt">regs</th>',
+          '<th class="alt">gate fired</th>',
+          '<th class="alt">possible bug</th><th class="alt">generic friction</th>',
           '<th>enforcement sites</th><th>note</th>',
           "</tr></thead><tbody>"]
     for r in rows:
@@ -945,6 +1073,11 @@ def write_html(rows: list, path: Path) -> None:
             f'<td class="num lead">{_esc(r["candidate"])}</td>'
             f'<td class="num">{_esc(r["generic_friction"])}</td>'
             f'<td class="num">{_esc(r["other_errors"])}</td>'
+            f'<td class="num alt lead">{_esc(r["fg_gates"])}</td>'
+            f'<td class="num alt">{_esc(r["fg_registers_gated"])}</td>'
+            f'<td class="num alt">{_esc(r["fg_true_enforcement"])}</td>'
+            f'<td class="num alt lead">{_esc(r["fg_candidate"])}</td>'
+            f'<td class="num alt">{_esc(r["fg_generic_friction"])}</td>'
             f'<td class="mono dim">{_esc(r["enforcement_sites"])}</td>'
             f'<td class="wide">{_esc(note) or "—"}</td></tr>')
 
@@ -981,6 +1114,20 @@ def write_html(rows: list, path: Path) -> None:
     t_untri = max(0, t_true - t_guard - t_cand)
     t_fric = sum(_n(r["generic_friction"]) for r in ok_pairings)
     t_other = sum(_n(r["other_errors"]) for r in ok_pairings)
+    # Field-level totals follow the SAME rules: registers once per injection,
+    # driver figures only over pairings whose baseline compiles.
+    seen_fg, tot_fg_regs, tot_fg_gates = set(), 0, 0
+    for r in rows:
+        if r["pac_crate"] == "\u2014":
+            continue
+        key = (r["RM"], r["device"])
+        if key not in seen_fg:
+            seen_fg.add(key)
+            tot_fg_regs += _n(r["fg_registers_gated"])
+            tot_fg_gates += _n(r["fg_gates"])
+    f_true = sum(_n(r["fg_true_enforcement"]) for r in ok_pairings)
+    f_cand = sum(_n(r["fg_candidate"]) for r in ok_pairings)
+    f_fric = sum(_n(r["fg_generic_friction"]) for r in ok_pairings)
     h += ["</tbody><tfoot>",
           f'<tr><td class="pin">TOTAL</td>'
           f'<td class="mono">{len(seen_inj)} injections</td>'
@@ -995,6 +1142,11 @@ def write_html(rows: list, path: Path) -> None:
           f'<td class="num lead">{t_cand}</td>'
           f'<td class="num">{t_fric}</td>'
           f'<td class="num">{t_other}</td>'
+          f'<td class="num alt lead">{tot_fg_gates}</td>'
+          f'<td class="num alt">{tot_fg_regs}</td>'
+          f'<td class="num alt">{f_true}</td>'
+          f'<td class="num alt lead">{f_cand}</td>'
+          f'<td class="num alt">{f_fric}</td>'
           f'<td class="mono dim">—</td>'
           f'<td class="wide">Gates and registers counted once per '
           f'(manual, chip) injection; driver figures cover only the '

@@ -176,7 +176,11 @@ TARGETS = [
     # --- the rest of the validated corpus. The device for each is chosen so
     # --- the PAC module, the SVD file and (where one exists) a stm32-hal2
     # --- feature all line up; without that a baseline cannot even be built.
-    Target("rm0041", "stm32f1", "stm32f100", "stm32f100.svd"),
+    # RM0041 is the F1 value line. It shares stm32f1xx-hal with RM0008 -- the
+    # HAL already builds against PAC 0.16 -- and only needed its own device
+    # feature naming, not a port.
+    Target("rm0041", "stm32f1", "stm32f100", "stm32f100.svd", [
+        Consumer("stm32f1xx-hal", "0.11.0", ["stm32f100", "medium"])]),
     Target("rm0090", "stm32f4", "stm32f429", "stm32f439.svd", [_hal2("f429")]),
     Target("rm0351", "stm32l4", "stm32l4x6", "stm32l496.svd", [_hal2("l4x6")]),
     Target("rm0399", "stm32h7", "stm32h747cm7", "stm32h747cm7.svd",
@@ -602,7 +606,11 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
 
     pac_dir = get_pac.provision(crate=t.pac, version=PAC_VERSION)
     OUT.mkdir(parents=True, exist_ok=True)
-    report = OUT / f"{t.rm}_{t.device}{'_dry' if dry else ''}.json"
+    # The two gating modes plan DIFFERENT gate sets, so their reports must not
+    # share a filename -- a field-gating run silently overwrote the default
+    # run's numbers, and the tracking table then published one as the other.
+    mode = "_fieldgate" if field_gating else ""
+    report = OUT / f"{t.rm}_{t.device}{mode}{'_dry' if dry else ''}.json"
 
     snap = None if dry else PacSnapshot(pac_dir, t.device)
     try:
