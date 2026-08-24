@@ -136,11 +136,24 @@ _SUFFIXED_RE = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*)_A\b")
 
 # (HAL, version, PAC, build features) -- the newest release of each, matching
 # hal_gap.py. The PAC generation each pins is in that script's report.
+# The feature sets are a LIST because the port has to hold for every
+# configuration we later measure. Porting under one chip feature leaves the
+# code paths behind the others untouched, and their errors then surface as a
+# failing baseline at measurement time -- which reads like the HAL is broken
+# rather than like the port was partial.
 CASES = {
-    "stm32f3xx-hal": ("0.10.0", "stm32f3", ["stm32f303xc"]),
-    "stm32l0xx-hal": ("0.10.0", "stm32l0", ["stm32l0x3", "mcu-STM32L073RZTx"]),
-    "stm32f0xx-hal": ("0.18.0", "stm32f0", ["stm32f051"]),
-    "stm32l1xx-hal": ("0.1.0", "stm32l1", ["stm32l151"]),
+    "stm32f3xx-hal": ("0.10.0", "stm32f3", [["stm32f303xc"]]),
+    "stm32l0xx-hal": ("0.10.0", "stm32l0", [
+        ["stm32l0x3", "mcu-STM32L053C6Tx"],
+        ["stm32l0x2", "mcu-STM32L052C6Tx"],
+        ["stm32l0x1", "mcu-STM32L011D3Px"],
+    ]),
+    # stm32f030 alone is not a complete configuration upstream -- rcc.rs
+    # gates RCC_PLLSRC_PREDIV1_SUPPORT on a size-specific feature -- so the
+    # measurable f0x0 config is stm32f030x8.
+    "stm32f0xx-hal": ("0.18.0", "stm32f0", [["stm32f051"],
+                                            ["stm32f030x8"]]),
+    "stm32l1xx-hal": ("0.1.0", "stm32l1", [["stm32l151"]]),
 }
 
 
@@ -530,7 +543,7 @@ def apply(ws: Path, edits, verify: bool, variants=None, skipped=None) -> int:
 
 
 def port(hal: str, verify: bool, target: str) -> dict:
-    version, pac, features = CASES[hal]
+    version, pac, feature_sets = CASES[hal]
     pac_dir = get_pac.provision(crate=pac, version=PAC_VERSION)
     hal_dir = vendor(hal, version)
     repoint(hal_dir, pac, Path(pac_dir).resolve())
@@ -555,8 +568,14 @@ def port(hal: str, verify: bool, target: str) -> dict:
 
     patched, history, total = 0, [], 0
     for _ in range(80):
-        run = check(ws, hal, features, target)
-        edits, codes = diagnostics(run.stdout)
+        # Every feature set, every round: an edit that fixes one config must
+        # not be judged against that config alone.
+        stdout, codes = "", collections.Counter()
+        for features in feature_sets:
+            run = check(ws, hal, features, target)
+            stdout += run.stdout
+        edits, codes = diagnostics(stdout)
+        run = type("R", (), {"stdout": stdout})()
         history.append({"errors": sum(codes.values()), "by_code": dict(codes)})
         if not edits:
             # The paren rule has converged; now the unsafe wraps. Kept in this
@@ -578,8 +597,9 @@ def port(hal: str, verify: bool, target: str) -> dict:
         if total == before:
             break
     ok = history[-1]["errors"] == 0
-    return {"hal": hal, "version": version, "pac": pac, "features": features,
-            "workspace": str(ws), "edits_applied": total,
+    return {"hal": hal, "version": version, "pac": pac,
+            "workspace": str(ws), "feature_sets": feature_sets,
+            "edits_applied": total,
             "enum_suffixes_dropped": renamed,
             "manual_patches": patched,
             "variant_renames_skipped": skipped,
