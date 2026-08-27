@@ -57,7 +57,8 @@ from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(APP_DIR / "experiments"))
-from stm_sweep import TARGETS, UNMAPPED, DATA, Consumer  # noqa: E402
+from stm_sweep import (TARGETS, UNMAPPED, DATA, Consumer,  # noqa: E402
+                       CONTROL_DEVICES)
 
 OUT = APP_DIR / "experiments" / "out"
 DOC = APP_DIR.parent.parent / "docs" / "injection_tracking.md"
@@ -568,6 +569,13 @@ def main() -> None:
     print(f"csv: {csv_path}")
 
     # ---- Markdown ----
+    # Control injections are measurements ABOUT the corpus, not members of
+    # it. Split here so the markdown, the CSV and the HTML all state the same
+    # rule -- one device module per manual -- and the controls are reported
+    # once, after the tables.
+    control_rows = [r for r in rows if (r["RM"], r["device"]) in CONTROL_DEVICES]
+    rows = [r for r in rows if (r["RM"], r["device"]) not in CONTROL_DEVICES]
+
     md = ["# Injection tracking table",
           "",
           "## Regenerating this table",
@@ -690,12 +698,50 @@ def main() -> None:
            "**Fate glossary**, in the order a constraint meets the stages:", ""]
     md += [f"{i}. `{fate}` ({short}) — {desc}"
            for i, (fate, short, desc) in enumerate(_STAGES, 1)]
+    if control_rows:
+        md += ["", "## Control: how much does the chip choice matter?", "",
+               "Every table above follows one rule — **one device module per "
+               "reference manual**, chosen so that every driver supporting "
+               "that manual can select it. These manuals cover 154 device "
+               "modules in total, so each row is one representative chip. "
+               "One manual is injected a second time to measure how much that "
+               "choice moves the numbers; it is excluded from every figure "
+               "above.", "",
+               "| RM | device | role | gates | registers | HAL crate | "
+               "gate fired | guarded | possible bug |",
+               "|---|---|---|---|---|---|---|---|---|"]
+        for rm in sorted({r["RM"] for r in control_rows}):
+            for r in ([x for x in rows if x["RM"] == rm]
+                      + [x for x in control_rows if x["RM"] == rm]):
+                role = ("control" if (r["RM"], r["device"]) in CONTROL_DEVICES
+                        else "corpus")
+                md.append(f"| {r['RM']} | {r['device']} | {role} | "
+                          f"**{r['enforced']}** | {r['registers_gated']} | "
+                          f"{r['hal_crate']} | {r['true_enforcement']} | "
+                          f"{r['guarded']} | {r['candidate']} |")
+        md += [""]
+        for (rm, dev), why in sorted(CONTROL_DEVICES.items()):
+            md.append(f"`{rm}` / `{dev}` — {why}")
+        md += ["",
+               "**One device at a time is a choice, not a limit of the "
+               "technique.** The harness injects into a single device module "
+               "from a pristine crate because `generic.rs` is patched "
+               "crate-wide, which keeps attribution simple. In the 20 "
+               "flat-layout crates the device modules are independent files, "
+               "so several could be injected in one pass. Only `stm32h7` is "
+               "deduplicated — 188 of its 430 peripheral modules are shared "
+               "between devices — and there two devices' constraints can land "
+               "on one Rust type, the same problem the instance-alias "
+               "resolver already solves for peripherals. Revisiting it would "
+               "buy coverage and variation, not new constraints: a manual is "
+               "read once, and its constraints do not change with the chip "
+               "they are applied to."]
     md += [""]
 
     DOC.write_text("\n".join(md))
     print(f"markdown: {DOC}")
 
-    write_html(rows, DOC.with_suffix(".html"))
+    write_html(rows, DOC.with_suffix(".html"), control_rows)
 
 
 
@@ -1010,7 +1056,10 @@ def per_manual(rows: list) -> list:
     return out
 
 
-def write_html(rows: list, path: Path) -> None:
+def write_html(rows: list, path: Path, control_rows: list = ()) -> None:
+    # Control injections are measurements ABOUT the corpus, not members of it.
+    # Leaving them in would make one manual contribute two chips to every
+    # total and break the "one device per manual" rule the tables state.
     per_rm = per_manual(rows)
 
     # One basis now, not two. per_manual() has already summed the per-injection
@@ -1285,7 +1334,57 @@ def write_html(rows: list, path: Path) -> None:
           "</tfoot></table></div>",
           '<p class="note">Driver crates measured: '
           + ", ".join(f"<code>{_esc(d)}</code>" for d in sorted(drivers))
-          + ".</p>", "</section>"]
+          + ".</p>"]
+
+    # --- the control, reported after the corpus rather than inside it -------
+    h += ['<div class="card"><h3>Control: how much does the chip choice '
+          'matter?</h3>',
+          '<p class="note">Every table above follows one rule &mdash; <b>one '
+          'device module per reference manual</b>, chosen so that every driver '
+          'supporting that manual can select it. These 48 manuals cover 154 '
+          'device modules in total, so each row is one representative chip, '
+          'and the obvious question is how much that choice moves the '
+          'numbers. One manual is injected a second time to answer it. It is '
+          'excluded from every figure above.</p>']
+    if control_rows:
+        h += ['<div class="scroll"><table><thead><tr>',
+              '<th class="pin">RM</th><th>device</th><th>role</th>',
+              '<th>gates</th><th>regs</th>',
+              '<th>HAL crate</th><th>gate fired</th><th>guarded</th>',
+              '<th>possible bug</th></tr></thead><tbody>']
+        by_rm = {r["RM"] for r in control_rows}
+        for rm in sorted(by_rm):
+            for r in [x for x in rows if x["RM"] == rm] + \
+                     [x for x in control_rows if x["RM"] == rm]:
+                is_ctl = (r["RM"], r["device"]) in CONTROL_DEVICES
+                h.append(
+                    f'<tr><td class="pin">{_esc(r["RM"])}</td>'
+                    f'<td class="mono">{_esc(r["device"])}</td>'
+                    f'<td>{"control" if is_ctl else "corpus"}</td>'
+                    f'<td class="num lead">{_esc(r["enforced"])}</td>'
+                    f'<td class="num">{_esc(r["registers_gated"])}</td>'
+                    f'<td class="mono">{_esc(r["hal_crate"])}</td>'
+                    f'<td class="num">{_esc(r["true_enforcement"])}</td>'
+                    f'<td class="num ok">{_esc(r["guarded"])}</td>'
+                    f'<td class="num lead">{_esc(r["candidate"])}</td></tr>')
+        h += ["</tbody></table></div>"]
+        for (rm, dev), why in sorted(CONTROL_DEVICES.items()):
+            h.append(f'<p class="note"><code>{_esc(rm)}</code> / '
+                     f'<code>{_esc(dev)}</code> &mdash; {_esc(why)}</p>')
+    h += ['<p class="note"><b>One device at a time is a choice, not a limit '
+          'of the technique.</b> The harness injects into a single device '
+          'module from a pristine crate because <code>generic.rs</code> is '
+          'patched crate-wide, which keeps attribution simple. In the 20 '
+          'flat-layout crates the device modules are independent files, so '
+          'several could be injected in one pass. Only <code>stm32h7</code> '
+          'is deduplicated &mdash; 188 of its 430 peripheral modules are '
+          'shared between devices &mdash; and there two devices&rsquo; '
+          'constraints can land on one Rust type, which is the same problem '
+          'the instance-alias resolver already solves for peripherals. '
+          'Revisiting it would buy coverage and variation, not new '
+          'constraints: a manual is read once, and its constraints do not '
+          'change with the chip they are applied to.</p>', "</div>",
+          "</section>"]
 
     # --- table 3 -----------------------------------------------------------
     h += ['<section><h2>Where the rest went</h2>',

@@ -107,7 +107,7 @@ under *where the rest went* as `kind_not_emitted`.
 | 34 | rm0433 | stm32h753 | stm32h7 0.16.0 | 458 | state_gate=368, sequence=21, write_once=4, delay=1, read_effect=12, value_relation=7, other=45 | 225 | state_gate=212, sequence=11, write_once=2 | **170** | state_gate=170 | 108 | 83 | PASS |
 | 35 | rm0436 | stm32mp157 | stm32mp1 0.16.0 | 938 | state_gate=819, sequence=32, write_once=4, clock_gate=4, read_effect=8, value_relation=1, other=70 | 520 | state_gate=505, sequence=14, write_once=1 | **432** | state_gate=432 | 97 | 241 | PASS |
 | 36 | rm0438 | stm32l562 | stm32l5 0.16.0 | 679 | state_gate=611, sequence=17, write_once=4, delay=7, read_effect=1, value_relation=5, other=34 | 364 | state_gate=361, sequence=1, write_once=2 | **150** | state_gate=150 | 20 | 132 | PASS |
-| 37 | rm0440 | stm32g4a1, stm32g474 | stm32g4 0.16.0 | 333 | state_gate=268, sequence=16, write_once=12, clock_gate=22, delay=1, read_effect=5, value_relation=4, other=5 | 155 | state_gate=148, sequence=2, write_once=5 | **152** | state_gate=71 | 68 | 79 | PASS |
+| 37 | rm0440 | stm32g474 | stm32g4 0.16.0 | 333 | state_gate=268, sequence=16, write_once=12, clock_gate=22, delay=1, read_effect=5, value_relation=4, other=5 | 155 | state_gate=148, sequence=2, write_once=5 | **81** | state_gate=81 | 41 | 38 | PASS |
 | 38 | rm0442 | stm32mp153 | stm32mp1 0.16.0 | 812 | state_gate=716, sequence=18, delay=1, read_effect=7, value_relation=6, other=64 | 461 | state_gate=459, sequence=2 | **394** | state_gate=394 | 88 | 222 | PASS |
 | 39 | rm0453 | stm32wl5x_cm4 | stm32wl 0.16.0 | 191 | state_gate=147, sequence=6, clock_gate=10, value_relation=3, other=25 | 72 | state_gate=72 | **55** | state_gate=55 | 7 | 50 | PASS |
 | 40 | rm0455 | stm32h7b3 | stm32h7 0.16.0 | 499 | state_gate=404, sequence=26, write_once=3, delay=3, read_effect=2, value_relation=4, other=57 | 268 | state_gate=258, sequence=9, write_once=1 | **219** | state_gate=219 | 96 | 117 | PASS |
@@ -182,8 +182,6 @@ Two gating modes are shown. The default gates a whole register; `--field-level-g
 | rm0433 | stm32h753 | stm32h7 0.16.0 | **170** | 83 | PASS | stm32-hrtim 0.2.0 | PASS | 5 | 0 | 5 | 6 | 0 | 178 | 75 | 5 | 5 | 6 | src/capture.rs, src/timer.rs | — |
 | rm0436 | stm32mp157 | stm32mp1 0.16.0 | **432** | 241 | PASS | — | — | — | — | — | — | — | 446 | 236 | — | — | — | — | no driver crate on stm32mp1 0.16 — the gates are injected and the crate compiles; there is simply nothing third-party to compile against |
 | rm0438 | stm32l562 | stm32l5 0.16.0 | **150** | 132 | PASS | stm32-hal2 2.1.10 | PASS | 73 | 38 | 34 | 0 | 0 | 161 | 128 | 65 | 27 | 0 | src/adc.rs, src/clocks/baseline.rs, src/flash/trustzone.rs, src/gpio.rs, src/i2c.rs, src/low_power.rs, src/rtc.rs, src/usart.rs | — |
-| rm0440 | stm32g4a1 | stm32g4 0.16.0 | **71** | 41 | PASS | stm32-hal2 2.1.10 | PASS | 127 | 72 | 52 | 0 | 0 | 85 | 35 | 116 | 42 | 0 | src/adc.rs, src/i2c.rs, src/lpuart.rs, src/rtc.rs, src/usart.rs | — |
-| rm0440 | stm32g4a1 | stm32g4 0.16.0 | **71** | 41 | PASS | stm32g4xx-hal 0.1.0 | PASS | 36 | 0 | 32 | 0 | 0 | 85 | 35 | 23 | 23 | 0 | src/adc/mod.rs, src/i2c.rs, src/rcc/clockout.rs, src/rcc/mod.rs, src/serial/usart.rs | — |
 | rm0440 | stm32g474 | stm32g4 0.16.0 | **81** | 38 | PASS | stm32-hal2 2.1.10 | PASS | 209 | 122 | 87 | 0 | 0 | 98 | 32 | 196 | 72 | 0 | src/adc.rs, src/i2c.rs, src/lpuart.rs, src/qspi.rs, src/rtc.rs, src/usart.rs | — |
 | rm0440 | stm32g474 | stm32g4 0.16.0 | **81** | 38 | PASS | stm32g4xx-hal 0.1.0 | PASS | 5 | 0 | 0 | 6 | 0 | 98 | 32 | 5 | 0 | 6 | — | — |
 | rm0440 | stm32g474 | stm32g4 0.16.0 | **81** | 38 | PASS | stm32-hrtim 0.2.0 | PASS | 5 | 0 | 5 | 6 | 0 | 98 | 32 | 5 | 4 | 6 | src/capture.rs, src/timer.rs | — |
@@ -244,7 +242,7 @@ Two gating modes are shown. The default gates a whole register; `--field-level-g
 | rm0433 | rejected_at_collection: state_gate=77,sequence=2,write_once=1,read_effect=5,value_relation=3,other=30; kind_not_emitted: sequence=18,write_once=3,delay=1,read_effect=6,value_relation=2,other=15; gated_out_by_validator: state_gate=63; peripheral_not_in_device: state_gate=6; field_gating_disabled: state_gate=33; instance_conflict_dropped: state_gate=2 |
 | rm0436 | rejected_at_collection: state_gate=170,write_once=2,clock_gate=4,read_effect=4,value_relation=1,other=53; kind_not_emitted: sequence=26,write_once=2,read_effect=4,other=15; gated_out_by_validator: state_gate=104; peripheral_not_in_device: state_gate=4; field_gating_disabled: state_gate=66; emitter_rejected: state_gate=1; pruned_for_device: state_gate=2 |
 | rm0438 | rejected_at_collection: state_gate=123,sequence=1,write_once=2,delay=1,value_relation=2,other=22; kind_not_emitted: sequence=7,write_once=2,delay=6,read_effect=1,value_relation=2,other=9; gated_out_by_validator: state_gate=92; peripheral_not_in_device: state_gate=167; field_gating_disabled: state_gate=38; emitter_rejected: state_gate=1; pruned_for_device: state_gate=1 |
-| rm0440 | rejected_at_collection: state_gate=84,write_once=8,clock_gate=19,read_effect=2,value_relation=2,other=4; kind_not_emitted: sequence=16,write_once=2,delay=1,read_effect=1,value_relation=2,other=1; gated_out_by_validator: state_gate=25; peripheral_not_in_device: state_gate=26; field_gating_disabled: state_gate=43 |
+| rm0440 | rejected_at_collection: state_gate=89,write_once=5,clock_gate=19,read_effect=2,value_relation=2,other=4; kind_not_emitted: sequence=16,write_once=5,delay=1,read_effect=1,value_relation=2,other=1; gated_out_by_validator: state_gate=23; peripheral_not_in_device: state_gate=2; field_gating_disabled: state_gate=48; instance_conflict_dropped: state_gate=6 |
 | rm0442 | rejected_at_collection: state_gate=134,read_effect=5,value_relation=1,other=43; kind_not_emitted: sequence=12,delay=1,read_effect=1,value_relation=2,other=19; gated_out_by_validator: state_gate=116; peripheral_not_in_device: state_gate=2; field_gating_disabled: state_gate=59; emitter_rejected: state_gate=2 |
 | rm0453 | rejected_at_collection: state_gate=45,clock_gate=10,value_relation=2,other=16; kind_not_emitted: sequence=6,value_relation=1,other=8; gated_out_by_validator: state_gate=24; field_gating_disabled: state_gate=16 |
 | rm0455 | rejected_at_collection: state_gate=58,sequence=2,read_effect=2,value_relation=1,other=43; kind_not_emitted: sequence=23,write_once=2,delay=2,value_relation=1,other=12; gated_out_by_validator: state_gate=69; peripheral_not_in_device: state_gate=2; field_gating_disabled: state_gate=23; emitter_rejected: state_gate=6; instance_conflict_dropped: state_gate=5 |
@@ -275,3 +273,19 @@ Two gating modes are shown. The default gates a whole register; `--field-level-g
 7. `instance_conflict_dropped` (instance conflict) — Peripheral instances share one Rust type and disagreed on the gate for it — two readings of one datasheet sentence with no way to tell which is right, so no gate is emitted at all.
 8. `pruned_for_device` (generated-PAC reality) — Not expressible against the generated code: the register's access mode has no such operation, or the precondition's field reader is the wrong shape (a 1-bit BitReader has no bits(); a multi-bit FieldReader has no bit_is_set()).
 9. `target_unverified_by_location` (quote anchoring) — The supporting quote never names the register and could not be anchored to the target's own section of the manual, so the evidence cannot be tied to what it claims to constrain.
+
+## Control: how much does the chip choice matter?
+
+Every table above follows one rule — **one device module per reference manual**, chosen so that every driver supporting that manual can select it. These manuals cover 154 device modules in total, so each row is one representative chip. One manual is injected a second time to measure how much that choice moves the numbers; it is excluded from every figure above.
+
+| RM | device | role | gates | registers | HAL crate | gate fired | guarded | possible bug |
+|---|---|---|---|---|---|---|---|---|
+| rm0440 | stm32g474 | corpus | **81** | 38 | stm32-hal2 2.1.10 | 209 | 122 | 87 |
+| rm0440 | stm32g474 | corpus | **81** | 38 | stm32g4xx-hal 0.1.0 | 5 | 0 | 0 |
+| rm0440 | stm32g474 | corpus | **81** | 38 | stm32-hrtim 0.2.0 | 5 | 0 | 5 |
+| rm0440 | stm32g4a1 | control | **71** | 41 | stm32-hal2 2.1.10 | 127 | 72 | 52 |
+| rm0440 | stm32g4a1 | control | **71** | 41 | stm32g4xx-hal 0.1.0 | 36 | 0 | 32 |
+
+`rm0440` / `stm32g4a1` — a second G4 part for the same manual and the same drivers, to show how much the choice of representative chip moves the numbers. G474 alone reaches all three G4 drivers, so this is not needed for coverage.
+
+**One device at a time is a choice, not a limit of the technique.** The harness injects into a single device module from a pristine crate because `generic.rs` is patched crate-wide, which keeps attribution simple. In the 20 flat-layout crates the device modules are independent files, so several could be injected in one pass. Only `stm32h7` is deduplicated — 188 of its 430 peripheral modules are shared between devices — and there two devices' constraints can land on one Rust type, the same problem the instance-alias resolver already solves for peripherals. Revisiting it would buy coverage and variation, not new constraints: a manual is read once, and its constraints do not change with the chip they are applied to.

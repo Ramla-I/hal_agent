@@ -60,6 +60,18 @@ class Consumer:
     note: str = ""
 
 
+# (rm, device) injected IN ADDITION to that manual's representative chip, to
+# measure something rather than to cover something. Excluded from the corpus
+# tables so the rule stays "one device per manual", and reported separately.
+CONTROL_DEVICES = {
+    ("rm0440", "stm32g4a1"):
+        "a second G4 part for the same manual and the same drivers, to show "
+        "how much the choice of representative chip moves the numbers. G474 "
+        "alone reaches all three G4 drivers, so this is not needed for "
+        "coverage.",
+}
+
+
 @dataclass
 class Target:
     rm: str
@@ -221,7 +233,8 @@ TARGETS = [
         _hal2("g4a1"),
         Consumer("stm32g4xx-hal", "0.1.0", ["stm32g4a1"],
                  note="the one first-party family HAL released against 0.16")]),
-    # The one manual injected into TWO devices, and deliberately kept that way.
+    # CONTROL, not coverage -- excluded from the headline tables, reported
+    # after them. See CONTROL_DEVICES.
     # G474 alone would reach all three G4 drivers (stm32-hal2, stm32g4xx-hal
     # and stm32-hrtim all offer it), so this is not needed for coverage. It is
     # kept as the corpus's only control on how much the choice of chip moves
