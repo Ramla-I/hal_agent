@@ -57,7 +57,7 @@ from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(APP_DIR / "experiments"))
-from stm_sweep import TARGETS, UNMAPPED, DATA  # noqa: E402
+from stm_sweep import TARGETS, UNMAPPED, DATA, Consumer  # noqa: E402
 
 OUT = APP_DIR / "experiments" / "out"
 DOC = APP_DIR.parent.parent / "docs" / "injection_tracking.md"
@@ -244,6 +244,49 @@ def sweep_results(files=None) -> dict:
     return out
 
 
+def ported_results() -> dict:
+    """(rm, device, crate) -> result for a HAL that only became measurable
+    after its PAC dependency was upgraded (experiments/port_hal.py).
+
+    Kept in the same shape as sweep_results so the table treats it the same
+    way, but flagged `ported` so the row can say so. The upgrade is one the
+    HAL owes its own dependency and touches only how register access is
+    spelled -- but a reader still deserves to know which crate came off
+    crates.io unmodified and which did not."""
+    p = OUT / "measure_ported.json"
+    if not p.is_file():
+        return {}
+    out = {}
+    for r in json.loads(p.read_text()):
+        if r.get("baseline") != "PASS":
+            continue
+        out[(r["rm"], r["device"], r["hal"])] = {
+            "version": PORTED_VERSIONS.get(r["hal"], ""),
+            "baseline": "PASS", "status": "ran", "ported": True,
+            "true_enforcement": r["gate_fired"],
+            "guarded": r["guarded"], "candidate": r["possible_bug"],
+            "untriaged": r.get("untriaged", 0),
+            "generic_friction": 0, "other": r["collateral"],
+            "files": sorted({h["file"].split("/")[-1] for h in r["hits"]}),
+        }
+    return out
+
+
+PORTED_VERSIONS = {"stm32l0xx-hal": "0.10.0", "stm32f0xx-hal": "0.18.0"}
+
+# Why a manual in a PORTED family still has no pairing. Read from the
+# measurement report so it cannot drift from what actually ran.
+def _ported_unpaired() -> dict:
+    p = OUT / "measure_ported.json"
+    if not p.is_file():
+        return {}
+    return {r["rm"]: r["unpaired_reason"] for r in json.loads(p.read_text())
+            if r.get("unpaired_reason")}
+
+
+PORTED_UNPAIRED = _ported_unpaired()
+
+
 def gap_notes() -> dict:
     """PAC crate -> why its community HAL cannot be used (from hal_gap.py)."""
     p = OUT / "hal_gap.json"
@@ -309,6 +352,21 @@ FAMILY_HAL = {
 
 def build_note(t, res, gaps, activity) -> str:
     """Why this row has (or has not) a compile result against a HAL."""
+    if res and res.get("ported"):
+        return ("HAL's PAC dependency upgraded to 0.16 by "
+                "experiments/port_hal.py before measuring — mechanical edits "
+                "only (rustc's own suggestions plus renames read off the PAC), "
+                "verified not to touch control flow, and the baseline against "
+                "the pristine PAC passes")
+    if not res and FAMILY_HAL.get(t.pac) in PORTED_VERSIONS:
+        # The family's HAL HAS been upgraded and measured elsewhere, so the
+        # PAC-generation note below would be false here. Say what actually
+        # blocks this chip instead.
+        hal = FAMILY_HAL[t.pac]
+        why = PORTED_UNPAIRED.get(t.rm)
+        return (f"{hal} was upgraded to PAC 0.16 (experiments/port_hal.py) "
+                f"and measured on this family's other manuals; "
+                + (why or f"this chip has no matching {hal} feature"))
     if res:
         if res.get("status") == "PATCH_UNUSED":
             return "INVALID: cargo did not apply the local PAC patch"
@@ -360,6 +418,8 @@ def main() -> None:
     args = ap.parse_args()
 
     sweeps = sweep_results()
+    ported = ported_results()
+    sweeps.update(ported)
     fsweeps = sweep_results(FIELD_SWEEP_FILES)
     gaps = gap_notes()
     activity = hal_activity(args.no_network)
@@ -412,7 +472,14 @@ def main() -> None:
                     for i in r["constraints"] if i is not None)
             fg_applied += sum(ks.values())
 
-        consumers = t.consumers or [None]
+        consumers = list(t.consumers or [])
+        for (prm, pdev, pcrate), _v in ported.items():
+            if prm == t.rm and pdev == t.device and not any(
+                    c.crate == pcrate for c in consumers):
+                consumers.append(Consumer(pcrate,
+                                          PORTED_VERSIONS.get(pcrate, ""),
+                                          [], note="PAC dependency upgraded"))
+        consumers = consumers or [None]
         for c in consumers:
             res = sweeps.get((t.rm, t.device, c.crate)) if c else None
             fres = fsweeps.get((t.rm, t.device, c.crate)) if c else None
