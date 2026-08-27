@@ -1005,21 +1005,29 @@ def write_html(rows: list, path: Path) -> None:
          "is read from a pipeline artifact.</p>", "</header>"]
 
     h += ['<section><h2>The funnel</h2>', '<div class="funnel">']
+    # Everything from `compile-time gates` onward depends on which gating mode
+    # ran, so each says which. The two above it are extraction figures, settled
+    # before any gate exists, and are the same number in both modes -- marking
+    # them would imply a distinction they do not have.
+    _WR = ' <em>(whole-register)</em>'
     for key, label, hi in (
             ("constraints_found_raw", "found (raw)", False),
             ("validator_enforce", "validator: enforce", False),
-            ("enforced", "compile-time gates", True),
-            ("enforced_via_instance_alias", "via instance alias", False),
-            ("registers_gated", "registers gated", False)):
+            ("enforced", "compile-time gates" + _WR, True),
+            ("enforced_via_instance_alias", "via instance alias" + _WR, False),
+            ("registers_gated", "registers gated" + _WR, False)):
         h.append(f'<div class="stat{" hi" if hi else ""}"><span class="k">{label}</span>'
                  f'<span class="v">{tot[key]}</span></div>')
-    h.append(f'<div class="stat"><span class="k">driver enforcement hits</span>'
-             f'<span class="v">{enforcement}</span></div>')
-    h.append(f'<div class="stat"><span class="k">collateral errors</span>'
+    h.append(f'<div class="stat"><span class="k">driver enforcement hits{_WR}'
+             f'</span><span class="v">{enforcement}</span></div>')
+    h.append(f'<div class="stat"><span class="k">collateral errors{_WR}</span>'
              f'<span class="v">{collateral}</span></div>')
     h.append("</div>")
-    h.append('<p class="note">Those are the default, <b>whole-register</b> '
-             "gating. The injector can also gate individual bitfields "
+    h.append('<p class="note"><b>found (raw)</b> and <b>validator: enforce</b> '
+             "are extraction figures and are the same in both modes; every "
+             "figure below them depends on how the gate is drawn, so each "
+             "says which. The default gates a whole register. The injector "
+             "can also gate individual bitfields "
              "(<code>--field-level-gating</code>, opt-in), which is a "
              "different trade rather than a better one: it gates fewer "
              "registers and asks less of the driver, so it fires on fewer "

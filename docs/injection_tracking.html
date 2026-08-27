@@ -142,13 +142,13 @@ a{color:var(--accent)}
 <div class="funnel">
 <div class="stat"><span class="k">found (raw)</span><span class="v">17720</span></div>
 <div class="stat"><span class="k">validator: enforce</span><span class="v">9232</span></div>
-<div class="stat hi"><span class="k">compile-time gates</span><span class="v">4959</span></div>
-<div class="stat"><span class="k">via instance alias</span><span class="v">1881</span></div>
-<div class="stat"><span class="k">registers gated</span><span class="v">2550</span></div>
-<div class="stat"><span class="k">driver enforcement hits</span><span class="v">1958</span></div>
-<div class="stat"><span class="k">collateral errors</span><span class="v">0</span></div>
+<div class="stat hi"><span class="k">compile-time gates <em>(whole-register)</em></span><span class="v">4959</span></div>
+<div class="stat"><span class="k">via instance alias <em>(whole-register)</em></span><span class="v">1881</span></div>
+<div class="stat"><span class="k">registers gated <em>(whole-register)</em></span><span class="v">2550</span></div>
+<div class="stat"><span class="k">driver enforcement hits <em>(whole-register)</em></span><span class="v">1958</span></div>
+<div class="stat"><span class="k">collateral errors <em>(whole-register)</em></span><span class="v">0</span></div>
 </div>
-<p class="note">Those are the default, <b>whole-register</b> gating. The injector can also gate individual bitfields (<code>--field-level-gating</code>, opt-in), which is a different trade rather than a better one: it gates fewer registers and asks less of the driver, so it fires on fewer sites, but it reaches constraints the datasheet states about single bits. Both are measured over the same 49 injections and the same drivers; the table below carries both.</p>
+<p class="note"><b>found (raw)</b> and <b>validator: enforce</b> are extraction figures and are the same in both modes; every figure below them depends on how the gate is drawn, so each says which. The default gates a whole register. The injector can also gate individual bitfields (<code>--field-level-gating</code>, opt-in), which is a different trade rather than a better one: it gates fewer registers and asks less of the driver, so it fires on fewer sites, but it reaches constraints the datasheet states about single bits. Both are measured over the same 49 injections and the same drivers; the table below carries both.</p>
 <div class="funnel">
 <div class="stat"><span class="k">compile-time gates <em>(field-level)</em></span><span class="v">5415</span></div>
 <div class="stat"><span class="k">registers gated <em>(field-level)</em></span><span class="v">2434</span></div>
