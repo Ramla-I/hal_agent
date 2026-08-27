@@ -627,15 +627,15 @@ def main() -> None:
     md += ["",
           "## Extraction → enforcement",
           "",
-          "| RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | of which via instance alias | registers gated | PAC still compiles |",
-          "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+          "| # | RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | of which via instance alias | registers gated | PAC still compiles |",
+          "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     seen = set()
     for r in rows:
         if r["RM"] in seen:
             continue
         seen.add(r["RM"])
         md.append(
-            f"| {r['RM']} | {r['device']} | {r['pac_crate']} | "
+            f"| {len(seen)} | {r['RM']} | {r['device']} | {r['pac_crate']} | "
             f"{r['constraints_found_raw']} | {r['found_by_kind_raw']} | "
             f"{r['validator_enforce']} | {r['validator_enforce_by_kind']} | "
             f"**{r['enforced']}** | {r['enforced_by_kind']} | "
@@ -797,6 +797,20 @@ th.pin,td.pin{
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:600;
 }
 thead th.pin{z-index:3;background:var(--surface-2)}
+/* Row numbers on the extraction table, so a row can be cited by number in
+   discussion. The number column takes over as the leftmost sticky cell, and
+   the RM column -- still sticky -- sits just behind it. Only the rightmost of
+   the two carries the edge shadow, or the seam shows twice. */
+.numbered th.rownum,.numbered td.rownum{
+  position:sticky;left:0;z-index:1;background:var(--surface);
+  width:2.9em;min-width:2.9em;text-align:right;
+  font-variant-numeric:tabular-nums;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color:var(--ink-dim);font-weight:500;box-shadow:none;
+}
+.numbered thead th.rownum{z-index:3;background:var(--surface-2)}
+.numbered tbody tr:hover td.rownum{background:var(--surface-2)}
+.numbered th.pin,.numbered td.pin{left:2.9em}
 tbody tr:hover td.pin{background:var(--surface-2)}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
 .num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
@@ -1082,15 +1096,17 @@ def write_html(rows: list, path: Path) -> None:
           'denominators: <code>found</code> is raw generator output; '
           '<code>validator: enforce</code> counts only what survived the stage-0 '
           'collection lint. <span class="hint">— scroll →</span></p>',
-          '<div class="scroll"><table><thead><tr>',
+          '<div class="scroll"><table class="numbered"><thead><tr>',
+          '<th class="rownum">#</th>',
           '<th class="pin">RM</th><th>device</th><th>PAC crate</th>',
           '<th>found</th><th>found by kind</th><th>validator: enforce</th>',
           '<th>enforce by kind</th><th>enforced</th><th>enforced by kind</th>',
           '<th>via alias</th><th>regs</th><th>PAC compiles</th>',
           "</tr></thead><tbody>"]
-    for r in per_rm:
+    for n, r in enumerate(per_rm, start=1):
         h.append(
-            f'<tr><td class="pin">{_esc(r["RM"])}</td>'
+            f'<tr><td class="rownum">{n}</td>'
+            f'<td class="pin">{_esc(r["RM"])}</td>'
             f'<td class="mono">{_esc(r["device"])}</td>'
             f'<td class="mono dim">{_esc(r["pac_crate"])}</td>'
             f'<td class="num">{_esc(r["constraints_found_raw"])}</td>'
