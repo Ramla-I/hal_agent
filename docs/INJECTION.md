@@ -94,6 +94,79 @@ STM run adds RMs as they finish.)
 
 ---
 
+## What injection actually changes in a PAC crate
+
+Every figure below is from diffing a pristine `stm32f1` 0.16.0 against the
+same crate after injecting RM0008 into `stm32f103` (6 registers gated, 1608
+files changed). Reproduce with:
+
+```bash
+python applications/pac_codegen/get_pac.py --crate stm32f1 --version 0.16.0 --force
+cp -r applications/pac_codegen/vendored/pac/stm32f1 /tmp/pristine_f1
+python applications/pac_codegen/inject_from_run.py \
+  <run_dir>/agent_output/stm/rm0008/1 \
+  --pac applications/pac_codegen/vendored/pac/stm32f1 --device stm32f103 \
+  --svd-dir <devices>/stm/rm0008/svd/stm32f103.svd \
+  --validated <eval>/stm/rm0008/1/rm0008_constraints_review.jsonl
+diff -rq /tmp/pristine_f1 applications/pac_codegen/vendored/pac/stm32f1
+```
+
+| # | Where | Change | Why |
+|---|---|---|---|
+| 1 | `src/generic.rs` | Add 3 marker traits — `UnconstrainedRead` / `UnconstrainedWrite` / `UnconstrainedModify` | The **absence** of a marker is the gate |
+| 2 | `src/generic.rs` | Add 3 gate traits — `ReadGate` / `WriteGate` / `ModifyGate`, each with `type Witness` | Binds a witness type to a constrained register |
+| 3 | `src/generic.rs` | Add `REG: UnconstrainedWrite` (etc.) bounds to the **existing** `read`/`write`/`modify`/`reset` | Makes the ordinary API refuse a gated register — this is what produces the compile error |
+| 4 | `src/generic.rs` | Add `*_witnessed` and `*_when_ready` methods | The sanctioned way to perform a constrained operation |
+| 5 | `src/generic.rs` | Add `unsafe *_unwitnessed` | Acknowledged bypass, like `unsafe` anywhere else |
+| 6 | Every register file in the injected device — **363** | Append `impl crate::Unconstrained{Read,Write,Modify} for <Spec> {}` for each operation *not* constrained | Unconstrained registers keep the ordinary API |
+| 7 | The gated register files — **6** | **Omit** the marker for the constrained operation | The gate itself |
+| 8 | The gated register's peripheral module — **2** | Append `pub mod constraints`: witness structs, a `ConstraintError` enum, the gate impls, and `check_*_ready()` | The runtime check that reads the source register and mints a witness |
+| 9 | Every *other* device module — **1242** | Append all three markers to every register | A sibling chip must not inherit another chip's datasheet |
+| 10 | *(opt-in, `--field-level-gating`)* Field writer accessors | `pub fn <field>(&mut self)` gains a `&<Field>Witness` parameter | Field-level gating |
+
+### The gate is a subtraction
+
+```rust
+// can/fa1r.rs — gated: write and modify markers withheld
+impl crate::UnconstrainedRead for FA1Rrs {}
+
+// tim1/cr1.rs — unconstrained: ordinary API intact
+impl crate::UnconstrainedRead for CR1rs {}
+impl crate::UnconstrainedWrite for CR1rs {}
+impl crate::UnconstrainedModify for CR1rs {}
+```
+
+### The check carries the datasheet sentence
+
+```rust
+/// This register can be written only when the filter initialization
+/// mode is set (FINIT=1) in the CAN_FMR register.
+pub fn check_write_ready(&self, fmr: &crate::Reg<super::fmr::FMRrs>)
+    -> Result<Fa1rWriteWitness, Fa1rConstraintError> {
+    let r_fmr = fmr.read();
+    if !(r_fmr.finit().bit_is_set()) {
+        return Err(Fa1rConstraintError::FmrFinitNotSet);
+    }
+    Ok(Fa1rWriteWitness { _priv: () })
+}
+```
+
+### Two properties worth stating
+
+**Almost every edit is the null change.** 1605 of 1608 files only receive
+markers saying *unconstrained*, and 1242 of those are in sibling device
+modules the selected cargo feature never compiles. Two files gain real logic;
+six have a marker withheld. The technique is subtractive — the interesting
+change is what is missing.
+
+**No existing code is rewritten.** Every change is an append, except the trait
+bounds added to `generic.rs`'s existing methods. Register layouts, field
+accessors, addresses and reset values are untouched, which is what makes "the
+driver's behaviour is unchanged" a structural property rather than a claim.
+
+For *why* trait-bound gating rather than shadowing, see
+`docs/register_constraints_plan.md` Appendix A.
+
 ## Notes
 
 - Constraint-validator verdicts are the judge's categorical call (uncalibrated;
