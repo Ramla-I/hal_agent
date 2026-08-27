@@ -267,15 +267,26 @@ TARGETS = [
 # so their constraints are extracted and judged but have nowhere to land. They
 # are carried in the tracking table with empty crate columns rather than
 # dropped, because "no row" and "zero enforced" look the same in a summary.
+# Manuals with no chip crate in the RELEASE the corpus is pinned to. Four of
+# the five that used to sit here are now built from stm32-rs master instead
+# (MASTER_TARGETS below); only MP13x has no patch set anywhere.
 UNMAPPED = {
-    # stm32mp1 exists but ships only stm32mp153 / stm32mp157.
+    # stm32mp1 exists but ships only stm32mp153 / stm32mp157, and master has
+    # no MP13x patch set either.
     "rm0475": ("STM32MP13x", "stm32mp1", 486, 395),
-    # No stm32wba crate at all.
-    "rm0493": ("STM32WBA5x", None, 302, 224),
-    # stm32wb ships only stm32wb55; the WB0 line is a different architecture.
-    "rm0505": ("STM32WB09", None, 36, 13),
-    "rm0529": ("STM32WB05", None, 34, 20),
-    "rm0530": ("STM32WB06/07", None, 35, 23),
+}
+
+# Manuals whose chip crate exists only on stm32-rs MASTER, in two crates that
+# postdate v0.16.0. Measured by experiments/measure_master_pacs.py, not by this
+# sweep: there is no crates.io release to provision and no driver can depend on
+# an unpublished crate, so only enforceability is measurable. Their PAC version
+# reads `latest` in the tables so released and unreleased rows are never
+# confused for one another.
+MASTER_TARGETS = {
+    "rm0493": ("STM32WBA5x", "stm32wba", "stm32wba55"),
+    "rm0505": ("STM32WB09", "stm32wb0", "stm32wb09"),
+    "rm0529": ("STM32WB05", "stm32wb0", "stm32wb05"),
+    "rm0530": ("STM32WB06/07", "stm32wb0", "stm32wb06"),
 }
 
 
