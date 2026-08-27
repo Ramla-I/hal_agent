@@ -87,9 +87,25 @@ class Target:
         return DATA / "chunked_datasheets/stm"
 
 
-# One device module per RM: the RM's primary chip, preferring one a paired HAL
-# can select. (An RM projects onto several chips; injection is per device
-# module, and generic.rs is patched crate-wide, so one at a time.)
+# DEVICE SELECTION POLICY
+#
+# One device module per RM: the RM's primary chip, chosen so that every driver
+# crate supporting that manual can select it. Checked across all 48 manuals --
+# no manual needs a second device to reach a driver.
+#
+# The 48 manuals project onto 154 device modules in total, so this is one
+# representative chip each, not the whole silicon line. That does not
+# understate the constraints (a manual is read once, and its constraints are
+# the same whichever chip they are applied to) but it does mean register
+# counts are per representative chip: the spread across sibling chips of the
+# same manual is not measured, except where noted below.
+#
+# Injection is per device module and generic.rs is patched crate-wide, so a
+# device is injected from a pristine crate one at a time. That is a property
+# of the harness, not a limit of the technique: in the 20 flat-layout crates
+# the device modules are independent, and only stm32h7 shares register blocks
+# between devices (188 of its 430 peripheral modules), where two devices'
+# constraints could collide on one Rust type.
 # stm32-hal2 is a SECOND, independent HAL family covering c0/f3/f4/g0/g4/h5/
 # h7/l4/l5 -- and it is already on PAC 0.16.0. It is what makes the f3 family
 # measurable at all: stm32f3xx-hal is ~850 errors away from this PAC
@@ -193,15 +209,24 @@ TARGETS = [
     Target("rm0399", "stm32h7", "stm32h747cm7", "stm32h747cm7.svd",
            [_hal2("h747cm7"), _hrtim("stm32h747cm7")]),
     Target("rm0432", "stm32l4", "stm32l4r9", "stm32l4r9.svd"),
-    Target("rm0433", "stm32h7", "stm32h753v", "stm32h753v.svd", [_hal2("h753v")]),
+    # H753 rather than H753V: both are RM0433 parts and stm32-hal2 selects
+    # either, but only the non-V part is offered by stm32-hrtim -- and it is
+    # also the feature Hubris's drv-stm32h7-usart builds with. One device,
+    # all three consumers.
+    Target("rm0433", "stm32h7", "stm32h753", "stm32h753.svd", [
+        _hal2("h753"), _hrtim("stm32h753")]),
     Target("rm0436", "stm32mp1", "stm32mp157", "stm32mp157.svd"),
     Target("rm0438", "stm32l5", "stm32l562", "stm32l562.svd", [_hal2("l562")]),
     Target("rm0440", "stm32g4", "stm32g4a1", "stm32g4a1.svd", [
         _hal2("g4a1"),
         Consumer("stm32g4xx-hal", "0.1.0", ["stm32g4a1"],
                  note="the one first-party family HAL released against 0.16")]),
-    # A second G4 part, because the three G4 consumers do not offer the same
-    # device feature: stm32-hrtim has no g4a1, so G474 is where all three meet.
+    # The one manual injected into TWO devices, and deliberately kept that way.
+    # G474 alone would reach all three G4 drivers (stm32-hal2, stm32g4xx-hal
+    # and stm32-hrtim all offer it), so this is not needed for coverage. It is
+    # kept as the corpus's only control on how much the choice of chip moves
+    # the numbers: same manual, same drivers, different device -- 71 gates and
+    # 41 registers on G4A1 against 81 and 38 here.
     Target("rm0440", "stm32g4", "stm32g474", "stm32g474.svd", [
         _hal2("g474"),
         Consumer("stm32g4xx-hal", "0.1.0", ["stm32g474"]),

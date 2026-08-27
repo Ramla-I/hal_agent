@@ -95,7 +95,9 @@ SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                "sweep_rm0041_wholereg.json",
                # two consumers that could always have been measured on the
                # device already injected, and were simply never listed
-               "sweep_rm0090_wholereg.json"]
+               "sweep_rm0090_wholereg.json",
+               # RM0433 moved from H753V to H753 so stm32-hrtim can select it
+               "sweep_rm0433_wholereg.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -202,7 +204,8 @@ def injection_report(rm: str, device: str, field_gating: bool = False) -> dict:
 # newer measurement of the first, so its results are read from their own file
 # and shown beside the default rather than merged into it. Both columns are
 # live numbers from a real 49-target build.
-FIELD_SWEEP_FILES = ["sweep_fieldgate_49.json", "sweep_rm0041_field.json"]
+FIELD_SWEEP_FILES = ["sweep_fieldgate_49.json", "sweep_rm0041_field.json",
+                     "sweep_rm0433_field.json"]
 
 
 def sweep_results(files=None) -> dict:
@@ -1119,6 +1122,17 @@ def write_html(rows: list, path: Path) -> None:
           'denominators: <code>found</code> is raw generator output; '
           '<code>validator: enforce</code> counts only what survived the stage-0 '
           'collection lint. <span class="hint">— scroll →</span></p>',
+          '<p class="note"><b>One device per manual.</b> A manual covers '
+          'several chips &mdash; these 48 project onto 154 device modules '
+          '&mdash; and each is injected into one, chosen so that every driver '
+          'crate supporting that manual can select it. Checked across all 48: '
+          'none needs a second device to reach a driver. Constraints are '
+          'unaffected (a manual is read once), but <b>registers gated is per '
+          'representative chip, not per family</b>. RM0440 is injected into '
+          'two G4 parts on purpose &mdash; G474 alone would reach all three of '
+          'its drivers, so the second is the one control we have on how much '
+          'the choice of chip moves the numbers: 71 gates and 41 registers on '
+          'G4A1 against 81 and 38 on G474.</p>',
           '<div class="scroll"><table class="numbered"><thead><tr>',
           '<th class="rownum">#</th>',
           '<th class="pin">RM</th><th>device</th><th>PAC crate</th>',
