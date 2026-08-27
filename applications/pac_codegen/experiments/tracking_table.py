@@ -58,7 +58,7 @@ from pathlib import Path
 APP_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(APP_DIR / "experiments"))
 from stm_sweep import (TARGETS, UNMAPPED, DATA, Consumer,  # noqa: E402
-                       CONTROL_DEVICES)
+                       CONTROL_DEVICES, MASTER_TARGETS)
 
 OUT = APP_DIR / "experiments" / "out"
 DOC = APP_DIR.parent.parent / "docs" / "injection_tracking.md"
@@ -98,7 +98,12 @@ SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                # device already injected, and were simply never listed
                "sweep_rm0090_wholereg.json",
                # RM0433 moved from H753V to H753 so stm32-hrtim can select it
-               "sweep_rm0433_wholereg.json"]
+               "sweep_rm0433_wholereg.json",
+               # the three manuals re-measured after the `sec` peripheral
+               # re-attribution, so the artifact's source data matches the
+               # corrected review files (the numbers are unchanged)
+               "sweep_rm0438_secfix.json", "sweep_rm0456_secfix.json",
+               "sweep_rm0481_secfix.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -206,7 +211,10 @@ def injection_report(rm: str, device: str, field_gating: bool = False) -> dict:
 # and shown beside the default rather than merged into it. Both columns are
 # live numbers from a real 49-target build.
 FIELD_SWEEP_FILES = ["sweep_fieldgate_49.json", "sweep_rm0041_field.json",
-                     "sweep_rm0433_field.json"]
+                     "sweep_rm0433_field.json",
+                     "sweep_rm0438_secfix_field.json",
+                     "sweep_rm0456_secfix_field.json",
+                     "sweep_rm0481_secfix_field.json"]
 
 
 def sweep_results(files=None) -> dict:
@@ -280,6 +288,19 @@ def ported_results() -> dict:
 
 
 PORTED_VERSIONS = {"stm32l0xx-hal": "0.10.0", "stm32f0xx-hal": "0.18.0"}
+
+
+def master_results() -> dict:
+    """manual -> enforceability against a crate built from stm32-rs master.
+
+    These count in the totals. The totals are about what was FOUND and
+    APPLIED, and these manuals have no earlier version to be inconsistent
+    with -- what matters is that the version is stated wherever it differs,
+    which is why their PAC column reads `latest`."""
+    p = OUT / "measure_master_pacs.json"
+    if not p.is_file():
+        return {}
+    return {r["rm"]: r for r in json.loads(p.read_text())}
 
 # Why a manual in a PORTED family still has no pairing. Read from the
 # measurement report so it cannot drift from what actually ran.
@@ -530,6 +551,48 @@ def main() -> None:
     # Manuals with no chip crate to inject into still get a row. Omitting them
     # would make the corpus look smaller than it is, and "absent" would read
     # identically to "enforced nothing".
+    master = master_results()
+    for rm, (chip, crate, device) in sorted(MASTER_TARGETS.items()):
+        found = constraints_found(rm)
+        verdicts = judge_verdicts(rm)
+        enforce_kinds = collections.Counter(
+            {k: v.get("enforce", 0) for k, v in verdicts.items()
+             if v.get("enforce", 0)})
+        m = master.get(rm, {})
+        rep = injection_report(rm, f"{device}_master")
+        applied = collections.Counter()
+        for r in rep.get("rows", []):
+            if r["fate"] == "planned":
+                ks = r.get("kinds") or ({r["kind"]: 1} if r.get("kind") else {})
+                applied.update(ks)
+        rows.append({
+            "RM": rm, "device": device, "pac_crate": f"{crate} latest",
+            "constraints_found_raw": sum(found.values()),
+            "found_by_kind_raw": kinds_str(found),
+            "validator_enforce": sum(v.get("enforce", 0)
+                                     for v in verdicts.values()),
+            "validator_enforce_by_kind": kinds_str(enforce_kinds),
+            "enforced": sum(applied.values()) or 0,
+            "enforced_by_kind": kinds_str(applied),
+            "enforced_via_instance_alias": 0,
+            "registers_gated": m.get("whole_registers", 0),
+            "pac_compiles": m.get("probe", "—"),
+            "hal_crate": "—", "hal_baseline": "—",
+            "true_enforcement": "—", "guarded": "—", "candidate": "—",
+            "generic_friction": "—", "other_errors": "—",
+            "fg_gates": 0, "fg_registers_gated": m.get("field_registers", 0),
+            "fg_pac_compiles": m.get("probe", "—"),
+            "fg_true_enforcement": "—", "fg_guarded": "—",
+            "fg_candidate": "—", "fg_generic_friction": "—",
+            "enforcement_sites": "—",
+            "dropped_by_stage": "—",
+            "note": ("chip crate exists only on stm32-rs master "
+                     f"({(m.get('stm32rs_commit') or '')[:12]}), not in the "
+                     "0.16.0 release the rest of the corpus is pinned to; "
+                     "no crates.io driver can depend on it, so gates are "
+                     "measured but adoption is not"),
+        })
+
     for rm, (chip, crate, found_n, enforce_n) in sorted(UNMAPPED.items()):
         found = constraints_found(rm)
         verdicts = judge_verdicts(rm)
