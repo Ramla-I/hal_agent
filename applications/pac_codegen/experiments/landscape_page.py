@@ -17,6 +17,7 @@ Usage:
 """
 
 import argparse
+import functools
 import html
 import json
 import sys
@@ -31,8 +32,25 @@ STYLE_LABEL = {
     "tock": "hand-written register maps",
     "hal_only": "everything through a driver",
 }
-EFFORT_CLASS = {"ready": "ok", "hal-bump": "warn", "pac-gap": "warn",
-                "missing-manual": "no", "not-applicable": "none"}
+EFFORT_CLASS = {"measured": "ok", "ready": "ok", "hal-bump": "warn",
+                "pac-gap": "warn", "missing-manual": "no",
+                "not-applicable": "none"}
+
+
+@functools.lru_cache(maxsize=1)
+def measured_projects() -> dict:
+    """Projects that were taken past the scan and actually compiled.
+
+    A scan can only say a project is `pac-gap`; it cannot say whether that gap
+    is an afternoon or a quarter. Where a harness has since closed one, the row
+    should report what the compiler found instead of what the scan guessed."""
+    out = {}
+    pth = OUT / "port_hubris.json"
+    if pth.is_file():
+        r = json.loads(pth.read_text())
+        if r.get("baseline") == "PASS" and "gate_fired" in r:
+            out[r["project"]] = r
+    return out
 
 
 def _e(x) -> str:
@@ -207,11 +225,44 @@ def project_section(p: dict, trace: dict) -> list:
     h.append("</div>")
 
     r = p["readiness"]
-    cls = EFFORT_CLASS.get(r["effort"], "none")
+    mm = measured_projects().get(p["name"])
+    cls = EFFORT_CLASS.get("measured" if mm else r["effort"], "none")
     blockers = "; ".join(r["blockers"]) or "none"
-    h.append(f'<p class="note"><span class="pill {cls}">{_e(r["effort"])}</span> '
-             f'&nbsp;{_e(r["pac_needed"] or "no chip crate to inject into")} '
-             f'&mdash; {_e(blockers)}</p>')
+    if mm:
+        h.append(
+            f'<p class="note"><span class="pill {cls}">measured</span> '
+            f'&nbsp;{_e(r["pac_needed"])} &mdash; the scan called this '
+            f'<em>{_e(r["effort"])}</em> ({_e(blockers)}); the gap was then '
+            f'closed and the project built. One version line in the workspace '
+            f'manifest plus {mm["mechanical_edits"]} mechanical edits, '
+            f'baseline passing against the pristine crate, then '
+            f'<b>{mm["gate_fired"]}</b> gate-fired sites across '
+            f'{mm["registers_gated"]} gated registers with '
+            f'{mm["collateral"]} collateral errors.</p>')
+        h.append('<div class="card"><h4>What the compiler found</h4>'
+                 '<div class="scroll"><table><thead><tr>'
+                 '<th class="pin">site</th><th>register</th><th>operation</th>'
+                 '<th>static verdict</th></tr></thead><tbody>')
+        for hit in mm["hits"]:
+            note = hit.get("triage_note")
+            h.append(
+                f'<tr><td class="pin mono">{_e(hit["file"])}:{hit["line"]}</td>'
+                f'<td class="mono">{_e(hit["register"])}</td>'
+                f'<td>{_e(hit["operation"])}</td>'
+                f'<td>{_e(hit["verdict"])}'
+                + (f' <span class="pill no">known wrong</span>' if note else "")
+                + (f'<br><span class="dim">{_e(note)}</span>' if note else "")
+                + "</td></tr>")
+        h.append("</tbody></table></div>")
+        if mm.get("triage_caveat"):
+            h.append(f'<p class="note"><b>Read the verdicts with this in '
+                     f'mind:</b> {_e(mm["triage_caveat"])}.</p>')
+        h.append("</div>")
+    else:
+        h.append(
+            f'<p class="note"><span class="pill {cls}">{_e(r["effort"])}</span> '
+            f'&nbsp;{_e(r["pac_needed"] or "no chip crate to inject into")} '
+            f'&mdash; {_e(blockers)}</p>')
 
     tr = trace.get(p["name"])
     if tr:
@@ -314,7 +365,8 @@ def build(scan: list, trace: dict, excluded: dict) -> str:
           "<th>build-readiness</th></tr></thead><tbody>"]
     for p in ranked:
         v = p["verdicts"]
-        eff = p["readiness"]["effort"]
+        eff = ("measured" if p["name"] in measured_projects()
+               else p["readiness"]["effort"])
         h.append(
             f'<tr><td class="pin"><a href="#{_e(p["name"])}">{_e(p["name"])}</a></td>'
             f'<td class="dim">{_e(STYLE_LABEL.get(p["style"], p["style"]))}</td>'

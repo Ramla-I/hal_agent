@@ -135,7 +135,7 @@ a{color:var(--accent)}
 <section><h2>Summary</h2>
 <div class="scroll"><table><thead><tr><th class="pin">project</th><th>how it reaches the chip</th><th>manuals</th><th>files</th><th>accesses</th><th>candidates</th><th>unchecked</th><th>corroborated</th><th>build-readiness</th></tr></thead><tbody>
 <tr><td class="pin"><a href="#tock">tock</a></td><td class="dim">hand-written register maps</td><td class="mono dim">rm0368, rm0402, rm0390, rm0316</td><td class="num">45</td><td class="num">1203</td><td class="num lead">51</td><td class="num">23</td><td class="num">28</td><td><span class="pill none">not-applicable</span></td></tr>
-<tr><td class="pin"><a href="#hubris">hubris</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0316, rm0090, rm0433, rm0444, rm0454</td><td class="num">276</td><td class="num">677</td><td class="num lead">22</td><td class="num">11</td><td class="num">11</td><td><span class="pill warn">pac-gap</span></td></tr>
+<tr><td class="pin"><a href="#hubris">hubris</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0316, rm0090, rm0433, rm0444, rm0454</td><td class="num">276</td><td class="num">677</td><td class="num lead">22</td><td class="num">11</td><td class="num">11</td><td><span class="pill ok">measured</span></td></tr>
 <tr><td class="pin"><a href="#embassy">embassy</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490</td><td class="num">249</td><td class="num">3136</td><td class="num lead">16</td><td class="num">8</td><td class="num">8</td><td><span class="pill ok">ready</span></td></tr>
 <tr><td class="pin"><a href="#bxcan">bxcan</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008</td><td class="num">35</td><td class="num">65</td><td class="num lead">11</td><td class="num">0</td><td class="num">11</td><td><span class="pill ok">ready</span></td></tr>
 <tr><td class="pin"><a href="#fdcan">fdcan</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0440, rm0433</td><td class="num">88</td><td class="num">73</td><td class="num lead">7</td><td class="num">3</td><td class="num">4</td><td><span class="pill ok">ready</span></td></tr>
@@ -307,7 +307,17 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">11</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">11</span></div>
 </div>
-<p class="note"><span class="pill warn">pac-gap</span> &nbsp;stm32h7 0.16.0 &mdash; pins stm32h7 0.14, injector targets 0.16.0</p>
+<p class="note"><span class="pill ok">measured</span> &nbsp;stm32h7 0.16.0 &mdash; the scan called this <em>pac-gap</em> (pins stm32h7 0.14, injector targets 0.16.0); the gap was then closed and the project built. One version line in the workspace manifest plus 20 mechanical edits, baseline passing against the pristine crate, then <b>6</b> gate-fired sites across 83 gated registers with 0 collateral errors.</p>
+<div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
+<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:72</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:76</td><td class="mono">BRRrs</td><td>write</td><td>corroborated <span class="pill no">known wrong</span><br><span class="dim">verdict is wrong: UE is ENABLED at line 72, so the precondition RM0433 states (UE=0) is violated, not established</span></td></tr>
+<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:79</td><td class="mono">CR1rs</td><td>modify</td><td>corroborated</td></tr>
+<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:92</td><td class="mono">CR1rs</td><td>modify</td><td>corroborated</td></tr>
+<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:135</td><td class="mono">CR1rs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:139</td><td class="mono">CR1rs</td><td>modify</td><td>unchecked</td></tr>
+</tbody></table></div>
+<p class="note"><b>Read the verdicts with this in mind:</b> corroborated = the precondition field is referenced before the access, NOT that it holds the required value; a driver that sets the field to the WRONG state still reads as corroborated (see lib.rs:76, where UE is enabled at line 72 and RM0433 requires UE=0).</p>
+</div>
 <div class="rule">
 <div class="hd">usart/cr1 <span class="dim">&mdash; 9 sites</span></div>
 <div class="meta">state_gate · write · requires USART_CR1.UE cleared · fields restricted: fifoen, m1</div>
