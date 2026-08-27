@@ -180,8 +180,15 @@ TARGETS = [
     # HAL already builds against PAC 0.16 -- and only needed its own device
     # feature naming, not a port.
     Target("rm0041", "stm32f1", "stm32f100", "stm32f100.svd", [
-        Consumer("stm32f1xx-hal", "0.11.0", ["stm32f100", "medium"])]),
-    Target("rm0090", "stm32f4", "stm32f429", "stm32f439.svd", [_hal2("f429")]),
+        Consumer("stm32f1xx-hal", "0.11.0", ["stm32f100", "medium"]),
+        # the independent F1 HAL selects the same device
+        Consumer("stm32f1-hal", "0.14.1", ["f100", "medium"],
+                 note="second F1 HAL on PAC 0.16")]),
+    # stm32f4xx-hal selects stm32f429 too, on the device already injected --
+    # it was simply never listed, so the corpus's most-used driver went
+    # unmeasured on the F4 flagship manual.
+    Target("rm0090", "stm32f4", "stm32f429", "stm32f439.svd", [
+        Consumer("stm32f4xx-hal", "0.23.0", ["stm32f429"]), _hal2("f429")]),
     Target("rm0351", "stm32l4", "stm32l4x6", "stm32l496.svd", [_hal2("l4x6")]),
     Target("rm0399", "stm32h7", "stm32h747cm7", "stm32h747cm7.svd",
            [_hal2("h747cm7"), _hrtim("stm32h747cm7")]),

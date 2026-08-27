@@ -92,7 +92,10 @@ SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
                "sweep_wholereg_build.json",
                # RM0041 gained a driver after the build sweep: stm32f1xx-hal
                # already supported the F1 value line, it just had no entry.
-               "sweep_rm0041_wholereg.json"]
+               "sweep_rm0041_wholereg.json",
+               # two consumers that could always have been measured on the
+               # device already injected, and were simply never listed
+               "sweep_rm0090_wholereg.json"]
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -629,13 +632,9 @@ def main() -> None:
           "",
           "| # | RM | device | PAC crate | constraints found (raw) | found by kind (raw) | validator says enforce | validator enforce by kind | enforced | enforced by kind | of which via instance alias | registers gated | PAC still compiles |",
           "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
-    seen = set()
-    for r in rows:
-        if r["RM"] in seen:
-            continue
-        seen.add(r["RM"])
+    for n, r in enumerate(per_manual(rows), start=1):
         md.append(
-            f"| {len(seen)} | {r['RM']} | {r['device']} | {r['pac_crate']} | "
+            f"| {n} | {r['RM']} | {r['device']} | {r['pac_crate']} | "
             f"{r['constraints_found_raw']} | {r['found_by_kind_raw']} | "
             f"{r['validator_enforce']} | {r['validator_enforce_by_kind']} | "
             f"**{r['enforced']}** | {r['enforced_by_kind']} | "
@@ -964,52 +963,76 @@ def _pill(v: str) -> str:
     return f'<span class="pill no">{_esc(v)}</span>'
 
 
-def write_html(rows: list, path: Path) -> None:
-    seen, per_rm = set(), []
+def _n(v) -> int:
+    """A column is "—" when its artifact does not exist yet (a newly added
+    manual whose compile sweep has not run). Pending is not zero, but it must
+    not crash the summary either."""
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return 0
+
+
+# Per-injection columns in BOTH gating modes. The field-level pair belongs
+# here for exactly the reason the whole-register pair does: RM0440 has two
+# chips and summing only one of them undercounts.
+_INJECTION_COLS = ("enforced", "enforced_via_instance_alias",
+                   "registers_gated", "fg_gates", "fg_registers_gated")
+
+
+def per_manual(rows: list) -> list:
+    """One row per manual, with the per-injection columns summed over its
+    chips.
+
+    A manual is read once, so extraction columns are already per manual. Gates
+    and registers are not: RM0440 is injected into two G4 parts and both are
+    real. Keeping only the first row per manual showed one chip and dropped
+    the other's 81 gates, and the column stopped summing to the headline."""
+    seen, out = {}, []
     for r in rows:
         if r["RM"] not in seen:
-            seen.add(r["RM"])
-            per_rm.append(r)
-    def _n(v) -> int:
-        # A column is "—" when its artifact does not exist yet (a newly added
-        # manual whose compile sweep has not run). Pending is not zero, but it
-        # must not crash the summary either.
-        try:
-            return int(v)
-        except (TypeError, ValueError):
-            return 0
+            row = dict(r)
+            row["_devices"] = {}
+            seen[r["RM"]] = row
+            out.append(row)
+        seen[r["RM"]]["_devices"].setdefault(r["device"], r)
+    for row in out:
+        devs = list(row["_devices"].values())
+        row["device"] = ", ".join(d["device"] for d in devs)
+        for k in _INJECTION_COLS:
+            row[k] = sum(_n(d[k]) for d in devs)
+        states = {d["pac_compiles"] for d in devs}
+        row["pac_compiles"] = (devs[0]["pac_compiles"] if len(states) == 1
+                               else "/".join(sorted(states)))
+    return out
 
-    # Extraction figures are per MANUAL: one datasheet, read once. Injection
-    # figures are per (manual, chip) -- RM0440 is injected into two different
-    # G4 parts and each gets its own gates. Deduplicating both by manual, as
-    # this block used to, silently dropped the second chip of every manual that
-    # has one, and disagreed with the table's own TOTAL row.
-    per_inj, seen_inj_h = [], set()
-    for r in rows:
-        if r["pac_crate"] == "\u2014":
-            continue
-        if (r["RM"], r["device"]) not in seen_inj_h:
-            seen_inj_h.add((r["RM"], r["device"]))
-            per_inj.append(r)
+
+def write_html(rows: list, path: Path) -> None:
+    per_rm = per_manual(rows)
+
+    # One basis now, not two. per_manual() has already summed the per-injection
+    # columns over each manual's chips, so the extraction columns (per manual)
+    # and the injection columns (per manual, summed over chips) can both be
+    # totalled from the same list. The earlier version kept a separate per_inj
+    # list for the injection columns, which is what let the funnel and the
+    # table below it disagree.
     tot = {k: sum(_n(r[k]) for r in per_rm) for k in
-           ("constraints_found_raw", "validator_enforce")}
-    tot.update({k: sum(_n(r[k]) for r in per_inj) for k in
-                ("enforced", "enforced_via_instance_alias", "registers_gated")})
+           ("constraints_found_raw", "validator_enforce", "enforced",
+            "enforced_via_instance_alias", "registers_gated")}
+
     # Only pairings whose driver compiles against the PRISTINE chip crate can
     # be measured. Where the baseline already fails, the driver is broken for
     # reasons of its own -- stm32-hal2 references an ADC3 that stm32h7b3 does
     # not have -- and every error on top of it would be miscounted as ours.
-    # Three of the 35 pairings are in that state; they stay in the table with
-    # `hal_baseline = FAIL` and are excluded from these two totals.
     hal_rows = [r for r in rows
-                if r["hal_crate"] != "—" and r["true_enforcement"] != "—"]
+                if r["hal_crate"] != "\u2014" and r["true_enforcement"] != "\u2014"]
     measurable = [r for r in hal_rows if r["hal_baseline"] == "PASS"]
     unmeasurable = len(hal_rows) - len(measurable)
     collateral = sum(_n(r["other_errors"]) for r in measurable)
     enforcement = sum(_n(r["true_enforcement"]) for r in measurable)
     fg_enforcement = sum(_n(r["fg_true_enforcement"]) for r in measurable)
-    fg_regs_tot = sum(_n(r["fg_registers_gated"]) for r in per_inj)
-    fg_gates_tot = sum(_n(r["fg_gates"]) for r in per_inj)
+    fg_gates_tot = sum(_n(r["fg_gates"]) for r in per_rm)
+    fg_regs_tot = sum(_n(r["fg_registers_gated"]) for r in per_rm)
 
     h = ['<div class="wrap">', "<header>",
          '<span class="eyebrow">LIDAR · enforcement arm</span>',

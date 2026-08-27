@@ -107,7 +107,7 @@ under *where the rest went* as `kind_not_emitted`.
 | 34 | rm0433 | stm32h753v | stm32h7 0.16.0 | 458 | state_gate=368, sequence=21, write_once=4, delay=1, read_effect=12, value_relation=7, other=45 | 225 | state_gate=212, sequence=11, write_once=2 | **170** | state_gate=170 | 108 | 83 | PASS |
 | 35 | rm0436 | stm32mp157 | stm32mp1 0.16.0 | 938 | state_gate=819, sequence=32, write_once=4, clock_gate=4, read_effect=8, value_relation=1, other=70 | 520 | state_gate=505, sequence=14, write_once=1 | **432** | state_gate=432 | 97 | 241 | PASS |
 | 36 | rm0438 | stm32l562 | stm32l5 0.16.0 | 679 | state_gate=611, sequence=17, write_once=4, delay=7, read_effect=1, value_relation=5, other=34 | 364 | state_gate=361, sequence=1, write_once=2 | **150** | state_gate=150 | 20 | 132 | PASS |
-| 37 | rm0440 | stm32g4a1 | stm32g4 0.16.0 | 333 | state_gate=268, sequence=16, write_once=12, clock_gate=22, delay=1, read_effect=5, value_relation=4, other=5 | 155 | state_gate=148, sequence=2, write_once=5 | **71** | state_gate=71 | 27 | 41 | PASS |
+| 37 | rm0440 | stm32g4a1, stm32g474 | stm32g4 0.16.0 | 333 | state_gate=268, sequence=16, write_once=12, clock_gate=22, delay=1, read_effect=5, value_relation=4, other=5 | 155 | state_gate=148, sequence=2, write_once=5 | **152** | state_gate=71 | 68 | 79 | PASS |
 | 38 | rm0442 | stm32mp153 | stm32mp1 0.16.0 | 812 | state_gate=716, sequence=18, delay=1, read_effect=7, value_relation=6, other=64 | 461 | state_gate=459, sequence=2 | **394** | state_gate=394 | 88 | 222 | PASS |
 | 39 | rm0453 | stm32wl5x_cm4 | stm32wl 0.16.0 | 191 | state_gate=147, sequence=6, clock_gate=10, value_relation=3, other=25 | 72 | state_gate=72 | **55** | state_gate=55 | 7 | 50 | PASS |
 | 40 | rm0455 | stm32h7b3 | stm32h7 0.16.0 | 499 | state_gate=404, sequence=26, write_once=3, delay=3, read_effect=2, value_relation=4, other=57 | 268 | state_gate=258, sequence=9, write_once=1 | **219** | state_gate=219 | 96 | 117 | PASS |
@@ -171,6 +171,8 @@ Two gating modes are shown. The default gates a whole register; `--field-level-g
 | rm0454 | stm32g070 | stm32g0 0.16.0 | **22** | 14 | PASS | stm32-hal2 2.1.10 | PASS | 42 | 1 | 41 | 0 | 0 | 23 | 12 | 10 | 9 | 0 | src/flash/non_trustzone.rs, src/i2c.rs, src/usart.rs | — |
 | rm0490 | stm32c031 | stm32c0 0.16.0 | **17** | 9 | PASS | stm32-hal2 2.1.10 | PASS | 1 | 1 | 0 | 0 | 0 | 20 | 8 | 1 | 0 | 0 | src/usart.rs | — |
 | rm0041 | stm32f100 | stm32f1 0.16.0 | **14** | 3 | PASS | stm32f1xx-hal 0.11.0 | PASS | 23 | 1 | 1 | 7 | 0 | 20 | 2 | 15 | 1 | 0 | src/adc.rs, src/rcc.rs, src/spi.rs | — |
+| rm0041 | stm32f100 | stm32f1 0.16.0 | **14** | 3 | PASS | stm32f1-hal 0.14.1 | PASS | 10 | 1 | 1 | 0 | 0 | 20 | 2 | — | — | — | src/rcc/mod.rs, src/spi/spi1.rs, src/spi/spi2.rs | — |
+| rm0090 | stm32f429 | stm32f4 0.16.0 | **19** | 11 | PASS | stm32f4xx-hal 0.23.0 | PASS | 6 | 5 | 1 | 14 | 0 | 32 | 11 | — | — | — | src/i2c.rs, src/ltdc.rs, src/rng.rs | — |
 | rm0090 | stm32f429 | stm32f4 0.16.0 | **19** | 11 | PASS | stm32-hal2 2.1.10 | PASS | 4 | 4 | 0 | 0 | 0 | 32 | 11 | 4 | 0 | 0 | src/i2c_f4.rs | — |
 | rm0351 | stm32l4x6 | stm32l4 0.16.0 | **78** | 32 | PASS | stm32-hal2 2.1.10 | PASS | 124 | 64 | 60 | 0 | 0 | 95 | 32 | 124 | 61 | 0 | src/adc.rs, src/clocks/baseline.rs, src/iwdg.rs, src/rtc.rs | — |
 | rm0399 | stm32h747cm7 | stm32h7 0.16.0 | **163** | 64 | PASS | stm32-hal2 2.1.10 | PASS | 172 | 76 | 70 | 0 | 0 | 164 | 61 | 146 | 70 | 0 | src/adc.rs, src/clocks/h.rs, src/lpuart.rs, src/qspi.rs, src/rtc.rs, src/spi/h.rs, src/spi/mod.rs, src/usart.rs | — |
