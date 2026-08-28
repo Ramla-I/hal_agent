@@ -428,6 +428,12 @@ STAGE_BAND = ["dropped_mechanical", "dropped_analyzer", "dropped_validator",
               "no_verdict", "remaining"]
 
 
+# Horizontal gap after each legend entry. 8 (was 12) so band two's five stage
+# labels pack into two rows -- "review" joins validator/no-verdict rather than
+# spilling onto a third row of its own.
+_LEG_TRAIL = 8.0
+
+
 def _legend_row(p, x, y, items, width, size=7.0):
     """Swatch + name + count for every segment, wrapping within `width`.
 
@@ -437,7 +443,7 @@ def _legend_row(p, x, y, items, width, size=7.0):
     """
     cx, cy = x, y
     for col, hat, text in items:
-        w = 7 + 4 + _HELV_ADV * size * len(text) + 12
+        w = 7 + 4 + _HELV_ADV * size * len(text) + _LEG_TRAIL
         if cx + w > x + width:
             cx, cy = x, cy - (size + 4)
         p.fill(col)
@@ -503,10 +509,21 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
         return [(c, h, "%s %s" % (BAND_LABEL.get(k, k), "{:,}".format(n)))
                 for k, n, c, h in segs]
 
-    def legend_rows(segs):
+    # The last band's legend is per-attribute "FP | TP" counts; the others are the
+    # generic stage labels. Build the actual items once so the height calc and the
+    # drawing agree (the FP|TP text is longer than the generic label it replaces).
+    def cat_items():
+        return [("#d7dbe1", CAT_HATCH[i % len(CAT_HATCH)],
+                 "%s %d | %d" % (BAND_LABEL.get(k, k),
+                                 agg[k]["remaining_fp"], agg[k]["remaining_tp"]))
+                for i, k in enumerate(cats)]
+    band_legends = [cat_items() if bi == len(bands) - 1 else legend_texts(segs)
+                    for bi, (_t, segs) in enumerate(bands)]
+
+    def legend_rows(items):
         cx, rows = 0.0, 1
-        for _c, _h, text in legend_texts(segs):
-            w = 7 + 4 + _HELV_ADV * F_LEG * len(text) + 12
+        for _c, _h, text in items:
+            w = 7 + 4 + _HELV_ADV * F_LEG * len(text) + _LEG_TRAIL
             if cx + w > pw:
                 rows += 1
                 cx = 0.0
@@ -515,8 +532,8 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
 
     if height_in is None:
         need = TOP_PAD + F_TITLE + TITLE_GAP
-        for i, (_ti, segs) in enumerate(bands):
-            need += bh + LABEL_GAP + (legend_rows(segs) - 1) * (F_LEG + 4)
+        for i, (_ti, _segs) in enumerate(bands):
+            need += bh + LABEL_GAP + (legend_rows(band_legends[i]) - 1) * (F_LEG + 4)
             need += BAND_GAP if i < len(bands) - 1 else 12.0
         H = need
     else:
@@ -567,15 +584,7 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
             p.stroke("#c0c7d2")
             p.line(prev[0], prev[1], ml, top, 0.5)
             p.line(prev[2], prev[1], ml + pw, top, 0.5)
-        if is_cat:
-            items = [("#d7dbe1", CAT_HATCH[i % len(CAT_HATCH)],
-                      "%s %d | %d" % (BAND_LABEL.get(k, k),
-                                      agg[k]["remaining_fp"], agg[k]["remaining_tp"]))
-                     for i, k in enumerate(cats)]
-            bottom = _legend_row(p, ml, y - LABEL_GAP, items, pw, size=F_LEG)
-        else:
-            bottom = _legend_row(p, ml, y - LABEL_GAP, legend_texts(segs), pw,
-                                 size=F_LEG)
+        bottom = _legend_row(p, ml, y - LABEL_GAP, band_legends[bi], pw, size=F_LEG)
         prev = (zoom[0], bottom, zoom[1]) if zoom else None
         top = bottom - BAND_GAP
 
