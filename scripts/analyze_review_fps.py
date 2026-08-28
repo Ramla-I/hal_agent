@@ -11,7 +11,12 @@ Headline counts:
   TPs  = rows you marked TP
   FPs  = validator said TP but you marked FP  (the validator's misses)
 
-The FPs are sorted into candidate pre-filter categories:
+The two mechanical rules below (width_variant, placeholder) are treated as a
+PRE-FILTER: the reported FP numbers and the per-bug-type breakdown ALWAYS exclude
+them (they should never reach the validator). The reporting categories are the
+bug types (address_offset, reset_value, size, bit_offset, bit_width).
+
+The FPs are screened by two candidate pre-filter rules:
   A. width-variant registers — the SVD gives a byte/half-word alias (dr8, rxdr16, …)
      its own narrower size/reset/bit-width, but the generator carries the base
      register's full-width values. Signature: register name ends in 8/16/32 and the
@@ -122,41 +127,30 @@ def main():
         if u in ("TP", "FP"):
             print(f"   validator={v:3}  you={u:3}  {n}")
 
-    print("\n" + "=" * 60)
-    print(f"TPs (you marked TP):                    {len(tps)}")
-    print(f"FPs (validator=TP, you marked FP):      {len(fps)}")
-    print("=" * 60)
-
-    # categorize the FPs
+    # The two mechanical rules are a PRE-FILTER: their FPs are always removed from
+    # the reported FP numbers (they should never reach the validator). Reported
+    # categories are the bug types (address_offset, reset_value, ...).
     cats = defaultdict(list)
     for r in fps:
         cats[category(r)].append(r)
-    print("\nFP categories (candidate pre-validator filters):")
-    for name, _ in _RULES:
-        print(f"  {name:16} {len(cats[name]):>4}")
-    print(f"  {'other':16} {len(cats['other']):>4}")
-    print(f"  {'TOTAL':16} {len(fps):>4}")
+    fps_net = cats["other"]
 
-    # TP vs FP across categories (each rule applied to your-TP and to the FPs)
-    print("\nTP / FP across categories:")
-    print(f"  {'category':16}{'TP':>7}{'FP':>7}{'FP%':>8}")
-    for name in [n for n, _ in _RULES] + ["other"]:
-        tp_n = sum(category(r) == name for r in tps)
-        fp_n = sum(category(r) == name for r in fps)
-        pct = 100 * fp_n / (tp_n + fp_n) if (tp_n + fp_n) else 0.0
-        print(f"  {name:16}{tp_n:>7}{fp_n:>7}{pct:>7.1f}%")
-    print(f"  {'TOTAL':16}{len(tps):>7}{len(fps):>7}")
+    print("\n" + "=" * 60)
+    print(f"TPs (you marked TP):                        {len(tps)}")
+    print(f"FPs (validator=TP, you=FP), raw:            {len(fps)}")
+    print(f"  - width_variant (pre-filtered out):       {len(cats['width_variant'])}")
+    print(f"  - placeholder   (pre-filtered out):       {len(cats['placeholder'])}")
+    print(f"FPs after removing the two categories:      {len(fps_net)}")
+    print("=" * 60)
 
-    # per-key breakdown per category + overall
-    print("\nby bug type (key):")
-    keys = [k for k in _KEYS if any((r.get('key') or '') == k for r in fps)]
-    hdr = f"  {'key':16}" + "".join(f"{n:>14}" for n, _ in _RULES) + f"{'other':>9}{'total':>9}"
-    print(hdr)
-    for k in keys:
-        cells = [sum((r.get('key') or '') == k for r in cats[n]) for n, _ in _RULES]
-        cells.append(sum((r.get('key') or '') == k for r in cats['other']))
-        tot = sum((r.get('key') or '') == k for r in fps)
-        print(f"  {k:16}" + "".join(f"{c:>14}" for c in cells[:len(_RULES)]) + f"{cells[-1]:>9}{tot:>9}")
+    print("\nby bug type  (FP excludes width_variant + placeholder):")
+    print(f"  {'bug type':16}{'TP':>7}{'FP':>7}")
+    for k in _KEYS:
+        tp_n = sum((r.get("key") or "") == k for r in tps)
+        fp_n = sum((r.get("key") or "") == k for r in fps_net)
+        if tp_n or fp_n:
+            print(f"  {k:16}{tp_n:>7}{fp_n:>7}")
+    print(f"  {'TOTAL':16}{len(tps):>7}{len(fps_net):>7}")
 
     # TP-collateral: your-TP rows each rule would also catch (its risk)
     print("\nTP-collateral (rows you marked TP that a rule would also drop — re-check these):")
