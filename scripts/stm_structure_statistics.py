@@ -568,10 +568,10 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
             p.line(prev[0], prev[1], ml, top, 0.5)
             p.line(prev[2], prev[1], ml + pw, top, 0.5)
         if is_cat:
-            items = [(FP_FILL, (), "FP %s" % "{:,}".format(fp_tot)),
-                     (TP_FILL, (), "TP %s" % "{:,}".format(tp_tot))]
-            items += [("#d7dbe1", CAT_HATCH[i % len(CAT_HATCH)], BAND_LABEL.get(k, k))
-                      for i, k in enumerate(cats)]
+            items = [("#d7dbe1", CAT_HATCH[i % len(CAT_HATCH)],
+                      "%s %d | %d" % (BAND_LABEL.get(k, k),
+                                      agg[k]["remaining_fp"], agg[k]["remaining_tp"]))
+                     for i, k in enumerate(cats)]
             bottom = _legend_row(p, ml, y - LABEL_GAP, items, pw, size=F_LEG)
         else:
             bottom = _legend_row(p, ml, y - LABEL_GAP, legend_texts(segs), pw,
