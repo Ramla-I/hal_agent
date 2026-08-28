@@ -125,11 +125,88 @@ def draw(data, path):
     open(path, "wb").write(p.to_bytes())
 
 
+def draw_bars(data, path, min_bugs=2):
+    """Dual-axis: bars = bugs per register (left), line = #RMs (right), by density."""
+    data = sorted((d for d in data if d[1] >= min_bugs), key=lambda d: -(d[1] / d[3]))
+    W, H = 7.0 * 72, 3.3 * 72
+    p = Pdf(W, H)
+    L, Rm, Tm, Bm = 34.0, 30.0, 26.0, 46.0
+    x0, x1, y0, y1 = L, W - Rm, Bm, H - Tm
+    n = len(data)
+    dmax = max(d[1] / d[3] for d in data) * 1.12
+    rmax = 55.0
+    BAR, LINE = "#5b8fc2", "#e0803c"
+
+    def yl(v):
+        return y0 + v / dmax * (y1 - y0)
+
+    def yr(v):
+        return y0 + v / rmax * (y1 - y0)
+
+    slot = (x1 - x0) / n
+    bw = slot * 0.56
+
+    for t in (0.0, 0.1, 0.2, 0.3):
+        if t > dmax:
+            continue
+        gy = yl(t)
+        p.stroke("#eceff3")
+        p.line(x0, gy, x1, gy, 0.5)
+        p.fill(BAR)
+        p.text(x0 - 4, gy - 2, "%.1f" % t, 6.2, "F1", "end")
+    for t in (0, 10, 20, 30, 40, 50):
+        p.fill(LINE)
+        p.text(x1 + 4, yr(t) - 2, str(t), 6.2, "F1")
+
+    for i, (fm, nb, nr, ng) in enumerate(data):
+        cx = x0 + slot * (i + 0.5)
+        p.fill(BAR)
+        p.stroke("#ffffff")
+        p.rect(cx - bw / 2, y0, bw, yl(nb / ng) - y0, 0.4)
+        p.fill("#3a4149")
+        p.rot_text(cx + 2.0, y0 - 3, fm, 5.6, -60.0, "F2")
+
+    p.stroke(LINE)
+    prev = None
+    for i, (fm, nb, nr, ng) in enumerate(data):
+        cx, cy = x0 + slot * (i + 0.5), yr(nr)
+        if prev:
+            p.line(prev[0], prev[1], cx, cy, 1.2)
+        prev = (cx, cy)
+    for i, (fm, nb, nr, ng) in enumerate(data):
+        cx, cy, dd = x0 + slot * (i + 0.5), yr(nr), 3.4
+        p.fill(LINE)
+        p.stroke("#ffffff")
+        p.cap_rect(cx - dd / 2, cy - dd / 2, dd, dd, dd / 2, 0.5)
+
+    p.stroke("#b7bfca")
+    p.line(x0, y0, x1, y0, 0.7)
+    p.line(x0, y0, x0, y1, 0.7)
+    p.line(x1, y0, x1, y1, 0.7)
+    # top colour key
+    ly = y1 + 6
+    p.fill(BAR); p.stroke("#ffffff"); p.rect(x0, ly, 7, 7, 0.4)
+    p.fill("#3a4149"); p.text(x0 + 10, ly, "bugs per register  (bars, left axis)", 6.6, "F1")
+    lx = x0 + 200
+    p.stroke(LINE); p.line(lx, ly + 3.5, lx + 13, ly + 3.5, 1.2)
+    p.fill(LINE); p.cap_rect(lx + 5, ly + 1.7, 3.5, 3.5, 1.75, 0.4)
+    p.fill("#3a4149"); p.text(lx + 18, ly, "# RMs present  (line, right axis)", 6.6, "F1")
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    open(path, "wb").write(p.to_bytes())
+
+
 def main():
-    out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(_REPO, "docs/figures/peripheral_bugs.pdf")
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("out", nargs="?")
+    ap.add_argument("--style", choices=["scatter", "bars"], default="scatter")
+    args = ap.parse_args()
+    default = "peripheral_bugs.pdf" if args.style == "scatter" else "peripheral_bug_density.pdf"
+    out = args.out or os.path.join(_REPO, "docs/figures", default)
     data = collect()
-    draw(data, out)
-    print("wrote", out, "(%d peripheral families)" % len(data))
+    (draw if args.style == "scatter" else draw_bars)(data, out)
+    print("wrote", out, "(%d families, style=%s)" % (len(data), args.style))
 
 
 if __name__ == "__main__":
