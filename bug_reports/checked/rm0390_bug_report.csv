@@ -1,0 +1,7 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32f446,stm32-rs,rm0390,"CAN1\2_BTR: reset value: svd = 0x0, agent = 0x1230000",,
+stm32f446,stm32-rs,rm0390,"FMC_BCR1: reset value: svd = 0x30D0, agent = 0x30DB",,
+stm32f446,stm32-rs,rm0390,"FMC_BCR2\3\4: reset value: svd = 0x30D0, agent = 0x30D2",,
+stm32f446,stm32-rs,rm0390,"RCC_AHB1ENR: reset value: svd = 0x100000, agent = 0x0",,
+stm32f446,stm32-rs,rm0390,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,
+stm32f446,stm32-rs,rm0390,"SPI2\3\4_I2SPR: reset value: svd = 0xA, agent = 0x2",,

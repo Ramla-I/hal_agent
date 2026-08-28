@@ -1,0 +1,6 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32f101, stm32f102, stm32f103, stm32f107",stm32-rs,rm0008,"FSMC_BCR1: reset value: svd = 0x30D0, agent = 0x30DB",,
+"stm32f101, stm32f102, stm32f103, stm32f107",stm32-rs,rm0008,"FSMC_BCR2/3/4: reset value: svd = 0x30D0, agent = 0x30D2",,
+"stm32f101, stm32f102, stm32f103, stm32f107",stm32-rs,rm0008,"FSMC_BTR1/2/3/4: reset value: svd = 0xFFFFFFFF, agent = 0xFFFFFFF",,
+"stm32f101, stm32f102, stm32f103, stm32f107",stm32-rs,rm0008,"SPI1_I2SPR: reset value: svd = 0xA, agent = 0x2",,
+"stm32f101, stm32f103, stm32f107",stm32-rs,rm0008,"SPI2/3_I2SPR: reset value: svd = 0xA, agent = 0x2",,

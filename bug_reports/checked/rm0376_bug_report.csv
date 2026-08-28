@@ -1,0 +1,4 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32l052, stm32l062, stm32l0x2",stm32-rs,rm0376,"RTC_DR: reset value: svd = 0x0, agent = 0x2101",,
+"stm32l052, stm32l062, stm32l0x2",stm32-rs,rm0376,"RTC_PRER: reset value: svd = 0x0, agent = 0x7F00FF",,
+"stm32l052, stm32l062, stm32l0x2",stm32-rs,rm0376,"RTC_WUTR: reset value: svd = 0x0, agent = 0xFFFF",,

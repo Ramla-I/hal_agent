@@ -1,0 +1,4 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32f301,stm32-rs,rm0366,"GPIOC\D\F_PUPDR: reset value: svd = 0xC000000, agent = 0x0",,
+stm32f301,stm32-rs,rm0366,"I2S2\3EXT_I2SPR: reset value: svd = 0x10, agent = 0x2",,
+stm32f301,stm32-rs,rm0366,"SPI2\3_I2SPR: reset value: svd = 0x10, agent = 0x2",,
