@@ -387,7 +387,7 @@ VALIDATOR_NOTE = ("validator characterised separately on a labelled set: "
 AGREE_FILL = "#c9d3e2"
 DISAGREE_FILL, DISAGREE_HATCH = "#2a78d6", (45,)
 MECH_FILL = "#a3c8ee"
-ZOOM_FILL, ZOOM_HATCH = "#1baf7a", (135,)
+ZOOM_FILL, ZOOM_HATCH = "#6f57a8", (135,)   # carry-forward marker: violet, not green
 # analyzer, validator, no verdict -- distinct from both blues and from green
 STAGE_PAINT = [(MECH_FILL, ()), ("#eb6834", (45,)), ("#eda100", (45, 135)),
                ("#e87ba4", (90,))]
@@ -408,7 +408,9 @@ CAT_HATCH = [(), (45,), (135,), (45, 135), (90,), (0,)]
 # The last band divides the reviewer's pile into FP (left) and TP (right) by
 # COLOUR, and within each side splits the five attributes by their CAT_HATCH
 # pattern -- so colour = verdict, hatch = attribute. A bold divider marks the seam.
-FP_FILL = "#e07a5f"   # the validator's miss (false positive)
+# FP is a lighter shade of the band-two carry-forward violet (it IS the bulk of
+# that segment magnified); TP stays green so the real bugs stand out.
+FP_FILL = "#b6a6d8"   # the validator's miss (false positive) -- tint of ZOOM_FILL
 TP_FILL = "#4fae82"   # a real SVD bug the validator surfaced (true positive)
 DIVIDER = "#1b212b"
 
