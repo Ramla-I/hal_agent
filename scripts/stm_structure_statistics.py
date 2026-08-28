@@ -405,12 +405,10 @@ STAGE_PAINT = [(MECH_FILL, ()), ("#eb6834", (45,)), ("#eda100", (45, 135)),
 CAT_FILL = "#8ed1b4"
 CAT_HATCH = [(), (45,), (135,), (45, 135), (90,), (0,)]
 
-# In the last band each category is split by the reviewer's verdict: TP (a real
-# SVD bug the validator correctly surfaced) vs FP (the validator's miss). Colour
-# now carries TP/FP; the per-category hatch (CAT_HATCH) still says which attribute.
-TP_FILL = "#4fae82"   # confirmed bug
-FP_FILL = "#e8804f"   # false positive
-UNL_FILL = "#cdd2da"  # unlabelled (should be empty once everything is marked)
+# In the last band a bold divider marks the TP | FP boundary within each category
+# segment (left = TP, a real SVD bug the validator surfaced; right = FP, the
+# validator's miss). The two counts sit next to the attribute in the legend.
+DIVIDER = "#1b212b"
 
 # "deterministic" rather than "mechanical": that stage is a fixed set of rules
 # over the diff values themselves -- same input, same verdict, no model in the
@@ -492,7 +490,7 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
          [(k, tot[k], STAGE_PAINT[i][0], STAGE_PAINT[i][1])
           for i, k in enumerate(stages_but_last)]
          + [("remaining", tot["remaining"], ZOOM_FILL, ZOOM_HATCH)]),
-        ("what reaches a reviewer, by attribute",
+        ("what reaches a reviewer, by attribute (bold line: TP | FP)",
          [(k, agg[k]["remaining"], CAT_FILL, CAT_HATCH[i % len(CAT_HATCH)])
           for i, k in enumerate(cats)]),
     ]
@@ -535,24 +533,16 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
         zoom = None
         for k, n, col, hat in segs:
             wseg = max(0.9, pw * n / total)
-            if is_cat:
+            p.fill(col)
+            p.stroke("#ffffff")
+            p.rect(x, y, wseg, bh, 0.7)
+            p.hatch(x, y, wseg, bh, hat)
+            if is_cat:                       # bold divider at the TP | FP boundary
                 tp, fp = agg[k]["remaining_tp"], agg[k]["remaining_fp"]
-                unl = max(0, n - tp - fp)
-                xx = x
-                for cnt, fill in ((tp, TP_FILL), (fp, FP_FILL), (unl, UNL_FILL)):
-                    if cnt <= 0:
-                        continue
-                    sw = wseg * cnt / n
-                    p.fill(fill)
-                    p.stroke("#ffffff")
-                    p.rect(xx, y, sw, bh, 0.7)
-                    p.hatch(xx, y, sw, bh, hat)
-                    xx += sw
-            else:
-                p.fill(col)
-                p.stroke("#ffffff")
-                p.rect(x, y, wseg, bh, 0.7)
-                p.hatch(x, y, wseg, bh, hat)
+                if tp + fp > 0:
+                    bx = x + wseg * tp / (tp + fp)
+                    p.stroke(DIVIDER)
+                    p.line(bx, y, bx, y + bh, 1.6)
             if k in ("disagreed", "remaining"):
                 zoom = (x, x + wseg)
             x += wseg
@@ -561,14 +551,9 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
             p.line(prev[0], prev[1], ml, top, 0.5)
             p.line(prev[2], prev[1], ml + pw, top, 0.5)
         if is_cat:
-            items = [(TP_FILL, (), "TP confirmed"), (FP_FILL, (), "FP false-positive")]
-            if any(agg[k]["remaining"] - agg[k]["remaining_tp"] - agg[k]["remaining_fp"] > 0
-                   for k in cats):
-                items.append((UNL_FILL, (), "unlabelled"))
-            items += [("#d7dbe1", CAT_HATCH[i % len(CAT_HATCH)],
-                       "%s %d/%d" % (BAND_LABEL.get(k, k), agg[k]["remaining_tp"],
-                                     agg[k]["remaining_fp"]))
-                      for i, k in enumerate(cats)]
+            items = [(col, hat, "%s %d | %d" % (BAND_LABEL.get(k, k),
+                      agg[k]["remaining_tp"], agg[k]["remaining_fp"]))
+                     for k, _n, col, hat in segs]
             bottom = _legend_row(p, ml, y - LABEL_GAP, items, pw, size=F_LEG)
         else:
             bottom = _legend_row(p, ml, y - LABEL_GAP, legend_texts(segs), pw,
