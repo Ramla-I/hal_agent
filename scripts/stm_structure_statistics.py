@@ -56,6 +56,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pdfwriter import Pdf, _HELV_ADV  # noqa: E402
+from analyze_review_fps import is_width_variant, is_placeholder  # noqa: E402
 
 # This script now lives inside the repo it reads, so the root is derived
 # rather than hardcoded to an absolute path on one machine.
@@ -176,7 +177,7 @@ def generated_counts(rm: str, root: Path, keys):
     return counts
 
 
-def collect(root: Path, exclude=()):
+def collect(root: Path, exclude=(), with_prefilter=False):
     """Per (rm, category) counters for every stage.
 
     `exclude` drops whole categories before any counting, so the totals, the
@@ -211,7 +212,12 @@ def collect(root: Path, exclude=()):
             bug_key = "|".join([r.get("peripheral", ""), r.get("register", ""),
                                 r.get("field", ""), k,
                                 r.get("svd_value", ""), r.get("generator_value", "")])
-            if status == "false_positive":
+            if with_prefilter and (is_width_variant(r) or is_placeholder(r)):
+                # projected pre-validator screen (issue #23): the width-variant and
+                # placeholder rules would drop these deterministically, so count them
+                # under dropped_mechanical regardless of their actual status/verdict.
+                c["dropped_mechanical"] += 1
+            elif status == "false_positive":
                 c["dropped_mechanical"] += 1
             elif bug_key in dropped:
                 c["dropped_analyzer"] += 1
@@ -297,6 +303,9 @@ def main():
     ap.add_argument("--exclude", action="append", default=[], metavar="CATEGORY",
                     help="drop a category everywhere (repeatable), e.g. "
                          "--exclude access")
+    ap.add_argument("--with-prefilter", action="store_true",
+                    help="PROJECTED: also count rows matching the width_variant / "
+                         "placeholder rules (issue #23) as dropped_mechanical")
     ap.add_argument("--csv", default=None)
     ap.add_argument("--cascade-figure", nargs="?",
                     const="docs/figures/structure_cascade.pdf", default=None,
@@ -309,7 +318,10 @@ def main():
     root = Path(args.root)
     if not (root / "evaluation" / "stm").is_dir():
         sys.exit(f"no evaluation/stm under {root}")
-    stats, level, unmapped = collect(root, set(args.exclude))
+    stats, level, unmapped = collect(root, set(args.exclude), args.with_prefilter)
+    if args.with_prefilter:
+        print("projecting the width_variant + placeholder pre-filter into "
+              "dropped_mechanical (issue #23)\n")
     if args.exclude:
         print(f'excluding: {", ".join(sorted(set(args.exclude)))}\n')
     if not stats:
