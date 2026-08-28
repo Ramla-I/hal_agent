@@ -500,7 +500,7 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
          [(k, tot[k], STAGE_PAINT[i][0], STAGE_PAINT[i][1])
           for i, k in enumerate(stages_but_last)]
          + [("remaining", tot["remaining"], ZOOM_FILL, ZOOM_HATCH)]),
-        ("what reaches a reviewer: FP | TP, hatched by attribute",
+        ("what reaches a reviewer: FP | TP",
          [(k, agg[k]["remaining"], CAT_FILL, CAT_HATCH[i % len(CAT_HATCH)])
           for i, k in enumerate(cats)]),
     ]
