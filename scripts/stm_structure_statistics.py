@@ -405,9 +405,11 @@ STAGE_PAINT = [(MECH_FILL, ()), ("#eb6834", (45,)), ("#eda100", (45, 135)),
 CAT_FILL = "#8ed1b4"
 CAT_HATCH = [(), (45,), (135,), (45, 135), (90,), (0,)]
 
-# In the last band a bold divider marks the TP | FP boundary within each category
-# segment (left = TP, a real SVD bug the validator surfaced; right = FP, the
-# validator's miss). The two counts sit next to the attribute in the legend.
+# The last band divides the reviewer's pile into FP (left) and TP (right) by
+# COLOUR, and within each side splits the five attributes by their CAT_HATCH
+# pattern -- so colour = verdict, hatch = attribute. A bold divider marks the seam.
+FP_FILL = "#e07a5f"   # the validator's miss (false positive)
+TP_FILL = "#4fae82"   # a real SVD bug the validator surfaced (true positive)
 DIVIDER = "#1b212b"
 
 # "deterministic" rather than "mechanical": that stage is a fixed set of rules
@@ -490,7 +492,7 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
          [(k, tot[k], STAGE_PAINT[i][0], STAGE_PAINT[i][1])
           for i, k in enumerate(stages_but_last)]
          + [("remaining", tot["remaining"], ZOOM_FILL, ZOOM_HATCH)]),
-        ("what reaches a reviewer, by attribute (bold line: TP | FP)",
+        ("what reaches a reviewer: FP | TP, hatched by attribute",
          [(k, agg[k]["remaining"], CAT_FILL, CAT_HATCH[i % len(CAT_HATCH)])
           for i, k in enumerate(cats)]),
     ]
@@ -531,29 +533,43 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
         y = top - bh
         x = ml
         zoom = None
-        for k, n, col, hat in segs:
-            wseg = max(0.9, pw * n / total)
-            p.fill(col)
-            p.stroke("#ffffff")
-            p.rect(x, y, wseg, bh, 0.7)
-            p.hatch(x, y, wseg, bh, hat)
-            if is_cat:                       # bold divider at the TP | FP boundary
-                tp, fp = agg[k]["remaining_tp"], agg[k]["remaining_fp"]
-                if tp + fp > 0:
-                    bx = x + wseg * tp / (tp + fp)
-                    p.stroke(DIVIDER)
-                    p.line(bx, y, bx, y + bh, 1.6)
-            if k in ("disagreed", "remaining"):
-                zoom = (x, x + wseg)
-            x += wseg
+        if is_cat:
+            fp_tot = sum(agg[k]["remaining_fp"] for k in cats)
+            tp_tot = sum(agg[k]["remaining_tp"] for k in cats)
+            grand = max(1, fp_tot + tp_tot)
+            for fill, pick in ((FP_FILL, "remaining_fp"), (TP_FILL, "remaining_tp")):
+                for i, k in enumerate(cats):
+                    cnt = agg[k][pick]
+                    if cnt <= 0:
+                        continue
+                    wsub = pw * cnt / grand
+                    p.fill(fill)
+                    p.stroke("#ffffff")
+                    p.rect(x, y, wsub, bh, 0.7)
+                    p.hatch(x, y, wsub, bh, CAT_HATCH[i % len(CAT_HATCH)])
+                    x += wsub
+            seam = ml + pw * fp_tot / grand   # FP | TP boundary, drawn on top
+            p.stroke(DIVIDER)
+            p.line(seam, y, seam, y + bh, 1.8)
+        else:
+            for k, n, col, hat in segs:
+                wseg = max(0.9, pw * n / total)
+                p.fill(col)
+                p.stroke("#ffffff")
+                p.rect(x, y, wseg, bh, 0.7)
+                p.hatch(x, y, wseg, bh, hat)
+                if k in ("disagreed", "remaining"):
+                    zoom = (x, x + wseg)
+                x += wseg
         if prev is not None:
             p.stroke("#c0c7d2")
             p.line(prev[0], prev[1], ml, top, 0.5)
             p.line(prev[2], prev[1], ml + pw, top, 0.5)
         if is_cat:
-            items = [(col, hat, "%s %d | %d" % (BAND_LABEL.get(k, k),
-                      agg[k]["remaining_tp"], agg[k]["remaining_fp"]))
-                     for k, _n, col, hat in segs]
+            items = [(FP_FILL, (), "FP %s" % "{:,}".format(fp_tot)),
+                     (TP_FILL, (), "TP %s" % "{:,}".format(tp_tot))]
+            items += [("#d7dbe1", CAT_HATCH[i % len(CAT_HATCH)], BAND_LABEL.get(k, k))
+                      for i, k in enumerate(cats)]
             bottom = _legend_row(p, ml, y - LABEL_GAP, items, pw, size=F_LEG)
         else:
             bottom = _legend_row(p, ml, y - LABEL_GAP, legend_texts(segs), pw,
