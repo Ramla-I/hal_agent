@@ -225,6 +225,11 @@ def collect(root: Path, exclude=(), with_prefilter=False):
                 c["dropped_validator"] += 1
             elif verdict == "TP":
                 c["remaining"] += 1
+                lab = (r.get("tp_fp") or "").strip()
+                if lab == "TP":
+                    c["remaining_tp"] += 1
+                elif lab == "FP":
+                    c["remaining_fp"] += 1
             else:
                 c["no_verdict"] += 1
             t = (r.get("tp_fp") or "").strip()
@@ -400,6 +405,13 @@ STAGE_PAINT = [(MECH_FILL, ()), ("#eb6834", (45,)), ("#eda100", (45, 135)),
 CAT_FILL = "#8ed1b4"
 CAT_HATCH = [(), (45,), (135,), (45, 135), (90,), (0,)]
 
+# In the last band each category is split by the reviewer's verdict: TP (a real
+# SVD bug the validator correctly surfaced) vs FP (the validator's miss). Colour
+# now carries TP/FP; the per-category hatch (CAT_HATCH) still says which attribute.
+TP_FILL = "#4fae82"   # confirmed bug
+FP_FILL = "#e8804f"   # false positive
+UNL_FILL = "#cdd2da"  # unlabelled (should be empty once everything is marked)
+
 # "deterministic" rather than "mechanical": that stage is a fixed set of rules
 # over the diff values themselves -- same input, same verdict, no model in the
 # loop -- and it is the only stage of the three that is not an LLM, which is
@@ -511,10 +523,11 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
 
     top = H - TOP_PAD - TITLE_GAP - F_TITLE    # top edge of the first bar
     prev = None
-    for title, segs in bands:
+    for bi, (title, segs) in enumerate(bands):
         total = sum(n for _k, n, _c, _h in segs)
         if not total:
             continue
+        is_cat = bi == len(bands) - 1            # last band: split each category by TP/FP
         p.fill("#5c6675")
         p.text(ml + pw, top + TITLE_GAP, title, F_TITLE, "F1", "end")
         y = top - bh
@@ -522,10 +535,24 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
         zoom = None
         for k, n, col, hat in segs:
             wseg = max(0.9, pw * n / total)
-            p.fill(col)
-            p.stroke("#ffffff")
-            p.rect(x, y, wseg, bh, 0.7)
-            p.hatch(x, y, wseg, bh, hat)
+            if is_cat:
+                tp, fp = agg[k]["remaining_tp"], agg[k]["remaining_fp"]
+                unl = max(0, n - tp - fp)
+                xx = x
+                for cnt, fill in ((tp, TP_FILL), (fp, FP_FILL), (unl, UNL_FILL)):
+                    if cnt <= 0:
+                        continue
+                    sw = wseg * cnt / n
+                    p.fill(fill)
+                    p.stroke("#ffffff")
+                    p.rect(xx, y, sw, bh, 0.7)
+                    p.hatch(xx, y, sw, bh, hat)
+                    xx += sw
+            else:
+                p.fill(col)
+                p.stroke("#ffffff")
+                p.rect(x, y, wseg, bh, 0.7)
+                p.hatch(x, y, wseg, bh, hat)
             if k in ("disagreed", "remaining"):
                 zoom = (x, x + wseg)
             x += wseg
@@ -533,8 +560,19 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
             p.stroke("#c0c7d2")
             p.line(prev[0], prev[1], ml, top, 0.5)
             p.line(prev[2], prev[1], ml + pw, top, 0.5)
-        bottom = _legend_row(p, ml, y - LABEL_GAP, legend_texts(segs), pw,
-                             size=F_LEG)
+        if is_cat:
+            items = [(TP_FILL, (), "TP confirmed"), (FP_FILL, (), "FP false-positive")]
+            if any(agg[k]["remaining"] - agg[k]["remaining_tp"] - agg[k]["remaining_fp"] > 0
+                   for k in cats):
+                items.append((UNL_FILL, (), "unlabelled"))
+            items += [("#d7dbe1", CAT_HATCH[i % len(CAT_HATCH)],
+                       "%s %d/%d" % (BAND_LABEL.get(k, k), agg[k]["remaining_tp"],
+                                     agg[k]["remaining_fp"]))
+                      for i, k in enumerate(cats)]
+            bottom = _legend_row(p, ml, y - LABEL_GAP, items, pw, size=F_LEG)
+        else:
+            bottom = _legend_row(p, ml, y - LABEL_GAP, legend_texts(segs), pw,
+                                 size=F_LEG)
         prev = (zoom[0], bottom, zoom[1]) if zoom else None
         top = bottom - BAND_GAP
 
