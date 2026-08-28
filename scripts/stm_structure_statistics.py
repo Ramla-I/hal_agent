@@ -456,6 +456,36 @@ def _legend_row(p, x, y, items, width, size=7.0):
     return cy
 
 
+def _title_boxes(p, cx, y, size, prefix, af, al, bf, bl, sep="  |  "):
+    """Centred title 'prefix [box] al sep [box] bl' -- a small colour box sits just
+    before each verdict label so the title doubles as the FP/TP colour key."""
+    bs, gap = size * 0.8, 2.5
+
+    def tw(s):
+        return _HELV_ADV * size * len(s)
+
+    total = tw(prefix) + bs + gap + tw(al) + tw(sep) + bs + gap + tw(bl)
+    x = [cx - total / 2]
+
+    def txt(s):
+        p.fill("#5c6675")
+        p.text(x[0], y, s, size, "F1")
+        x[0] += tw(s)
+
+    def box(fill):
+        p.fill(fill)
+        p.stroke("#ffffff")
+        p.rect(x[0], y, bs, bs, 0.4)
+        x[0] += bs + gap
+
+    txt(prefix)
+    box(af)
+    txt(al)
+    txt(sep)
+    box(bf)
+    txt(bl)
+
+
 def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
     """The cascade alone -- no side panel, no caption.
 
@@ -500,7 +530,7 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
          [(k, tot[k], STAGE_PAINT[i][0], STAGE_PAINT[i][1])
           for i, k in enumerate(stages_but_last)]
          + [("remaining", tot["remaining"], ZOOM_FILL, ZOOM_HATCH)]),
-        ("what reaches a reviewer: FP | TP",
+        ("judgement by reviewer: FP | TP",   # rendered with colour boxes via _title_boxes
          [(k, agg[k]["remaining"], CAT_FILL, CAT_HATCH[i % len(CAT_HATCH)])
           for i, k in enumerate(cats)]),
     ]
@@ -547,8 +577,12 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
         if not total:
             continue
         is_cat = bi == len(bands) - 1            # last band: split each category by TP/FP
-        p.fill("#5c6675")
-        p.text(ml + pw / 2, top + TITLE_GAP, title, F_TITLE, "F1", "middle")
+        if is_cat:
+            _title_boxes(p, ml + pw / 2, top + TITLE_GAP, F_TITLE,
+                         "judgement by reviewer:  ", FP_FILL, "FP", TP_FILL, "TP")
+        else:
+            p.fill("#5c6675")
+            p.text(ml + pw / 2, top + TITLE_GAP, title, F_TITLE, "F1", "middle")
         y = top - bh
         x = ml
         zoom = None
