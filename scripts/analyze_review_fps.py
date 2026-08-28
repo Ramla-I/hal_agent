@@ -137,6 +137,16 @@ def main():
     print(f"  {'other':16} {len(cats['other']):>4}")
     print(f"  {'TOTAL':16} {len(fps):>4}")
 
+    # TP vs FP across categories (each rule applied to your-TP and to the FPs)
+    print("\nTP / FP across categories:")
+    print(f"  {'category':16}{'TP':>7}{'FP':>7}{'FP%':>8}")
+    for name in [n for n, _ in _RULES] + ["other"]:
+        tp_n = sum(category(r) == name for r in tps)
+        fp_n = sum(category(r) == name for r in fps)
+        pct = 100 * fp_n / (tp_n + fp_n) if (tp_n + fp_n) else 0.0
+        print(f"  {name:16}{tp_n:>7}{fp_n:>7}{pct:>7.1f}%")
+    print(f"  {'TOTAL':16}{len(tps):>7}{len(fps):>7}")
+
     # per-key breakdown per category + overall
     print("\nby bug type (key):")
     keys = [k for k in _KEYS if any((r.get('key') or '') == k for r in fps)]
