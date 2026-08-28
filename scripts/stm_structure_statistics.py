@@ -531,7 +531,7 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
             continue
         is_cat = bi == len(bands) - 1            # last band: split each category by TP/FP
         p.fill("#5c6675")
-        p.text(ml + pw, top + TITLE_GAP, title, F_TITLE, "F1", "end")
+        p.text(ml + pw / 2, top + TITLE_GAP, title, F_TITLE, "F1", "middle")
         y = top - bh
         x = ml
         zoom = None
