@@ -1,0 +1,5 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32f765, stm32f767, stm32f769, stm32f777, stm32f778, stm32f779",stm32-rs,rm0410,"FLASH_OPTCR: reset value: svd = 0xFFFAAED, agent = 0xFFFFAAFD",,
+"stm32f765, stm32f767, stm32f769, stm32f777, stm32f778, stm32f779",stm32-rs,rm0410,"FLASH_OPTCR1: reset value: svd = 0xFFF0000, agent = 0x400080",,
+"stm32f765, stm32f767, stm32f769, stm32f777, stm32f778, stm32f779",stm32-rs,rm0410,"HASH_CSR0: reset value: svd = 0x0, agent = 0x2",,
+"stm32f765, stm32f767, stm32f769, stm32f777, stm32f778, stm32f779",stm32-rs,rm0410,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,

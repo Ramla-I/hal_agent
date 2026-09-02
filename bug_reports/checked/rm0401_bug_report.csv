@@ -1,0 +1,4 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32f410,stm32-rs,rm0401,"RCC_AHB1ENR: reset value: svd = 0x100000, agent = 0x0",,
+stm32f410,stm32-rs,rm0401,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,
+stm32f410,stm32-rs,rm0401,"SPI1\2\5_I2SPR: reset value: svd = 0xA, agent = 0x2",,
