@@ -58,6 +58,15 @@ REPORTS = REPO / "applications" / "pac_codegen" / "experiments" / "out"
 DEFAULT_CASCADE = REPO / "docs" / "figures" / "constraint_cascade.pdf"
 
 # Which question each stage answers. "success" is the one that got a gate.
+# Fates that are ANNOTATIONS about a group of constraints, not constraints.
+# `inject_from_run` writes one of these per colliding or merged instance group,
+# with an empty `constraints` list, alongside the per-constraint rows that
+# record what actually happened. Counting them as constraints inflates both the
+# total and the applicability loss -- RM0433 has one `instance_conflict` row
+# describing the two `instance_conflict_dropped` constraints beside it. They
+# are reported separately rather than binned.
+ANNOTATION_FATES = {"instance_conflict", "instance_merged_for_review"}
+
 STAGE_ROLE = {
     "rejected_at_collection":        "validity",
     "target_unverified_by_location": "validity",
@@ -66,7 +75,6 @@ STAGE_ROLE = {
     "field_gating_disabled":         "applicability",
     "peripheral_not_in_device":      "applicability",
     "pruned_for_device":             "applicability",
-    "instance_conflict":             "applicability",
     "instance_conflict_dropped":     "applicability",
     "emitter_rejected":              "applicability",
     "unsupported_by_emitter":        "applicability",
@@ -78,9 +86,10 @@ LABEL = {
     "gated_out_by_validator": "gated out by validator",
     "kind_not_emitted": "kind not emitted",
     "field_gating_disabled": "field gating disabled",
+    "instance_merged_for_review": "instance merge (note only)",
+    "instance_conflict": "instance conflict (note only)",
     "peripheral_not_in_device": "peripheral not on chip",
     "pruned_for_device": "pruned for device",
-    "instance_conflict": "instance conflict",
     "instance_conflict_dropped": "instance conflict",
     "emitter_rejected": "emitter rejected",
     "unsupported_by_emitter": "unsupported by emitter",
@@ -135,7 +144,8 @@ def collect(reports_dir: Path):
         c = collections.Counter(r.get("fate") for r in d.get("rows", []))
         if not c:
             continue
-        unknown |= {k for k in c if k not in STAGE_ROLE}
+        unknown |= {k for k in c if k not in STAGE_ROLE
+                    and k not in ANNOTATION_FATES}
         rm = m.group(1)
         if rm not in per or sum(c.values()) > sum(per[rm].values()):
             per[rm] = c
@@ -143,11 +153,15 @@ def collect(reports_dir: Path):
 
 
 def roll(per):
-    """Totals, plus the three chained quantities the cascade needs."""
+    """Totals, plus the three chained quantities the cascade needs.
+
+    Annotation fates are excluded from every figure here: they describe a
+    group of constraints rather than being one, so counting them inflates the
+    total and the applicability loss alike."""
     tot = collections.Counter()
     for c in per.values():
         tot.update(c)
-    total = sum(tot.values())
+    total = sum(n for k, n in tot.items() if k not in ANNOTATION_FATES)
     invalid = sum(n for k, n in tot.items() if STAGE_ROLE.get(k) == "validity")
     inapplicable = sum(n for k, n in tot.items()
                        if STAGE_ROLE.get(k) == "applicability")
@@ -171,7 +185,9 @@ def emit_table(per, by_rm, out_csv):
                 for rm, c in sorted(per.items())]
     else:
         head = ["stage", "role", "n"]
-        rows = [[LABEL.get(k, k), STAGE_ROLE.get(k, "?"), tot[k]] for k in keys]
+        rows = [[LABEL.get(k, k),
+                 "annotation" if k in ANNOTATION_FATES else STAGE_ROLE.get(k, "?"),
+                 tot[k]] for k in keys]
         rows.append(["TOTAL", "", total])
     w = [max(len(str(r[i])) for r in [head] + rows) for i in range(len(head))]
     print("  ".join(h.ljust(w[i]) if i < 2 else h.rjust(w[i])
