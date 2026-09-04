@@ -401,9 +401,16 @@ def main():
           % ("judged", f"{tj:,}", 100 * tj / tr if tr else 0))
     for k in JUDGED:
         print("      %-34s %7s" % (k, f"{verd[k]:,}"))
+    # A blank verdict is not a category of its own: it is exactly the set the
+    # quote anchor rejected. Verified 1:1 -- every blank-verdict row is
+    # `unanchored` and every unanchored row has a blank verdict -- so print the
+    # gate that caused it, matching the figure, rather than the empty field
+    # value the file happens to carry.
     for k, n in verd.most_common():
         if k not in JUDGED:
-            print("      %-34s %7s   never reached the judge" % (k, f"{n:,}"))
+            label = ("quote anchor (unanchored)" if k == "(blank)" else k)
+            print("      %-34s %7s   never reached the judge"
+                  % (label, f"{n:,}"))
 
     print("\n  per-constraint reject reasons (manifest; entries, not constraints)")
     for k, n in rej.most_common():
