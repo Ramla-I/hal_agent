@@ -28,7 +28,18 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
-from defs import RegisterInfo                     # noqa: E402
+try:
+    from defs import RegisterInfo                 # noqa: E402
+except ModuleNotFoundError as e:                  # pydantic, typically
+    # This worktree has no .venv of its own -- the dependencies live in the
+    # sibling checkout. Say so, rather than leaving a bare ImportError for a
+    # module the reader never asked for.
+    sibling = REPO.parent / "hal_agent-pac-injection" / ".venv"
+    hint = (f"source {sibling}/bin/activate" if sibling.is_dir()
+            else "create a venv and pip install pydantic")
+    sys.exit(f"{e.name} is missing: the schema check needs defs.RegisterInfo.\n"
+             f"  {hint}\n"
+             f"then re-run from {REPO}")
 
 AGENT = REPO / "agent_output" / "stm"
 EVAL = REPO / "evaluation" / "stm"
