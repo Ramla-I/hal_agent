@@ -23,6 +23,7 @@ import csv
 import json
 import re
 import statistics as stats
+import textwrap
 import sys
 from pathlib import Path
 
@@ -103,11 +104,17 @@ BAND2 = [
 for _band in (BAND1, BAND2):
     assert len({h for _k, _l, _c, h in _band}) == len(_band), \
         "two segments in one band share a hatch pattern"
+# Wrap width for the prose blocks. Long single lines are unreadable in a
+# terminal and worse in a scrollback, and these explanations are the part a
+# reader most needs to follow.
+WIDTH = 74
+
 SOURCES = [
     ("generated (funnel)",
      "manifest.registers[].num_source_constraints, plus the schema-skipped "
      "files from agent_output/stm/<rm>/1/<peripheral>_<register>",
-     "what collect actually SAW. Taken from the manifest, not re-counted from "
+     "collect's own count of what it saw. Taken from the manifest, not "
+     "re-counted from "
      "the run dir, so the funnel describes one snapshot and closes without a "
      "residual. Only the schema-skipped population is read from the run dir, "
      "because collect returns None for those files without recording them"),
@@ -115,8 +122,9 @@ SOURCES = [
      "agent_output/stm/<rm>/1/<peripheral>_<register>",
      "every entry of `access_constraints_v2`, TODAY. Feeds the per-manual "
      "distribution, constraints-per-register and grammar-kind sections, which "
-     "need per-constraint detail the manifest does not keep. It totals 96 "
-     "fewer than the funnel's `generated` -- see the note under the funnel"),
+     "need per-constraint detail the manifest does not keep. It totals fewer "
+     "than the funnel's `generated`; the difference and its causes are "
+     "reported below the barrier"),
     ("schema check",
      "the same files, validated against defs.RegisterInfo",
      "collect's _load_register_info returns None for the WHOLE file, so every "
@@ -125,9 +133,9 @@ SOURCES = [
      "manifest.registers -- the list of registers collect actually scanned",
      "a later generator pass added registers to runs whose collect and judge "
      "had already finished. Those constraints live only in agent_output: never "
-     "collected, anchored or judged, and in no review file. EXCLUDED from "
-     "every figure below, because counting them beside the reviewed set shows "
-     "a loss rate that is partly just work not yet done"),
+     "collected, anchored or judged, and in no review file. EXCLUDED "
+     "everywhere, because counting them beside the reviewed set shows a loss "
+     "rate that is partly just work not yet done"),
     ("exact duplicate / deterministic reject / expansion",
      "agent_output/stm/<rm>/1/constraint_validation/manifest.json",
      "summary.constraints_deduped and _rejected are collect's own counts. "
@@ -394,12 +402,17 @@ def main():
 
     print(f"repository: {REPO}")
     print(f"manuals:    {len(rms)} (discovered under agent_output/stm/*/1)\n")
-    print("WHERE EACH NUMBER COMES FROM")
+    print("WHERE EACH NUMBER COMES FROM\n")
     for name, where, how in SOURCES:
-        print(f"  {name}")
-        print(f"      path   {where}")
-        print(f"      method {how}")
-    print()
+        print(f"  \u2022 {name}")
+        for label, body in (("from", where), ("what", how)):
+            # break_on_hyphens=False: otherwise "schema-skipped" and
+            # "per-manual" split across lines, and a path is worse still.
+            print(textwrap.fill(body, width=WIDTH, break_on_hyphens=False,
+                                break_long_words=False,
+                                initial_indent=f"      {label}  ",
+                                subsequent_indent=" " * 12))
+        print()
 
     per, kinds, regcounts = {}, collections.Counter(), []
     excluded = excluded_files = seen_total = 0
