@@ -317,10 +317,30 @@ def scan_manifest(rm: str) -> tuple:
     scanned = {(r.get("peripheral", "").lower(), r.get("register", "").lower())
                for r in j.get("registers", [])}
     reasons = collections.Counter()
+    # What collect SAW, per register. Counting these instead of re-reading the
+    # files makes the funnel describe one snapshot: 113 of them lived in `%s`
+    # placeholder files that were deleted afterwards, and 11 more have since
+    # been edited away, so the run dir no longer holds what was validated.
+    source_seen = 0
+    gone = edited = 0
+    for r in j.get("registers", []):
+        then = r.get("num_source_constraints", 0) or 0
+        source_seen += then
+        f = AGENT / rm / "1" / r.get("file", "")
+        if not f.is_file():
+            gone += then
+            continue
+        try:
+            now = len(json.loads(f.read_text()).get("access_constraints_v2") or [])
+        except (ValueError, OSError):
+            continue
+        if now != then:
+            edited += then - now
     for reg in j.get("registers", []):
         for r in (reg.get("rejects") or reg.get("reject_details") or []):
             reasons[r.get("reason") if isinstance(r, dict) else str(r)] += 1
-    return j.get("summary", {}), reasons, scanned, m.stat().st_mtime
+    return (j.get("summary", {}), reasons, scanned, m.stat().st_mtime,
+            source_seen, gone, edited)
 
 
 def scan_review(rm: str):
@@ -371,12 +391,14 @@ def main():
     print()
 
     per, kinds, regcounts = {}, collections.Counter(), []
-    excluded = excluded_files = 0
+    excluded = excluded_files = seen_total = 0
+    gone_total = edited_total = 0
     verd = collections.Counter(); enf = collections.Counter()
     anch = collections.Counter(); rej = collections.Counter()
     man = collections.Counter()
     for rm in rms:
-        summ, reasons, scanned, mmt = scan_manifest(rm)
+        summ, reasons, scanned, mmt, seen, gone, edited = scan_manifest(rm)
+        seen_total += seen; gone_total += gone; edited_total += edited
         k, bad, valid, pr, oos, oosf = scan_generated(rm, scanned, mmt)
         regcounts.extend(pr)
         excluded += oos
@@ -398,15 +420,16 @@ def main():
     rev = [p["reviewed"] for p in per.values()]
     jud = [p["judged"] for p in per.values()]
 
-    tg, tr = sum(gen), sum(rev)
+    tr = sum(rev)
     bad = sum(p["schema_invalid"] for p in per.values())
-    valid_total = tg - bad
+    # `generated` is what collect SAW (manifest, per register) plus the files it
+    # skipped on the schema before recording anything. One snapshot, so the
+    # funnel closes without a residual.
+    tg = seen_total + bad
+    on_disk = sum(gen)          # the same registers, counted from the run dir today
     # Derived at CORPUS level. Summing per-manual differences and clamping each
     # at zero adds a couple of units where a manifest is newer than its run.
-    # What collect scanned, minus what the files now carry. Should be near
-    # zero once scope is enforced; reported rather than absorbed so a drift
-    # between the manifest and the run dir cannot hide.
-    residual = man["constraints_native_v2"] - valid_total
+
     tj = sum(verd[x] for x in JUDGED)
 
     if excluded:
@@ -424,9 +447,6 @@ def main():
     print("  %-38s %7s   silent, stderr only" % ("  file failed RegisterInfo", f"-{bad:,}"))
     print("  %-38s %7s   manifest constraints_native_v2"
           % ("reached collect's lint", f"{man['constraints_native_v2']:,}"))
-    if residual:
-        print("  %-38s %7s   manifest vs run dir; see --by-rm"
-              % ("  (unreconciled)", f"{residual:+,}"))
     print("  %-38s %7s" % ("  exact duplicates", f"-{man['constraints_deduped']:,}"))
     print("  %-38s %7s" % ("  rejected per-constraint", f"-{man['constraints_rejected']:,}"))
     print("  %-38s %7s   manifest constraints_v2" % ("collect kept", f"{man['constraints_v2']:,}"))
@@ -445,6 +465,19 @@ def main():
             label = ("quote anchor (unanchored)" if k == "(blank)" else k)
             print("      %-34s %7s   never reached the judge"
                   % (label, f"{n:,}"))
+
+    print("\n  TODAY the run dir holds %s constraints for these registers (%+d)."
+          % (f"{on_disk:,}", on_disk - tg))
+    print("  Everything above describes the snapshot collect and the judge ran "
+          "on. Of the")
+    print("  registers the manifest lists, %d constraints have since been "
+          "deleted with their" % gone_total)
+    print("  files (placeholder names like bkp_dr%%s) and %d edited away; the "
+          "schema-skipped" % edited_total)
+    print("  count is read from the run dir and has drifted too, so the net is "
+          "%+d rather" % (on_disk - tg))
+    print("  than -%d. The manifest is the only record of what was validated."
+          % (gone_total + edited_total))
 
     print("\n  per-constraint reject reasons (manifest; entries, not constraints)")
     for k, n in rej.most_common():
