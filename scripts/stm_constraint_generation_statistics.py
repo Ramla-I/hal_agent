@@ -420,14 +420,17 @@ def main():
         for key in ("constraints_native_v2", "constraints_deduped",
                     "constraints_v2", "constraints_rejected"):
             man[key] += summ.get(key, 0) or 0
-        per[rm] = {"generated": sum(k.values()), "schema_invalid": bad,
+        per[rm] = {"generated": seen + bad,          # snapshot: manifest + schema-skipped
+                   "in_run_dir": sum(k.values()),   # run dir today
+                   "schema_invalid": bad,
                    "out_of_scope": oos, "reviewed": n,
                    "judged": sum(v[x] for x in JUDGED),
                    "confirmed": v.get("confirmed", 0),
                    "encoding_error": v.get("encoding_error", 0),
                    "enforce": e.get("enforce", 0)}
 
-    gen = [p["generated"] for p in per.values()]
+    gen = [p["generated"] for p in per.values()]        # snapshot
+    gen_disk = [p["in_run_dir"] for p in per.values()]   # run dir today
     rev = [p["reviewed"] for p in per.values()]
     jud = [p["judged"] for p in per.values()]
 
@@ -437,21 +440,11 @@ def main():
     # skipped on the schema before recording anything. One snapshot, so the
     # funnel closes without a residual.
     tg = seen_total + bad
-    on_disk = sum(gen)          # the same registers, counted from the run dir today
+    on_disk = sum(gen_disk)     # the same registers, counted from the run dir today
     # Derived at CORPUS level. Summing per-manual differences and clamping each
     # at zero adds a couple of units where a manifest is newer than its run.
 
     tj = sum(verd[x] for x in JUDGED)
-
-    if excluded:
-        print("EXCLUDED FROM EVERYTHING BELOW")
-        print("  cannot collect statistics for %s generator output files: they "
-              "have not" % f"{excluded_files:,}")
-        print("  passed through the validation pipeline. A later generator pass "
-              "added them")
-        print("  after collect and the judge had run, so they carry %s "
-              "constraints that" % f"{excluded:,}")
-        print("  no manifest, review file or injection report accounts for.\n")
 
     print("FUNNEL  (each line names its source above)")
     print("  %-38s %7s" % ("generated", f"{tg:,}"))
@@ -477,19 +470,6 @@ def main():
             print("      %-34s %7s   never reached the judge"
                   % (label, f"{n:,}"))
 
-    print("\n  TODAY the run dir holds %s constraints for these registers (%+d)."
-          % (f"{on_disk:,}", on_disk - tg))
-    print("  Everything above describes the snapshot collect and the judge ran "
-          "on. Of the")
-    print("  registers the manifest lists, %d constraints have since been "
-          "deleted with their" % gone_total)
-    print("  files (placeholder names like bkp_dr%%s) and %d edited away; the "
-          "schema-skipped" % edited_total)
-    print("  count is read from the run dir and has drifted too, so the net is "
-          "%+d rather" % (on_disk - tg))
-    print("  than -%d. The manifest is the only record of what was validated."
-          % (gone_total + edited_total))
-
     print("\n  per-constraint reject reasons (manifest; entries, not constraints)")
     for k, n in rej.most_common():
         print("      %-34s %7s" % (k, f"{n:,}"))
@@ -500,15 +480,42 @@ def main():
     for k, n in anch.most_common():
         print("      %-34s %7s" % (k, f"{n:,}"))
 
-    print("\nPER MANUAL  (counted from the run dir today, %+d vs the funnel)"
-          % (on_disk - tg))
-    describe("in run dir", gen)
+    print("\nPER MANUAL  (the validated snapshot)")
+    describe("generated", gen)
     describe("reached review", rev)
     describe("judged", jud)
 
     print("\nGENERATOR ACCURACY, over constraints the judge ruled on")
     for k in JUDGED:
         print("  %-18s %7s  %5.1f%%" % (k, f"{verd[k]:,}", 100 * verd[k] / tj))
+
+    print("\n" + "-" * 74)
+    print("THE RUN DIRECTORY TODAY -- NOT WHAT WAS VALIDATED")
+    print("-" * 74)
+    print("  Everything above describes the snapshot collect and the judge ran")
+    print("  on. The run dir has moved since, in two directions.\n")
+    print("  holds %s constraints for the same registers (%+d)"
+          % (f"{on_disk:,}", on_disk - tg))
+    print("    %d deleted with their files (placeholder names like bkp_dr%%s)"
+          % gone_total)
+    print("    %d edited away" % edited_total)
+    print("    the schema-skipped count is read from the run dir and drifted "
+          "too," )
+    print("    so the net is %+d rather than -%d"
+          % (on_disk - tg, gone_total + edited_total))
+    if excluded:
+        print("\n  plus %s files carrying %s constraints that never entered the"
+              % (f"{excluded_files:,}", f"{excluded:,}"))
+        print("  pipeline at all: a later generator pass added them after "
+              "collect and the")
+        print("  judge had finished, so no manifest, review file or injection "
+              "report")
+        print("  accounts for them. Excluded from the snapshot above and from "
+              "the two")
+        print("  sections below.")
+    print("\n  The manifest is the only record of what was validated. The two")
+    print("  sections below need per-constraint detail the manifest does not")
+    print("  keep, so they count the run dir and are stated separately.")
 
     if regcounts:
         h = collections.Counter(regcounts)
