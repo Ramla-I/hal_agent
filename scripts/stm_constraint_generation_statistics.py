@@ -28,6 +28,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
+sys.path.insert(0, str(REPO / "scripts"))
 try:
     from defs import RegisterInfo                 # noqa: E402
 except ModuleNotFoundError as e:                  # pydantic, typically
@@ -53,6 +54,115 @@ DEVICES = REPO / "devices" / "stm"
 JUDGED = ("confirmed", "encoding_error", "not_constraint")
 
 _REG_RE = re.compile(r"<register[^>]*>.*?<name>([^<]+)</name>", re.S)
+
+DEFAULT_FIGURE = REPO / "docs" / "figures" / "constraint_generation.pdf"
+
+# Palette and spacing are lifted from stm_structure_statistics so the two
+# figures sit together in a paper without looking like they came from different
+# tools. Colour carries the STAGE, texture separates neighbours of one family.
+#
+#   blue-grey, no hatch / hatched : the two SILENT skips -- one family, because
+#                                   they fail the same way (stderr only, in no
+#                                   manifest), and texture tells them apart
+#   orange                        : collect's own lint, which does report
+#   amber                         : the quote anchor, which stops a constraint
+#                                   before the judge ever sees it
+#   pink / blue / light           : the judge's three verdicts, ending in the
+#                                   light fill the structure figure uses for
+#                                   its "agrees" segment
+SEGMENTS = [
+    ("schema_invalid",  "file failed schema", "#a3c8ee", ()),
+    ("not_scanned",     "not scanned",        "#a3c8ee", (135,)),
+    ("collect_dropped", "dropped in collect", "#eb6834", (45,)),
+    ("never_judged",    "never judged",       "#eda100", (45, 135)),
+    ("not_constraint",  "not a constraint",   "#e87ba4", (90,)),
+    ("encoding_error",  "encoding error",     "#2a78d6", (45,)),
+    ("confirmed",       "confirmed",          "#c9d3e2", ()),
+]
+_LEG_TRAIL = 8.0
+
+
+def _legend_row(p, x, y, items, width, size=7.0):
+    """Swatch + name + count for every segment, wrapping within `width`.
+
+    Same helper as the structure figure: in one column the narrow segments
+    cannot hold text, and dropping a small segment's label silently is how a
+    whole stage becomes an unexplained sliver."""
+    from pdfwriter import _HELV_ADV
+    cx, cy = x, y
+    for col, hat, text in items:
+        w = 7 + 4 + _HELV_ADV * size * len(text) + _LEG_TRAIL
+        if cx + w > x + width:
+            cx, cy = x, cy - (size + 4)
+        p.fill(col)
+        p.stroke("#ffffff")
+        p.rect(cx, cy, 7, 7, 0.5)
+        p.hatch(cx, cy, 7, 7, hat, gap=2.0, lw=0.4)
+        p.fill("#1b212b")
+        p.text(cx + 11, cy + 1, text, size, "F1")
+        cx += w
+    return cy
+
+
+def write_figure(parts: dict, path: Path, width_in=3.4, height_in=None):
+    """One bar: every constraint the generator produced, by what became of it.
+
+    The structure cascade has three bands because it magnifies a segment twice.
+    There is nothing to magnify here -- this is the whole of generation in one
+    row -- so the extra bands would be empty ceremony.
+
+    The segments sum to the total exactly. That is not automatic: collect's
+    manifest counts rejects as "unique source constraints with no v2 output",
+    which does not reconcile with its own kept count once repairs are involved,
+    so `collect_dropped` is taken as the DIFFERENCE between what reached the
+    lint and what reached the review files. A bar whose parts do not add up is
+    worse than no bar."""
+    from pdfwriter import Pdf
+    W = width_in * 72.0
+    ml, mr = 14.0, 8.0
+    pw = W - ml - mr
+    bh = 21.0
+    TOP_PAD, TITLE_GAP, LABEL_GAP = 16.0, 6.0, 13.0
+    F_TITLE, F_LEG = 8.0, 7.6
+
+    segs = [(lab, parts.get(k, 0), col, hat) for k, lab, col, hat in SEGMENTS]
+    total = sum(n for _l, n, _c, _h in segs)
+    if not total:
+        return
+    items = [(c, h, "%s %s" % (lab, "{:,}".format(n)))
+             for lab, n, c, h in segs if n]
+
+    from pdfwriter import _HELV_ADV
+    rows, cx = 1, 0.0
+    for _c, _h, text in items:
+        w = 7 + 4 + _HELV_ADV * F_LEG * len(text) + _LEG_TRAIL
+        if cx + w > pw:
+            rows += 1
+            cx = 0.0
+        cx += w
+
+    H = (height_in * 72.0 if height_in else
+         TOP_PAD + F_TITLE + TITLE_GAP + bh + LABEL_GAP
+         + (rows - 1) * (F_LEG + 4) + 12.0)
+    p = Pdf(W, H)
+    top = H - TOP_PAD - TITLE_GAP - F_TITLE
+    p.fill("#5c6675")
+    p.text(ml + pw / 2, top + TITLE_GAP,
+           "every access constraint the generator produced", F_TITLE, "F1",
+           "middle")
+    y, x = top - bh, ml
+    for _lab, n, col, hat in segs:
+        if not n:
+            continue
+        wseg = max(0.9, pw * n / total)
+        p.fill(col)
+        p.stroke("#ffffff")
+        p.rect(x, y, wseg, bh, 0.7)
+        p.hatch(x, y, wseg, bh, hat)
+        x += wseg
+    _legend_row(p, ml, y - LABEL_GAP, items, pw, size=F_LEG)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(p.to_bytes())
 
 SOURCES = [
     ("generated",
@@ -172,6 +282,10 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--by-rm", action="store_true")
     ap.add_argument("--csv", default=None)
+    ap.add_argument("--figure", nargs="?", const=str(DEFAULT_FIGURE),
+                    default=None, help="write the single-bar breakdown")
+    ap.add_argument("--width-in", type=float, default=3.4)
+    ap.add_argument("--height-in", type=float, default=None)
     args = ap.parse_args()
 
     rms = manuals()
@@ -293,6 +407,24 @@ def main():
         for rm in rms:
             p = per[rm]
             print("  %-8s %s" % (rm, " ".join(str(p[c]).rjust(10) for c in cols)))
+
+    if args.figure:
+        # collect_dropped by DIFFERENCE so the parts sum to the total; see
+        # write_figure. never_judged is everything in a review file the judge
+        # did not rule on.
+        parts = {
+            "schema_invalid": bad,
+            "not_scanned": absent,
+            "collect_dropped": man["constraints_native_v2"] - tr,
+            "never_judged": tr - tj,
+            "not_constraint": verd.get("not_constraint", 0),
+            "encoding_error": verd.get("encoding_error", 0),
+            "confirmed": verd.get("confirmed", 0),
+        }
+        assert sum(parts.values()) == tg, (sum(parts.values()), tg)
+        out = Path(args.figure)
+        write_figure(parts, out, args.width_in, args.height_in)
+        print(f"\nfigure: {out}  ({sum(parts.values()):,} constraints)")
 
     if args.csv:
         cols = ("generated", "schema_invalid", "svd_absent", "reviewed",
