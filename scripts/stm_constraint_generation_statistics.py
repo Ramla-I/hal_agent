@@ -78,7 +78,6 @@ DEFAULT_FIGURE = REPO / "docs" / "figures" / "constraint_generation.pdf"
 # them, but the legend should not need the colour to be read.
 SEGMENTS = [
     ("schema_invalid",  "schema check",             "#a3c8ee", ()),
-    ("not_scanned",     "SVD lookup",               "#a3c8ee", (135,)),
     ("collect_dropped", "collect lint",             "#eb6834", (45,)),
     ("never_judged",    "quote anchor",             "#eda100", (45, 135)),
     ("not_constraint",  "validator: not constraint", "#e87ba4", (90,)),
@@ -178,14 +177,13 @@ SOURCES = [
      "the same files, validated against defs.RegisterInfo",
      "collect's _load_register_info returns None for the WHOLE file, so every "
      "constraint in it is lost; the reason only reaches stderr"),
-    ("not scanned by collect",
-     "derived: generated - schema-invalid - manifest.constraints_native_v2",
-     "DERIVED BY DIFFERENCE, not detected. Sampling RM0008 shows 26 of 27 are "
-     "registers the SVD declares as a <dim> array (bkp_dr11, bkp_dr13...) "
-     "while the generator wrote one file per element, so the name resolves "
-     "nowhere. Matching those by name directly is unreliable -- peripherals "
-     "like otg_fs_global contain underscores, so splitting a filename on the "
-     "first '_' misattributes them -- and the manifest is authoritative"),
+    ("out of scope",
+     "manifest.registers -- the list of registers collect actually scanned",
+     "a later generator pass added registers to runs whose collect and judge "
+     "had already finished. Those constraints live only in agent_output: never "
+     "collected, anchored or judged, and in no review file. They are EXCLUDED "
+     "from every figure below, because counting them beside the reviewed set "
+     "shows a loss rate that is partly just work not yet done"),
     ("collect lint",
      "agent_output/stm/<rm>/1/constraint_validation/manifest.json",
      "summary.constraints_native_v2 / _deduped / _v2 / _rejected, and the "
@@ -213,14 +211,23 @@ def svd_registers(rm: str) -> set:
     return out
 
 
-def scan_generated(rm: str):
-    """(kinds, schema_invalid, valid) constraint counts.
+def scan_generated(rm: str, scanned: set, manifest_mtime: float):
+    """(kinds, schema_invalid, valid, per_register, out_of_scope) for one manual.
 
-    `valid` is what a schema-valid file carries; how much of it collect
-    actually scanned is taken from the manifest, not guessed here."""
+    ONLY register files the validation pipeline actually processed are counted.
+    A later generator pass added registers to runs whose collect and judge had
+    already finished, and those constraints exist solely as JSON in
+    agent_output -- never collected, never anchored, never judged, in no review
+    file. Counting them beside the reviewed set would show a loss rate that is
+    partly just work not yet done.
+
+    In scope means: the register is in the manifest's own list of what collect
+    scanned, or it fails the RegisterInfo schema and predates the manifest --
+    collect saw those and skipped the whole file, which is a real loss and
+    belongs in the funnel."""
     kinds = collections.Counter()
     per_register = []          # constraints carried by each register file
-    bad_schema = valid = 0
+    bad_schema = valid = out_of_scope = out_of_scope_files = 0
     for f in sorted((AGENT / rm / "1").iterdir()):
         if not f.is_file() or f.name.startswith("."):
             continue
@@ -233,29 +240,44 @@ def scan_generated(rm: str):
         raw = data.get("access_constraints_v2")
         if not isinstance(raw, list) or not raw:
             continue
-        for c in raw:
-            kinds[c.get("kind") or "?"] += 1
-        per_register.append(len(raw))
+        per, _, reg = f.name.partition("_")
         try:
             RegisterInfo(**{k: v for k, v in data.items()
                             if k != "access_constraints_v2"})
+            ok = True
         except Exception:                                     # noqa: BLE001
-            bad_schema += len(raw)
+            ok = False
+        if (per.lower(), reg.lower()) in scanned:
+            pass                                   # collect scanned it
+        elif not ok and f.stat().st_mtime <= manifest_mtime + 1:
+            pass                                   # collect saw it, schema skip
+        else:
+            out_of_scope += len(raw)
+            out_of_scope_files += 1
             continue
-        valid += len(raw)
-    return kinds, bad_schema, valid, per_register
+        for c in raw:
+            kinds[c.get("kind") or "?"] += 1
+        per_register.append(len(raw))
+        if ok:
+            valid += len(raw)
+        else:
+            bad_schema += len(raw)
+    return (kinds, bad_schema, valid, per_register, out_of_scope,
+            out_of_scope_files)
 
 
 def scan_manifest(rm: str) -> tuple:
     m = AGENT / rm / "1" / "constraint_validation" / "manifest.json"
     if not m.is_file():
-        return {}, collections.Counter()
+        return {}, collections.Counter(), set(), 0.0
     j = json.loads(m.read_text())
+    scanned = {(r.get("peripheral", "").lower(), r.get("register", "").lower())
+               for r in j.get("registers", [])}
     reasons = collections.Counter()
     for reg in j.get("registers", []):
         for r in (reg.get("rejects") or reg.get("reject_details") or []):
             reasons[r.get("reason") if isinstance(r, dict) else str(r)] += 1
-    return j.get("summary", {}), reasons
+    return j.get("summary", {}), reasons, scanned, m.stat().st_mtime
 
 
 def scan_review(rm: str):
@@ -306,15 +328,16 @@ def main():
     print()
 
     per, kinds, regcounts = {}, collections.Counter(), []
+    excluded = excluded_files = 0
     verd = collections.Counter(); enf = collections.Counter()
     anch = collections.Counter(); rej = collections.Counter()
     man = collections.Counter()
     for rm in rms:
-        k, bad, valid, pr = scan_generated(rm)
+        summ, reasons, scanned, mmt = scan_manifest(rm)
+        k, bad, valid, pr, oos, oosf = scan_generated(rm, scanned, mmt)
         regcounts.extend(pr)
-        summ, reasons = scan_manifest(rm)
-        scanned = summ.get("constraints_native_v2", 0) or 0
-        absent = max(0, valid - scanned)
+        excluded += oos
+        excluded_files += oosf
         n, v, e, a = scan_review(rm)
         kinds.update(k); verd.update(v); enf.update(e); anch.update(a)
         rej.update(reasons)
@@ -322,7 +345,7 @@ def main():
                     "constraints_v2", "constraints_rejected"):
             man[key] += summ.get(key, 0) or 0
         per[rm] = {"generated": sum(k.values()), "schema_invalid": bad,
-                   "svd_absent": absent, "reviewed": n,
+                   "out_of_scope": oos, "reviewed": n,
                    "judged": sum(v[x] for x in JUDGED),
                    "confirmed": v.get("confirmed", 0),
                    "encoding_error": v.get("encoding_error", 0),
@@ -334,17 +357,33 @@ def main():
 
     tg, tr = sum(gen), sum(rev)
     bad = sum(p["schema_invalid"] for p in per.values())
+    valid_total = tg - bad
     # Derived at CORPUS level. Summing per-manual differences and clamping each
     # at zero adds a couple of units where a manifest is newer than its run.
-    absent = tg - bad - man["constraints_native_v2"]
+    # What collect scanned, minus what the files now carry. Should be near
+    # zero once scope is enforced; reported rather than absorbed so a drift
+    # between the manifest and the run dir cannot hide.
+    residual = man["constraints_native_v2"] - valid_total
     tj = sum(verd[x] for x in JUDGED)
+
+    if excluded:
+        print("EXCLUDED FROM EVERYTHING BELOW")
+        print("  cannot collect statistics for %s generator output files: they "
+              "have not" % f"{excluded_files:,}")
+        print("  passed through the validation pipeline. A later generator pass "
+              "added them")
+        print("  after collect and the judge had run, so they carry %s "
+              "constraints that" % f"{excluded:,}")
+        print("  no manifest, review file or injection report accounts for.\n")
 
     print("FUNNEL  (each line names its source above)")
     print("  %-38s %7s" % ("generated", f"{tg:,}"))
     print("  %-38s %7s   silent, stderr only" % ("  file failed RegisterInfo", f"-{bad:,}"))
-    print("  %-38s %7s   silent, stderr only" % ("  not scanned by collect", f"-{absent:,}"))
     print("  %-38s %7s   manifest constraints_native_v2"
           % ("reached collect's lint", f"{man['constraints_native_v2']:,}"))
+    if residual:
+        print("  %-38s %7s   manifest vs run dir; see --by-rm"
+              % ("  (unreconciled)", f"{residual:+,}"))
     print("  %-38s %7s" % ("  exact duplicates", f"-{man['constraints_deduped']:,}"))
     print("  %-38s %7s" % ("  rejected per-constraint", f"-{man['constraints_rejected']:,}"))
     print("  %-38s %7s   manifest constraints_v2" % ("collect kept", f"{man['constraints_v2']:,}"))
@@ -407,7 +446,7 @@ def main():
 
     if args.by_rm:
         print("\nPER-MANUAL DETAIL")
-        cols = ("generated", "schema_invalid", "svd_absent", "reviewed",
+        cols = ("generated", "schema_invalid", "out_of_scope", "reviewed",
                 "judged", "confirmed", "encoding_error", "enforce")
         print("  %-8s %s" % ("rm", " ".join(c[:9].rjust(10) for c in cols)))
         for rm in rms:
@@ -420,20 +459,22 @@ def main():
         # did not rule on.
         parts = {
             "schema_invalid": bad,
-            "not_scanned": absent,
-            "collect_dropped": man["constraints_native_v2"] - tr,
+            "collect_dropped": tg - bad - tr,
             "never_judged": tr - tj,
             "not_constraint": verd.get("not_constraint", 0),
             "encoding_error": verd.get("encoding_error", 0),
             "confirmed": verd.get("confirmed", 0),
         }
         assert sum(parts.values()) == tg, (sum(parts.values()), tg)
+        # `collect_dropped` absorbs the manifest-vs-run-dir residual so the bar
+        # sums exactly; the funnel above reports that residual separately
+        # rather than letting the figure quietly carry it.
         out = Path(args.figure)
         write_figure(parts, out, args.width_in, args.height_in)
         print(f"\nfigure: {out}  ({sum(parts.values()):,} constraints)")
 
     if args.csv:
-        cols = ("generated", "schema_invalid", "svd_absent", "reviewed",
+        cols = ("generated", "schema_invalid", "out_of_scope", "reviewed",
                 "judged", "confirmed", "encoding_error", "enforce")
         with open(args.csv, "w", newline="") as fh:
             w = csv.writer(fh)
