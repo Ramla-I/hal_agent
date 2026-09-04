@@ -70,14 +70,20 @@ DEFAULT_FIGURE = REPO / "docs" / "figures" / "constraint_generation.pdf"
 #   pink / blue / light           : the judge's three verdicts, ending in the
 #                                   light fill the structure figure uses for
 #                                   its "agrees" segment
+# Each label names the CHECK that decided the constraint's fate, not how the
+# outcome felt. "not scanned" said nothing about what did the not-scanning;
+# "SVD lookup" says a name was looked up in the SVD and was not there, which is
+# the thing a reader can go and verify. The three validator segments keep the
+# prefix so it is clear one stage produced all three verdicts -- colour groups
+# them, but the legend should not need the colour to be read.
 SEGMENTS = [
-    ("schema_invalid",  "file failed schema", "#a3c8ee", ()),
-    ("not_scanned",     "not scanned",        "#a3c8ee", (135,)),
-    ("collect_dropped", "dropped in collect", "#eb6834", (45,)),
-    ("never_judged",    "never judged",       "#eda100", (45, 135)),
-    ("not_constraint",  "not a constraint",   "#e87ba4", (90,)),
-    ("encoding_error",  "encoding error",     "#2a78d6", (45,)),
-    ("confirmed",       "confirmed",          "#c9d3e2", ()),
+    ("schema_invalid",  "schema check",             "#a3c8ee", ()),
+    ("not_scanned",     "SVD lookup",               "#a3c8ee", (135,)),
+    ("collect_dropped", "collect lint",             "#eb6834", (45,)),
+    ("never_judged",    "quote anchor",             "#eda100", (45, 135)),
+    ("not_constraint",  "validator: not constraint", "#e87ba4", (90,)),
+    ("encoding_error",  "validator: encoding error", "#2a78d6", (45,)),
+    ("confirmed",       "validator: confirmed",     "#c9d3e2", ()),
 ]
 _LEG_TRAIL = 8.0
 
