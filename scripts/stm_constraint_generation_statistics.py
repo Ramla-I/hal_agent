@@ -77,13 +77,22 @@ DEFAULT_FIGURE = REPO / "docs" / "figures" / "constraint_generation.pdf"
 # prefix so it is clear one stage produced all three verdicts -- colour groups
 # them, but the legend should not need the colour to be read.
 SEGMENTS = [
-    ("schema_invalid",  "schema check",             "#a3c8ee", ()),
-    ("collect_dropped", "collect lint",             "#eb6834", (45,)),
-    ("never_judged",    "quote anchor",             "#eda100", (45, 135)),
+    ("schema_invalid",  "schema check",              "#a3c8ee", (45,)),
+    ("collect_dropped", "collect lint",              "#eb6834", (135,)),
+    ("never_judged",    "quote anchor",              "#eda100", (45, 135)),
     ("not_constraint",  "validator: not constraint", "#e87ba4", (90,)),
-    ("encoding_error",  "validator: encoding error", "#2a78d6", (45,)),
-    ("confirmed",       "validator: confirmed",     "#c9d3e2", ()),
+    ("encoding_error",  "validator: encoding error", "#2a78d6", (0,)),
+    ("confirmed",       "validator: confirmed",      "#c9d3e2", ()),
 ]
+
+# Every segment carries a DIFFERENT texture, so the bar survives greyscale
+# printing and colour-blind readers: hue and texture each identify a segment on
+# their own rather than together. The largest segment is the plain one --
+# hatching 56% of the bar buys nothing and costs legibility. Asserted rather
+# than trusted, because two segments quietly sharing (45,) is exactly the kind
+# of thing that survives review.
+assert len({h for _k, _l, _c, h in SEGMENTS}) == len(SEGMENTS), \
+    "two segments share a hatch pattern"
 _LEG_TRAIL = 8.0
 
 
