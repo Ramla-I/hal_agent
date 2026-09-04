@@ -104,9 +104,19 @@ for _band in (BAND1, BAND2):
     assert len({h for _k, _l, _c, h in _band}) == len(_band), \
         "two segments in one band share a hatch pattern"
 SOURCES = [
-    ("generated",
+    ("generated (funnel)",
+     "manifest.registers[].num_source_constraints, plus the schema-skipped "
+     "files from agent_output/stm/<rm>/1/<peripheral>_<register>",
+     "what collect actually SAW. Taken from the manifest, not re-counted from "
+     "the run dir, so the funnel describes one snapshot and closes without a "
+     "residual. Only the schema-skipped population is read from the run dir, "
+     "because collect returns None for those files without recording them"),
+    ("counted from the run dir",
      "agent_output/stm/<rm>/1/<peripheral>_<register>",
-     "every entry of `access_constraints_v2` in each per-register JSON file"),
+     "every entry of `access_constraints_v2`, TODAY. Feeds the per-manual "
+     "distribution, constraints-per-register and grammar-kind sections, which "
+     "need per-constraint detail the manifest does not keep. It totals 96 "
+     "fewer than the funnel's `generated` -- see the note under the funnel"),
     ("schema check",
      "the same files, validated against defs.RegisterInfo",
      "collect's _load_register_info returns None for the WHOLE file, so every "
@@ -122,9 +132,10 @@ SOURCES = [
      "agent_output/stm/<rm>/1/constraint_validation/manifest.json",
      "summary.constraints_deduped and _rejected are collect's own counts. "
      "Note collect also EXPANDS: an `any` gate becomes one gate per operation, "
-     "so constraints_v2 exceeds native - dedup - rejected by 242 across 21 "
-     "manuals. Source constraints and review rows are therefore different "
-     "units, which is why the figure has two bands and not one bar"),
+     "so constraints_v2 exceeds native - dedup - rejected. Source constraints "
+     "and review rows are therefore different units, which is why the figure "
+     "has two bands and not one bar; the exact expansion is printed in the "
+     "figure's bridge line rather than asserted here"),
     ("verdicts",
      "evaluation/stm/<rm>/1/<rm>_constraints_review.jsonl",
      "one row per constraint that reached the validator. `verdict` empty and "
@@ -489,8 +500,9 @@ def main():
     for k, n in anch.most_common():
         print("      %-34s %7s" % (k, f"{n:,}"))
 
-    print("\nPER MANUAL")
-    describe("generated", gen)
+    print("\nPER MANUAL  (counted from the run dir today, %+d vs the funnel)"
+          % (on_disk - tg))
+    describe("in run dir", gen)
     describe("reached review", rev)
     describe("judged", jud)
 
@@ -500,7 +512,8 @@ def main():
 
     if regcounts:
         h = collections.Counter(regcounts)
-        print("\nCONSTRAINTS PER REGISTER  (register files carrying at least one)")
+        print("\nCONSTRAINTS PER REGISTER  (run dir today; register files "
+              "carrying at least one)")
         print("  registers with a constraint : %s" % f"{len(regcounts):,}")
         print("  constraints                 : %s" % f"{sum(regcounts):,}")
         print("  mean=%.2f  median=%.0f  sd=%.2f  max=%d"
@@ -519,7 +532,7 @@ def main():
             print("      9+ constraints %7s  %5.1f%%"
                   % (f"{tail:,}", 100 * tail / len(regcounts)))
 
-    print("\nBY GRAMMAR KIND  (generator output)")
+    print("\nBY GRAMMAR KIND  (run dir today, pre-lint)")
     for k, n in kinds.most_common():
         print("  %-18s %7s  %5.1f%%" % (k, f"{n:,}", 100 * n / tg))
 
