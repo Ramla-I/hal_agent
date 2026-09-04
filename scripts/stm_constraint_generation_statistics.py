@@ -76,23 +76,62 @@ DEFAULT_FIGURE = REPO / "docs" / "figures" / "constraint_generation.pdf"
 # the thing a reader can go and verify. The three validator segments keep the
 # prefix so it is clear one stage produced all three verdicts -- colour groups
 # them, but the legend should not need the colour to be read.
-SEGMENTS = [
-    ("schema_invalid",  "schema check",              "#a3c8ee", (45,)),
-    ("collect_dropped", "collect lint",              "#eb6834", (135,)),
-    ("never_judged",    "quote anchor",              "#eda100", (45, 135)),
-    ("not_constraint",  "validator: not constraint", "#e87ba4", (90,)),
-    ("encoding_error",  "validator: encoding error", "#2a78d6", (0,)),
+# TWO BANDS, because there are two units and pretending otherwise is what the
+# single-bar version got wrong. Band one counts SOURCE constraints -- what the
+# generator wrote, and what each deterministic stage did with it. Band two
+# counts REVIEW ROWS. They are not the same quantity: collect splits an "any"
+# gate into per-operation gates, so 11,557 survivors become 11,895 linted
+# constraints. A net difference hides that; a connector states it.
+#
+# Band two is the magnification of band one's final segment, drawn with the
+# same zoom connector the structure cascade uses.
+BAND1 = [
+    ("schema_invalid",   "schema check",              "#a3c8ee", (45,)),
+    ("deduped",          "exact duplicate",           "#eb6834", (135,)),
+    ("rejected",         "deterministic reject",      "#eda100", (45, 135)),
+    ("survived",         "survived collection",       "#6f57a8", (0,)),
+]
+BAND2 = [
+    ("never_judged",    "quote anchor",              "#e87ba4", (90,)),
+    ("not_constraint",  "validator: not constraint", "#eb6834", (135,)),
+    ("encoding_error",  "validator: encoding error", "#2a78d6", (45,)),
     ("confirmed",       "validator: confirmed",      "#c9d3e2", ()),
 ]
 
-# Every segment carries a DIFFERENT texture, so the bar survives greyscale
-# printing and colour-blind readers: hue and texture each identify a segment on
-# their own rather than together. The largest segment is the plain one --
-# hatching 56% of the bar buys nothing and costs legibility. Asserted rather
-# than trusted, because two segments quietly sharing (45,) is exactly the kind
-# of thing that survives review.
-assert len({h for _k, _l, _c, h in SEGMENTS}) == len(SEGMENTS), \
-    "two segments share a hatch pattern"
+# Within a band every segment carries its own texture, so hue and texture each
+# identify a segment on their own and the bar survives greyscale.
+for _band in (BAND1, BAND2):
+    assert len({h for _k, _l, _c, h in _band}) == len(_band), \
+        "two segments in one band share a hatch pattern"
+SOURCES = [
+    ("generated",
+     "agent_output/stm/<rm>/1/<peripheral>_<register>",
+     "every entry of `access_constraints_v2` in each per-register JSON file"),
+    ("schema check",
+     "the same files, validated against defs.RegisterInfo",
+     "collect's _load_register_info returns None for the WHOLE file, so every "
+     "constraint in it is lost; the reason only reaches stderr"),
+    ("out of scope",
+     "manifest.registers -- the list of registers collect actually scanned",
+     "a later generator pass added registers to runs whose collect and judge "
+     "had already finished. Those constraints live only in agent_output: never "
+     "collected, anchored or judged, and in no review file. EXCLUDED from "
+     "every figure below, because counting them beside the reviewed set shows "
+     "a loss rate that is partly just work not yet done"),
+    ("exact duplicate / deterministic reject / expansion",
+     "agent_output/stm/<rm>/1/constraint_validation/manifest.json",
+     "summary.constraints_deduped and _rejected are collect's own counts. "
+     "Note collect also EXPANDS: an `any` gate becomes one gate per operation, "
+     "so constraints_v2 exceeds native - dedup - rejected by 242 across 21 "
+     "manuals. Source constraints and review rows are therefore different "
+     "units, which is why the figure has two bands and not one bar"),
+    ("verdicts",
+     "evaluation/stm/<rm>/1/<rm>_constraints_review.jsonl",
+     "one row per constraint that reached the validator. `verdict` empty and "
+     "`anchor_tier` unanchored coincide exactly (490/490): the quote anchor is "
+     "a gate before the judge, so an unanchorable sentence is never judged"),
+]
+
 _LEG_TRAIL = 8.0
 
 
@@ -118,91 +157,86 @@ def _legend_row(p, x, y, items, width, size=7.0):
     return cy
 
 
-def write_figure(parts: dict, path: Path, width_in=3.4, height_in=None):
-    """One bar: every constraint the generator produced, by what became of it.
+def write_figure(b1: dict, b2: dict, bridge: str, path: Path,
+                 width_in=3.4, height_in=None):
+    """Two bands: source constraints, then the review rows they became.
 
-    The structure cascade has three bands because it magnifies a segment twice.
-    There is nothing to magnify here -- this is the whole of generation in one
-    row -- so the extra bands would be empty ceremony.
-
-    The segments sum to the total exactly. That is not automatic: collect's
-    manifest counts rejects as "unique source constraints with no v2 output",
-    which does not reconcile with its own kept count once repairs are involved,
-    so `collect_dropped` is taken as the DIFFERENCE between what reached the
-    lint and what reached the review files. A bar whose parts do not add up is
-    worse than no bar."""
-    from pdfwriter import Pdf
+    Band two is band one's `survived` segment opened up, so the zoom connector
+    runs between them exactly as it does in the structure cascade. The bridge
+    line carries the adjustment that makes the two totals differ -- expansion
+    of `any` gates, and the duplicates removed after collection -- because that
+    difference is a fact about the pipeline, not rounding to be absorbed."""
+    from pdfwriter import Pdf, _HELV_ADV
     W = width_in * 72.0
     ml, mr = 14.0, 8.0
     pw = W - ml - mr
     bh = 21.0
-    TOP_PAD, TITLE_GAP, LABEL_GAP = 16.0, 6.0, 13.0
-    F_TITLE, F_LEG = 8.0, 7.6
+    TOP_PAD, TITLE_GAP, LABEL_GAP, BAND_GAP = 16.0, 6.0, 13.0, 22.0
+    F_TITLE, F_LEG, F_NOTE = 8.0, 7.6, 6.6
 
-    segs = [(lab, parts.get(k, 0), col, hat) for k, lab, col, hat in SEGMENTS]
-    total = sum(n for _l, n, _c, _h in segs)
-    if not total:
-        return
-    items = [(c, h, "%s %s" % (lab, "{:,}".format(n)))
-             for lab, n, c, h in segs if n]
+    bands = [
+        ("every access constraint the generator produced",
+         [(lab, b1.get(k, 0), c, h) for k, lab, c, h in BAND1]),
+        ("the survivors, by the validator's verdict",
+         [(lab, b2.get(k, 0), c, h) for k, lab, c, h in BAND2]),
+    ]
 
-    from pdfwriter import _HELV_ADV
-    rows, cx = 1, 0.0
-    for _c, _h, text in items:
-        w = 7 + 4 + _HELV_ADV * F_LEG * len(text) + _LEG_TRAIL
-        if cx + w > pw:
-            rows += 1
-            cx = 0.0
-        cx += w
+    def items_for(segs):
+        return [(c, h, "%s %s" % (lab, "{:,}".format(n)))
+                for lab, n, c, h in segs if n]
 
-    H = (height_in * 72.0 if height_in else
-         TOP_PAD + F_TITLE + TITLE_GAP + bh + LABEL_GAP
-         + (rows - 1) * (F_LEG + 4) + 12.0)
+    def rows_for(items):
+        cx, rows = 0.0, 1
+        for _c, _h, text in items:
+            w = 7 + 4 + _HELV_ADV * F_LEG * len(text) + 8.0
+            if cx + w > pw:
+                rows += 1
+                cx = 0.0
+            cx += w
+        return rows
+
+    legs = [items_for(segs) for _t, segs in bands]
+    if height_in:
+        H = height_in * 72.0
+    else:
+        H = TOP_PAD + F_TITLE + TITLE_GAP
+        for i in range(len(bands)):
+            H += bh + LABEL_GAP + (rows_for(legs[i]) - 1) * (F_LEG + 4)
+            H += (BAND_GAP + F_NOTE + 4) if i == 0 else 12.0
     p = Pdf(W, H)
+
     top = H - TOP_PAD - TITLE_GAP - F_TITLE
-    p.fill("#5c6675")
-    p.text(ml + pw / 2, top + TITLE_GAP,
-           "every access constraint the generator produced", F_TITLE, "F1",
-           "middle")
-    y, x = top - bh, ml
-    for _lab, n, col, hat in segs:
-        if not n:
+    zoom = None
+    for bi, (title, segs) in enumerate(bands):
+        total = sum(n for _l, n, _c, _h in segs)
+        if not total:
             continue
-        wseg = max(0.9, pw * n / total)
-        p.fill(col)
-        p.stroke("#ffffff")
-        p.rect(x, y, wseg, bh, 0.7)
-        p.hatch(x, y, wseg, bh, hat)
-        x += wseg
-    _legend_row(p, ml, y - LABEL_GAP, items, pw, size=F_LEG)
+        p.fill("#5c6675")
+        p.text(ml + pw / 2, top + TITLE_GAP, title, F_TITLE, "F1", "middle")
+        y, x = top - bh, ml
+        for lab, n, col, hat in segs:
+            if not n:
+                continue
+            wseg = max(0.9, pw * n / total)
+            p.fill(col)
+            p.stroke("#ffffff")
+            p.rect(x, y, wseg, bh, 0.7)
+            p.hatch(x, y, wseg, bh, hat)
+            if bi == 0 and lab.startswith("survived"):
+                zoom = (x, x + wseg)
+            x += wseg
+        if bi == 1 and zoom:
+            p.stroke("#c0c7d2")
+            p.line(zoom[0], prev_bottom, ml, top, 0.5)
+            p.line(zoom[1], prev_bottom, ml + pw, top, 0.5)
+        bottom = _legend_row(p, ml, y - LABEL_GAP, legs[bi], pw, size=F_LEG)
+        if bi == 0:
+            p.fill("#8b8f97")
+            p.text(ml + pw / 2, bottom - F_NOTE - 5, bridge, F_NOTE, "F1", "middle")
+            prev_bottom = bottom - F_NOTE - 7
+            top = prev_bottom - BAND_GAP
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(p.to_bytes())
-
-SOURCES = [
-    ("generated",
-     "agent_output/stm/<rm>/1/<peripheral>_<register>",
-     "every entry of `access_constraints_v2` in each per-register JSON file"),
-    ("schema-invalid",
-     "the same files, validated against defs.RegisterInfo",
-     "collect's _load_register_info returns None for the WHOLE file, so every "
-     "constraint in it is lost; the reason only reaches stderr"),
-    ("out of scope",
-     "manifest.registers -- the list of registers collect actually scanned",
-     "a later generator pass added registers to runs whose collect and judge "
-     "had already finished. Those constraints live only in agent_output: never "
-     "collected, anchored or judged, and in no review file. They are EXCLUDED "
-     "from every figure below, because counting them beside the reviewed set "
-     "shows a loss rate that is partly just work not yet done"),
-    ("collect lint",
-     "agent_output/stm/<rm>/1/constraint_validation/manifest.json",
-     "summary.constraints_native_v2 / _deduped / _v2 / _rejected, and the "
-     "per-register reject reasons"),
-    ("review rows",
-     "evaluation/stm/<rm>/1/<rm>_constraints_review.jsonl",
-     "one row per constraint that reached the validator; verdict, "
-     "anchor_tier and enforcement are read from it"),
-]
-
 
 def manuals():
     if not AGENT.is_dir():
@@ -470,24 +504,34 @@ def main():
             print("  %-8s %s" % (rm, " ".join(str(p[c]).rjust(10) for c in cols)))
 
     if args.figure:
-        # collect_dropped by DIFFERENCE so the parts sum to the total; see
-        # write_figure. never_judged is everything in a review file the judge
-        # did not rule on.
-        parts = {
-            "schema_invalid": bad,
-            "collect_dropped": tg - bad - tr,
-            "never_judged": tr - tj,
-            "not_constraint": verd.get("not_constraint", 0),
-            "encoding_error": verd.get("encoding_error", 0),
-            "confirmed": verd.get("confirmed", 0),
-        }
-        assert sum(parts.values()) == tg, (sum(parts.values()), tg)
-        # `collect_dropped` absorbs the manifest-vs-run-dir residual so the bar
-        # sums exactly; the funnel above reports that residual separately
-        # rather than letting the figure quietly carry it.
+        # Band one is SOURCE constraints; `survived` is the remainder, so the
+        # band sums to what the generator produced in scope. Band two is REVIEW
+        # ROWS. The two totals differ, and the bridge says by how much and why
+        # rather than letting a net difference swallow it.
+        ded = man["constraints_deduped"]
+        rej = man["constraints_rejected"]
+        survived = tg - bad - ded - rej
+        b1 = {"schema_invalid": bad, "deduped": ded, "rejected": rej,
+              "survived": survived}
+        b2 = {"never_judged": tr - tj,
+              "not_constraint": verd.get("not_constraint", 0),
+              "encoding_error": verd.get("encoding_error", 0),
+              "confirmed": verd.get("confirmed", 0)}
+        assert sum(b1.values()) == tg, (sum(b1.values()), tg)
+        assert sum(b2.values()) == tr, (sum(b2.values()), tr)
+        expand = man["constraints_v2"] - (man["constraints_native_v2"] - ded - rej)
+        post = man["constraints_v2"] - tr
+        bridge = ("%s survivors -> %s linted (+%d 'any' split per operation)"
+                  " -> %s rows (-%d duplicates)"
+                  % ("{:,}".format(survived),
+                     "{:,}".format(man["constraints_v2"]), expand,
+                     "{:,}".format(tr), post))
         out = Path(args.figure)
-        write_figure(parts, out, args.width_in, args.height_in)
-        print(f"\nfigure: {out}  ({sum(parts.values()):,} constraints)")
+        write_figure(b1, b2, bridge, out, args.width_in, args.height_in)
+        print(f"\nfigure: {out}")
+        print(f"  band 1  {sum(b1.values()):,} source constraints")
+        print(f"  bridge  {bridge}")
+        print(f"  band 2  {sum(b2.values()):,} review rows")
 
     if args.csv:
         cols = ("generated", "schema_invalid", "out_of_scope", "reviewed",
