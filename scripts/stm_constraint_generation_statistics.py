@@ -91,9 +91,9 @@ DEFAULT_FIGURE = REPO / "docs" / "figures" / "constraint_generation.pdf"
 # final segment -- what survives for a human to review -- takes the plain fill
 # the structure figure uses for its "agrees" band.
 SEGMENTS = [
-    ("schema_invalid", "schema check",         "#a3c8ee", (45,)),
+    ("schema_invalid", "schema",               "#a3c8ee", (45,)),
     ("duplicate",      "duplicate",            "#eb6834", (135,)),
-    ("rejected",       "deterministic reject", "#eda100", (45, 135)),
+    ("rejected",       "deterministic",        "#eda100", (45, 135)),
     ("never_judged",   "quote anchor",         "#e87ba4", (90,)),
     ("validator",      "validator",            "#2a78d6", (0,)),
     ("remaining",      "review (remaining)",   "#c9d3e2", ()),
@@ -176,22 +176,21 @@ def _legend_row(p, x, y, items, width, size=7.0):
     return cy
 
 
-def write_figure(parts: dict, subtitle: str, path: Path,
-                 width_in=3.4, height_in=None):
+def write_figure(parts: dict, path: Path, width_in=3.4, height_in=None):
     """One bar: every constraint instance the pipeline handled.
 
-    The denominator is instances, not constraints generated, and it is larger
-    than what the generator wrote: collect splits an `any` gate into one gate
-    per operation, creating rows. A bar cannot show a segment that ADDS, so the
-    expansion joins the denominator and the subtitle says so. Pretending the
-    total is "generated" would be the one dishonest option."""
+    The denominator is instances HANDLED, not constraints generated: it is 242
+    larger, because collect splits an `any` gate into one gate per operation
+    and a stacked bar cannot show a segment that adds. The figure no longer
+    states that -- it belongs in the LaTeX caption, and the script prints it
+    under the figure path on every run so it cannot be lost."""
     from pdfwriter import Pdf, _HELV_ADV
     W = width_in * 72.0
     ml, mr = 14.0, 8.0
     pw = W - ml - mr
     bh = 21.0
     TOP_PAD, TITLE_GAP, LABEL_GAP = 16.0, 6.0, 13.0
-    F_TITLE, F_SUB, F_LEG = 8.0, 6.6, 7.6
+    F_TITLE, F_LEG = 8.0, 7.6
 
     segs = [(lab, parts.get(k, 0), c, h) for k, lab, c, h in SEGMENTS]
     total = sum(n for _l, n, _c, _h in segs)
@@ -209,17 +208,14 @@ def write_figure(parts: dict, subtitle: str, path: Path,
         cx += w
 
     H = (height_in * 72.0 if height_in else
-         TOP_PAD + F_TITLE + 3 + F_SUB + TITLE_GAP + bh + LABEL_GAP
+         TOP_PAD + F_TITLE + TITLE_GAP + bh + LABEL_GAP
          + (rows - 1) * (F_LEG + 4) + 12.0)
     p = Pdf(W, H)
 
-    top = H - TOP_PAD - TITLE_GAP - F_TITLE - 3 - F_SUB
+    top = H - TOP_PAD - TITLE_GAP - F_TITLE
     p.fill("#5c6675")
-    p.text(ml + pw / 2, top + TITLE_GAP + F_SUB + 3,
-           "every access constraint, by the check that ended it",
+    p.text(ml + pw / 2, top + TITLE_GAP, "Breakdown of Constraints",
            F_TITLE, "F1", "middle")
-    p.fill("#8b8f97")
-    p.text(ml + pw / 2, top + TITLE_GAP, subtitle, F_SUB, "F1", "middle")
 
     y, x = top - bh, ml
     for _lab, n, col, hat in segs:
@@ -567,12 +563,11 @@ def main():
         # created by splitting `any` gates. Asserted so a future segment cannot
         # be added without the arithmetic being checked.
         assert sum(parts.values()) == tg + expand, (sum(parts.values()), tg + expand)
-        subtitle = ("%s generated + %d created by `any` expansion"
-                    % ("{:,}".format(tg), expand))
         out = Path(args.figure)
-        write_figure(parts, subtitle, out, args.width_in, args.height_in)
+        write_figure(parts, out, args.width_in, args.height_in)
         print(f"\nfigure: {out}   {sum(parts.values()):,} instances")
-        print(f"  {subtitle}")
+        print("  for the caption: %s generated + %d created by `any` expansion"
+              % ("{:,}".format(tg), expand))
         print("  duplicate = %d collect dedup + %d removed post-collect"
               % (ded, post))
         print("  validator = %d encoding_error + %d not_constraint"
