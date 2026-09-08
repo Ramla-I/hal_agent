@@ -96,7 +96,7 @@ SEGMENTS = [
     ("rejected",       "deterministic",        "#eda100", (45, 135)),
     ("never_judged",   "quote anchor",         "#e87ba4", (90,)),
     ("validator",      "validator",            "#2a78d6", (0,)),
-    ("remaining",      "review (remaining)",   "#c9d3e2", ()),
+    ("remaining",      "review",               "#c9d3e2", ()),
 ]
 
 # Every segment carries its own texture, so hue and texture each identify a
