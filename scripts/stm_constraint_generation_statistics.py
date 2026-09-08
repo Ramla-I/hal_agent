@@ -86,24 +86,24 @@ DEFAULT_FIGURE = REPO / "docs" / "figures" / "constraint_generation.pdf"
 #
 # Band two is the magnification of band one's final segment, drawn with the
 # same zoom connector the structure cascade uses.
-BAND1 = [
-    ("schema_invalid",   "schema check",              "#a3c8ee", (45,)),
-    ("deduped",          "exact duplicate",           "#eb6834", (135,)),
-    ("rejected",         "deterministic reject",      "#eda100", (45, 135)),
-    ("survived",         "survived collection",       "#6f57a8", (0,)),
-]
-BAND2 = [
-    ("never_judged",    "quote anchor",              "#e87ba4", (90,)),
-    ("not_constraint",  "validator: not constraint", "#eb6834", (135,)),
-    ("encoding_error",  "validator: encoding error", "#2a78d6", (45,)),
-    ("confirmed",       "validator: confirmed",      "#c9d3e2", ()),
+# ONE bar: every constraint instance the pipeline handled, by the check that
+# ended it. Colour carries the stage, texture separates neighbours, and the
+# final segment -- what survives for a human to review -- takes the plain fill
+# the structure figure uses for its "agrees" band.
+SEGMENTS = [
+    ("schema_invalid", "schema check",         "#a3c8ee", (45,)),
+    ("duplicate",      "duplicate",            "#eb6834", (135,)),
+    ("rejected",       "deterministic reject", "#eda100", (45, 135)),
+    ("never_judged",   "quote anchor",         "#e87ba4", (90,)),
+    ("validator",      "validator",            "#2a78d6", (0,)),
+    ("remaining",      "review (remaining)",   "#c9d3e2", ()),
 ]
 
-# Within a band every segment carries its own texture, so hue and texture each
-# identify a segment on their own and the bar survives greyscale.
-for _band in (BAND1, BAND2):
-    assert len({h for _k, _l, _c, h in _band}) == len(_band), \
-        "two segments in one band share a hatch pattern"
+# Every segment carries its own texture, so hue and texture each identify a
+# segment on their own and the bar survives greyscale printing. Asserted rather
+# than trusted: two segments quietly sharing a pattern still renders.
+assert len({h for _k, _l, _c, h in SEGMENTS}) == len(SEGMENTS), \
+    "two segments share a hatch pattern"
 # Wrap width for the prose blocks. Long single lines are unreadable in a
 # terminal and worse in a scrollback, and these explanations are the part a
 # reader most needs to follow.
@@ -176,84 +176,62 @@ def _legend_row(p, x, y, items, width, size=7.0):
     return cy
 
 
-def write_figure(b1: dict, b2: dict, bridge: str, path: Path,
+def write_figure(parts: dict, subtitle: str, path: Path,
                  width_in=3.4, height_in=None):
-    """Two bands: source constraints, then the review rows they became.
+    """One bar: every constraint instance the pipeline handled.
 
-    Band two is band one's `survived` segment opened up, so the zoom connector
-    runs between them exactly as it does in the structure cascade. The bridge
-    line carries the adjustment that makes the two totals differ -- expansion
-    of `any` gates, and the duplicates removed after collection -- because that
-    difference is a fact about the pipeline, not rounding to be absorbed."""
+    The denominator is instances, not constraints generated, and it is larger
+    than what the generator wrote: collect splits an `any` gate into one gate
+    per operation, creating rows. A bar cannot show a segment that ADDS, so the
+    expansion joins the denominator and the subtitle says so. Pretending the
+    total is "generated" would be the one dishonest option."""
     from pdfwriter import Pdf, _HELV_ADV
     W = width_in * 72.0
     ml, mr = 14.0, 8.0
     pw = W - ml - mr
     bh = 21.0
-    TOP_PAD, TITLE_GAP, LABEL_GAP, BAND_GAP = 16.0, 6.0, 13.0, 22.0
-    F_TITLE, F_LEG, F_NOTE = 8.0, 7.6, 6.6
+    TOP_PAD, TITLE_GAP, LABEL_GAP = 16.0, 6.0, 13.0
+    F_TITLE, F_SUB, F_LEG = 8.0, 6.6, 7.6
 
-    bands = [
-        ("every access constraint the generator produced",
-         [(lab, b1.get(k, 0), c, h) for k, lab, c, h in BAND1]),
-        ("the survivors, by the validator's verdict",
-         [(lab, b2.get(k, 0), c, h) for k, lab, c, h in BAND2]),
-    ]
+    segs = [(lab, parts.get(k, 0), c, h) for k, lab, c, h in SEGMENTS]
+    total = sum(n for _l, n, _c, _h in segs)
+    if not total:
+        return
+    items = [(c, h, "%s %s" % (lab, "{:,}".format(n)))
+             for lab, n, c, h in segs if n]
 
-    def items_for(segs):
-        return [(c, h, "%s %s" % (lab, "{:,}".format(n)))
-                for lab, n, c, h in segs if n]
+    rows, cx = 1, 0.0
+    for _c, _h, text in items:
+        w = 7 + 4 + _HELV_ADV * F_LEG * len(text) + _LEG_TRAIL
+        if cx + w > pw:
+            rows += 1
+            cx = 0.0
+        cx += w
 
-    def rows_for(items):
-        cx, rows = 0.0, 1
-        for _c, _h, text in items:
-            w = 7 + 4 + _HELV_ADV * F_LEG * len(text) + 8.0
-            if cx + w > pw:
-                rows += 1
-                cx = 0.0
-            cx += w
-        return rows
-
-    legs = [items_for(segs) for _t, segs in bands]
-    if height_in:
-        H = height_in * 72.0
-    else:
-        H = TOP_PAD + F_TITLE + TITLE_GAP
-        for i in range(len(bands)):
-            H += bh + LABEL_GAP + (rows_for(legs[i]) - 1) * (F_LEG + 4)
-            H += (BAND_GAP + F_NOTE + 4) if i == 0 else 12.0
+    H = (height_in * 72.0 if height_in else
+         TOP_PAD + F_TITLE + 3 + F_SUB + TITLE_GAP + bh + LABEL_GAP
+         + (rows - 1) * (F_LEG + 4) + 12.0)
     p = Pdf(W, H)
 
-    top = H - TOP_PAD - TITLE_GAP - F_TITLE
-    zoom = None
-    for bi, (title, segs) in enumerate(bands):
-        total = sum(n for _l, n, _c, _h in segs)
-        if not total:
+    top = H - TOP_PAD - TITLE_GAP - F_TITLE - 3 - F_SUB
+    p.fill("#5c6675")
+    p.text(ml + pw / 2, top + TITLE_GAP + F_SUB + 3,
+           "every access constraint, by the check that ended it",
+           F_TITLE, "F1", "middle")
+    p.fill("#8b8f97")
+    p.text(ml + pw / 2, top + TITLE_GAP, subtitle, F_SUB, "F1", "middle")
+
+    y, x = top - bh, ml
+    for _lab, n, col, hat in segs:
+        if not n:
             continue
-        p.fill("#5c6675")
-        p.text(ml + pw / 2, top + TITLE_GAP, title, F_TITLE, "F1", "middle")
-        y, x = top - bh, ml
-        for lab, n, col, hat in segs:
-            if not n:
-                continue
-            wseg = max(0.9, pw * n / total)
-            p.fill(col)
-            p.stroke("#ffffff")
-            p.rect(x, y, wseg, bh, 0.7)
-            p.hatch(x, y, wseg, bh, hat)
-            if bi == 0 and lab.startswith("survived"):
-                zoom = (x, x + wseg)
-            x += wseg
-        if bi == 1 and zoom:
-            p.stroke("#c0c7d2")
-            p.line(zoom[0], prev_bottom, ml, top, 0.5)
-            p.line(zoom[1], prev_bottom, ml + pw, top, 0.5)
-        bottom = _legend_row(p, ml, y - LABEL_GAP, legs[bi], pw, size=F_LEG)
-        if bi == 0:
-            p.fill("#8b8f97")
-            p.text(ml + pw / 2, bottom - F_NOTE - 5, bridge, F_NOTE, "F1", "middle")
-            prev_bottom = bottom - F_NOTE - 7
-            top = prev_bottom - BAND_GAP
+        wseg = max(0.9, pw * n / total)
+        p.fill(col)
+        p.stroke("#ffffff")
+        p.rect(x, y, wseg, bh, 0.7)
+        p.hatch(x, y, wseg, bh, hat)
+        x += wseg
+    _legend_row(p, ml, y - LABEL_GAP, items, pw, size=F_LEG)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(p.to_bytes())
 
@@ -570,34 +548,35 @@ def main():
             print("  %-8s %s" % (rm, " ".join(str(p[c]).rjust(10) for c in cols)))
 
     if args.figure:
-        # Band one is SOURCE constraints; `survived` is the remainder, so the
-        # band sums to what the generator produced in scope. Band two is REVIEW
-        # ROWS. The two totals differ, and the bridge says by how much and why
-        # rather than letting a net difference swallow it.
         ded = man["constraints_deduped"]
         rej = man["constraints_rejected"]
-        survived = tg - bad - ded - rej
-        b1 = {"schema_invalid": bad, "deduped": ded, "rejected": rej,
-              "survived": survived}
-        b2 = {"never_judged": tr - tj,
-              "not_constraint": verd.get("not_constraint", 0),
-              "encoding_error": verd.get("encoding_error", 0),
-              "confirmed": verd.get("confirmed", 0)}
-        assert sum(b1.values()) == tg, (sum(b1.values()), tg)
-        assert sum(b2.values()) == tr, (sum(b2.values()), tr)
         expand = man["constraints_v2"] - (man["constraints_native_v2"] - ded - rej)
-        post = man["constraints_v2"] - tr
-        bridge = ("%s survivors -> %s linted (+%d 'any' split per operation)"
-                  " -> %s rows (-%d duplicates)"
-                  % ("{:,}".format(survived),
-                     "{:,}".format(man["constraints_v2"]), expand,
-                     "{:,}".format(tr), post))
+        post = man["constraints_v2"] - tr        # duplicates removed after collect
+        parts = {
+            "schema_invalid": bad,
+            # both kinds of duplicate: collect's exact-dedup, and the copies
+            # removed when the security-chapter constraints were re-attributed
+            "duplicate": ded + post,
+            "rejected": rej,
+            "never_judged": tr - tj,
+            # everything the judge did NOT confirm
+            "validator": verd.get("encoding_error", 0) + verd.get("not_constraint", 0),
+            "remaining": verd.get("confirmed", 0),
+        }
+        # The denominator is instances handled: generated PLUS the rows collect
+        # created by splitting `any` gates. Asserted so a future segment cannot
+        # be added without the arithmetic being checked.
+        assert sum(parts.values()) == tg + expand, (sum(parts.values()), tg + expand)
+        subtitle = ("%s generated + %d created by `any` expansion"
+                    % ("{:,}".format(tg), expand))
         out = Path(args.figure)
-        write_figure(b1, b2, bridge, out, args.width_in, args.height_in)
-        print(f"\nfigure: {out}")
-        print(f"  band 1  {sum(b1.values()):,} source constraints")
-        print(f"  bridge  {bridge}")
-        print(f"  band 2  {sum(b2.values()):,} review rows")
+        write_figure(parts, subtitle, out, args.width_in, args.height_in)
+        print(f"\nfigure: {out}   {sum(parts.values()):,} instances")
+        print(f"  {subtitle}")
+        print("  duplicate = %d collect dedup + %d removed post-collect"
+              % (ded, post))
+        print("  validator = %d encoding_error + %d not_constraint"
+              % (verd.get("encoding_error", 0), verd.get("not_constraint", 0)))
 
     if args.csv:
         cols = ("generated", "schema_invalid", "out_of_scope", "reviewed",
