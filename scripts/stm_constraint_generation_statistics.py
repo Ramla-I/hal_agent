@@ -110,12 +110,13 @@ assert len({h for _k, _l, _c, h in SEGMENTS}) == len(SEGMENTS), \
 WIDTH = 74
 
 SOURCES = [
-    ("generated (funnel)",
+    ("Total -- generated",
      "manifest.registers[].num_source_constraints, plus the schema-skipped "
      "files from agent_output/stm/<rm>/1/<peripheral>_<register>",
      "collect's own count of what it saw. Taken from the manifest, not "
      "re-counted from "
-     "the run dir, so the funnel describes one snapshot and closes without a "
+     "the run dir, so the breakdown describes one snapshot and closes without "
+     "a "
      "residual. Only the schema-skipped population is read from the run dir, "
      "because collect returns None for those files without recording them"),
     ("counted from the run dir",
@@ -123,9 +124,9 @@ SOURCES = [
      "every entry of `access_constraints_v2`, TODAY. Feeds the per-manual "
      "distribution, constraints-per-register and grammar-kind sections, which "
      "need per-constraint detail the manifest does not keep. It totals fewer "
-     "than the funnel's `generated`; the difference and its causes are "
+     "than the Total line's `generated`; the difference and its causes are "
      "reported below the barrier"),
-    ("schema check",
+    ("schema",
      "the same files, validated against defs.RegisterInfo",
      "collect's _load_register_info returns None for the WHOLE file, so every "
      "constraint in it is lost; the reason only reaches stderr"),
@@ -136,19 +137,22 @@ SOURCES = [
      "collected, anchored or judged, and in no review file. EXCLUDED "
      "everywhere, because counting them beside the reviewed set shows a loss "
      "rate that is partly just work not yet done"),
-    ("exact duplicate / deterministic reject / expansion",
+    ("duplicate / deterministic / expansion",
      "agent_output/stm/<rm>/1/constraint_validation/manifest.json",
      "summary.constraints_deduped and _rejected are collect's own counts. "
      "Note collect also EXPANDS: an `any` gate becomes one gate per operation, "
-     "so constraints_v2 exceeds native - dedup - rejected. Source constraints "
-     "and review rows are therefore different units, which is why the figure "
-     "has two bands and not one bar; the exact expansion is printed in the "
-     "figure's bridge line rather than asserted here"),
-    ("verdicts",
+     "so constraints_v2 exceeds native - dedup - rejected. That expansion is "
+     "why the Total is generated PLUS expanded: the bar counts the instances "
+     "the pipeline handled, not the ones the generator wrote. `duplicate` "
+     "also has a second source, constraints dropped between collect and the "
+     "review file; both parts are printed on its line"),
+    ("quote anchor / validator / review",
      "evaluation/stm/<rm>/1/<rm>_constraints_review.jsonl",
-     "one row per constraint that reached the validator. `verdict` empty and "
-     "`anchor_tier` unanchored coincide exactly (490/490): the quote anchor is "
-     "a gate before the judge, so an unanchorable sentence is never judged"),
+     "one row per constraint that reached the validator. `review` is the "
+     "judge's `confirmed`; `validator` is its two rejecting verdicts. "
+     "`verdict` empty and `anchor_tier` unanchored coincide exactly "
+     "(490/490): the quote anchor is a gate BEFORE the judge, so an "
+     "unanchorable sentence is never judged"),
 ]
 
 _LEG_TRAIL = 8.0
@@ -433,29 +437,45 @@ def main():
 
     tj = sum(verd[x] for x in JUDGED)
 
-    print("FUNNEL  (each line names its source above)")
-    print("  %-38s %7s" % ("generated", f"{tg:,}"))
-    print("  %-38s %7s   silent, stderr only" % ("  file failed RegisterInfo", f"-{bad:,}"))
-    print("  %-38s %7s   manifest constraints_native_v2"
-          % ("reached collect's lint", f"{man['constraints_native_v2']:,}"))
-    print("  %-38s %7s" % ("  exact duplicates", f"-{man['constraints_deduped']:,}"))
-    print("  %-38s %7s" % ("  rejected per-constraint", f"-{man['constraints_rejected']:,}"))
-    print("  %-38s %7s   manifest constraints_v2" % ("collect kept", f"{man['constraints_v2']:,}"))
-    print("  %-38s %7s   review rows on disk" % ("review rows", f"{tr:,}"))
-    print("  %-38s %7s   %.0f%% of reviewed"
-          % ("judged", f"{tj:,}", 100 * tj / tr if tr else 0))
-    for k in JUDGED:
-        print("      %-34s %7s" % (k, f"{verd[k]:,}"))
-    # A blank verdict is not a category of its own: it is exactly the set the
-    # quote anchor rejected. Verified 1:1 -- every blank-verdict row is
-    # `unanchored` and every unanchored row has a blank verdict -- so print the
-    # gate that caused it, matching the figure, rather than the empty field
-    # value the file happens to carry.
-    for k, n in verd.most_common():
-        if k not in JUDGED:
-            label = ("quote anchor (unanchored)" if k == "(blank)" else k)
-            print("      %-34s %7s   never reached the judge"
-                  % (label, f"{n:,}"))
+    # Computed once and used for both the printed breakdown and the figure, so
+    # the two can never disagree.
+    ded = man["constraints_deduped"]
+    n_rej = man["constraints_rejected"]
+    expand = man["constraints_v2"] - (man["constraints_native_v2"] - ded - n_rej)
+    post = man["constraints_v2"] - tr
+    parts = {
+        "schema_invalid": bad,
+        "duplicate": ded + post,
+        "rejected": n_rej,
+        "never_judged": tr - tj,
+        "validator": verd.get("encoding_error", 0) + verd.get("not_constraint", 0),
+        "remaining": verd.get("confirmed", 0),
+    }
+    handled = tg + expand
+    assert sum(parts.values()) == handled, (sum(parts.values()), handled)
+
+    note = {
+        "duplicate": "%d at collect + %d after collect" % (ded, post),
+        "validator": "%s encoding error + %s not a constraint"
+                     % (f"{verd.get('encoding_error', 0):,}",
+                        f"{verd.get('not_constraint', 0):,}"),
+        "remaining": "confirmed by the judge; what a human reviews",
+    }
+
+    print("BREAKDOWN OF CONSTRAINTS  (each line names its source above)")
+    print("Total: %s generated + %d expanded = %s"
+          % (f"{tg:,}", expand, f"{handled:,}"))
+    print("  (`any` gates split into one gate per operation, so the pipeline "
+          "handles more")
+    print("   instances than the generator wrote)\n")
+    for key, label, _c, _h in SEGMENTS:
+        n = parts[key]
+        print(("  %-16s %7s  %5.1f%%   %s"
+               % (label, f"{n:,}", 100 * n / handled, note.get(key, ""))).rstrip())
+
+    print("\n  chain: %s reached collect's lint, %s kept, %s review rows, "
+          "%s judged" % (f"{man['constraints_native_v2']:,}",
+                         f"{man['constraints_v2']:,}", f"{tr:,}", f"{tj:,}"))
 
     print("\n  per-constraint reject reasons (manifest; entries, not constraints)")
     for k, n in rej.most_common():
@@ -544,34 +564,9 @@ def main():
             print("  %-8s %s" % (rm, " ".join(str(p[c]).rjust(10) for c in cols)))
 
     if args.figure:
-        ded = man["constraints_deduped"]
-        rej = man["constraints_rejected"]
-        expand = man["constraints_v2"] - (man["constraints_native_v2"] - ded - rej)
-        post = man["constraints_v2"] - tr        # duplicates removed after collect
-        parts = {
-            "schema_invalid": bad,
-            # both kinds of duplicate: collect's exact-dedup, and the copies
-            # removed when the security-chapter constraints were re-attributed
-            "duplicate": ded + post,
-            "rejected": rej,
-            "never_judged": tr - tj,
-            # everything the judge did NOT confirm
-            "validator": verd.get("encoding_error", 0) + verd.get("not_constraint", 0),
-            "remaining": verd.get("confirmed", 0),
-        }
-        # The denominator is instances handled: generated PLUS the rows collect
-        # created by splitting `any` gates. Asserted so a future segment cannot
-        # be added without the arithmetic being checked.
-        assert sum(parts.values()) == tg + expand, (sum(parts.values()), tg + expand)
         out = Path(args.figure)
         write_figure(parts, out, args.width_in, args.height_in)
-        print(f"\nfigure: {out}   {sum(parts.values()):,} instances")
-        print("  for the caption: %s generated + %d created by `any` expansion"
-              % ("{:,}".format(tg), expand))
-        print("  duplicate = %d collect dedup + %d removed post-collect"
-              % (ded, post))
-        print("  validator = %d encoding_error + %d not_constraint"
-              % (verd.get("encoding_error", 0), verd.get("not_constraint", 0)))
+        print(f"\nfigure: {out}   {handled:,} instances")
 
     if args.csv:
         cols = ("generated", "schema_invalid", "out_of_scope", "reviewed",
