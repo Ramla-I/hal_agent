@@ -454,37 +454,61 @@ def main():
     handled = tg + expand
     assert sum(parts.values()) == handled, (sum(parts.values()), handled)
 
-    note = {
-        "duplicate": "%d at collect + %d after collect" % (ded, post),
-        "validator": "%s encoding error + %s not a constraint"
-                     % (f"{verd.get('encoding_error', 0):,}",
-                        f"{verd.get('not_constraint', 0):,}"),
-        "remaining": "confirmed by the judge; what a human reviews",
-    }
+    # The funnel, in pipeline order. Every row is a DROP, so the running
+    # remainder walks straight from the Total down to what a human reviews.
+    # The one non-drop in the pipeline -- collect's `any` expansion, which
+    # ADDS 242 -- is folded into the Total instead, which is what makes the
+    # walk linear. Each row's `seg` says which figure segment it lands in;
+    # `duplicate` and `validator` each get two rows because they happen at two
+    # different points, and the figure sums them.
+    steps = [
+        ("schema", "schema", "the file failed RegisterInfo", bad, []),
+        ("duplicate", "duplicate", "exact duplicate, caught by collect", ded,
+         []),
+        ("deterministic", "deterministic", "collect's lint rejected it", n_rej,
+         [(k, v) for k, v in rej.most_common()]),
+        ("duplicate", "duplicate", "dropped between collect and review", post,
+         []),
+        ("quote anchor", "never_judged", "no datasheet sentence anchors it",
+         tr - tj,
+         [("anchored " + k, anch[k])
+          for k in ("exact", "fuzzy") if anch.get(k)]),
+        ("validator", "validator", "judge: encoding_error",
+         verd.get("encoding_error", 0), []),
+        ("validator", "validator", "judge: not_constraint",
+         verd.get("not_constraint", 0), []),
+    ]
 
-    print("BREAKDOWN OF CONSTRAINTS  (each line names its source above)")
-    print("Total: %s generated + %d expanded = %s"
-          % (f"{tg:,}", expand, f"{handled:,}"))
-    print("  (`any` gates split into one gate per operation, so the pipeline "
-          "handles more")
-    print("   instances than the generator wrote)\n")
-    for key, label, _c, _h in SEGMENTS:
-        n = parts[key]
-        print(("  %-16s %7s  %5.1f%%   %s"
-               % (label, f"{n:,}", 100 * n / handled, note.get(key, ""))).rstrip())
+    print("FUNNEL  (each stage names its source above)")
+    print("%-56s %8s %9s" % ("", "dropped", "left"))
+    print("  %-54s %8s %9s"
+          % ("Total   %s generated + %d by `any` expansion"
+             % (f"{tg:,}", expand), "", f"{handled:,}"))
+    left = handled
+    for label, seg, why, n, subs in steps:
+        left -= n
+        print("    %-14s %-37s %8s %9s"
+              % (label, why, "-" + f"{n:,}", f"{left:,}"))
+        for s, v in subs:          # numbers land under the `dropped` column
+            print("        %-48s %8s" % (s, f"{v:,}"))
+    print("  %-54s %8s %9s"
+          % ("review  judge: confirmed -- what a human reviews", "",
+             f"{left:,}"))
+    assert left == verd.get("confirmed", 0), (left, verd.get("confirmed", 0))
 
-    print("\n  chain: %s reached collect's lint, %s kept, %s review rows, "
-          "%s judged" % (f"{man['constraints_native_v2']:,}",
-                         f"{man['constraints_v2']:,}", f"{tr:,}", f"{tj:,}"))
+    print("\n  the reject reasons are manifest entries, not constraints: one "
+          "rejected")
+    print("  constraint can trip more than one, so they over-sum the %s."
+          % f"{n_rej:,}")
+    print("\n  the figure groups those rows into six segments:")
+    print("    " + textwrap.fill(
+        ", ".join("%s %s" % (lab, f"{parts[k]:,}")
+                  for k, lab, _c, _h in SEGMENTS),
+        68, subsequent_indent="    ").strip())
 
-    print("\n  per-constraint reject reasons (manifest; entries, not constraints)")
-    for k, n in rej.most_common():
-        print("      %-34s %7s" % (k, f"{n:,}"))
-    print("\n  enforcement gate (review rows)")
+    print("\n  enforcement gate (all %s review rows, not a funnel stage)"
+          % f"{tr:,}")
     for k, n in enf.most_common():
-        print("      %-34s %7s" % (k, f"{n:,}"))
-    print("\n  quote anchor tier (review rows)")
-    for k, n in anch.most_common():
         print("      %-34s %7s" % (k, f"{n:,}"))
 
     print("\nPER MANUAL  (the validated snapshot)")
