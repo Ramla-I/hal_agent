@@ -216,6 +216,64 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
     return plans, rows
 
 
+def device_constraints_file(device, run_dir, svd_dir, chunks,
+                            field_level_gating, plans, quote_tiers) -> dict:
+    """The durable per-device record: exactly what this device's crate gates.
+
+    Its own function so the shape can be asserted on without a run directory,
+    a PAC and a toolchain. The field-gate section below was silently absent
+    until a field-mode file was read closely, precisely because nothing could
+    reach this code to test it.
+    """
+    return {
+        "device": device,
+        "source_run": run_dir,
+        "svd_dir": svd_dir,
+        "note": "constraints this device's crate enforces, post "
+                "collection-lint, emitter selection, access-mode pruning, "
+                "and (with --chunks) quote verification; regenerate with "
+                "inject_from_run.py. Whole-register gates are in "
+                "`gated_operations`/`preconditions`; field-scoped ones are "
+                "in `gated_fields` and gate a single writer accessor, "
+                "leaving sibling fields untouched",
+        "quote_verified_against": chunks or None,
+        # Which gating mode produced this set. The two modes plan DIFFERENT
+        # gates, and without this the file cannot be told apart from the
+        # other mode's after the fact.
+        "field_level_gating": bool(field_level_gating),
+        "registers": [
+            {
+                "peripheral": p.peripheral,
+                "register": p.reg_name,
+                "gated_operations": sorted(op for _, _, op in p.gated_ops()),
+                "preconditions": {
+                    op: [pre.describe() for pre in pres]
+                    for op, pres in p.preconditions.items()},
+                "datasheet_text": p.docs,
+                # Field gates live in their own structure: they gate
+                # `w.<field>()`, not the register's write/modify, so folding
+                # them into gated_operations would claim the whole register
+                # is constrained. Omitting them made a field-mode file list a
+                # register with an EMPTY gate list -- present, unexplained.
+                "gated_fields": {
+                    fg.field: {
+                        # One accessor serves both surfaces, so a field gate
+                        # always covers write and modify.
+                        "operations": ["write", "modify"],
+                        "preconditions": [pre.describe()
+                                          for pre in fg.preconditions],
+                        "datasheet_text": fg.docs,
+                    }
+                    for _, fg in sorted(p.field_gates.items())
+                },
+                "quote_verification": quote_tiers.get(
+                    (p.peripheral, p.reg_name)),
+            }
+            for p in plans
+        ],
+    }
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("run_dir", help="generator run directory (one file per register)")
@@ -400,35 +458,9 @@ def main() -> None:
             plans = kept_plans
 
         if args.save_constraints:
-            device_file = {
-                "device": args.device,
-                "source_run": args.run_dir,
-                "svd_dir": args.svd_dir,
-                "note": "constraints this device's crate enforces, post "
-                        "collection-lint, emitter selection, access-mode "
-                        "pruning, and (with --chunks) quote verification; "
-                        "regenerate with inject_from_run.py",
-                "quote_verified_against": args.chunks or None,
-                # Which gating mode produced this set. The two modes plan
-                # DIFFERENT gates, and without this the file cannot be told
-                # apart from the other mode's after the fact.
-                "field_level_gating": bool(args.field_level_gating),
-                "registers": [
-                    {
-                        "peripheral": p.peripheral,
-                        "register": p.reg_name,
-                        "gated_operations": sorted(
-                            op for _, _, op in p.gated_ops()),
-                        "preconditions": {
-                            op: [pre.describe() for pre in pres]
-                            for op, pres in p.preconditions.items()},
-                        "datasheet_text": p.docs,
-                        "quote_verification": quote_tiers.get(
-                            (p.peripheral, p.reg_name)),
-                    }
-                    for p in plans
-                ],
-            }
+            device_file = device_constraints_file(
+                args.device, args.run_dir, args.svd_dir, args.chunks,
+                args.field_level_gating, plans, quote_tiers)
             out = Path(args.save_constraints)
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps(device_file, indent=1) + "\n")
