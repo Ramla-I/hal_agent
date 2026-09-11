@@ -2,8 +2,8 @@
  "device": "stm32l151",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0038/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0038/svd/stm32l151.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -29,6 +29,7 @@
      "This register must be written before the EN bit in the AES_CR register is set:"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -61,6 +62,7 @@
      "This register must be written before the EN bit in the AES_CR register is set:"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -93,6 +95,7 @@
      "This register must be written before the EN bit in the AES_CR register is set:"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -125,6 +128,7 @@
      "This register must be written before the EN bit in the AES_CR register is set:"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -157,6 +161,7 @@
      "This register must be written before the EN bit in the AES_CR register is set"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -189,6 +194,7 @@
      "This register must be written before the EN bit in the AES_CR register is set"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -221,6 +227,7 @@
      "This register must be written before the EN bit in the AES_CR register is set"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -253,6 +260,7 @@
      "This register must be written before the EN bit in the AES_CR register is set"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -285,6 +293,7 @@
      "These bits can only be written when the LCKK bit is \u20180."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -317,6 +326,7 @@
      "The CCR register must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -349,6 +359,7 @@
      "TRISE must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -381,6 +392,7 @@
      "The RTC_DR is the calendar date shadow register. This register must be written in initialization mode only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"

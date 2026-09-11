@@ -2,8 +2,8 @@
  "device": "stm32g071",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0444/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0444/svd/stm32g071.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -29,6 +29,7 @@
      "Software can write these bits only when ADEN=1 (ADC is enabled and no calibration is ongoing and no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -61,6 +62,7 @@
      "The software is allowed to program ADC_CFGR1 only when ADEN is cleared in ADC_CR."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -93,6 +95,7 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -125,6 +128,7 @@
      "**Caution:** The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -157,6 +161,7 @@
      "**Caution:** The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -189,6 +194,7 @@
      "**Caution:** The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -221,6 +227,7 @@
      "This register can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -253,6 +260,7 @@
      "These bits can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -285,6 +293,7 @@
      "These bits can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -317,6 +326,7 @@
      "These bits can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -349,6 +359,7 @@
      "This register can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -381,6 +392,7 @@
      "As this register is outside of the V CORE domain, it is write-protected upon reset. The DBP bit of the Power control register 1 (PWR_CR1) must be set to allow their modification."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -413,6 +425,7 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -445,6 +458,7 @@
      "Writing to this register is only effective when UCPD is disabled (UCPDEN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -477,6 +491,7 @@
      "Writing to this register is only effective when the peripheral is disabled (UCPDEN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -509,6 +524,7 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -541,6 +557,7 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -573,6 +590,7 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -605,6 +623,7 @@
      "_Note:_ _The TE bit must be set before writing the data to be transmitted to the USART_TDR._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"

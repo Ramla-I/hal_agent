@@ -2,8 +2,8 @@
  "device": "stm32l412",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0394/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0394/svd/stm32l412.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -31,6 +31,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -65,6 +66,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -99,6 +101,7 @@
      "The software is allowed to write this bit only when ADSTART = 0 and JADSTART = 0 (which ensures that no regular nor injected conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -143,6 +146,7 @@
      "The software is allowed to write these bits only when the ADC is disabled (ADCAL = 0, JADSTART = 0, JADSTP = 0, ADSTART = 0, ADSTP = 0, ADDIS = 0 and ADEN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -175,6 +179,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -209,6 +214,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -243,6 +249,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -277,6 +284,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -313,6 +321,7 @@
      "The software is allowed to write these bits only when ADEN = 1 and ADSTART = 0 and JADSTART = 0 (ADC is enabled and no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -345,6 +354,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -377,6 +387,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -409,6 +420,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -441,6 +453,7 @@
      "This register can be written only when the frequency error counter is disabled (the CEN bit is cleared in CRS_CR)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -473,6 +486,7 @@
      "The FLASH_CR register cannot be written when the BSY bit in the Flash status register (FLASH_SR) is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -505,6 +519,7 @@
      "These bits can be written only when TXE = 1."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -537,6 +552,7 @@
      "The LPTIM_CFGR2 register must only be modified when the LPTIM is disabled (ENABLE bit reset to 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -569,6 +585,7 @@
      "The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -601,6 +618,7 @@
      "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -633,6 +651,7 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -665,6 +684,7 @@
      "The LPTIM_RCR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -697,6 +717,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -729,6 +750,7 @@
      "_Note: This bitfield can be modified only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -761,6 +783,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -793,6 +816,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -825,6 +849,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -857,6 +882,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -889,6 +915,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -921,6 +948,7 @@
      "The bits of the Backup domain control register (RCC_BDCR) are outside of the V_CORE domain. As a result, after Reset, these bits are write-protected and the DBP bit in the Power control register 1 (PWR_CR1) has to be set before these can be modified."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -953,6 +981,7 @@
      "This register must be written in initialization mode only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -985,6 +1014,7 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"

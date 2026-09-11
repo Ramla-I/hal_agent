@@ -2,8 +2,8 @@
  "device": "stm32f303",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0316/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0316/svd/stm32f303.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -31,6 +31,7 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -65,6 +66,7 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -99,6 +101,7 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -143,6 +146,7 @@
      "Software is allowed to write these bits only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -175,6 +179,7 @@
      "Software is allowed to write these bits at any time, once the ADC is enabled (ADEN=1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -209,6 +214,7 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -241,6 +247,7 @@
      "Software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -275,6 +282,7 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -307,6 +315,7 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -339,6 +348,7 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -371,6 +381,7 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -403,6 +414,7 @@
      "These bits can be written only when OA1EN = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -435,6 +447,7 @@
      "These bits can be written only when TXE = 1."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -467,6 +480,7 @@
      "These bits can be written only when TEXTEN = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -499,6 +513,7 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -531,6 +546,7 @@
      "Note: This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -563,6 +579,7 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -595,6 +612,7 @@
      "Note: This register must be written only when TXE=1."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -627,6 +645,7 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -659,6 +678,7 @@
      "This bit field can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"

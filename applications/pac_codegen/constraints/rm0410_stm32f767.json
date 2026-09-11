@@ -2,8 +2,8 @@
  "device": "stm32f767",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0410/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0410/svd/stm32f767.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -29,6 +29,7 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -61,6 +62,7 @@
      "Caution: It is mandatory to write CEC_CFGR only when CECEN = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -95,6 +97,7 @@
      "It can be changed only when DSI is stopped (DSI_WCR.DSIEN = 0 and DSI_CR.EN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -127,6 +130,7 @@
      "The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -159,6 +163,7 @@
      "Note: These bits can be written only when TXE = 1."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -191,6 +196,7 @@
      "These bits can be written only when OA2EN = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -223,6 +229,7 @@
      "These bits can be written only when TEXTEN = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -255,6 +262,7 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -287,6 +295,7 @@
      "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -319,6 +328,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -351,6 +361,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -383,6 +394,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -415,6 +427,7 @@
      "_Note: This bitfield can be modified only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -447,6 +460,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -479,6 +493,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -511,6 +526,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -543,6 +559,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -575,6 +592,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -607,6 +625,7 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -639,6 +658,7 @@
      "This register must be written in initialization mode only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -671,6 +691,7 @@
      "Note: This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"

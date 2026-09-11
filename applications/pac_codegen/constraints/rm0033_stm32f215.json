@@ -2,8 +2,8 @@
  "device": "stm32f215",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0033/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0033/svd/stm32f215.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -29,6 +29,7 @@
      "This register can only be accessed by the software when the CAN hardware is in initialization mode."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -61,6 +62,7 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -93,6 +95,7 @@
      "The CCR register must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -125,6 +128,7 @@
      "TRISE[5:0] must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -157,6 +161,7 @@
      "The RCC_SSCGR register must be written either before the main PLL is enabled or after the main PLL disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -182,6 +187,7 @@
      "The software must check that the DRDY bit is set before reading the RNDATA value."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -211,6 +217,7 @@
      "Note: This bit should be written only when the SPI is disabled (SPE = \u20180\u2019) for correct operation."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"

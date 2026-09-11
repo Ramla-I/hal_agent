@@ -22,12 +22,12 @@ reader can tell at a glance which rows come from a release and which from
 master.
 
 Like the sweep, this writes a per-device constraints file to
-applications/pac_codegen/constraints/ via --save-constraints. One difference
-is deliberate and visible in the files: no --chunks, so `quote_verified_against`
-is null where the sweep's 49 name a chunked-datasheet directory. Adding it
-would change these four targets' measured gate counts, which are already
-published, so it is a separate decision rather than a side effect of recording
-them.
+applications/pac_codegen/constraints/ via --save-constraints, and applies the
+same --verify-evidence check. It did neither for a while: these four were the
+only injected targets with no reviewable artifact, and the only ones whose
+constraints were never checked for target attribution. Both are closed, which
+moved their gate counts down -- the numbers here supersede any earlier
+measurement of these manuals.
 
 Usage:
     python applications/pac_codegen/experiments/measure_master_pacs.py
@@ -80,6 +80,11 @@ def inject(rm: str, pac_dir: Path, device: str, field: bool) -> dict:
             "--svd-dir", str(PHASE1D / f"devices/stm/{rm}/svd/{device}.svd"),
             "--validated",
             str(PHASE1D / f"evaluation/stm/{rm}/1/{rm}_constraints_review.jsonl"),
+            # Same evidence check the sweep applies. Its unique work is target
+            # attribution: a quote that says "this bit" and anchors outside the
+            # target register's section supports the claim neither textually
+            # nor positionally, so the gate is dropped.
+            "--verify-evidence", str(PHASE1D / "chunked_datasheets/stm"),
             "--report", str(report),
             # The same durable per-device record the sweep writes. Without it
             # these four targets reported fate counts and a PASS but never

@@ -218,7 +218,7 @@ def inject() -> dict:
          "--svd-dir", str(PHASE1D / f"devices/stm/{RM}/svd/{DEVICE}.svd"),
          "--validated",
          str(PHASE1D / f"evaluation/stm/{RM}/1/{RM}_constraints_review.jsonl"),
-         "--chunks", str(PHASE1D / "chunked_datasheets/stm"),
+         "--verify-evidence", str(PHASE1D / "chunked_datasheets/stm"),
          "--save-constraints", str(saved),
          "--report", str(report)],
         capture_output=True, text=True, cwd=str(REPO), timeout=TIMEOUT)

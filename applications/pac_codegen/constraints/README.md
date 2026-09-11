@@ -30,10 +30,14 @@ Files are keyed by manual **and** device because injection happens per
 (manual, chip): `rm0440_stm32g431.json` and `rm0440_stm32g4a1.json` are both
 real and differ.
 
-The four master-PAC files carry `"quote_verified_against": null` where the
-other 49 name a chunked-datasheet directory — `measure_master_pacs.py` does
-not pass `--chunks`. That is visible rather than hidden on purpose; turning it
-on would change those targets' published gate counts.
+`evidence_verified_against` names the chunked datasheet each file's
+constraints were checked against, and every file has one: the
+`--verify-evidence` pass runs for all 53. It does two things — confirms the
+supporting quote exists in the manual, and confirms it actually attributes to
+the register the constraint claims. The second is what earns its keep;
+datasheets say *"this bit"* far more often than they name the register, so a
+quote that names none AND anchors outside the target's section supports the
+claim neither textually nor positionally, and its gate is dropped.
 
 ## Regenerating
 

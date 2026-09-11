@@ -2,8 +2,8 @@
  "device": "stm32wl5x_cm4",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0453/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0453/svd/stm32wl5x_cm4.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -29,6 +29,7 @@
      "The software is allowed to write this bit only when ADEN = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -61,6 +62,7 @@
      "The software is allowed to write this bit only when ADEN = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -93,6 +95,7 @@
      "The software is allowed to write this bit only when ADEN = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -125,6 +128,7 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -157,6 +161,7 @@
      "The software is allowed to program ADC_CFGR1 only when ADEN is cleared in ADC_CR."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -189,6 +194,7 @@
      "The software is allowed to write this bit only when ADSTART bit is cleared (this ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -221,6 +227,7 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -253,6 +260,7 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -285,6 +293,7 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -317,6 +326,7 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -342,6 +352,7 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -364,6 +375,7 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -386,6 +398,7 @@
      "The AES_KEYRx registers may be written only when KEYSIZE value is correct and when the AES peripheral is disabled (EN bit of the AES_CR register cleared)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -408,6 +421,7 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -430,6 +444,7 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -459,6 +474,7 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -491,6 +507,7 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -523,6 +540,7 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -555,6 +573,7 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -587,6 +606,7 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -619,6 +639,7 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -651,6 +672,7 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -683,6 +705,7 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -715,6 +738,7 @@
      "Bit 31 LOCK : locks the whole content of the register, COMP1_CSR[31:0]\n\nThis bit is set by software and cleared by a hardware system reset.\n0: COMP1_CSR[31:0] are read/write.\n1: COMP1_CSR[31:0] are read-only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -747,6 +771,7 @@
      "Bit 31 LOCK : locks the whole content of the register, COMP2_CSR[31:0]\n\nThis bit is set by software and cleared by a hardware system reset.\n0: COMP2_CSR[31:0] are read/write.\n1: COMP2_CSR[31:0] are read-only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -779,6 +804,7 @@
      "Note: These bits can be written only when TEXTEN = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -811,6 +837,7 @@
      "PVU bit of the IWDG status register (IWDG_SR) must be reset in order to be able to change the prescaler divider."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -843,6 +870,7 @@
      "RVU bit in the IWDG status register (IWDG_SR) must be reset in order to be able to change the reload value."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -875,6 +903,7 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -907,6 +936,7 @@
      "The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -939,6 +969,7 @@
      "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -971,6 +1002,7 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1003,6 +1035,7 @@
      "The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1035,6 +1068,7 @@
      "Caution: The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -1067,6 +1101,7 @@
      "After a write to the LPTIM_RCR register, a new write operation to the same register can only be performed when the previous write operation is completed. Any successive writes before the REPOK flag is set, lead to unpredictable results."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1099,6 +1134,7 @@
      "This register can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1131,6 +1167,7 @@
      "This bit can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1163,6 +1200,7 @@
      "This register can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1195,6 +1233,7 @@
      "The bits of this register are outside of the V_CORE domain. As a result, after Reset, these bits are write-protected and the DBP bit in the PWR control register 1 (PWR_CR1) must be set before these bits can be modified."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -1227,6 +1266,7 @@
      "_Note:_ _The bits of this register are outside of the V_ _CORE_ _domain. As a result, after Reset, these bits_ _are write-protected and the DBP bit in the PWR control register 1 (PWR_CR1) must be set_ _before these bits can be modified. Refer to Section 6.1.2: Battery backup domain for further_ _information. These bits (except LSCOSEL, LSCOEN and BDRST) are only reset after a_ _backup domain reset (see Section 7.1.3). Any internal or external reset has no effect on_ _these bits._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1259,6 +1299,7 @@
      "Writes to RNG_HTCR and RNG_CR configuration bits [29:4] are allowed when CONFIGLOCK=0. 1: Writes to RNG_HTCR and RNG_CR configuration bits [29:4] are ignored until the next RNG reset."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -1293,6 +1334,7 @@
      "Writing in RNG_HTCR is taken into account only if the CONDRST bit is set, and the CONFIGLOCK bit is cleared in the RNG_CR. Writing to this register is ignored if CONFIGLOCK=1."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1325,6 +1367,7 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1357,6 +1400,7 @@
      "DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1389,6 +1433,7 @@
      "DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1421,6 +1466,7 @@
      "DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1446,6 +1492,7 @@
      "DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1475,6 +1522,7 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1507,6 +1555,7 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1539,6 +1588,7 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"

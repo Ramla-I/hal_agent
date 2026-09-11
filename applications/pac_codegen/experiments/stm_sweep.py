@@ -362,7 +362,7 @@ def run_inject(t: Target, pac_dir: Path, report: Path, dry: bool,
         "--pac", str(pac_dir), "--device", t.device,
         "--svd-dir", str(t.svd_path),
         "--validated", str(t.validated),
-        "--chunks", str(t.chunks),
+        "--verify-evidence", str(t.chunks),
         "--report", str(report),
         # NOTE: --save-constraints writes even under --dry-run, so this must
         # never point at the committed applications/pac_codegen/constraints/

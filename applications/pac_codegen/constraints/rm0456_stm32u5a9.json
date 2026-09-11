@@ -2,8 +2,8 @@
  "device": "stm32u5a9",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0456/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0456/svd/stm32u5a9.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -33,6 +33,7 @@
      "_Note: The software is allowed to write these bits only when ADEN = 1, ADSTART = 0 and JADSTART = 0 (ADC is enabled and no calibration is ongoing and no conversion is ongoing)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -67,6 +68,7 @@
      "Note: The software is allowed to write this bit only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -101,6 +103,7 @@
      "_Note: Software is allowed to write this bit only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -133,6 +136,7 @@
      "_Note: The software is allowed to write these bits only when JADSTART = 0 (which ensures that no injected conversion is ongoing)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -167,6 +171,7 @@
      "_Note: the software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -201,6 +206,7 @@
      "Note: The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -235,6 +241,7 @@
      "_Note: The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -267,6 +274,7 @@
      "_Note: The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -313,6 +321,7 @@
      "_Note: The software is allowed to write these bits only when the ADC is disabled (ADCAL = 0, ADVREGEN = 0, ADSTART = 0, JADSTART = 0, JADSTP = 0, ADSTP = 0, ADDIS = 0 and ADEN = 0)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -345,6 +354,7 @@
      "_Note: The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -377,6 +387,7 @@
      "_Note: The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -409,6 +420,7 @@
      "_Note: The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)._"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -441,6 +453,7 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -473,6 +486,7 @@
      "The software is allowed to write this bit only when ADSTART bit is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -505,6 +519,7 @@
      "The software is allowed to write this bit only when ADSTART bit is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -537,6 +552,7 @@
      "The protected fields of this function can only be updated when CKGACTIVE = 0 (see _Section 40.4.13: Register protection_ for details)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -569,6 +585,7 @@
      "The protected fields of this function can only be updated when SITFACTIVE is set to 0 (see _Section 40.4.13: Register protection_ for details)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -601,6 +618,7 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -633,6 +651,7 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -665,6 +684,7 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -697,6 +717,7 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -722,6 +743,7 @@
      "Therefore, when the DMA read channel is enabled, CPU access to the CORDIC_RDATA register must be avoided. Similarly, the processor must avoid accessing the CORDIC_WDATA register when the DMA write channel is enabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -751,6 +773,7 @@
      "This register can be written only when the frequency error counter is disabled (the CEN bit is cleared in CRS_CR). When the counter is enabled, this register is write-protected."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -783,6 +806,7 @@
      "This register can only be written when no transfer is ongoing. Once the CLUT transfer has started, this register is read-only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -815,6 +839,7 @@
      "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -847,6 +872,7 @@
      "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -879,6 +905,7 @@
      "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -911,6 +938,7 @@
      "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -943,6 +971,7 @@
      "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -975,6 +1004,7 @@
      "This register can only be written when transfers are disabled. Once the CLUT transfer started, this register is read-only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1009,6 +1039,7 @@
      "It can be changed only when DSI is stopped (DSI_WCR.DSIEN = 0 and DSI_CR.EN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1041,6 +1072,7 @@
      "This register can not be written if OPTLOCK bit is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1073,6 +1105,7 @@
      "This register can not be written if OPTLOCK bit is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1105,6 +1138,7 @@
      "This register can only be modified if START = 0 in the FMAC_PARAM register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1137,6 +1171,7 @@
      "This register can only be modified if START = 0 in the FMAC_PARAM register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -1169,6 +1204,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1201,6 +1237,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1233,6 +1270,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1265,6 +1303,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1297,6 +1336,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1329,6 +1369,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1361,6 +1402,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1393,6 +1435,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1425,6 +1468,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1457,6 +1501,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1489,6 +1534,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1521,6 +1567,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1553,6 +1600,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1585,6 +1633,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1617,6 +1666,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1649,6 +1699,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1681,6 +1732,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1713,6 +1765,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1745,6 +1798,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1777,6 +1831,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1809,6 +1864,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1841,6 +1897,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1873,6 +1930,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1905,6 +1963,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1937,6 +1996,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -1969,6 +2029,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2001,6 +2062,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2033,6 +2095,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2065,6 +2128,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2097,6 +2161,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2129,6 +2194,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2161,6 +2227,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2193,6 +2260,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2225,6 +2293,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2257,6 +2326,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2289,6 +2359,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2321,6 +2392,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2353,6 +2425,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2385,6 +2458,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2417,6 +2491,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2449,6 +2524,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2481,6 +2557,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2513,6 +2590,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2545,6 +2623,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2577,6 +2656,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2609,6 +2689,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2641,6 +2722,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2673,6 +2755,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2705,6 +2788,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2737,6 +2821,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2769,6 +2854,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2801,6 +2887,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2833,6 +2920,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2865,6 +2953,7 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2890,6 +2979,7 @@
      "If a read access to one of these registers is performed while the hash core is calculating an intermediate digest or a final message digest (DCIS bit equals 0), then the read operation returns zeros."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -2919,6 +3009,7 @@
      "These bits can be written only when TXE = 1."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -2951,6 +3042,7 @@
      "Caution: The LPTIM_CFGR register must only be modified when the LPTIM is disabled (ENABLE bit reset to 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -2983,6 +3075,7 @@
      "Caution: The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3015,6 +3108,7 @@
      "Caution: The LPTIM_CCR2 register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3047,6 +3141,7 @@
      "Caution: The LPTIM_RCR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3079,6 +3174,7 @@
      "The LPTIM_CFGR register must only be modified when the LPTIM is disabled (ENABLE bit reset to 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3111,6 +3207,7 @@
      "Caution: The LPTIM_RCR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3143,6 +3240,7 @@
      "This bitfield can be written only when the UE bit is cleared in LPUART_CR1 register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3175,6 +3273,7 @@
      "This register can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3207,6 +3306,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3239,6 +3339,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3271,6 +3372,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3303,6 +3405,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3335,6 +3438,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3367,6 +3471,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3392,6 +3497,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3421,6 +3527,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3453,6 +3560,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3485,6 +3593,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3517,6 +3626,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3549,6 +3659,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3581,6 +3692,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3613,6 +3725,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3645,6 +3758,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3677,6 +3791,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3709,6 +3824,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3741,6 +3857,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3773,6 +3890,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3805,6 +3923,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3837,6 +3956,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3869,6 +3989,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3901,6 +4022,7 @@
      "This register can be modified only when BUSY = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3927,6 +4049,7 @@
      "Writing this register is discarded if performed while the region CONFIGLOCK or KEYLOCK bit is set in the OTFDEC_RxCFGR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -3949,6 +4072,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in OTFDEC_RxCFGR is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -3972,6 +4096,7 @@
      "Writing this register is discarded if performed while the region CONFIGLOCK or KEYLOCK bit is set in the OTFDEC_RxCFGR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -4001,6 +4126,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in OTFDEC_RxCFGR is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4027,6 +4153,7 @@
      "Writing this register is discarded if performed while the region CONFIGLOCK or KEYLOCK bit is set in the OTFDEC_RxCFGR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -4050,6 +4177,7 @@
      "Writing this register is discarded if performed while the region CONFIGLOCK or KEYLOCK bit is set in the OTFDEC_RxCFGR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -4079,6 +4207,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in OTFDEC_RxCFGR is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4111,6 +4240,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in the OTFDEC_RxCFGR register is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4143,6 +4273,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in the OTFDEC_RxCFGR register is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4168,6 +4299,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in OTFDEC_RxCFGR is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4197,6 +4329,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in the OTFDEC_RxCFGR register is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4229,6 +4362,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in OTFDEC_RxCFGR is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4255,6 +4389,7 @@
      "Writing this register is discarded if performed while the region CONFIGLOCK or KEYLOCK bit is set in the OTFDEC_RxCFGR register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -4284,6 +4419,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in the OTFDEC_RxCFGR register is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4316,6 +4452,7 @@
      "Writing to this register is discarded if performed while the region CONFIGLOCK bit in the OTFDEC_RxCFGR register is set."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4355,6 +4492,7 @@
      "Accessing PSSI_DR when ENABLE bit in PSSI_CR is set to 0 results in an error response."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "read": [
      "exact"
@@ -4392,6 +4530,7 @@
      "It can be written only when the PLL1 is disabled (PLL1ON = 0 and PLL1RDY = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4426,6 +4565,7 @@
      "It can be written only when the PLL2 is disabled (PLL2ON = 0 and PLL2RDY = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4460,6 +4600,7 @@
      "It can be written only when the PLL is disabled (PLL3ON = 0 and PLL3RDY = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4494,6 +4635,7 @@
      "Writing in RNG_HTCR is taken into account only if the CONDRST bit is set, and the CONFIGLOCK bit is cleared in the RNG_CR. Writing to this register is ignored if CONFIGLOCK=1."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4526,6 +4668,7 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4558,6 +4701,7 @@
      "The SAES_IVRx registers may be written only when the SAES peripheral is disabled"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4590,6 +4734,7 @@
      "The SAES_IVRx registers may be written only when the SAES peripheral is disabled"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4622,6 +4767,7 @@
      "The SAES_IVRx registers may be written only when the SAES peripheral is disabled"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4654,6 +4800,7 @@
      "This register can only be written by firmware when DPSM is inactive (DPSMACT = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4686,6 +4833,7 @@
      "These bits can only be written by firmware when DPSM is inactive (DPSMACT = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4718,6 +4866,7 @@
      "These bits can only be written by firmware when CPSM is disabled (CPSMEN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4750,6 +4899,7 @@
      "This bit can only be written by firmware when DPSM is inactive (DPSMACT = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4782,6 +4932,7 @@
      "The content of this register is write protected when SPI is enabled, except TXDMAEN and RXDMAEN bits."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4816,6 +4967,7 @@
      "The content of this register is write-protected when SPI is enabled or the IOLOCK bit is set in the SPI_CR1 register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4848,6 +5000,7 @@
      "The content of this register is write protected when SPI is enabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4880,6 +5033,7 @@
      "The content of this register is write protected when SPI is enabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4912,6 +5066,7 @@
      "Note: This bit can be written only when SPE = 0."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4944,6 +5099,7 @@
      "When these bits are changed by software, the SPI must be disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -4976,6 +5132,7 @@
      "Once BHKLOCK is set, the 8 backup registers cannot be accessed anymore by software: they are read as 0 and write to these registers is ignored."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5008,6 +5165,7 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5040,6 +5198,7 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5072,6 +5231,7 @@
      "Note: This register must be written only when TXE/TXFNF = 1."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5104,6 +5264,7 @@
      "Writing to this register is only effective when UCPD is disabled (UCPDEN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5136,6 +5297,7 @@
      "Writing to this register is only effective when UCPD is disabled (UCPDEN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5168,6 +5330,7 @@
      "Writing to this register is only effective when the peripheral is disabled (UCPDEN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5200,6 +5363,7 @@
      "Writing to this register is only effective when the peripheral is disabled (UCPDEN = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5232,6 +5396,7 @@
      "Writing to this register is only effective when the peripheral is enabled (UCPDEN = 1)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5264,6 +5429,7 @@
      "This bitfield can be written only when the UE bit is cleared in USART_CR1 register."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5296,6 +5462,7 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5328,6 +5495,7 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -5360,6 +5528,7 @@
      "This bit can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"

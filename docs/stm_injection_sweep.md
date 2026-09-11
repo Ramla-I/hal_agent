@@ -212,7 +212,7 @@ every row carries its fate and reason in the per-RM report.
 | `kind_not_emitted` | 129 | no emitter yet: 84 `sequence`, 16 `delay`, 15 `write_once`, 8 `read_effect`, 5 `value_relation`, 1 `other` |
 | `emitter_rejected` | 85 | 78 "no enforceable constraints" left after kind filtering, 7 a non-identifier field name |
 | `pruned_for_device` | 22 | survived planning but not expressible against the generated PAC (access mode or field-reader shape) |
-| `target_unverified_by_location` | 6 | `--chunks` quote check: self-referential quote anchored outside the target's section |
+| `target_unverified_by_location` | 6 | `--verify-evidence`: the quote names no register ("this bit") AND anchors outside the target's section, so it attributes neither textually nor positionally |
 
 The single largest enforcement gap is `sequence` (84) — ordering constraints,
 roadmap step I — followed by the lint's `unresolvable_in_svd` (237), which is

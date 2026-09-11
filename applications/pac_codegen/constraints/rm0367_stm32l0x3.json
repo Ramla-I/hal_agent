@@ -2,8 +2,8 @@
  "device": "stm32l0x3",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0367/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0367/svd/stm32l0x3.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -31,6 +31,7 @@
      "Software can write these bits only when ADEN=1 and ADSTART=0 (ADC enabled and no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -63,6 +64,7 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -95,6 +97,7 @@
      "The software is allowed to write this bit only when ADSTART bit is cleared (this ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -129,6 +132,7 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing). The software is allowed to write this bit only when ADEN bit is cleared."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -161,6 +165,7 @@
      "Note: The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -193,6 +198,7 @@
      "The initialization vector may be written only when the AES peripheral is disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -225,6 +231,7 @@
      "The initialization vector may be written only when the AES peripheral is disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -257,6 +264,7 @@
      "The initialization vector may be written only when the AES peripheral is disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -289,6 +297,7 @@
      "The initialization vector may be written only when the AES peripheral is disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -321,6 +330,7 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -353,6 +363,7 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -385,6 +396,7 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -417,6 +429,7 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -449,6 +462,7 @@
      "When this bit is set, the CRS_CFGR register is write-protected and cannot be modified."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -481,6 +495,7 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -513,6 +528,7 @@
      "The LPTIM_CFGR and LPTIM_IER registers must be modified only when the LPTIM is disabled."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -545,6 +561,7 @@
      "The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -577,6 +594,7 @@
      "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -609,6 +627,7 @@
      "This register can only be written when the LPUART is disabled (UE=0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -641,6 +660,7 @@
      "This register must be written in initialization mode only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -666,6 +686,7 @@
      "Writing to SUBFS ... has no effect when a shift operation is pending (when SHPF=1, in RTC_ISR)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "fuzzy"
@@ -695,6 +716,7 @@
      "The RTC_TR is the calendar time shadow register. This register must be written in initialization mode only."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -727,6 +749,7 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -759,6 +782,7 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -791,6 +815,7 @@
      "This bit field can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"
@@ -823,6 +848,7 @@
      "This register must be written only when TXE=1."
     ]
    },
+   "gated_fields": {},
    "quote_verification": {
     "write": [
      "exact"

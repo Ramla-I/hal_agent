@@ -2,8 +2,8 @@
  "device": "stm32wb05",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0529/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0529/svd/stm32wb05.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
- "quote_verified_against": null,
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {
@@ -29,7 +29,15 @@
      "Note: These bits can be written only when OA1EN=0."
     ]
    },
-   "quote_verification": null
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
   },
   {
    "peripheral": "i2c1",
@@ -54,7 +62,15 @@
      "Note: These bits can be written only when TXE=1."
     ]
    },
-   "quote_verification": null
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
   },
   {
    "peripheral": "lpuart",
@@ -79,7 +95,15 @@
      "This register can only be written when the LPUART is disabled (UE=0)."
     ]
    },
-   "quote_verification": null
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
   },
   {
    "peripheral": "rtc",
@@ -104,7 +128,15 @@
      "This register must be written in initialization mode only."
     ]
    },
-   "quote_verification": null
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
   },
   {
    "peripheral": "rtc",
@@ -129,7 +161,15 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
-   "quote_verification": null
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
   },
   {
    "peripheral": "usart",
@@ -154,7 +194,15 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
-   "quote_verification": null
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
   }
  ]
 }

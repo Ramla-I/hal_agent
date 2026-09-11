@@ -80,7 +80,11 @@ specified in **`docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`**. Key pieces:
 - **Constraint Validator** (`core/quote_anchor.py` + `core/constraint_validator.py`):
   deterministic quote anchoring + target-location gate, then a closed-book
   gpt-oss judge, wired into `core/s0` (`--constraint-validation`) and
-  `inject_from_run.py` (`--chunks`). The judge validates **all 8 grammar-v2
+  `inject_from_run.py` (`--verify-evidence`, formerly `--chunks`). At
+  injection the anchoring is largely redundant with `--validated` — the
+  judge never confirms an unanchorable quote — and what the flag uniquely
+  contributes is the **target-attribution** check. The judge validates
+  **all 8 grammar-v2
   kinds** (the native constraint object, no flattening); `s0`'s Step-6 phase
   builds items in memory (no intermediate CSV) and can batch constraints per
   LLM call (`--constraint-batch-size`, amortizes the system prompt). Its

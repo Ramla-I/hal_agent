@@ -168,10 +168,10 @@ def test_collision_input_is_already_validator_gated():
     src = (APP_DIR / "inject_from_run.py").read_text()
     gate = src.index("gate_map=gate_map")
     collide = src.index("resolve_instance_collisions")
-    chunks = src.index("if args.chunks:")
-    assert gate < collide < chunks, (
+    verify = src.index("if args.verify_evidence:")
+    assert gate < collide < verify, (
         "pipeline order changed: collisions must be resolved after the "
-        "validator gate and before quote re-verification")
+        "validator gate and before the evidence check")
 
 
 def test_distinct_registers_do_not_collide():
