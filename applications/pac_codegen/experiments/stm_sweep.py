@@ -270,10 +270,30 @@ TARGETS = [
 # Manuals with no chip crate in the RELEASE the corpus is pinned to. Four of
 # the five that used to sit here are now built from stm32-rs master instead
 # (MASTER_TARGETS below); only MP13x has no patch set anywhere.
+#
+# WHY WE DO NOT JUST GENERATE ONE. We tried, with svd2rust 0.36.1 over the
+# vendor SVD (experiments/gen_pac.py, since retired). The attempt is what
+# taught us the rule now recorded in the tracking table: a stm32-rs crate is
+# the vendor SVD PLUS a large layer of YAML patches, and the patches are
+# load-bearing. Raw ST SVDs omit `<access>`, so svd2rust emits no
+# `impl Writable` and the register comes out read-only; a write gate on a
+# read-only register is not expressible and the injector correctly drops it.
+# RM0475's SVD does not even parse: its TIM2 CCMR1 declares an enumerated
+# value of 8 in a 3-bit field. The missing piece was never the crate -- it is
+# the patched register map, which is exactly what stm32-rs would have to write
+# to publish the part at all.
 UNMAPPED = {
     # stm32mp1 exists but ships only stm32mp153 / stm32mp157, and master has
     # no MP13x patch set either.
-    "rm0475": ("STM32MP13x", "stm32mp1", 486, 395),
+    "rm0475": ("STM32MP13x", "stm32mp1", 486, 395,
+               "Generating one ourselves does not work either: svd2rust over "
+               "the raw vendor SVD fails to parse RM0475 at all (TIM2 CCMR1 "
+               "declares an enumerated value of 8 in a 3-bit field), and more "
+               "generally a stm32-rs crate is the vendor SVD plus a "
+               "load-bearing YAML patch layer -- the raw file omits "
+               "`<access>`, so svd2rust marks registers read-only and a write "
+               "gate on them is not expressible. The missing piece is the "
+               "patched register map, not the crate."),
 }
 
 # Manuals whose chip crate exists only on stm32-rs MASTER, in two crates that

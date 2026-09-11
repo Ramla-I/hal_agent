@@ -593,7 +593,7 @@ def main() -> None:
                      "measured but adoption is not"),
         })
 
-    for rm, (chip, crate, found_n, enforce_n) in sorted(UNMAPPED.items()):
+    for rm, (chip, crate, found_n, enforce_n, why) in sorted(UNMAPPED.items()):
         found = constraints_found(rm)
         verdicts = judge_verdicts(rm)
         enforce_kinds = collections.Counter(
@@ -620,7 +620,8 @@ def main() -> None:
                      + (f"stm32-rs ships {crate} but no {chip} device module."
                         if crate else
                         f"stm32-rs 0.16 has no crate for this family.")
-                     + " Extracted and judged; nothing to inject into."),
+                     + " Extracted and judged; nothing to inject into. "
+                     + why),
         })
 
     OUT.mkdir(parents=True, exist_ok=True)
