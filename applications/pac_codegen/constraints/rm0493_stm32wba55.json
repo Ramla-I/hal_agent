@@ -1,0 +1,1622 @@
+{
+ "device": "stm32wba55",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0493/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0493/svd/stm32wba55.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
+ "quote_verified_against": null,
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "adc4",
+   "register": "AWD2CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write this bit only when ADSTART bit is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write this bit only when ADSTART bit is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "adc4",
+   "register": "AWD3CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write this bit only when ADSTART bit is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write this bit only when ADSTART bit is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "adc4",
+   "register": "AWD3TR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "adc4",
+   "register": "CALFACT",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADEN set",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.ADCAL cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADEN set",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.ADCAL cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Software can write these bits only when ADEN = 1 (ADC is enabled and no calibration is ongoing and no conversion is ongoing)."
+    ],
+    "modify": [
+     "Software can write these bits only when ADEN = 1 (ADC is enabled and no calibration is ongoing and no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "adc4",
+   "register": "CFGR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "adc4",
+   "register": "CFGR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write this bit only when ADSTART bit is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write this bit only when ADSTART bit is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "adc4",
+   "register": "CHSELR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "adc4",
+   "register": "IER",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "adc4",
+   "register": "SMPR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write this bit only when ADSTART is cleared to 0 by writing ADSTP to 1 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "aes",
+   "register": "IVR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "AES_CR.EN cleared"
+    ],
+    "modify": [
+     "AES_CR.EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The four AES_IVRx registers store the initialization vector (IV) information, as shown in Table 190 . They can only be written if the AES peripheral is disabled (EN cleared)"
+    ],
+    "modify": [
+     "The four AES_IVRx registers store the initialization vector (IV) information, as shown in Table 190 . They can only be written if the AES peripheral is disabled (EN cleared)"
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "aes",
+   "register": "IVR3",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "AES_CR.EN cleared"
+    ],
+    "modify": [
+     "AES_CR.EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The four AES_IVRx registers store the initialization vector (IV) information, as shown in Table 190 . They can only be written if the AES peripheral is disabled (EN cleared)"
+    ],
+    "modify": [
+     "The four AES_IVRx registers store the initialization vector (IV) information, as shown in Table 190 . They can only be written if the AES peripheral is disabled (EN cleared)"
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "aes",
+   "register": "KEYR3",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "AES_CR.EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write operations to the AES_KEYRx registers are ignored when AES peripheral is enabled (EN bit set). The application must check this before modifying key registers."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "aes",
+   "register": "KEYR5",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "AES_CR.EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write operations to the AES_KEYRx registers are ignored when AES peripheral is enabled (EN bit set). The application must check this before modifying key registers."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "aes",
+   "register": "KEYR6",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "AES_CR.EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write operations to the AES_KEYRx registers are ignored when AES peripheral is enabled (EN bit set). The application must check this before modifying key registers."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR0",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR1",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR10",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR11",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR12",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR13",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR14",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR15",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR18",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR19",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR20",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR22",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR24",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR25",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR27",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR29",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR31",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR32",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR34",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR36",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR39",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR40",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR43",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR44",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR45",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR46",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR47",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR49",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR50",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR51",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR52",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR53",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR7",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR8",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "hash",
+   "register": "CSR9",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "HASH_SR.DINIS set"
+    ],
+    "modify": [
+     "HASH_SR.DINIS set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ],
+    "modify": [
+     "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "i2c",
+   "register": "TXDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "I2C_ISR.TXE set"
+    ],
+    "modify": [
+     "I2C_ISR.TXE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can be written only when TXE = 1."
+    ],
+    "modify": [
+     "These bits can be written only when TXE = 1."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "pka",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "PKA_SR.OPERRF cleared"
+    ],
+    "modify": [
+     "PKA_SR.OPERRF cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "OPERRF error must be cleared using OPERRFC bit in PKA_CLRFR before a new operation is written in PKA_CR register."
+    ],
+    "modify": [
+     "OPERRF error must be cleared using OPERRFC bit in PKA_CLRFR before a new operation is written in PKA_CR register."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "rtc",
+   "register": "DR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ICSR.INIT set"
+    ],
+    "modify": [
+     "RTC_ICSR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written in initialization mode only. Refer to Calendar initialization and configuration on page 1295."
+    ],
+    "modify": [
+     "This register must be written in initialization mode only. Refer to Calendar initialization and configuration on page 1295."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "rtc",
+   "register": "TR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ICSR.INIT set"
+    ],
+    "modify": [
+     "RTC_ICSR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written in initialization mode only. Refer to Calendar initialization and configuration on page 1295."
+    ],
+    "modify": [
+     "This register must be written in initialization mode only. Refer to Calendar initialization and configuration on page 1295."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "saes",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SAES_SR.BUSY cleared",
+     "EN cleared"
+    ],
+    "modify": [
+     "SAES_SR.BUSY cleared",
+     "EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Attempts to write the bitfield are ignored when the BUSY flag of the SAES_SR register is set, as well as when the EN bit of the SAES_CR register is set before the write access and it is not cleared by that write access."
+    ],
+    "modify": [
+     "Attempts to write the bitfield are ignored when the BUSY flag of the SAES_SR register is set, as well as when the EN bit of the SAES_CR register is set before the write access and it is not cleared by that write access."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "saes",
+   "register": "IVR0",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SAES_CR.EN cleared"
+    ],
+    "modify": [
+     "SAES_CR.EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write to this register is ignored when EN bit is set in SAES_CR register"
+    ],
+    "modify": [
+     "Write to this register is ignored when EN bit is set in SAES_CR register"
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "saes",
+   "register": "IVR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SAES_CR.EN cleared"
+    ],
+    "modify": [
+     "SAES_CR.EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write to this register is ignored when EN bit is set in SAES_CR register"
+    ],
+    "modify": [
+     "Write to this register is ignored when EN bit is set in SAES_CR register"
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "spi1",
+   "register": "CRCPOLY",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_CR1.SPE cleared"
+    ],
+    "modify": [
+     "SPI_CR1.SPE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The content of this register is write protected when SPI is enabled."
+    ],
+    "modify": [
+     "The content of this register is write protected when SPI is enabled."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "spi1",
+   "register": "UDRDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_CR1.SPE cleared"
+    ],
+    "modify": [
+     "SPI_CR1.SPE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The content of this register is write protected when SPI is enabled."
+    ],
+    "modify": [
+     "The content of this register is write protected when SPI is enabled."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "spi1",
+   "register": "CFG2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_CR1.SPE cleared",
+     "SPI_CR1.IOLOCK cleared"
+    ],
+    "modify": [
+     "SPI_CR1.SPE cleared",
+     "SPI_CR1.IOLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The content of this register is write-protected when SPI is enabled or the IOLOCK bit is set in the SPI_CR1 register."
+    ],
+    "modify": [
+     "The content of this register is write-protected when SPI is enabled or the IOLOCK bit is set in the SPI_CR1 register."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "tsc",
+   "register": "IOSCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "TSC_CR.START cleared"
+    ],
+    "modify": [
+     "TSC_CR.START cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: These bits must not be modified when an acquisition is ongoing."
+    ],
+    "modify": [
+     "Note: These bits must not be modified when an acquisition is ongoing."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "usart1",
+   "register": "PRESC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.UE cleared"
+    ],
+    "modify": [
+     "USART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the USART is disabled (UE = 0)."
+    ],
+    "modify": [
+     "This register can only be written when the USART is disabled (UE = 0)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "usart1",
+   "register": "AUTOCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.UE cleared"
+    ],
+    "modify": [
+     "USART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This bitfield can be written only when the UE bit is cleared in USART_CR1 register."
+    ],
+    "modify": [
+     "This bitfield can be written only when the UE bit is cleared in USART_CR1 register."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "usart1",
+   "register": "CR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "UE cleared"
+    ],
+    "modify": [
+     "UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This bitfield can only be written when the USART is disabled (UE = 0)."
+    ],
+    "modify": [
+     "This bitfield can only be written when the USART is disabled (UE = 0)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "usart1",
+   "register": "GTPR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.UE cleared"
+    ],
+    "modify": [
+     "USART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This bitfield can only be written when the USART is disabled (UE = 0)."
+    ],
+    "modify": [
+     "This bitfield can only be written when the USART is disabled (UE = 0)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "usart1",
+   "register": "TDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_ISR.TXFNF set"
+    ],
+    "modify": [
+     "USART_ISR.TXFNF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This register must be written only when TXE/TXFNF = 1."
+    ],
+    "modify": [
+     "Note: This register must be written only when TXE/TXFNF = 1."
+    ]
+   },
+   "quote_verification": null
+  }
+ ]
+}

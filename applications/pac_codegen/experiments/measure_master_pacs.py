@@ -21,6 +21,14 @@ The PAC version reads `latest` rather than `0.16.0` wherever these appear, so a
 reader can tell at a glance which rows come from a release and which from
 master.
 
+Like the sweep, this writes a per-device constraints file to
+applications/pac_codegen/constraints/ via --save-constraints. One difference
+is deliberate and visible in the files: no --chunks, so `quote_verified_against`
+is null where the sweep's 49 name a chunked-datasheet directory. Adding it
+would change these four targets' measured gate counts, which are already
+published, so it is a separate decision rather than a side effect of recording
+them.
+
 Usage:
     python applications/pac_codegen/experiments/measure_master_pacs.py
 """
@@ -72,7 +80,15 @@ def inject(rm: str, pac_dir: Path, device: str, field: bool) -> dict:
             "--svd-dir", str(PHASE1D / f"devices/stm/{rm}/svd/{device}.svd"),
             "--validated",
             str(PHASE1D / f"evaluation/stm/{rm}/1/{rm}_constraints_review.jsonl"),
-            "--report", str(report)]
+            "--report", str(report),
+            # The same durable per-device record the sweep writes. Without it
+            # these four targets reported fate counts and a PASS but never
+            # WHICH registers they gate, so the only injected targets with no
+            # reviewable artifact were the four nobody can download a crate
+            # for. Mode-suffixed, like the report.
+            "--save-constraints",
+            str(OUT / "constraints" / f"{rm}_{device}"
+                f"{'_fieldgate' if field else ''}.json")]
     if field:
         argv.append("--field-level-gating")
     r = subprocess.run(argv, capture_output=True, text=True, cwd=str(REPO),

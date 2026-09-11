@@ -1,0 +1,144 @@
+{
+ "device": "stm32wb09",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0505/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0505/svd/stm32wb09.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
+ "quote_verified_against": null,
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "i2c1",
+   "register": "TIMINGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "I2C_CR1.PE cleared"
+    ],
+    "modify": [
+     "I2C_CR1.PE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be configured when the I2C is disabled (PE = 0)."
+    ],
+    "modify": [
+     "This register must be configured when the I2C is disabled (PE = 0)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "lpuart",
+   "register": "BRR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPUART_CR1.UE cleared"
+    ],
+    "modify": [
+     "LPUART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the LPUART is disabled (UE=0)."
+    ],
+    "modify": [
+     "This register can only be written when the LPUART is disabled (UE=0)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "lpuart",
+   "register": "CR3",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPUART_CR1.UE cleared"
+    ],
+    "modify": [
+     "LPUART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the LPUART is disabled (UE=0)."
+    ],
+    "modify": [
+     "This register can only be written when the LPUART is disabled (UE=0)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "lpuart",
+   "register": "PRESC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPUART_CR1.UE cleared"
+    ],
+    "modify": [
+     "LPUART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the USART is disabled (UE=0)."
+    ],
+    "modify": [
+     "This register can only be written when the USART is disabled (UE=0)."
+    ]
+   },
+   "quote_verification": null
+  },
+  {
+   "peripheral": "rtc",
+   "register": "DR",
+   "gated_operations": [
+    "modify",
+    "read",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ISR.INIT set"
+    ],
+    "modify": [
+     "RTC_ISR.INIT set",
+     "RTC_ISR.RSF set"
+    ],
+    "read": [
+     "RTC_ISR.RSF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The RTC_DR is the calendar date shadow register. This register must be written in initialization mode only."
+    ],
+    "modify": [
+     "The RTC_DR is the calendar date shadow register. This register must be written in initialization mode only.",
+     "After an initialization (refer to _Calendar initialization and configuration on page 421_ ): the software must wait until RSF is set before reading the RTC_SSR, RTC_TR and RTC_DR registers."
+    ],
+    "read": [
+     "After an initialization (refer to _Calendar initialization and configuration on page 421_ ): the software must wait until RSF is set before reading the RTC_SSR, RTC_TR and RTC_DR registers."
+    ]
+   },
+   "quote_verification": null
+  }
+ ]
+}
