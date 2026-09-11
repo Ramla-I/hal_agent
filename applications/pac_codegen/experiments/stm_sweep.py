@@ -367,7 +367,12 @@ def run_inject(t: Target, pac_dir: Path, report: Path, dry: bool,
         # NOTE: --save-constraints writes even under --dry-run, so this must
         # never point at the committed applications/pac_codegen/constraints/
         # tree; the sweep's artifacts stay in the gitignored out/ dir.
-        "--save-constraints", str(OUT / "constraints" / f"{t.rm}_{t.device}.json"),
+        # Mode-suffixed for the same reason the report is: the two modes plan
+        # different gate sets, and an unsuffixed name let a field-gating run
+        # overwrite the default run's file.
+        "--save-constraints", str(OUT / "constraints" /
+                                  f"{t.rm}_{t.device}"
+                                  f"{'_fieldgate' if field_gating else ''}.json"),
         *(["--field-level-gating"] if field_gating else []),
     ]
     if dry:

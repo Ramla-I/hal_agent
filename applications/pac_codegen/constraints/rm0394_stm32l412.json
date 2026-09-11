@@ -1,0 +1,998 @@
+{
+ "device": "stm32l412",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0394/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0394/svd/stm32l412.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
+ "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "adc1",
+   "register": "AWD2CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "AWD3CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "CFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write this bit only when ADSTART = 0 and JADSTART = 0 (which ensures that no regular nor injected conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write this bit only when ADSTART = 0 and JADSTART = 0 (which ensures that no regular nor injected conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "DIFSEL",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADCAL cleared",
+     "ADC_CR.JADSTART cleared",
+     "ADC_CR.JADSTP cleared",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.ADSTP cleared",
+     "ADC_CR.ADDIS cleared",
+     "ADC_CR.ADEN cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADCAL cleared",
+     "ADC_CR.JADSTART cleared",
+     "ADC_CR.JADSTP cleared",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.ADSTP cleared",
+     "ADC_CR.ADDIS cleared",
+     "ADC_CR.ADEN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when the ADC is disabled (ADCAL = 0, JADSTART = 0, JADSTP = 0, ADSTART = 0, ADSTP = 0, ADDIS = 0 and ADEN = 0)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when the ADC is disabled (ADCAL = 0, JADSTART = 0, JADSTP = 0, ADSTART = 0, ADSTP = 0, ADDIS = 0 and ADEN = 0)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "SQR4",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "TR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "TR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "TR3",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "CALFACT",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADEN set",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADEN set",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADEN = 1 and ADSTART = 0 and JADSTART = 0 (ADC is enabled and no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADEN = 1 and ADSTART = 0 and JADSTART = 0 (ADC is enabled and no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "SMPR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "SQR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "SQR3",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "crs",
+   "register": "CFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRS_CR.CEN cleared"
+    ],
+    "modify": [
+     "CRS_CR.CEN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the frequency error counter is disabled (the CEN bit is cleared in CRS_CR)."
+    ],
+    "modify": [
+     "This register can be written only when the frequency error counter is disabled (the CEN bit is cleared in CRS_CR)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "flash",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FLASH_SR.BSY cleared"
+    ],
+    "modify": [
+     "FLASH_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The FLASH_CR register cannot be written when the BSY bit in the Flash status register (FLASH_SR) is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
+    ],
+    "modify": [
+     "The FLASH_CR register cannot be written when the BSY bit in the Flash status register (FLASH_SR) is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "TXDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "I2C_ISR.TXE set"
+    ],
+    "modify": [
+     "I2C_ISR.TXE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can be written only when TXE = 1."
+    ],
+    "modify": [
+     "These bits can be written only when TXE = 1."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "CFGR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE cleared"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The LPTIM_CFGR2 register must only be modified when the LPTIM is disabled (ENABLE bit reset to 0)."
+    ],
+    "modify": [
+     "The LPTIM_CFGR2 register must only be modified when the LPTIM is disabled (ENABLE bit reset to 0)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "CMP",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE set"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
+    ],
+    "modify": [
+     "The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "IER",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE cleared"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)."
+    ],
+    "modify": [
+     "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "ARR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE set"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
+    ],
+    "modify": [
+     "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "RCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE set"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The LPTIM_RCR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
+    ],
+    "modify": [
+     "The LPTIM_RCR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "CCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ],
+    "modify": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "_Note: This bitfield can be modified only when BUSY = 0._"
+    ],
+    "modify": [
+     "_Note: This bitfield can be modified only when BUSY = 0._"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "DLR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ],
+    "modify": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "DR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ],
+    "modify": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "LPTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ],
+    "modify": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "PSMAR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ],
+    "modify": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "PSMKR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ],
+    "modify": [
+     "_Note: This bitfield can be written only when BUSY = 0._"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "BDCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "PWR_CR1.DBP set"
+    ],
+    "modify": [
+     "PWR_CR1.DBP set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The bits of the Backup domain control register (RCC_BDCR) are outside of the V_CORE domain. As a result, after Reset, these bits are write-protected and the DBP bit in the Power control register 1 (PWR_CR1) has to be set before these can be modified."
+    ],
+    "modify": [
+     "The bits of the Backup domain control register (RCC_BDCR) are outside of the V_CORE domain. As a result, after Reset, these bits are write-protected and the DBP bit in the Power control register 1 (PWR_CR1) has to be set before these can be modified."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "TR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ICSR.INIT set"
+    ],
+    "modify": [
+     "RTC_ICSR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written in initialization mode only."
+    ],
+    "modify": [
+     "This register must be written in initialization mode only."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "WUTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ICSR.WUTWF set"
+    ],
+    "modify": [
+     "RTC_ICSR.WUTWF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
+    ],
+    "modify": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  }
+ ]
+}

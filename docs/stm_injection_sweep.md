@@ -408,11 +408,13 @@ needed). This is what `pruned_for_device` (22) counts.
 ## 5. Two things worth the pipeline owner's attention
 
 **The rm0008 generator run changed underneath the committed artifact.**
-`applications/pac_codegen/constraints/stm32f103.json` records 19 gated
-registers (AFIO, BKP, I2C1, IWDG, RCC, RTC, SPI1, TIM1/2, USART1). Re-running
-collection over the *same run directory path* today yields a different
-constraint set — 9 registers before the validator gate (CAN, RTC, SPI1), 6
-after. The run directory was regenerated since. Two separable causes:
+The artifact committed on 2026-07-29 recorded 19 gated registers for rm0008
+(AFIO, BKP, I2C1, IWDG, RCC, RTC, SPI1, TIM1/2, USART1); retrieve it with
+`git show 8d85873:applications/pac_codegen/constraints/stm32f103.json`.
+Re-running collection over the *same run directory path* today yields a
+different constraint set — 9 registers before the validator gate (CAN, RTC,
+SPI1), 6 after, as `constraints/rm0008_stm32f103.json` now shows. The run
+directory was regenerated since. Two separable causes:
 
 - the flagship **I2C1_CR1 STOP/START/PEC gate is gone**: the register file now
   carries `access_constraints_v2: []`;

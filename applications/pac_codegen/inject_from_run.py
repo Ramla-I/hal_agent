@@ -241,7 +241,10 @@ def main() -> None:
                     help="write the per-DEVICE constraints file (the durable, "
                          "reviewable artifact: exactly what this device's "
                          "crate enforces, plus provenance). Convention: "
-                         "applications/pac_codegen/constraints/<device>.json")
+                         "applications/pac_codegen/constraints/"
+                         "<rm>_<device>.json -- keyed by MANUAL and device, "
+                         "because two manuals can project onto the same "
+                         "family and one manual onto two devices")
     ap.add_argument("--dry-run", action="store_true",
                     help="select and plan, but do not touch the PAC")
     ap.add_argument("--field-level-gating", action="store_true",
@@ -406,6 +409,10 @@ def main() -> None:
                         "pruning, and (with --chunks) quote verification; "
                         "regenerate with inject_from_run.py",
                 "quote_verified_against": args.chunks or None,
+                # Which gating mode produced this set. The two modes plan
+                # DIFFERENT gates, and without this the file cannot be told
+                # apart from the other mode's after the fact.
+                "field_level_gating": bool(args.field_level_gating),
                 "registers": [
                     {
                         "peripheral": p.peripheral,

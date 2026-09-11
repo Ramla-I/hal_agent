@@ -1,0 +1,106 @@
+{
+ "device": "stm32f100",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0041/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0041/svd/stm32f100.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
+ "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "rcc",
+   "register": "CFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RCC_CR.PLLON cleared"
+    ],
+    "modify": [
+     "RCC_CR.PLLON cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can be written only when PLL is disabled."
+    ],
+    "modify": [
+     "These bits can be written only when PLL is disabled."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "CFGR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RCC_CR.PLLON cleared"
+    ],
+    "modify": [
+     "RCC_CR.PLLON cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can be written only when PLL is disabled."
+    ],
+    "modify": [
+     "These bits can be written only when PLL is disabled."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "CR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPE cleared"
+    ],
+    "modify": [
+     "SPE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Bit 13 **CRCEN:** ... This bit should be written only when SPI is disabled (SPE = \u20180) for correct operation"
+    ],
+    "modify": [
+     "Bit 13 **CRCEN:** ... This bit should be written only when SPI is disabled (SPE = \u20180) for correct operation"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  }
+ ]
+}

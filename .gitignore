@@ -284,9 +284,6 @@ docs/figures/*.pdf
 # Regenerated from the registry cache; never hand-edited, so never committed.
 applications/pac_codegen/experiments/ported/
 
-# Chip crates generated from raw vendor SVDs by experiments/gen_pac.py.
-# Reproducible from the SVDs; never hand-edited, so never committed.
-applications/pac_codegen/vendored/pac_generated/
 
 # Chip crates built from stm32-rs MASTER (unreleased). Reproducible from
 # the make invocation in pac_master/README.md; never hand-edited.

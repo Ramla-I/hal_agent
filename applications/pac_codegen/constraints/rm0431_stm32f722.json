@@ -1,0 +1,864 @@
+{
+ "device": "stm32f722",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0431/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0431/svd/stm32f722.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
+ "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "can1",
+   "register": "FFA1R",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_FMR.FINIT set"
+    ],
+    "modify": [
+     "CAN_FMR.FINIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ],
+    "modify": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "can1",
+   "register": "FM1R",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_FMR.FINIT set"
+    ],
+    "modify": [
+     "CAN_FMR.FINIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ],
+    "modify": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "can1",
+   "register": "FS1R",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_FMR.FINIT set"
+    ],
+    "modify": [
+     "CAN_FMR.FINIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ],
+    "modify": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "flash",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FLASH_SR.BSY cleared"
+    ],
+    "modify": [
+     "FLASH_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
+    ],
+    "modify": [
+     "The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "OAR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OA2EN cleared"
+    ],
+    "modify": [
+     "OA2EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can be written only when OA2EN = 0."
+    ],
+    "modify": [
+     "These bits can be written only when OA2EN = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "TXDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "I2C_ISR.TXE set"
+    ],
+    "modify": [
+     "I2C_ISR.TXE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can be written only when TXE = 1."
+    ],
+    "modify": [
+     "These bits can be written only when TXE = 1."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "ARR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE set"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
+    ],
+    "modify": [
+     "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "CFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE cleared"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The LPTIM_CFGR and LPTIM_IER registers must be modified only when the LPTIM is disabled."
+    ],
+    "modify": [
+     "The LPTIM_CFGR and LPTIM_IER registers must be modified only when the LPTIM is disabled."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "IER",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE cleared"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The LPTIM_CFGR and LPTIM_IER registers must be modified only when the LPTIM is disabled."
+    ],
+    "modify": [
+     "The LPTIM_CFGR and LPTIM_IER registers must be modified only when the LPTIM is disabled."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "ABR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ],
+    "modify": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "AR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ],
+    "modify": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "CCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ],
+    "modify": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bitfield can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "Note: This bitfield can be modified only when BUSY = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "DR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ],
+    "modify": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "LPTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ],
+    "modify": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "PIR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ],
+    "modify": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "PSMAR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ],
+    "modify": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "quadspi",
+   "register": "PSMKR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "QUADSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "QUADSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ],
+    "modify": [
+     "Note: This bitfield can be written only when BUSY = 0."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "PLLI2SCFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RCC_CR.PLLON cleared"
+    ],
+    "modify": [
+     "RCC_CR.PLLON cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits are set and cleared by software. To write before setting CR[24]=PLLON bit."
+    ],
+    "modify": [
+     "These bits are set and cleared by software. To write before setting CR[24]=PLLON bit."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "PLLSAICFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RCC_CR.PLLSAION cleared"
+    ],
+    "modify": [
+     "RCC_CR.PLLSAION cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits should be written when the PLLSAI is disabled."
+    ],
+    "modify": [
+     "These bits should be written when the PLLSAI is disabled."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "SSCGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RCC_CR.PLLON cleared"
+    ],
+    "modify": [
+     "RCC_CR.PLLON cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The RCC_SSCGR register must be written either before the main PLL is enabled or after the main PLL disabled."
+    ],
+    "modify": [
+     "The RCC_SSCGR register must be written either before the main PLL is enabled or after the main PLL disabled."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "PRER",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ISR.INIT set"
+    ],
+    "modify": [
+     "RTC_ISR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written in initialization mode only."
+    ],
+    "modify": [
+     "This register must be written in initialization mode only."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "SSR",
+   "gated_operations": [
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "RTC_ISR.RSF set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "then the software must wait until RSF is set before reading the RTC_SSR, RTC_TR and RTC_DR registers."
+    ]
+   },
+   "quote_verification": {
+    "read": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "TR",
+   "gated_operations": [
+    "modify",
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "RTC_ISR.RSF set"
+    ],
+    "modify": [
+     "RTC_ISR.RSF set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "then the software must wait until RSF is set before reading the RTC_SSR, RTC_TR and RTC_DR registers."
+    ],
+    "modify": [
+     "then the software must wait until RSF is set before reading the RTC_SSR, RTC_TR and RTC_DR registers."
+    ]
+   },
+   "quote_verification": {
+    "read": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "WUTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ISR.WUTWF set"
+    ],
+    "modify": [
+     "RTC_ISR.WUTWF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ISR."
+    ],
+    "modify": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ISR."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "usart1",
+   "register": "TDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_ISR.TXE set"
+    ],
+    "modify": [
+     "USART_ISR.TXE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "_Note: This register must be written only when TXE=1._"
+    ],
+    "modify": [
+     "_Note: This register must be written only when TXE=1._"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "usart1",
+   "register": "RTOR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.UE cleared"
+    ],
+    "modify": [
+     "USART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This bit field can only be written when the USART is disabled (UE=0)."
+    ],
+    "modify": [
+     "This bit field can only be written when the USART is disabled (UE=0)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  }
+ ]
+}

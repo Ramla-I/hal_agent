@@ -1,0 +1,314 @@
+{
+ "device": "stm32f410",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0401/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0401/svd/stm32f410.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --chunks) quote verification; regenerate with inject_from_run.py",
+ "quote_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "flash",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FLASH_SR.BSY cleared"
+    ],
+    "modify": [
+     "FLASH_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
+    ],
+    "modify": [
+     "The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "flash",
+   "register": "OPTCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FLASH_SR.BSY cleared"
+    ],
+    "modify": [
+     "FLASH_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "1. Check that no flash memory operation is ongoing by checking the BSY bit in the FLASH_SR register"
+    ],
+    "modify": [
+     "1. Check that no flash memory operation is ongoing by checking the BSY bit in the FLASH_SR register"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "CR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "STOP cleared",
+     "START cleared",
+     "PEC cleared"
+    ],
+    "modify": [
+     "STOP cleared",
+     "START cleared",
+     "PEC cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
+    ],
+    "modify": [
+     "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "ARR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE set"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Caution: The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
+    ],
+    "modify": [
+     "Caution: The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "IER",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE cleared"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Caution: The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
+    ],
+    "modify": [
+     "Caution: The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "CALIBR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ISR.INITF set"
+    ],
+    "modify": [
+     "RTC_ISR.INITF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written in initialization mode only (RTC_ISR/INITF = \u20181\u2019)."
+    ],
+    "modify": [
+     "This register can be written in initialization mode only (RTC_ISR/INITF = \u20181\u2019)."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "WUTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ISR.WUTWF set"
+    ],
+    "modify": [
+     "RTC_ISR.WUTWF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ISR."
+    ],
+    "modify": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ISR."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "RXCRCR",
+   "gated_operations": [
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "SPI_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "Note: A read to this register when the BSY Flag is set could return an incorrect value."
+    ]
+   },
+   "quote_verification": {
+    "read": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "TXCRCR",
+   "gated_operations": [
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "SPI_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "Note: A read to this register when the BSY Flag is set could return an incorrect value."
+    ]
+   },
+   "quote_verification": {
+    "read": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "I2SPR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_I2SCFGR.I2SE cleared"
+    ],
+    "modify": [
+     "SPI_I2SCFGR.I2SE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "For correct operation, these bits should be configured when the I2S is disabled."
+    ],
+    "modify": [
+     "For correct operation, these bits should be configured when the I2S is disabled."
+    ]
+   },
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  }
+ ]
+}
