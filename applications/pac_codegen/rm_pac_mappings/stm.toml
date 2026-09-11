@@ -1,4 +1,4 @@
-# targets/stm.toml — STM device -> PAC crate -> higher-level consumers.
+# rm_pac_mappings/stm.toml — STM device -> PAC crate -> higher-level consumers.
 #
 # One [[manual]] block per STM reference manual with assets in the repo
 # (devices/stm/<rm>/). Constraints are extracted PER MANUAL; each device is

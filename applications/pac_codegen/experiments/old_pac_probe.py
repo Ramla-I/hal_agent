@@ -6,7 +6,7 @@ PAC than the 0.16.0 release the injector targets (checked live against the
 crates.io index): stm32f3xx-hal -> stm32f3 0.15.1, stm32l0xx-hal -> stm32l0
 0.15.1, stm32f0xx-hal -> stm32f0 0.14, stm32l1xx-hal -> stm32l1 0.5.
 
-targets/stm.toml's POLICY is to prefer a HAL's development branch on the new
+rm_pac_mappings/stm.toml's POLICY is to prefer a HAL's development branch on the new
 PAC over back-porting the injector. That policy is only *cheaper* if the
 back-port is actually expensive -- which is an empirical question about
 svd2rust template drift, and this script answers it: provision each older PAC

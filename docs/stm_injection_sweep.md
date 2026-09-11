@@ -13,7 +13,7 @@ Reports: `applications/pac_codegen/experiments/out/` (gitignored).
 
 ## 1. The map
 
-`applications/pac_codegen/targets/stm.toml` is the manual → PAC → consumer
+`applications/pac_codegen/rm_pac_mappings/stm.toml` is the manual → PAC → consumer
 configuration. Re-verified against the live crates.io sparse index on the run
 date (`experiments/build_map.py`); every field held. The 13 RMs land on **7
 chip crates**, all at the 0.16.0 release (svd2rust 0.36.1 — the template the

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Join targets/stm.toml x available pipeline data x live crates.io index.
+"""Join rm_pac_mappings/stm.toml x available pipeline data x live crates.io index.
 
 Produces the RM -> SVD -> PAC crate/device-module -> HAL-consumer map that the
 injection + HAL-adoption runs consume, and RE-VERIFIES every HAL pairing
@@ -13,7 +13,7 @@ from pathlib import Path
 
 REPO = Path("/home/ramla/hal_agent-pac-injection")
 DATA = Path("/home/ramla/hal_agent-phase-1d")
-TARGETS = REPO / "applications/pac_codegen/targets/stm.toml"
+TARGETS = REPO / "applications/pac_codegen/rm_pac_mappings/stm.toml"
 PAC_VERSION = "0.16.0"
 
 
