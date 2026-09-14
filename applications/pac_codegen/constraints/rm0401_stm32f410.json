@@ -2,8 +2,8 @@
  "device": "stm32f410",
  "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0401/1",
  "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0401/svd/stm32f410.svd",
- "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --verify-evidence) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
- "evidence_verified_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --attribution-check) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "attribution_checked_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
  "field_level_gating": false,
  "registers": [
   {

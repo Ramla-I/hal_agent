@@ -96,9 +96,9 @@ def inject(rm: str, pac: str, device: str) -> dict:
             "--pac", str(APP_DIR / "vendored" / "pac" / pac),
             "--device", device,
             "--svd-dir", str(PHASE1D / f"devices/stm/{rm}/svd/{device}.svd"),
-            "--validated",
+            "--constraints",
             str(PHASE1D / f"evaluation/stm/{rm}/1/{rm}_constraints_review.jsonl"),
-            "--verify-evidence", str(PHASE1D / "chunked_datasheets/stm"),
+            "--attribution-check", str(PHASE1D / "chunked_datasheets/stm"),
             "--report", str(report)]
     run = subprocess.run(argv, capture_output=True, text=True,
                          cwd=str(REPO), timeout=TIMEOUT)

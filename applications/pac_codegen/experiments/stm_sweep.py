@@ -6,7 +6,8 @@ HAL pairs with the PAC) the real third-party HAL.
 This generalizes experiments/cross_pac.py from four hand-picked fixtures to the
 whole corpus, and swaps the fixture for the real pipeline artifact: each target
 runs ``inject_from_run.py`` over the RM's generator run directory, gated on the
-constraint validator (``--validated``) and re-verified against the chunked
+constraint validator (``--constraints``) and attribution-checked against the
+chunked
 datasheet (``--chunks``).
 
 Per target:
@@ -17,10 +18,23 @@ The PAC tree is snapshotted BEFORE injection and restored even when a step
 fails, so targets sharing a crate (four RMs share stm32f3) never contaminate
 each other.
 
+Two guards keep a run honest, and both exist because their absence produced
+wrong numbers rather than an error:
+
+* the PAC is verified PRISTINE before injection, not merely provisioned --
+  get_pac's stamp file records the version, not the tree's state, so a crate
+  left injected by a crash or a hand-run is otherwise snapshotted as if clean;
+* ``patch_applied()`` reads Cargo.lock after every HAL check, because cargo
+  does NOT fail when a ``[patch.crates-io]`` does not apply -- it warns and
+  resolves the registry crate, so the whole experiment silently measures the
+  UNPATCHED PAC and reports zero enforcement.
+
 Usage:
     python applications/pac_codegen/experiments/stm_sweep.py --dry-run
     python applications/pac_codegen/experiments/stm_sweep.py --only rm0316
     python applications/pac_codegen/experiments/stm_sweep.py --skip-hal
+    python applications/pac_codegen/experiments/stm_sweep.py --only rm0008 \
+        --keep-pac /tmp/kept          # inspect the injected crate afterwards
 """
 
 import argparse
@@ -297,7 +311,7 @@ UNMAPPED = {
 }
 
 # Manuals whose chip crate exists only on stm32-rs MASTER, in two crates that
-# postdate v0.16.0. Measured by experiments/measure_master_pacs.py, not by this
+# postdate v0.16.0. Measured by experiments/stm_master_pacs.py, not by this
 # sweep: there is no crates.io release to provision and no driver can depend on
 # an unpublished crate, so only enforceability is measurable. Their PAC version
 # reads `latest` in the tables so released and unreleased rows are never
@@ -361,8 +375,8 @@ def run_inject(t: Target, pac_dir: Path, report: Path, dry: bool,
         sys.executable, str(INJECT), str(t.run_dir),
         "--pac", str(pac_dir), "--device", t.device,
         "--svd-dir", str(t.svd_path),
-        "--validated", str(t.validated),
-        "--verify-evidence", str(t.chunks),
+        "--constraints", str(t.validated),
+        "--attribution-check", str(t.chunks),
         "--report", str(report),
         # NOTE: --save-constraints writes even under --dry-run, so this must
         # never point at the committed applications/pac_codegen/constraints/
@@ -435,6 +449,30 @@ def hal_workspace(t: Target, c: Consumer, pac_dir: Path) -> Path:
         "[patch.crates-io]\n"
         f'{t.pac} = {{ path = "{pac_dir}" }}\n')
     return ws
+
+
+# The marker traits injection adds to generic.rs. Their presence means the
+# crate is ALREADY injected.
+_INJECTED_MARKER = "UnconstrainedWrite"
+
+
+def ensure_pristine(crate: str) -> Path:
+    """Provision, and re-provision by force if the tree is already injected.
+
+    get_pac.provision() trusts a stamp file that records the VERSION, not the
+    tree's state, so a crate left injected by a crashed run, an interrupt, or a
+    hand-run inject_from_run is returned as if it were clean. PacSnapshot would
+    then take the DIRTY tree as its baseline and report "restored pristine" for
+    restoring the dirt -- and injection's one-shot guard would refuse, failing
+    the target for a reason that has nothing to do with what it measures. This
+    is the single most common way a run in this folder fails spuriously.
+    """
+    pac_dir = get_pac.provision(crate=crate, version=PAC_VERSION)
+    generic = pac_dir / "src" / "generic.rs"
+    if generic.is_file() and _INJECTED_MARKER in generic.read_text():
+        print(f"  !! {crate} was left injected; re-provisioning from crates.io")
+        pac_dir = get_pac.provision(crate=crate, version=PAC_VERSION, force=True)
+    return pac_dir
 
 
 def patch_applied(ws: Path, pac: str) -> bool:
@@ -674,7 +712,7 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
 # --------------------------------------------------------------------------- #
 
 def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
-               field_gating: bool = False) -> dict:
+               field_gating: bool = False, keep_pac: Path = None) -> dict:
     res = {"rm": t.rm, "pac": t.pac, "device": t.device,
            "consumers": [c.crate for c in t.consumers],
            "inject": "?", "planned": 0, "fates": {}, "gated_specs": [],
@@ -685,7 +723,7 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
         print(f"  no run dir: {t.run_dir}")
         return res
 
-    pac_dir = get_pac.provision(crate=t.pac, version=PAC_VERSION)
+    pac_dir = ensure_pristine(t.pac)
     OUT.mkdir(parents=True, exist_ok=True)
     # The two gating modes plan DIFFERENT gate sets, so their reports must not
     # share a filename -- a field-gating run silently overwrote the default
@@ -752,6 +790,19 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
             res["hal_results"].append(entry)
         return res
     finally:
+        # Keep a copy of the INJECTED crate before restoring it. The sweep
+        # exists to measure, so it always puts the crate back -- which leaves
+        # nothing to read afterwards. This is the flag for "I want to look at
+        # what was generated", and it copies before the restore because after
+        # it there is nothing to copy.
+        if keep_pac is not None and not dry and res["inject"] == "ok":
+            dest = Path(keep_pac) / f"{t.rm}_{t.device}_{t.pac}"
+            if dest.exists():
+                shutil.rmtree(dest)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(pac_dir, dest)
+            res["kept_pac"] = str(dest)
+            print(f"  injected crate kept: {dest}")
         if snap is not None:
             res["pristine"] = snap.restore_and_verify()
             print(f"  restored pristine: {res['pristine']}")
@@ -764,7 +815,7 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
 def hal_baseline(t: Target, c: Consumer) -> str:
     """The consumer must compile against the PRISTINE PAC, else the injected
     result means nothing. A patch that did not apply is also a non-result."""
-    pac_dir = get_pac.provision(crate=t.pac, version=PAC_VERSION)
+    pac_dir = ensure_pristine(t.pac)
     ws = hal_workspace(t, c, pac_dir)
     run = cargo_check(ws)
     ok_patch = patch_applied(ws, t.pac)
@@ -786,6 +837,13 @@ def main() -> None:
     ap.add_argument("--field-level-gating", action="store_true",
                     help="gate individual field writer accessors as well as "
                          "whole registers (opt-in; changes which fates fire)")
+    ap.add_argument("--keep-pac", nargs="?", const="", default=None,
+                    metavar="DIR",
+                    help="copy each INJECTED crate here before it is restored, "
+                         "as <rm>_<device>_<crate>/. Without a DIR a temporary "
+                         "one is made and its path printed. The sweep always "
+                         "restores the PAC, so without this there is nothing "
+                         "left to inspect. Ignored under --dry-run.")
     ap.add_argument("--out", default=None, help="write the JSON summary here")
     args = ap.parse_args()
 
@@ -804,8 +862,16 @@ def main() -> None:
                 baselines[(t.rm, c.crate)] = hal_baseline(t, c)
                 print(f"  {baselines[(t.rm, c.crate)]}")
 
+    keep = None
+    if args.keep_pac is not None and not args.dry_run:
+        keep = Path(args.keep_pac) if args.keep_pac else Path(
+            tempfile.mkdtemp(prefix="stm_sweep_kept_"))
+        print(f"keeping injected crates under: {keep}\n")
+    elif args.keep_pac is not None:
+        print("--keep-pac ignored: --dry-run never touches a PAC\n")
+
     results = [run_target(t, args.dry_run, args.skip_hal, baselines,
-                          args.field_level_gating) for t in targets]
+                          args.field_level_gating, keep) for t in targets]
 
     print("\n\n## Summary\n")
     print("| RM | PAC | device | injection | registers gated | probe | consumer | "

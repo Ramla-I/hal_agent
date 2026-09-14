@@ -19,7 +19,7 @@ worktree references them by **absolute path**. Per RM (run `1`):
 | **SVD-bug report** | `evaluation/stm/{rm}/1/{rm}_structure_review.csv` | potential SVD/generator disagreements (`validator_verdict` = TP/FP, blank `tp_fp` to label) |
 | **Generator run dir** | `agent_output/stm/{rm}/1` | one file per register (input to `inject_from_run`) |
 | **SVD dir** | `devices/stm/{rm}/svd` | for collection's name/width lint |
-| **Chunked datasheet** | `chunked_datasheets/stm` | for `--verify-evidence` (quote anchoring + target attribution) |
+| **Chunked datasheet** | `chunked_datasheets/stm` | for `--attribution-check` (quote anchoring + target attribution) |
 
 ---
 
@@ -33,9 +33,9 @@ worktree references them by **absolute path**. Per RM (run `1`):
   - `"FP"` → force drop (overrides `enforce`).
   - `"TP"` → rescue a non-`enforce` row to at least doc_only.
 
-`inject_from_run --validated` accepts **either** file and gates codegen to
+`inject_from_run --constraints` accepts **either** file and gates codegen to
 `enforce`-only, honoring `tp_fp`. So: review `_constraints_review.jsonl`, then point
-`--validated` at it.
+`--constraints` at it.
 
 ---
 
@@ -47,7 +47,7 @@ worktree references them by **absolute path**. Per RM (run `1`):
 3. **Inject** (drop `--dry-run`) into the target PAC crate.
 
 `inject_from_run` internally: generator run → `collect_constraints` (lint) →
-`--validated` gate (enforce-only + `tp_fp`) → `--verify-evidence` →
+`--constraints` gate (enforce-only + `tp_fp`) → `--attribution-check` →
 inject via `rust_codegen`. Fates in the report: `planned`, `gated_out_by_validator`,
 `kind_not_emitted`, `rejected_at_collection`, `peripheral_not_in_device`, etc.
 
@@ -60,8 +60,8 @@ python applications/pac_codegen/inject_from_run.py \
   --device stm32f303 \
   --pac <path/to/pac-crate> \
   --svd-dir /home/ramla/hal_agent-phase-1d/devices/stm/rm0316/svd \
-  --validated /home/ramla/hal_agent-phase-1d/evaluation/stm/rm0316/1/rm0316_constraints_review.jsonl \
-  --verify-evidence /home/ramla/hal_agent-phase-1d/chunked_datasheets/stm \
+  --constraints /home/ramla/hal_agent-phase-1d/evaluation/stm/rm0316/1/rm0316_constraints_review.jsonl \
+  --attribution-check /home/ramla/hal_agent-phase-1d/chunked_datasheets/stm \
   --report /home/ramla/hal_agent-pac-injection/reports/rm0316.json \
   --dry-run
 ```
@@ -107,7 +107,7 @@ python applications/pac_codegen/inject_from_run.py \
   <run_dir>/agent_output/stm/rm0008/1 \
   --pac applications/pac_codegen/vendored/pac/stm32f1 --device stm32f103 \
   --svd-dir <devices>/stm/rm0008/svd/stm32f103.svd \
-  --validated <eval>/stm/rm0008/1/rm0008_constraints_review.jsonl
+  --constraints <eval>/stm/rm0008/1/rm0008_constraints_review.jsonl
 diff -rq /tmp/pristine_f1 applications/pac_codegen/vendored/pac/stm32f1
 ```
 

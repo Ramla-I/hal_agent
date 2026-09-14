@@ -162,16 +162,16 @@ def test_tie_break_is_numeric_not_lexicographic():
 
 
 def test_collision_input_is_already_validator_gated():
-    """Plans reach this function only after the --validated gate, so both
+    """Plans reach this function only after the --constraints gate, so both
     sides of a conflict are judge-`enforce`. This pins the ordering
     assumption the tie-break rests on (see inject_from_run.main)."""
     src = (APP_DIR / "inject_from_run.py").read_text()
     gate = src.index("gate_map=gate_map")
     collide = src.index("resolve_instance_collisions")
-    verify = src.index("if args.verify_evidence:")
+    verify = src.index("if args.attribution_check:")
     assert gate < collide < verify, (
         "pipeline order changed: collisions must be resolved after the "
-        "validator gate and before the evidence check")
+        "validator gate and before the attribution check")
 
 
 def test_distinct_registers_do_not_collide():

@@ -86,7 +86,7 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
     ``field_level_gating`` (opt-in) enables field-scoped constraints to be
     enforced at field granularity; off by default (they are skipped).
 
-    ``gate_map`` (opt-in, from ``--validated``) keys the constraint validator's
+    ``gate_map`` (opt-in, from ``--constraints``) keys the constraint validator's
     codegen decision by the linted-constraint id: only ``enforce`` constraints
     are emitted as compile-time gates; ``doc_only`` / ``drop`` / unknown are
     excluded and reported. Without it, no validator gating is applied.
@@ -231,13 +231,13 @@ def device_constraints_file(device, run_dir, svd_dir, chunks,
         "svd_dir": svd_dir,
         "note": "constraints this device's crate enforces, post "
                 "collection-lint, emitter selection, access-mode pruning, "
-                "and (with --verify-evidence) quote anchoring plus target "
+                "and (with --attribution-check) quote anchoring plus target "
                 "attribution; regenerate with "
                 "inject_from_run.py. Whole-register gates are in "
                 "`gated_operations`/`preconditions`; field-scoped ones are "
                 "in `gated_fields` and gate a single writer accessor, "
                 "leaving sibling fields untouched",
-        "evidence_verified_against": chunks or None,
+        "attribution_checked_against": chunks or None,
         # Which gating mode produced this set. The two modes plan DIFFERENT
         # gates, and without this the file cannot be told apart from the
         # other mode's after the fact.
@@ -282,7 +282,8 @@ def main() -> None:
     ap.add_argument("--device", required=True, help="device module, e.g. stm32f103")
     ap.add_argument("--svd-dir", default=None,
                     help="SVD file/dir for collection's name+width lint")
-    ap.add_argument("--verify-evidence", "--chunks", dest="verify_evidence",
+    ap.add_argument("--attribution-check", "--verify-evidence", "--chunks",
+                    dest="attribution_check",
                     default=None, metavar="DIR",
                     help="chunked-datasheet root (e.g. "
                          ".../chunked_datasheets/stm). Verify that each kept "
@@ -296,9 +297,11 @@ def main() -> None:
                          "register AND anchors outside the target's section "
                          "supports the claim neither textually nor "
                          "positionally. (a) is usually already enforced by "
-                         "--validated, whose judge never confirms an "
-                         "unanchorable quote. --chunks is the old name.")
-    ap.add_argument("--validated", default=None, metavar="PATH",
+                         "--constraints, whose judge never confirms an "
+                         "unanchorable quote. --verify-evidence and "
+                         "--chunks are the old names.")
+    ap.add_argument("--constraints", "--validated", dest="constraints",
+                    default=None, metavar="PATH",
                     help="chained validated.jsonl (or a *_constraints_review.jsonl): "
                          "gate codegen on the constraint validator — only "
                          "judge-confirmed, witness-enforceable constraints "
@@ -340,7 +343,7 @@ def main() -> None:
         collect_constraints.main(argv)
 
         rm = Path(args.run_dir.rstrip("/")).parent.name
-        gate_map = _load_gate_map(Path(args.validated), rm) if args.validated else None
+        gate_map = _load_gate_map(Path(args.constraints), rm) if args.constraints else None
         plans, rows = select_and_plan(
             collect_dir, device_dir,
             field_level_gating=args.field_level_gating,
@@ -418,10 +421,10 @@ def main() -> None:
                                f"{sorted(set(before[key]) - set(kept))} at the device)")
 
         quote_tiers = {}
-        if args.verify_evidence:
+        if args.attribution_check:
             from core import quote_anchor as qa
             matcher = qa.RMMatcher(
-                rm, str(Path(args.verify_evidence) / rm / "chunks" / "md"))
+                rm, str(Path(args.attribution_check) / rm / "chunks" / "md"))
             kept_plans = []
             for plan in plans:
                 tiers = {}
@@ -470,7 +473,7 @@ def main() -> None:
 
         if args.save_constraints:
             device_file = device_constraints_file(
-                args.device, args.run_dir, args.svd_dir, args.verify_evidence,
+                args.device, args.run_dir, args.svd_dir, args.attribution_check,
                 args.field_level_gating, plans, quote_tiers)
             out = Path(args.save_constraints)
             out.parent.mkdir(parents=True, exist_ok=True)

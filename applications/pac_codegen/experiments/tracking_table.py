@@ -297,7 +297,7 @@ def master_results() -> dict:
     APPLIED, and these manuals have no earlier version to be inconsistent
     with -- what matters is that the version is stated wherever it differs,
     which is why their PAC column reads `latest`."""
-    p = OUT / "measure_master_pacs.json"
+    p = OUT / "stm_master_pacs.json"
     if not p.is_file():
         return {}
     return {r["rm"]: r for r in json.loads(p.read_text())}
