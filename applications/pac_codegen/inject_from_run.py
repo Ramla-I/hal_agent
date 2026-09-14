@@ -198,6 +198,14 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
             plan.constraint_ids = [
                 new_constraint_id(rm, peripheral, reg_entry["register"], g)
                 for g in gates]
+        except rust_codegen.SameRegisterSoftwareGate as e:
+            # A refusal on safety grounds, not a codegen gap: kept as its own
+            # fate so the count is visible rather than buried in
+            # emitter_rejected. (Subclasses ValueError -- catch before the
+            # generic handler.)
+            row("same_register_software_gate", str(e),
+                kinds=_kind_counts(gates))
+            continue
         except rust_codegen.FieldGatingDisabled as e:
             # A switched-off feature, not a codegen gap -- kept separate so the
             # emitter's real limits are readable. (Subclasses ValueError, so it
@@ -331,10 +339,16 @@ def main() -> None:
                          "family and one manual onto two devices")
     ap.add_argument("--dry-run", action="store_true",
                     help="select and plan, but do not touch the PAC")
+    ap.add_argument("--register-only", action="store_true",
+                    help="BASELINE MODE: gate whole registers only, skipping "
+                         "every field-scoped constraint. This was the default "
+                         "until field gating was shown to recover 602 "
+                         "registers and 1068 obligations the policy discarded; "
+                         "it is kept because every previously published number "
+                         "was measured this way and the comparison should be "
+                         "runnable, not asserted.")
     ap.add_argument("--field-level-gating", action="store_true",
-                    help="OPT-IN: enforce field-scoped constraints at field "
-                         "granularity by gating per-field writer accessors "
-                         "(default off: field-scoped constraints are skipped)")
+                    help=argparse.SUPPRESS)   # now the default; accepted as a no-op
     ap.add_argument("--disable-kind", action="append", default=[],
                     metavar="KIND",
                     help="disable codegen for a grammar-v2 kind (repeatable); "
@@ -358,7 +372,7 @@ def main() -> None:
         gate_map = _load_gate_map(Path(args.constraints), rm) if args.constraints else None
         plans, rows = select_and_plan(
             collect_dir, device_dir,
-            field_level_gating=args.field_level_gating,
+            field_level_gating=(not args.register_only),
             disabled_kinds=set(args.disable_kind),
             gate_map=gate_map, rm=rm)
 
@@ -525,7 +539,7 @@ def main() -> None:
         if args.save_constraints:
             device_file = device_constraints_file(
                 args.device, args.run_dir, args.svd_dir, args.attribution_check,
-                args.field_level_gating, plans, quote_tiers)
+                (not args.register_only), plans, quote_tiers)
             out = Path(args.save_constraints)
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps(device_file, indent=1) + "\n")

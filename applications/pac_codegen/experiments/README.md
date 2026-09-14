@@ -32,7 +32,7 @@ pairing that has drifted is how an experiment silently measures the wrong crate.
 
 | script | question | output |
 |---|---|---|
-| `stm_sweep.py` | inject every manual into its PAC and compile real drivers against it — what breaks? | `out/sweep*.json`, `out/<rm>_<device>*.json`, `out/constraints/` |
+| `stm_sweep.py` | inject every manual into its PAC and compile real drivers against it — what breaks? | `out/` (field gating, the default) or `out/register_only/` (`--register-only`) |
 | `stm_master_pacs.py` | same, for the 4 manuals whose crate exists only on stm32-rs master | `out/stm_master_pacs.json` |
 | `tracking_table.py` | turn every report into the published per-manual table | `out/tracking.csv`, `docs/injection_tracking.{md,html}` |
 
@@ -44,7 +44,16 @@ manuals share `stm32f3`), so a crate left dirty contaminates the next run.
 ```sh
 python applications/pac_codegen/experiments/stm_sweep.py --only rm0008
 python applications/pac_codegen/experiments/stm_sweep.py --dry-run --skip-hal
+python applications/pac_codegen/experiments/stm_sweep.py --register-only   # baseline
 ```
+
+**Field-level gating is the default.** A constraint that names fields gates
+only those fields' writer accessors; one that names none gates the register.
+`--register-only` is the old behaviour — whole registers only, field-scoped
+constraints skipped — kept because every previously published number was
+measured that way, and the comparison should be runnable rather than asserted.
+Its artifacts go to `out/register_only/`, a separate tree: the two modes plan
+different gate sets, and a shared path once let one overwrite the other.
 
 `tracking_table.py` reads results, never recomputes them: every number in the
 published table traces to a file in `out/`.

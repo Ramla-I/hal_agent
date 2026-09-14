@@ -187,6 +187,10 @@ class Precondition:
 
     def __init__(self, cond, source: "SourceRegister | None" = None):
         self.source = source
+        # Who restores this condition. A same-register precondition the
+        # SOFTWARE must restore is a one-way door under whole-register gating
+        # (see SameRegisterSoftwareGate); one the HARDWARE restores is not.
+        self.established_by = getattr(cond, "established_by", None)
         self.field = cond.field
         if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", self.field or ""):
             raise ValueError(
@@ -314,6 +318,25 @@ def enabled_kinds(disabled=None) -> frozenset:
     return SUPPORTED_KINDS - frozenset(disabled or ())
 
 
+class SameRegisterSoftwareGate(ValueError):
+    """A whole-register write gate whose precondition is a field in THAT
+    register, restored by software: a one-way door, so it is refused.
+
+    Once the field leaves the required state the register can never be written
+    again -- restoring the field would itself be a write, which the gate
+    forbids. I2C_OAR2 is the worked example: "These bits can be written only
+    when OA2EN = 0" scopes to the address fields, but extracted without a field
+    list it gates the whole register, and setting OA2EN then locks OAR2 until
+    reset.
+
+    Two things produce this shape and both are review outcomes, not codegen
+    outcomes: an extraction that lost the field list (91% of OAR2 instances
+    kept theirs), or a genuine lock bit, which belongs in the `write_once` kind
+    rather than `state_gate`. A precondition the HARDWARE restores is exempt --
+    the peripheral clears it without our help, so the register comes back.
+    """
+
+
 class FieldGatingDisabled(ValueError):
     """Every constraint on this register was field-scoped and field-level
     gating is off, so nothing was emitted.
@@ -415,6 +438,18 @@ class RegisterPlan:
             )
         pres = _build_preconditions(c, peripheral)
         op_raw = c.target_operation.strip().lower()
+        if op_raw in ("write", "modify", "any", "read/write", "read-write"):
+            locked = [p for p in pres
+                      if p.source is None and p.established_by == "software"]
+            if locked:
+                raise SameRegisterSoftwareGate(
+                    f"{self.reg_name}: whole-register {op_raw} gate on "
+                    f"{[p.field for p in locked]}, a field of this same "
+                    "register that software must restore — the gate would "
+                    "forbid the write that satisfies it, locking the register "
+                    "until reset. Scope it to fields, or classify it as "
+                    "write_once if it is a lock."
+                )
         # svd2rust modify() = one read + one write, so its obligations are
         # the UNION of the register's read and write constraints. modify is
         # DERIVED here (a "modify" bucket fed by both surfaces), never a

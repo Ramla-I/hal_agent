@@ -33,6 +33,7 @@ Usage:
     python applications/pac_codegen/experiments/stm_sweep.py --dry-run
     python applications/pac_codegen/experiments/stm_sweep.py --only rm0316
     python applications/pac_codegen/experiments/stm_sweep.py --skip-hal
+    python applications/pac_codegen/experiments/stm_sweep.py --register-only
     python applications/pac_codegen/experiments/stm_sweep.py --only rm0008 \
         --keep-pac /tmp/kept          # inspect the injected crate afterwards
 """
@@ -369,8 +370,16 @@ class PacSnapshot:
 # Steps
 # --------------------------------------------------------------------------- #
 
+def out_root(field_gating: bool) -> Path:
+    """Where a run's artifacts go. The two modes plan DIFFERENT gate sets, so
+    they get separate trees rather than a filename suffix -- a suffix once let
+    a field run overwrite the default run's numbers, and the published table
+    reported one as the other."""
+    return OUT if field_gating else OUT / "register_only"
+
+
 def run_inject(t: Target, pac_dir: Path, report: Path, dry: bool,
-               field_gating: bool = False) -> subprocess.CompletedProcess:
+               field_gating: bool = True) -> subprocess.CompletedProcess:
     argv = [
         sys.executable, str(INJECT), str(t.run_dir),
         "--pac", str(pac_dir), "--device", t.device,
@@ -384,10 +393,9 @@ def run_inject(t: Target, pac_dir: Path, report: Path, dry: bool,
         # Mode-suffixed for the same reason the report is: the two modes plan
         # different gate sets, and an unsuffixed name let a field-gating run
         # overwrite the default run's file.
-        "--save-constraints", str(OUT / "constraints" /
-                                  f"{t.rm}_{t.device}"
-                                  f"{'_fieldgate' if field_gating else ''}.json"),
-        *(["--field-level-gating"] if field_gating else []),
+        "--save-constraints", str(out_root(field_gating) / "constraints" /
+                                  f"{t.rm}_{t.device}.json"),
+        *([] if field_gating else ["--register-only"]),
     ]
     if dry:
         argv.append("--dry-run")
@@ -712,7 +720,7 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
 # --------------------------------------------------------------------------- #
 
 def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
-               field_gating: bool = False, keep_pac: Path = None) -> dict:
+               field_gating: bool = True, keep_pac: Path = None) -> dict:
     res = {"rm": t.rm, "pac": t.pac, "device": t.device,
            "consumers": [c.crate for c in t.consumers],
            "inject": "?", "planned": 0, "fates": {}, "gated_specs": [],
@@ -728,8 +736,9 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
     # The two gating modes plan DIFFERENT gate sets, so their reports must not
     # share a filename -- a field-gating run silently overwrote the default
     # run's numbers, and the tracking table then published one as the other.
-    mode = "_fieldgate" if field_gating else ""
-    report = OUT / f"{t.rm}_{t.device}{mode}{'_dry' if dry else ''}.json"
+    root = out_root(field_gating)
+    root.mkdir(parents=True, exist_ok=True)
+    report = root / f"{t.rm}_{t.device}{'_dry' if dry else ''}.json"
 
     snap = None if dry else PacSnapshot(pac_dir, t.device)
     try:
@@ -773,7 +782,7 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
             else:
                 entry.update(classify(
                     errors, set(res["gated_specs"]),
-                    _gate_fields(OUT / "constraints" /
+                    _gate_fields(out_root(field_gating) / "constraints" /
                                  f"{t.rm}_{t.device}.json")))
                 entry["status"] = "ran"
                 print(f"  HAL {c.crate} {c.version} (baseline {base}): "
@@ -834,9 +843,12 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true",
                     help="selection + planning only; never touch a PAC")
     ap.add_argument("--skip-hal", action="store_true")
+    ap.add_argument("--register-only", action="store_true",
+                    help="BASELINE MODE: whole-register gating only. Writes to "
+                         "out/register_only/ so the two modes never share a "
+                         "path; the default (field) run keeps out/.")
     ap.add_argument("--field-level-gating", action="store_true",
-                    help="gate individual field writer accessors as well as "
-                         "whole registers (opt-in; changes which fates fire)")
+                    help=argparse.SUPPRESS)   # now the default; a no-op
     ap.add_argument("--keep-pac", nargs="?", const="", default=None,
                     metavar="DIR",
                     help="copy each INJECTED crate here before it is restored, "
@@ -871,7 +883,7 @@ def main() -> None:
         print("--keep-pac ignored: --dry-run never touches a PAC\n")
 
     results = [run_target(t, args.dry_run, args.skip_hal, baselines,
-                          args.field_level_gating, keep) for t in targets]
+                          (not args.register_only), keep) for t in targets]
 
     print("\n\n## Summary\n")
     print("| RM | PAC | device | injection | registers gated | probe | consumer | "
@@ -889,7 +901,8 @@ def main() -> None:
                   f"{h.get('other', '—')} | {r['pristine']} |")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    out = Path(args.out) if args.out else OUT / (
+    out = Path(args.out) if args.out else out_root(
+        not args.register_only) / (
         "sweep_dry.json" if args.dry_run else "sweep.json")
     out.write_text(json.dumps(results, indent=1, default=str) + "\n")
     print(f"\nsummary: {out}")

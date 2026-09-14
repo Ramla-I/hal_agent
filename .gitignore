@@ -291,3 +291,7 @@ applications/pac_codegen/vendored/pac_master/
 applications/pac_codegen/experiments/hal_probe/target/
 applications/pac_codegen/experiments/hal_probe/Cargo.lock
 applications/pac_codegen/experiments/hal_probe/vendored/
+# Baseline (whole-register) sweep artifacts. Same status as out/: regenerable,
+# never hand-edited. Kept in its own tree so the two gating modes can never
+# share a path.
+applications/pac_codegen/experiments/out/register_only/
