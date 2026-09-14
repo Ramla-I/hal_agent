@@ -29,6 +29,9 @@
      "The software is allowed to program ADC_CFGR1 only when ADEN is cleared in ADC_CR."
     ]
    },
+   "constraint_ids": [
+    "bfc85131a7a6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -64,6 +67,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing). The software is allowed to write this bit only when ADEN bit is cleared."
     ]
    },
+   "constraint_ids": [
+    "453e56857d5f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -97,6 +103,9 @@
      "Note: The software is allowed to write this bit only when ADSTART bit is cleared (this ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "1fd0e003cf32"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -130,6 +139,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "7dd0be585cd3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -163,6 +175,9 @@
      "The initialization vector may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "8e284b120c3e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -196,6 +211,9 @@
      "The initialization vector may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "8659184b2f5e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -229,6 +247,9 @@
      "The initialization vector may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "365cc00454ed"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -262,6 +283,9 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "5a5dd69e3acc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -295,6 +319,9 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "c6a3f4b51ba7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -328,6 +355,9 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "d2172c0374e4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -361,6 +391,9 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "bb9ec57a0e7a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -394,6 +427,9 @@
      "**Caution:** The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "eaacde8cc826"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -427,6 +463,9 @@
      "**Caution:** The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "3b53ea4527dc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -460,6 +499,9 @@
      "**Caution:** The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
     ]
    },
+   "constraint_ids": [
+    "98d77c570012"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -493,6 +535,9 @@
      "This register can only be written when the LPUART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "b976954fdfcf"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -526,6 +571,9 @@
      "This register must be written in initialization mode only."
     ]
    },
+   "constraint_ids": [
+    "32c3f9b33a40"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -559,6 +607,9 @@
      "The RTC_TR is the calendar time shadow register. This register must be written in initialization mode only."
     ]
    },
+   "constraint_ids": [
+    "801271c1e2e4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -592,6 +643,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "cde4ffc71a49"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -625,6 +679,9 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "ed31d75076a8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

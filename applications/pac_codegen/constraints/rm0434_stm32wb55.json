@@ -31,6 +31,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "23c95450f90f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -66,6 +69,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "f1f6a80e7647"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -103,6 +109,9 @@
      "Note: The software is allowed to write these bits only when ADEN = 1, ADSTART = 0 and JADSTART = 0 (ADC enabled and no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "81f20e6077bc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -136,6 +145,9 @@
      "Note: The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "9e6681a8b108"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -181,6 +193,9 @@
      "The software is allowed to write these bits only when the ADC is disabled (ADCAL = 0, JADSTART = 0, JADSTP = 0, ADSTART = 0, ADSTP = 0, ADDIS = 0 and ADEN = 0)."
     ]
    },
+   "constraint_ids": [
+    "67d12ea30fb0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -216,6 +231,9 @@
      "Note: The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "628db896971e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -249,6 +267,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "7191746e7e2d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -282,6 +303,9 @@
      "Note: The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "132d65775550"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -315,6 +339,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "c12702f6c39a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -350,6 +377,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "bc0da51f2528"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -385,6 +415,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "5f1201cfeee6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -420,6 +453,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "a6afd7c25617"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -453,6 +489,9 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "constraint_ids": [
+    "8b48f8bff613"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -486,6 +525,9 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "constraint_ids": [
+    "c2ea8eb5cced"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -519,6 +561,9 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "constraint_ids": [
+    "fbf5d1a7f305"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -552,6 +597,9 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "constraint_ids": [
+    "959c4965c166"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -585,6 +633,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "7e39e844f9e5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -618,6 +669,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "205742343ef2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -651,6 +705,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "7f72afa8dce7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -684,6 +741,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "cd0941c1602f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -717,6 +777,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "cd6613454455"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -750,6 +813,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "1ebae8fbe6ee"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -783,6 +849,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "8af1f29a29a7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -816,6 +885,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "a26f2ba3cc6b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -849,6 +921,9 @@
      "The AES_IVRx registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "6f98a3d40d49"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -882,6 +957,9 @@
      "The AES_IVRx registers may be written only when the AES peripheral is disabled"
     ]
    },
+   "constraint_ids": [
+    "fcea70ad7ea2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -915,6 +993,9 @@
      "The AES_IVRx registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "f7f5194f2e07"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -948,6 +1029,9 @@
      "The AES_IVRx registers may be written only when the AES peripheral is disabled"
     ]
    },
+   "constraint_ids": [
+    "84638ab12d98"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -981,6 +1065,9 @@
      "The key for encryption or decryption may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "a48a3bc5747b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1014,6 +1101,9 @@
      "The key for encryption or decryption may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "b8553cc90bf4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1047,6 +1137,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "0e3bd189873c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1080,6 +1173,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "bc218bc7b543"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1113,6 +1209,9 @@
      "The key for encryption or decryption may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "c4a3ec51f35e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1146,6 +1245,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "54b599d6a03f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1179,6 +1281,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "ac95b36c4bc7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1212,6 +1317,9 @@
      "The key for encryption or decryption may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "260448f47c55"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1245,6 +1353,9 @@
      "This register can be written only when the frequency error counter is disabled (the CEN bit is cleared in CRS_CR). When the counter is enabled, this register is write-protected."
     ]
    },
+   "constraint_ids": [
+    "79e37498f7d5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1278,6 +1389,9 @@
      "This register cannot be modified when CFGBSY in the Flash memory CPU2 status register (FLASH_C2SR) is set."
     ]
    },
+   "constraint_ids": [
+    "ed846b4a25cf"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1311,6 +1425,9 @@
      "These bits are read/write but can only be written when the LCKK bit is \u20180."
     ]
    },
+   "constraint_ids": [
+    "51f5933dc40d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1344,6 +1461,9 @@
      "These bits can be written only when OA1EN = 0."
     ]
    },
+   "constraint_ids": [
+    "50867f405712"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1377,6 +1497,9 @@
      "These bits can be written only when TXE = 1."
     ]
    },
+   "constraint_ids": [
+    "01649f933ba0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1410,6 +1533,9 @@
      "VSEL, MUX_SEG, BIAS, DUTY, and BUFEN bitfields are write-protected when the LCD is enabled (ENS =1 in LCD_SR)."
     ]
    },
+   "constraint_ids": [
+    "58d2cf984032"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1443,6 +1569,9 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "eb9186a84160"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1476,6 +1605,9 @@
      "The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "451dbf33abfe"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1509,6 +1641,9 @@
      "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
     ]
    },
+   "constraint_ids": [
+    "fc5b58857422"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1542,6 +1677,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "4cc87bd29c12"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1575,6 +1713,9 @@
      "Note: This bitfield can be modified only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "ab32d30808b0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1608,6 +1749,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "3431639a2aa8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1641,6 +1785,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "ae0a325c4827"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1674,6 +1821,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "ea98a141a39d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1707,6 +1857,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "1f91ec92a60e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1740,6 +1893,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "f2483896f965"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1773,6 +1929,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "a4d999a1c6da"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1806,6 +1965,9 @@
      "The RTC_TR is the calendar time shadow register. This register must be written in initialization mode only."
     ]
    },
+   "constraint_ids": [
+    "0e247fdfdd99"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1839,6 +2001,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "36e7f653cc1e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1872,6 +2037,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "35a9063b757e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1905,6 +2073,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "24fc24d53ede"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1938,6 +2109,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "c9a05ada0c9b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1971,6 +2145,9 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "b143279515e7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

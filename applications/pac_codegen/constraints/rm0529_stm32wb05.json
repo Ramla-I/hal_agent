@@ -29,6 +29,9 @@
      "Note: These bits can be written only when OA1EN=0."
     ]
    },
+   "constraint_ids": [
+    "2437d0482b64"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "Note: These bits can be written only when TXE=1."
     ]
    },
+   "constraint_ids": [
+    "9eb4cab7053d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "This register can only be written when the LPUART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "58a83c948b0e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -128,6 +137,9 @@
      "This register must be written in initialization mode only."
     ]
    },
+   "constraint_ids": [
+    "9c228909798a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -161,6 +173,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "897c3c7d2a2e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -194,6 +209,9 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "cc1f520ccce5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

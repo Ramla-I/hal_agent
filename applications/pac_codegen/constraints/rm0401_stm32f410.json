@@ -29,6 +29,9 @@
      "The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
     ]
    },
+   "constraint_ids": [
+    "25b58eb42eab"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "1. Check that no flash memory operation is ongoing by checking the BSY bit in the FLASH_SR register"
     ]
    },
+   "constraint_ids": [
+    "e5f04310ffd3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -99,6 +105,9 @@
      "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
     ]
    },
+   "constraint_ids": [
+    "89809769d7f1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -132,6 +141,9 @@
      "Caution: The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "d824ea4c684d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -165,6 +177,9 @@
      "Caution: The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
     ]
    },
+   "constraint_ids": [
+    "a5c0ec164b5e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -198,6 +213,9 @@
      "This register can be written in initialization mode only (RTC_ISR/INITF = \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "1ec055e65f6d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -231,6 +249,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "5a502b54615d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -257,6 +278,9 @@
      "Note: A read to this register when the BSY Flag is set could return an incorrect value."
     ]
    },
+   "constraint_ids": [
+    "b65bd6bc68e1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -280,6 +304,9 @@
      "Note: A read to this register when the BSY Flag is set could return an incorrect value."
     ]
    },
+   "constraint_ids": [
+    "bbacb1d2ee0d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -310,6 +337,9 @@
      "For correct operation, these bits should be configured when the I2S is disabled."
     ]
    },
+   "constraint_ids": [
+    "8177dc2b9edd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

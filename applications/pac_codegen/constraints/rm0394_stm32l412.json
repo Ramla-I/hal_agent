@@ -31,6 +31,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "3d26bc004b12"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -66,6 +69,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "eeef412ed92a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -101,6 +107,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 and JADSTART = 0 (which ensures that no regular nor injected conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "3a5dc573de09"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -146,6 +155,9 @@
      "The software is allowed to write these bits only when the ADC is disabled (ADCAL = 0, JADSTART = 0, JADSTP = 0, ADSTART = 0, ADSTP = 0, ADDIS = 0 and ADEN = 0)."
     ]
    },
+   "constraint_ids": [
+    "c53e23263661"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -179,6 +191,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "baeb41e95479"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -214,6 +229,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "c5c8d3ea8032"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -249,6 +267,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "d259ee5409bf"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -284,6 +305,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 and JADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "5754bd10f1cf"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -321,6 +345,9 @@
      "The software is allowed to write these bits only when ADEN = 1 and ADSTART = 0 and JADSTART = 0 (ADC is enabled and no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "a6172417d8b0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -354,6 +381,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "aa16978b2426"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -387,6 +417,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "154be7af5133"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -420,6 +453,9 @@
      "The software is allowed to write these bits only when ADSTART = 0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "93f8c0d9c3d5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -453,6 +489,9 @@
      "This register can be written only when the frequency error counter is disabled (the CEN bit is cleared in CRS_CR)."
     ]
    },
+   "constraint_ids": [
+    "ec4abec35a3c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -486,6 +525,9 @@
      "The FLASH_CR register cannot be written when the BSY bit in the Flash status register (FLASH_SR) is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
     ]
    },
+   "constraint_ids": [
+    "6ca10e7ed4a8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -519,6 +561,9 @@
      "These bits can be written only when TXE = 1."
     ]
    },
+   "constraint_ids": [
+    "f7b0eb5e328f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -552,6 +597,9 @@
      "The LPTIM_CFGR2 register must only be modified when the LPTIM is disabled (ENABLE bit reset to 0)."
     ]
    },
+   "constraint_ids": [
+    "55e487ebf805"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -585,6 +633,9 @@
      "The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "constraint_ids": [
+    "ac30272051f4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -618,6 +669,9 @@
      "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)."
     ]
    },
+   "constraint_ids": [
+    "c496f31a4886"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -651,6 +705,9 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "constraint_ids": [
+    "52a4f0f44480"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -684,6 +741,9 @@
      "The LPTIM_RCR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "constraint_ids": [
+    "a241f68844e0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -717,6 +777,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "c907fa4a8db4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -750,6 +813,9 @@
      "_Note: This bitfield can be modified only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "36fe3bd04cd3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -783,6 +849,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "27e9ece4f7d4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -816,6 +885,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "2c677b2c1650"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -849,6 +921,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "4d8b7a200c3e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -882,6 +957,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "6bdc6405914b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -915,6 +993,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "36211232a75f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -948,6 +1029,9 @@
      "The bits of the Backup domain control register (RCC_BDCR) are outside of the V_CORE domain. As a result, after Reset, these bits are write-protected and the DBP bit in the Power control register 1 (PWR_CR1) has to be set before these can be modified."
     ]
    },
+   "constraint_ids": [
+    "44e02c1ca452"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -981,6 +1065,9 @@
      "This register must be written in initialization mode only."
     ]
    },
+   "constraint_ids": [
+    "3f33ebc5212b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1014,6 +1101,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
     ]
    },
+   "constraint_ids": [
+    "0f155ad0ff0d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

@@ -29,6 +29,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "4a4dc7105747"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "fa97372a5021"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "bc7893a03125"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -128,6 +137,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "ff80b3158d3d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -161,6 +173,9 @@
      "This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set."
     ]
    },
+   "constraint_ids": [
+    "d317cf6c7b95"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -194,6 +209,9 @@
      "_Note: These bits can be written only when TXE=1._"
     ]
    },
+   "constraint_ids": [
+    "5398f9813913"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -227,6 +245,9 @@
      "After system reset, the TAMP registers (including backup registers) are protected against parasitic write access by the DBP bit in the power control peripheral (refer to the PWR power control section). DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "constraint_ids": [
+    "bb80ed270990"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -260,6 +281,9 @@
      "After system reset, the TAMP registers (including backup registers) are protected against parasitic write access by the DBP bit in the power control peripheral (refer to the PWR power control section). DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "constraint_ids": [
+    "f168976c09c7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -293,6 +317,10 @@
      "After system reset, the TAMP registers (including backup registers) are protected against parasitic write access by the DBP bit in the power control peripheral (refer to the PWR power control section). DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "constraint_ids": [
+    "18d41ad5fbaf",
+    "6ca5b2417903"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -319,6 +347,9 @@
      "After system reset, the TAMP registers (including backup registers) are protected against parasitic write access by the DBP bit in the power control peripheral (refer to the PWR power control section). DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "constraint_ids": [
+    "96cfbc09b7c0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -349,6 +380,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "ee69e9fce3f8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -382,6 +416,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "ec75b36c7198"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -415,6 +452,9 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "1c213b46d09c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -448,6 +488,9 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "0d61ea01acf4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

@@ -29,6 +29,9 @@
      "Note: The software is allowed to write this bit only when ADEN = 0."
     ]
    },
+   "constraint_ids": [
+    "6d193aec1857"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "Note: The software is allowed to write this bit only when ADEN = 0."
     ]
    },
+   "constraint_ids": [
+    "91d297fce15c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "Note: The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "0019fb07def0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -128,6 +137,9 @@
      "The software is allowed to program ADC_CFGR1 only when ADEN is cleared in ADC_CR."
     ]
    },
+   "constraint_ids": [
+    "526ca5c789fb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -161,6 +173,9 @@
      "The software is allowed to program ADC_CFGR2 only when ADEN is cleared in ADC_CR."
     ]
    },
+   "constraint_ids": [
+    "9b10efbb4f2b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -194,6 +209,9 @@
      "software must write the ADCAL and ADEN bits in the ADC_CR register and configure the ADC_CFGR1 and ADC_CFGR2 registers only when the ADC is disabled (ADEN must be cleared)."
     ]
    },
+   "constraint_ids": [
+    "f8ea9998ecf3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -227,6 +245,9 @@
      "Note: The software is allowed to write this bit only when ADSTART bit is cleared (this ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "a275d49ee8cc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -260,6 +281,9 @@
      "Note: The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "47adbf2a7b4b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -293,6 +317,9 @@
      "Attempts to write the bitfield are ignored when the EN bit of the AES_CR register is set before the write access and it is not cleared by that write access."
     ]
    },
+   "constraint_ids": [
+    "da4e21d87324"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -326,6 +353,9 @@
      "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect to the register contents. For modifying the contents of the AES_IVRx registers, the EN bit of the AES_CR register must first be cleared."
     ]
    },
+   "constraint_ids": [
+    "1c24558c457d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -352,6 +382,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "ef12cb808341"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -375,6 +408,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "222bdff24760"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -398,6 +434,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "71c59ac9f8ec"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -421,6 +460,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "ecc7da5c5dfd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -444,6 +486,9 @@
      "The key may be written into these registers when the AES peripheral is disabled, by clearing the EN bit of the AES_CR register."
     ]
    },
+   "constraint_ids": [
+    "1b04d47779e4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -474,6 +519,9 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "constraint_ids": [
+    "f95c4b721d68"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -507,6 +555,9 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "constraint_ids": [
+    "109f641888f8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -540,6 +591,9 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "constraint_ids": [
+    "f0fcf46d8532"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -573,6 +627,9 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "constraint_ids": [
+    "1d7b66be485c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -606,6 +663,9 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "constraint_ids": [
+    "34a9569560ea"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -639,6 +699,9 @@
      "These registers can be read only when AES is enabled. Reading these registers while AES is disabled returns 0x0000 0000."
     ]
    },
+   "constraint_ids": [
+    "bf39eb70c42b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -672,6 +735,9 @@
      "Bit 31 LOCK : locks the whole content of the register, COMP1_CSR[31:0]\n\nThis bit is set by software and cleared by a hardware system reset.\n0: COMP1_CSR[31:0] are read/write.\n1: COMP1_CSR[31:0] are read-only."
     ]
    },
+   "constraint_ids": [
+    "4f7dd78a2358"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -705,6 +771,9 @@
      "Bit 31 LOCK : locks the whole content of the register, COMP2_CSR[31:0]\n\nThis bit is set by software and cleared by a hardware system reset.\n0: COMP2_CSR[31:0] are read/write.\n1: COMP2_CSR[31:0] are read-only."
     ]
    },
+   "constraint_ids": [
+    "134c4e6f8cbf"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -742,6 +811,10 @@
      "This register cannot be modified when CFGBSY is set in FLASH_SR."
     ]
    },
+   "constraint_ids": [
+    "664d8d25819d",
+    "d751ddeafbbb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -777,6 +850,9 @@
      "Note: These bits can be written only when TXE = 1."
     ]
    },
+   "constraint_ids": [
+    "6446e80eb0ee"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -810,6 +886,9 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "constraint_ids": [
+    "920dba1e13d9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -843,6 +922,9 @@
      "The LPTIM_RCR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "constraint_ids": [
+    "f696cba68c59"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -876,6 +958,9 @@
      "Caution: The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "constraint_ids": [
+    "69a2d8263da0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -909,6 +994,9 @@
      "Caution: The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "constraint_ids": [
+    "1eda7a919fca"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -942,6 +1030,9 @@
      "Caution: The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to 0)."
     ]
    },
+   "constraint_ids": [
+    "3f576f32a7fe"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -975,6 +1066,9 @@
      "Caution: The LPTIM_RCR register must only be modified when the LPTIM is enabled (ENABLE bit set to 1)."
     ]
    },
+   "constraint_ids": [
+    "02f54ebe9ef2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1008,6 +1102,9 @@
      "This register can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "361f88c421ad"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1041,6 +1138,9 @@
      "This register can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "0ef1b8eab02d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1074,6 +1174,9 @@
      "The RTC_TR is the calendar time shadow register. This register must be written in initialization mode only. Refer to _Calendar initialization and configuration on page 884_ and _Reading the calendar on page 886_."
     ]
    },
+   "constraint_ids": [
+    "ebb4a75a136a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1107,6 +1210,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
     ]
    },
+   "constraint_ids": [
+    "ac4ce77affac"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1140,6 +1246,9 @@
      "After system reset, the TAMP registers (including backup registers) are protected against parasitic write access by the DBP bit in the power control peripheral (refer to the PWR power control section). DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "constraint_ids": [
+    "2b8dd8391771"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1173,6 +1282,9 @@
      "After system reset, the TAMP registers (including backup registers) are protected against parasitic write access by the DBP bit in the power control peripheral (refer to the PWR power control section). DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "constraint_ids": [
+    "3b84322dab3b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1206,6 +1318,9 @@
      "After system reset, the TAMP registers (including backup registers) are protected against parasitic write access by the DBP bit in the power control peripheral (refer to the PWR power control section). DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "constraint_ids": [
+    "9ae7f434bb00"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1232,6 +1347,9 @@
      "After system reset, the TAMP registers (including backup registers) are protected against parasitic write access by the DBP bit in the power control peripheral (refer to the PWR power control section). DBP bit must be set in order to enable TAMP registers write access."
     ]
    },
+   "constraint_ids": [
+    "cfc6da9f54f9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1262,6 +1380,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "d785a2f60738"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1295,6 +1416,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "5fce526d293a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1328,6 +1452,9 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "07fbfd156ed2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

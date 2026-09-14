@@ -29,6 +29,9 @@
      "This register must be configured when the I2C is disabled (PE = 0)."
     ]
    },
+   "constraint_ids": [
+    "fb35926659b0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "This register can only be written when the LPUART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "4dcc44ff154b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "This register can only be written when the LPUART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "cb04337ccd70"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -128,6 +137,9 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "0044745dddcc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -170,6 +182,10 @@
      "After an initialization (refer to _Calendar initialization and configuration on page 421_ ): the software must wait until RSF is set before reading the RTC_SSR, RTC_TR and RTC_DR registers."
     ]
    },
+   "constraint_ids": [
+    "35a1e8cf7863",
+    "f2ffec257588"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

@@ -29,6 +29,9 @@
      "These bits can be written only when PLL is disabled."
     ]
    },
+   "constraint_ids": [
+    "61f15528dbd1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "These bits can be written only when PLL is disabled."
     ]
    },
+   "constraint_ids": [
+    "cd8061b90021"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "Bit 13 **CRCEN:** ... This bit should be written only when SPI is disabled (SPE = \u20180) for correct operation"
     ]
    },
+   "constraint_ids": [
+    "39da02d62910"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

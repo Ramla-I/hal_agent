@@ -41,6 +41,9 @@
      "Software is allowed to write these bits only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
     ]
    },
+   "constraint_ids": [
+    "9e9a75175f0f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -76,6 +79,9 @@
      "Software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "f714d1251e54"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -109,6 +115,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "855f375913ad"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -142,6 +151,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "912d6326240b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -175,6 +187,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "fe49b69a6bdd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -208,6 +223,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "ab6fbad7ccac"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -241,6 +259,9 @@
      "These bits can be written only when TXE=1."
     ]
    },
+   "constraint_ids": [
+    "c9ea25f0e12c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -274,6 +295,9 @@
      "These bits can be written only when OA2EN=0."
     ]
    },
+   "constraint_ids": [
+    "2c57f751d995"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -307,6 +331,9 @@
      "These bits can be written only when TEXTEN=0."
     ]
    },
+   "constraint_ids": [
+    "ff397aa9be50"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -340,6 +367,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "c33a836b3024"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -373,6 +403,9 @@
      "This bit-field can not be modified as long as LOCK level 1, 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register)."
     ]
    },
+   "constraint_ids": [
+    "a42012451b37"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -406,6 +439,9 @@
      "These bits must not be modified when an acquisition is ongoing."
     ]
    },
+   "constraint_ids": [
+    "4cdb27b70ee9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -439,6 +475,9 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "887b4ff42a97"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -472,6 +511,9 @@
      "Note: This register must be written only when TXE=1."
     ]
    },
+   "constraint_ids": [
+    "c2180f9828d6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -505,6 +547,9 @@
      "This bit field can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "c94d1b7a6f3f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

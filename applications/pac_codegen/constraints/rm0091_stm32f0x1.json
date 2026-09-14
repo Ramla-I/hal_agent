@@ -29,6 +29,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "f34ca102ae2b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "3af59744e8c0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "de1ec97dec9a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -128,6 +137,9 @@
      "Therefore the CAN_BTR register can be modified by software only while the CAN hardware is in initialization mode."
     ]
    },
+   "constraint_ids": [
+    "ff6643e36d13"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -161,6 +173,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "707387cfbe8f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -194,6 +209,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "541a53d7c0b3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -227,6 +245,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "398958acd184"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -260,6 +281,9 @@
      "Caution: It is mandatory to write CEC_CFGR only when CECEN = 0."
     ]
    },
+   "constraint_ids": [
+    "bafab475d144"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -293,6 +317,9 @@
      "This register can be written only when the frequency error counter is disabled (CEN bit is cleared in CRS_CR). When the counter is enabled, this register is write\u2011protected."
     ]
    },
+   "constraint_ids": [
+    "2c3beb5ff16c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -319,6 +346,9 @@
      "Write access to this register is blocked when the BSY bit in the FLASH_SR register is set."
     ]
    },
+   "constraint_ids": [
+    "5c1f33fb2adc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -349,6 +379,9 @@
      "The registers are not accessible in write mode when the BSY bit in the FLASH_SR register is set."
     ]
    },
+   "constraint_ids": [
+    "1500363edaf0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -382,6 +415,9 @@
      "These bits are read/write but can only be written when the LCKK bit is 0."
     ]
    },
+   "constraint_ids": [
+    "9ffba82d4665"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -415,6 +451,9 @@
      "These bits can be written only when TXE = 1."
     ]
    },
+   "constraint_ids": [
+    "463a84975549"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -448,6 +487,9 @@
      "The LSEON, LSEBYP, RTCSEL and RTCEN bits of the RTC domain control register (RCC_BDCR) are in the RTC domain. As a result, after reset, these bits are write-protected and the DBP bit in the Power control register (PWR_CR) has to be set before they can be modified. Refer to Section 5.1.3: Battery backup domain for further information. These bits are only reset after a RTC domain reset (see Section 6.1.3: RTC domain reset). Any internal or external reset does not have any effect on these bits."
     ]
    },
+   "constraint_ids": [
+    "54fe2586824c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -481,6 +523,9 @@
      "The RTC_DR is the calendar date shadow register. This register must be written in initialization mode only."
     ]
    },
+   "constraint_ids": [
+    "165de055d6fc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -507,6 +552,9 @@
      "The content of this register is valid only when TSF is set to 1 in RTC_ISR. It is cleared when the RTC_ISR/TSF bit is reset."
     ]
    },
+   "constraint_ids": [
+    "fcff203319b3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -537,6 +585,9 @@
      "This bit field can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "9c7ac7d3da49"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -570,6 +621,9 @@
      "Note: This register must be written only when TXE=1."
     ]
    },
+   "constraint_ids": [
+    "337b793a9e87"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -603,6 +657,9 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "58298a649a08"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

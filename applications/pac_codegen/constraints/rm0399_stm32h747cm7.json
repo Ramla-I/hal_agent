@@ -31,6 +31,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "5108770358d8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -66,6 +69,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "944f00ba4261"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -103,6 +109,9 @@
      "The software is allowed to write these bits only when ADEN=1 and ADSTART=0 and JADSTART=0 (ADC is enabled and no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "5e10e5f6f4f5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -140,6 +149,9 @@
      "The software is allowed to write these bits only when ADEN=1, ADSTART=0 and JADSTART=0 (ADC is enabled and no calibration is ongoing and no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "f914670fec4f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -185,6 +197,9 @@
      "The software is allowed to write these bits only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
     ]
    },
+   "constraint_ids": [
+    "30ccf23fc5ad"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -220,6 +235,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "1e4930bea0b8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -255,6 +273,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "b1a3bb69716e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -290,6 +311,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "c9d003b9c219"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -325,6 +349,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "238c3e5a735d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -360,6 +387,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "d01fd58dfd89"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -395,6 +425,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "74a4dc21d0fe"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -430,6 +463,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "4d5f003c813c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -465,6 +501,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "f8b918fd3051"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -498,6 +537,9 @@
      "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "ae8987c85f45"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -531,6 +573,9 @@
      "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "56d673ddd88d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -564,6 +609,9 @@
      "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "e0314dcba679"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -597,6 +645,9 @@
      "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "536811ec5a11"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -632,6 +683,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "48b97aea4bf5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -665,6 +719,9 @@
      "The software is allowed to write this bit only when ADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "236e30de1542"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -700,6 +757,9 @@
      "The software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "097dcedc3848"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -728,6 +788,10 @@
      "TXSOM must be set when transmission data is available into TXDR."
     ]
    },
+   "constraint_ids": [
+    "2eb5b2a60a43",
+    "7bcd05f7dc44"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -759,6 +823,9 @@
      "This register can be written only when the frequency error counter is disabled (CEN bit is cleared in CRS_CR). When the counter is enabled, this register is write-protected."
     ]
    },
+   "constraint_ids": [
+    "f98393eca640"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -794,6 +861,9 @@
      "This register is dedicated to data bit timing phase and only writable if bits FDCAN_CCCR.CCE and FDCAN_CCCR.INIT are set."
     ]
    },
+   "constraint_ids": [
+    "041c77f022e1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -829,6 +899,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "af154c3a3baa"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -864,6 +937,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "ac45da997c86"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -899,6 +975,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "23efc5173550"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -934,6 +1013,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "4ee9e70b3862"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -969,6 +1051,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "f1353d173297"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1004,6 +1089,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "71fcd02e441e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1037,6 +1125,9 @@
      "Write access to this register must be enabled by setting bit FDCAN_CCCR.TEST to 1."
     ]
    },
+   "constraint_ids": [
+    "397a471181ca"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1072,6 +1163,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "66e45e430940"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1107,6 +1201,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "4f6f48c9c118"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1142,6 +1239,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "088fe6bbac64"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1175,6 +1275,9 @@
      "Caution: The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "6acb2c8cce82"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1208,6 +1311,9 @@
      "Caution: The LPTIM_CFGR2 register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)."
     ]
    },
+   "constraint_ids": [
+    "d884b6a2146c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1241,6 +1347,9 @@
      "Caution: The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "ffeff4865bb5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1274,6 +1383,9 @@
      "Caution: The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)."
     ]
    },
+   "constraint_ids": [
+    "d0b74c7b6717"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1307,6 +1419,9 @@
      "This register can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "61527825e3f2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1340,6 +1455,9 @@
      "This register can only be written when the LPUART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "5320413ff089"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1373,6 +1491,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "1a366e46bc73"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1406,6 +1527,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "c79e3037a044"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1439,6 +1563,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "208de6a21152"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1472,6 +1599,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "0d36cf6721cd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1505,6 +1635,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "47eb0f37586f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1538,6 +1671,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "310b293d8be8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1573,6 +1709,9 @@
      "These bits can be written only when the PLL1 is disabled (PLL1ON = \u20180\u2019 and PLL1RDY = \u20180\u2019)."
     ]
    },
+   "constraint_ids": [
+    "62be0b2913ce"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1608,6 +1747,9 @@
      "These bits can be written only when the PLL2 is disabled (PLL2ON = \u20180\u2019 and PLL2RDY = \u20180\u2019)."
     ]
    },
+   "constraint_ids": [
+    "6788a7f9f55b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1643,6 +1785,9 @@
      "These bits can be written only when the PLL3 is disabled (PLL3ON = \u20180\u2019 and PLL3RDY = \u20180\u2019)."
     ]
    },
+   "constraint_ids": [
+    "8d9e67d7df4e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1671,6 +1816,9 @@
      "If one or both of the above conditions are false, the RNG_DR register must not be read."
     ]
    },
+   "constraint_ids": [
+    "5de4acb0ff49"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -1701,6 +1849,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "2a8506e26ff6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1734,6 +1885,9 @@
      "This register can only be written by firmware when DPSM is inactive (DPSMACT = 0)."
     ]
    },
+   "constraint_ids": [
+    "4b44b53dc515"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1767,6 +1921,9 @@
      "These bits can only be written by firmware when CPSM is disabled (CPSMEN = 0)."
     ]
    },
+   "constraint_ids": [
+    "8bdbb087aa8c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1800,6 +1957,9 @@
      "changed by software, the SPI must be disabled."
     ]
    },
+   "constraint_ids": [
+    "8a5f0f00dca2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1833,6 +1993,9 @@
      "When these bits are changed by software, the SPI must be disabled."
     ]
    },
+   "constraint_ids": [
+    "38c8874bbecd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1866,6 +2029,9 @@
      "The content of this register is write protected when SPI is enabled."
     ]
    },
+   "constraint_ids": [
+    "4dceda0f9b3f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1892,6 +2058,9 @@
      "When the bit SPE is set to 0, the user is not allowed to read and write into the SPI_RXDR and SPI_TXDR registers, but the access to other registers is allowed."
     ]
    },
+   "constraint_ids": [
+    "21ce4cfdd992"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -1915,6 +2084,9 @@
      "When the bit SPE is set to 0, the user is not allowed to read and write into the SPI_RXDR and SPI_TXDR registers, but the access to other registers is allowed."
     ]
    },
+   "constraint_ids": [
+    "ec879c953f1f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1945,6 +2117,9 @@
      "The content of this register is write protected when SPI is enabled."
     ]
    },
+   "constraint_ids": [
+    "acdaa9171581"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1980,6 +2155,9 @@
      "The content of this register is write protected when SPI is enabled or IOLOCK bit is set at _SPI_CR1 register_."
     ]
    },
+   "constraint_ids": [
+    "5b1fdeeec2c7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2013,6 +2191,9 @@
      "All documented bits in this register must be configured when the I2S is disabled (SPE = 0)."
     ]
    },
+   "constraint_ids": [
+    "766ca7c4af49"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2046,6 +2227,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "4b4f11d73b4b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2079,6 +2263,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "f2e324907d31"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2112,6 +2299,9 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "49f052585a32"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2145,6 +2335,9 @@
      "This bitfield can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "ac4756ba8c24"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

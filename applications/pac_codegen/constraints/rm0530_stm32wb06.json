@@ -29,6 +29,9 @@
      "Note: These bits can be written only when OA2EN=0."
     ]
    },
+   "constraint_ids": [
+    "377fd331efd1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "Note: These bits can be written only when TEXTEN=0."
     ]
    },
+   "constraint_ids": [
+    "693171607a67"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "This register can only be written when the LPUART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "eab4e9d6732d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -128,6 +137,9 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "e833eda42287"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -161,6 +173,9 @@
      "Caution: If READY bit is high, the PKA cannot be accessed through the AHB interface."
     ]
    },
+   "constraint_ids": [
+    "daf5a39ee90c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -194,6 +209,9 @@
      "This register must be written in initialization mode only. Refer to Section 17.3.7: Reading the calendar."
     ]
    },
+   "constraint_ids": [
+    "02f41b78e961"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -227,6 +245,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "947b32459492"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

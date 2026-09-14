@@ -288,3 +288,5 @@ applications/pac_codegen/experiments/ported/
 # Chip crates built from stm32-rs MASTER (unreleased). Reproducible from
 # the make invocation in pac_master/README.md; never hand-edited.
 applications/pac_codegen/vendored/pac_master/
+applications/pac_codegen/experiments/hal_probe/target/
+applications/pac_codegen/experiments/hal_probe/Cargo.lock

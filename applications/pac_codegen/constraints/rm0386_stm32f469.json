@@ -29,6 +29,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "bf156e3cd850"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "The IFEM flag must be checked before each read operation to make sure that the FIFO is not empty."
     ]
    },
+   "constraint_ids": [
+    "7b28a43dcfff"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -97,6 +103,9 @@
      "This bit must only be changed when DSI Wrapper is stopped (DSI_WCR.DSIEN = 0 and DSI_CR.EN = 0)."
     ]
    },
+   "constraint_ids": [
+    "a9a0ad8cad84"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -132,6 +141,9 @@
      "_Note:_ _This register must be programmed only when DSI is stopped (CR. DSIEN=0 and _CR.EN = 0)."
     ]
    },
+   "constraint_ids": [
+    "3a431a2c0b6a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -167,6 +179,9 @@
      "_Note:_ _This register must be programmed only when DSI is stopped (CR. DSIEN=0 and _CR.EN = 0)."
     ]
    },
+   "constraint_ids": [
+    "6efbc285bf98"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -202,6 +217,9 @@
      "This register shall be programmed only when DSI is stopped (CR.DSIEN=0 and DSI_CR.EN = 0)."
     ]
    },
+   "constraint_ids": [
+    "c840940eb351"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -235,6 +253,9 @@
      "The DSI PLL settings can be changed only when the PLL is disabled."
     ]
    },
+   "constraint_ids": [
+    "067f09566923"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -272,6 +293,9 @@
      "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
     ]
    },
+   "constraint_ids": [
+    "c62786cf9f6b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -305,6 +329,9 @@
      "Reading this register returns the prescaler value from the VDD voltage domain. This value may not be up to date/valid if a write operation to this register is ongoing. For this reason the value read from this register is valid only when the PVU bit in the IWDG_SR register is reset."
     ]
    },
+   "constraint_ids": [
+    "f2ca6217e06f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -338,6 +365,9 @@
      "Reading this register returns the reload value from the VDD voltage domain. This value may not be up to date/valid if a write operation to this register is ongoing. For this reason the value read from this register is valid only when the RVU bit in the IWDG_SR register is reset."
     ]
    },
+   "constraint_ids": [
+    "c54eee119df8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -371,6 +401,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "a45592abeb97"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -404,6 +437,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "034c9a4a7fec"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -437,6 +473,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "2e3fd54cf59a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -470,6 +509,9 @@
      "_Note: This bitfield can be modified only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "a1407cf5e6fd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -503,6 +545,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "9550ac57e809"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -536,6 +581,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "9d912d78fd21"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -569,6 +617,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "bce3ca8668ea"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -602,6 +653,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "b825e1a48af8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -635,6 +689,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "d989c30ab2f1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -668,6 +725,9 @@
      "Note: This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation."
     ]
    },
+   "constraint_ids": [
+    "ce36927da9c9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

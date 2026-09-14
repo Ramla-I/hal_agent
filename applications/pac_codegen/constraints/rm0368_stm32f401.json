@@ -29,6 +29,9 @@
      "The CCR register must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "constraint_ids": [
+    "1fb08ffca468"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "ANOFF must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "constraint_ids": [
+    "832c35d20c02"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "TRISE[5:0] must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "constraint_ids": [
+    "cb982b6a0448"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -128,6 +137,9 @@
      "The RCC_SSCGR register must be written either before the main PLL is enabled or after the main PLL disabled."
     ]
    },
+   "constraint_ids": [
+    "42b8ec331032"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -161,6 +173,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "7bba06a1bdca"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -194,6 +209,9 @@
      "Note: This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation."
     ]
    },
+   "constraint_ids": [
+    "b6b63dde28a1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -227,6 +245,9 @@
      "Note: This bit should be configured when the I2S is disabled. It is used only when the I2S is in master mode."
     ]
    },
+   "constraint_ids": [
+    "1b8d41ff79e4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

@@ -29,6 +29,9 @@
      "This register can only be accessed by the software when the CAN hardware is in initialization mode."
     ]
    },
+   "constraint_ids": [
+    "c730a1fa5674"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "6195c21953ce"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "670c575671fe"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -128,6 +137,9 @@
      "These bits can only be written when data transfers are disabled. Once the transfer has started, they are read-only."
     ]
    },
+   "constraint_ids": [
+    "7d7fa816da57"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -161,6 +173,9 @@
      "These bits can only be written when data transfers are disabled. Once the transfer has started, they are read-only."
     ]
    },
+   "constraint_ids": [
+    "dc66f3d5b710"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -194,6 +209,9 @@
      "The CCR register must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "constraint_ids": [
+    "c36a7edd0b70"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -227,6 +245,9 @@
      "ANOFF must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "constraint_ids": [
+    "24cf812fed6b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -260,6 +281,9 @@
      "TRISE must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "constraint_ids": [
+    "bc6ef59dbf64"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -293,6 +317,9 @@
      "The RCC_SSCGR register must be written either before the main PLL is enabled or after the main PLL disabled."
     ]
    },
+   "constraint_ids": [
+    "77ecb041b501"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -319,6 +346,9 @@
      "The software must check that the DRDY bit is set before reading the RNDATA value."
     ]
    },
+   "constraint_ids": [
+    "a9dd1f29afb3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -342,6 +372,9 @@
      "A read to this register when the BSY flag is set could return an incorrect value."
     ]
    },
+   "constraint_ids": [
+    "1988cdc56dd2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [

@@ -29,6 +29,9 @@
      "This register must be written before the EN bit in the AES_CR register is set:"
     ]
    },
+   "constraint_ids": [
+    "8246e20f44e4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "This register must be written before the EN bit in the AES_CR register is set:"
     ]
    },
+   "constraint_ids": [
+    "b2f8dce9d6b6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "This register must be written before the EN bit in the AES_CR register is set:"
     ]
    },
+   "constraint_ids": [
+    "d38d6e817c56"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -128,6 +137,9 @@
      "This register must be written before the EN bit in the AES_CR register is set:"
     ]
    },
+   "constraint_ids": [
+    "561c8c37939a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -161,6 +173,9 @@
      "This register must be written before the EN bit in the AES_CR register is set"
     ]
    },
+   "constraint_ids": [
+    "26a0aa17ca47"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -194,6 +209,9 @@
      "This register must be written before the EN bit in the AES_CR register is set"
     ]
    },
+   "constraint_ids": [
+    "8b525255472c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -227,6 +245,9 @@
      "This register must be written before the EN bit in the AES_CR register is set"
     ]
    },
+   "constraint_ids": [
+    "e56c96826658"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -260,6 +281,9 @@
      "This register must be written before the EN bit in the AES_CR register is set"
     ]
    },
+   "constraint_ids": [
+    "3f382106f1ed"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -293,6 +317,9 @@
      "These bits can only be written when the LCKK bit is \u20180."
     ]
    },
+   "constraint_ids": [
+    "e06a82f996ab"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -326,6 +353,9 @@
      "The CCR register must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "constraint_ids": [
+    "25c1cedde012"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -359,6 +389,9 @@
      "TRISE must be configured only when the I2C is disabled (PE = 0)."
     ]
    },
+   "constraint_ids": [
+    "580f268240a2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -392,6 +425,9 @@
      "The RTC_DR is the calendar date shadow register. This register must be written in initialization mode only."
     ]
    },
+   "constraint_ids": [
+    "085663cd899c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

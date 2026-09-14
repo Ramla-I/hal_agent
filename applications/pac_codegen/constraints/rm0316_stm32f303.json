@@ -31,6 +31,9 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "96d7488c8e25"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -66,6 +69,9 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "ab273190f95b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -101,6 +107,9 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "ef157fdf554e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -146,6 +155,9 @@
      "Software is allowed to write these bits only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
     ]
    },
+   "constraint_ids": [
+    "80bc593fb48e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -179,6 +191,9 @@
      "Software is allowed to write these bits at any time, once the ADC is enabled (ADEN=1)."
     ]
    },
+   "constraint_ids": [
+    "55a670a4d645"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -214,6 +229,9 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "c5cec0aea078"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -247,6 +265,9 @@
      "Software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "5ae70bac5c44"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -282,6 +303,9 @@
      "Software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "9287d170d5a6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -315,6 +339,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "f8eb0e05d83e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -348,6 +375,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "64a55bb41504"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -381,6 +411,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "a03a325cebc5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -414,6 +447,9 @@
      "These bits can be written only when OA1EN = 0."
     ]
    },
+   "constraint_ids": [
+    "c4f7842a336b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -447,6 +483,9 @@
      "These bits can be written only when TXE = 1."
     ]
    },
+   "constraint_ids": [
+    "789b04d825f1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -480,6 +519,9 @@
      "These bits can be written only when TEXTEN = 0."
     ]
    },
+   "constraint_ids": [
+    "cc1155ee5765"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -513,6 +555,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "0bd1a807f257"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -546,6 +591,9 @@
      "Note: This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation."
     ]
    },
+   "constraint_ids": [
+    "574737c04540"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -579,6 +627,9 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "1f308aa53573"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -612,6 +663,9 @@
      "Note: This register must be written only when TXE=1."
     ]
    },
+   "constraint_ids": [
+    "a0b86c2e1065"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -645,6 +699,9 @@
      "This register can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "5295f9280747"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -678,6 +735,9 @@
      "This bit field can only be written when the USART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "519e8556a6ce"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

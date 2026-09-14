@@ -29,6 +29,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "5e44458f9998"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -62,6 +65,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "e72be4f456bb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -95,6 +101,9 @@
      "The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared."
     ]
    },
+   "constraint_ids": [
+    "e316bb54efd2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -132,6 +141,9 @@
      "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware."
     ]
    },
+   "constraint_ids": [
+    "7323f34761f4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -165,6 +177,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "6605dc7cf519"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -198,6 +213,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "64ee1483fba2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -231,6 +249,9 @@
      "Note: This bitfield can be modified only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "76be1e89f337"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -264,6 +285,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "89c5852cba00"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -297,6 +321,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "172a4fd7de70"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -330,6 +357,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "f53365d8246f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -363,6 +393,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "d7d57fc5b378"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -396,6 +429,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "2d14f4429a6c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -429,6 +465,9 @@
      "Note: This bitfield can be written only when BUSY = 0."
     ]
    },
+   "constraint_ids": [
+    "ce2364ac0d98"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -464,6 +503,9 @@
      "These bits should be written when the PLL and PLLI2S are disabled."
     ]
    },
+   "constraint_ids": [
+    "b7b015ab21af"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -497,6 +539,9 @@
      "The RCC_SSCGR register must be written either before the main PLL is enabled or after the main PLL disabled."
     ]
    },
+   "constraint_ids": [
+    "a39e870e1298"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -530,6 +575,9 @@
      "This register can be written in initialization mode only (RTC_ISR/INITF = \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "23d6146d01e2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -563,6 +611,9 @@
      "The RTC_TR is the calendar time shadow register. This register must be written in initialization mode only."
     ]
    },
+   "constraint_ids": [
+    "344f29e9ab4d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

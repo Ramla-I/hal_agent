@@ -31,6 +31,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "d88058794447"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -68,6 +71,9 @@
      "_Note: The software is allowed to write these bits only when ADEN=1, ADSTART=0 and JADSTART=0 (ADC is enabled and no conversion is ongoing)_"
     ]
    },
+   "constraint_ids": [
+    "f7de7474c433"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -105,6 +111,9 @@
      "The software is allowed to write this bits only when ADEN=1 and ADSTART=0 and JADSTART=0 (ADC is enabled and no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "1fd4136caa8e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -140,6 +149,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no regular nor injected conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "e25c3e20e26d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -173,6 +185,9 @@
      "The software is allowed to write this bit only when ADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "f99bf6e870e2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -216,6 +231,9 @@
      "_Note: The software is allowed to write this bit only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)._"
     ]
    },
+   "constraint_ids": [
+    "2937852eb032"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -261,6 +279,9 @@
      "The software is allowed to write these bits only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
     ]
    },
+   "constraint_ids": [
+    "05c2c51464e0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -296,6 +317,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "44aa9e7529f3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -331,6 +355,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "b0f339f7a783"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -366,6 +393,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "9300d6789187"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -401,6 +431,10 @@
      "The software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "3eee9df201c9",
+    "758130af3546"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -436,6 +470,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "c29d2212b26e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -471,6 +508,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "11918b7e2acd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -506,6 +546,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "80f77317aac9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -541,6 +584,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "46a2d851aaeb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -576,6 +622,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "66b956fb7786"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -611,6 +660,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "d91a33b42570"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -644,6 +696,9 @@
      "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "2ef60dd03a31"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -677,6 +732,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "68357ac197ab"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -710,6 +768,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "28dafa887f8b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -743,6 +804,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "ab55ef9a80a3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -778,6 +842,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "cf227d65d2b5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -813,6 +880,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "62e81254620b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -850,6 +920,9 @@
      "The software is allowed to write these bits only when ADEN=1, ADSTART=0 and JADSTART=0 (ADC is enabled and no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "57f539894864"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -887,6 +960,9 @@
      "The software is allowed to write these bits only when ADEN=1 and ADSTART=0 and JADSTART=0 (ADC enabled and no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "97e890fce79a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -922,6 +998,9 @@
      "The software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no regular nor injected conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "c8839accb6e2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -955,6 +1034,9 @@
      "The software is allowed to write this bit only when ADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "3e234dcf70e2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1000,6 +1082,9 @@
      "The software is allowed to write these bits only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
     ]
    },
+   "constraint_ids": [
+    "4627c5b7b4dd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1035,6 +1120,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "249659eb37f7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1070,6 +1158,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "2d89fdd4c094"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1105,6 +1196,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "cf3cda54a999"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1140,6 +1234,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "9e78f2bd2a26"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1175,6 +1272,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "7058f9611742"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1210,6 +1310,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "1bb2b53fa7c9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1243,6 +1346,9 @@
      "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "1f34fd13cd94"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1276,6 +1382,9 @@
      "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "cb7b3d82bcfe"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1309,6 +1418,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "5cd9ffedb238"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1342,6 +1454,9 @@
      "_Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)._"
     ]
    },
+   "constraint_ids": [
+    "7fdbd7e1b74b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1375,6 +1490,9 @@
      "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
     ]
    },
+   "constraint_ids": [
+    "cadb17f592da"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1408,6 +1526,9 @@
      "Write accesses to these registers are disregarded when the cryptographic processor is busy (bit BUSY = 1 in the CRYP_SR register)."
     ]
    },
+   "constraint_ids": [
+    "f56900ff808a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1434,6 +1555,9 @@
      "Write accesses to these registers are disregarded when the cryptographic processor is busy (bit BUSY = 1 in the CRYP_SR register)."
     ]
    },
+   "constraint_ids": [
+    "39453b480282"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1457,6 +1581,9 @@
      "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
     ]
    },
+   "constraint_ids": [
+    "ee9d58348ad6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1480,6 +1607,9 @@
      "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
     ]
    },
+   "constraint_ids": [
+    "d8c92b297f6f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1503,6 +1633,9 @@
      "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
     ]
    },
+   "constraint_ids": [
+    "dcf8cb001175"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1526,6 +1659,9 @@
      "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
     ]
    },
+   "constraint_ids": [
+    "94f0555aed10"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1549,6 +1685,9 @@
      "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
     ]
    },
+   "constraint_ids": [
+    "fea6d37788bc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1579,6 +1718,9 @@
      "Write accesses to these registers are disregarded when the cryptographic processor is busy (bit BUSY = 1 in the CRYP_SR register)."
     ]
    },
+   "constraint_ids": [
+    "3eac90d5d372"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1605,6 +1747,9 @@
      "_Note:_ _Write accesses to these registers are disregarded when the cryptographic processor is busy (bit BUSY = 1 in the CRYP_SR register)._"
     ]
    },
+   "constraint_ids": [
+    "a1ea67948e3e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1628,6 +1773,9 @@
      "_Note:_ _Write accesses to these registers are disregarded when the cryptographic processor is busy _(BUSY = 1 in the CRYP_SR register)._"
     ]
    },
+   "constraint_ids": [
+    "fe9ea81d91d4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1664,6 +1812,9 @@
      "These bits can be written only when the DAC channel is disabled and in normal operating mode (when bit ENx = 0 and bit CENx = 0 in the DAC_CR register)."
     ]
    },
+   "constraint_ids": [
+    "1a0887dbc3fc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1697,6 +1848,9 @@
      "The DDRPERFM_CFG can be modified only when the DDRPERFM is stopped. A write to this register is ignored when DDRPERFM_STATUS.BUSY = 1"
     ]
    },
+   "constraint_ids": [
+    "22e3bd0fd8dd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1723,6 +1877,9 @@
      "Caution: The counters must only be read when DDRPERFM is stopped. These registers are read as zero when DDRPERFM_STATUS.BUSY=1."
     ]
    },
+   "constraint_ids": [
+    "6863830ba48a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -1746,6 +1903,9 @@
      "Caution: The counters must only be read when DDRPERFM is stopped. These registers are read as zero when DDRPERFM_STATUS.BUSY=1."
     ]
    },
+   "constraint_ids": [
+    "e3b09e44b8fc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -1769,6 +1929,9 @@
      "Caution: The counters must only be read when DDRPERFM is stopped. These registers are read as zero when DDRPERFM_STATUS.BUSY=1."
     ]
    },
+   "constraint_ids": [
+    "02c24e6f2ac3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -1792,6 +1955,9 @@
      "Caution: The counters must only be read when DDRPERFM is stopped. These registers are read as zero when DDRPERFM_STATUS.BUSY=1."
     ]
    },
+   "constraint_ids": [
+    "339903af5cb0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -1815,6 +1981,9 @@
      "Caution: The time counter must only be read when DDRPERFM is stopped. This register is read as zero when DDRPERFM_STATUS.BUSY=1."
     ]
    },
+   "constraint_ids": [
+    "50ca7eb06fc9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -1845,6 +2014,9 @@
      "These bits are write-protected and can be written only when bit EN = 0 in DMA_SxCR."
     ]
    },
+   "constraint_ids": [
+    "e379e1afe7d9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1878,6 +2050,9 @@
      "These bits are write-protected and can be written only when bit EN = 0 in DMA_SxCR."
     ]
    },
+   "constraint_ids": [
+    "063c6e5e5070"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1918,6 +2093,10 @@
      "When TZENx is disabled, RTx can be accessed with non-secure and secure access. When TZENx is enabled, RTx can only be accessed with secure access. Non-secure write to RTx is discarded, non-secure read returns 0."
     ]
    },
+   "constraint_ids": [
+    "1d25e44919d7",
+    "9f4855163cca"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -1956,6 +2135,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "eb86cdd48bca"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1991,6 +2173,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "87ff976bf505"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2026,6 +2211,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "0ea769f79d95"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2061,6 +2249,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "8abd53a5b397"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2096,6 +2287,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "0891cc106407"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2131,6 +2325,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "761e9da8820e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2166,6 +2363,9 @@
      "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
     ]
    },
+   "constraint_ids": [
+    "9b4e4c560f1e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -2199,6 +2399,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "b72c04eb72f6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2232,6 +2435,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "9d51d7756e34"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2265,6 +2471,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "c1b2a9881666"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2298,6 +2507,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "541f40d14a9d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2331,6 +2543,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "f8ebd233163e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2364,6 +2579,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "10eb046c95cf"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2397,6 +2615,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "5a981e41e49d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2430,6 +2651,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "69b59cbee63f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2463,6 +2687,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "6bfe82347b5a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2496,6 +2723,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "f3602a860dd7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2529,6 +2759,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "d5e51bd1d3bc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2562,6 +2795,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "ae36755d6340"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2595,6 +2831,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "e0225c1c44d6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2628,6 +2867,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "70c55f3a82da"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2661,6 +2903,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "96318e6e23f1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2694,6 +2939,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "b5cdd421f67f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2727,6 +2975,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "cf467b311c03"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2760,6 +3011,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "94c79f549559"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2793,6 +3047,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "6f837ae39e79"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2826,6 +3083,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "3217c0d27abe"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2859,6 +3119,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "d09367a152eb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2892,6 +3155,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "25a1faa1babe"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2925,6 +3191,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "d299fb08f1d0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2958,6 +3227,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "c3353cb106cf"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -2991,6 +3263,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "820157f26618"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3024,6 +3299,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "1a29183894ec"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3057,6 +3335,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "63bc821274bd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3090,6 +3371,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "8b3133f56799"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3123,6 +3407,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "15bc29745c82"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3156,6 +3443,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "ba61be91d1ca"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3189,6 +3479,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "6245746e9002"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3222,6 +3515,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "7dbfc773cc48"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3255,6 +3551,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "79f468b5dd9e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3288,6 +3587,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "f13cb5d2320f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3321,6 +3623,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "28a2c6382607"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3354,6 +3659,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "9d72b6a22a19"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3387,6 +3695,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "f42e93f162e5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3420,6 +3731,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "a81c8d63f685"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3453,6 +3767,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "635201938543"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3486,6 +3803,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "e198272f61cd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3519,6 +3839,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "e2383850b2fe"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3552,6 +3875,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "08ca902ec59b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3585,6 +3911,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "e928b4ce4fef"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3618,6 +3947,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "4aded9df7d4c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3651,6 +3983,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "159293da53fb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3684,6 +4019,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "08c63f460938"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3717,6 +4055,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "f3b0fb84c212"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3750,6 +4091,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "b0ff8e87ec62"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3783,6 +4127,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "de653833e33f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3816,6 +4163,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "7ee4192ee118"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3849,6 +4199,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "02ce516a2ce9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3882,6 +4235,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "dca60c0d41ec"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3915,6 +4271,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "eb933d011468"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3948,6 +4307,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "e3725a0ccfdf"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -3981,6 +4343,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "b40af7dcc131"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4014,6 +4379,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "0e225ae28c90"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4047,6 +4415,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "dd4b01dc0bc7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4080,6 +4451,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "8e50cad79bbc"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4113,6 +4487,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "368a8ad25b91"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4146,6 +4523,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "00bb0c55b5b6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4179,6 +4559,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "e9fc03ff3b7e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4212,6 +4595,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "b6f3ae8e6811"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4245,6 +4631,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "5c510da12469"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4278,6 +4667,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "dcf9825bc4d7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4311,6 +4703,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "ccf7f223d08e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4344,6 +4739,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "7bc8e9f3aeee"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4377,6 +4775,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "479a67fc45b0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4410,6 +4811,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "8e8a869c1089"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4443,6 +4847,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "ae71712b6a86"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4476,6 +4883,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "3ddec9739e4a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4509,6 +4919,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "22cafa47f5ee"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4542,6 +4955,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "aed28a2f5dbb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4575,6 +4991,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "ed0fa4c8c781"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4608,6 +5027,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "3fe0e1e2106d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4641,6 +5063,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "4903229e4238"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4674,6 +5099,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "404a7ede1877"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4707,6 +5135,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "799f46797881"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4740,6 +5171,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "3aa294904d21"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4773,6 +5207,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "be42fead59f5"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4806,6 +5243,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "8e18632179b8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4839,6 +5279,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "75e5eb6c22ba"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4872,6 +5315,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "fe26a3180eb3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4905,6 +5351,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "ed345ac199f6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4938,6 +5387,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "2cb4e4b4ee3c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -4971,6 +5423,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "629a4729d80a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5004,6 +5459,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "61e2748a5386"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5037,6 +5495,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "a8138ca36831"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5070,6 +5531,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "fe45cdcb079f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5103,6 +5567,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "0e26b0e8d14a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5136,6 +5603,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "cc3c0936bb2c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5169,6 +5639,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "d76f44b55f44"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5202,6 +5675,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "41fb5fb9f946"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5235,6 +5711,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "d8e8d15c7c49"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5268,6 +5747,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "6e5f9f840f80"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5301,6 +5783,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "68efbf080925"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5334,6 +5819,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "359429680b89"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5367,6 +5855,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "de746db30430"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5400,6 +5891,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "2c67a9fecf5c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5433,6 +5927,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "ff0f1d3708d8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5466,6 +5963,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "3edd707499f0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5499,6 +5999,9 @@
      "HASH_CSRx registers can be read only when DINIS equals to 1, otherwise zeros are returned."
     ]
    },
+   "constraint_ids": [
+    "bf8c1b00dd38"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -5532,6 +6035,9 @@
      "These bits can be written only when TXE = 1."
     ]
    },
+   "constraint_ids": [
+    "4e4a980c4055"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5565,6 +6071,9 @@
      "These bits can be written only when OA1EN = 0."
     ]
    },
+   "constraint_ids": [
+    "461804a8488b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5598,6 +6107,9 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "4c1256d91386"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5631,6 +6143,9 @@
      "The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "f1141bafd5c1"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5664,6 +6179,9 @@
      "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
     ]
    },
+   "constraint_ids": [
+    "2864c526553f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5697,6 +6215,9 @@
      "Caution: The LPTIM_CFGR2 register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)."
     ]
    },
+   "constraint_ids": [
+    "2392466d6a78"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5730,6 +6251,9 @@
      "_Note: These bits are write\u2011protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "43327436460e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5763,6 +6287,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "e9eb7053d96b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5796,6 +6323,9 @@
      "_Note: These bits are write\u2011protected and can be written only when EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "8a4dca8b2791"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5829,6 +6359,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "d76e0c313440"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5862,6 +6395,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "0c11c74336eb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5895,6 +6431,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "f662338fb3ad"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5928,6 +6467,9 @@
      "These bits are write-protected and can be written only when bit EN = 0."
     ]
    },
+   "constraint_ids": [
+    "0ebbe4dfb6b9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5961,6 +6503,9 @@
      "_Note: These bits are write\u2011protected and can be written only when EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "f36f17a5d815"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -5994,6 +6539,9 @@
      "These bits are write-protected and can be written only when bit EN = 0."
     ]
    },
+   "constraint_ids": [
+    "cf946afb8959"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6027,6 +6575,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "8e25e1fc04ca"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6060,6 +6611,9 @@
      "_These bits are protected and can be written only if EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "3e3316d12d5b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6093,6 +6647,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "54dbf5c81f59"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6126,6 +6683,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "c60b4635c821"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6159,6 +6719,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "395cf706a103"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6192,6 +6755,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "459ede151869"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6225,6 +6791,9 @@
      "_Note: These bits are write-protected and can be written only when EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "cab19e0278fb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6258,6 +6827,9 @@
      "_Note: These bits are write-protected and can be written only when EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "9471e1d1ca72"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6291,6 +6863,9 @@
      "_Note: These bits are write\u2011protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "5106791e8f9b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6324,6 +6899,9 @@
      "These bits are write-protected and can be written only when EN = 0."
     ]
    },
+   "constraint_ids": [
+    "de030a40175e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6357,6 +6935,9 @@
      "Note: These bits are write-protected and can be written only when bit EN = 0."
     ]
    },
+   "constraint_ids": [
+    "33a0b1b9071e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6390,6 +6971,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "5ab0ca3efcb2"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6423,6 +7007,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "061afe2e278a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6456,6 +7043,9 @@
      "_Note: These bits are write-protected and can be written only when EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "2165709e76af"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6489,6 +7079,9 @@
      "These bits are write-protected and can be written only if EN = 0."
     ]
    },
+   "constraint_ids": [
+    "4ce04a93442d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6522,6 +7115,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "8837eaab0984"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6555,6 +7151,9 @@
      "_Note: These bits are write-protected and can be written only when EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "76cf7706e4b3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6588,6 +7187,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "7b9b2ecb3238"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6621,6 +7223,9 @@
      "_Note: These bits are write\u2011protected and can be written only when EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "ef0cdce9ea68"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6654,6 +7259,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "886df77e0a23"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6687,6 +7295,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "b0b0ef37613b"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6720,6 +7331,9 @@
      "These bits are write-protected and can be written only when EN = 0."
     ]
    },
+   "constraint_ids": [
+    "95e53fd73b49"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6753,6 +7367,9 @@
      "These bits are write-protected and can be written only when bit EN = 0."
     ]
    },
+   "constraint_ids": [
+    "a5efabae10e3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6786,6 +7403,9 @@
      "_Note: These bits are write-protected and can be written only when EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "70c13adef0b8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6819,6 +7439,9 @@
      "These bits are write-protected and can be written only when bit EN = 0."
     ]
    },
+   "constraint_ids": [
+    "c2695efce979"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6852,6 +7475,9 @@
      "_Note: These bits are write-protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "c1627e5626ec"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6885,6 +7511,9 @@
      "_Note: These bits are write\u2011protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "947d03de33bb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6918,6 +7547,9 @@
      "These bits are write-protected and can be written only when bit EN = 0."
     ]
    },
+   "constraint_ids": [
+    "9995993901c7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6951,6 +7583,9 @@
      "_Note: These bits are write\u2011protected and can be written only when bit EN = 0._"
     ]
    },
+   "constraint_ids": [
+    "7a16c1ec77e4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -6984,6 +7619,9 @@
      "These bits are write-protected and can be written only when bit EN = 0."
     ]
    },
+   "constraint_ids": [
+    "7a6e8741d560"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7017,6 +7655,9 @@
      "After reset the register is write-protected and the DBP bit in the PWR control register 1 (PWR_CR1) has to be set before it can be written."
     ]
    },
+   "constraint_ids": [
+    "f08fefd9c78f"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7050,6 +7691,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "7ace3ef938cd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7083,6 +7727,9 @@
      "_Note: This bitfield can be modified only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "de9b911b5786"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7116,6 +7763,9 @@
      "_Note: This bitfield can be modified only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "ce2b7e38f2b9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7149,6 +7799,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "de207d878e57"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7182,6 +7835,9 @@
      "_Note: this bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "4ef95e6805f8"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7215,6 +7871,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "898c8ec6b242"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7248,6 +7907,9 @@
      "_Note: This bitfield can be written only when BUSY = 0._"
     ]
    },
+   "constraint_ids": [
+    "26bb232d67f4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7281,6 +7943,9 @@
      "After a system reset, the register RCC_BDCR is write-protected. In order to modify this register, the DBP bit in the PWR control register 1 (PWR_CR1) has to be set to '1'."
     ]
    },
+   "constraint_ids": [
+    "a9604953a76d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7314,6 +7979,9 @@
      "This register must be written in initialization mode only."
     ]
    },
+   "constraint_ids": [
+    "ad1d318bf10e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7347,6 +8015,9 @@
      "This register can only be written by firmware when DPSM is inactive (DPSMACT = 0)."
     ]
    },
+   "constraint_ids": [
+    "f28bfcd8ba5a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7387,6 +8058,10 @@
      "This register can only be read or written by firmware when the DPSM is active (DPSMACT = 1)."
     ]
    },
+   "constraint_ids": [
+    "2248871e4dbb",
+    "343a4a1fbaba"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -7423,6 +8098,9 @@
      "This register can only be read or written by firmware when the DPSM is active (DPSMACT = 1)."
     ]
    },
+   "constraint_ids": [
+    "0f2c95f1fdbb"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7456,6 +8134,9 @@
      "This register can only be read or written by firmware when the DPSM is active (DPSMACT = 1)."
     ]
    },
+   "constraint_ids": [
+    "587237631d33"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -7489,6 +8170,9 @@
      "These bits can only be written by firmware when DPSM is inactive (DPSMACT = 0)."
     ]
    },
+   "constraint_ids": [
+    "bb6a5412948d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7522,6 +8206,9 @@
      "This bit can only be written by firmware when CPSM is disabled (CPSMEN = 0)."
     ]
    },
+   "constraint_ids": [
+    "2a94721d83a7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7555,6 +8242,9 @@
      "These bits can only be written by firmware when CPSM is disabled (CPSMEN = 0)."
     ]
    },
+   "constraint_ids": [
+    "19aff6f5d86a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7595,6 +8285,10 @@
      "This register can only be read or written by firmware when the DPSM is active (DPSMACT = 1)."
     ]
    },
+   "constraint_ids": [
+    "34c3396c5b0f",
+    "85a9d9e99234"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -7631,6 +8325,9 @@
      "This register can only be read or written by firmware when the DPSM is active (DPSMACT = 1)."
     ]
    },
+   "constraint_ids": [
+    "d72b488954bf"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7671,6 +8368,10 @@
      "This register can only be read or written by firmware when the DPSM is active (DPSMACT = 1)."
     ]
    },
+   "constraint_ids": [
+    "b966cac2208b",
+    "dc15f38cd162"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -7707,6 +8408,9 @@
      "This register can only be read or written by firmware when the DPSM is active (DPSMACT = 1)."
     ]
    },
+   "constraint_ids": [
+    "7f843cf647de"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "read": [
@@ -7740,6 +8444,9 @@
      "Bit can only be written by firmware when DPSM is inactive (DPSMACT = 0)."
     ]
    },
+   "constraint_ids": [
+    "548d38a112ac"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7773,6 +8480,9 @@
      "_Note:_ _The control interface must clear the STGENC_CNTCR.EN bit before writing to this register."
     ]
    },
+   "constraint_ids": [
+    "da57cf9cd411"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7806,6 +8516,9 @@
      "_Note:_ _The control interface must clear the STGENC_CNTCR.EN bit before writing to this register."
     ]
    },
+   "constraint_ids": [
+    "d1f3017f9240"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7839,6 +8552,9 @@
      "_Note:_ _The control interface must clear the STGEN_CNTCR.EN bit before writing to this register._"
     ]
    },
+   "constraint_ids": [
+    "0f6fca968e66"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7872,6 +8588,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "de64e8ea6768"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7905,6 +8624,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "8a0da9960b45"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7938,6 +8660,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "3798f37d54b6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -7971,6 +8696,9 @@
      "This register can only be written when the USART is disabled (UE = 0)."
     ]
    },
+   "constraint_ids": [
+    "b94120bcec7a"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

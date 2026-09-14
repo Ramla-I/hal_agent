@@ -189,6 +189,15 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
                 field_level_gating=field_level_gating,
                 disabled_kinds=disabled_kinds)
             plan.source_instance = peripheral
+            # The review-ledger ids of the constraints that survived to become
+            # this plan. Without them the durable artifact says WHAT a crate
+            # gates but not WHICH ledger rows produced it, so a reviewer going
+            # the other way -- "these gates are wrong, mark them FP" -- has to
+            # join on (peripheral, register) and guess among a register's
+            # several constraints.
+            plan.constraint_ids = [
+                new_constraint_id(rm, peripheral, reg_entry["register"], g)
+                for g in gates]
         except rust_codegen.FieldGatingDisabled as e:
             # A switched-off feature, not a codegen gap -- kept separate so the
             # emitter's real limits are readable. (Subclasses ValueError, so it
@@ -251,6 +260,9 @@ def device_constraints_file(device, run_dir, svd_dir, chunks,
                     op: [pre.describe() for pre in pres]
                     for op, pres in p.preconditions.items()},
                 "datasheet_text": p.docs,
+                # Review-ledger ids: `tp_fp = FP` on any of these removes this
+                # register's gate on the next injection.
+                "constraint_ids": sorted(getattr(p, "constraint_ids", []) or []),
                 # Field gates live in their own structure: they gate
                 # `w.<field>()`, not the register's write/modify, so folding
                 # them into gated_operations would claim the whole register

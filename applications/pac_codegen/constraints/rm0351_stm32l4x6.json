@@ -41,6 +41,9 @@
      "The software is allowed to write these bits only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
     ]
    },
+   "constraint_ids": [
+    "5b7ca892daf9"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -74,6 +77,9 @@
      "Note: The software is allowed to write these bits only when JADSTART=0 (which ensures that no injected conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "4d3263fd94f6"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -109,6 +115,9 @@
      "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "5bb581ef8859"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -144,6 +153,9 @@
      "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "61fcaeb1a30e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -177,6 +189,9 @@
      "Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "6bc084bd1ab0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -212,6 +227,9 @@
      "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "8da492e6675d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -247,6 +265,9 @@
      "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "e86fc3662f06"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -284,6 +305,9 @@
      "The software is allowed to write these bits only when ADEN=1 and ADSTART=0 and JADSTART=0 (ADC is enabled and no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "a1412875724d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -319,6 +343,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "cc47d2dc8bf0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -354,6 +381,9 @@
      "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "8e0ea24f14f0"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -387,6 +417,9 @@
      "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "44483911999c"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -420,6 +453,9 @@
      "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
     ]
    },
+   "constraint_ids": [
+    "0d89b9fad1ff"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -453,6 +489,9 @@
      "The initialization vector registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "f01f6d59249e"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -486,6 +525,9 @@
      "The initialization vector registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "06d241b437ec"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -519,6 +561,9 @@
      "The initialization vector registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "12c594dbcc04"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -552,6 +597,9 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "533babb1e3c4"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -585,6 +633,9 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "488d2e8749ac"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -618,6 +669,9 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "b254fe25b824"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -651,6 +705,9 @@
      "The key registers may be written only when the AES peripheral is disabled."
     ]
    },
+   "constraint_ids": [
+    "06ab72e8d2f3"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -684,6 +741,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "ff1d795e61ad"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -717,6 +777,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "992c9b3b6a04"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -750,6 +813,9 @@
      "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
     ]
    },
+   "constraint_ids": [
+    "f464ab37e2f7"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -783,6 +849,9 @@
      "This register can be written only when the frequency error counter is disabled (CEN bit is cleared in CRS_CR). When the counter is enabled, this register is write-protected."
     ]
    },
+   "constraint_ids": [
+    "95d65a7fc2ac"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -816,6 +885,9 @@
      "This register can only be written when no transfer is ongoing. Once the CLUT transfer has started, this register is read-only."
     ]
    },
+   "constraint_ids": [
+    "6a025ebe5dbd"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -849,6 +921,9 @@
      "This register can only be written when no transfer is ongoing. Once the CLUT transfer has started, this register is read-only."
     ]
    },
+   "constraint_ids": [
+    "66c7a3e9c791"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -882,6 +957,9 @@
      "These bits are set and cleared by software. They cannot be modified while a transfer is ongoing."
     ]
    },
+   "constraint_ids": [
+    "9b4c15cfbd2d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -915,6 +993,9 @@
      "PVU bit of the IWDG status register (IWDG_SR) must be reset in order to be able to change the prescaler divider."
     ]
    },
+   "constraint_ids": [
+    "8a9cb8a8732d"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -948,6 +1029,9 @@
      "The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
     ]
    },
+   "constraint_ids": [
+    "af1fa66ff556"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -981,6 +1065,9 @@
      "The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)"
     ]
    },
+   "constraint_ids": [
+    "0e8e792b1564"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1014,6 +1101,9 @@
      "This register can only be written when the LPUART is disabled (UE=0)."
     ]
    },
+   "constraint_ids": [
+    "759149eb6dfe"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1051,6 +1141,9 @@
      "These bits can be written only when PLL, PLLSAI1 and PLLSAI2 are disabled."
     ]
    },
+   "constraint_ids": [
+    "3b6efdc80714"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [
@@ -1084,6 +1177,9 @@
      "This register can be written only when WUTWF is set to 1 in RTC_ISR."
     ]
    },
+   "constraint_ids": [
+    "6b7b9cd734be"
+   ],
    "gated_fields": {},
    "quote_verification": {
     "write": [

@@ -36,7 +36,9 @@ def show(path: Path, quotes: bool) -> tuple[int, int]:
     for r in regs:
         head = f"{r['peripheral']}/{r['register']}"
         gated = ", ".join(r["gated_operations"]) or "-"
-        print(f"\n  {head:<22} gates: {gated}")
+        print(f"\n  {head:<22} gates: {gated}"
+              + (f"   [{','.join(r.get('constraint_ids') or [])}]"
+                 if r.get("constraint_ids") else ""))
         ops += len(r["gated_operations"])
         # One line per distinct rule; the file repeats it per operation.
         seen = set()
@@ -71,12 +73,23 @@ def main():
     ap.add_argument("--all", action="store_true", help="every manual")
     ap.add_argument("--quotes", action="store_true",
                     help="also print the datasheet sentence and anchor tier")
+    ap.add_argument("--ids", action="store_true",
+                    help="print only the review-ledger ids, one per line, so a "
+                         "reviewer can pull exactly these rows out of "
+                         "<rm>_constraints_review.jsonl and mark tp_fp on them")
     a = ap.parse_args()
     if not a.rm and not a.all:
         ap.error("name a manual, or pass --all")
     paths = files("" if a.all else a.rm)
     if not paths:
         ap.error(f"no constraints file matching {a.rm!r} in {DIR}")
+    if a.ids:
+        for path in paths:
+            d = json.loads(path.read_text())
+            for r in d["registers"]:
+                for cid in r.get("constraint_ids", []):
+                    print(cid)
+        return
     tr = to = 0
     for p in paths:
         r, o = show(p, a.quotes)
