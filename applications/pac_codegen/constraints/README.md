@@ -15,6 +15,18 @@ These are the **end** of the pipeline, after collection lint, emitter
 selection, access-mode pruning, validator gating and quote verification. A
 constraint that appears here survived every stage.
 
+## Reading one
+
+```sh
+python applications/pac_codegen/show_injected_constraints.py rm0008 --quotes
+python applications/pac_codegen/show_injected_constraints.py --all
+```
+
+One block per register: the gated operations, each distinct rule once, and with
+`--quotes` the datasheet sentence and the tier it anchored at. The files repeat
+a rule and its sentence once per operation gated, so raw JSON reads as
+duplication; this dedupes.
+
 ## What is here, and what is not
 
 53 reference manuals have validated constraints; 53 files would need every one

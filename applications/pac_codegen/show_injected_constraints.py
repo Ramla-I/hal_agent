@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read a device's applied constraints out loud.
+"""Read out loud the constraints a device's crate actually gates.
 
 `constraints/<rm>_<device>.json` is the durable record of what a crate gates,
 but it is JSON built for machines: one nested object per register, the same
@@ -8,9 +8,9 @@ reads it -- one block per register, the rule, the sentence it came from, and
 how firmly that sentence anchored.
 
 Usage:
-    python applications/pac_codegen/show_constraints.py rm0008
-    python applications/pac_codegen/show_constraints.py rm0008 --quotes
-    python applications/pac_codegen/show_constraints.py --all
+    python applications/pac_codegen/show_injected_constraints.py rm0008
+    python applications/pac_codegen/show_injected_constraints.py rm0008 --quotes
+    python applications/pac_codegen/show_injected_constraints.py --all
 """
 import argparse
 import json
