@@ -478,8 +478,47 @@ def main() -> None:
                         })
                         print(f"  note: {plan.peripheral}/{plan.reg_name}: "
                               f"dropped {op} gate — {fate}")
+                # Field gates live in plan.field_gates, not plan.preconditions,
+                # and their quotes need the same check: a field-scoped
+                # constraint is evidence about a register just as much as a
+                # register-scoped one. Until this ran, a plan whose gates were
+                # ALL field-scoped had empty preconditions and was dropped by
+                # the test below -- silently, with no fate row -- so enabling
+                # the attribution check disabled field-level gating entirely.
+                for fname in list(plan.field_gates):
+                    fg = plan.field_gates[fname]
+                    ftiers, drop = [], None
+                    for quote in fg.docs:
+                        rec = qa.anchor_row(matcher, {
+                            "datasheet_text": quote,
+                            "register": plan.reg_name,
+                            "peripheral": plan.peripheral,
+                        })
+                        ftiers.append(rec["tier"])
+                        if rec["tier"] == "unanchored":
+                            drop = ("quote_unanchored",
+                                    "supporting quote not found in the "
+                                    f"{rm} datasheet markdown")
+                        elif (rec.get("self_referential")
+                              and not rec.get("target_located")):
+                            drop = ("target_unverified_by_location",
+                                    "self-referential quote anchored outside "
+                                    "the target register's section")
+                    tiers[f"field:{fg.field}"] = ftiers
+                    if drop:
+                        fate, why = drop
+                        del plan.field_gates[fname]
+                        rows.append({
+                            "file": "", "peripheral": plan.peripheral,
+                            "register": plan.reg_name,
+                            "fate": fate,
+                            "reason": f"field {fg.field}: {why}",
+                            "constraints": [],
+                        })
+                        print(f"  note: {plan.peripheral}/{plan.reg_name}: "
+                              f"dropped field gate on {fg.field} — {fate}")
                 quote_tiers[(plan.peripheral, plan.reg_name)] = tiers
-                if plan.preconditions:
+                if plan.preconditions or plan.field_gates:
                     kept_plans.append(plan)
             plans = kept_plans
 

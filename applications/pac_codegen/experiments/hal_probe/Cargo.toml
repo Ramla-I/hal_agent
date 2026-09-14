@@ -28,7 +28,7 @@ stm32f1xx-hal = { version = "=0.11.0", features = ["stm32f103", "medium"] }
 #     ...), or the patch silently does not apply -- see (3).
 # ---------------------------------------------------------------------------
 [patch.crates-io]
-stm32f1 = { path = "/tmp/kept/rm0008_stm32f103_stm32f1" }
+stm32f1 = { path = "/tmp/claude-1006/-home-ramla-hal-agent-pac-injection/777dc301-e753-406b-a6c8-f0cf2b5598fe/scratchpad/rm0008/stm32f1" }
 
 # ---------------------------------------------------------------------------
 # (3) NOTHING TO EDIT HERE, BUT READ IT ONCE.
@@ -38,3 +38,4 @@ stm32f1 = { path = "/tmp/kept/rm0008_stm32f103_stm32f1" }
 #     before it believes any result. Never trust a clean build you did not
 #     check.
 # ---------------------------------------------------------------------------
+stm32f1xx-hal = { path = "vendored/stm32f1xx-hal-0.11.0" }
