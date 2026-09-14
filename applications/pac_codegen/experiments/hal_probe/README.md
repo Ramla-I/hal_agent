@@ -81,13 +81,86 @@ The split is the whole point, and it is not cosmetic:
   mechanical `where` clauses — counting it as a finding would inflate the
   result. (Above: every ADC hit is friction; stm32f1xx-hal's ADC layer is
   generic, and no ADC register is gated on rm0008.)
-- **other** — not ours. Collateral, and worth reading.
+- **bound cascade** — `E0276 impl has stricter requirements than trait`. Not
+  one of our diagnostics, but an *expected* residue after `--apply-fix`: a
+  bound we added landed on a method implementing a trait, and Rust rejects a
+  requirement the trait itself does not declare. Neither a finding nor
+  collateral — see below.
+- **other** — neither ours nor an expected residue. This IS collateral, and
+  worth reading.
 
 A violation is a **candidate**, not a proven bug: the driver may establish the
 precondition a few lines above. `experiments/corroboration.py` does that triage.
 
-## When the build is clean
+## Removing the friction: `--apply-fix`
 
-That is a result too — this driver never touches a constrained register on this
-device. Check `show_injected_constraints.py <rm>` to see what *was* gated; if
-the list is short, a clean build is expected rather than suspicious.
+```sh
+python applications/pac_codegen/experiments/hal_probe/check.py --apply-fix
+```
+
+Copies the driver out of the registry cache into `vendored/`, repoints
+`Cargo.toml` at the copy, and applies **rustc's own MachineApplicable `where`
+bounds** until the friction is gone. The registry cache is never touched — it
+is shared by every project on the machine and cargo overwrites it.
+
+Only `MachineApplicable` suggestions are taken. A `MaybeIncorrect` one is rustc
+guessing at intent; applying it would make this a rewrite of the driver rather
+than the mechanical step it claims to be.
+
+Three repairs are needed on top of what rustc hands you, and all three were
+found by running it:
+
+- **same-span merge.** Two errors on one generic item each suggest
+  ` where A: Trait` at the *same* byte span. Applied verbatim that is two where
+  clauses and `cannot define duplicate where clauses on an item`.
+- **name qualification.** rustc emits trait names as they were in scope where
+  it *diagnosed*, not where the clause gets written. It suggests bare
+  `UnconstrainedModify` (it lives in the PAC) and bare `Ptr` (stm32f1xx-hal
+  spells its own trait `crate::Ptr`). Unrepaired, 12 of 13 sites become E0405
+  and the run gets *worse* — 18 errors to 25.
+- **lift to the impl block.** A bound on a method that implements a trait is
+  illegal (`E0276: impl has stricter requirements than trait`). The fix is not
+  to widen the trait — that changes the driver's public API. A bound on the
+  **impl block** is legal and says the right thing: *this impl applies where
+  the register is unconstrained*. So the clause moves up one level, into the
+  impl's own `where`, where the impl's generic params are already in scope.
+
+```rust
+impl<ADC: Instance, WORD, PIN> OneShot<ADC, WORD, PIN> for Adc<ADC>
+where
+    WORD: From<u16>,
+    PIN: Channel<ADC, ID = u8>,
+    <<ADC as crate::Ptr>::RB as AdcRB>::CR2rs: stm32f1::UnconstrainedModify,
+{
+    fn read(&mut self, _pin: &mut PIN) -> nb::Result<WORD, Self::Error> { … }
+```
+
+### What it found, on stm32f1xx-hal 0.11.0 vs rm0008-injected stm32f1
+
+```
+18 errors  =  5 violations + 13 generic friction
+    ↓  17 bounds added, 4 lifted to an impl block,
+       17 names qualified, over 8 rounds
+ 5 errors  =  5 violations
+```
+
+**Converged.** The driver compiles against the injected PAC except exactly
+where it genuinely touches a gated register — RTC `CRH` modified four times and
+`PRLH` written once, without checking `RTOFF`.
+
+**Every edit is verified to be a bound and nothing else.** After the loop, each
+touched file is compared against the pristine copy in the registry cache with
+all marker predicates stripped and whitespace collapsed; anything that differs
+beyond its bounds fails the run. Without that, *"we only added where clauses"*
+is an assurance rather than a checked claim — and a driver we silently reshaped
+is a driver whose violations mean nothing. Same discipline as
+`port_hal.py --verify`.
+
+### The honest scope of "mechanical"
+
+All 13 friction errors were removable without touching a line of logic, so the
+adoption cost for this pairing is 17 one-line annotations a tool can write. But
+note where the difficulty sat: not in the bounds themselves, which rustc hands
+you, but in the three repairs above. A naive application of rustc's own
+machine-applicable suggestions makes the build *worse*. The cost is mechanical;
+mechanising it is not free.

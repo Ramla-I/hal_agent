@@ -290,3 +290,4 @@ applications/pac_codegen/experiments/ported/
 applications/pac_codegen/vendored/pac_master/
 applications/pac_codegen/experiments/hal_probe/target/
 applications/pac_codegen/experiments/hal_probe/Cargo.lock
+applications/pac_codegen/experiments/hal_probe/vendored/
