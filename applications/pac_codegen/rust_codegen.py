@@ -1582,11 +1582,19 @@ def _norm_quote(q: str) -> str:
     """Strip everything that is transcription, not sentence.
 
     Markdown emphasis comes from the PDF->markdown conversion and the curly
-    quotes come from the PDF itself; neither is part of what the manual says."""
+    quotes come from the PDF itself; neither is part of what the manual says.
+
+    Articles go too. Two extractions of one sentence differ by them --
+    "cleared in RNG_CR" against "cleared in the RNG_CR" -- and the
+    one-sentence test is CONTAINMENT, which tolerates different windows around
+    a sentence but not a word inserted inside it. That single "the" was enough
+    to read one rule as two, and rng/HTCR then kept a whole-register gate over
+    the field-scoped reading of the very same sentence."""
     s = (q or "").lower()
     for a, b in (("\u2018", "'"), ("\u2019", "'"), ("\u201c", '"'), ("\u201d", '"')):
         s = s.replace(a, b)
     s = _QUOTE_NOISE_RE.sub(" ", s)
+    s = re.sub(r"\b(?:the|a|an)\b", " ", s)
     return re.sub(r"\s+", " ", s).strip(" .:")
 
 
@@ -1711,22 +1719,67 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
         # answer is the same as for a register that carries a whole-register
         # gate and a field gate -- they stack.
         if len(set(instances)) == 1:
-            winner = group[0]
-            for other in group[1:]:
-                for op, pres in other.preconditions.items():
-                    _extend_unique(winner.preconditions.setdefault(op, []), pres)
-                    for d in other.docs.get(op, []):
-                        if d not in winner.docs.setdefault(op, []):
-                            winner.docs[op].append(d)
-                for name, fg in (getattr(other, "field_gates", {}) or {}).items():
-                    if name in winner.field_gates:
-                        _extend_unique(winner.field_gates[name].preconditions,
-                                       fg.preconditions)
-                        for d in fg.docs:
-                            if d not in winner.field_gates[name].docs:
-                                winner.field_gates[name].docs.append(d)
-                    else:
-                        winner.field_gates[name] = fg
+            # SAME copy of the peripheral, several plans. Nothing is competing
+            # to describe one rule, so the plans stack -- but only AFTER the
+            # same narrowest-reading test the cross-instance path applies.
+            #
+            # Two shapes hide here and they need opposite treatment:
+            #   * genuinely different rules (different sentences) -> stack
+            #   * ONE rule at two precisions (same sentence, same conditions,
+            #     one file named the fields and another did not) -> the
+            #     field-scoped reading wins, exactly as across instances.
+            # Stacking the second shape adopts the BROAD reading and gates
+            # fields the sentence never mentions -- the I2C_OAR2 mistake, the
+            # one that locks a register until reset. rng/HTCR hit it: three
+            # files, one sentence, and the only field-scoped reading (HTCFG)
+            # was overwritten by two register-wide ones.
+            quotes = [_rule_quotes(p) for p in group]
+            conds = {_rule_conditions(p) for p in group}
+            one_rule = _quotes_are_one_sentence(quotes) and len(conds) == 1
+            named = [p for p in group if (getattr(p, "field_gates", {}) or {})]
+
+            if one_rule and named:
+                winner = max(named,
+                             key=lambda p: len(getattr(p, "field_gates", {}) or {}))
+                for pl in named:
+                    for name, fg in (getattr(pl, "field_gates", {}) or {}).items():
+                        if name in winner.field_gates:
+                            _extend_unique(winner.field_gates[name].preconditions,
+                                           fg.preconditions)
+                        else:
+                            winner.field_gates[name] = fg
+                # The register-wide readings of this ONE rule are the coarser
+                # extraction of it, so they are dropped rather than merged in.
+                winner.preconditions.clear()
+                winner.docs.clear()
+                how = ("one rule at two precisions: narrowed to the named "
+                       "fields [%s]" % ", ".join(sorted(winner.field_gates)))
+                detail = ("%d of %d plans named no fields and were discarded as "
+                          "the coarser reading of the same sentence"
+                          % (len(group) - len(named), len(group)))
+            else:
+                winner = group[0]
+                for other in group[1:]:
+                    for op, pres in other.preconditions.items():
+                        _extend_unique(winner.preconditions.setdefault(op, []),
+                                       pres)
+                        for d in other.docs.get(op, []):
+                            if d not in winner.docs.setdefault(op, []):
+                                winner.docs[op].append(d)
+                    for name, fg in (getattr(other, "field_gates", {}) or {}).items():
+                        if name in winner.field_gates:
+                            _extend_unique(winner.field_gates[name].preconditions,
+                                           fg.preconditions)
+                            for d in fg.docs:
+                                if d not in winner.field_gates[name].docs:
+                                    winner.field_gates[name].docs.append(d)
+                        else:
+                            winner.field_gates[name] = fg
+                how = "%d plans from one instance unioned" % len(group)
+                detail = ("separate rules on one register, not competing "
+                          "readings of one -- they stack, exactly as a "
+                          "whole-register gate and a field gate do")
+
             kept.append(winner)
             reviews.append({
                 "module": module, "register": reg, "instances": instances,
@@ -1734,14 +1787,11 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
                 # nothing competed here. Kept distinguishable so a reviewer
                 # filtering the merge fate does not get two unrelated kinds.
                 "kind": "same_instance_union",
-                "resolution": ("%d plans from one instance unioned"
-                               % len(group)),
+                "resolution": how,
                 "field_sets": sorted(
                     ",".join(sorted(getattr(p, "field_gates", {}) or {}))
                     or "(whole register)" for p in group),
-                "detail": ("separate rules on one register, not competing "
-                           "readings of one -- they stack, exactly as a "
-                           "whole-register gate and a field gate do"),
+                "detail": detail,
             })
             continue
 
