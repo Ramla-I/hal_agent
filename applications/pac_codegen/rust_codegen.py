@@ -1730,6 +1730,10 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
             kept.append(winner)
             reviews.append({
                 "module": module, "register": reg, "instances": instances,
+                # Marks a DIFFERENT event from the narrowest-wins merge below:
+                # nothing competed here. Kept distinguishable so a reviewer
+                # filtering the merge fate does not get two unrelated kinds.
+                "kind": "same_instance_union",
                 "resolution": ("%d plans from one instance unioned"
                                % len(group)),
                 "field_sets": sorted(

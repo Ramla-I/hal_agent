@@ -388,6 +388,20 @@ def main() -> None:
         # Rust type; emitting both would define the same witness twice.
         plans, collisions, merges = rust_codegen.resolve_instance_collisions(plans)
         for m in merges:
+            # Two different events, so two fates. A reviewer filtering for
+            # "instances disagreed and we picked" must not also get "one
+            # instance stated two rules and they stack" -- nothing competed in
+            # the second, and it needs no adjudication.
+            if m.get("kind") == "same_instance_union":
+                rows.append({
+                    "file": "", "peripheral": m["module"],
+                    "register": m["register"],
+                    "fate": "same_instance_rules_unioned",
+                    "reason": f"{m['resolution']}: {m['detail']} "
+                              f"(gate sets {m['field_sets']})",
+                    "constraints": [],
+                })
+                continue
             rows.append({
                 "file": "", "peripheral": m["module"], "register": m["register"],
                 "fate": "instance_merged_for_review",
