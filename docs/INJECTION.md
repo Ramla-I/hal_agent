@@ -94,6 +94,10 @@ STM run adds RMs as they finish.)
 
 ---
 
+When one register carries several rules — several sentences, or one sentence
+extracted twice — see
+[`CONSTRAINT_RECONCILIATION.md`](CONSTRAINT_RECONCILIATION.md).
+
 ## What injection actually changes in a PAC crate
 
 Every figure below is from diffing a pristine `stm32f1` 0.16.0 against the
