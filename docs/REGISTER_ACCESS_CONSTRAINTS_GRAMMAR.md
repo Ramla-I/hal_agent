@@ -7,8 +7,7 @@ grammar** — the enforcement-arm plan (`docs/register_constraints_plan.md`)
 points here rather than restating it. The Pydantic implementation lives in
 `defs.py` (grammar v2 section), and collection lives in
 `core/collect_constraints.py`. How several rules for ONE register are
-reconciled is specified separately in
-[`CONSTRAINT_RECONCILIATION.md`](CONSTRAINT_RECONCILIATION.md).
+reconciled is specified in [`PAC_CODEGEN.md`](PAC_CODEGEN.md).
 
 All examples below are real, from the 30-reference-manual STM corpus.
 
