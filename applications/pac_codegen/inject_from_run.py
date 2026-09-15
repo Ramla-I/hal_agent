@@ -198,6 +198,11 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
             plan.constraint_ids = [
                 new_constraint_id(rm, peripheral, reg_entry["register"], g)
                 for g in gates]
+        except rust_codegen.UnsatisfiableGate as e:
+            # Not a codegen gap: a gate that could never pass, withdrawn.
+            # (Subclasses ValueError -- catch before the generic handler.)
+            row("unsatisfiable_gate", str(e), kinds=_kind_counts(gates))
+            continue
         except rust_codegen.SameRegisterSoftwareGate as e:
             # A refusal on safety grounds, not a codegen gap: kept as its own
             # fate so the count is visible rather than buried in

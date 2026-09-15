@@ -318,6 +318,26 @@ def enabled_kinds(disabled=None) -> frozenset:
     return SUPPORTED_KINDS - frozenset(disabled or ())
 
 
+class UnsatisfiableGate(ValueError):
+    """Pooled preconditions demand one field in two states at once, so the
+    check can never pass -- the gate is dropped rather than emitted.
+
+    Case (A) pools conditions with no consistency test, so this compiled, was
+    callable, and returned Err on every call: enforcement the crate promises
+    and cannot deliver. AES_IVRx is the whole population (8 registers): "write
+    only when AES_CR.EN is cleared" and "read only when it is set" are both
+    correct, and `modify` is DERIVED as the union of a register's read and
+    write obligations, so it inherits both.
+
+    The conclusion that derivation reaches is RIGHT -- a read-modify-write of
+    AES_IVRx cannot be done safely, since the read needs AES enabled and the
+    write needs it disabled. Only the mechanism was wrong. Dropping the gate
+    withholds the marker for that operation, so the method does not exist for
+    the register and only `unsafe` reaches it: the same fact, stated at compile
+    time instead of on every call.
+    """
+
+
 class SameRegisterSoftwareGate(ValueError):
     """A whole-register write gate whose precondition is a field in THAT
     register, restored by software: a one-way door, so it is refused.
@@ -380,6 +400,14 @@ class RegisterPlan:
         self.docs: dict[str, list[str]] = {}
         # field-lowercase -> FieldGate (populated only when field_level_gating)
         self.field_gates: dict[str, FieldGate] = {}
+        self._unsatisfiable: list[str] = []
+        # Operations that must NOT exist for this register and carry no gate
+        # either. They stay in gated_ops() so the marker impl is withheld --
+        # absence of the marker IS the gate -- while the constraints module
+        # emits nothing for them, so `<op>_witnessed` has no Gate impl and does
+        # not compile. Only `unsafe <op>_unwitnessed` remains, which is the
+        # honest surface for "this cannot be done safely".
+        self.forbidden_ops: set[str] = set()
         # Kinds this plan will emit (all supported kinds minus any disabled).
         self._enabled_kinds = enabled_kinds(disabled_kinds)
         # Constraints skipped ONLY because field-level gating is off; they
@@ -399,7 +427,36 @@ class RegisterPlan:
                 continue
             getattr(self, f"_emit_{c.kind}")(c, peripheral, field_level_gating)
 
-        if not self.preconditions and not self.field_gates:
+        # Two preconditions differing ONLY in `kind` (set vs cleared) are
+        # mutually exclusive by construction, so the operation can never be
+        # witnessed. Drop it: an operation with no marker and no gate does not
+        # exist for this register, which is the fact, stated at compile time.
+        for op in list(self.preconditions):
+            seen = {}
+            for pre in self.preconditions[op]:
+                ident = (pre.source.key() if pre.source else None,
+                         pre.field.lower(), pre.value)
+                if ident in seen and seen[ident] != pre.kind:
+                    self._unsatisfiable.append(
+                        f"{op}: {pre.describe()} contradicts a sibling "
+                        f"precondition on the same field")
+                    del self.preconditions[op]
+                    self.docs.pop(op, None)
+                    # FORBIDDEN, not freed. Deleting the precondition alone
+                    # took the op out of gated_ops, so add_marker_impls handed
+                    # the register an Unconstrained* marker and the operation
+                    # became freely callable -- strictly worse than the
+                    # always-failing check it replaced.
+                    self.forbidden_ops.add(op)
+                    break
+                seen[ident] = pre.kind
+
+        if not self.preconditions and not self.field_gates \
+                and not self.forbidden_ops:
+            if self._unsatisfiable:
+                raise UnsatisfiableGate(
+                    f"{self.reg_name}: every gate dropped as unsatisfiable — "
+                    + "; ".join(self._unsatisfiable))
             if self._skipped_field_scoped:
                 raise FieldGatingDisabled(
                     f"{self.reg_name}: {self._skipped_field_scoped} "
@@ -560,8 +617,11 @@ class RegisterPlan:
 
     # (peripheral module, register-spec type, gated op), for the marker walk
     def gated_ops(self) -> set[tuple[str, str, str]]:
+        """Every operation whose marker must be withheld: those with a gate,
+        and those forbidden outright."""
         spec = f"{self.reg_name.upper()}rs"
-        return {(self.peripheral, spec, op) for op in self.preconditions}
+        return {(self.peripheral, spec, op)
+                for op in set(self.preconditions) | self.forbidden_ops}
 
     def witness_name(self, op: str) -> str:
         return f"{self.reg_name.capitalize()}{op.capitalize()}Witness"
