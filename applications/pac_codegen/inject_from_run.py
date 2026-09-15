@@ -189,6 +189,17 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
                 field_level_gating=field_level_gating,
                 disabled_kinds=disabled_kinds)
             plan.source_instance = peripheral
+            # An operation can be forbidden while the register keeps its other
+            # gates, and the exception below only fires when EVERY gate goes.
+            # Without this the eight AES registers whose modify is forbidden
+            # produced no row at all -- the strongest statement the emitter can
+            # make about a register, and it was silent.
+            for op in sorted(getattr(plan, "forbidden_ops", ())):
+                row("operation_forbidden",
+                    f"{op}: conditions cannot all hold at once, so {op} has no "
+                    f"marker and no gate — only `unsafe {op}_unwitnessed` "
+                    f"reaches it",
+                    kind="state_gate")
             # The review-ledger ids of the constraints that survived to become
             # this plan. Without them the durable artifact says WHAT a crate
             # gates but not WHICH ledger rows produced it, so a reviewer going
@@ -268,7 +279,14 @@ def device_constraints_file(device, run_dir, svd_dir, chunks,
             {
                 "peripheral": p.peripheral,
                 "register": p.reg_name,
-                "gated_operations": sorted(op for _, _, op in p.gated_ops()),
+                # Operations reachable with a witness. gated_ops() also
+                # carries forbidden ones -- they must be there so the marker is
+                # withheld -- but reporting them here would claim a witness
+                # path that does not exist.
+                "gated_operations": sorted(p.preconditions),
+                # Operations that cannot be performed safely at all: no marker
+                # and no gate, so only `unsafe <op>_unwitnessed` reaches them.
+                "forbidden_operations": sorted(getattr(p, "forbidden_ops", ())),
                 "preconditions": {
                     op: [pre.describe() for pre in pres]
                     for op, pres in p.preconditions.items()},
