@@ -1820,15 +1820,24 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
             named = [p for p in group if (getattr(p, "field_gates", {}) or {})]
 
             if one_rule and named:
+                shared = set.intersection(*(set(getattr(p, "field_gates", {}) or {})
+                                            for p in named))
                 winner = max(named,
                              key=lambda p: len(getattr(p, "field_gates", {}) or {}))
-                for pl in named:
-                    for name, fg in (getattr(pl, "field_gates", {}) or {}).items():
-                        if name in winner.field_gates:
-                            _extend_unique(winner.field_gates[name].preconditions,
-                                           fg.preconditions)
-                        else:
-                            winner.field_gates[name] = fg
+                if shared:
+                    for pl in named:
+                        for name, fg in (getattr(pl, "field_gates", {}) or {}).items():
+                            if name not in shared:
+                                continue
+                            if name in winner.field_gates:
+                                _extend_unique(
+                                    winner.field_gates[name].preconditions,
+                                    fg.preconditions)
+                            else:
+                                winner.field_gates[name] = fg
+                    for name in list(winner.field_gates):
+                        if name not in shared:
+                            del winner.field_gates[name]
                 # The register-wide readings of this ONE rule are the coarser
                 # extraction of it, so they are dropped rather than merged in.
                 winner.preconditions.clear()
@@ -1918,23 +1927,38 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
             # those breaks correct driver code. This is 104 of 127 cases.
             #
             # SECOND: if two copies each listed fields but the lists differ,
-            # take every field any copy named -- the WIDER answer. A field name
-            # has to exist on the register to reach this point, because
-            # collection checks it against the SVD, so a name in one reading
-            # and not another is far more likely a field the other reading
-            # missed than one it invented. This is 23 of 127.
+            # keep only the fields EVERY one of them named. A field one copy
+            # claimed and another did not is a field we have two readings of
+            # and no way to choose between, so gating it would put a
+            # requirement on downstream code that half our evidence does not
+            # support. Under-gating loses a finding; over-gating invents one,
+            # so the shared fields are what survive. If the copies share no
+            # field at all they are not two readings of one sentence, and the
+            # group is dropped like any other disagreement.
             named = [p for p in group if (getattr(p, "field_gates", {}) or {})]
-            if named:
+            shared = (set.intersection(*(set(getattr(p, "field_gates", {}) or {})
+                                         for p in named)) if named else set())
+            if named and shared:
                 winner = max(named,
                              key=lambda p: len(getattr(p, "field_gates", {}) or {}))
                 for pl in named:
                     for name, fg in (getattr(pl, "field_gates", {}) or {}).items():
-                        winner.field_gates.setdefault(name, fg)
-                how = ("merged to the union of the named fields [%s]"
+                        if name in shared:
+                            winner.field_gates.setdefault(name, fg)
+                for name in list(winner.field_gates):
+                    if name not in shared:
+                        del winner.field_gates[name]
+                how = ("merged to the fields every copy named [%s]"
                        % ", ".join(sorted(winner.field_gates)))
+                dropped = sorted(
+                    {n for p in named for n in (getattr(p, "field_gates", {}) or {})}
+                    - shared)
+                if dropped:
+                    how += ("; %s named by some copies but not all, so not "
+                            "gated" % ", ".join(dropped))
                 if len(named) != len(group):
-                    how += ("; %d instance(s) named no fields and were narrowed "
-                            "to that union" % (len(group) - len(named)))
+                    how += ("; %d copy/copies named no fields at all"
+                            % (len(group) - len(named)))
             else:
                 winner = group[0]
                 how = "merged as whole-register (no instance named fields)"

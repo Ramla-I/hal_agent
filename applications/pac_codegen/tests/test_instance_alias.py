@@ -206,7 +206,12 @@ def test_same_rule_at_two_precisions_merges_to_the_named_fields():
     Before this merge the whole group was dropped as a conflict, and with it a
     real finding: Hubris writes USART1.CR1.FIFOEN while the port is enabled,
     which RM0433 forbids, and four sibling instances disagreeing about how
-    precisely to say so was enough to lose it."""
+    precisely to say so was enough to lose it.
+
+    Only the fields EVERY naming instance listed are gated. usart1 read the
+    sentence as covering FIFOEN and M1, usart2 as covering FIFOEN alone, and
+    nothing tells us which is right -- so M1 is not gated. The finding is
+    still recovered, because FIFOEN is what both of them named."""
     q = "This bitfield can only be written when the USART is disabled."
     plans = [
         _plan("usart1", "usart1", "UE", targets=["FIFOEN", "M1"],
@@ -219,7 +224,7 @@ def test_same_rule_at_two_precisions_merges_to_the_named_fields():
     kept, conflicts, merges = rust_codegen.resolve_instance_collisions(plans)
     assert len(kept) == 1 and conflicts == []
     assert len(merges) == 1
-    assert sorted(kept[0].field_gates) == ["fifoen", "m1"]
+    assert sorted(kept[0].field_gates) == ["fifoen"]
 
 
 def test_the_narrowest_reading_wins_not_the_widest():

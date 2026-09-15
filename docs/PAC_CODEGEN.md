@@ -194,7 +194,7 @@ The implementation is `RegisterPlan._emit_state_gate` and
 
 ## The one rule
 
-> **Rules add up. Readings of one rule compete, and the narrower one wins.**
+> **Rules add up. When two readings of one rule compete, the narrower one wins.**
 
 Everything below follows from that, plus one asymmetry in why:
 
@@ -319,6 +319,15 @@ and the rule is kept. See *Same-register refusal* below.
 **Everything here has already been confirmed by the judge.** The choices above
 are always between two readings the validator accepted, never between an
 accepted one and a rejected one.
+
+"Narrower" means two things, because two different questions come up:
+
+- A reading that lists the fields a sentence is about beats one that lists
+  none. The second did not make a broader claim; it failed to work out what the
+  sentence covered.
+- When two readings each list fields and the lists differ, only the fields both
+  of them named are gated. The rest we have two readings of and no way to
+  choose between.
 
 ## Worked examples
 
