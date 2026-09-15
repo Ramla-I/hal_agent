@@ -226,9 +226,14 @@ SEVERAL RULES FOR ONE REGISTER
 │      │     NEVER inherits a condition from a neighbour it was not named
 │      │     alongside.
 │      │
-│      └─ both kinds
-│            Both apply: writing a gated field needs two witnesses, the
-│            register's and the field's. Correct when the rules really differ.
+│      ├─ both kinds
+│      │     Both apply: writing a gated field needs two witnesses, the
+│      │     register's and the field's. Correct when the rules really differ.
+│      │
+│      └─ rules that CONTRADICT each other
+│            Nothing detects it. Conditions are pooled, so a field required
+│            both set and cleared produces a check that can never pass --
+│            see below.
 │
 └─ (B) from SEVERAL FILES for the same register
        │
@@ -287,6 +292,46 @@ needs both witnesses.
 distinguishes them. Unioning would demand a precondition the manual does not;
 picking one gates on a condition we have equal reason to think is wrong. Both
 are dropped.
+
+## When rules in one file contradict each other
+
+Case (A) pools conditions with no consistency test, so two rules that demand
+opposite states of one field produce a gate that **can never be satisfied**.
+`check_*_ready()` compiles, is callable, and always returns `Err` -- the
+register becomes unreachable through the safe API, the same end state as the
+one-way door but arrived at differently.
+
+Eight registers in the corpus are in this state, and every one is the same
+shape. `AES_IVRx` carries two correct datasheet rules:
+
+| operation | condition | sentence |
+|---|---|---|
+| write | `AES_CR.EN` **cleared** | "Write operations to the AES_IVRx registers when the AES peripheral is enabled have no effect" |
+| read  | `AES_CR.EN` **set**     | "These registers can be read only when AES is enabled" |
+
+Neither is wrong. But `modify` is **derived** as the union of a register's read
+and write obligations -- a modify performs both -- so it inherits `EN cleared`
+and `EN set` together:
+
+```json
+"modify": ["AES_CR.EN cleared", "AES_CR.EN set"]
+```
+
+**The contradiction is manufactured by that derivation, not present in the
+manual.** And the conclusion it encodes is *correct*: a read-modify-write of
+`AES_IVRx` genuinely cannot be performed safely, because the read needs AES
+enabled and the write needs it disabled. The register should not be
+modifiable.
+
+What is wrong is the mechanism. That fact should be stated at compile time --
+withhold the modify gate entirely, so `modify` does not exist for the register
+and only `unsafe` can reach it -- rather than as a runtime check that always
+fails. A caller today writes the witness-minting call, it compiles, and it
+fails on every execution.
+
+Detecting this is cheap: preconditions carry `(source, field, kind, value)`, so
+two entries differing only in `kind` are mutually exclusive by construction. It
+is not yet implemented.
 
 ## Deduplication
 
