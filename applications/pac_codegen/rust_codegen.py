@@ -1837,14 +1837,18 @@ def add_sibling_markers(src: Path, device: str) -> int:
     return total
 
 
-def prune_plans_for_device(device_dir: Path,
-                           plans: list[RegisterPlan]) -> list[RegisterPlan]:
+def prune_plans_for_device(device_dir: Path, plans: list[RegisterPlan],
+                           reasons: dict | None = None) -> list[RegisterPlan]:
     """Drop gates each register's real access mode cannot express, and gates
     whose preconditions the generated field readers cannot express (both
     checked against the generated register files themselves — the ground
     truth). Mutates the plans; returns those with something left to gate.
     Idempotent, and callable by drivers BEFORE saving artifacts so the record
-    matches what is actually injected."""
+    matches what is actually injected.
+
+    ``reasons``, if given, is filled with (peripheral, reg_lower) -> list of
+    per-gate explanations. They were computed and then thrown away, so every
+    prune row read "access mode or field reader shape" whatever the cause."""
     kept = []
     shapes = ReaderShapes(device_dir)
     layout = shapes.layout
@@ -1856,11 +1860,17 @@ def prune_plans_for_device(device_dir: Path,
             readable=f"impl crate::Readable for {spec}" in reg_text,
             writable=f"impl crate::Writable for {spec}" in reg_text,
         )
+        key = (plan.peripheral, plan.reg_lower)
         if removed:
+            if reasons is not None:
+                reasons.setdefault(key, []).append(
+                    f"{removed} unsupported by the register's access mode")
             print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
                   f"{removed} gate(s) — unsupported by the register's "
                   "access mode")
         for why in _prune_plan_for_readers(shapes, plan):
+            if reasons is not None:
+                reasons.setdefault(key, []).append(why)
             print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
                   f"{why} — precondition not expressible against the "
                   "generated field reader")

@@ -425,11 +425,22 @@ def main() -> None:
                         f"{c['instances']} disagree on the gate; dropped "
                         "rather than unioned or arbitrarily picked")
 
-        before = {(p.peripheral, p.reg_lower): sorted(op for _, _, op in p.gated_ops())
-                  for p in plans}
-        plans = rust_codegen.prune_plans_for_device(device_dir, plans)
-        after = {(p.peripheral, p.reg_lower): sorted(op for _, _, op in p.gated_ops())
-                 for p in plans}
+        # A plan's gates are register-level ops AND field gates. Counting only
+        # gated_ops() made every FIELD-ONLY plan look pruned: its register-op
+        # list is empty before and after, and `if not kept` is true for an
+        # empty list. That mislabelled 513 of 891 rows -- registers that are
+        # gated in the finished crate, reported as dropped.
+        def sig(p):
+            return (sorted(op for _, _, op in p.gated_ops()),
+                    sorted(p.field_gates))
+
+        before = {(p.peripheral, p.reg_lower): sig(p) for p in plans}
+        # prune_plans_for_device computes a reason per dropped gate
+        # (`field:TRIM [...]`); keep them instead of a generic sentence.
+        why = {}
+        plans = rust_codegen.prune_plans_for_device(device_dir, plans,
+                                                    reasons=why)
+        after = {(p.peripheral, p.reg_lower): sig(p) for p in plans}
         for r in rows:
             if r["fate"] != "planned":
                 continue
@@ -437,14 +448,23 @@ def main() -> None:
             if key not in before:
                 continue
             kept = after.get(key)
-            if not kept:
+            had = before[key][0] or before[key][1]
+            has = bool(kept and (kept[0] or kept[1]))
+            detail = "; ".join(why.get(key, [])) or (
+                "access mode or field reader shape")
+            if had and not has:
                 r["fate"] = "pruned_for_device"
-                r["reason"] = (f"gates {before[key]} dropped: not expressible "
-                               "against the generated PAC (access mode or "
-                               "field reader shape)")
-            elif kept != before[key]:
-                r["reason"] = (f"gates: {kept} (dropped "
-                               f"{sorted(set(before[key]) - set(kept))} at the device)")
+                r["reason"] = (f"all gates dropped, not expressible against "
+                               f"the generated PAC: {detail}")
+            elif kept and kept != before[key]:
+                lost_ops = sorted(set(before[key][0]) - set(kept[0]))
+                lost_f = sorted(set(before[key][1]) - set(kept[1]))
+                bits = ([f"ops {lost_ops}"] if lost_ops else []) + \
+                       ([f"fields {lost_f}"] if lost_f else [])
+                if bits:
+                    r["reason"] = (f"kept ops {kept[0]} fields {kept[1]}; "
+                                   f"dropped {' and '.join(bits)} at the "
+                                   f"device: {detail}")
 
         quote_tiers = {}
         if args.attribution_check:
