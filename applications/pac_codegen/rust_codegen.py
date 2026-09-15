@@ -408,6 +408,7 @@ class RegisterPlan:
         # not compile. Only `unsafe <op>_unwitnessed` remains, which is the
         # honest surface for "this cannot be done safely".
         self.forbidden_ops: set[str] = set()
+        self._redundant_fields: list[str] = []
         # Kinds this plan will emit (all supported kinds minus any disabled).
         self._enabled_kinds = enabled_kinds(disabled_kinds)
         # Constraints skipped ONLY because field-level gating is off; they
@@ -450,6 +451,23 @@ class RegisterPlan:
                     self.forbidden_ops.add(op)
                     break
                 seen[ident] = pre.kind
+
+        # A field gate is redundant when its conditions are a SUBSET of what
+        # the register gate already demands for the same surface: the accessor
+        # cannot be reached without first minting the register witness, which
+        # proved strictly more. Keeping it costs the caller a second witness
+        # for nothing. adc2/IER and adc1/CR are the corpus's two cases.
+        if self.field_gates and self.preconditions:
+            reg_keys = set()
+            for op in ("write", "modify"):
+                reg_keys |= {pre.key() for pre in self.preconditions.get(op, [])}
+            for fname in list(self.field_gates):
+                fg = self.field_gates[fname]
+                if reg_keys and {pre.key() for pre in fg.preconditions} <= reg_keys:
+                    self._redundant_fields.append(
+                        f"{fg.field}: {[p.describe() for p in fg.preconditions]} "
+                        "already required by the register gate")
+                    del self.field_gates[fname]
 
         if not self.preconditions and not self.field_gates \
                 and not self.forbidden_ops:
@@ -543,7 +561,10 @@ class RegisterPlan:
             _extend_unique(self.preconditions.setdefault(op, []), pres)
             doc = self.docs.setdefault(op, [])
             line = c.datasheet_text.strip()
-            if line and line not in doc:
+            # Compare the way _norm_quote does -- markdown, curly quotes and
+            # articles removed. Raw equality kept two transcriptions of one
+            # sentence, and both landed in the generated doc comment.
+            if line and _norm_quote(line) not in {_norm_quote(d) for d in doc}:
                 doc.append(line)
 
     def _add_field_gate(self, c, peripheral: str) -> None:
@@ -574,7 +595,7 @@ class RegisterPlan:
         for field in c.target_fields:
             fg = self.field_gates.setdefault(field.lower(), FieldGate(field))
             _extend_unique(fg.preconditions, pres)
-            if doc and doc not in fg.docs:
+            if doc and _norm_quote(doc) not in {_norm_quote(d) for d in fg.docs}:
                 fg.docs.append(doc)
 
     def sources(self, op: str) -> list["SourceRegister"]:
@@ -1885,15 +1906,23 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
         quotes = [_rule_quotes(p) for p in group]
         conds = {_rule_conditions(p) for p in group}
         if _quotes_are_one_sentence(quotes) and len(conds) == 1:
-            # The NARROWEST reading wins, not the widest. When one instance
-            # named fields and another named none, the two are not a narrow
-            # claim and a broad one -- they are one datasheet sentence
-            # extracted at two precisions, and the sentence itself ("this
-            # bitfield can only be written when...") is field-scoped. Adopting
-            # the whole-register reading would gate sibling fields the sentence
-            # never mentions, and every one of those is a false report against
-            # downstream code. Under-gating loses a finding; over-gating
-            # invents one.
+            # Two different questions are settled here, and they are settled
+            # in opposite directions. Both are right, for different reasons.
+            #
+            # FIRST: did a copy list fields, or list none? Keep the one that
+            # listed fields. A copy that produced no field list did not make a
+            # broader claim; it failed to work out what the sentence was about.
+            # The sentence itself ("this bitfield can only be written when...")
+            # is about particular bits, so treating it as covering the whole
+            # register would gate siblings it never mentions, and every one of
+            # those breaks correct driver code. This is 104 of 127 cases.
+            #
+            # SECOND: if two copies each listed fields but the lists differ,
+            # take every field any copy named -- the WIDER answer. A field name
+            # has to exist on the register to reach this point, because
+            # collection checks it against the SVD, so a name in one reading
+            # and not another is far more likely a field the other reading
+            # missed than one it invented. This is 23 of 127.
             named = [p for p in group if (getattr(p, "field_gates", {}) or {})]
             if named:
                 winner = max(named,

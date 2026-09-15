@@ -608,6 +608,21 @@ def _gate_fields(constraints_path: Path) -> dict:
                     fields.append(m.group(1).lower())
             if fields:
                 per_op[op] = sorted(set(fields))
+        # Field gates too. Reading only `preconditions` left every field-only
+        # register with nothing for the triage to look for, so its hits came
+        # back untriaged instead of guarded/candidate -- and under field
+        # gating those are 600+ registers, the majority of what is new.
+        # A field gate rides the writer accessor, which serves write and
+        # modify alike, so its preconditions belong under both.
+        for fg in (e.get("gated_fields") or {}).values():
+            fields = []
+            for text in fg.get("preconditions") or []:
+                m = re.search(r"\.(\w+)", str(text))
+                fields.append(m.group(1).lower() if m
+                              else str(text).split()[0].lower())
+            for op in ("write", "modify"):
+                if fields:
+                    per_op[op] = sorted(set(per_op.get(op, [])) | set(fields))
         if per_op:
             out[reg] = per_op
     return out

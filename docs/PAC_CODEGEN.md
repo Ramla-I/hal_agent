@@ -210,60 +210,115 @@ branch, and why genuinely contradictory evidence buys no gate at all.
 ```
 SEVERAL RULES FOR ONE REGISTER
 │
-├─ (A) all from ONE FILE
-│      One file = one register on one copy of a peripheral. Nothing competes.
-│      Every rule applies.
+├─ (A) they all came from ONE FILE
+│      A file describes one register on one copy of a peripheral. If it lists
+│      several rules, none of them are competing. Every rule applies.
 │
-│      ├─ whole-register rules only
-│      │     Conditions pooled into one requirement. One witness for the
-│      │     register, minted only when every condition holds at once.
-│      │     More rules = stricter gate, never looser.
+│      ├─ every rule is about the whole register
+│      │     Their conditions are collected into one list. You get a single
+│      │     key for the register, and only when every condition on that list
+│      │     is true at the same time. Adding a rule makes the gate stricter;
+│      │     it can never make it looser.
 │      │
-│      ├─ field rules only
-│      │     One witness per named field, carrying only that field's own
-│      │     conditions. A rule naming three fields gives all three the same
-│      │     conditions. A field named by two sentences collects both. A field
-│      │     NEVER inherits a condition from a neighbour it was not named
+│      ├─ every rule names specific fields
+│      │     Each named field gets its own key, carrying only the conditions
+│      │     of the rules that named it. A rule naming three fields gives all
+│      │     three the same conditions. A field named by two separate
+│      │     sentences collects the conditions of both. A field never picks up
+│      │     a condition from a neighbouring field it was not named
 │      │     alongside.
 │      │
-│      ├─ both kinds
-│      │     Both apply: writing a gated field needs two witnesses, the
-│      │     register's and the field's. Correct when the rules really differ.
+│      ├─ some rules are about the register and some name fields
+│      │     Both kinds apply, so writing a gated field needs two keys: the
+│      │     register's and the field's. This is right when the rules really
+│      │     are different. On CRS_CR, the register may not be written while
+│      │     CEN is set, and separately its TRIM field may not be written
+│      │     while AUTOTRIMEN is set.
 │      │
-│      └─ rules that CONTRADICT each other
-│            Nothing detects it. Conditions are pooled, so a field required
-│            both set and cleared produces a check that can never pass --
-│            see below.
+│      │     One exception. If a field's conditions are already included in
+│      │     the register's conditions, the field's key is dropped. You cannot
+│      │     reach the field without first getting the register key, and
+│      │     getting it proved strictly more, so the second key would add
+│      │     nothing.
+│      │
+│      └─ two rules ask for opposite things
+│            If one rule needs a field set and another needs the same field
+│            cleared, no one can ever satisfy both, so that OPERATION is
+│            forbidden outright. It gets no marker and no gate, which means
+│            neither modify() nor modify_witnessed() exists for the register
+│            and only unsafe modify_unwitnessed can reach it. The register's
+│            other operations keep their own rules.
+│            fate: unsatisfiable_gate
 │
-└─ (B) from SEVERAL FILES for the same register
+└─ (B) they came from SEVERAL FILES for the same register
+       In Rust, I2C1 and I2C2 and I2C3 share one piece of code, so we cannot
+       gate one of them differently from another. We have to settle on a
+       single answer for the register.
        │
-       ├─ all from the SAME copy of the peripheral
-       │    (a secure alias, a naming variant: rng_htcr / rng_s_htcr)
+       ├─ every file is for the SAME copy of the peripheral
+       │    This happens when one register has two files, because the chip
+       │    exposes it at a second address (a secure alias) or because of a
+       │    naming variant: rng_htcr and rng_s_htcr.
        │    │
-       │    ├─ ONE sentence at two precisions
-       │    │     One file named the fields, another did not.
-       │    │     NARROW WINS. The register-wide version is the coarser
-       │    │     extraction of that sentence and is discarded, not merged.
-       │    │     fate: same_instance_rules_unioned
+       │    ├─ the files quote the same sentence but read it differently
+       │    │     One file listed the fields the sentence is about and
+       │    │     another listed none. Keep the one with the fields. The file
+       │    │     that produced no field list did not make a broader claim,
+       │    │     it simply failed to work out what the sentence was about,
+       │    │     so its version is discarded rather than merged in.
        │    │
-       │    └─ genuinely different sentences
-       │          Different rules; they stack, as in (A).
+       │    └─ the files quote different sentences
+       │          These are different rules, so they apply together exactly
+       │          as they would inside one file.
        │          fate: same_instance_rules_unioned
        │
-       └─ from DIFFERENT copies
+       └─ the files are for DIFFERENT copies of the peripheral
             │
-            ├─ they agree ──► keep one (the module's own copy preferred)
+            ├─ the copies say the same thing
+            │     One rule that the manual states once, which our scan picked
+            │     up separately for each copy. Keep one of them.
             │
-            └─ they differ
+            └─ the copies say different things
                  │
-                 ├─ ONE sentence at two precisions
-                 │     NARROW WINS; named fields unioned.
+                 ├─ one copy listed fields and another listed none
+                 │     Keep the fields, for the same reason as above: a
+                 │     missing field list is an incomplete reading, not a
+                 │     wider claim. Two copies of I2C read "these bits" as
+                 │     TXDATA and a third produced nothing, so TXDATA wins.
+                 │     This is how most of these cases look — 104 of 127.
+                 │
+                 ├─ the copies each listed fields, and the lists differ
+                 │     Take every field any copy named. One copy of SPI named
+                 │     CRCEN and another named CRCEN and CRCL, so both are
+                 │     gated. A field name has to exist on the register to get
+                 │     this far, because collection checks it against the SVD,
+                 │     so a name appearing in one reading and not another is
+                 │     far more likely to be a field the other reading missed
+                 │     than one it invented. 23 of 127.
                  │     fate: instance_merged_for_review
                  │
-                 └─ genuinely different answers
-                       NOTHING is gated, for any copy.
+                 └─ the copies disagree about the conditions themselves
+                       Nothing is gated, for any copy. On rm0008's USART_CR2,
+                       one copy read the identical quote as being about
+                       CR1.TE and another as CR1.UE. One of them is wrong and
+                       nothing tells us which. Making a register harder to
+                       use, on a condition we have equal reason to think is
+                       the wrong one, would break correct driver code, so we
+                       gate nothing instead.
                        fate: instance_conflict_dropped
 ```
+
+Two rules apply whichever branch you land on.
+
+**A rule whose condition is a field of the register it guards, and which only
+software can restore, is refused.** Setting that field would lock the register
+for good, because clearing it again means writing the register, and the rule
+forbids that. If the *hardware* clears the field instead, there is no problem
+and the rule is kept. See *Same-register refusal* below.
+
+**Everything here has already been confirmed by the judge.** The choices above
+are always between two readings the validator accepted, never between an
+accepted one and a rejected one.
 
 ## Worked examples
 
@@ -323,15 +378,42 @@ manual.** And the conclusion it encodes is *correct*: a read-modify-write of
 enabled and the write needs it disabled. The register should not be
 modifiable.
 
-What is wrong is the mechanism. That fact should be stated at compile time --
-withhold the modify gate entirely, so `modify` does not exist for the register
-and only `unsafe` can reach it -- rather than as a runtime check that always
-fails. A caller today writes the witness-minting call, it compiles, and it
-fails on every execution.
+What was wrong is the mechanism, and it is now fixed. The operation is marked
+**forbidden**: it keeps its place in the gated set so no `Unconstrained*`
+marker is emitted, and the constraints module emits nothing for it, so there is
+no `ModifyGate` impl either. Neither `modify()` nor `modify_witnessed()`
+exists; only `unsafe modify_unwitnessed` remains. The register's read and write
+keep their own correct conditions.
 
-Detecting this is cheap: preconditions carry `(source, field, kind, value)`, so
-two entries differing only in `kind` are mutually exclusive by construction. It
-is not yet implemented.
+Detection is one pass after pooling: preconditions carry
+`(source, field, kind, value)`, so two entries differing only in `kind` are
+mutually exclusive by construction.
+
+**Forbidding is not the same as freeing.** The first attempt dropped the gate
+by deleting the precondition, which took the operation out of the gated set --
+and a marker is added to every operation *not* in that set, so `modify` came
+back as freely callable. That is strictly worse than the always-failing check
+it replaced, which at least made the operation unreachable. Absence of a marker
+is the gate; removing a gate must not also grant one.
+
+### Could case (A) hold one sentence at two precisions?
+
+Structurally yes, and there is no precision test in (A) -- the rules would
+stack and the broader reading would survive. Measured across the corpus it does
+not occur: **zero** files carry a register-scoped and a field-scoped rule citing
+the same sentence. Within one file the generator makes a single pass over one
+register and emits one constraint per sentence; duplication at differing
+precision comes from *repetition* across files (a secure alias, another copy of
+the peripheral), which always lands in case (B), where the test does run.
+
+What (A) does hold, twice, is a field gate whose conditions are a **subset** of
+the register gate's: `adc2/IER` (register needs `ADSTART` and `JADSTART` clear,
+`JQOVFIE` needs only `JADSTART`) and `adc1/CR` (register needs seven busy flags
+clear, `ADCAL` needs only `ADEN`). The field gate is then redundant -- the
+accessor is unreachable without first satisfying the stricter register
+condition -- and costs the caller a second witness for nothing. Suppressing a
+field gate whose preconditions are a subset of its register's is not yet
+implemented.
 
 ## Deduplication
 
