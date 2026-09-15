@@ -1701,6 +1701,46 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
             continue
         instances = sorted((getattr(p, "source_instance", module) for p in group),
                            key=_instance_key)
+
+        # SAME INSTANCE, more than one plan. This is not a collision at all:
+        # nothing is competing to describe one rule. It happens when a manual
+        # states two DIFFERENT rules for one register, and the run directory
+        # carries them in separately-named files (i2c1_oar2 and
+        # i2c1_i2c_oar2), which the grouping then reads as two instances of
+        # the same name. Dropping the group discards both rules; the right
+        # answer is the same as for a register that carries a whole-register
+        # gate and a field gate -- they stack.
+        if len(set(instances)) == 1:
+            winner = group[0]
+            for other in group[1:]:
+                for op, pres in other.preconditions.items():
+                    _extend_unique(winner.preconditions.setdefault(op, []), pres)
+                    for d in other.docs.get(op, []):
+                        if d not in winner.docs.setdefault(op, []):
+                            winner.docs[op].append(d)
+                for name, fg in (getattr(other, "field_gates", {}) or {}).items():
+                    if name in winner.field_gates:
+                        _extend_unique(winner.field_gates[name].preconditions,
+                                       fg.preconditions)
+                        for d in fg.docs:
+                            if d not in winner.field_gates[name].docs:
+                                winner.field_gates[name].docs.append(d)
+                    else:
+                        winner.field_gates[name] = fg
+            kept.append(winner)
+            reviews.append({
+                "module": module, "register": reg, "instances": instances,
+                "resolution": ("%d plans from one instance unioned"
+                               % len(group)),
+                "field_sets": sorted(
+                    ",".join(sorted(getattr(p, "field_gates", {}) or {}))
+                    or "(whole register)" for p in group),
+                "detail": ("separate rules on one register, not competing "
+                           "readings of one -- they stack, exactly as a "
+                           "whole-register gate and a field gate do"),
+            })
+            continue
+
         sigs = {_plan_signature(p) for p in group}
         if len(sigs) == 1:
             owner = next((p for p in group
