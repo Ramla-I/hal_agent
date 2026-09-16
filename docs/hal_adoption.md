@@ -7,8 +7,11 @@ a HAL maintainer would eventually perform — mechanically, on
 **stm32f4xx-hal 0.23.0** against **RM0383 / stm32f411** (14 registers gated) —
 and records what it took.
 
-Run it with `applications/pac_codegen/experiments/patch_hal.py`; the report
-lands in `experiments/out/patch_hal.json`.
+Run it with `applications/pac_codegen/experiments/hal_probe/check.py
+--apply-fix`; `patch_hal.py` did this first and was retired, because its
+results carried no triage — every site it rewrote was recorded as a
+`hal_constraint_violation`, and on stm32f4xx-hal all seven of those were sites
+the driver already guarded.
 
 ---
 

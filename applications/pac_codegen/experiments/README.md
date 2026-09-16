@@ -70,7 +70,6 @@ depends on an older svd2rust PAC generation than the injector targets.
 | `port_hal.py` | upgrade the HAL to PAC 0.16 — mechanically, provably | `out/port_hal.json`, `ported/` |
 | `port_hubris.py` | same for Hubris, which has no HAL at all | `out/port_hubris.json` |
 | `measure_ported.py` | what do the gates find in what the upgrade made visible? | `out/measure_ported.json` |
-| `patch_hal.py` | the earlier, single-HAL version of `port_hal` | `out/patch_hal.json` |
 
 `port_hal.py` is the load-bearing one, and its discipline is the point: it
 applies **only** rustc's own suggestions for the two diagnostics that mark the

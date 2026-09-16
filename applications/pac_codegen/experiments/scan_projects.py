@@ -114,6 +114,30 @@ class Project:
         return self.rms if best is None else best
 
 
+def _ground_truth_n() -> str:
+    """How many enforcement sites the COMPILE route finds on stm32f4xx-hal,
+    read from the sweep rather than remembered.
+
+    This used to come from patch_hal.py, now retired: its list recorded every
+    site it managed to rewrite and carried no triage, so it counted sites the
+    driver already guarded and missed the real candidates entirely.
+    """
+    p = OUT / "sweep.json"
+    if not p.is_file():
+        return "an unrecorded number of"
+    try:
+        data = json.loads(p.read_text())
+    except Exception:                                      # noqa: BLE001
+        return "an unrecorded number of"
+    for t in data:
+        if t.get("rm") != "rm0368":
+            continue
+        for h in t.get("hal_results") or []:
+            if h.get("crate") == "stm32f4xx-hal" and h.get("status") == "ran":
+                return str(h.get("true_enforcement"))
+    return "an unrecorded number of"
+
+
 PROJECTS = [
     # --- track 2: PACs used directly, no HAL. Errors land on their own lines.
     # Chip attribution here is derived from each driver crate's OWN Cargo
@@ -896,20 +920,25 @@ def write_report(results: list, path: Path) -> None:
           "writes, and that — not any datasheet check — was what marked three",
           "sites corroborated in an earlier run.",
           "",
-          "**Triage caveat: whole-register gates over-approximate.** When a",
+          "**Triage caveat: a whole-register gate over-approximates.** When a",
           "constraint lists no `fields restricted`, it gates the whole register",
-          "even though the datasheet note usually attaches to specific bits. In",
-          "the SPI CR1 case below (*\"this bit should be written only when SPE =",
-          "0\"*), sites writing `cpol`/`cpha`/`br`/`dff` are the strong",
-          "candidates; a site whose only field is `spe` is the enable/disable",
-          "operation itself and is almost certainly benign. Read the",
-          "*fields written* column before the verdict.",
+          "even though the datasheet note usually attaches to specific bits, so",
+          "read the *fields written* column before the verdict. Field-level",
+          "gating is now the default and states these rules against the bits",
+          "the datasheet names, which removes most of this caveat; a",
+          "whole-register gate whose condition is a field of that same register",
+          "is no longer emitted at all.",
           "",
-          "**Scanner accuracy.** Run against stm32f4xx-hal 0.23 with RM0383's",
-          "constraints, it finds **31 of the 31** sites `patch_hal.py` found by",
-          "compiling — zero missed — plus 8 more the compile route structurally",
-          "cannot reach, because their gate was never emitted (field-scoped",
-          "constraints, `field_gating_disabled`).",
+          "**Scanner accuracy — NOT re-measured in this run.** The check is to",
+          "scan `stm32f4xx-hal` and confirm the scanner independently finds the",
+          "sites the COMPILE route finds. That HAL is not among the",
+          "projects scanned here, so this page cannot compute the agreement,",
+          "and the figure previously quoted (*31 of 31*) is stale: it was",
+          "measured against a gate set that no longer exists, before",
+          "whole-register gates on a bit of the same register were refused.",
+          f"The sweep currently finds {_ground_truth_n()} enforcement sites in",
+          "that driver. Re-establishing the comparison means adding the HAL to",
+          "the scan.",
           "",
           "## Summary",
           "",

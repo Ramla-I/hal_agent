@@ -221,7 +221,7 @@ four one-line changes, not the API revision first estimated.
 
 ```sh
 python applications/pac_codegen/experiments/hopter.py            # facts + surface probe
-python applications/pac_codegen/experiments/patch_hal.py \       # the HAL adoption step
+python applications/pac_codegen/experiments/hal_probe/check.py --apply-fix \  # the HAL adoption step
     --rm rm0383 --device stm32f411 --svd stm32f411.svd
 ```
 

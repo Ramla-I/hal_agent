@@ -32,7 +32,7 @@ Only ESCAPING produces an application-level finding. This tool separates them.
 METHOD
 ------
 1. Start from the 31 compile-CONFIRMED violation sites in stm32f4xx-hal 0.23
-   (out/patch_hal.json -- these are E0277s from a real `cargo check` against an
+   (out/sweep.json -- these are real `cargo check` diagnostics against an
    injected chip crate, not a text match).
 2. Walk UP the driver's call graph to every `pub` entry point that reaches each
    site.
@@ -112,6 +112,37 @@ class Fn:
     @property
     def label(self):
         return f"{self.impl_ty}::{self.name}" if self.impl_ty else self.name
+
+
+def sweep_sites(rm: str, crate: str) -> list:
+    """Enforcement sites for one (manual, driver), from the sweep summary.
+
+    Each row carries file, line, register, operation AND the triage verdict --
+    `corroborated` where the driver already establishes the precondition,
+    `unchecked` where it does not. The retired patch_hal.py had no verdict, so
+    a caller could not tell a finding from an already-safe access.
+
+    NOTE: the sweep stores at most 40 rows per pairing and reports the rest in
+    `triage_truncated`; a pairing over that cap yields a sample, not the set.
+    """
+    out = []
+    for name in ("sweep.json", "register_only/sweep.json"):
+        p = OUT / name
+        if not p.is_file():
+            continue
+        for t in json.loads(p.read_text()):
+            if t["rm"] != rm:
+                continue
+            for h in t.get("hal_results") or []:
+                if h.get("crate") != crate:
+                    continue
+                if h.get("triage_truncated"):
+                    print(f"  WARNING: {h['triage_truncated']} site(s) beyond "
+                          f"the sweep's 40-row cap are not listed")
+                out.extend(h.get("triage") or [])
+        if out:
+            break
+    return out
 
 
 def index_functions(root: Path) -> list:
@@ -308,6 +339,10 @@ def main() -> None:
     ap.add_argument("--apps-dir", default=None,
                     help="directory holding the cloned applications")
     ap.add_argument("--hal", default=str(HAL_SRC))
+    # Which sweep rows to trace. Defaults to the pairing this script has always
+    # used; patch_hal.py hardcoded it, so the choice was invisible.
+    ap.add_argument("--rm", default="rm0368")
+    ap.add_argument("--hal-crate", dest="hal_crate", default="stm32f4xx-hal")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
@@ -318,9 +353,19 @@ def main() -> None:
     if apps_dir is None or not apps_dir.is_dir():
         sys.exit("--apps-dir must point at the cloned applications")
 
-    viol = json.loads((OUT / "patch_hal.json").read_text())
-    sites = viol["hal_constraint_violations"]
-    print(f"driver: {hal.name}   compile-confirmed violation sites: {len(sites)}")
+    # From the sweep, which is the finding pipeline. patch_hal.py used to
+    # supply this and was retired: its list recorded every site it managed to
+    # rewrite, with no triage, so on stm32f4xx-hal all seven entries were
+    # sites the driver already guarded and none of the four real candidates
+    # appeared. The sweep carries the verdict, so a site can be traced knowing
+    # whether it is a finding or an already-safe access.
+    sites = sweep_sites(args.rm, args.hal_crate)
+    if not sites:
+        sys.exit(f"no enforcement sites for {args.rm}/{args.hal_crate} in "
+                 f"{OUT}/sweep.json — run stm_sweep.py first")
+    cand = [s for s in sites if s.get("verdict") == "unchecked"]
+    print(f"driver: {hal.name}   compile-confirmed sites: {len(sites)} "
+          f"({len(cand)} unguarded)")
 
     fns = index_functions(hal)
     rev = callers_of(fns)
