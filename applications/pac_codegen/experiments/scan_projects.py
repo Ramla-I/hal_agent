@@ -186,18 +186,30 @@ PROJECTS = [
             hal="stm32f4xx-hal", hal_pinned="^0.21",
             note="Ethernet MAC/DMA driver; programs ETH registers directly."),
     Project("stm32f469i-disc", "https://github.com/tegimeki/stm32f469i-disc",
+            # Stays hal_only: verified 0 direct register accesses. 674 lines,
+            # and its only HAL calls are freeze/constrain/init.
             "hal_only", ["rm0386"], "stm32f469", "stm32f4",
             hal="stm32f4xx-hal", hal_pinned="^0.23",
             note="ALREADY on the HAL version that pairs with PAC 0.16."),
-    Project("booster", "https://github.com/quartiq/booster", "hal_only",
+    # Also mis-tagged hal_only, and also touching registers directly (24
+    # accesses). See the px4flow note below: `hal_only` means no scanner runs,
+    # so the zero these reported was never a measurement.
+    Project("booster", "https://github.com/quartiq/booster", "pac_direct",
             ["rm0090"], "stm32f407", "stm32f4",
             hal="stm32f4xx-hal", hal_pinned="^0.21",
-            note="RF power amplifier firmware. F407 = RM0090, now in the "
-                 "corpus."),
+            note="RF power amplifier firmware. F407 = RM0090. Uses the HAL for "
+                 "most work but reaches some registers through the PAC."),
+    # Registered `hal_only` for months, which means NO SCANNER RUNS -- its zero
+    # was never a measurement. It depends on stm32f4xx-hal but reaches DCMI,
+    # DMA2 and RCC registers directly, 50 accesses across three files, in the
+    # pre-0.15 svd2rust field form (`rcc2.ahb2enr.modify(..)` rather than
+    # `.ahb2enr().modify(..)`). The matcher handles both; only the style tag
+    # was wrong.
     Project("px4flow_bsp", "https://github.com/tstellanova/px4flow_bsp",
-            "hal_only", ["rm0090"], "stm32f407", "stm32f4",
+            "pac_direct", ["rm0090"], "stm32f407", "stm32f4",
             hal="stm32f4xx-hal", hal_pinned="^0.8.3",
-            note="Optical-flow sensor BSP; F407 = RM0090."),
+            note="Optical-flow sensor BSP; F407 = RM0090. Uses the HAL for "
+                 "setup but drives DCMI/DMA2 through the PAC directly."),
 
     # --- peripheral drivers that exist BECAUSE the HAL does not cover their
     # peripheral, so they drive registers themselves. Highest density of the
@@ -269,6 +281,7 @@ PROJECTS = [
             ["rm0316"], "stm32f303", "stm32f3", subdirs=["src"],
             note="F3DISCOVERY board support."),
     Project("stm32f407g-disc", "https://github.com/stm32-rs/stm32f407g-disc",
+            # Stays hal_only: verified 0 direct register accesses.
             "hal_only", ["rm0090"], "stm32f407", "stm32f4",
             hal="stm32f4xx-hal", hal_pinned="^0.14",
             note="F4DISCOVERY board support; re-exports the HAL."),
