@@ -676,6 +676,7 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
            "guarded": 0, "candidate": 0, "untriaged": 0, "triage": [],
            "files": {"true_enforcement": set(), "generic_friction": set(),
                      "other": set()},
+           "triage_truncated": 0,
            "specs": {}, "samples": {"true_enforcement": [],
                                     "generic_friction": [], "other": []},
            "other_detail": []}
@@ -733,7 +734,17 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
                     res["candidate"] += 1
                 else:
                     res["untriaged"] += 1
-                if len(res["triage"]) < 40:
+                # A SAMPLE, not the population. The verdict counts above are
+                # complete -- every hit is triaged -- but the per-site records
+                # stop here to keep the summary from ballooning: 49 targets,
+                # up to five drivers each, ~2000 hits. The count of what was
+                # dropped goes alongside, because a truncated list that does
+                # not say so reads as the full set, and diffing two of them
+                # across modes reports findings as lost when they are merely
+                # off the end.
+                if len(res["triage"]) >= 40:
+                    res["triage_truncated"] += 1
+                else:
                     res["triage"].append({
                         "file": e["hal_files"][0] if e["hal_files"] else "",
                         "line": site[1], "register": reg, "operation": op,

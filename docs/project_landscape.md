@@ -66,7 +66,7 @@ constraints, `field_gating_disabled`).
 | [keyboard-labs](https://github.com/rgoulter/keyboard-labs) | pac_direct | rm0368 | 53 | 2 | **0** | 0 | 0 | `ready` |
 | [stm32f3-discovery](https://github.com/rubberduck203/stm32f3-discovery) | pac_direct | rm0316 | 5 | 1 | **0** | 0 | 0 | `ready` |
 | [stm32f407g-disc](https://github.com/stm32-rs/stm32f407g-disc) | hal_only | rm0090 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
-| [embassy](https://github.com/embassy-rs/embassy) | pac_direct | rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490 | 249 | 3136 | **16** | 8 | 8 | `ready` |
+| [embassy](https://github.com/embassy-rs/embassy) | pac_direct | rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490 | 257 | 3240 | **17** | 9 | 8 | `ready` |
 
 ## Build-readiness
 
@@ -535,7 +535,7 @@ Effort key:
 | `src/ports/stm32f412/update_signal.rs:49` | modify | bre, dbp, rtcen | **unchecked** |
 
 
-## embassy — 16 candidate sites
+## embassy — 17 candidate sites
 
 *Async embedded framework; embassy-stm32 alone carries 4,049 register accesses, more than Tock and Hubris combined. Uses stm32-metapac, so field writes are `w.set_ff(true)` rather than `w.ff().set_bit()`. Only the paths whose family is named in the layout are scanned.*
 
@@ -543,14 +543,14 @@ Effort key:
 
 - **rule** (state_gate, write): RCC_CR.HSEON cleared
 - **fields restricted**: hsebyp
-- **datasheet** (rm0440): "The HSEBYP bit can be written only if the HSE oscillator is disabled."
+- **datasheet** (rm0008): "The HSEBYP bit can be written only if the HSE oscillator is disabled."
 
 | file:line | op | fields written | verdict |
 |---|---|---|---|
+| `embassy-stm32/src/rcc/f013.rs:202` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
+| `embassy-stm32/src/rcc/f013.rs:211` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
 | `embassy-stm32/src/rcc/g4.rs:144` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
 | `embassy-stm32/src/rcc/g4.rs:153` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
-| `embassy-stm32/src/rcc/f013.rs:196` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
-| `embassy-stm32/src/rcc/f013.rs:205` | modify | hsebyp, hseon, set_hsebyp, set_hseon | **corroborated** |
 
 ### `flash/acr` — 4 site(s)
 
@@ -561,9 +561,9 @@ Effort key:
 | file:line | op | fields written | verdict |
 |---|---|---|---|
 | `embassy-stm32/src/rcc/l.rs:206` | modify | latency, set_latency, set_vos, vos | **unchecked** |
-| `embassy-stm32/src/rcc/l.rs:403` | write | acc64, hpre, latency, ppre, prften, set_acc64, set_hpre, set_latency, set_ppre, set_prften, set_sw, sw | **corroborated** |
-| `embassy-stm32/src/rcc/l.rs:405` | modify | hpre, latency, ppre, prften, set_hpre, set_latency, set_ppre, set_prften, set_sw, sw | **corroborated** |
-| `embassy-stm32/src/rcc/l.rs:410` | modify | hpre, ppre, ppre1, ppre2, prften, set_hpre, set_ppre, set_ppre1, set_ppre2, set_prften, set_sw, sw | **corroborated** |
+| `embassy-stm32/src/rcc/l.rs:425` | write | acc64, latency, prften, set_acc64, set_latency, set_prften | **corroborated** |
+| `embassy-stm32/src/rcc/l.rs:427` | modify | latency, prften, set_latency, set_prften | **corroborated** |
+| `embassy-stm32/src/rcc/l.rs:432` | modify | prften, set_prften | **corroborated** |
 
 ### `pwr/cr1` — 3 site(s)
 
@@ -585,8 +585,8 @@ Effort key:
 
 | file:line | op | fields written | verdict |
 |---|---|---|---|
-| `embassy-stm32/src/rcc/h.rs:785` | modify | octo1_hslv, octo2_hslv, pg_opt, set_octo1_hslv, set_octo2_hslv, set_pg_opt | **unchecked** |
-| `embassy-stm32/src/rcc/h.rs:801` | modify | iohslv, octo1_iohslv, octo2_iohslv, optlock, pg_opt, set_iohslv, set_octo1_iohslv, set_octo2_iohslv, set_optlock, set_pg_opt | **unchecked** |
+| `embassy-stm32/src/rcc/h.rs:774` | modify | octo1_hslv, octo2_hslv, pg_opt, set_octo1_hslv, set_octo2_hslv, set_pg_opt | **unchecked** |
+| `embassy-stm32/src/rcc/h.rs:790` | modify | iohslv, octo1_iohslv, octo2_iohslv, optlock, pg_opt, set_iohslv, set_octo1_iohslv, set_octo2_iohslv, set_optlock, set_pg_opt | **unchecked** |
 
 ### `rcc/pllsaicfgr` — 1 site(s)
 
@@ -596,7 +596,7 @@ Effort key:
 
 | file:line | op | fields written | verdict |
 |---|---|---|---|
-| `embassy-stm32/src/rcc/f247.rs:510` | write | — | **unchecked** |
+| `embassy-stm32/src/rcc/f247.rs:520` | write | — | **unchecked** |
 
 ### `syscfg/cccsr` — 1 site(s)
 
@@ -606,7 +606,17 @@ Effort key:
 
 | file:line | op | fields written | verdict |
 |---|---|---|---|
-| `embassy-stm32/src/rcc/h.rs:756` | modify | cs, en, hslv, set_cs, set_en, set_hslv | **unchecked** |
+| `embassy-stm32/src/rcc/h.rs:745` | modify | cs, en, hslv, set_cs, set_en, set_hslv | **unchecked** |
+
+### `pwr/sr2` — 1 site(s)
+
+- **rule** (state_gate, read): PWR_PRIVCFGR.PRIV cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0438): "This register is protected against non-privileged access when PRIV=1 in the PWR_PRIVCFGR register."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `embassy-stm32/src/rcc/l.rs:224` | read | — | **unchecked** |
 
 ### `i2c/txdr` — 1 site(s)
 
@@ -616,7 +626,7 @@ Effort key:
 
 | file:line | op | fields written | verdict |
 |---|---|---|---|
-| `embassy-stm32/src/i2c/v2.rs:904` | write | set_txdata, txdata | **unchecked** |
+| `embassy-stm32/src/i2c/v2.rs:910` | write | set_txdata, txdata | **unchecked** |
 
 
 ## Limits

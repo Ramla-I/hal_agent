@@ -51,12 +51,29 @@ constraints, so the wrong reading was the only one that could fire.
 | rm0041 | `stm32f1xx-hal` | 23 → 2 | `spi1/CR1` |
 | rm0386 | `stm32f4xx-hal` | 54 → 38 | `spi1/CR1`, `dsi/WCR`, `dsi/WRPCR` |
 
-**Status: expected to return, verify.** Under field-level gating — now the
-default — the same sentences should gate `CRCEN`, `UE`, `OA2` and so on, and
-catch the same driver code more precisely. The field-mode sweep does find more
-hits overall (1993 vs 1659), but **nobody has checked that these specific sites
-are among them.** That check is the open item: take the six rows above and
-confirm each driver site still errors under field gating.
+**Status: VERIFIED — nothing lost.** Every one of the six pairings finds MORE
+under field gating, and no driver file went dark:
+
+| manual | driver | reg-only | field | files lost | files gained |
+|---|---|---:|---:|---:|---:|
+| rm0041 | `stm32f1xx-hal` | 2 | **23** | 0 | 2 |
+| rm0386 | `stm32f4xx-hal` | 38 | **42** | 0 | 5 |
+| rm0454 | `stm32-hal2` | 17 | **24** | 0 | 1 |
+| rm0468 | `stm32-hal2` | 144 | **151** | 0 | 0 |
+| rm0399 | `stm32-hal2` | 146 | **154** | 0 | 1 |
+| rm0433 | `stm32-hal2` | 176 | **186** | 0 | 1 |
+
+rm0041 lands back on exactly 23, the count it had before rule 2 removed the
+unsound `SPI_CR1` gate — the rule returned scoped to `CRCEN` and caught the same
+code. Site-level, where the record is complete (rm0041, all 23 sites), nothing
+present in register-only is missing from field.
+
+> **A trap when checking this yourself.** `hal_results[].triage` in the sweep
+> summary is a SAMPLE capped at 40 rows, not the population; the verdict counts
+> beside it are complete. Diffing two capped lists across modes made
+> `watchdog.rs:76-77` look lost on rm0386 when the gates are identical in both
+> and the file is in the hits set for both. `triage_truncated` now records how
+> many rows were dropped.
 
 ---
 
