@@ -104,14 +104,30 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
     for reg_entry in manifest["registers"]:
         peripheral = reg_entry["peripheral"]
         source = reg_entry["file"]
-        def row(fate: str, reason: str, indices=None, **extra):
+        # Every constraint this register carries, by the same id the validator
+        # ledger and the saved artifact use. Filled once the collected file is
+        # read below (the manifest holds lint REPORTS, not the constraints);
+        # rows written before that -- a file that failed to load at all --
+        # legitimately have none. A row concerning a subset passes its own.
+        all_ids: list = []
+        def row(fate: str, reason: str, indices=None, ids=None, **extra):
             # `kind`/`kinds` carry the grammar-v2 kind(s) STRUCTURALLY, so
             # accounting never has to parse the human-readable reason string.
+            #
+            # `constraint_ids` is what makes this row joinable to the durable
+            # artifact. Without it the only way to ask "why did THIS register
+            # lose its gate" is to match names, and the two files do not agree
+            # on any of them: the artifact records the Rust MODULE (usart1) and
+            # the prefix-stripped register (CR1), while a row records the
+            # SOURCE INSTANCE (uart4) and the run-file name (cr1_disabled). One
+            # constraint, four different strings, and a join that misses looks
+            # exactly like a register that lost its gate for no reason.
             r = {
                 "file": source, "peripheral": peripheral,
                 "register": reg_entry["register"], "fate": fate,
                 "reason": reason,
                 "constraints": indices if indices is not None else [],
+                "constraint_ids": sorted(ids) if ids else all_ids,
             }
             r.update(extra)
             rows.append(r)
@@ -133,6 +149,9 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
         out_file = collect_dir / Path(reg_entry["output_path"]).name
         data = json.loads(out_file.read_text())
         all_v2 = data.get("access_constraints_v2") or []
+        all_ids[:] = sorted({
+            new_constraint_id(rm, peripheral, reg_entry["register"], g)
+            for g in all_v2 if isinstance(g, dict)})
         # Offer only kinds the emitter supports and are not disabled; skipped
         # kinds become report rows (never crashes). Single source of truth:
         # rust_codegen.enabled_kinds.
@@ -409,6 +428,18 @@ def main() -> None:
         # skip any row that does not resolve rather than mislabel it.)
         # Instances share register types, so two plans can now target one
         # Rust type; emitting both would define the same witness twice.
+        # Ids for the post-loop rows below. They are appended outside the
+        # per-register loop, so they never pass through row() and would carry
+        # none -- and these are precisely the rows that explain why a register
+        # lost its gate, so a name-based join was the only way to read them.
+        ids_by_reg: dict = {}
+        for _p in plans:
+            ids_by_reg.setdefault((_p.peripheral, _p.reg_lower), set()).update(
+                getattr(_p, "constraint_ids", ()) or ())
+
+        def _ids(module, register):
+            return sorted(ids_by_reg.get((module, str(register).lower()), ()))
+
         plans, collisions, merges = rust_codegen.resolve_instance_collisions(plans)
         for m in merges:
             # Two different events, so two fates. A reviewer filtering for
@@ -420,6 +451,7 @@ def main() -> None:
                     "file": "", "peripheral": m["module"],
                     "register": m["register"],
                     "fate": "same_instance_rules_unioned",
+                "constraint_ids": _ids(m["module"], m["register"]),
                     "reason": f"{m['resolution']}: {m['detail']} "
                               f"(gate sets {m['field_sets']})",
                     "constraints": [],
@@ -428,6 +460,7 @@ def main() -> None:
             rows.append({
                 "file": "", "peripheral": m["module"], "register": m["register"],
                 "fate": "instance_merged_for_review",
+                "constraint_ids": _ids(m["module"], m["register"]),
                 "reason": f"instances {m['instances']} named different fields "
                           f"{m['field_sets']} for the same rule — "
                           f"{m['resolution']}; {m['detail']}",
@@ -440,6 +473,7 @@ def main() -> None:
             rows.append({
                 "file": "", "peripheral": c["module"], "register": c["register"],
                 "fate": "instance_conflict",
+                "constraint_ids": _ids(c["module"], c["register"]),
                 "reason": f"instances {c['instances']} disagree — {c['detail']}",
                 # what each instance claimed, so the row is reviewable
                 "readings": c.get("readings", []),
@@ -546,6 +580,8 @@ def main() -> None:
                             "fate": fate,
                             "reason": f"{op}: {why}",
                             "constraints": [],
+                            "constraint_ids": sorted(
+                                getattr(plan, "constraint_ids", ()) or ()),
                         })
                         print(f"  note: {plan.peripheral}/{plan.reg_name}: "
                               f"dropped {op} gate — {fate}")
@@ -585,6 +621,8 @@ def main() -> None:
                             "fate": fate,
                             "reason": f"field {fg.field}: {why}",
                             "constraints": [],
+                            "constraint_ids": sorted(
+                                getattr(plan, "constraint_ids", ()) or ()),
                         })
                         print(f"  note: {plan.peripheral}/{plan.reg_name}: "
                               f"dropped field gate on {fg.field} — {fate}")
