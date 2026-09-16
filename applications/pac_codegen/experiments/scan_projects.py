@@ -788,13 +788,83 @@ def triage(matched: list, dialect: str = "pac") -> list:
 # Build-readiness
 # --------------------------------------------------------------------------- #
 
-def readiness(p: Project) -> dict:
+_PAC_DEP_RE = None
+
+
+_SKIP_MANIFEST = re.compile(
+    r"(^|/)(testsuite|tests|examples?|xtask|benches?|fuzz|ci)(/|$)")
+
+
+def declared_pac_dependency(root: Path, pac: str) -> "tuple[bool, str]":
+    """Does this project actually DEPEND on a PAC we can inject into?
+
+    Readiness used to answer from `p.pac`, a hand-declared field naming which
+    family's registers the project touches. That is not the same question. A
+    crate can access CAN_FA1R by name while reaching it through its own
+    `vcell` register block, and injecting gates into stm32f1 would never touch
+    it -- bxcan, fdcan, stm32-fmc and lilos were all marked `ready` on exactly
+    that confusion.
+
+    Two things this must NOT count, both found by getting them wrong:
+
+    * a manifest under testsuite/, examples/ or tests/. bxcan's testsuite
+      pins stm32f1 0.14 to drive its hardware tests; the library it tests
+      depends on vcell and nothing else. Gating the PAC would not touch the
+      library, which is the thing being scanned.
+    * a [dev-dependencies] entry, for the same reason at a smaller scale.
+
+    A dependency on a `*xx-hal` counts, since the HAL consumes the PAC on the
+    project's behalf. Returns (reachable, evidence naming the manifest).
+    """
+    hal_hit = None
+    for man in sorted(root.rglob("Cargo.toml"))[:80]:
+        rel = str(man.relative_to(root))
+        if _SKIP_MANIFEST.search(rel.replace("\\", "/")):
+            continue
+        try:
+            text = man.read_text(errors="replace")
+        except OSError:
+            continue
+        section = ""
+        for line in text.splitlines():
+            s = line.strip()
+            if s.startswith("["):
+                section = s.strip("[]")
+                continue
+            if s.startswith("#") or "=" not in s:
+                continue
+            if "dev-dependencies" in section or "build-dependencies" in section:
+                continue
+            # `[dependencies.stm32f1]` names the crate in the header itself
+            name = (section.split(".", 1)[1] if section.startswith("dependencies.")
+                    else s.split("=", 1)[0].strip().strip('"'))
+            if name == pac:
+                return True, f"depends on {pac} ({rel})"
+            if re.fullmatch(r"stm32\w*xx-hal", name) and hal_hit is None:
+                hal_hit = f"depends on {name} ({rel})"
+    if hal_hit:
+        return True, hal_hit
+    return False, ("no dependency on a PAC or a *xx-hal in any library "
+                   "manifest (test and example crates excluded)")
+
+
+def readiness(p: Project, root: Path = None) -> dict:
     """Could this project ever be built against an injected crate, and what
     would it take? This is the ranked shortlist the build phase consumes."""
     if p.style == "tock":
         return {"reachable": False, "effort": "not-applicable",
                 "pac_needed": None,
                 "blockers": ["hand-written register maps; no PAC to inject into"]}
+    if root is not None:
+        ok, why = declared_pac_dependency(root, p.pac)
+        if not ok:
+            # Same category as tock: the registers are real and the findings
+            # are real, but nothing we inject can reach them.
+            return {"reachable": False, "effort": "not-applicable",
+                    "pac_needed": None,
+                    "blockers": [f"{why}; register access goes through the "
+                                 f"project's own register block, so an "
+                                 f"injected PAC cannot reach it"]}
     if not p.rms:
         return {"reachable": False, "effort": "missing-manual",
                 "pac_needed": f"{p.pac} {PAC_VERSION}",
@@ -872,7 +942,7 @@ def scan_project(p: Project, root: Path, periph_map: dict) -> dict:
         "hits": len(triaged),
         "verdicts": dict(verdicts),
         "findings": triaged,
-        "readiness": readiness(p),
+        "readiness": readiness(p, root),
     }
 
 

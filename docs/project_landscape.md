@@ -28,20 +28,25 @@ driver calls a helper `self.stop()` beside its `CR1::STOP::SET`
 writes, and that — not any datasheet check — was what marked three
 sites corroborated in an earlier run.
 
-**Triage caveat: whole-register gates over-approximate.** When a
+**Triage caveat: a whole-register gate over-approximates.** When a
 constraint lists no `fields restricted`, it gates the whole register
-even though the datasheet note usually attaches to specific bits. In
-the SPI CR1 case below (*"this bit should be written only when SPE =
-0"*), sites writing `cpol`/`cpha`/`br`/`dff` are the strong
-candidates; a site whose only field is `spe` is the enable/disable
-operation itself and is almost certainly benign. Read the
-*fields written* column before the verdict.
+even though the datasheet note usually attaches to specific bits, so
+read the *fields written* column before the verdict. Field-level
+gating is now the default and states these rules against the bits
+the datasheet names, which removes most of this caveat; a
+whole-register gate whose condition is a field of that same register
+is no longer emitted at all.
 
-**Scanner accuracy.** Run against stm32f4xx-hal 0.23 with RM0383's
-constraints, it finds **31 of the 31** sites `patch_hal.py` found by
-compiling — zero missed — plus 8 more the compile route structurally
-cannot reach, because their gate was never emitted (field-scoped
-constraints, `field_gating_disabled`).
+**Scanner accuracy — NOT re-measured in this run.** The check is to
+scan `stm32f4xx-hal` and confirm the scanner independently finds the
+sites the COMPILE route finds. That HAL is not among the
+projects scanned here, so this page cannot compute the agreement,
+and the figure previously quoted (*31 of 31*) is stale: it was
+measured against a gate set that no longer exists, before
+whole-register gates on a bit of the same register were refused.
+The sweep currently finds 11 enforcement sites in
+that driver. Re-establishing the comparison means adding the HAL to
+the scan.
 
 ## Summary
 
@@ -55,18 +60,18 @@ constraints, `field_gating_disabled`).
 | [booster](https://github.com/quartiq/booster) | hal_only | rm0090 | 35 | 0 | **0** | 0 | 0 | `hal-bump` |
 | [px4flow_bsp](https://github.com/tstellanova/px4flow_bsp) | hal_only | rm0090 | 5 | 0 | **0** | 0 | 0 | `hal-bump` |
 | [stm32f7-discovery](https://github.com/embed-rs/stm32f7-discovery) | pac_direct | rm0385 | 33 | 288 | **4** | 2 | 2 | `pac-gap` |
-| [fdcan](https://github.com/stm32-rs/fdcan) | pac_direct | rm0440, rm0433 | 88 | 73 | **7** | 3 | 4 | `ready` |
-| [bxcan](https://github.com/stm32-rs/bxcan) | pac_direct | rm0008 | 35 | 65 | **11** | 0 | 11 | `ready` |
-| [stm32-usbd](https://github.com/stm32-rs/stm32-usbd) | pac_direct | rm0008 | 16 | 30 | **0** | 0 | 0 | `ready` |
+| [fdcan](https://github.com/stm32-rs/fdcan) | pac_direct | rm0440, rm0433 | 88 | 73 | **7** | 3 | 4 | `not-applicable` |
+| [bxcan](https://github.com/stm32-rs/bxcan) | pac_direct | rm0008 | 35 | 65 | **11** | 0 | 11 | `not-applicable` |
+| [stm32-usbd](https://github.com/stm32-rs/stm32-usbd) | pac_direct | rm0008 | 16 | 30 | **0** | 0 | 0 | `not-applicable` |
 | [stm32f103xx-usb](https://github.com/mvirkkunen/stm32f103xx-usb) | pac_direct | rm0008 | 4 | 21 | **0** | 0 | 0 | `ready` |
-| [stm32-fmc](https://github.com/stm32-rs/stm32-fmc) | pac_direct | rm0433 | 18 | 0 | **0** | 0 | 0 | `ready` |
+| [stm32-fmc](https://github.com/stm32-rs/stm32-fmc) | pac_direct | rm0433 | 18 | 0 | **0** | 0 | 0 | `not-applicable` |
 | [blethrs](https://github.com/AirborneEngineering/blethrs) | pac_direct | rm0090 | 6 | 85 | **0** | 0 | 0 | `pac-gap` |
-| [loadstone](https://github.com/absw/loadstone) | pac_direct | rm0402 | 25 | 8 | **1** | 1 | 0 | `ready` |
-| [lilos](https://github.com/cbiffle/lilos) | pac_direct | rm0090, rm0433, rm0444 | 26 | 10 | **0** | 0 | 0 | `ready` |
+| [loadstone](https://github.com/absw/loadstone) | pac_direct | rm0402 | 25 | 8 | **1** | 1 | 0 | `not-applicable` |
+| [lilos](https://github.com/cbiffle/lilos) | pac_direct | rm0090, rm0433, rm0444 | 26 | 10 | **0** | 0 | 0 | `not-applicable` |
 | [keyboard-labs](https://github.com/rgoulter/keyboard-labs) | pac_direct | rm0368 | 53 | 2 | **0** | 0 | 0 | `ready` |
 | [stm32f3-discovery](https://github.com/rubberduck203/stm32f3-discovery) | pac_direct | rm0316 | 5 | 1 | **0** | 0 | 0 | `ready` |
 | [stm32f407g-disc](https://github.com/stm32-rs/stm32f407g-disc) | hal_only | rm0090 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
-| [embassy](https://github.com/embassy-rs/embassy) | pac_direct | rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490 | 257 | 3240 | **17** | 9 | 8 | `ready` |
+| [embassy](https://github.com/embassy-rs/embassy) | pac_direct | rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490 | 257 | 3240 | **17** | 9 | 8 | `not-applicable` |
 
 ## Build-readiness
 
@@ -75,25 +80,25 @@ injected chip crate — the ranked input to the build phase.
 
 | project | reachable | PAC needed | blockers |
 |---|---|---|---|
-| embassy | yes | stm32f4 0.16.0 | none |
-| bxcan | yes | stm32f1 0.16.0 | none |
-| fdcan | yes | stm32g4 0.16.0 | none |
-| loadstone | yes | stm32f4 0.16.0 | none |
-| stm32-usbd | yes | stm32f1 0.16.0 | none |
 | stm32f103xx-usb | yes | stm32f1 0.16.0 | none |
-| stm32-fmc | yes | stm32h7 0.16.0 | none |
-| lilos | yes | stm32f4 0.16.0 | none |
 | keyboard-labs | yes | stm32f4 0.16.0 | none |
 | stm32f3-discovery | yes | stm32f3 0.16.0 | none |
 | tock | no | — | hand-written register maps; no PAC to inject into |
 | hubris | yes | stm32h7 0.16.0 | pins stm32h7 0.14, injector targets 0.16.0 |
+| embassy | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
+| bxcan | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
+| fdcan | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
 | stm32f7-discovery | yes | stm32f7 0.16.0 | pins stm32f7 0.7, injector targets 0.16.0 |
 | anne-key | yes | stm32l1 0.16.0 | pins stm32l1 0.11.0, injector targets 0.16.0 |
+| loadstone | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
 | stm32-eth | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | stm32f469i-disc | yes | stm32f4 0.16.0 | stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | booster | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | px4flow_bsp | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.8.3 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
+| stm32-usbd | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
+| stm32-fmc | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
 | blethrs | yes | stm32f4 0.16.0 | pins stm32f4 0.11, injector targets 0.16.0 |
+| lilos | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
 | stm32f407g-disc | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.14 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 
 Effort key:

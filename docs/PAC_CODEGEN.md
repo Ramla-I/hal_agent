@@ -547,20 +547,40 @@ it *holds*.
 
 ### What could be ported next
 
-From the scan's own readiness verdicts. `ready` means the project already
-depends on a PAC we inject into, so no version port is needed:
+From the scan's own readiness verdicts, which are derived from each project's
+**manifests** — what it depends on — not from which registers it touches:
 
-| project | sites | effort | needs |
+| project | sites | effort | why |
 |---|---:|---|---|
-| `embassy` | 17 | ready | `stm32f4` 0.16.0 |
-| `bxcan` | 11 | ready | `stm32f1` 0.16.0 |
-| `fdcan` | 7 | ready | `stm32g4` 0.16.0 |
+| `hubris` | 22 | done | pinned `stm32h7` 0.14; ported to 0.16 |
 | `stm32f7-discovery` | 4 | pac-gap | pins `stm32f7` 0.7 |
 | `anne-key` | 3 | pac-gap | pins `stm32l1` 0.11.0 |
-| `tock` | 51 | **not applicable** | hand-written register maps; no PAC exists to inject into |
+| `tock` | 51 | **not applicable** | hand-written register maps |
+| `embassy` | 17 | **not applicable** | no PAC dependency in any library manifest |
+| `bxcan` | 11 | **not applicable** | own `vcell` register block |
+| `fdcan` | 7 | **not applicable** | own register block |
 
-`tock` has the most sites and can never be compiled against, which is the
-clearest statement of why the source scanner exists.
+**No project with findings is `ready`.** The three the scan marks ready —
+`stm32f103xx-usb`, `keyboard-labs`, `stm32f3-discovery` — have zero sites.
+Everything with findings either pins an older PAC, needs its HAL bumped, or has
+no PAC at all.
+
+That last category is the important one, and it is larger than it looks: **tock,
+embassy, bxcan and fdcan together hold 86 of the scan's sites and none of them
+can ever be compiled against an injected crate.** They reach real constrained
+registers — bxcan's `fa1r`/`fm1r`/`ffa1r` are exactly the filter registers the
+`FINIT` rule governs — but through their own register blocks, so no gate we
+emit is in their path. This is the clearest statement of why the source scanner
+exists, and of the ceiling on the compile-based method.
+
+> The readiness column previously answered a different question. It inferred
+> the PAC from which family's registers a project *touched*, so any crate using
+> names we recognise came out injectable, and `bxcan`, `fdcan`, `stm32-fmc` and
+> `lilos` were all marked `ready` with no PAC dependency at all. It now reads
+> the library manifests, skipping `testsuite/`, `examples/` and
+> `[dev-dependencies]` — bxcan's testsuite pins `stm32f1` 0.14 to drive
+> hardware tests while the library it tests depends on `vcell` and nothing
+> else.
 
 ## 4. One pairing, by hand — `experiments/hal_probe/`
 
