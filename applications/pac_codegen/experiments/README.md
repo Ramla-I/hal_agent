@@ -28,6 +28,11 @@ It re-checks every HAL pairing against the live crates.io index rather than
 trusting `../rm_pac_mappings/stm.toml`, whose data was hand-verified once. A
 pairing that has drifted is how an experiment silently measures the wrong crate.
 
+**The three-stage finding story — compile it, read it, make more of it
+compilable — is written up in
+[`docs/PAC_CODEGEN.md`](../../../docs/PAC_CODEGEN.md#finding-violations-in-real-code),
+with current numbers. This file is the per-script index.**
+
 ## The main measurement
 
 | script | question | output |

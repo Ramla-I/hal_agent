@@ -469,3 +469,112 @@ belongs in the `write_once` kind rather than `state_gate`.
   windows around a sentence, and (since articles are normalised away) small
   function-word differences inside one — but two paraphrases of one rule still
   read as two rules.
+
+---
+
+# Finding violations in real code
+
+Injecting gates into a chip crate proves nothing on its own. The finding comes
+from putting real code in front of those gates and seeing what will not
+compile. Every compile error is a place the code does something the datasheet
+forbids.
+
+There are two ways to get there, and which one applies is decided by a single
+practical fact: **will the project build against a crate we can inject into?**
+
+## 1. Compile it — `experiments/stm_sweep.py`
+
+The primary finder. For each of 49 (manual, device) targets it provisions the
+chip crate, snapshots it, injects, compiles a probe crate and then every
+released driver crate that depends on that PAC, restores the crate, and checks
+it is byte-for-byte pristine again.
+
+The evidence is the compiler's, so a hit is a violation by construction.
+
+```
+43 driver pairings (3 more omitted: the driver fails against the PRISTINE crate)
+1993 enforcement hits      863 guarded    1094 candidate
+  80 generic friction        0 other
+```
+
+*Guarded* means the driver already establishes the precondition in the
+enclosing function; *candidate* means it does not. *Friction* is the encoding's
+adoption cost in code written generically over register types — not a finding.
+*Other* is collateral: an error the encoding caused that is neither. **Zero is
+the number to watch there**, and it is zero in both gating modes.
+
+## 2. Read it — `experiments/scan_projects.py`
+
+Every other candidate project pins an older HAL or PAC, so there is nothing to
+compile against. This finds the same thing in source: it maps each register
+access to `(peripheral, register, field, operation)`, cross-references the
+constraints, and runs the **same** triage pass, so the verdicts mean the same
+thing.
+
+```
+20 projects   tock 51 sites   hubris 22   embassy 17   bxcan 11   fdcan 7
+```
+
+A static scan sees no runtime guards, so `unchecked` here means *we found no
+check*, not *there is no check* — a guard one call frame up reads as unchecked.
+Its verdicts are candidates in a stronger sense than the sweep's.
+
+That is also why the scanner's own correctness rests on agreeing with the
+compiler on a project where both can run. **That check is currently unwired**:
+`stm32f4xx-hal` is not among the scanned projects, so the agreement cannot be
+computed, and the landscape page says so rather than quoting the stale figure it
+used to.
+
+## 3. Make more of it compilable — `experiments/port_*.py`
+
+A project that only *reads* can sometimes be made to *build*. `port_hal.py`
+upgrades a community HAL to the PAC generation the injector targets, applying
+only the compiler's own suggestions and failing if any edit changed a byte
+beyond inserting `()`. `port_hubris.py` does the same for Hubris, whose drivers
+talk to the chip crate with no HAL in between — so its errors land on Hubris's
+own lines rather than inside somebody else's abstraction.
+
+```
+hubris @ 4924a12b   drv-stm32h7-usart   93 registers gated
+  2 hits   1 guarded   0 collateral   20 mechanical edits   pac 0.14 -> 0.16
+```
+
+Its one hit is instructive, and the artifact records the caveat next to the
+number: the site reads *corroborated* because the driver references `UE` just
+before the access — but it sets it the **wrong way**, which is the bug. A static
+corroboration pass checks that a precondition field is *consulted*, never that
+it *holds*.
+
+### What could be ported next
+
+From the scan's own readiness verdicts. `ready` means the project already
+depends on a PAC we inject into, so no version port is needed:
+
+| project | sites | effort | needs |
+|---|---:|---|---|
+| `embassy` | 17 | ready | `stm32f4` 0.16.0 |
+| `bxcan` | 11 | ready | `stm32f1` 0.16.0 |
+| `fdcan` | 7 | ready | `stm32g4` 0.16.0 |
+| `stm32f7-discovery` | 4 | pac-gap | pins `stm32f7` 0.7 |
+| `anne-key` | 3 | pac-gap | pins `stm32l1` 0.11.0 |
+| `tock` | 51 | **not applicable** | hand-written register maps; no PAC exists to inject into |
+
+`tock` has the most sites and can never be compiled against, which is the
+clearest statement of why the source scanner exists.
+
+## 4. One pairing, by hand — `experiments/hal_probe/`
+
+A four-line crate that depends on a driver normally and swaps the chip crate
+underneath with `[patch.crates-io]`. Reach for it to hold a single result: it
+reports violations, generic friction and the bound cascade separately, and
+`--apply-fix` discharges the friction using the compiler's own suggestions.
+
+## What each of these is NOT
+
+`patch_hal.py` was retired. It measured the adoption cost before `hal_probe`
+did it better, and its `hal_constraint_violations` field read like a findings
+list while containing none: it recorded every site it managed to rewrite, with
+no triage, so on `stm32f4xx-hal` all seven entries were sites the driver already
+guarded and none of the four real candidates appeared. `trace_hal.py` and
+`scan_projects.py` now take their sites from the sweep, which carries the
+verdict.
