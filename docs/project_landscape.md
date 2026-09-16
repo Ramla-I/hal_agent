@@ -57,8 +57,8 @@ the scan.
 | [tock](https://github.com/tock/tock) | tock | rm0368, rm0402, rm0390, rm0316 | 45 | 1203 | **51** | 23 | 28 | `not-applicable` |
 | [stm32-eth](https://github.com/stm32-rs/stm32-eth) | pac_direct | rm0090, rm0386, rm0390 | 19 | 104 | **0** | 0 | 0 | `hal-bump` |
 | [stm32f469i-disc](https://github.com/tegimeki/stm32f469i-disc) | hal_only | rm0386 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
-| [booster](https://github.com/quartiq/booster) | hal_only | rm0090 | 35 | 0 | **0** | 0 | 0 | `hal-bump` |
-| [px4flow_bsp](https://github.com/tstellanova/px4flow_bsp) | hal_only | rm0090 | 5 | 0 | **0** | 0 | 0 | `hal-bump` |
+| [booster](https://github.com/quartiq/booster) | pac_direct | rm0090 | 35 | 24 | **0** | 0 | 0 | `hal-bump` |
+| [px4flow_bsp](https://github.com/tstellanova/px4flow_bsp) | pac_direct | rm0090 | 5 | 50 | **0** | 0 | 0 | `hal-bump` |
 | [stm32f7-discovery](https://github.com/embed-rs/stm32f7-discovery) | pac_direct | rm0385 | 33 | 288 | **4** | 2 | 2 | `pac-gap` |
 | [fdcan](https://github.com/stm32-rs/fdcan) | pac_direct | rm0440, rm0433 | 88 | 73 | **7** | 3 | 4 | `not-applicable` |
 | [bxcan](https://github.com/stm32-rs/bxcan) | pac_direct | rm0008 | 35 | 65 | **11** | 0 | 11 | `not-applicable` |

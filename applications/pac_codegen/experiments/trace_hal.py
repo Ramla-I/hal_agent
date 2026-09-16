@@ -4,11 +4,12 @@ driver absorb every one of them?
 
 THE QUESTION
 ------------
-`scan_projects.py` reads a project's own source. For an application that drives
-its chip entirely through a driver crate (`booster`, `px4flow_bsp`,
-`stm32f469i-disc`), that source contains ZERO register accesses, so the scan
-reports zero hits -- true, and uninformative. The registers are still being
-touched; they are being touched one layer down.
+`scan_projects.py` reads a project's own source and reports hits on registers
+that carry a datasheet constraint. For these three applications that number is
+ZERO, and for a different reason in each case: `stm32f469i-disc` touches no
+registers at all, while `booster` and `px4flow_bsp` touch 24 and 50 of them but
+none that is constrained. Either way the scan says nothing about the registers
+these applications reach THROUGH the driver, which is most of them.
 
 So: if the driver were FIXED -- rewritten to use the witness API correctly --
 would anything still be wrong at the application level? There are two ways a
@@ -31,9 +32,11 @@ Only ESCAPING produces an application-level finding. This tool separates them.
 
 METHOD
 ------
-1. Start from the 31 compile-CONFIRMED violation sites in stm32f4xx-hal 0.23
-   (out/sweep.json -- these are real `cargo check` diagnostics against an
-   injected chip crate, not a text match).
+1. Start from the compile-CONFIRMED violation sites in stm32f4xx-hal 0.23 for
+   THE APPLICATION'S OWN MANUAL (out/sweep.json -- real `cargo check`
+   diagnostics against an injected chip crate, not a text match). The driver
+   source is shared across the F4 family but the constraint set is not, so
+   tracing an F407 application against RM0368 sites would be a cross-chip join.
 2. Walk UP the driver's call graph to every `pub` entry point that reaches each
    site.
 3. Read the application's source for calls to those entry points.
@@ -61,12 +64,15 @@ OUT = APP_DIR / "experiments" / "out"
 HAL_SRC = Path.home() / (".cargo/registry/src/index.crates.io-"
                          "1949cf8c6b5b557f/stm32f4xx-hal-0.23.0")
 
-# Applications that reach the chip only through a driver crate. `scan_projects`
-# records them at zero register accesses; that is the fact this tool explains.
+# Each application is traced against THE MANUAL FOR ITS OWN CHIP. This used to
+# be one `--rm` default inherited from the retired patch_hal.py, which pointed
+# at RM0368 (STM32F401) -- the chip of none of these three. The driver source is
+# shared across the F4 family, so the call paths were real, but whether the
+# constraint applies to the application's part was never asked.
 APPS = {
-    "booster": "RF power-amplifier firmware (F407 / RM0090)",
-    "px4flow_bsp": "optical-flow sensor board support (F407 / RM0090)",
-    "stm32f469i-disc": "discovery-board BSP (F469 / RM0386)",
+    "booster": ("RF power-amplifier firmware (F407)", "rm0090"),
+    "px4flow_bsp": ("optical-flow sensor board support (F407)", "rm0090"),
+    "stm32f469i-disc": ("discovery-board BSP (F469)", "rm0386"),
 }
 
 _FN_RE = re.compile(
@@ -141,8 +147,11 @@ def sweep_sites(rm: str, crate: str) -> list:
                           f"the sweep's 40-row cap are not listed")
                 out.extend(h.get("triage") or [])
         if out:
-            break
-    return out
+            # Returned, not just used: the two sweeps gate different things, so
+            # a reader has to be told which one these rows describe rather than
+            # discovering it from a silent fallback.
+            return out, name
+    return out, "none"
 
 
 def index_functions(root: Path) -> list:
@@ -322,9 +331,23 @@ def classify(path: list, fields: list) -> dict:
 # Application side
 # --------------------------------------------------------------------------- #
 
-def app_calls(root: Path) -> dict:
-    """method name -> [(file, line, source line)] across the application."""
-    calls = defaultdict(list)
+# `Base64Display::with_config(..)` -- the qualifier is what lets a call be
+# rejected as belonging to another crate.
+_APP_CALL_RE = re.compile(r"(?:(?P<qual>[A-Z]\w*)\s*::\s*)?"
+                          r"(?:\.|::|\b)(?P<name>[a-z_]\w*)\s*\(")
+
+
+def app_calls(root: Path) -> tuple:
+    """(calls, defined) for one application.
+
+    calls   method name -> [(file, line, source line, qualifier)]. The
+            qualifier is the `Foo` of an explicit `Foo::bar(..)` and None for
+            `x.bar(..)`, whose receiver type needs inference to know.
+    defined function names the APPLICATION ITSELF declares. booster declares
+            its own `convert`, which forwards to the driver's; without this,
+            `self.pins.output_power.convert(..)` was counted as a call into
+            the driver on the strength of the shared name."""
+    calls, defined = defaultdict(list), set()
     for f in sorted(root.rglob("*.rs")):
         if "target" in f.parts:
             continue
@@ -348,11 +371,18 @@ def app_calls(root: Path) -> dict:
                 continue
             if stripped.startswith("//"):
                 continue
-            for m in _CALL_RE.finditer(text):
+            # A declaration is not a call. `pub fn convert(&self, ..)` was
+            # being read as a call to the driver's `convert`.
+            fm = _FN_RE.match(text)
+            if fm:
+                defined.add(fm.group("name"))
+                continue
+            for m in _APP_CALL_RE.finditer(text):
                 n = m.group("name")
                 if n not in _NOISE:
-                    calls[n].append((rel, i + 1, text.strip()[:130]))
-    return calls
+                    calls[n].append((rel, i + 1, text.strip()[:130],
+                                     m.group("qual")))
+    return calls, defined
 
 
 # --------------------------------------------------------------------------- #
@@ -362,9 +392,11 @@ def main() -> None:
     ap.add_argument("--apps-dir", default=None,
                     help="directory holding the cloned applications")
     ap.add_argument("--hal", default=str(HAL_SRC))
-    # Which sweep rows to trace. Defaults to the pairing this script has always
-    # used; patch_hal.py hardcoded it, so the choice was invisible.
-    ap.add_argument("--rm", default="rm0368")
+    # A FILTER now, not a default. It used to be a single hardcoded manual
+    # inherited from patch_hal.py, which silently traced every application
+    # against RM0368 whatever chip it actually ran on.
+    ap.add_argument("--rm", action="append", default=[],
+                    help="restrict to these manuals (default: each app's own)")
     ap.add_argument("--hal-crate", dest="hal_crate", default="stm32f4xx-hal")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
@@ -376,40 +408,13 @@ def main() -> None:
     if apps_dir is None or not apps_dir.is_dir():
         sys.exit("--apps-dir must point at the cloned applications")
 
-    # From the sweep, which is the finding pipeline. patch_hal.py used to
-    # supply this and was retired: its list recorded every site it managed to
-    # rewrite, with no triage, so on stm32f4xx-hal all seven entries were
-    # sites the driver already guarded and none of the four real candidates
-    # appeared. The sweep carries the verdict, so a site can be traced knowing
-    # whether it is a finding or an already-safe access.
-    sites = sweep_sites(args.rm, args.hal_crate)
-    if not sites:
-        sys.exit(f"no enforcement sites for {args.rm}/{args.hal_crate} in "
-                 f"{OUT}/sweep.json — run stm_sweep.py first")
-    cand = [s for s in sites if s.get("verdict") == "unchecked"]
-    print(f"driver: {hal.name}   compile-confirmed sites: {len(sites)} "
-          f"({len(cand)} unguarded)")
-
+    # The call graph is a property of the driver, not of any one manual, so it
+    # is built once and reused across them.
     fns = index_functions(hal)
     rev = callers_of(fns)
-    print(f"indexed {len(fns)} driver functions\n")
-
-    # site -> public entry points
-    entries = {}
-    for s in sites:
-        fn = enclosing(fns, s["file"], s["line"])
-        if fn is None:
-            continue
-        eps = public_entry_points(fns, rev, fn)
-        fields = precondition_fields(s)
-        entries[(s["file"], s["line"])] = {
-            "site": s, "inner": fn.label, "fields": fields,
-            "entries": [{"label": e.label, "name": e.name, "file": e.file,
-                         "line": e.start,
-                         "path": " -> ".join(f.label for f in path),
-                         **classify(path, fields)}
-                        for e, path in eps],
-        }
+    driver_types = {f.impl_ty for f in fns if f.impl_ty}
+    print(f"driver: {hal.name}  ({len(fns)} functions, "
+          f"{len(driver_types)} types)\n")
 
     # An application writes `spi.transfer(..)`; the driver defines `transfer`
     # eight times. Joining on the bare method name cannot tell which one, and
@@ -422,89 +427,177 @@ def main() -> None:
         if f.public:
             all_names[f.name].add(f.label)
 
-    reachable_names, ambiguous_names = defaultdict(set), defaultdict(set)
-    for key, rec in entries.items():
-        for e in rec["entries"]:
-            bucket = (reachable_names if len(all_names[e["name"]]) == 1
-                      else ambiguous_names)
-            bucket[e["name"]].add(key)
-
-    results = []
-    for name, desc in APPS.items():
-        root = apps_dir / name
-        if not root.is_dir():
-            print(f"!! {name}: not cloned, skipping")
+    results, traced = [], {}
+    wanted = set(args.rm)
+    for rm in sorted({m for _, m in APPS.values()}):
+        if wanted and rm not in wanted:
             continue
-        calls = app_calls(root)
-        touched = []
-        for meth, keys in reachable_names.items():
-            if meth not in calls:
+        apps = [n for n, (_, m) in APPS.items() if m == rm]
+
+        # From the sweep, which is the finding pipeline. patch_hal.py used to
+        # supply this and was retired: its list recorded every site it managed
+        # to rewrite, with no triage, so on stm32f4xx-hal all seven entries were
+        # sites the driver already guarded and none of the four real candidates
+        # appeared.
+        sites, src = sweep_sites(rm, args.hal_crate)
+        if not sites:
+            print(f"!! no enforcement sites for {rm}/{args.hal_crate} in "
+                  f"{OUT}/sweep.json -- skipping {', '.join(apps)}\n")
+            continue
+        cand = [s for s in sites if s.get("verdict") == "unchecked"]
+        print(f"--- {rm} [{src}]: {len(sites)} compile-confirmed sites, "
+              f"{len(cand)} unguarded")
+
+        entries = {}
+        for s in sites:
+            fn = enclosing(fns, s["file"], s["line"])
+            if fn is None:
                 continue
-            for key in keys:
-                rec = entries[key]
-                ent = next(e for e in rec["entries"] if e["name"] == meth)
-                touched.append({
-                    "app_call": meth,
-                    "app_sites": calls[meth][:6],
-                    "driver_entry": ent["label"],
-                    "driver_inner": rec["inner"],
-                    "register": rec["site"]["register"].split("::")[-1],
-                    "operation": rec["site"]["operation"],
-                    "site": f"{rec['site']['file']}:{rec['site']['line']}",
-                    "verdict": ent["verdict"],
-                    "evidence": ent["evidence"],
-                    # The sweep's triage of the DRIVER site: `unchecked` means
-                    # the driver does not establish the precondition today.
-                    # That is a different fact from `escaping`, which is about
-                    # what would remain after the driver is fixed.
-                    "driver_site_verdict": rec["site"].get("verdict", ""),
-                })
-        amb = sorted({m for m in ambiguous_names if m in calls})
-        esc = [t for t in touched if t["verdict"] == "escaping"]
-        con = [t for t in touched if t["verdict"] == "contained"]
-        # TWO DIFFERENT QUESTIONS, and conflating them reads as one result.
-        #
-        #   AFFECTED TODAY -- the app calls a driver function whose register
-        #   access the sweep marks `unchecked`: the driver does not establish
-        #   the precondition, so this app is running on a broken path NOW,
-        #   whether or not the constraint would escape a fixed driver.
-        #
-        #   RESIDUAL AFTER A FIX -- the constraint ESCAPES: even a correct
-        #   driver cannot discharge it alone, because the obligation depends on
-        #   what the caller does. Fixing the driver leaves the app with work.
-        #
-        # A constraint can be one, the other, both or neither.
-        today = [t for t in touched if t["driver_site_verdict"] == "unchecked"]
-        print(f"=== {name} ({desc})")
-        print(f"    driver entry points it calls that reach a gated register: "
-              f"{len({t['driver_entry'] for t in touched})}")
-        print(f"    AFFECTED TODAY (driver violates the rule on this path): "
-              f"{len(today)}")
-        for x in today[:4]:
-            s = x["app_sites"][0] if x["app_sites"] else None
-            where = f"{s[0]}:{s[1]}" if s else "?"
-            print(f"      {where}  {x['app_call']}() -> {x['driver_inner']}"
-                  f" -> {x['register']} {x['operation']}")
-        print(f"    RESIDUAL AFTER A DRIVER FIX: {len(esc)} escaping, "
-              f"{len(con)} contained")
-        if amb:
-            print(f"    ambiguous method names (not claimed): "
-                  f"{', '.join(amb)}")
-        for t in esc[:8]:
-            f, l, src = t["app_sites"][0]
-            print(f"      {f}:{l}  {t['app_call']}() -> {t['driver_entry']}"
-                  f" -> {t['register']} {t['operation']}")
-            print(f"        {src}")
-        results.append({"app": name, "desc": desc, "touched": touched,
-                        "escaping": len(esc), "contained": len(con),
-                        "ambiguous": amb})
+            eps = public_entry_points(fns, rev, fn)
+            fields = precondition_fields(s)
+            entries[(s["file"], s["line"])] = {
+                "site": s, "inner": fn.label, "fields": fields,
+                "entries": [{"label": e.label, "name": e.name, "file": e.file,
+                             "line": e.start,
+                             "path": " -> ".join(f.label for f in path),
+                             **classify(path, fields)}
+                            for e, path in eps],
+            }
+        traced[rm] = {f"{k[0]}:{k[1]}": v for k, v in entries.items()}
+
+        reachable_names, ambiguous_names = defaultdict(set), defaultdict(set)
+        for key, rec in entries.items():
+            for e in rec["entries"]:
+                bucket = (reachable_names if len(all_names[e["name"]]) == 1
+                          else ambiguous_names)
+                bucket[e["name"]].add(key)
+
+        for name in apps:
+            desc = APPS[name][0]
+            root = apps_dir / name
+            if not root.is_dir():
+                print(f"!! {name}: not cloned, skipping")
+                continue
+            calls, defined = app_calls(root)
+            touched, foreign, unresolved = [], set(), []
+            for meth, keys in reachable_names.items():
+                # An explicit `Type::method(..)` in the application NAMES the
+                # type it is calling. If the driver does not define that type,
+                # the match is a same-name collision with another crate --
+                # px4flow's `Base64Display::with_config` was reported as the
+                # driver's `Rtc::with_config` and counted as a finding, because
+                # the name is unique WITHIN the driver, which is the only thing
+                # the ambiguity check above looks at.
+                here = []
+                for f, ln, srcline, qual in calls.get(meth, ()):
+                    if qual and qual not in driver_types:
+                        foreign.add(f"{qual}::{meth}")
+                        continue
+                    here.append((f, ln, srcline))
+                # The application declares a function of this name too, so
+                # `x.convert(..)` could be either its own or the driver's and
+                # only the receiver's type decides -- which needs inference
+                # this tool does not do. Shown to a human, never counted:
+                # three of booster's four claimed sites were its own method.
+                if meth in defined:
+                    unresolved += [(meth, f, ln, srcline) for f, ln, srcline
+                                   in here]
+                    continue
+                for key in keys:
+                    rec = entries[key]
+                    ent = next(e for e in rec["entries"] if e["name"] == meth)
+                    site = f"{rec['site']['file']}:{rec['site']['line']}"
+                    for f, ln, srcline in here:
+                        touched.append({
+                            "app_call": meth, "app_file": f, "app_line": ln,
+                            "app_src": srcline,
+                            "driver_entry": ent["label"],
+                            "driver_inner": rec["inner"],
+                            "register": rec["site"]["register"].split("::")[-1],
+                            "operation": rec["site"]["operation"],
+                            "site": site,
+                            # Examples are the application for a BSP whose own
+                            # crate is a library, so they are kept -- but
+                            # labelled, because scan_projects deliberately
+                            # excludes them and the two must be comparable.
+                            "in_example": f.startswith(("examples/", "tests/")),
+                            "verdict": ent["verdict"],
+                            "evidence": ent["evidence"],
+                            # The sweep's triage of the DRIVER site:
+                            # `unchecked` means the driver does not establish
+                            # the precondition today. That is a different fact
+                            # from `escaping`, which is about what would remain
+                            # after the driver is fixed.
+                            "driver_site_verdict": rec["site"].get("verdict", ""),
+                        })
+            amb = sorted({m for m in ambiguous_names if m in calls})
+            esc = [t for t in touched if t["verdict"] == "escaping"]
+            con = [t for t in touched if t["verdict"] == "contained"]
+            # TWO DIFFERENT QUESTIONS, and conflating them reads as one result.
+            #
+            #   AFFECTED TODAY -- the app calls a driver function whose register
+            #   access the sweep marks `unchecked`: the driver does not
+            #   establish the precondition, so this app is running on a broken
+            #   path NOW, whether or not the constraint would escape a fixed
+            #   driver.
+            #
+            #   RESIDUAL AFTER A FIX -- the constraint ESCAPES: even a correct
+            #   driver cannot discharge it alone, because the obligation depends
+            #   on what the caller does. Fixing the driver leaves the app work.
+            #
+            # A constraint can be one, the other, both or neither.
+            today = [t for t in touched
+                     if t["driver_site_verdict"] == "unchecked"]
+            print(f"\n=== {name} ({desc}, {rm})")
+            print(f"    driver entry points it calls that reach a gated "
+                  f"register: {len({t['driver_entry'] for t in touched})}")
+            print(f"    AFFECTED TODAY (driver violates the rule on this "
+                  f"path): {len(today)}")
+            for x in today[:6]:
+                ex = "  [example]" if x["in_example"] else ""
+                print(f"      {x['app_file']}:{x['app_line']}  "
+                      f"{x['app_call']}() -> {x['driver_entry']} -> "
+                      f"{x['driver_inner']} -> {x['register']} "
+                      f"{x['operation']}   @{x['site']}{ex}")
+            if len(today) > 6:
+                print(f"      ... and {len(today) - 6} more, in the json")
+            print(f"    RESIDUAL AFTER A DRIVER FIX: {len(esc)} escaping, "
+                  f"{len(con)} contained")
+            for x in esc[:8]:
+                ex = "  [example]" if x["in_example"] else ""
+                print(f"      {x['app_file']}:{x['app_line']}  "
+                      f"{x['app_call']}() -> {x['driver_entry']} -> "
+                      f"{x['register']} {x['operation']}   @{x['site']}{ex}")
+                print(f"        {x['app_src']}")
+            if len(esc) > 8:
+                print(f"      ... and {len(esc) - 8} more, in the json")
+            if amb:
+                print(f"    ambiguous method names (not claimed): "
+                      f"{', '.join(amb)}")
+            if foreign:
+                print(f"    rejected, another crate's type: "
+                      f"{', '.join(sorted(foreign))}")
+            if unresolved:
+                print(f"    UNRESOLVED -- the app declares a function of the "
+                      f"same name, so the receiver decides and we do not "
+                      f"infer types ({len(unresolved)}):")
+                for meth, f, ln, srcline in unresolved[:8]:
+                    print(f"      {f}:{ln}  {meth}()   {srcline[:88]}")
+            results.append({"app": name, "desc": desc, "rm": rm,
+                            "sweep": src, "sites": len(sites),
+                            "touched": touched, "affected_today": len(today),
+                            "escaping": len(esc), "contained": len(con),
+                            "ambiguous": amb, "rejected_foreign":
+                            sorted(foreign),
+                            "unresolved": [{"call": m, "file": f, "line": ln,
+                                            "src": s}
+                                           for m, f, ln, s in unresolved]})
         print()
 
     out = Path(args.out) if args.out else OUT / "trace_hal.json"
     out.write_text(json.dumps(
-        {"hal": hal.name, "sites": len(sites),
-         "entries": {f"{k[0]}:{k[1]}": v for k, v in entries.items()},
-         "apps": results}, indent=1, default=str) + "\n")
+        {"hal": hal.name, "entries": traced, "apps": results},
+        indent=1, default=str) + "\n")
     print(f"json: {out}")
 
 
