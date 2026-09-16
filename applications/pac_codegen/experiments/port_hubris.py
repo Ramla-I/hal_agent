@@ -44,6 +44,7 @@ from pathlib import Path
 APP_DIR = Path(__file__).resolve().parent.parent
 REPO = APP_DIR.parent.parent
 sys.path.insert(0, str(APP_DIR))
+import enforcement  # noqa: E402
 sys.path.insert(0, str(APP_DIR / "experiments"))
 import get_pac                                    # noqa: E402
 import corroboration                              # noqa: E402
@@ -63,8 +64,6 @@ TIMEOUT = 3600
 # ssmarshal 1.0 does not build on a modern compiler; Hubris's own workspace
 # carries this same patch.
 SSMARSHAL_REV = "10e90cbe389c8f07c52815857551a051946881ab"
-
-_CONSTRAINED_RE = re.compile(r"`([^`]+)` is (\w+)-constrained by its datasheet")
 
 # What `corroborated` does and does not mean, recorded with the numbers
 # because Hubris is the clearest example of the gap.
@@ -245,11 +244,10 @@ def precondition_fields(saved) -> dict:
 def triage(diags: list, fields_by_reg: dict, src: Path) -> list:
     rows = []
     for d in diags:
-        m = _CONSTRAINED_RE.search(d.get("message", ""))
-        if not m:
+        hit = enforcement.classify_diagnostic(d)
+        if hit is None:
             continue
-        reg = m.group(1).split("::")[-1]
-        key = reg[:-2].lower() if reg.lower().endswith("rs") else reg.lower()
+        reg, key = hit.spec, hit.register
         for sp in d.get("spans", []):
             if not sp.get("is_primary"):
                 continue

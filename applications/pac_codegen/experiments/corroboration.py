@@ -40,6 +40,7 @@ from pathlib import Path
 APP_DIR = Path(__file__).resolve().parent.parent   # applications/pac_codegen
 REPO = APP_DIR.parent.parent
 sys.path.insert(0, str(REPO))
+import enforcement  # noqa: E402
 sys.path.insert(0, str(APP_DIR))
 
 import get_pac  # noqa: E402
@@ -128,7 +129,13 @@ def enforcement_hits(ws: Path, hal_name: str, concrete_token: str) -> list[dict]
         if d.get("level") != "error":
             continue
         msg = d.get("message", "")
-        if "constrained by its datasheet" not in msg or concrete_token not in msg:
+        # Field-gate hits carry no datasheet sentence and name their register
+        # only in a span label, so a message-only test never saw them and they
+        # never reached the judge at all.
+        hit = enforcement.classify_diagnostic(d)
+        if hit is None or hit.projection:
+            continue
+        if hit.kind == "register" and concrete_token not in msg:
             continue
         spans = []
 

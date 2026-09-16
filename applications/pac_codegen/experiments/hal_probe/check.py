@@ -21,6 +21,8 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+import enforcement  # noqa: E402
 VENDOR = HERE / "vendored"
 MAX_ROUNDS = 25
 
@@ -405,9 +407,7 @@ def fix_loop(pac: str):
             break
         total += apply_edits(sugg, pac)
     errs, _ = diagnostics()
-    ours = [e for e in errs
-            if (e.get("code") or {}).get("code") == "E0277"
-            and "constrained by its datasheet" in e.get("message", "")]
+    ours = [e for e in errs if enforcement.is_ours(e)]
     strict = [e for e in errs
               if (e.get("code") or {}).get("code") == "E0276"]
     rest = [e for e in errs if e not in ours and e not in strict]
@@ -481,11 +481,10 @@ def main():
     # and such a definition needs the marker bounds even when nothing on this
     # device is gated. Counting those as findings would inflate the result
     # with the encoding's adoption cost. Same split stm_sweep.classify makes.
-    ours = [e for e in errs
-            if (e.get("code") or {}).get("code") == "E0277"
-            and "constrained by its datasheet" in e.get("message", "")]
-    hits = [e for e in ours if "<<" not in e["message"].split("`")[1]]
-    friction = [e for e in ours if e not in hits]
+    classified = [(e, enforcement.classify_diagnostic(e)) for e in errs]
+    ours = [e for e, h in classified if h]
+    hits = [e for e, h in classified if h and not h.projection]
+    friction = [e for e, h in classified if h and h.projection]
     # E0276 is not one of our diagnostics, but after --apply-fix it is an
     # EXPECTED residue, not collateral: a bound we added landed on a method
     # implementing a trait, and Rust rejects a requirement the trait does not

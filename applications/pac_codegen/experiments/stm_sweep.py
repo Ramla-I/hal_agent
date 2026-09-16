@@ -53,6 +53,7 @@ APP_DIR = Path(__file__).resolve().parent.parent          # applications/pac_cod
 REPO = APP_DIR.parent.parent
 sys.path.insert(0, str(APP_DIR))
 import get_pac  # noqa: E402
+import enforcement  # noqa: E402
 
 INJECT = APP_DIR / "inject_from_run.py"
 OUT = APP_DIR / "experiments" / "out"
@@ -698,21 +699,15 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
         # Recognising only E0277 counted every field-gate violation as
         # collateral: 295 of them, in drivers that compile clean against the
         # pristine crate.
-        field_witness = (e["code"] == "E0061"
-                         and "FieldWitness" in (e.get("labels") or ""))
-        witness = (field_witness
-                   or (e["code"] == "E0277"
-                       and "constrained by its datasheet" in e["message"]))
+        hit = enforcement.classify_diagnostic(e)
+        field_witness = bool(hit and hit.kind == "field")
+        witness = hit is not None
         named = [s for s in gated_specs if s in e["message"]]
-        if field_witness and not named:
-            # `CrHsebypFieldWitness` -> CR -> CRrs, the spec name gated_specs
-            # holds. Without this a field-gate hit is "our diagnostic naming no
-            # gated register", which classify() reads as generic friction.
-            for m in re.finditer(r"\b([A-Z][a-z0-9]*)[A-Z]\w*FieldWitness",
-                                 e.get("labels") or ""):
-                spec = f"{m.group(1).upper()}rs"
-                if spec in gated_specs:
-                    named.append(spec)
+        if field_witness and not named and hit.spec in gated_specs:
+            # A field-gate hit names its register through the witness type, not
+            # the message. Without this it is "our diagnostic naming no gated
+            # register", which classify() reads as generic friction.
+            named.append(hit.spec)
         if witness and named:
             res["true_enforcement"] += 1
             res["files"]["true_enforcement"] |= set(e["hal_files"])

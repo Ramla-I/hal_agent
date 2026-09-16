@@ -46,6 +46,7 @@ from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(APP_DIR))
+import enforcement as enforcement_mod  # noqa: E402
 sys.path.insert(0, str(APP_DIR / "experiments"))
 import get_pac  # noqa: E402
 import rust_codegen  # noqa: E402
@@ -376,11 +377,11 @@ def main() -> None:
 
         for rnd in range(1, MAX_ROUNDS + 1):
             diags, ok = diagnostics(ws)
-            witness = [d for d in diags
-                       if (d.get("code") or {}).get("code") == "E0277"
-                       and "constrained by its datasheet" in d.get("message", "")]
-            enforcement = [d for d in witness if not _is_projection(d["message"])]
-            friction = [d for d in witness if _is_projection(d["message"])]
+            witness = [d for d in diags if enforcement_mod.is_ours(d)]
+            enforcement = [d for d in witness
+                           if not enforcement_mod.classify_diagnostic(d).projection]
+            friction = [d for d in witness
+                        if enforcement_mod.classify_diagnostic(d).projection]
             other = [d for d in diags if d not in witness]
             history.append({"round": rnd, "enforcement": len(enforcement),
                             "friction": len(friction), "other": len(other)})

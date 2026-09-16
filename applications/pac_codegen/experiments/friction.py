@@ -49,6 +49,7 @@ from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(APP_DIR))
+import enforcement  # noqa: E402
 sys.path.insert(0, str(APP_DIR.parent.parent))
 import get_pac  # noqa: E402
 import rust_codegen  # noqa: E402
@@ -93,8 +94,7 @@ def classify_witness(diags) -> dict:
     """Split errors into witness-diagnostic ones (ours) and everything else."""
     ours, other = [], []
     for d in diags:
-        code = (d.get("code") or {}).get("code", "")
-        if code == "E0277" and "constrained by its datasheet" in d.get("message", ""):
+        if enforcement.is_ours(d):
             ours.append(d)
         else:
             other.append(d)

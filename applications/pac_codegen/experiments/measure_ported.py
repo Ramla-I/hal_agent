@@ -32,6 +32,7 @@ from pathlib import Path
 APP_DIR = Path(__file__).resolve().parent.parent
 REPO = APP_DIR.parent.parent
 sys.path.insert(0, str(APP_DIR))
+import enforcement  # noqa: E402
 sys.path.insert(0, str(APP_DIR / "experiments"))
 import get_pac                                    # noqa: E402
 import corroboration                              # noqa: E402
@@ -57,30 +58,6 @@ PAIRINGS = [
 # RM0451 (stm32l0x0) has no matching stm32l0xx-hal feature -- the HAL supports
 # stm32l0x1/x2/x3 only -- so it stays unpaired and is NOT silently dropped.
 UNPAIRED = {"rm0451": "stm32l0xx-hal 0.10.0 has no stm32l0x0 feature"}
-
-_CONSTRAINED_RE = re.compile(r"`([^`]+)` is (\w+)-constrained by its datasheet")
-# A WHOLE-REGISTER gate fires as E0277 on a missing marker trait, and the
-# datasheet sentence rides in the message. A FIELD gate adds a witness
-# parameter to the field's writer, so calling it is an ARITY error with no
-# custom text; the witness TYPE is the only thing naming the register, and it
-# sits in a span LABEL: "argument #1 of type `&CrHsebypFieldWitness` is
-# missing". Matching the message alone counted every field-gate violation as
-# collateral -- the bucket meaning the encoding broke something unrelated.
-_FIELD_WITNESS_RE = re.compile(r"&(\w+?)([A-Z]\w*)FieldWitness")
-
-
-def _field_hit(d: dict):
-    """(register, field) if this diagnostic is a field gate firing, else None."""
-    if (d.get("code") or {}).get("code") != "E0061":
-        return None
-    spans = list(d.get("spans", [])) + [
-        sp for ch in d.get("children", []) for sp in ch.get("spans", [])]
-    for sp in spans:
-        m = _FIELD_WITNESS_RE.search(sp.get("label") or "")
-        if m:
-            return m.group(1).lower(), m.group(2).lower()
-    return None
-
 
 def check(hal: str, features: str, target: str, pac: str) -> list:
     """Errors from a clean build. The PAC's cached build is dropped first:
@@ -172,18 +149,10 @@ def triage(diags: list, fields_by_reg: dict) -> list:
     """guarded vs possible bug, per the project's own static pass."""
     rows = []
     for d in diags:
-        m = _CONSTRAINED_RE.search(d.get("message", ""))
-        fh = None if m else _field_hit(d)
-        if not m and not fh:
+        hit = enforcement.classify_diagnostic(d)
+        if hit is None:
             continue
-        if m:
-            reg = m.group(1).split("::")[-1]
-            op = m.group(2)
-        else:
-            # A field gate rides the writer accessor, which serves write and
-            # modify alike, so the operation is always a write.
-            reg, _field = fh
-            op = "write"
+        reg, op = hit.spec, hit.operation
         for sp in d.get("spans", []):
             if not sp.get("is_primary"):
                 continue
