@@ -260,7 +260,7 @@ def triage(diags: list, fields_by_reg: dict, src: Path) -> list:
             fields = fields_by_reg.get(key)
             if not fields:
                 rows.append({"file": rel, "line": sp["line_start"],
-                             "register": reg, "operation": m.group(2),
+                             "register": reg, "operation": hit.operation,
                              "verdict": "untriaged"})
                 continue
             start, snippet = corroboration.enclosing_function(
@@ -268,7 +268,7 @@ def triage(diags: list, fields_by_reg: dict, src: Path) -> list:
             det = corroboration.deterministic_scan(
                 snippet, sp["line_start"] - start, fields)
             rows.append({"file": rel, "line": sp["line_start"],
-                         "register": reg, "operation": m.group(2),
+                         "register": reg, "operation": hit.operation,
                          "fields": fields, "verdict": det["verdict"]})
     return rows
 

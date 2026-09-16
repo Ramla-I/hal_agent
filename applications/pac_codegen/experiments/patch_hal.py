@@ -192,6 +192,80 @@ _BOUND_RE = re.compile(r"consider further restricting", re.I)
 _EXTRA_RE = re.compile(r"impl has extra requirement `(.+)`")
 
 
+_METHOD_WHERE = re.compile(r"^(?P<head>.*?)\s+where\s+(?P<preds>.*?)\s*\{\s*$")
+_IMPL_LINE = re.compile(r"^(?P<head>\s*impl\b.*?)(?:\s+where\s+(?P<existing>.*?))?\s*\{\s*$")
+
+
+def lift_bounds_to_impl(diags, hal_root: Path) -> int:
+    """Move a bound off a trait-implementing method onto its impl block.
+
+    E0276 says an impl may not require more than the trait declares. The fix is
+    NOT to widen the trait -- that changes the driver's public API, the line
+    port_hal refuses to cross. A bound on the IMPL BLOCK is legal and says the
+    right thing: this impl applies where the register is unconstrained.
+
+        impl<ADC: Instance> AdcExt for ADC {
+            fn adc(..) -> .. where <..>::CR2rs: Unconstrained.. {   // E0276
+
+        impl<ADC: Instance> AdcExt for ADC
+        where <..>::CR2rs: Unconstrained.. {
+            fn adc(..) -> .. {                                      // legal
+
+    Ported from hal_probe, where it took the run from 5 unresolved E0276 to
+    zero. Handles both header shapes: single-line, and multi-line with an
+    existing where clause.
+    """
+    by_file = {}
+    for d in diags:
+        if (d.get("code") or {}).get("code") != "E0276":
+            continue
+        for s in d.get("spans", []):
+            if s.get("is_primary"):
+                f = Path(s["file_name"])
+                f = f if f.is_absolute() else (hal_root / s["file_name"])
+                by_file.setdefault(f, set()).add(s["line_start"])
+    moved = 0
+    for f, lines in by_file.items():
+        if not f.is_file():
+            continue
+        src = f.read_text().splitlines()
+        for ln in sorted(lines, reverse=True):     # bottom-up: indices hold
+            i = ln - 1
+            if i >= len(src):
+                continue
+            m = _METHOD_WHERE.match(src[i])
+            if not m or "Unconstrained" not in m.group("preds"):
+                continue
+            preds = m.group("preds")
+            j = next((k for k in range(i - 1, -1, -1)
+                      if re.match(r"\s*impl\b", src[k])), None)
+            if j is None:
+                continue
+            brace = next((k for k in range(j, i)
+                          if src[k].rstrip().endswith("{")), None)
+            if brace is None:
+                continue
+            src[i] = m.group("head") + " {"
+            if brace == j:
+                im = _IMPL_LINE.match(src[j])
+                if not im:
+                    continue
+                existing = im.group("existing")
+                joined = f"{existing}, {preds}" if existing else preds
+                src[j] = f"{im.group('head')}\nwhere {joined} {{"
+            else:
+                has_where = any(re.match(r"\s*where\b", src[k])
+                                for k in range(j, brace))
+                prev = brace - 1
+                if has_where and not src[prev].rstrip().endswith((",", "where")):
+                    src[prev] = src[prev].rstrip() + ","
+                src.insert(brace,
+                           f"    {preds}," if has_where else f"where\n    {preds},")
+            moved += 1
+        f.write_text("\n".join(src) + "\n")
+    return moved
+
+
 def widen_trait_bounds(diags, hal_root: Path) -> int:
     """Thread a bound up into the TRAIT DECLARATION (E0276).
 
@@ -374,6 +448,12 @@ def main() -> None:
         hal_root = fetch_hal(args.hal, args.hal_version)
         ws = workspace(args.hal, hal_root, args.pac, pac_dir, [args.device])
         bugs, bounds, history = [], 0, []
+        # Round 1 is measured against the UNMODIFIED driver, and that is the
+        # only number usable as ground truth for a source scanner. `bugs` below
+        # accumulates what each round could neutralise, so by the last round it
+        # is the RESIDUE after patching -- 7 where round 1 saw 10. Reporting the
+        # residue as "sites found" invited exactly that confusion.
+        initial: dict = {}
 
         for rnd in range(1, MAX_ROUNDS + 1):
             diags, ok = diagnostics(ws)
@@ -385,6 +465,16 @@ def main() -> None:
             other = [d for d in diags if d not in witness]
             history.append({"round": rnd, "enforcement": len(enforcement),
                             "friction": len(friction), "other": len(other)})
+            if rnd == 1:
+                initial = {
+                    "enforcement": len(enforcement),
+                    "friction": len(friction),
+                    "other": len(other),
+                    "sites": sorted({
+                        (sp["file_name"], sp["line_start"])
+                        for d in enforcement for sp in (d.get("spans") or [])
+                        if sp.get("is_primary")}),
+                }
             print(f"  round {rnd}: enforcement={len(enforcement)} "
                   f"friction={len(friction)} other={len(other)}")
             if ok:
@@ -396,11 +486,18 @@ def main() -> None:
                     progress += 1
             n = add_bounds(friction + other, hal_root)
             bounds += n
-            widened = widen_trait_bounds(other, hal_root)
+            # Widening the trait's own signature changes the driver's public
+            # API. hal_probe showed the cascade is resolvable without that: a
+            # bound on the IMPL BLOCK is legal and says the right thing -- this
+            # impl applies where the register is unconstrained. Try that first;
+            # fall back to widening only if nothing lifted.
+            lifted = lift_bounds_to_impl(other, hal_root)
+            widened = 0 if lifted else widen_trait_bounds(other, hal_root)
             imports = apply_import_suggestions(other, hal_root)
-            progress += n + widened + imports + fixup(hal_root, args.pac)
-            if widened or imports:
-                print(f"    trait declarations widened: {widened}; "
+            progress += n + widened + lifted + imports + fixup(hal_root, args.pac)
+            if lifted or widened or imports:
+                print(f"    bounds lifted to impl blocks: {lifted}; "
+                      f"trait declarations widened: {widened}; "
                       f"imports added: {imports}")
             result_trait_widenings = result.get("trait_widenings", 0) + widened
             result["trait_widenings"] = result_trait_widenings
@@ -412,6 +509,10 @@ def main() -> None:
             "registers_gated": summary["registers_planned"],
             "compiles": ok, "history": history,
             "bound_edits": bounds,
+            # What the gates found against the UNMODIFIED driver. Use this as
+            # ground truth, not `hal_constraint_violations`, which is the
+            # residue left after the patch loop.
+            "initial": initial,
             "hal_constraint_violations": bugs,
             "hal_source": str(hal_root), "workspace": str(ws),
         })
