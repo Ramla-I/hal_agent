@@ -72,6 +72,11 @@ def pristine(crate: str) -> Path:
 
 
 def inject(rm: str, pac_dir: Path, device: str, field: bool) -> dict:
+    """field=False is the BASELINE (whole-register only), field=True the
+    default. The flag moved: --field-level-gating is now a no-op because field
+    gating IS the default, and --register-only selects the baseline. Passing
+    the old flag left BOTH columns field-gated, which is why they read
+    identically (rm0493: whole=80, field=80)."""
     suffix = "_master_field" if field else "_master"
     report = OUT / f"{rm}_{device}{suffix}.json"
     argv = [sys.executable, str(APP_DIR / "inject_from_run.py"),
@@ -94,8 +99,8 @@ def inject(rm: str, pac_dir: Path, device: str, field: bool) -> dict:
             "--save-constraints",
             str(OUT / "constraints" / f"{rm}_{device}"
                 f"{'_fieldgate' if field else ''}.json")]
-    if field:
-        argv.append("--field-level-gating")
+    if not field:
+        argv.append("--register-only")
     r = subprocess.run(argv, capture_output=True, text=True, cwd=str(REPO),
                        timeout=TIMEOUT)
     if r.returncode != 0:

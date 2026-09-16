@@ -59,6 +59,27 @@ PAIRINGS = [
 UNPAIRED = {"rm0451": "stm32l0xx-hal 0.10.0 has no stm32l0x0 feature"}
 
 _CONSTRAINED_RE = re.compile(r"`([^`]+)` is (\w+)-constrained by its datasheet")
+# A WHOLE-REGISTER gate fires as E0277 on a missing marker trait, and the
+# datasheet sentence rides in the message. A FIELD gate adds a witness
+# parameter to the field's writer, so calling it is an ARITY error with no
+# custom text; the witness TYPE is the only thing naming the register, and it
+# sits in a span LABEL: "argument #1 of type `&CrHsebypFieldWitness` is
+# missing". Matching the message alone counted every field-gate violation as
+# collateral -- the bucket meaning the encoding broke something unrelated.
+_FIELD_WITNESS_RE = re.compile(r"&(\w+?)([A-Z]\w*)FieldWitness")
+
+
+def _field_hit(d: dict):
+    """(register, field) if this diagnostic is a field gate firing, else None."""
+    if (d.get("code") or {}).get("code") != "E0061":
+        return None
+    spans = list(d.get("spans", [])) + [
+        sp for ch in d.get("children", []) for sp in ch.get("spans", [])]
+    for sp in spans:
+        m = _FIELD_WITNESS_RE.search(sp.get("label") or "")
+        if m:
+            return m.group(1).lower(), m.group(2).lower()
+    return None
 
 
 def check(hal: str, features: str, target: str, pac: str) -> list:
@@ -87,9 +108,13 @@ def check(hal: str, features: str, target: str, pac: str) -> list:
     return out
 
 
-def inject(rm: str, pac: str, device: str) -> dict:
-    report = OUT / f"{rm}_{device}_ported.json"
-    saved = OUT / f"{rm}_{device}_ported_constraints.json"
+def inject(rm: str, pac: str, device: str, register_only: bool = False) -> dict:
+    # Separate trees, never a filename suffix -- the two modes plan different
+    # gate sets, and a shared path once let one overwrite the other's numbers.
+    root = (OUT / "register_only") if register_only else OUT
+    root.mkdir(parents=True, exist_ok=True)
+    report = root / f"{rm}_{device}_ported.json"
+    saved = root / f"{rm}_{device}_ported_constraints.json"
     argv = [sys.executable, str(APP_DIR / "inject_from_run.py"),
             "--save-constraints", str(saved),
             str(PHASE1D / f"agent_output/stm/{rm}/1"),
@@ -100,6 +125,11 @@ def inject(rm: str, pac: str, device: str) -> dict:
             str(PHASE1D / f"evaluation/stm/{rm}/1/{rm}_constraints_review.jsonl"),
             "--attribution-check", str(PHASE1D / "chunked_datasheets/stm"),
             "--report", str(report)]
+    # Field gating is the default; --register-only is the baseline. This script
+    # predates the flag and so measured only one mode, silently whichever the
+    # default happened to be.
+    if register_only:
+        argv.append("--register-only")
     run = subprocess.run(argv, capture_output=True, text=True,
                          cwd=str(REPO), timeout=TIMEOUT)
     if run.returncode != 0:
@@ -122,7 +152,14 @@ def precondition_fields(saved) -> dict:
     out = collections.defaultdict(set)
     for entry in (saved or {}).get("registers", []):
         reg = (entry.get("register") or "").lower()
-        for conds in (entry.get("preconditions") or {}).values():
+        # Field gates carry their own preconditions, in their own structure.
+        # Reading only `preconditions` left every field-only register with
+        # nothing for the scan to look for, so its hits came back untriaged
+        # rather than guarded or candidate.
+        cond_lists = list((entry.get("preconditions") or {}).values())
+        cond_lists += [fg.get("preconditions") or []
+                       for fg in (entry.get("gated_fields") or {}).values()]
+        for conds in cond_lists:
             for c in conds:
                 head = c.split()[0] if c.split() else ""
                 field = head.rsplit(".", 1)[-1]
@@ -136,10 +173,17 @@ def triage(diags: list, fields_by_reg: dict) -> list:
     rows = []
     for d in diags:
         m = _CONSTRAINED_RE.search(d.get("message", ""))
-        if not m:
+        fh = None if m else _field_hit(d)
+        if not m and not fh:
             continue
-        reg = m.group(1).split("::")[-1]
-        op = m.group(2)
+        if m:
+            reg = m.group(1).split("::")[-1]
+            op = m.group(2)
+        else:
+            # A field gate rides the writer accessor, which serves write and
+            # modify alike, so the operation is always a write.
+            reg, _field = fh
+            op = "write"
         for sp in d.get("spans", []):
             if not sp.get("is_primary"):
                 continue
@@ -169,6 +213,11 @@ def triage(diags: list, fields_by_reg: dict) -> list:
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--only", action="append", default=[])
+    ap.add_argument("--register-only", action="store_true",
+                    help="BASELINE MODE: whole-register gating only, matching "
+                         "stm_sweep --register-only. Results go to "
+                         "out/register_only/ so the two modes never share a "
+                         "path.")
     args = ap.parse_args()
 
     results = []
@@ -189,7 +238,7 @@ def main():
             continue
         print("  baseline PASS", flush=True)
 
-        rep = inject(rm, pac, device)
+        rep = inject(rm, pac, device, args.register_only)
         if "error" in rep:
             print(f"  injection FAILED: {rep['error'][:200]}", flush=True)
             results.append({"rm": rm, "hal": hal, "inject": "FAILED"})
@@ -224,7 +273,9 @@ def main():
         results.append({"rm": rm, "baseline": "—", "unpaired_reason": why})
         print(f"=== {rm}: unpaired -- {why}")
 
-    p = OUT / "measure_ported.json"
+    p = ((OUT / "register_only") if args.register_only else OUT) / \
+        "measure_ported.json"
+    p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(results, indent=1))
     print(f"\nreport: {p}")
 
