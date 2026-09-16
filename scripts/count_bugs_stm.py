@@ -69,6 +69,11 @@ def parse_values(desc: str):
     return norm(o.group(1)) if o else "", norm(r.group(1)) if r else ""
 
 
+def svd_files(r: dict) -> list:
+    """The SVD device names in a row's 'SVD File' cell (comma/space separated, .svd stripped)."""
+    return [s.replace(".svd", "") for s in re.split(r"[,\s]+", (r.get("SVD File") or "").strip()) if s.strip()]
+
+
 def already_upstream(r: dict) -> bool:
     """No PR link + Patched = fixed upstream before we submitted (not our discovery)."""
     return not (r.get("PR") or "").strip() and (r.get("Status") or "").strip().lower() == "patched"
@@ -118,13 +123,14 @@ def main():
     upstream = [r for r in rows if already_upstream(r)]
     ours = rows if args.include_upstream else [r for r in rows if not already_upstream(r)]
 
-    bugs, fams, deduped = set(), set(), set()
+    bugs, fams, deduped, buggy_svds = set(), set(), set(), set()
     breakdown, by_key = collections.defaultdict(set), collections.defaultdict(set)
     for r in ours:
         rm = r.get("RM", "").strip()
         loc, key = parse_desc(r.get("Bug Description", ""))
         bug = (rm, loc, key)
         bugs.add(bug); fams.add((rm, family(loc), key))
+        buggy_svds.update(svd_files(r))
         if args.dedup:
             orig, repl = parse_values(r.get("Bug Description", ""))
             deduped.add((rm, base_loc(loc), key, orig, repl))
@@ -153,6 +159,10 @@ def main():
         line("deduped bugs (derived + same value):", len(deduped))
     if args.family:
         line("~root-cause families (heuristic):", len(fams))
+
+    total_svds = glob.glob(os.path.join(_REPO, "devices", "stm", "*", "svd", "*.svd"))
+    line("SVD files with >=1 bug:", len(buggy_svds))
+    line("total SVDs scanned (devices/stm):", len(total_svds))
 
     print("\n  distinct bugs by key:")
     for k, s in sorted(by_key.items(), key=lambda kv: -len(kv[1])):
