@@ -128,6 +128,11 @@ def precondition_fields(saved) -> dict:
     the dot and before the state word."""
     out = collections.defaultdict(set)
     for entry in (saved or {}).get("registers", []):
+        # KEYED BY PERIPHERAL AND REGISTER. Keyed by the register alone, ADC1
+        # and USART1 both claim `cr2` and one silently replaced the other, so
+        # triage looked for a USART field at an ADC write. The union is kept
+        # under the bare name too, for a diagnostic that names no peripheral.
+        periph = (entry.get("peripheral") or "").lower()
         reg = (entry.get("register") or "").lower()
         # Field gates carry their own preconditions, in their own structure.
         # Reading only `preconditions` left every field-only register with
@@ -141,6 +146,7 @@ def precondition_fields(saved) -> dict:
                 head = c.split()[0] if c.split() else ""
                 field = head.rsplit(".", 1)[-1]
                 if field:
+                    out[(periph, reg)].add(field.lower())
                     out[reg].add(field.lower())
     return {k: sorted(v) for k, v in out.items()}
 
@@ -160,7 +166,10 @@ def triage(diags: list, fields_by_reg: dict) -> list:
             if not path.is_file():
                 continue
             key = reg[:-2].lower() if reg.lower().endswith("rs") else reg.lower()
-            fields = fields_by_reg.get(key)
+            parts = [s for s in str(hit.spec).split("::") if s]
+            periph = parts[-3].lower() if len(parts) >= 3 else ""
+            fields = (fields_by_reg.get((periph, key))
+                      or fields_by_reg.get(key))
             if not fields:
                 # No precondition field recorded: the hit is real but the
                 # static pass has nothing to look for, so it is neither a

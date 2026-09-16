@@ -588,10 +588,25 @@ _SPEC_REG_RE = re.compile(r"(\w+)rs$")
 
 
 def _gate_fields(constraints_path: Path) -> dict:
-    """register (lower) -> operation -> [precondition field names].
+    """register (lower) -> {by_peripheral, union, ambiguous}.
 
     Read from the constraints file the injection was driven by, so the fields
     triage looks for are exactly the ones the gate was built from.
+
+    KEYED BY PERIPHERAL AS WELL AS REGISTER. It used to be keyed by the bare
+    register name, and assigned rather than merged, so the last peripheral
+    parsed silently replaced every earlier one. RM0090 constrains ADC1_CR2 on
+    `ADON set` and USART1_CR2 on `USART_CR1.TE cleared`; `cr2` ended up meaning
+    `te`, so the triage went looking for a USART field at an ADC register
+    write, never found it, and called a guarded site a candidate bug. 252
+    entries across the 49 targets were being clobbered this way.
+
+    `union` is the fallback for a diagnostic that does not name its peripheral
+    -- a field gate fires as an arity error whose witness type carries the
+    register and field but no module path. Triage then looks for ANY of the
+    plausible preconditions, which can over-credit a site as guarded; that is
+    the safe direction here, since it declines to invent a bug, and rows
+    resolved this way are marked so the count stays auditable.
     """
     if not constraints_path.is_file():
         return {}
@@ -609,6 +624,7 @@ def _gate_fields(constraints_path: Path) -> dict:
         reg = (e.get("register") or "").lower()
         if not reg:
             continue
+        periph = (e.get("peripheral") or "").lower()
         per_op = {}
         for op, pres in (e.get("preconditions") or {}).items():
             fields = []
@@ -635,8 +651,38 @@ def _gate_fields(constraints_path: Path) -> dict:
                 if fields:
                     per_op[op] = sorted(set(per_op.get(op, [])) | set(fields))
         if per_op:
-            out[reg] = per_op
-    return out
+            out.setdefault(reg, {})[periph] = per_op
+
+    resolved = {}
+    for reg, by_periph in out.items():
+        union = {}
+        for per_op in by_periph.values():
+            for op, fs in per_op.items():
+                union[op] = sorted(set(union.get(op, [])) | set(fs))
+        distinct = {json.dumps(v, sort_keys=True) for v in by_periph.values()}
+        resolved[reg] = {"by_peripheral": by_periph, "union": union,
+                         "ambiguous": len(distinct) > 1}
+    return resolved
+
+
+def _fields_for(gate_fields: dict, spec: str, reg: str, op: str) -> tuple:
+    """(fields, how) for one diagnostic.
+
+    `spec` is the Rust type the gate names. When it is a full path --
+    `stm32f4::stm32f429::i2c1::ccr::CCRrs` -- the module two segments up IS the
+    peripheral, and the lookup is exact. A bare `CR2rs` names no peripheral, so
+    the union stands in and the row records that it did."""
+    ent = gate_fields.get(reg)
+    if not ent:
+        return [], "none"
+    parts = [s for s in str(spec).split("::") if s]
+    periph = parts[-3].lower() if len(parts) >= 3 else ""
+    per_op = ent["by_peripheral"].get(periph)
+    how = "exact"
+    if per_op is None:
+        per_op, how = ent["union"], ("union" if ent["ambiguous"] else "only")
+    fields = per_op.get(op) or sorted({f for v in per_op.values() for f in v})
+    return fields, how
 
 
 def triage_hit(abs_path: str, line: int, fields: list) -> dict:
@@ -677,6 +723,11 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
            "files": {"true_enforcement": set(), "generic_friction": set(),
                      "other": set()},
            "triage_truncated": 0,
+           # Rows whose diagnostic named no peripheral while two peripherals
+           # share the register name with different preconditions. Their
+           # verdict is the weaker "one of these was established", so it is
+           # counted rather than buried in the per-row detail.
+           "fields_from_union": 0,
            "specs": {}, "samples": {"true_enforcement": [],
                                     "generic_friction": [], "other": []},
            "other_detail": []}
@@ -722,9 +773,9 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
                 reg = m.group(1).lower()
             op = ("write" if "write-constrained" in e["message"] else
                   "modify" if "modify-constrained" in e["message"] else "read")
-            fields = (gate_fields.get(reg, {}).get(op)
-                      or sorted({f for v in gate_fields.get(reg, {}).values()
-                                 for f in v}))
+            fields, how = _fields_for(gate_fields, named[0], reg, op)
+            if how == "union":
+                res["fields_from_union"] += 1
             site = e["sites"][0] if e.get("sites") else None
             if site and fields:
                 v = triage_hit(site[0], site[1], fields)
@@ -749,6 +800,12 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
                         "file": e["hal_files"][0] if e["hal_files"] else "",
                         "line": site[1], "register": reg, "operation": op,
                         "fields": fields, "verdict": v["verdict"],
+                        # How the fields were resolved: `exact` means the
+                        # diagnostic named the peripheral, `union` means it did
+                        # not and two peripherals share this register name with
+                        # different preconditions, so the verdict is the weaker
+                        # claim "one of these was established".
+                        "field_source": how,
                         "helpers": v.get("helpers_inlined") or [],
                         "scope_guard": v.get("scope_guard", "")})
             else:
