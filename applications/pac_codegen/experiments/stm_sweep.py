@@ -542,9 +542,19 @@ def hal_errors(ws: Path, hal_dirname: str):
         _walk(d.get("spans", []))
         for ch in d.get("children", []):
             _walk(ch.get("spans", []))
+        # Span LABELS as well as the message. A field-gate violation is an
+        # arity error whose message says only "this method takes 1 argument";
+        # the witness type that identifies the register lives in a label
+        # ("argument #1 of type `&CrHsebypFieldWitness` is missing"), so
+        # without these the diagnostic is unattributable.
+        labels = " ".join(
+            s.get("label") or ""
+            for s in list(d.get("spans", []))
+            + [sp for ch in d.get("children", []) for sp in ch.get("spans", [])]
+        )
         out.append({"code": (d.get("code") or {}).get("code", ""),
-                    "message": d.get("message", ""), "hal_files": sorted(files),
-                    "sites": sorted(sites)})
+                    "message": d.get("message", ""), "labels": labels,
+                    "hal_files": sorted(files), "sites": sorted(sites)})
     return out
 
 
@@ -678,9 +688,31 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
                  "files": e["hal_files"]})
 
     for e in errors:
-        witness = (e["code"] == "E0277"
-                   and "constrained by its datasheet" in e["message"])
+        # A WHOLE-REGISTER gate fires as E0277 on a missing marker trait, and
+        # #[diagnostic::on_unimplemented] puts the datasheet sentence in the
+        # message. A FIELD gate fires differently: it adds a witness parameter
+        # to the field's writer, so calling it fires E0061 (wrong arity) and
+        # carries no custom text -- an arity error has no hook to attach one
+        # to. The witness TYPE still names the register and field, in a span
+        # label: "argument #1 of type `&CrHsebypFieldWitness` is missing".
+        # Recognising only E0277 counted every field-gate violation as
+        # collateral: 295 of them, in drivers that compile clean against the
+        # pristine crate.
+        field_witness = (e["code"] == "E0061"
+                         and "FieldWitness" in (e.get("labels") or ""))
+        witness = (field_witness
+                   or (e["code"] == "E0277"
+                       and "constrained by its datasheet" in e["message"]))
         named = [s for s in gated_specs if s in e["message"]]
+        if field_witness and not named:
+            # `CrHsebypFieldWitness` -> CR -> CRrs, the spec name gated_specs
+            # holds. Without this a field-gate hit is "our diagnostic naming no
+            # gated register", which classify() reads as generic friction.
+            for m in re.finditer(r"\b([A-Z][a-z0-9]*)[A-Z]\w*FieldWitness",
+                                 e.get("labels") or ""):
+                spec = f"{m.group(1).upper()}rs"
+                if spec in gated_specs:
+                    named.append(spec)
         if witness and named:
             res["true_enforcement"] += 1
             res["files"]["true_enforcement"] |= set(e["hal_files"])
