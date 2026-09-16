@@ -71,39 +71,12 @@ KINDS = ["state_gate", "sequence", "write_once", "clock_gate", "delay",
 # The earlier files are partial runs kept for provenance; `sweep_all48.json`
 # is the whole-corpus re-measurement (every target, every consumer, one code
 # version) and must merge LAST so it wins wherever the two disagree.
-SWEEP_FILES = ["sweep.json", "sweep_hal.json", "sweep_hal2.json",
-               "sweep_opsel.json", "sweep_alias.json",
-               "sweep_conflict.json", "sweep_new.json",
-               "sweep_full.json", "sweep_all48.json",
-               # the seven targets re-measured after the multi-line doc-comment
-               # fix, which had failed to compile at all in the all48 run
-               "sweep_docfix.json",
-               # and the three re-measured after the keyword-field fix
-               "sweep_kwfix.json",
-               # the four consumers added after the crates.io reverse-dependency
-               # sweep: stm32-hrtim, stm32g4xx-hal, stm32f1-hal, rivet-bsp
-               "sweep_newconsumers.json",
-               # the whole-consumer re-run that added static triage of every
-               # enforcement hit (guarded vs possible bug)
-               "sweep_triage.json",
-               # the full 49-target re-measurement taken alongside the
-               # field-level run, so the two columns compare gating modes
-               # rather than two vintages of the injector. Last in the list,
-               # so it wins for every target it covers.
-               "sweep_wholereg_build.json",
-               # RM0041 gained a driver after the build sweep: stm32f1xx-hal
-               # already supported the F1 value line, it just had no entry.
-               "sweep_rm0041_wholereg.json",
-               # two consumers that could always have been measured on the
-               # device already injected, and were simply never listed
-               "sweep_rm0090_wholereg.json",
-               # RM0433 moved from H753V to H753 so stm32-hrtim can select it
-               "sweep_rm0433_wholereg.json",
-               # the three manuals re-measured after the `sec` peripheral
-               # re-attribution, so the artifact's source data matches the
-               # corrected review files (the numbers are unchanged)
-               "sweep_rm0438_secfix.json", "sweep_rm0456_secfix.json",
-               "sweep_rm0481_secfix.json"]
+# ONE run per mode, not a merge. These used to be lists of a dozen partial
+# sweeps combined later-wins, because the corpus was measured in pieces as it
+# grew. That is now a liability: a number from a months-old partial run can
+# outlive the code that produced it, and the merged table carried 48 driver
+# pairings where a single clean run finds 43.
+SWEEP_FILES = ["register_only/sweep.json"]      # baseline: whole-register only
 
 UA = {"User-Agent": "hal_agent-research (ramla.ijaz@yale.edu)"}
 
@@ -196,9 +169,12 @@ def injection_report(rm: str, device: str, field_gating: bool = False) -> dict:
     Within a mode, a dry run and a real run select identically (the prune runs
     either way), so freshness is what matters: an older file predates report
     schema changes and would silently report zeros."""
-    mode = "_fieldgate" if field_gating else ""
-    cands = [OUT / f"{rm}_{device}{mode}.json",
-             OUT / f"{rm}_{device}{mode}_dry.json"]
+    # The two modes write to separate TREES now, not one tree with suffixed
+    # filenames -- a shared path is what let a field run overwrite the default
+    # run's numbers and the table publish one as the other.
+    root = OUT if field_gating else OUT / "register_only"
+    cands = [root / f"{rm}_{device}.json",
+             root / f"{rm}_{device}_dry.json"]
     cands = [p for p in cands if p.is_file()]
     if not cands:
         return {}
@@ -210,11 +186,7 @@ def injection_report(rm: str, device: str, field_gating: bool = False) -> dict:
 # newer measurement of the first, so its results are read from their own file
 # and shown beside the default rather than merged into it. Both columns are
 # live numbers from a real 49-target build.
-FIELD_SWEEP_FILES = ["sweep_fieldgate_49.json", "sweep_rm0041_field.json",
-                     "sweep_rm0433_field.json",
-                     "sweep_rm0438_secfix_field.json",
-                     "sweep_rm0456_secfix_field.json",
-                     "sweep_rm0481_secfix_field.json"]
+FIELD_SWEEP_FILES = ["sweep.json"]              # default: field-level gating
 
 
 def sweep_results(files=None) -> dict:
@@ -259,7 +231,7 @@ def sweep_results(files=None) -> dict:
     return out
 
 
-def ported_results() -> dict:
+def ported_results(field_gating: bool = False) -> dict:
     """(rm, device, crate) -> result for a HAL that only became measurable
     after its PAC dependency was upgraded (experiments/port_hal.py).
 
@@ -268,7 +240,7 @@ def ported_results() -> dict:
     HAL owes its own dependency and touches only how register access is
     spelled -- but a reader still deserves to know which crate came off
     crates.io unmodified and which did not."""
-    p = OUT / "measure_ported.json"
+    p = (OUT if field_gating else OUT / "register_only") / "measure_ported.json"
     if not p.is_file():
         return {}
     out = {}
@@ -304,8 +276,8 @@ def master_results() -> dict:
 
 # Why a manual in a PORTED family still has no pairing. Read from the
 # measurement report so it cannot drift from what actually ran.
-def _ported_unpaired() -> dict:
-    p = OUT / "measure_ported.json"
+def _ported_unpaired(field_gating: bool = False) -> dict:
+    p = (OUT if field_gating else OUT / "register_only") / "measure_ported.json"
     if not p.is_file():
         return {}
     return {r["rm"]: r["unpaired_reason"] for r in json.loads(p.read_text())
@@ -446,7 +418,8 @@ def main() -> None:
     args = ap.parse_args()
 
     sweeps = sweep_results()
-    ported = ported_results()
+    ported = ported_results()                 # baseline
+    ported_fg = ported_results(field_gating=True)
     sweeps.update(ported)
     fsweeps = sweep_results(FIELD_SWEEP_FILES)
     gaps = gap_notes()
