@@ -271,16 +271,25 @@ def public_entry_points(fns, rev, start: Fn, max_depth: int = 4) -> list:
 # Containment
 # --------------------------------------------------------------------------- #
 
-def precondition_fields(diagnostic: str, site_src: str) -> list:
-    """Fields the datasheet rule depends on, recovered from the register the
-    diagnostic names. Kept deliberately small: the point is containment, not
-    re-deriving the constraint."""
-    reg = diagnostic.split("`")[1] if "`" in diagnostic else ""
-    reg = reg.split("::")[-1].removesuffix("rs").lower()
-    return {"ccr": ["pe"], "trise": ["pe"], "cr1": ["spe", "pe", "ue"],
-            "cr2": ["pe"], "brr": ["ue"], "dr": ["ue", "te"],
-            "prlh": ["cnf"], "prll": ["cnf"], "crh": ["cnf"],
-            }.get(reg, [])
+_FALLBACK_FIELDS = {"ccr": ["pe"], "trise": ["pe"], "cr1": ["spe", "pe", "ue"],
+                    "cr2": ["pe"], "brr": ["ue"], "dr": ["ue", "te"],
+                    "prlh": ["cnf"], "prll": ["cnf"], "crh": ["cnf"]}
+
+
+def precondition_fields(site: dict) -> list:
+    """Fields the datasheet rule depends on.
+
+    The sweep row already carries them, computed from the constraint that
+    produced the gate. The hand-written table below is the fallback and used to
+    be the ONLY source, because the retired patch_hal.py recorded a diagnostic
+    string and no fields; it covers nine registers and silently returned [] for
+    everything else, which reads as "no precondition to look for" rather than
+    "we did not know"."""
+    fields = site.get("fields")
+    if fields:
+        return list(fields)
+    reg = str(site.get("register") or "").split("::")[-1]
+    return _FALLBACK_FIELDS.get(reg.removesuffix("rs").lower(), [])
 
 
 def classify(path: list, fields: list) -> dict:
@@ -324,7 +333,21 @@ def app_calls(root: Path) -> dict:
         except OSError:
             continue
         rel = str(f.relative_to(root))
+        in_block = False
         for i, text in enumerate(lines):
+            # Commented-out code is not a call. booster's only "affected
+            # today" site was a 40-line commented-out block, which made an app
+            # look impacted by a path it does not take.
+            stripped = text.strip()
+            if in_block:
+                if "*/" in stripped:
+                    in_block = False
+                continue
+            if stripped.startswith("/*"):
+                in_block = "*/" not in stripped
+                continue
+            if stripped.startswith("//"):
+                continue
             for m in _CALL_RE.finditer(text):
                 n = m.group("name")
                 if n not in _NOISE:
@@ -378,7 +401,7 @@ def main() -> None:
         if fn is None:
             continue
         eps = public_entry_points(fns, rev, fn)
-        fields = precondition_fields(s["diagnostic"], s.get("source", ""))
+        fields = precondition_fields(s)
         entries[(s["file"], s["line"])] = {
             "site": s, "inner": fn.label, "fields": fields,
             "entries": [{"label": e.label, "name": e.name, "file": e.file,
@@ -430,15 +453,40 @@ def main() -> None:
                     "site": f"{rec['site']['file']}:{rec['site']['line']}",
                     "verdict": ent["verdict"],
                     "evidence": ent["evidence"],
+                    # The sweep's triage of the DRIVER site: `unchecked` means
+                    # the driver does not establish the precondition today.
+                    # That is a different fact from `escaping`, which is about
+                    # what would remain after the driver is fixed.
+                    "driver_site_verdict": rec["site"].get("verdict", ""),
                 })
         amb = sorted({m for m in ambiguous_names if m in calls})
         esc = [t for t in touched if t["verdict"] == "escaping"]
         con = [t for t in touched if t["verdict"] == "contained"]
+        # TWO DIFFERENT QUESTIONS, and conflating them reads as one result.
+        #
+        #   AFFECTED TODAY -- the app calls a driver function whose register
+        #   access the sweep marks `unchecked`: the driver does not establish
+        #   the precondition, so this app is running on a broken path NOW,
+        #   whether or not the constraint would escape a fixed driver.
+        #
+        #   RESIDUAL AFTER A FIX -- the constraint ESCAPES: even a correct
+        #   driver cannot discharge it alone, because the obligation depends on
+        #   what the caller does. Fixing the driver leaves the app with work.
+        #
+        # A constraint can be one, the other, both or neither.
+        today = [t for t in touched if t["driver_site_verdict"] == "unchecked"]
         print(f"=== {name} ({desc})")
         print(f"    driver entry points it calls that reach a gated register: "
               f"{len({t['driver_entry'] for t in touched})}")
-        print(f"    CONTAINED (driver absorbs it): {len(con)}")
-        print(f"    ESCAPING  (would surface in the app): {len(esc)}")
+        print(f"    AFFECTED TODAY (driver violates the rule on this path): "
+              f"{len(today)}")
+        for x in today[:4]:
+            s = x["app_sites"][0] if x["app_sites"] else None
+            where = f"{s[0]}:{s[1]}" if s else "?"
+            print(f"      {where}  {x['app_call']}() -> {x['driver_inner']}"
+                  f" -> {x['register']} {x['operation']}")
+        print(f"    RESIDUAL AFTER A DRIVER FIX: {len(esc)} escaping, "
+              f"{len(con)} contained")
         if amb:
             print(f"    ambiguous method names (not claimed): "
                   f"{', '.join(amb)}")
