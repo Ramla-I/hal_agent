@@ -916,9 +916,19 @@ def main() -> None:
                   f"{h.get('other', '—')} | {r['pristine']} |")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    out = Path(args.out) if args.out else out_root(
-        not args.register_only) / (
-        "sweep_dry.json" if args.dry_run else "sweep.json")
+    # A partial run must NOT overwrite the whole-corpus summary. `--only
+    # rm0440` once replaced a 49-target sweep.json with two rows, and the HAL
+    # results live only in that file -- the per-target reports carry injection
+    # data, not what the drivers did. Hours of compiling, gone to a flag that
+    # looked read-only.
+    if args.out:
+        out = Path(args.out)
+    else:
+        root = out_root(not args.register_only)
+        stem = "sweep_dry" if args.dry_run else "sweep"
+        if args.only:
+            stem += "_only_" + "_".join(sorted(args.only))
+        out = root / f"{stem}.json"
     out.write_text(json.dumps(results, indent=1, default=str) + "\n")
     print(f"\nsummary: {out}")
 

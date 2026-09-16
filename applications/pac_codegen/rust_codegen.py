@@ -2063,6 +2063,26 @@ def prune_plans_for_device(device_dir: Path, plans: list[RegisterPlan],
         reg_file = layout.register_file(plan.peripheral, plan.reg_lower)
         spec = f"{plan.reg_name.upper()}rs"
         reg_text = reg_file.read_text() if reg_file.is_file() else ""
+        # A field gate rides the field's WRITER accessor, so a field with no
+        # writer cannot carry one. Read-only fields inside a writable register
+        # are ordinary -- FDCAN_RWD.WDV is the watchdog's current value, next
+        # to the writable WDC -- and collection only rejects write constraints
+        # on a read-only REGISTER, never on a read-only field of a writable
+        # one. Without this the patcher aborted the whole target looking for an
+        # accessor that does not exist (rm0440, the entire run lost).
+        for fname in list(plan.field_gates):
+            fg = plan.field_gates[fname]
+            if not _field_writer_accessor_re(fg.field_lower).search(reg_text):
+                if reasons is not None:
+                    reasons.setdefault((plan.peripheral, plan.reg_lower),
+                                       []).append(
+                        f"field:{fg.field} has no writer in the generated PAC "
+                        "(read-only field), so no accessor to gate")
+                print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
+                      f"field gate on {fg.field} — read-only field, no writer "
+                      "accessor to gate")
+                del plan.field_gates[fname]
+
         removed = plan.prune_for_access(
             readable=f"impl crate::Readable for {spec}" in reg_text,
             writable=f"impl crate::Writable for {spec}" in reg_text,
