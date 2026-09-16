@@ -1,0 +1,2 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32wba50, stm32wba52, stm32wba54, stm32wba55",stm32-rs,rm0493,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,

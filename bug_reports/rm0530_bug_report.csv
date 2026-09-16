@@ -1,0 +1,2 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32wb06, stm32wb07",stm32-rs,rm0530,"IWDG_WINR: reset value: svd = 0x0, agent = 0xFFF",,

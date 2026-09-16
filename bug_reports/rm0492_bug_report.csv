@@ -1,0 +1,7 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32h503,stm32-rs,rm0492,"EXTI_EMR1: reset value: svd = 0xFFFE0000, agent = 0x0",,
+stm32h503,stm32-rs,rm0492,"EXTI_EMR2: reset value: svd = 0xDBBFFF, agent = 0x0",,
+stm32h503,stm32-rs,rm0492,"GPIOC_MODER: reset value: svd = 0xABFFFFFF, agent = 0xFFFFFFFF",,
+stm32h503,stm32-rs,rm0492,"GPIOC_OSPEEDR: reset value: svd = 0xC000000, agent = 0x0",,
+stm32h503,stm32-rs,rm0492,"GPIOD_OSPEEDR: reset value: svd = 0xC000000, agent = 0x0",,
+stm32h503,stm32-rs,rm0492,"GPIOH_OSPEEDR: reset value: svd = 0xC000000, agent = 0x0",,

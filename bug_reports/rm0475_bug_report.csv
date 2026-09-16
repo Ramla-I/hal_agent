@@ -1,0 +1,3 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32mp13xx,stm32-rs,rm0475,"ETH1_ETH_DMAC0RXDLAR_RDESLA: bit width: svd = 30, agent = 32",,
+stm32mp13xx,stm32-rs,rm0475,"ETH2_ETH_DMAC0RXDLAR_RDESLA: bit offset: svd = 2, agent = 0",,

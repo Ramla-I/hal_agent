@@ -1,0 +1,7 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32g070,stm32-rs,rm0454,"DBG_IDCODE_DEV_ID: bit width: svd = 16, agent = 12",,
+"stm32g030, stm32g050",stm32-rs,rm0454,"FLASH_WRP1AR: reset value: svd = 0xFF, agent = 0x00XX00XX",,
+"stm32g030, stm32g050",stm32-rs,rm0454,"FLASH_WRP1BR: reset value: svd = 0xFF, agent = 0b00000000XXXXXXXX00000000XXXXXXXX",,
+"stm32g030, stm32g050, stm32g070, stm32g0b0",stm32-rs,rm0454,"RCC_APBSMENR1: reset value: svd = 0xFFFFFFB7, agent = 0b00011000111011101110111100110110",,
+"stm32g030, stm32g050, stm32g070, stm32g0b0",stm32-rs,rm0454,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,
+"stm32g030, stm32g070",stm32-rs,rm0454,"TIM17_AF1: reset value: svd = 0x0, agent = 0x1",,

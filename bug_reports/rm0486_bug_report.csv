@@ -1,0 +1,6 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32n657,stm32-rs,rm0486,"ETH_MACCR: reset value: svd = 0x8000, agent = 0x0",,
+stm32n657,stm32-rs,rm0486,"ETH_MACHWF0R: reset value: svd = 0xE0D73F7, agent = 0xA0D73F7",,
+stm32n657,stm32-rs,rm0486,"ETH_MACHWF2R: reset value: svd = 0x41041041, agent = 0x42041041",,
+stm32n657,stm32-rs,rm0486,"FDCAN1_CCU_CCFG: reset value: svd = 0x87654321, agent = 0x4",,
+stm32n657,stm32-rs,rm0486,"FDCAN1_CCU_CREL: reset value: svd = 0x32141218, agent = 0x11141218",,

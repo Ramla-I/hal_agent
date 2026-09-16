@@ -1,0 +1,13 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32l0x0,stm32-rs,rm0451,"EXTI_IMR: reset value: svd = 0xFF840000, agent = 0x3F840000",,
+stm32l0x0,stm32-rs,rm0451,"FLASH_SR: reset value: svd = 0x4, agent = 0xC",,
+stm32l0x0,stm32-rs,rm0451,"GPIOA_OSPEEDR: reset value: svd = 0x0, agent = 0xC000000",,
+stm32l0x0,stm32-rs,rm0451,"PWR_CSR: reset value: svd = 0x0, agent = 0x8",,
+stm32l0x0,stm32-rs,rm0451,"RCC_CSR: reset value: svd = 0xC000000, agent = 0xC000004",,
+stm32l0x0,stm32-rs,rm0451,"RTC_DR: reset value: svd = 0x0, agent = 0x2101",,
+stm32l0x0,stm32-rs,rm0451,"RTC_ISR: reset value: svd = 0x0, agent = 0x7",,
+stm32l0x0,stm32-rs,rm0451,"RTC_PRER: reset value: svd = 0x0, agent = 0x7F00FF",,
+stm32l0x0,stm32-rs,rm0451,"RTC_PRER_PREDIV_S: bit width: svd = 16, agent = 15",,
+stm32l0x0,stm32-rs,rm0451,"RTC_WUTR: reset value: svd = 0x0, agent = 0xFFFF",,
+stm32l0x0,stm32-rs,rm0451,"SYSCFG_CFGR2: reset value: svd = 0x0, agent = 0x1",,
+stm32l0x0,stm32-rs,rm0451,"TIM2_ARR: reset value: svd = 0x0, agent = 0xFFFFFFFF",,

@@ -1,0 +1,12 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32g031, stm32g041",stm32-rs,rm0444,"ADC_CHSELR0: reset value: svd = 0xFFF0000, agent = 0x0",,
+"stm32g031, stm32g051, stm32g081, stm32g0b1, stm32g0c1",stm32-rs,rm0444,"DBG_IDCODE: reset value: svd = 0x0, agent = 0xXXXX64XX",,
+"stm32g071, stm32g081",stm32-rs,rm0444,"DBG_IDCODE_DEV_ID: bit width: svd = 16, agent = 12",,
+"stm32g031, stm32g051, stm32g081, stm32g0b1, stm32g0c1",stm32-rs,rm0444,"FLASH_ACR: reset value: svd = 0x600, agent = 0b0000 0000 0000 010X 0000 0110 0000 0000",,
+"stm32g031, stm32g041, stm32g071, stm32g081",stm32-rs,rm0444,"LPUART_ISR: reset value: svd = 0xC0, agent = 0x8000C0",,
+"stm32g031, stm32g041, stm32g051, stm32g061, stm32g071, stm32g081",stm32-rs,rm0444,"RCC_AHBENR: reset value: svd = 0x0, agent = 0x100",,
+"stm32g031, stm32g041, stm32g051, stm32g061, stm32g071, stm32g081",stm32-rs,rm0444,"RCC_APBSMENR2: reset value: svd = 0x0, agent = 0x17D801",,
+"stm32g051, stm32g061, stm32g0b1, stm32g0c1",stm32-rs,rm0444,"RTC_TR: reset value: svd = 0x7, agent = 0x0",,
+"stm32g031, stm32g041, stm32g051, stm32g061, stm32g071, stm32g081, stm32g0b1, stm32g0c1",stm32-rs,rm0444,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,
+"stm32g051, stm32g061, stm32g0b1, stm32g0c1",stm32-rs,rm0444,"RTC_TSTR: reset value: svd = 0x7, agent = 0x0",,
+"stm32g031, stm32g041, stm32g071, stm32g081",stm32-rs,rm0444,"TIM17_AF1: reset value: svd = 0x0, agent = 0x1",,
