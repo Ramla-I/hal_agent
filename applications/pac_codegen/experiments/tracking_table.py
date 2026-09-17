@@ -431,24 +431,37 @@ def main() -> None:
         verdicts = judge_verdicts(t.rm)
         rep = injection_report(t.rm, t.device)
 
-        applied = collections.Counter()
-        via_alias = 0
-        elsewhere = collections.defaultdict(collections.Counter)
         raw_kinds = raw_kinds_by_index(t.rm)
-        for r in rep.get("rows", []):
-            ks = r.get("kinds") or ({r["kind"]: 1} if r.get("kind") else {})
-            if not ks and r.get("constraints"):
-                # Recover the kind of a constraint that never parsed.
-                ks = collections.Counter(
-                    raw_kinds.get((r["file"], i), "unparseable")
-                    for i in r["constraints"] if i is not None)
-            if r["fate"] == "planned":
-                applied.update(ks)
-                if r.get("via_alias"):
-                    via_alias += sum(ks.values())
-            else:
-                for k, n in ks.items():
-                    elsewhere[r["fate"]][k] += n
+
+        def fate_kinds(report):
+            applied = collections.Counter()
+            via_alias = 0
+            elsewhere = collections.defaultdict(collections.Counter)
+            for r in report.get("rows", []):
+                ks = r.get("kinds") or ({r["kind"]: 1} if r.get("kind") else {})
+                if not ks and r.get("constraints"):
+                    # Recover the kind of a constraint that never parsed.
+                    ks = collections.Counter(
+                        raw_kinds.get((r["file"], i), "unparseable")
+                        for i in r["constraints"] if i is not None)
+                if r["fate"] == "planned":
+                    applied.update(ks)
+                    if r.get("via_alias"):
+                        via_alias += sum(ks.values())
+                else:
+                    for k, n in ks.items():
+                        elsewhere[r["fate"]][k] += n
+            return applied, via_alias, elsewhere
+
+        applied, via_alias, elsewhere = fate_kinds(rep)
+        # The fates table describes THE DEFAULT PIPELINE, which is field
+        # gating. It used to read the register-only report, whose
+        # `field_gating_disabled` fate is that mode's own policy -- so the
+        # published table said field gating was off long after it became the
+        # default. The baseline columns above keep their own report; only the
+        # drop story switches.
+        _, _, felsewhere = fate_kinds(
+            injection_report(t.rm, t.device, field_gating=True))
 
         enforce_total = sum(v.get("enforce", 0) for v in verdicts.values())
         enforce_kinds = collections.Counter(
@@ -516,8 +529,8 @@ def main() -> None:
                 # pipeline order, not alphabetical: a row should read as the
                 # path a constraint takes, so `rejected_at_collection` first.
                 "dropped_by_stage": "; ".join(
-                    f"{fate}: {kinds_str(elsewhere[fate], ',')}"
-                    for fate, _s, _d in _STAGES if fate in elsewhere) or "—",
+                    f"{fate}: {kinds_str(felsewhere[fate], ',')}"
+                    for fate, _s, _d in _STAGES if fate in felsewhere) or "—",
                 "note": build_note(t, res, gaps, activity),
             })
 
@@ -723,6 +736,11 @@ def main() -> None:
             f"{r['enforcement_sites']} | {r['note'] or '—'} |")
 
     md += ["", "## Where the non-applied constraints went", "",
+           "In the **default pipeline (field-level gating)**. The "
+           "register-only baseline drops one extra class the default does "
+           "not: constraints whose every restriction names a field "
+           "(`field_gating_disabled`), which under the default become field "
+           "gates instead.", "",
            "| RM | stage → kinds dropped there |", "|---|---|"]
     seen = set()
     for r in rows:
@@ -1014,12 +1032,13 @@ _STAGES = [
      "The manual covers a chip family; this peripheral is genuinely not on the "
      "chip injected. Instances that merely share another instance's "
      "register-block module are resolved, not dropped."),
-    ("field_gating_disabled", "switched-off feature",
+    ("field_gating_disabled", "baseline-mode drop",
      "Every constraint on the register applies to a named FIELD rather than "
-     "the whole register, and field-level gating is off by default \u2014 "
+     "the whole register. Field-level gating is the default, so in the "
+     "default pipeline these become field gates and this fate never appears; "
+     "it exists only in the register-only BASELINE (--register-only), where "
      "gating the whole register would demand the precondition for writes to "
-     "unrelated fields. The emitter builds these fine with "
-     "--field-level-gating; this is a policy default, not a codegen gap."),
+     "unrelated fields. A policy of that mode, not a codegen gap."),
     ("emitter_rejected", "emitter cannot express it",
      "A shape the emitter genuinely cannot translate: a field name that is "
      "not an SVD identifier (empty, a bit range, a wildcard), OR-values it "
