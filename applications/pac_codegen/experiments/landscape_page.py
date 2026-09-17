@@ -424,11 +424,17 @@ def build(scan: list, trace: dict, excluded: dict) -> str:
         elif rec.get("baseline") == "FAIL":
             comp = '<span class="pill no">build blocked</span>'
         else:
+            # Mechanism words, no verdict implied. "N confirmed" invited the
+            # reading "N confirmed BUGS", which overstates it exactly the way
+            # this page tries never to: what the compiler confirms is that
+            # the ACCESS is real and the build reaches it. The verdict lives
+            # in triage, and its word is "unchecked" -- a candidate, not a
+            # finding.
             n = rec.get("gate_fired", 0)
             bug = rec.get("possible_bug")
-            comp = (f'<span class="pill ok">{n} confirmed</span>'
-                    + (f' <span class="dim">({bug} possible bug'
-                       f'{"s" if bug != 1 else ""})</span>'
+            comp = (f'<span class="pill ok">{n} gate'
+                    f'{"s" if n != 1 else ""} fired</span>'
+                    + (f' <span class="dim">({bug} unchecked)</span>'
                        if bug is not None else ""))
         eff = ("measured" if (rec and rec.get("baseline") == "PASS")
                else p["readiness"]["effort"])
@@ -445,15 +451,20 @@ def build(scan: list, trace: dict, excluded: dict) -> str:
             f'<td><span class="pill {EFFORT_CLASS.get(eff, "none")}">'
             f'{_e(eff)}</span></td></tr>')
     h += ["</tbody></table></div>",
-          '<p class="note"><b>compiler</b>: <i>N confirmed</i> means the '
-          "project was built against an injected crate and N gates fired "
-          "(compile errors, each a real diagnostic); <i>scan only</i> means "
-          "no build exists yet and the count columns are the static "
-          "scanner&rsquo;s; <i>build blocked</i> means a build was attempted "
-          "and recorded as impossible. Where both grades exist they need not "
-          "match &mdash; the compiler sees only what a build can reach "
-          "(elodin: SDMMC subset), and field gates are finer than "
-          "register-level scanning.</p>"
+          '<p class="note"><b>compiler</b>: <i>N gates fired</i> means the '
+          "project was built against an injected crate and N compile errors "
+          "landed on constrained-register accesses &mdash; the compiler "
+          "confirms the ACCESS is real and the build reaches it, never that "
+          "it is a bug. <i>(M unchecked)</i> is the subset where static "
+          "triage then found no precondition check in the enclosing function "
+          "&mdash; candidates for human review, the same word the count "
+          "columns use. <i>scan only</i> means no build exists yet and the "
+          "count columns are the static scanner&rsquo;s; <i>build "
+          "blocked</i> means a build was attempted and recorded as "
+          "impossible. Where both grades exist they need not match &mdash; "
+          "the compiler sees only what a build can reach (elodin: SDMMC "
+          "subset), and field gates are finer than register-level "
+          "scanning.</p>"
           '<p class="note"><code>ready</code> already on a driver version that '
           "pairs with our chip crate &middot; <code>hal-bump</code> needs the "
           "driver bumped, then a four-line patch &middot; <code>pac-gap</code> "
