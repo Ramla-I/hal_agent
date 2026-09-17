@@ -217,6 +217,7 @@ def sweep_results(files=None) -> dict:
                     "untriaged": h.get("untriaged"),
                     "generic_friction": h.get("generic_friction"),
                     "other": h.get("other"),
+                    "other_detail": (h.get("other_detail") or [])[:4],
                     "files": (h.get("files") or {}).get("true_enforcement", []),
                 }
             if r.get("probe") and r["probe"] != "-":
@@ -350,6 +351,37 @@ FAMILY_HAL = {
 }
 
 
+# WHY a baseline fails, diagnosed from the recorded errors rather than
+# hand-entered per pairing: the diagnosis is keyed to the ERROR PATTERN, so a
+# future failure with a new cause falls through to its raw samples instead of
+# wearing a stale explanation. Both current patterns are upstream stm32-hal2
+# gaps against PAC 0.16 -- the same species the elodin port hit (missing GPIO
+# J/K, missing embedded-hal I2C).
+_BASELINE_DIAGNOSES = [
+    ("unresolved import `crate::pac::DMA",
+     "the H5-family PAC names its DMA engine GPDMA1 -- there is no DMA1 "
+     "module -- while stm32-hal2's shared DAC/I2C/timer/USART code imports "
+     "the old name, and everything downstream cascades"),
+    ("`ADC3",
+     "stm32-hal2's h7b3 feature gating still compiles its ADC3/SAI3 paths, "
+     "but the H7B3's SVD (and therefore its PAC module) has neither "
+     "peripheral -- a per-chip cfg map out of step with the part"),
+]
+
+
+def _baseline_fail_note(res) -> str:
+    head = (f"baseline against pristine PAC: {res.get('baseline')}"
+            + (f" ({res.get('other')} errors)" if res.get("other") else ""))
+    samples = res.get("other_detail") or []
+    blob = " ".join(samples)
+    for needle, why in _BASELINE_DIAGNOSES:
+        if needle in blob:
+            return f"{head} — {why}. The driver never compiles against the "                    f"UNMODIFIED crate, so nothing after injection is "                    f"attributable; fixing this is an upstream stm32-hal2 "                    f"change, not a pipeline one"
+    if samples:
+        return f"{head} — e.g. {samples[0][:110]}"
+    return head
+
+
 def build_note(t, res, gaps, activity) -> str:
     """Why this row has (or has not) a compile result against a HAL."""
     if res and res.get("ported"):
@@ -371,7 +403,7 @@ def build_note(t, res, gaps, activity) -> str:
         if res.get("status") == "PATCH_UNUSED":
             return "INVALID: cargo did not apply the local PAC patch"
         if res.get("baseline") != "PASS":
-            return f"baseline against pristine PAC: {res.get('baseline')}"
+            return _baseline_fail_note(res)
         return ""
     if t.consumers:
         # A driver exists and is wired up; the compile sweep just has not
