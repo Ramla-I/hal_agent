@@ -49,6 +49,7 @@ class Review(unittest.TestCase):
         import bug_review
         importlib.reload(bug_review)
         bug_review.OUT = root / "out"
+        (root / "out" / "constraints").mkdir()
         bug_review.REVIEW = root / "bug_review.csv"
         bug_review.TABLE = root / "out" / "bug_review_table.md"
         self.br = bug_review
@@ -147,6 +148,82 @@ class Review(unittest.TestCase):
         self.assertIn("| tp |", md)
         self.assertIn("real", md)
         self.assertIn("**1** tp", md)
+
+
+class PortSites(unittest.TestCase):
+    """The compiled PROJECTS' hits enter the ledger too -- the first version
+    covered only the sweep's HALs while the handover advice pointed the
+    reviewer at project rows that did not exist. Identity is JOINED from the
+    per-device constraints file: one register match is exact, several share
+    the name -> the labelled candidate list, the sweep's union rule."""
+
+    def setUp(self):
+        import tempfile
+        self.td = tempfile.TemporaryDirectory()
+        root = Path(self.td.name)
+        (root / "out" / "triage").mkdir(parents=True)
+        (root / "out" / "constraints").mkdir()
+        import importlib, bug_review
+        importlib.reload(bug_review)
+        bug_review.OUT = root / "out"
+        bug_review.REVIEW = root / "bug_review.csv"
+        bug_review.TABLE = root / "out" / "t.md"
+        bug_review.PORT_RECORDS = ["port_x.json"]
+        self.br = bug_review
+        self.root = root
+
+    def tearDown(self):
+        self.td.cleanup()
+
+    def write(self, hits, constraints):
+        (self.root / "out" / "port_x.json").write_text(json.dumps(
+            {"project": "proj-x", "rm": "rm0399", "device": "stm32h747cm7",
+             "baseline": "PASS", "hal": "some-hal 1.0", "hits": hits}))
+        (self.root / "out" / "constraints" / "rm0399_stm32h747cm7.json"
+         ).write_text(json.dumps({"registers": constraints}))
+
+    def test_unchecked_project_hit_joined_exactly(self):
+        self.write(
+            [{"file": "src/sdmmc.rs", "line": 196, "register": "clkcr",
+              "operation": "write", "fields": ["dpsmact"],
+              "verdict": "unchecked"}],
+            [{"peripheral": "sdmmc1", "register": "CLKCR",
+              "constraint_ids": ["c1"],
+              "gated_fields": {"CLKDIV": {
+                  "preconditions": ["DPSMACT cleared"],
+                  "datasheet_text": ["written when DPSM not active"]}}}])
+        rows = self.br.load_port_sites()
+        self.assertEqual(len(rows), 1)
+        r = rows[0]
+        self.assertEqual(r["crate"], "proj-x")
+        self.assertEqual(r["peripheral"], "sdmmc1")
+        self.assertEqual(r["constraint_ids"], "c1")
+        self.assertIn("DPSM not active", r["quote"])
+        self.assertEqual(r["field_source"], "exact")
+
+    def test_shared_register_name_yields_labelled_union(self):
+        self.write(
+            [{"file": "src/a.rs", "line": 1, "register": "CR2rs",
+              "operation": "write", "fields": [], "verdict": "unchecked"}],
+            [{"peripheral": "adc1", "register": "CR2",
+              "constraint_ids": ["a"], "datasheet_text": {"w": ["rule A"]}},
+             {"peripheral": "usart1", "register": "CR2",
+              "constraint_ids": ["u"], "datasheet_text": {"w": ["rule U"]}}])
+        r = self.br.load_port_sites()[0]
+        self.assertEqual(r["field_source"], "union")
+        self.assertIn("[adc1] rule A", r["quote"])
+        self.assertIn("[usart1] rule U", r["quote"])
+
+    def test_guarded_hits_stay_out(self):
+        self.write([{"file": "f", "line": 1, "register": "clkcr",
+                     "operation": "write", "verdict": "corroborated"}], [])
+        self.assertEqual(self.br.load_port_sites(), [])
+
+    def test_failed_baseline_record_contributes_nothing(self):
+        (self.root / "out" / "port_x.json").write_text(json.dumps(
+            {"project": "p", "rm": "r", "device": "d", "baseline": "FAIL",
+             "hits": [{"register": "x", "verdict": "unchecked"}]}))
+        self.assertEqual(self.br.load_port_sites(), [])
 
 
 if __name__ == "__main__":

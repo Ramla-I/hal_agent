@@ -60,6 +60,78 @@ def key(row) -> tuple:
     return tuple(str(row.get(k, "")) for k in KEY)
 
 
+# The compiled PROJECTS record their hits in port_*.json, not in triage side
+# files -- and the ledger's first version silently covered only the HALs,
+# while the handover advice pointed the reviewer at elodin/blackpill rows
+# that did not exist. Port hits lack constraint identity, so it is joined
+# here from the per-device constraints file the sweep saves: one match ->
+# exact; several peripherals sharing the register name -> the labelled
+# candidate list, same rule as the sweep's union.
+PORT_RECORDS = ["port_blackpill.json", "port_elodin.json", "port_hubris.json",
+                "port_anne_key.json", "port_stm32_eth.json"]
+
+
+def _constraint_index(rm: str, device: str) -> dict:
+    p = OUT / "constraints" / f"{rm}_{device}.json"
+    if not p.is_file():
+        return {}
+    idx = {}
+    for e in json.loads(p.read_text()).get("registers", []):
+        quotes = [q for v in (e.get("datasheet_text") or {}).values()
+                  for q in (v if isinstance(v, list) else [v])]
+        quotes += [q for fg in (e.get("gated_fields") or {}).values()
+                   for q in (fg.get("datasheet_text") or [])]
+        idx.setdefault((e.get("register") or "").lower(), []).append({
+            "peripheral": (e.get("peripheral") or "").lower(),
+            "constraint_ids": list(e.get("constraint_ids") or []),
+            "quote": quotes[0] if quotes else "",
+        })
+    return idx
+
+
+def load_port_sites() -> list:
+    rows = []
+    for name in PORT_RECORDS:
+        f = OUT / name
+        if not f.is_file():
+            continue
+        r = json.loads(f.read_text())
+        if r.get("baseline") != "PASS":
+            continue
+        idx = _constraint_index(r["rm"], r["device"])
+        for h in r.get("hits") or []:
+            if h.get("verdict") != "unchecked":
+                continue
+            reg = str(h.get("register", "")).split("::")[-1].lower()
+            reg = reg[:-2] if reg.endswith("rs") else reg
+            cands = idx.get(reg, [])
+            per = (h.get("peripheral") or "").lower()
+            if per:
+                cands = [c for c in cands if c["peripheral"] == per] or cands
+            if len(cands) == 1:
+                ids = cands[0]["constraint_ids"]
+                quote = cands[0]["quote"]
+                per = per or cands[0]["peripheral"]
+            else:
+                ids = sorted({i for c in cands for i in c["constraint_ids"]})
+                quote = " | OR: ".join(
+                    f"[{c['peripheral']}] {c['quote']}" for c in cands)
+            rows.append({
+                "status": "", "tp_fp": "", "note": "",
+                "rm": r["rm"], "device": r["device"],
+                "crate": r["project"],
+                "version": r.get("hal") or r.get("pac") or "",
+                "file": h.get("file", ""), "line": h.get("line", 0),
+                "peripheral": per, "register": reg,
+                "operation": h.get("operation", ""),
+                "precondition_fields": " ".join(h.get("fields") or []),
+                "field_source": "exact" if len(cands) == 1 else "union",
+                "constraint_ids": " ".join(ids),
+                "quote": quote,
+            })
+    return rows
+
+
 def load_sites() -> list:
     rows = []
     tri = OUT / "triage"
@@ -108,7 +180,7 @@ def write_review(rows) -> None:
 
 
 def init() -> None:
-    fresh = load_sites()
+    fresh = load_sites() + load_port_sites()
     if not fresh:
         sys.exit(f"no triage side files under {OUT/'triage'} — "
                  f"run stm_sweep.py first (the field-mode sweep writes them)")
