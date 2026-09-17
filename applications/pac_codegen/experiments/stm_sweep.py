@@ -1027,7 +1027,13 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
                 # The complete rows go to a side file, one per pairing, so
                 # the summary stays small and NOTHING is lost to the 40-row
                 # sample cap. Each row already names its constraint.
-                allrows = entry.pop("_triage_all", [])
+                # BASELINE-PASS PAIRINGS ONLY: a driver that fails against the
+                # pristine crate produces "candidates" that are not reviewable
+                # claims -- the review ledger once carried 95 such rows from
+                # the three FAIL pairings, inflating 930 to 1025.
+                allrows = (entry.pop("_triage_all", [])
+                           if base == "PASS" else
+                           (entry.pop("_triage_all", []) and []))
                 tri_dir = out_root(field_gating) / "triage"
                 tri_dir.mkdir(parents=True, exist_ok=True)
                 tri = tri_dir / f"{t.rm}_{t.device}_{c.crate}.jsonl"
