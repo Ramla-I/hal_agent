@@ -49,7 +49,7 @@ def measured_projects() -> dict:
     should report what the compiler found instead of what the scan guessed."""
     out = {}
     for name in ("port_hubris.json", "port_anne_key.json",
-                 "port_stm32f7_discovery.json"):
+                 "port_stm32_eth.json", "port_stm32f7_discovery.json"):
         pth = OUT / name
         if not pth.is_file():
             continue

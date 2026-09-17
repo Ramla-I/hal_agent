@@ -80,10 +80,12 @@ Usage:
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent.parent
@@ -138,6 +140,28 @@ def sub_count(text, pattern, repl, flags=0):
 # --------------------------------------------------------------------------- #
 # The port
 # --------------------------------------------------------------------------- #
+
+def copy_pristine(src: Path, dest: Path) -> None:
+    """Copy the vendored crate, then stamp every file as just-written.
+
+    `shutil.copytree` preserves mtimes, so a freshly restored PRISTINE tree
+    looks OLDER than the injected build cargo has cached, and cargo reuses the
+    injected artifacts -- a baseline that failed with gate errors against a
+    crate carrying no gates, on one run out of two. `cargo clean -p` does not
+    save you: the crates that DEPEND on the PAC are fingerprinted on its
+    mtimes, so they stay stale too. Touching the tree is what actually tells
+    cargo the contents changed."""
+    if dest.is_dir():
+        shutil.rmtree(dest)
+    shutil.copytree(src, dest, ignore=shutil.ignore_patterns("target"))
+    now = time.time()
+    for p in dest.rglob("*"):
+        try:
+            os.utime(p, (now, now))
+        except OSError:
+            pass
+    os.utime(dest, (now, now))
+
 
 def port_pac(pac: Path) -> None:
     """R9: the RTFM 0.4 / modern-svd2rust interrupt ABI shim."""
@@ -452,10 +476,7 @@ def main() -> None:
     # A COPY. The shared vendored crate feeds every other measurement in this
     # project, and R9 would contaminate all of them.
     pac = work / "stm32l1-anne"
-    if pac.is_dir():
-        shutil.rmtree(pac)
-    shutil.copytree(APP_DIR / "vendored" / "pac" / PAC_CRATE, pac,
-                    ignore=shutil.ignore_patterns("target"))
+    copy_pristine(APP_DIR / "vendored" / "pac" / PAC_CRATE, pac)
 
     # After the reset above, not before: the pin is a tracked file.
     (app / "rust-toolchain").unlink(missing_ok=True)
@@ -492,9 +513,7 @@ def main() -> None:
               "pac": f"{PAC_CRATE} 0.16.0", "port": counts,
               "baseline": "PASS"}
     for mode, reg_only in (("field", False), ("register_only", True)):
-        shutil.rmtree(pac)
-        shutil.copytree(APP_DIR / "vendored" / "pac" / PAC_CRATE, pac,
-                        ignore=shutil.ignore_patterns("target"))
+        copy_pristine(APP_DIR / "vendored" / "pac" / PAC_CRATE, pac)
         port_pac(pac)
         result[mode] = measure(app, pac, work, reg_only)
         r = result[mode]
