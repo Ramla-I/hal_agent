@@ -51,7 +51,7 @@ def measured_projects() -> dict:
     out = {}
     for name in ("port_hubris.json", "port_anne_key.json",
                  "port_stm32_eth.json", "port_stm32f7_discovery.json",
-                 "port_blackpill.json"):
+                 "port_blackpill.json", "port_elodin.json"):
         pth = OUT / name
         if not pth.is_file():
             continue

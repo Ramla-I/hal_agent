@@ -120,7 +120,7 @@ a{color:var(--accent)}
 <header>
 <span class="eyebrow">LIDAR · enforcement arm</span>
 <h1>Where our datasheet rules would bite &mdash; and where the compiler agrees</h1>
-<p class="sub">22 open-source embedded projects read against constraints extracted from their chips' reference manuals. The survey is <b>static</b> &mdash; each project's own Rust source is parsed for register accesses and cross-referenced &mdash; and where a project could be brought to the PAC generation we inject, it was then <b>compiled against the injected crate</b>: 4 projects measured that way (anne-key, blackpill-usb-pwdstore, hubris, stm32-eth), 1 attempt recorded as blocked, and the scan's blind spot (writes that leave the typed API) is bounded at the bottom of the page.</p>
+<p class="sub">22 open-source embedded projects read against constraints extracted from their chips' reference manuals. The survey is <b>static</b> &mdash; each project's own Rust source is parsed for register accesses and cross-referenced &mdash; and where a project could be brought to the PAC generation we inject, it was then <b>compiled against the injected crate</b>: 5 projects measured that way (anne-key, blackpill-usb-pwdstore, elodin-sensor-fw, hubris, stm32-eth), 1 attempt recorded as blocked, and the scan's blind spot (writes that leave the typed API) is bounded at the bottom of the page.</p>
 </header>
 <section><h2>Across all projects</h2>
 <div class="row">
@@ -135,7 +135,7 @@ a{color:var(--accent)}
 <section><h2>Summary</h2>
 <div class="scroll"><table><thead><tr><th class="pin">project</th><th>how it reaches the chip</th><th>manuals</th><th>files</th><th>accesses</th><th>candidates</th><th>unchecked</th><th>corroborated</th><th>build-readiness</th></tr></thead><tbody>
 <tr><td class="pin"><a href="#tock">tock</a></td><td class="dim">hand-written register maps</td><td class="mono dim">rm0368, rm0402, rm0390, rm0316</td><td class="num">45</td><td class="num">1203</td><td class="num lead">51</td><td class="num">23</td><td class="num">28</td><td><span class="pill none">not-applicable</span></td></tr>
-<tr><td class="pin"><a href="#elodin-sensor-fw">elodin-sensor-fw</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0399</td><td class="num">31</td><td class="num">154</td><td class="num lead">33</td><td class="num">27</td><td class="num">6</td><td><span class="pill warn">hal-bump</span></td></tr>
+<tr><td class="pin"><a href="#elodin-sensor-fw">elodin-sensor-fw</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0399</td><td class="num">31</td><td class="num">154</td><td class="num lead">33</td><td class="num">27</td><td class="num">6</td><td><span class="pill ok">measured</span></td></tr>
 <tr><td class="pin"><a href="#hubris">hubris</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0316, rm0090, rm0433, rm0444, rm0454</td><td class="num">276</td><td class="num">677</td><td class="num lead">22</td><td class="num">11</td><td class="num">11</td><td><span class="pill ok">measured</span></td></tr>
 <tr><td class="pin"><a href="#embassy">embassy</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490</td><td class="num">257</td><td class="num">3240</td><td class="num lead">17</td><td class="num">9</td><td class="num">8</td><td><span class="pill none">not-applicable</span></td></tr>
 <tr><td class="pin"><a href="#bxcan">bxcan</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008</td><td class="num">35</td><td class="num">65</td><td class="num lead">11</td><td class="num">0</td><td class="num">11</td><td><span class="pill none">not-applicable</span></td></tr>
@@ -309,7 +309,22 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">27</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">6</span></div>
 </div>
-<p class="note"><span class="pill warn">hal-bump</span> &nbsp;stm32h7 0.16.0 &mdash; stm32-hal2 1.8 does not pair with PAC 0.16.0; needs a release built against it</p>
+<p class="note"><span class="pill ok">measured</span> &nbsp;stm32h7 0.16.0 &mdash; the scan called this <em>hal-bump</em> (stm32-hal2 1.8 does not pair with PAC 0.16.0; needs a release built against it); the gap was then closed and the project built. One version line in the workspace manifest plus 23 mechanical edits, baseline passing against the pristine crate, then <b>11</b> gate-fired sites across 4 gated registers with 0 collateral errors.</p>
+<div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
+<tr><td class="pin mono">src/sdmmc.rs:196</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:198</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:202</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:204</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:206</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:340</td><td class="mono">dlenr</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:357</td><td class="mono">dlenr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:615</td><td class="mono">clkcr</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:640</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:706</td><td class="mono">clkcr</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:789</td><td class="mono">argr</td><td>write</td><td>unchecked</td></tr>
+</tbody></table></div>
+<p class="note"><b>Read the verdicts with this in mind:</b> compiler verdicts INSIDE the application&#x27;s own source, on the one peripheral (SDMMC) its driver has no module for. The full manual cannot be measured end-to-end: injected whole, the build stops in stm32-hal2 with ~150 of the driver&#x27;s own violations and never reaches the app -- enforcement halting the stack at the first violating layer. The scan&#x27;s adc clusters therefore remain static claims. On every comparable sdmmc line the scanner&#x27;s verdict matches the compiler&#x27;s; the compiler is finer -- field gates fire per gated FIELD, so register-level scan sites whose written fields are not the gated ones correctly do not fire.</p>
+</div>
 <div class="rule">
 <div class="hd">adc/cr <span class="dim">&mdash; 6 sites</span></div>
 <div class="meta">state_gate · write · requires ADC_CR.ADEN cleared · fields restricted: adcal</div>
@@ -785,7 +800,7 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
 </div>
-<p class="note"><span class="pill ok">measured</span> &nbsp;stm32f4 0.16.0 &mdash; the scan called this <em>hal-bump</em> (stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)); the gap was then closed and the project built. One version line in the workspace manifest plus 0 mechanical edits, baseline passing against the pristine crate, then <b>39</b> gate-fired sites across 16 gated registers with 0 collateral errors.</p>
+<p class="note"><span class="pill ok">measured</span> &nbsp;stm32f4 0.16.0 &mdash; the scan called this <em>hal-bump</em> (stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)); the gap was then closed and the project built. One version line in the workspace manifest plus 0 mechanical edits, baseline passing against the pristine crate, then <b>32</b> gate-fired sites across 16 gated registers with 0 collateral errors.</p>
 <div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
 <tr><td class="pin mono">stm32f4xx-hal/src/adc.rs:353</td><td class="mono">CR2rs</td><td>write</td><td>unchecked</td></tr>
 <tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:167</td><td class="mono">TRISErs</td><td>write</td><td>corroborated</td></tr>
@@ -812,14 +827,7 @@ a{color:var(--accent)}
 <tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:552</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
 <tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:561</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
 <tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:567</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:129</td><td class="mono">SRrs</td><td>write</td><td>untriaged</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:152</td><td class="mono">CR3rs</td><td>modify</td><td>untriaged</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:155</td><td class="mono">CR3rs</td><td>modify</td><td>untriaged</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:208</td><td class="mono">CR3rs</td><td>write</td><td>untriaged</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:211</td><td class="mono">CR3rs</td><td>write</td><td>untriaged</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:214</td><td class="mono">CR3rs</td><td>write</td><td>untriaged</td></tr>
 <tr><td class="pin mono">stm32f4xx-hal/src/serial.rs:285</td><td class="mono">CR2rs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/serial.rs:286</td><td class="mono">CR3rs</td><td>write</td><td>untriaged</td></tr>
 <tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:375</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
 <tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:391</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
 <tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:690</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
