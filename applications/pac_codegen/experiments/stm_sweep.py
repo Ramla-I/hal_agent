@@ -504,9 +504,22 @@ def patch_applied(ws: Path, pac: str) -> bool:
     return False
 
 
+# Distinct from None (timeout) and from [] (compiled, no errors): cargo never
+# got as far as compiling, so there is nothing to conclude either way.
+DID_NOT_RUN = "DID_NOT_RUN"
+
+
 def hal_errors(ws: Path, hal_dirname: str):
     """cargo check --message-format=json -> error diagnostics with the HAL
-    source files attributed (primary spans + macro expansions)."""
+    source files attributed (primary spans + macro expansions).
+
+    A BUILD THAT NEVER RAN IS NOT A BUILD WITH NO ERRORS. An invalid manifest,
+    an unresolvable dependency or a missing toolchain makes cargo exit before
+    compiling anything, emitting no `compiler-message` records at all -- which
+    reads here as zero errors, and downstream as a pairing where no gate fired.
+    The baseline check already rejects such a pairing because it tests the exit
+    status, so this is insurance rather than a live bug; it makes the invariant
+    explicit at the place that would otherwise report a false zero."""
     run = cargo_check(ws, ["--message-format=json"])
     if run is None:
         return None
@@ -556,6 +569,8 @@ def hal_errors(ws: Path, hal_dirname: str):
         out.append({"code": (d.get("code") or {}).get("code", ""),
                     "message": d.get("message", ""), "labels": labels,
                     "hal_files": sorted(files), "sites": sorted(sites)})
+    if run.returncode != 0 and not out:
+        return DID_NOT_RUN
     return out
 
 
@@ -889,6 +904,10 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
                 print(f"  !! {c.crate}: patch not applied — result discarded")
             elif errors is None:
                 entry["status"] = "TIMEOUT"
+            elif errors == DID_NOT_RUN:
+                entry["status"] = "DID_NOT_RUN"
+                print(f"  !! {c.crate}: cargo exited without compiling "
+                      f"anything — no result, not a zero")
             else:
                 entry.update(classify(
                     errors, set(res["gated_specs"]),

@@ -140,7 +140,7 @@ a{color:var(--accent)}
 <tr><td class="pin"><a href="#bxcan">bxcan</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008</td><td class="num">35</td><td class="num">65</td><td class="num lead">11</td><td class="num">0</td><td class="num">11</td><td><span class="pill none">not-applicable</span></td></tr>
 <tr><td class="pin"><a href="#fdcan">fdcan</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0440, rm0433</td><td class="num">88</td><td class="num">73</td><td class="num lead">7</td><td class="num">3</td><td class="num">4</td><td><span class="pill none">not-applicable</span></td></tr>
 <tr><td class="pin"><a href="#stm32f7-discovery">stm32f7-discovery</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0385</td><td class="num">33</td><td class="num">288</td><td class="num lead">4</td><td class="num">2</td><td class="num">2</td><td><span class="pill warn">pac-gap</span></td></tr>
-<tr><td class="pin"><a href="#anne-key">anne-key</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0038</td><td class="num">22</td><td class="num">91</td><td class="num lead">3</td><td class="num">0</td><td class="num">3</td><td><span class="pill warn">pac-gap</span></td></tr>
+<tr><td class="pin"><a href="#anne-key">anne-key</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0038</td><td class="num">22</td><td class="num">91</td><td class="num lead">3</td><td class="num">0</td><td class="num">3</td><td><span class="pill ok">measured</span></td></tr>
 <tr><td class="pin"><a href="#loadstone">loadstone</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0402</td><td class="num">25</td><td class="num">8</td><td class="num lead">1</td><td class="num">1</td><td class="num">0</td><td><span class="pill none">not-applicable</span></td></tr>
 <tr><td class="pin"><a href="#blethrs">blethrs</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0090</td><td class="num">6</td><td class="num">85</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">pac-gap</span></td></tr>
 <tr><td class="pin"><a href="#booster">booster</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0090</td><td class="num">35</td><td class="num">24</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">hal-bump</span></td></tr>
@@ -606,7 +606,13 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">3</span></div>
 </div>
-<p class="note"><span class="pill warn">pac-gap</span> &nbsp;stm32l1 0.16.0 &mdash; pins stm32l1 0.11.0, injector targets 0.16.0</p>
+<p class="note"><span class="pill ok">measured</span> &nbsp;stm32l1 0.16.0 &mdash; the scan called this <em>pac-gap</em> (pins stm32l1 0.11.0, injector targets 0.16.0); the gap was then closed and the project built. One version line in the workspace manifest plus 23 mechanical edits, baseline passing against the pristine crate, then <b>2</b> gate-fired sites across 15 gated registers with 0 collateral errors.</p>
+<div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
+<tr><td class="pin mono">src/clock.rs:7</td><td class="mono">ACRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">src/clock.rs:8</td><td class="mono">ACRrs</td><td>write</td><td>corroborated</td></tr>
+</tbody></table></div>
+<p class="note"><b>Read the verdicts with this in mind:</b> the scanner claimed 3 sites and the compiler fired on 2; the third writes ACC64, which is the PRECONDITION rather than a constrained field, so field gating correctly leaves it alone. Whole-register mode fires on none of them: RM0038 constrains two fields of FLASH_ACR and nothing about the register as a whole.</p>
+</div>
 <div class="rule">
 <div class="hd">flash/acr <span class="dim">&mdash; 3 sites</span></div>
 <div class="meta">state_gate · write · requires FLASH_ACR.ACC64 set · fields restricted: prften</div>

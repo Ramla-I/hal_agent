@@ -45,8 +45,10 @@ def measured_projects() -> dict:
     is an afternoon or a quarter. Where a harness has since closed one, the row
     should report what the compiler found instead of what the scan guessed."""
     out = {}
-    pth = OUT / "port_hubris.json"
-    if pth.is_file():
+    for name in ("port_hubris.json", "port_anne_key.json"):
+        pth = OUT / name
+        if not pth.is_file():
+            continue
         r = json.loads(pth.read_text())
         if r.get("baseline") == "PASS" and "gate_fired" in r:
             out[r["project"]] = r

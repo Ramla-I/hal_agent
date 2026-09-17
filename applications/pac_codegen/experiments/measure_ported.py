@@ -82,6 +82,13 @@ def check(hal: str, features: str, target: str, pac: str) -> list:
         if d.get("level") != "error":
             continue
         out.append(d)
+    if run.returncode != 0 and not out:
+        # A build that never ran is not a build with no errors: cargo exits
+        # before compiling on an invalid manifest or an unresolvable
+        # dependency, emitting no compiler-message records, which would read
+        # as a clean baseline and then as zero gate hits.
+        sys.exit(f"cargo exited without emitting a single compiler error, so "
+                 f"nothing was compiled:\n{(run.stderr or run.stdout)[-1000:]}")
     return out
 
 
