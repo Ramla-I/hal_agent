@@ -691,6 +691,15 @@ def _gate_fields(constraints_path: Path) -> dict:
                     fields.append(m.group(1).lower())
             if fields:
                 per_op[op] = sorted(set(fields))
+        # Constraint IDENTITY rides along, so a triage row can say which
+        # datasheet rule produced its gate instead of leaving a reviewer to
+        # re-join by register name -- the join this file exists to distrust.
+        quotes = [q for v in (e.get("datasheet_text") or {}).values()
+                  for q in (v if isinstance(v, list) else [v])]
+        quotes += [q for fg in (e.get("gated_fields") or {}).values()
+                   for q in (fg.get("datasheet_text") or [])]
+        ident = {"constraint_ids": list(e.get("constraint_ids") or []),
+                 "quote": (quotes[0] if quotes else "")}
         # Field gates too. Reading only `preconditions` left every field-only
         # register with nothing for the triage to look for, so its hits came
         # back untriaged instead of guarded/candidate -- and under field
@@ -707,6 +716,7 @@ def _gate_fields(constraints_path: Path) -> dict:
                 if fields:
                     per_op[op] = sorted(set(per_op.get(op, [])) | set(fields))
         if per_op:
+            per_op["_ident"] = ident
             out.setdefault(reg, {})[periph] = per_op
 
     resolved = {}
@@ -714,31 +724,50 @@ def _gate_fields(constraints_path: Path) -> dict:
         union = {}
         for per_op in by_periph.values():
             for op, fs in per_op.items():
+                if op == "_ident":
+                    continue
                 union[op] = sorted(set(union.get(op, [])) | set(fs))
-        distinct = {json.dumps(v, sort_keys=True) for v in by_periph.values()}
+        distinct = {json.dumps({k: x for k, x in v.items() if k != "_ident"},
+                               sort_keys=True) for v in by_periph.values()}
         resolved[reg] = {"by_peripheral": by_periph, "union": union,
                          "ambiguous": len(distinct) > 1}
     return resolved
 
 
 def _fields_for(gate_fields: dict, spec: str, reg: str, op: str) -> tuple:
-    """(fields, how) for one diagnostic.
+    """(fields, how, peripheral, identity) for one diagnostic.
 
     `spec` is the Rust type the gate names. When it is a full path --
     `stm32f4::stm32f429::i2c1::ccr::CCRrs` -- the module two segments up IS the
     peripheral, and the lookup is exact. A bare `CR2rs` names no peripheral, so
-    the union stands in and the row records that it did."""
+    the union stands in and the row records that it did. `identity` is the
+    constraint that built the gate ({constraint_ids, quote}); under a union it
+    is the LIST of candidates, never a silent pick."""
     ent = gate_fields.get(reg)
     if not ent:
-        return [], "none"
+        return [], "none", "", {}
     parts = [s for s in str(spec).split("::") if s]
     periph = parts[-3].lower() if len(parts) >= 3 else ""
     per_op = ent["by_peripheral"].get(periph)
     how = "exact"
     if per_op is None:
         per_op, how = ent["union"], ("union" if ent["ambiguous"] else "only")
-    fields = per_op.get(op) or sorted({f for v in per_op.values() for f in v})
-    return fields, how
+        if how == "only":
+            only = next(iter(ent["by_peripheral"]))
+            ident = dict(ent["by_peripheral"][only].get("_ident") or {})
+            ident["peripheral"] = only
+            periph = only
+        else:
+            periph = ""
+            ident = {"candidates": [
+                dict(v.get("_ident") or {}, peripheral=k)
+                for k, v in sorted(ent["by_peripheral"].items())]}
+    else:
+        ident = dict(per_op.get("_ident") or {})
+        ident["peripheral"] = periph
+    fields = per_op.get(op) or sorted({f for k, v in per_op.items()
+                                       if k != "_ident" for f in v})
+    return fields, how, periph, ident
 
 
 def triage_hit(abs_path: str, line: int, fields: list) -> dict:
@@ -779,6 +808,12 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
            "files": {"true_enforcement": set(), "generic_friction": set(),
                      "other": set()},
            "triage_truncated": 0,
+           # The COMPLETE per-site rows, cap-free. The summary's `triage` list
+           # stays a 40-row sample for size; this one exists so a reviewer can
+           # see every possible-bug site -- 930 candidates of which only 490
+           # were recorded anywhere before. The caller writes it to a side
+           # file and strips it from the summary.
+           "_triage_all": [],
            # Rows whose diagnostic named no peripheral while two peripherals
            # share the register name with different preconditions. Their
            # verdict is the weaker "one of these was established", so it is
@@ -844,12 +879,22 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
                 reg = m.group(1).lower()
             op = ("write" if "write-constrained" in e["message"] else
                   "modify" if "modify-constrained" in e["message"] else "read")
-            fields, how = _fields_for(gate_fields, named[0], reg, op)
+            fields, how, periph, ident = _fields_for(
+                gate_fields, named[0], reg, op)
             if how == "union":
                 res["fields_from_union"] += 1
             site = e["sites"][0] if e.get("sites") else None
             if site and fields:
                 v = triage_hit(site[0], site[1], fields)
+                res["_triage_all"].append({
+                    "file": site[2] if len(site) > 2 else
+                            (e["hal_files"][0] if e["hal_files"] else ""),
+                    "line": site[1], "peripheral": periph, "register": reg,
+                    "operation": op, "fields": fields, "field_source": how,
+                    "verdict": v["verdict"],
+                    "helpers": v.get("helpers_inlined") or [],
+                    **ident,
+                })
                 if v["verdict"] == "corroborated":
                     res["guarded"] += 1
                 elif v["verdict"] == "unchecked":
@@ -897,6 +942,9 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
                 res["other_detail"].append(
                     f"{e['code']} {e['message'][:150]} @ {e['hal_files']}")
     res["files"] = {k: sorted(v) for k, v in res["files"].items()}
+    # callers that do not write a side file must not embed 2000 rows either
+    if len(res["_triage_all"]) > 2000:
+        res["_triage_all"] = res["_triage_all"][:2000]
     return res
 
 
@@ -976,6 +1024,20 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
                     errors, set(res["gated_specs"]),
                     _gate_fields(out_root(field_gating) / "constraints" /
                                  f"{t.rm}_{t.device}.json")))
+                # The complete rows go to a side file, one per pairing, so
+                # the summary stays small and NOTHING is lost to the 40-row
+                # sample cap. Each row already names its constraint.
+                allrows = entry.pop("_triage_all", [])
+                tri_dir = out_root(field_gating) / "triage"
+                tri_dir.mkdir(parents=True, exist_ok=True)
+                tri = tri_dir / f"{t.rm}_{t.device}_{c.crate}.jsonl"
+                with open(tri, "w") as fh:
+                    for row in allrows:
+                        fh.write(json.dumps(
+                            {"rm": t.rm, "device": t.device,
+                             "crate": c.crate, "version": c.version,
+                             **row}) + "\n")
+                entry["triage_file"] = str(tri)
                 entry["status"] = "ran"
                 print(f"  HAL {c.crate} {c.version} (baseline {base}): "
                       f"true_enforcement={entry['true_enforcement']} "

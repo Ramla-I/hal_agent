@@ -94,33 +94,46 @@ class FieldsFor(unittest.TestCase):
     def test_full_path_resolves_the_peripheral(self):
         """THE REGRESSION. A whole-register gate names the module, so the ADC
         site must be told to look for ADON, not USART's TE."""
-        fields, how = stm_sweep._fields_for(
+        fields, how, periph, ident = stm_sweep._fields_for(
             self.gf, "stm32f4::stm32f429::adc1::cr2::CR2rs", "cr2", "modify")
         self.assertEqual(fields, ["adon"])
         self.assertEqual(how, "exact")
+        self.assertEqual(periph, "adc1")
+        self.assertEqual(ident.get("peripheral"), "adc1")
 
     def test_the_other_peripheral_too(self):
-        fields, how = stm_sweep._fields_for(
+        fields, how, periph, _ = stm_sweep._fields_for(
             self.gf, "stm32f4::stm32f429::usart1::cr2::CR2rs", "cr2", "modify")
         self.assertEqual(fields, ["te"])
         self.assertEqual(how, "exact")
+        self.assertEqual(periph, "usart1")
 
     def test_bare_spec_falls_back_to_the_union_and_says_so(self):
         """A field gate fires as an arity error carrying `CR2rs` and no module.
         Looking for either field can over-credit a site as guarded, which
         declines to invent a bug; the row has to record that it happened."""
-        fields, how = stm_sweep._fields_for(self.gf, "CR2rs", "cr2", "modify")
+        fields, how, periph, ident = stm_sweep._fields_for(
+            self.gf, "CR2rs", "cr2", "modify")
         self.assertEqual(fields, ["adon", "te"])
         self.assertEqual(how, "union")
+        self.assertEqual(periph, "", "a union names no single peripheral")
+        self.assertEqual(
+            [c["peripheral"] for c in ident["candidates"]],
+            ["adc1", "usart1"],
+            "under a union the constraint identity is the CANDIDATE LIST, "
+            "never a silent pick")
 
     def test_bare_spec_on_an_uncontested_register_is_not_a_union(self):
-        fields, how = stm_sweep._fields_for(self.gf, "CCRrs", "ccr", "write")
+        fields, how, periph, ident = stm_sweep._fields_for(
+            self.gf, "CCRrs", "ccr", "write")
         self.assertEqual(fields, ["pe"])
         self.assertEqual(how, "only")
+        self.assertEqual(periph, "i2c1",
+                         "an uncontested name resolves to its one peripheral")
 
     def test_unknown_register_yields_nothing(self):
         self.assertEqual(stm_sweep._fields_for(self.gf, "X", "nope", "write"),
-                         ([], "none"))
+                         ([], "none", "", {}))
 
 
 if __name__ == "__main__":
