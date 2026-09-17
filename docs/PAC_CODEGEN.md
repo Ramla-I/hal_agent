@@ -537,6 +537,35 @@ compiler on a project where both can run. **That check is currently unwired**:
 computed, and the landscape page says so rather than quoting the stale figure it
 used to.
 
+### How candidates are found
+
+The project list is not a sample; it is the result of a repeatable search,
+last swept 2026-09. Three passes, in decreasing order of yield:
+
+1. **crates.io reverse dependencies** of every family PAC we inject
+   (`stm32f4`, `stm32h7`, `stm32g4`, …) and of both swept drivers
+   (`stm32f4xx-hal`, `stm32-hal2`). This finds published libraries. Almost
+   all PAC dependents at the injectable generation are already in the sweep;
+   the HAL dependents are mostly `embedded-hal` trait drivers with no
+   register access at all, which is the common reason a candidate yields
+   nothing.
+2. **GitHub code search over `Cargo.toml`** for the pairing versions
+   (`stm32f4xx-hal 0.23`, `stm32-hal2`) — this finds applications and
+   firmware that never publish to crates.io, which is where the interesting
+   candidates live (elodin's flight software and the blackpill application
+   both came from this pass, not from crates.io).
+3. Curated lists (awesome-embedded-rust and its neighbours) as a cross-check.
+
+The inclusion bar: the project must either access registers a constraint
+could reach — directly (`pac_direct`), or through a HAL we measure — or be
+recorded in `EXCLUDED` with the reason it was rejected, because a project
+absent from the report is indistinguishable from one that scanned clean.
+Manifest facts (which PAC or HAL, which version, which features) are **read
+from the project's manifests at scan time, never hand-entered** — every
+hand-entered field this table ever had was eventually found wrong, including
+two pinned versions and a renamed `package = "stm32-hal2"` dependency that
+made a HAL invisible.
+
 ## 3. Make more of it compilable — `experiments/port_*.py`
 
 A project that only *reads* can sometimes be made to *build*. `port_hal.py`

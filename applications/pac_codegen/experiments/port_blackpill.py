@@ -163,6 +163,10 @@ def main() -> None:
         sys.exit(f"injection failed:\n{(r.stderr or r.stdout)[-800:]}")
     rep = json.loads(report.read_text())
     saved_c = json.loads(saved.read_text()) if saved.is_file() else {}
+    gated_specs = sorted({f"{r['register'].upper()}rs"
+                          for r in rep.get("rows", [])
+                          if r.get("fate") == "planned"},
+                         key=lambda s: (-len(s), s))
 
     run(["cargo", "clean", "-p", PAC_CRATE], cwd=app)
     # register (lower) -> precondition fields, per peripheral+register, from
@@ -184,7 +188,7 @@ def main() -> None:
     # Everything up to and including the crate dir: the row should read
     # `stm32f4xx-hal/src/i2c.rs`, not a registry hash with the crate eaten.
     hal_re = re.compile(r"^.*/(stm32f4xx-hal)-[0-9.]+/")
-    hits, collateral = [], []
+    hits, collateral, friction = [], [], []
     for d in errors(app):
         h = enforcement.classify_diagnostic(d)
         spans = [s for s in d.get("spans") or [] if s.get("is_primary")]
@@ -192,6 +196,18 @@ def main() -> None:
         line = spans[0]["line_start"] if spans else 0
         if h is None:
             collateral.append({"file": loc, "message": d["message"][:140]})
+            continue
+        # The sweep's enforcement/friction split, drawn the same way: a
+        # witness-shaped error naming a gated register is a gate firing; one
+        # naming none (`<Self as UartRB>::SRrs` on a generic path) is the
+        # encoding's adoption cost in generic code, not a finding. The first
+        # published record counted both as hits -- 39 where 30 are gates.
+        # Longest-first so `BDCRrs` never resolves as `CRrs`.
+        blob = d["message"] + " " + enforcement.span_labels(d)
+        named = next((s for s in gated_specs if s in blob), None)
+        if named is None and h.spec not in gated_specs:
+            friction.append({"file": hal_re.sub(r"\1/", loc), "line": line,
+                             "spec": h.spec})
             continue
         where = ("app" if not hal_re.search(loc) and loc.startswith("src")
                  else "hal")
@@ -217,6 +233,8 @@ def main() -> None:
         "registers_gated": rep.get("registers_planned"),
         "gate_fired": len(hits),
         "hits": hits, "collateral": len(collateral),
+        "generic_friction": len(friction),
+        "friction_detail": friction[:6],
         "collateral_detail": collateral[:8],
         "app_hits": sum(1 for x in hits if x["where"] == "app"),
         "guarded": v.get("corroborated", 0),
@@ -235,7 +253,7 @@ def main() -> None:
           f"{len(hits)} (app {result['app_hits']}, hal "
           f"{len(hits)-result['app_hits']})  guarded {result['guarded']}  "
           f"possible bug {result['possible_bug']}  "
-          f"collateral {len(collateral)}")
+          f"friction {len(friction)}  collateral {len(collateral)}")
     for x in hits[:10]:
         print(f"    [{x['where']}] {x['file']}:{x['line']}  "
               f"{x['register']} {x['operation']}  {x['verdict']}")
