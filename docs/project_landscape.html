@@ -122,7 +122,107 @@ a{color:var(--accent)}
 <h1>Where our datasheet rules would bite &mdash; and where the compiler agrees</h1>
 <p class="sub">22 open-source embedded projects read against constraints extracted from their chips' reference manuals. The survey is <b>static</b> &mdash; each project's own Rust source is parsed for register accesses and cross-referenced &mdash; and where a project could be brought to the PAC generation we inject, it was then <b>compiled against the injected crate</b>: 5 projects measured that way (anne-key, blackpill-usb-pwdstore, elodin-sensor-fw, hubris, stm32-eth), 1 attempt recorded as blocked, and the scan's blind spot (writes that leave the typed API) is bounded at the bottom of the page.</p>
 </header>
-<section><h2>Across all projects</h2>
+<section><h2>Purpose</h2>
+<p class="note">Datasheets attach <b>preconditions</b> to register writes ("SWSTART may be set only when ADON&nbsp;=&nbsp;1"). This project extracts those rules from ST reference manuals and injects them into the generated chip crates as compile-time gates. The question this page answers: <b>where would those rules bite in real, third-party code?</b></p>
+<p class="note">Two evidence grades, kept separate throughout. <b>Compiled</b> (next section): the project was built against an injected crate and every listed site is a compiler diagnostic. <b>Scanned</b> (the section after): the project&rsquo;s own source was read statically and cross-referenced against the constraints &mdash; the reach is wider, the claim weaker. Driver-level compile results across the whole 49-manual corpus live on the companion <i>register-constraints tracking</i> page, not here. Nothing on this page is a confirmed bug: gates prove an access is real, triage says whether a check is visible nearby, and the human verdict lives in the review ledger.</p>
+</section>
+<section id="compiled"><h2>Ported and actually run &mdash; what the compiler found</h2>
+<p class="note">Each project below was <b>built against an injected crate</b>: constraints in, whole dependency graph compiled, every listed site a real diagnostic. This is the stronger evidence grade on this page; the scan (next section) covers everything a build cannot yet reach.</p>
+<div class="card" id="compiled-blackpill-usb-pwdstore">
+<h3><a href="#blackpill-usb-pwdstore">blackpill-usb-pwdstore</a></h3>
+<p class="note">Encrypted USB password store, RTIC 2, stable Rust. The first whole APPLICATION measured end-to-end: it pins stm32f4xx-hal 0.23 -- the release built against the PAC generation we inject -- so the entire binary compiles against an injected crate with zero mechanical edits (experiments/port_blackpill.py). hal_only is verified, not assumed: its own source contains no direct register access, so every gate hit is HAL code its feature selection monomorphises.</p>
+<p class="note"><span class="pill ok">baseline PASS</span> &nbsp;stm32f4 0.16.0 &mdash; the scan called this <em>hal-bump</em> (stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)); the gap was closed and the project built. One version line in the workspace manifest plus 0 mechanical edits, baseline passing against the pristine crate, then <b>32</b> gate-fired sites across 16 gated registers with 0 collateral errors.</p>
+<div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
+<tr><td class="pin mono">stm32f4xx-hal/src/adc.rs:353</td><td class="mono">CR2rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:167</td><td class="mono">TRISErs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:175</td><td class="mono">CCRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:189</td><td class="mono">CCRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:197</td><td class="mono">CCRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:198</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:227</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:249</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:273</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:164</td><td class="mono">BDCRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:172</td><td class="mono">BDCRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:310</td><td class="mono">TRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:331</td><td class="mono">TRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:344</td><td class="mono">TRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:358</td><td class="mono">TRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:370</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:383</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:396</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:412</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:433</td><td class="mono">DRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:466</td><td class="mono">DRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:475</td><td class="mono">TRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:552</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:561</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:567</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/serial.rs:285</td><td class="mono">CR2rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:375</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:391</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:690</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:714</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/timer/pwm_input.rs:140</td><td class="mono">SMCRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/timer/pwm_input.rs:146</td><td class="mono">SMCRrs</td><td>write</td><td>unchecked</td></tr>
+</tbody></table></div>
+<p class="note"><b>Read the verdicts with this in mind:</b> the first whole APPLICATION measured end-to-end: a binary with a concrete feature set, built against the injected crate through an unmodified stm32f4xx-hal 0.23, zero mechanical edits. Every hit is HAL code that THIS app&#x27;s feature selection actually monomorphises -- driver code its binary would contain, not driver code that merely exists. The app&#x27;s own source contains no direct register access, so app-attributed hits would mean a constraint reached application code itself.</p>
+</div>
+<div class="card" id="compiled-elodin-sensor-fw">
+<h3><a href="#elodin-sensor-fw">elodin-sensor-fw</a></h3>
+<p class="note">Commercial aerospace flight software (Elodin&#x27;s Aleph board). Uses stm32-hal2 for setup and then drives ADC3, SDMMC, RCC and DMA registers directly in its own source -- the pre-0.15 field style, which the matcher handles. Found in the 2026-09 ecosystem re-sweep of stm32-hal2 dependents; its manifest hides the HAL behind a RENAMED dependency (`hal = { package = &quot;stm32-hal2&quot; }`), which is why manifest reading had to learn that form.</p>
+<p class="note"><span class="pill ok">baseline PASS</span> &nbsp;stm32h7 0.16.0 &mdash; the scan called this <em>hal-bump</em> (stm32-hal2 1.8 does not pair with PAC 0.16.0; needs a release built against it); the gap was closed and the project built. One version line in the workspace manifest plus 23 mechanical edits, baseline passing against the pristine crate, then <b>11</b> gate-fired sites across 4 gated registers with 0 collateral errors.</p>
+<div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
+<tr><td class="pin mono">src/sdmmc.rs:196</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:198</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:202</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:204</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:206</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:340</td><td class="mono">dlenr</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:357</td><td class="mono">dlenr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:615</td><td class="mono">clkcr</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:640</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:706</td><td class="mono">clkcr</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">src/sdmmc.rs:789</td><td class="mono">argr</td><td>write</td><td>unchecked</td></tr>
+</tbody></table></div>
+<p class="note"><b>Read the verdicts with this in mind:</b> compiler verdicts INSIDE the application&#x27;s own source, on the one peripheral (SDMMC) its driver has no module for. The full manual cannot be measured end-to-end: injected whole, the build stops in stm32-hal2 with ~150 of the driver&#x27;s own violations and never reaches the app -- enforcement halting the stack at the first violating layer. The scan&#x27;s adc clusters therefore remain static claims. On every comparable sdmmc line the scanner&#x27;s verdict matches the compiler&#x27;s; the compiler is finer -- field gates fire per gated FIELD, so register-level scan sites whose written fields are not the gated ones correctly do not fire.</p>
+</div>
+<div class="card" id="compiled-hubris">
+<h3><a href="#hubris">hubris</a></h3>
+<p class="note">Oxide service processor. 23 STM32 driver crates; also uses stm32f3/stm32g0/stm32h7 directly.</p>
+<p class="note"><span class="pill ok">baseline PASS</span> &nbsp;stm32h7 0.16.0 &mdash; the scan called this <em>pac-gap</em> (pins stm32h7 0.14, injector targets 0.16.0); the gap was closed and the project built. One version line in the workspace manifest plus 20 mechanical edits, baseline passing against the pristine crate, then <b>2</b> gate-fired sites across 93 gated registers with 0 collateral errors.</p>
+<div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
+<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:72</td><td class="mono">CR1rs</td><td>write</td><td>untriaged</td></tr>
+<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:76</td><td class="mono">BRRrs</td><td>write</td><td>corroborated <span class="pill no">known wrong</span><br><span class="dim">verdict is wrong: UE is ENABLED at line 72, so the precondition RM0433 states (UE=0) is violated, not established</span></td></tr>
+</tbody></table></div>
+<p class="note"><b>Read the verdicts with this in mind:</b> corroborated = the precondition field is referenced before the access, NOT that it holds the required value; a driver that sets the field to the WRONG state still reads as corroborated (see lib.rs:76, where UE is enabled at line 72 and RM0433 requires UE=0).</p>
+</div>
+<div class="card" id="compiled-anne-key">
+<h3><a href="#anne-key">anne-key</a></h3>
+<p class="note">Keyboard firmware on stm32l1 with no HAL layer.</p>
+<p class="note"><span class="pill ok">baseline PASS</span> &nbsp;stm32l1 0.16.0 &mdash; the scan called this <em>pac-gap</em> (pins stm32l1 0.11.0, injector targets 0.16.0); the gap was closed and the project built. One version line in the workspace manifest plus 23 mechanical edits, baseline passing against the pristine crate, then <b>2</b> gate-fired sites across 15 gated registers with 0 collateral errors.</p>
+<div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
+<tr><td class="pin mono">src/clock.rs:7</td><td class="mono">ACRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">src/clock.rs:8</td><td class="mono">ACRrs</td><td>write</td><td>corroborated</td></tr>
+</tbody></table></div>
+<p class="note"><b>Read the verdicts with this in mind:</b> the scanner claimed 3 sites and the compiler fired on 2; the third writes ACC64, which is the PRECONDITION rather than a constrained field, so field gating correctly leaves it alone. Whole-register mode fires on none of them: RM0038 constrains two fields of FLASH_ACR and nothing about the register as a whole.</p>
+</div>
+<div class="card" id="compiled-stm32-eth">
+<h3><a href="#stm32-eth">stm32-eth</a></h3>
+<p class="note">Ethernet MAC/DMA driver; programs ETH registers directly.</p>
+<p class="note"><span class="pill ok">baseline PASS</span> &nbsp;stm32f4 0.16.0 &mdash; the scan called this <em>pac-gap</em> (pins stm32f4 0.15, injector targets 0.16.0; stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)); the gap was closed and the project built. One version line in the workspace manifest plus 64 mechanical edits, baseline passing against the pristine crate, then <b>0</b> gate-fired sites across 24 gated registers with 0 collateral errors.</p>
+<p class="note dim">No gate fired &mdash; a compiler-confirmed true negative.</p>
+<p class="note"><b>Read the verdicts with this in mind:</b> a confirmed TRUE NEGATIVE: the scan reported 0 hits and the compiler agrees. RM0386 constrains ADC1, CAN1, CRYP, DSI, I2C1, IWDG, QUADSPI, RNG, SPI1 and USART1; stm32-eth touches ETH_MAC, ETH_DMA and ETH_PTP, so there is no overlap to fire on. The 49 hits are stm32f4xx-hal&#x27;s own, measured separately by the sweep. Two access paths in this driver would evade the gate if a constrained register ever went through them: bit banding, which writes via a raw pointer and so never calls Reg::write, and the DelayedReg&lt;T&gt; wrapper, which would fail to compile in one generic body rather than at the call site. Neither costs a finding here.</p>
+</div>
+<div class="card" id="compiled-stm32f7-discovery">
+<h3><a href="#stm32f7-discovery">stm32f7-discovery</a></h3>
+<p class="note">Board framework with its own SD, Ethernet and LCD drivers; 261 register accesses, the densest project scanned.</p>
+<p class="note"><span class="pill no">attempted &mdash; blocked</span> &nbsp;the scan called this <em>pac-gap</em> (the recorded pin (0.7) disagrees with the manifest (0.3.2); the manifest wins; pins stm32f7 0.3.2, injector targets 0.16.0). A build attempt says otherwise: No toolchain builds both. The PAC generation the injector targets needs Rust 1.65 and edition 2021, so it cannot be compiled on the 2019 nightly the project pins; and the project&#x27;s dependency stack -- cortex-m 0.1.8, linked_list_allocator 0.6.4, spin 0.4.10, plus a local crate named `core` -- does not compile on a current one. None of the errors is in the project&#x27;s own source: its register code never gets compiled at all, so the PAC bump is not what blocks it and porting 0.3.2 to 0.16 would not help. Reaching these 4 sites means first moving the application off 2019 Rust, which is a rewrite of the project rather than a port of a dependency.</p>
+<p class="note"><b>Evidence.</b> cargo check on nightly-2025-06-23 with the toolchain pin removed: 40 errors, <b>0</b> of them in the project's own source. By crate: cortex-m-0.1.8 26, core 4, linked_list_allocator-0.6.4 3, spin-0.4.10 1. It pins <code>nightly-2019-04-26</code>; the PAC needs Rust 1.65 / edition 2021.</p>
+<p class="note">the scan&#x27;s 4 sites stand as static claims: i2c.rs:468 (OAR2, unchecked), init/mod.rs:49 (PLLCFGR, corroborated), init/mod.rs:66 and :69 (PWR_CR1, unchecked and corroborated). Note :66 writes ODEN while the gated field is ODSWEN, so field gating would likely not fire there -- the same register-vs-field granularity gap anne-key showed, but unverified here.</p>
+</div>
+</section>
+<section><h2>Results of the scan &mdash; across all projects</h2>
 <div class="row">
 <div class="stat"><span class="k">projects</span><span class="v">22</span></div>
 <div class="stat"><span class="k">register accesses</span><span class="v">6126</span></div>
@@ -309,22 +409,7 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">27</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">6</span></div>
 </div>
-<p class="note"><span class="pill ok">measured</span> &nbsp;stm32h7 0.16.0 &mdash; the scan called this <em>hal-bump</em> (stm32-hal2 1.8 does not pair with PAC 0.16.0; needs a release built against it); the gap was then closed and the project built. One version line in the workspace manifest plus 23 mechanical edits, baseline passing against the pristine crate, then <b>11</b> gate-fired sites across 4 gated registers with 0 collateral errors.</p>
-<div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
-<tr><td class="pin mono">src/sdmmc.rs:196</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:198</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:202</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:204</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:206</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:340</td><td class="mono">dlenr</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:357</td><td class="mono">dlenr</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:615</td><td class="mono">clkcr</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:640</td><td class="mono">clkcr</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:706</td><td class="mono">clkcr</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">src/sdmmc.rs:789</td><td class="mono">argr</td><td>write</td><td>unchecked</td></tr>
-</tbody></table></div>
-<p class="note"><b>Read the verdicts with this in mind:</b> compiler verdicts INSIDE the application&#x27;s own source, on the one peripheral (SDMMC) its driver has no module for. The full manual cannot be measured end-to-end: injected whole, the build stops in stm32-hal2 with ~150 of the driver&#x27;s own violations and never reaches the app -- enforcement halting the stack at the first violating layer. The scan&#x27;s adc clusters therefore remain static claims. On every comparable sdmmc line the scanner&#x27;s verdict matches the compiler&#x27;s; the compiler is finer -- field gates fire per gated FIELD, so register-level scan sites whose written fields are not the gated ones correctly do not fire.</p>
-</div>
+<p class="note"><span class="pill ok">11 gates fired</span> &nbsp;compiled against an injected crate &mdash; <a href="#compiled-elodin-sensor-fw">results above</a>. Below: what the static scan claims for the same project.</p>
 <div class="rule">
 <div class="hd">adc/cr <span class="dim">&mdash; 6 sites</span></div>
 <div class="meta">state_gate · write · requires ADC_CR.ADEN cleared · fields restricted: adcal</div>
@@ -449,13 +534,7 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">11</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">11</span></div>
 </div>
-<p class="note"><span class="pill ok">measured</span> &nbsp;stm32h7 0.16.0 &mdash; the scan called this <em>pac-gap</em> (pins stm32h7 0.14, injector targets 0.16.0); the gap was then closed and the project built. One version line in the workspace manifest plus 20 mechanical edits, baseline passing against the pristine crate, then <b>2</b> gate-fired sites across 93 gated registers with 0 collateral errors.</p>
-<div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
-<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:72</td><td class="mono">CR1rs</td><td>write</td><td>untriaged</td></tr>
-<tr><td class="pin mono">drv/stm32h7-usart/src/lib.rs:76</td><td class="mono">BRRrs</td><td>write</td><td>corroborated <span class="pill no">known wrong</span><br><span class="dim">verdict is wrong: UE is ENABLED at line 72, so the precondition RM0433 states (UE=0) is violated, not established</span></td></tr>
-</tbody></table></div>
-<p class="note"><b>Read the verdicts with this in mind:</b> corroborated = the precondition field is referenced before the access, NOT that it holds the required value; a driver that sets the field to the WRONG state still reads as corroborated (see lib.rs:76, where UE is enabled at line 72 and RM0433 requires UE=0).</p>
-</div>
+<p class="note"><span class="pill ok">2 gates fired</span> &nbsp;compiled against an injected crate &mdash; <a href="#compiled-hubris">results above</a>. Below: what the static scan claims for the same project.</p>
 <div class="rule">
 <div class="hd">usart/cr1 <span class="dim">&mdash; 9 sites</span></div>
 <div class="meta">state_gate · write · requires USART_CR1.UE cleared · fields restricted: fifoen, m1</div>
@@ -712,9 +791,7 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">2</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">2</span></div>
 </div>
-<p class="note"><span class="pill no">attempted &mdash; blocked</span> &nbsp;the scan called this <em>pac-gap</em> (the recorded pin (0.7) disagrees with the manifest (0.3.2); the manifest wins; pins stm32f7 0.3.2, injector targets 0.16.0). A build attempt says otherwise: No toolchain builds both. The PAC generation the injector targets needs Rust 1.65 and edition 2021, so it cannot be compiled on the 2019 nightly the project pins; and the project&#x27;s dependency stack -- cortex-m 0.1.8, linked_list_allocator 0.6.4, spin 0.4.10, plus a local crate named `core` -- does not compile on a current one. None of the errors is in the project&#x27;s own source: its register code never gets compiled at all, so the PAC bump is not what blocks it and porting 0.3.2 to 0.16 would not help. Reaching these 4 sites means first moving the application off 2019 Rust, which is a rewrite of the project rather than a port of a dependency.</p>
-<p class="note"><b>Evidence.</b> cargo check on nightly-2025-06-23 with the toolchain pin removed: 40 errors, <b>0</b> of them in the project's own source. By crate: cortex-m-0.1.8 26, core 4, linked_list_allocator-0.6.4 3, spin-0.4.10 1. It pins <code>nightly-2019-04-26</code>; the PAC needs Rust 1.65 / edition 2021.</p>
-<p class="note">the scan&#x27;s 4 sites stand as static claims: i2c.rs:468 (OAR2, unchecked), init/mod.rs:49 (PLLCFGR, corroborated), init/mod.rs:66 and :69 (PWR_CR1, unchecked and corroborated). Note :66 writes ODEN while the gated field is ODSWEN, so field gating would likely not fire there -- the same register-vs-field granularity gap anne-key showed, but unverified here.</p>
+<p class="note"><span class="pill no">build blocked</span> &nbsp;compiled against an injected crate &mdash; <a href="#compiled-stm32f7-discovery">results above</a>. Below: what the static scan claims for the same project.</p>
 <div class="rule">
 <div class="hd">pwr/cr1 <span class="dim">&mdash; 2 sites</span></div>
 <div class="meta">state_gate · write · requires PWR_CSR1.ODRDY set · fields restricted: odswen</div>
@@ -750,13 +827,7 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">3</span></div>
 </div>
-<p class="note"><span class="pill ok">measured</span> &nbsp;stm32l1 0.16.0 &mdash; the scan called this <em>pac-gap</em> (pins stm32l1 0.11.0, injector targets 0.16.0); the gap was then closed and the project built. One version line in the workspace manifest plus 23 mechanical edits, baseline passing against the pristine crate, then <b>2</b> gate-fired sites across 15 gated registers with 0 collateral errors.</p>
-<div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
-<tr><td class="pin mono">src/clock.rs:7</td><td class="mono">ACRrs</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">src/clock.rs:8</td><td class="mono">ACRrs</td><td>write</td><td>corroborated</td></tr>
-</tbody></table></div>
-<p class="note"><b>Read the verdicts with this in mind:</b> the scanner claimed 3 sites and the compiler fired on 2; the third writes ACC64, which is the PRECONDITION rather than a constrained field, so field gating correctly leaves it alone. Whole-register mode fires on none of them: RM0038 constrains two fields of FLASH_ACR and nothing about the register as a whole.</p>
-</div>
+<p class="note"><span class="pill ok">2 gates fired</span> &nbsp;compiled against an injected crate &mdash; <a href="#compiled-anne-key">results above</a>. Below: what the static scan claims for the same project.</p>
 <div class="rule">
 <div class="hd">flash/acr <span class="dim">&mdash; 3 sites</span></div>
 <div class="meta">state_gate · write · requires FLASH_ACR.ACC64 set · fields restricted: prften</div>
@@ -800,43 +871,7 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
 </div>
-<p class="note"><span class="pill ok">measured</span> &nbsp;stm32f4 0.16.0 &mdash; the scan called this <em>hal-bump</em> (stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)); the gap was then closed and the project built. One version line in the workspace manifest plus 0 mechanical edits, baseline passing against the pristine crate, then <b>32</b> gate-fired sites across 16 gated registers with 0 collateral errors.</p>
-<div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
-<tr><td class="pin mono">stm32f4xx-hal/src/adc.rs:353</td><td class="mono">CR2rs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:167</td><td class="mono">TRISErs</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:175</td><td class="mono">CCRrs</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:189</td><td class="mono">CCRrs</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:197</td><td class="mono">CCRrs</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:198</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:227</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:249</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:273</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:164</td><td class="mono">BDCRrs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:172</td><td class="mono">BDCRrs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:310</td><td class="mono">TRrs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:331</td><td class="mono">TRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:344</td><td class="mono">TRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:358</td><td class="mono">TRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:370</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:383</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:396</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:412</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:433</td><td class="mono">DRrs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:466</td><td class="mono">DRrs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:475</td><td class="mono">TRrs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:552</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:561</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:567</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/serial.rs:285</td><td class="mono">CR2rs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:375</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:391</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:690</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:714</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/timer/pwm_input.rs:140</td><td class="mono">SMCRrs</td><td>write</td><td>unchecked</td></tr>
-<tr><td class="pin mono">stm32f4xx-hal/src/timer/pwm_input.rs:146</td><td class="mono">SMCRrs</td><td>write</td><td>unchecked</td></tr>
-</tbody></table></div>
-<p class="note"><b>Read the verdicts with this in mind:</b> the first whole APPLICATION measured end-to-end: a binary with a concrete feature set, built against the injected crate through an unmodified stm32f4xx-hal 0.23, zero mechanical edits. Every hit is HAL code that THIS app&#x27;s feature selection actually monomorphises -- driver code its binary would contain, not driver code that merely exists. The app&#x27;s own source contains no direct register access, so app-attributed hits would mean a constraint reached application code itself.</p>
-</div>
+<p class="note"><span class="pill ok">32 gates fired</span> &nbsp;compiled against an injected crate &mdash; <a href="#compiled-blackpill-usb-pwdstore">results above</a>. Below: what the static scan claims for the same project.</p>
 <p class="note dim">No candidate sites.</p>
 </section>
 <section id="blethrs">
@@ -934,11 +969,7 @@ a{color:var(--accent)}
 <div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
 <div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
 </div>
-<p class="note"><span class="pill ok">measured</span> &nbsp;stm32f4 0.16.0 &mdash; the scan called this <em>pac-gap</em> (pins stm32f4 0.15, injector targets 0.16.0; stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)); the gap was then closed and the project built. One version line in the workspace manifest plus 64 mechanical edits, baseline passing against the pristine crate, then <b>0</b> gate-fired sites across 24 gated registers with 0 collateral errors.</p>
-<div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
-</tbody></table></div>
-<p class="note"><b>Read the verdicts with this in mind:</b> a confirmed TRUE NEGATIVE: the scan reported 0 hits and the compiler agrees. RM0386 constrains ADC1, CAN1, CRYP, DSI, I2C1, IWDG, QUADSPI, RNG, SPI1 and USART1; stm32-eth touches ETH_MAC, ETH_DMA and ETH_PTP, so there is no overlap to fire on. The 49 hits are stm32f4xx-hal&#x27;s own, measured separately by the sweep. Two access paths in this driver would evade the gate if a constrained register ever went through them: bit banding, which writes via a raw pointer and so never calls Reg::write, and the DelayedReg&lt;T&gt; wrapper, which would fail to compile in one generic body rather than at the call site. Neither costs a finding here.</p>
-</div>
+<p class="note"><span class="pill ok">0 gates fired</span> &nbsp;compiled against an injected crate &mdash; <a href="#compiled-stm32-eth">results above</a>. Below: what the static scan claims for the same project.</p>
 <p class="note dim">No candidate sites.</p>
 </section>
 <section id="stm32-fmc">

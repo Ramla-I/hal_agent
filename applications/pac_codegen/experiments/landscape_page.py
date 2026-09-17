@@ -239,60 +239,20 @@ def project_section(p: dict, trace: dict) -> list:
 
     r = p["readiness"]
     mm = measured_projects().get(p["name"])
-    blocked = bool(mm and mm.get("baseline") == "FAIL")
-    cls = EFFORT_CLASS.get("blocked" if blocked else
-                           "measured" if mm else r["effort"], "none")
-    blockers = "; ".join(r["blockers"]) or "none"
-    if blocked:
+    if mm:
+        # The compiler results live in their own top-level section now; the
+        # scan section carries a pointer, not a copy.
+        word = ("build blocked" if mm.get("baseline") == "FAIL"
+                else f'{mm.get("gate_fired", 0)} gates fired')
+        cls = "no" if mm.get("baseline") == "FAIL" else "ok"
         h.append(
-            f'<p class="note"><span class="pill {cls}">attempted &mdash; '
-            f'blocked</span> &nbsp;the scan called this '
-            f'<em>{_e(r["effort"])}</em> ({_e(blockers)}). A build attempt says '
-            f'otherwise: {_e(mm["verdict"])}</p>')
-        h.append(
-            f'<p class="note"><b>Evidence.</b> {_e(mm["attempt"])}: '
-            f'{mm["errors"]} errors, <b>{mm["errors_in_own_src"]}</b> of them '
-            f'in the project\'s own source. By crate: '
-            f'{_e(", ".join(f"{k} {v}" for k, v in mm["errors_by_crate"].items() if k))}. '
-            f'It pins <code>{_e(mm["pinned_toolchain"])}</code>; the PAC needs '
-            f'Rust {_e(mm["pac_requires"]["rust_version"])} / edition '
-            f'{_e(mm["pac_requires"]["edition"])}.</p>')
-        h.append(f'<p class="note">{_e(mm["unreached_sites"])}</p>')
-        # No closing div: unlike the measured branch, this one opens no card.
-        # A stray </div> here closed the page's content wrapper mid-section,
-        # and every rule block after it rendered flush against the viewport
-        # edge -- visibly, on the published page.
-    elif mm:
-        h.append(
-            f'<p class="note"><span class="pill {cls}">measured</span> '
-            f'&nbsp;{_e(r["pac_needed"])} &mdash; the scan called this '
-            f'<em>{_e(r["effort"])}</em> ({_e(blockers)}); the gap was then '
-            f'closed and the project built. One version line in the workspace '
-            f'manifest plus {mm["mechanical_edits"]} mechanical edits, '
-            f'baseline passing against the pristine crate, then '
-            f'<b>{mm["gate_fired"]}</b> gate-fired sites across '
-            f'{mm["registers_gated"]} gated registers with '
-            f'{mm["collateral"]} collateral errors.</p>')
-        h.append('<div class="card"><h4>What the compiler found</h4>'
-                 '<div class="scroll"><table><thead><tr>'
-                 '<th class="pin">site</th><th>register</th><th>operation</th>'
-                 '<th>static verdict</th></tr></thead><tbody>')
-        for hit in mm["hits"]:
-            note = hit.get("triage_note")
-            h.append(
-                f'<tr><td class="pin mono">{_e(hit["file"])}:{hit["line"]}</td>'
-                f'<td class="mono">{_e(hit["register"])}</td>'
-                f'<td>{_e(hit["operation"])}</td>'
-                f'<td>{_e(hit["verdict"])}'
-                + (f' <span class="pill no">known wrong</span>' if note else "")
-                + (f'<br><span class="dim">{_e(note)}</span>' if note else "")
-                + "</td></tr>")
-        h.append("</tbody></table></div>")
-        if mm.get("triage_caveat"):
-            h.append(f'<p class="note"><b>Read the verdicts with this in '
-                     f'mind:</b> {_e(mm["triage_caveat"])}.</p>')
-        h.append("</div>")
+            f'<p class="note"><span class="pill {cls}">{word}</span> '
+            f'&nbsp;compiled against an injected crate &mdash; '
+            f'<a href="#compiled-{_e(p["name"])}">results above</a>. '
+            f'Below: what the static scan claims for the same project.</p>')
     else:
+        cls = EFFORT_CLASS.get(r["effort"], "none")
+        blockers = "; ".join(r["blockers"]) or "none"
         h.append(
             f'<p class="note"><span class="pill {cls}">{_e(r["effort"])}</span> '
             f'&nbsp;{_e(r["pac_needed"] or "no chip crate to inject into")} '
@@ -352,6 +312,85 @@ def project_section(p: dict, trace: dict) -> list:
     return h
 
 
+def compiled_entry(p: dict, mm: dict) -> list:
+    """One project's compiler results, first-class."""
+    name = p["name"]
+    r = p["readiness"]
+    blockers = "; ".join(r["blockers"]) or "none"
+    h = [f'<div class="card" id="compiled-{_e(name)}">',
+         f'<h3><a href="#{_e(name)}">{_e(name)}</a></h3>',
+         f'<p class="note">{_e(p.get("note", ""))}</p>']
+    if mm.get("baseline") == "FAIL":
+        h.append(
+            f'<p class="note"><span class="pill no">attempted &mdash; '
+            f'blocked</span> &nbsp;the scan called this '
+            f'<em>{_e(r["effort"])}</em> ({_e(blockers)}). A build attempt '
+            f'says otherwise: {_e(mm["verdict"])}</p>')
+        h.append(
+            f'<p class="note"><b>Evidence.</b> {_e(mm["attempt"])}: '
+            f'{mm["errors"]} errors, <b>{mm["errors_in_own_src"]}</b> of them '
+            f'in the project\'s own source. By crate: '
+            f'{_e(", ".join(f"{k} {v}" for k, v in mm["errors_by_crate"].items() if k))}. '
+            f'It pins <code>{_e(mm["pinned_toolchain"])}</code>; the PAC needs '
+            f'Rust {_e(mm["pac_requires"]["rust_version"])} / edition '
+            f'{_e(mm["pac_requires"]["edition"])}.</p>')
+        h.append(f'<p class="note">{_e(mm["unreached_sites"])}</p>')
+        h.append("</div>")
+        return h
+    h.append(
+        f'<p class="note"><span class="pill ok">baseline PASS</span> '
+        f'&nbsp;{_e(r["pac_needed"] or mm.get("pac", ""))} &mdash; the scan '
+        f'called this <em>{_e(r["effort"])}</em> ({_e(blockers)}); the gap '
+        f'was closed and the project built. One version line in the '
+        f'workspace manifest plus {mm["mechanical_edits"]} mechanical edits, '
+        f'baseline passing against the pristine crate, then '
+        f'<b>{mm["gate_fired"]}</b> gate-fired sites across '
+        f'{mm["registers_gated"]} gated registers with '
+        f'{mm["collateral"]} collateral errors.</p>')
+    if mm.get("hits"):
+        h.append('<div class="scroll"><table><thead><tr>'
+                 '<th class="pin">site</th><th>register</th><th>operation</th>'
+                 '<th>static verdict</th></tr></thead><tbody>')
+        for hit in mm["hits"]:
+            note = hit.get("triage_note")
+            h.append(
+                f'<tr><td class="pin mono">{_e(hit["file"])}:{hit["line"]}</td>'
+                f'<td class="mono">{_e(hit["register"])}</td>'
+                f'<td>{_e(hit["operation"])}</td>'
+                f'<td>{_e(hit["verdict"])}'
+                + (' <span class="pill no">known wrong</span>' if note else "")
+                + (f'<br><span class="dim">{_e(note)}</span>' if note else "")
+                + "</td></tr>")
+        h.append("</tbody></table></div>")
+    else:
+        h.append('<p class="note dim">No gate fired &mdash; a compiler-'
+                 'confirmed true negative.</p>')
+    if mm.get("triage_caveat"):
+        h.append(f'<p class="note"><b>Read the verdicts with this in '
+                 f'mind:</b> {_e(mm["triage_caveat"])}.</p>')
+    h.append("</div>")
+    return h
+
+
+def compiled_section(scan: list) -> list:
+    mm_all = measured_projects()
+    by_name = {p["name"]: p for p in scan}
+    entries = [(n, r) for n, r in mm_all.items() if n in by_name]
+    entries.sort(key=lambda nr: (nr[1].get("baseline") == "FAIL",
+                                 -(nr[1].get("gate_fired") or 0)))
+    h = ['<section id="compiled"><h2>Ported and actually run &mdash; what '
+         'the compiler found</h2>',
+         '<p class="note">Each project below was <b>built against an '
+         'injected crate</b>: constraints in, whole dependency graph '
+         'compiled, every listed site a real diagnostic. This is the '
+         'stronger evidence grade on this page; the scan (next section) '
+         'covers everything a build cannot yet reach.</p>']
+    for n, r in entries:
+        h += compiled_entry(by_name[n], r)
+    h.append("</section>")
+    return h
+
+
 def build(scan: list, trace: dict, excluded: dict) -> str:
     ranked = sorted(scan, key=lambda p: (-p["hits"], p["name"]))
     tot_hits = sum(p["hits"] for p in scan)
@@ -384,7 +423,30 @@ def build(scan: list, trace: dict, excluded: dict) -> str:
          "the typed API) is bounded at the bottom of the page.</p>",
          "</header>"]
 
-    h += ['<section><h2>Across all projects</h2>', '<div class="row">',
+    h += ['<section><h2>Purpose</h2>',
+          '<p class="note">Datasheets attach <b>preconditions</b> to register '
+          'writes ("SWSTART may be set only when ADON&nbsp;=&nbsp;1"). This '
+          'project extracts those rules from ST reference manuals and injects '
+          'them into the generated chip crates as compile-time gates. The '
+          'question this page answers: <b>where would those rules bite in '
+          'real, third-party code?</b></p>',
+          '<p class="note">Two evidence grades, kept separate throughout. '
+          '<b>Compiled</b> (next section): the project was built against an '
+          'injected crate and every listed site is a compiler diagnostic. '
+          '<b>Scanned</b> (the section after): the project&rsquo;s own source '
+          'was read statically and cross-referenced against the constraints '
+          '&mdash; the reach is wider, the claim weaker. Driver-level compile '
+          'results across the whole 49-manual corpus live on the companion '
+          '<i>register-constraints tracking</i> page, not here. Nothing on '
+          'this page is a confirmed bug: gates prove an access is real, '
+          'triage says whether a check is visible nearby, and the human '
+          'verdict lives in the review ledger.</p>',
+          "</section>"]
+
+    h += compiled_section(scan)
+
+    h += ['<section><h2>Results of the scan &mdash; across all projects</h2>',
+          '<div class="row">',
           f'<div class="stat"><span class="k">projects</span>'
           f'<span class="v">{len(scan)}</span></div>',
           f'<div class="stat"><span class="k">register accesses</span>'
