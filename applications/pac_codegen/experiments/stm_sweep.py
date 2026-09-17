@@ -545,10 +545,19 @@ def hal_errors(ws: Path, hal_dirname: str):
             for s in spans:
                 fn = s.get("file_name", "")
                 if hal_dirname in fn:
-                    files.add(fn.split(f"{hal_dirname}/")[-1])
+                    rel = fn.split(f"{hal_dirname}/")[-1]
+                    files.add(rel)
                     ln = s.get("line_start")
                     if ln:
-                        sites.add((fn, int(ln)))
+                        # The relative name travels WITH the (path, line) pair.
+                        # It used to be recoverable only through `hal_files`, a
+                        # separately sorted set -- so the triage row took its
+                        # file from hal_files[0] and its line from sites[0],
+                        # two different sorts of the same diagnostic. A macro
+                        # error spanning two files paired one file's name with
+                        # the other file's line number, and trace_hal joins on
+                        # exactly that pair to find the enclosing function.
+                        sites.add((fn, int(ln), rel))
                 exp = s.get("expansion")
                 if exp and exp.get("span"):
                     _walk([exp["span"]])
@@ -827,7 +836,11 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
                     res["triage_truncated"] += 1
                 else:
                     res["triage"].append({
-                        "file": e["hal_files"][0] if e["hal_files"] else "",
+                        # site[2] is the relative name of THE FILE THE LINE IS
+                        # IN. hal_files[0] is merely the alphabetically first
+                        # file the diagnostic touches anywhere.
+                        "file": site[2] if len(site) > 2 else
+                                (e["hal_files"][0] if e["hal_files"] else ""),
                         "line": site[1], "register": reg, "operation": op,
                         "fields": fields, "verdict": v["verdict"],
                         # How the fields were resolved: `exact` means the
