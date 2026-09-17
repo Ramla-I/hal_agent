@@ -857,6 +857,25 @@ _GATED_METHODS = [
     ("    pub unsafe fn from_write_with_zero<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite"),
     ("    pub fn modify<F>(&self, f: F) -> REG::Ux\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> &'w mut W<REG>,", "UnconstrainedModify"),
     ("    pub fn from_modify<F, T>(&self, f: F) -> T\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> T,", "UnconstrainedModify"),
+    # THE ATOMIC WRITE SURFACE. svd2rust emits set_bits/clear_bits/toggle_bits
+    # behind the `atomics` feature: a single atomic_or/and/xor instead of a
+    # read-modify-write, which is what a driver reaches for when two contexts
+    # may touch one register. They are FULLY TYPED -- they take &mut W<REG> and
+    # the caller names the field, `w.lseon().set_bit()` -- and they were not in
+    # this table, so they wrote gated registers with no bound at all. Being
+    # `unsafe` is not a gate: it says the bit pattern may be invalid, not that
+    # the datasheet precondition holds.
+    #
+    # Live cost when found: zero. One call site in the whole local corpus
+    # (stm32g4xx-hal rng.rs:135, on RNG_SR, which no manual constrains) and no
+    # measured driver enables the feature. A hole in the encoding, not a lost
+    # finding -- and exactly the hole that matters for a driver staying inside
+    # the typed API, because this IS the typed API.
+    #
+    # Eight-space indent: these live in `mod atomic`, one level deeper.
+    ("        pub unsafe fn set_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
+    ("        pub unsafe fn clear_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
+    ("        pub unsafe fn toggle_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
 ]
 
 _GENERIC_ADDITIONS = GENERIC_SENTINEL + """
@@ -1166,14 +1185,22 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
 
     # The rest already have a where clause: require the marker first.
     for sig, bound in _GATED_METHODS:
-        head, tail = sig.split("\n    where\n", 1)
+        # The indent is derived, not assumed to be four spaces: the atomic
+        # methods sit inside `mod atomic`, one level deeper, and a hardcoded
+        # "\n    where\n" simply fails to split them.
+        indent = " " * (len(sig) - len(sig.lstrip(" ")))
+        marker = f"\n{indent}where\n"
+        if marker not in sig:
+            raise RuntimeError(f"gated-method table entry has no where clause "
+                               f"at its own indent:\n{sig}")
+        head, tail = sig.split(marker, 1)
         if sig not in content:
             raise RuntimeError(f"generic.rs drift: signature not found:\n{sig}")
         if _BOUND_OP[bound] not in ops:
             continue
         content = content.replace(
             sig,
-            f"{head}\n    where\n        REG: {bound},\n{tail}",
+            f"{head}{marker}{indent}    REG: {bound},\n{tail}",
             1,
         )
 
