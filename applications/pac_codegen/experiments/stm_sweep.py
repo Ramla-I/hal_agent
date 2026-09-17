@@ -11,19 +11,23 @@ chunked
 datasheet (``--chunks``).
 
 Per target:
-    provision -> snapshot -> inject_from_run -> [probe check] -> [HAL check]
-    -> restore -> verify the PAC tree byte-for-byte pristine.
+    provision -> COPY the pristine crate to a run-private temp dir
+    -> inject_from_run into the COPY -> [probe check] -> [HAL check]
+    -> delete the copy.
 
-The PAC tree is snapshotted BEFORE injection and restored even when a step
-fails, so targets sharing a crate (four RMs share stm32f3) never contaminate
-each other.
+The shared vendored crate is never written. It used to be: the sweep injected
+in place, snapshotted first, and promised to restore byte-for-byte -- a
+promise that broke in every way a promise can. A kill mid-restore left
+stm32g4 with no generic.rs and the next run failed with an unrelated-looking
+pydantic error; a restored copy kept its old mtimes, so cargo reused the
+INJECTED build against a pristine-on-disk tree; and two sweeps could not run
+concurrently at all, because both were mutating the same files. Injecting
+into a throwaway copy removes the restore step rather than hardening it:
+there is nothing to corrupt, nothing to race, and `--register-only` and the
+default mode can run side by side.
 
-Two guards keep a run honest, and both exist because their absence produced
-wrong numbers rather than an error:
-
-* the PAC is verified PRISTINE before injection, not merely provisioned --
-  get_pac's stamp file records the version, not the tree's state, so a crate
-  left injected by a crash or a hand-run is otherwise snapshotted as if clean;
+The old contract's one real service -- catching a crate that a crash or a
+hand-run
 * ``patch_applied()`` reads Cargo.lock after every HAL check, because cargo
   does NOT fail when a ``[patch.crates-io]`` does not apply -- it warns and
   resolves the registry crate, so the whole experiment silently measures the
@@ -329,6 +333,9 @@ MASTER_TARGETS = {
 # --------------------------------------------------------------------------- #
 # Snapshot / restore  (same contract as experiments/cross_pac.py)
 # --------------------------------------------------------------------------- #
+# NO LONGER USED BY THE SWEEP, which injects into a throwaway copy instead
+# (pac_workdir) and so has nothing to restore. Kept because hopter.py imports
+# it; migrate that the same way and this class can go.
 
 class PacSnapshot:
     def __init__(self, pac_root: Path, device: str):
@@ -465,6 +472,20 @@ def hal_workspace(t: Target, c: Consumer, pac_dir: Path) -> Path:
 _INJECTED_MARKER = "UnconstrainedWrite"
 
 
+def pac_workdir(pristine: Path, tag: str) -> "tuple[Path, Path]":
+    """(copy of the pristine crate, its temp parent to delete afterwards).
+
+    The copy is what gets injected and built against; the shared vendored
+    tree is only ever read. `target/` is excluded -- it is cargo build cache
+    for some OTHER path and would only mislead. A fresh path also sidesteps
+    the mtime trap for free: cargo has never seen this directory, so nothing
+    can be stale."""
+    parent = Path(tempfile.mkdtemp(prefix=f"stm_sweep_pac_{tag}_"))
+    work = parent / pristine.name
+    shutil.copytree(pristine, work, ignore=shutil.ignore_patterns("target"))
+    return work, parent
+
+
 def ensure_pristine(crate: str) -> Path:
     """Provision, and re-provision by force if the tree is already injected.
 
@@ -476,11 +497,22 @@ def ensure_pristine(crate: str) -> Path:
     the target for a reason that has nothing to do with what it measures. This
     is the single most common way a run in this folder fails spuriously.
     """
-    pac_dir = get_pac.provision(crate=crate, version=PAC_VERSION)
-    generic = pac_dir / "src" / "generic.rs"
-    if generic.is_file() and _INJECTED_MARKER in generic.read_text():
-        print(f"  !! {crate} was left injected; re-provisioning from crates.io")
-        pac_dir = get_pac.provision(crate=crate, version=PAC_VERSION, force=True)
+    # Provisioning is the ONE write to the shared tree that remains, so it is
+    # the one thing concurrent sweeps must not do at the same time: two
+    # force-downloads into one directory interleave freely. The lock is held
+    # only while provisioning; readers never need it.
+    get_pac.PAC_ROOT.mkdir(parents=True, exist_ok=True)
+    lock = get_pac.PAC_ROOT / f".{crate}.lock"
+    import fcntl
+    with open(lock, "w") as lf:
+        fcntl.flock(lf, fcntl.LOCK_EX)
+        pac_dir = get_pac.provision(crate=crate, version=PAC_VERSION)
+        generic = pac_dir / "src" / "generic.rs"
+        if generic.is_file() and _INJECTED_MARKER in generic.read_text():
+            print(f"  !! {crate} was left injected; re-provisioning "
+                  f"from crates.io")
+            pac_dir = get_pac.provision(crate=crate, version=PAC_VERSION,
+                                        force=True)
     return pac_dir
 
 
@@ -884,7 +916,11 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
         print(f"  no run dir: {t.run_dir}")
         return res
 
-    pac_dir = ensure_pristine(t.pac)
+    pristine = ensure_pristine(t.pac)
+    # Injection happens in a PRIVATE COPY; the shared vendored crate is only
+    # read. See the module docstring for the three failure modes this ends.
+    pac_dir, _work_parent = (pristine, None) if dry else \
+        pac_workdir(pristine, f"{t.rm}_{t.device}")
     OUT.mkdir(parents=True, exist_ok=True)
     # The two gating modes plan DIFFERENT gate sets, so their reports must not
     # share a filename -- a field-gating run silently overwrote the default
@@ -893,7 +929,6 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
     root.mkdir(parents=True, exist_ok=True)
     report = root / f"{t.rm}_{t.device}{'_dry' if dry else ''}.json"
 
-    snap = None if dry else PacSnapshot(pac_dir, t.device)
     try:
         run = run_inject(t, pac_dir, report, dry, field_gating)
         if run.returncode != 0:
@@ -956,11 +991,9 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
             res["hal_results"].append(entry)
         return res
     finally:
-        # Keep a copy of the INJECTED crate before restoring it. The sweep
-        # exists to measure, so it always puts the crate back -- which leaves
-        # nothing to read afterwards. This is the flag for "I want to look at
-        # what was generated", and it copies before the restore because after
-        # it there is nothing to copy.
+        # Keep a copy of the INJECTED crate before its temp dir is deleted.
+        # The injected tree is otherwise thrown away, so this is the flag for
+        # "I want to look at what was generated".
         if keep_pac is not None and not dry and res["inject"] == "ok":
             dest = Path(keep_pac) / f"{t.rm}_{t.device}_{t.pac}"
             if dest.exists():
@@ -969,13 +1002,23 @@ def run_target(t: Target, dry: bool, skip_hal: bool, hal_baseline_cache: dict,
             shutil.copytree(pac_dir, dest)
             res["kept_pac"] = str(dest)
             print(f"  injected crate kept: {dest}")
-        if snap is not None:
-            res["pristine"] = snap.restore_and_verify()
-            print(f"  restored pristine: {res['pristine']}")
+        if not dry:
+            # There is no restore step to verify any more; what "pristine"
+            # now attests is that the SHARED crate was never touched. Checking
+            # one file is enough: injection cannot happen without patching
+            # generic.rs, and the injector refuses a tree already carrying
+            # the marker.
+            shared_generic = pristine / "src" / "generic.rs"
+            res["pristine"] = (shared_generic.is_file() and
+                               _INJECTED_MARKER not in
+                               shared_generic.read_text())
             if not res["pristine"]:
-                print(f"  !! {t.pac} left non-pristine; re-provision with "
-                      f"get_pac.py --crate {t.pac} --version {PAC_VERSION} --force",
+                print(f"  !! shared {t.pac} tree was modified — this should "
+                      f"be impossible; re-provision with get_pac.py "
+                      f"--crate {t.pac} --version {PAC_VERSION} --force",
                       file=sys.stderr)
+        if _work_parent is not None:
+            shutil.rmtree(_work_parent, ignore_errors=True)
 
 
 def hal_baseline(t: Target, c: Consumer) -> str:
