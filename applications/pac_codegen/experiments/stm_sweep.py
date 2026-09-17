@@ -769,7 +769,21 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
         hit = enforcement.classify_diagnostic(e)
         field_witness = bool(hit and hit.kind == "field")
         witness = hit is not None
-        named = [s for s in gated_specs if s in e["message"]]
+        # MOST SPECIFIC FIRST, AND DETERMINISTIC. Matching is by substring, so
+        # a diagnostic naming `BDCRrs` also matches the gated spec `CRrs` --
+        # seven such collisions in rm0440 alone (ACRrs, AWD2CRrs, AWD3CRrs,
+        # BDCRrs, CCRrs, TDCRrs all contain CRrs; TXDRrs contains DRrs).
+        # `gated_specs` is a SET, and Python randomises string hashing per
+        # process, so `named[0]` picked a different one on different runs.
+        # Everything downstream reads it: the register name comes from
+        # `_SPEC_REG_RE.search(named[0])`, so triage looked up `bdcr`'s
+        # precondition fields or `cr`'s depending on the hash seed, and the
+        # guarded/candidate split was not reproducible -- re-running rm0440
+        # moved stm32-hal2 from 135/86 to 132/89 with no code change.
+        # Longest match wins: `BDCRrs` is the register that fired, `CRrs` is
+        # an artifact of one name containing another.
+        named = sorted((s for s in gated_specs if s in e["message"]),
+                       key=lambda s: (-s.count("::"), -len(s), s))
         if field_witness and not named and hit.spec in gated_specs:
             # A field-gate hit names its register through the witness type, not
             # the message. Without this it is "our diagnostic naming no gated
@@ -778,8 +792,9 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
         if witness and named:
             res["true_enforcement"] += 1
             res["files"]["true_enforcement"] |= set(e["hal_files"])
-            for s in named:
-                res["specs"][s] = res["specs"].get(s, 0) + 1
+            # Only the resolved spec, not every substring of it. Counting all
+            # of them credited `CRrs` with a hit every time `BDCRrs` fired.
+            res["specs"][named[0]] = res["specs"].get(named[0], 0) + 1
             sample("true_enforcement", e)
             # --- static triage: does the driver already establish it here?
             reg = ""
