@@ -200,18 +200,79 @@ def classify(rel, line, src, m, fmap, cmap, aliases) -> dict:
     return row
 
 
+# The (driver, family) pairings the corpus mode scans: every locally available
+# sweep consumer that uses bit banding at all. Explicit, so a driver that
+# starts using `bb::` without being added here is a gap in THIS list, not a
+# silent zero -- the corpus run prints what it scanned.
+CORPUS_DRIVERS = [
+    ("stm32f4xx-hal-0.23.0", "stm32f4"),
+    ("stm32f1xx-hal-0.11.0", "stm32f1"),
+    ("stm32f1-hal-0.14.1", "stm32f1"),
+    ("stm32g4xx-hal-0.1.0", "stm32g4"),
+]
+_REGISTRY = Path.home() / ".cargo" / "registry" / "src"
+
+
+def run_corpus(out_path: Path) -> None:
+    """One merged record over every (driver, manual) pairing: the artifact's
+    input. Results used to live only in a session scratchpad, which meant the
+    published section could not be regenerated from the repo."""
+    results = []
+    cdir = OUT / "constraints"
+    for drv, family in CORPUS_DRIVERS:
+        srcs = sorted(_REGISTRY.glob(f"*/{drv}/src"))
+        if not srcs:
+            print(f"!! {drv}: not in the local cargo registry, skipped")
+            continue
+        pac = APP_DIR / "vendored" / "pac" / family
+        for cpath in sorted(cdir.glob("*.json")):
+            device = cpath.stem.split("_", 1)[1]
+            device_dir = pac / "src" / device
+            if not device_dir.is_dir():
+                continue
+            fmap = field_map(device_dir)
+            aliases = rust_codegen.peripheral_instance_map(device_dir)
+            cmap = constrained_fields(cpath)
+            rows = scan([srcs[0]], fmap, cmap, aliases)
+            by_state = {}
+            for r in rows:
+                by_state[r["state"]] = by_state.get(r["state"], 0) + 1
+            hits = [r for r in rows if r.get("constrained")]
+            results.append({
+                "driver": drv, "pairing": cpath.stem,
+                "sites": len(rows), "by_state": by_state,
+                "constrained_hits": len(hits),
+                # Only the hits carry full rows; the artifact renders them.
+                "hits": hits,
+            })
+            print(f"  {drv:26s} {cpath.stem:22s} sites={len(rows):<3d} "
+                  f"invisible-hits={len(hits)}")
+    out_path.write_text(json.dumps(
+        {"drivers": CORPUS_DRIVERS, "pairings": results}, indent=1) + "\n")
+    print(f"json: {out_path}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--corpus", action="store_true",
+                    help="scan every known bb-using driver against every "
+                         "manual of its family; writes out/bitband_scan.json")
     ap.add_argument("--pac", default=None,
                     help="vendored PAC dir (default: the stm32 family of --device)")
-    ap.add_argument("--device", required=True)
+    ap.add_argument("--device", default=None)
     ap.add_argument("--constraints", default=None,
                     help="out/constraints/<rm>_<device>.json")
-    ap.add_argument("--src", action="append", required=True,
+    ap.add_argument("--src", action="append", default=[],
                     help="source tree to scan (repeatable)")
     ap.add_argument("--label", default="")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
+
+    if args.corpus:
+        run_corpus(Path(args.out) if args.out else OUT / "bitband_scan.json")
+        return
+    if not args.device or not args.src:
+        ap.error("--device and --src are required (or use --corpus)")
 
     pac = Path(args.pac) if args.pac else None
     if pac is None:

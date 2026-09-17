@@ -873,9 +873,31 @@ a{color:var(--accent)}
 </section>
 <section><h2>What this cannot see</h2>
 <p class="note">A static scan sees no runtime guards, so <i>unchecked</i> means candidate, not bug; compile confirmation is the eventual arbiter. Peripheral attribution is heuristic &mdash; it comes from the receiver expression, falling back to the module the code lives in. Chip attribution is per path prefix and derived from each driver crate's own build features, not the family in its name; getting that wrong is not conservative, and an earlier run matched Hubris's shared I&sup2;C driver against an F4 manual whose I&sup2;C is a different peripheral generation, manufacturing 14 findings. Whole-register gates over-approximate: when a rule lists no restricted fields it gates the whole register, though the datasheet note usually attaches to specific bits &mdash; read the <i>fields written</i> column before the verdict.</p>
+<h3>Register writes that leave the typed API entirely</h3>
+<p class="note">Every compile-confirmed number on this page is a <b>lower bound</b>, and this measures the gap. Enforcement is a trait bound on the register type&rsquo;s access methods; <b>bit banding</b> writes a register through a raw pointer (<code>bb::set(rcc.bdcr(), 0)</code> &mdash; ARM maps each peripheral bit to its own word address), so the write never calls a gated method and compiles whatever markers the register carries. <code>experiments/bitband_scan.py</code> finds these calls, resolves the bit number to a field through the PAC&rsquo;s own generated accessors, and cross-references the constraints. Across 14 (driver, manual) pairings &mdash; every locally available sweep consumer that uses bit banding &mdash; it finds <b>16</b> writes to constrained fields that no gate can see. &ldquo;Zero hits&rdquo; on this page means &ldquo;nothing went through the gated API&rdquo;, not &ldquo;nothing touched the register&rdquo;.</p>
+<div class="card"><h4>Invisible writes, by pairing</h4>
+<div class="scroll"><table><thead><tr><th class="pin">driver</th><th>manual</th><th>site</th><th>field</th><th>requires</th></tr></thead><tbody>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0368_stm32f401</td><td class="mono">rtc.rs:198 bb::set(&hellip;, 0)</td><td class="mono">LSEON</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0368_stm32f401</td><td class="mono">rtc.rs:201 bb::set(&hellip;, 2)</td><td class="mono">LSEBYP</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0368_stm32f401</td><td class="mono">rtc.rs:203 bb::clear(&hellip;, 2)</td><td class="mono">LSEBYP</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0368_stm32f401</td><td class="mono">rtc.rs:258 bb::set(&hellip;, 15)</td><td class="mono">RTCEN</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0383_stm32f411</td><td class="mono">rtc.rs:198 bb::set(&hellip;, 0)</td><td class="mono">LSEON</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0383_stm32f411</td><td class="mono">rtc.rs:201 bb::set(&hellip;, 2)</td><td class="mono">LSEBYP</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0383_stm32f411</td><td class="mono">rtc.rs:203 bb::clear(&hellip;, 2)</td><td class="mono">LSEBYP</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0383_stm32f411</td><td class="mono">rtc.rs:258 bb::set(&hellip;, 15)</td><td class="mono">RTCEN</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0390_stm32f446</td><td class="mono">rtc.rs:198 bb::set(&hellip;, 0)</td><td class="mono">LSEON</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0390_stm32f446</td><td class="mono">rtc.rs:201 bb::set(&hellip;, 2)</td><td class="mono">LSEBYP</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0390_stm32f446</td><td class="mono">rtc.rs:203 bb::clear(&hellip;, 2)</td><td class="mono">LSEBYP</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0390_stm32f446</td><td class="mono">rtc.rs:258 bb::set(&hellip;, 15)</td><td class="mono">RTCEN</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0401_stm32f410</td><td class="mono">rtc.rs:198 bb::set(&hellip;, 0)</td><td class="mono">LSEON</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0401_stm32f410</td><td class="mono">rtc.rs:201 bb::set(&hellip;, 2)</td><td class="mono">LSEBYP</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0401_stm32f410</td><td class="mono">rtc.rs:203 bb::clear(&hellip;, 2)</td><td class="mono">LSEBYP</td><td>PWR_CR.DBP set</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal-0.23.0</td><td class="mono">rm0401_stm32f410</td><td class="mono">rtc.rs:258 bb::set(&hellip;, 15)</td><td class="mono">RTCEN</td><td>PWR_CR.DBP set</td></tr>
+</tbody></table></div>
+<p class="note">Whether each is a live defect is unresolved by design: the access is invisible to the gate, so the triage that would decide never runs. The scan also reports, without judging, sites whose bit is computed (the register&rsquo;s constrained fields are listed, never guessed) and macro-generated sites where the register name does not survive (counted, never dropped). The typed atomic path (<code>set_bits</code>/<code>clear_bits</code>, now gated) offers the same single-instruction write with the field named by the compiler.</p></div>
 </section>
 <footer>
-<div>Generated by <code>applications/pac_codegen/experiments/landscape_page.py</code> from <code>out/scan_projects.json</code> and <code>out/trace_hal.json</code>.</div>
+<div>Generated by <code>applications/pac_codegen/experiments/landscape_page.py</code> from <code>out/scan_projects.json</code>, <code>out/trace_hal.json</code> and <code>out/bitband_scan.json</code>.</div>
 <div>Scanner accuracy: run against stm32f4xx-hal 0.23 with RM0383's constraints it finds all 31 sites the compile route found, plus 8 the compiler structurally cannot reach because their gate was never emitted.</div>
 </footer>
 </div>
