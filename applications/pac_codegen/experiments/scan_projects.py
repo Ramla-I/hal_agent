@@ -214,6 +214,17 @@ PROJECTS = [
     # --- peripheral drivers that exist BECAUSE the HAL does not cover their
     # peripheral, so they drive registers themselves. Highest density of the
     # set, and on exactly the peripherals where constraints cluster.
+    Project("elodin-sensor-fw", "https://github.com/elodin-sys/elodin",
+            "pac_direct", ["rm0399"], "stm32h747cm7", "stm32h7",
+            hal="stm32-hal2", hal_pinned="1.8", subdirs=["fsw/sensor-fw"],
+            note="Commercial aerospace flight software (Elodin's Aleph "
+                 "board). Uses stm32-hal2 for setup and then drives ADC3, "
+                 "SDMMC, RCC and DMA registers directly in its own source -- "
+                 "the pre-0.15 field style, which the matcher handles. Found "
+                 "in the 2026-09 ecosystem re-sweep of stm32-hal2 dependents; "
+                 "its manifest hides the HAL behind a RENAMED dependency "
+                 "(`hal = { package = \"stm32-hal2\" }`), which is why "
+                 "manifest reading had to learn that form."),
     Project("stm32f7-discovery", "https://github.com/embed-rs/stm32f7-discovery",
             "pac_direct", ["rm0385"], "stm32f7x6", "stm32f7",
             pac_pinned="0.7", subdirs=["src"],
@@ -851,9 +862,20 @@ def declared_pac_dependency(root: Path, pac: str) -> "tuple[bool, str]":
             # `[dependencies.stm32f1]` names the crate in the header itself
             name = (section.split(".", 1)[1] if section.startswith("dependencies.")
                     else s.split("=", 1)[0].strip().strip('"'))
+            # A RENAMED dependency hides the crate behind an arbitrary local
+            # name: elodin writes `hal = { package = "stm32-hal2", .. }`, and
+            # reading the left-hand side saw a crate called `hal` and filed
+            # the project as having no HAL at all.
+            pkg = re.search(r'package\s*=\s*"([^"]+)"', s)
+            if pkg:
+                name = pkg.group(1)
             if name == pac:
                 return True, f"depends on {pac} ({rel})"
-            if re.fullmatch(r"stm32\w*xx-hal", name) and hal_hit is None:
+            # stm32-hal2 is the sweep's second driver and never matched the
+            # `*xx-hal` pattern -- a project reaching the PAC through it was
+            # filed not-applicable.
+            if (re.fullmatch(r"stm32\w*xx-hal", name) or name == "stm32-hal2") \
+                    and hal_hit is None:
                 hal_hit = f"depends on {name} ({rel})"
     if hal_hit:
         return True, hal_hit
@@ -885,12 +907,20 @@ def pinned_hal(root: Path) -> "tuple[str, str]":
             text = man.read_text(errors="replace")
         except OSError:
             continue
-        for m in re.finditer(r'^\s*(stm32\w*xx-hal)\s*=\s*(.+)$', text, re.M):
+        for m in re.finditer(r'^\s*(stm32\w*xx-hal|stm32-hal2)\s*=\s*(.+)$',
+                             text, re.M):
             name, rhs = m.group(1), m.group(2)
             v = re.search(r'version\s*=\s*"([^"]+)"', rhs) or \
                 re.match(r'\s*"([^"]+)"', rhs)
             if v:
                 return name, v.group(1)
+        # The renamed form: `hal = { package = "stm32-hal2", version = "1.8" }`
+        for m in re.finditer(
+                r'^\s*[\w-]+\s*=\s*\{([^}]*package\s*=\s*'
+                r'"(stm32\w*xx-hal|stm32-hal2)"[^}]*)\}', text, re.M):
+            v = re.search(r'version\s*=\s*"([^"]+)"', m.group(1))
+            if v:
+                return m.group(2), v.group(1)
         m = re.search(r'\[dependencies\.(stm32\w*xx-hal)\]\n(.*?)(?=\n\[|\Z)',
                       text, re.S)
         if m:
@@ -1017,17 +1047,24 @@ def readiness(p: Project, root: Path = None) -> dict:
         # on a HAL that does not pair with PAC 0.16.
         hal, hal_pinned = pinned_hal(root)
     if hal:
-        # 0.23 is the stm32f4xx-hal release built against PAC 0.16; naming it
-        # for an f1 or f3 HAL is wrong advice, and those appeared as soon as
-        # the HAL pin started being read rather than hand-entered.
-        pairs = (hal_pinned or "").lstrip("^").startswith("0.23")
+        # 0.23 is the stm32f4xx-hal release built against PAC 0.16, and
+        # stm32-hal2 2.x is that crate's own pairing (the sweep measures
+        # 2.1.10); naming 0.23 for any other HAL is wrong advice.
+        ver = (hal_pinned or "").lstrip("^")
+        pairs = (ver.startswith("2") if hal == "stm32-hal2"
+                 else ver.startswith("0.23"))
         if not pairs:
             fix = ("needs the 0.23 bump" if hal == "stm32f4xx-hal"
                    else "needs a release built against it")
             blockers.append(f"{hal} {hal_pinned} does not pair with PAC "
                             f"{PAC_VERSION}; {fix}")
-        blockers.append(f"{hal} must be patched (4-line associated-type "
-                        "bound; see docs/generic_friction.md)")
+        if hal != "stm32-hal2":
+            # The associated-type patch is the generic-code adoption cost.
+            # stm32-hal2 is written concretely per chip and took ZERO friction
+            # on every sweep target, so telling its dependents to patch it
+            # would be an instruction with nothing to do.
+            blockers.append(f"{hal} must be patched (4-line associated-type "
+                            "bound; see docs/generic_friction.md)")
     effort = ("ready" if not blockers else
               "pac-gap" if any("pins" in b for b in blockers) else "hal-bump")
     return {"reachable": True, "effort": effort,
@@ -1287,6 +1324,23 @@ def main() -> None:
 
     OUT.mkdir(parents=True, exist_ok=True)
     out = Path(args.out) if args.out else OUT / "scan_projects.json"
+    if args.only and out.is_file():
+        # A partial run MERGES into the standing report instead of replacing
+        # it. `--only elodin-sensor-fw` once overwrote the 20-project artifact
+        # with a single row -- the same defect the sweep had, where
+        # `--only rm0440` destroyed the 49-target summary. Scanned names are
+        # replaced (or appended); everything else is kept.
+        try:
+            existing = json.loads(out.read_text())
+        except Exception:                                  # noqa: BLE001
+            existing = []
+        scanned = {r["name"] for r in results}
+        merged = [r for r in existing if r["name"] not in scanned] + results
+        order = {p.name: i for i, p in enumerate(PROJECTS)}
+        merged.sort(key=lambda r: order.get(r["name"], len(order)))
+        print(f"\nmerged {len(results)} scanned project(s) into the standing "
+              f"report ({len(merged)} total)")
+        results = merged
     out.write_text(json.dumps(results, indent=1, default=str) + "\n")
     print(f"\njson: {out}")
     if results:

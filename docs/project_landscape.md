@@ -59,6 +59,7 @@ the scan.
 | [stm32f469i-disc](https://github.com/tegimeki/stm32f469i-disc) | hal_only | rm0386 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
 | [booster](https://github.com/quartiq/booster) | pac_direct | rm0090 | 35 | 24 | **0** | 0 | 0 | `hal-bump` |
 | [px4flow_bsp](https://github.com/tstellanova/px4flow_bsp) | pac_direct | rm0090 | 5 | 50 | **0** | 0 | 0 | `hal-bump` |
+| [elodin-sensor-fw](https://github.com/elodin-sys/elodin) | pac_direct | rm0399 | 31 | 154 | **33** | 27 | 6 | `hal-bump` |
 | [stm32f7-discovery](https://github.com/embed-rs/stm32f7-discovery) | pac_direct | rm0385 | 33 | 288 | **4** | 2 | 2 | `pac-gap` |
 | [fdcan](https://github.com/stm32-rs/fdcan) | pac_direct | rm0440, rm0433 | 88 | 73 | **7** | 3 | 4 | `not-applicable` |
 | [bxcan](https://github.com/stm32-rs/bxcan) | pac_direct | rm0008 | 35 | 65 | **11** | 0 | 11 | `not-applicable` |
@@ -81,6 +82,7 @@ injected chip crate — the ranked input to the build phase.
 | project | reachable | PAC needed | blockers |
 |---|---|---|---|
 | tock | no | — | hand-written register maps; no PAC to inject into |
+| elodin-sensor-fw | yes | stm32h7 0.16.0 | stm32-hal2 1.8 does not pair with PAC 0.16.0; needs a release built against it |
 | hubris | yes | stm32h7 0.16.0 | pins stm32h7 0.14, injector targets 0.16.0 |
 | embassy | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
 | bxcan | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
@@ -360,6 +362,161 @@ Effort key:
 | file:line | op | fields written | verdict |
 |---|---|---|---|
 | `chips/stm32f303xc/src/i2c.rs:343` | write | r, txdata | **unchecked** |
+
+
+## elodin-sensor-fw — 33 candidate sites
+
+*Commercial aerospace flight software (Elodin's Aleph board). Uses stm32-hal2 for setup and then drives ADC3, SDMMC, RCC and DMA registers directly in its own source -- the pre-0.15 field style, which the matcher handles. Found in the 2026-09 ecosystem re-sweep of stm32-hal2 dependents; its manifest hides the HAL behind a RENAMED dependency (`hal = { package = "stm32-hal2" }`), which is why manifest reading had to learn that form.*
+
+### `adc/cr` — 6 site(s)
+
+- **rule** (state_gate, write): ADC_CR.ADEN cleared
+- **fields restricted**: adcal
+- **datasheet** (rm0399): "Note: The software is allowed to launch a calibration by setting ADCAL only when ADEN=0."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/adc.rs:87` | modify | adcal, deeppwd, res | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:89` | modify | adcal, deeppwd, res, smp0 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:91` | modify | adcal, res, smp0 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:170` | modify | adcal, deeppwd, res | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:172` | modify | adcal, deeppwd, res, smp0 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:174` | modify | adcal, res, smp0 | **unchecked** |
+
+### `sdmmc/dctrl` — 5 site(s)
+
+- **rule** (state_gate, write): SDMMC_STAR.CPSMACT cleared, SDMMC_STAR.DPSMACT cleared
+- **fields restricted**: bootacken, sdioen, rwmod, rwstop, rwstart, dblocksize, dtmode, dtdir, dten
+- **datasheet** (rm0399): "These bits can only be written when the CPSM and DPSM are not active (CPSMACT = 0 and DPSMACT = 0)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/sdmmc.rs:341` | write | dblocksize | **corroborated** |
+| `fsw/sensor-fw/src/sdmmc.rs:362` | write | cmdtrans, dblocksize | **unchecked** |
+| `fsw/sensor-fw/src/sdmmc.rs:421` | modify | dten | **unchecked** |
+| `fsw/sensor-fw/src/sdmmc.rs:451` | modify | dten | **corroborated** |
+| `fsw/sensor-fw/src/sdmmc.rs:464` | modify | dten | **corroborated** |
+
+### `sdmmc/clkcr` — 4 site(s)
+
+- **rule** (state_gate, write): SDMMC_STAR.CPSMACT cleared, SDMMC_STAR.DPSMACT cleared
+- **fields restricted**: selclkrx, busspeed, ddr, hwfc_en, negedge, widbus, clkdiv
+- **datasheet** (rm0399): "These bits can only be written when the CPSM and DPSM are not active (CPSMACT = 0 and DPSMACT = 0)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/sdmmc.rs:195` | write | widbus | **unchecked** |
+| `fsw/sensor-fw/src/sdmmc.rs:615` | modify | widbus | **corroborated** |
+| `fsw/sensor-fw/src/sdmmc.rs:640` | modify | clkdiv | **unchecked** |
+| `fsw/sensor-fw/src/sdmmc.rs:706` | modify | busspeed | **corroborated** |
+
+### `adc3/cr` — 3 site(s)
+
+- **rule** (state_gate, write): ADC_CR.ADEN cleared
+- **fields restricted**: adcal
+- **datasheet** (rm0399): "Note: The software is allowed to launch a calibration by setting ADCAL only when ADEN=0."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/adc.rs:50` | modify | adcal, adrdy, deeppwd, res, smp19 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:52` | modify | adcal, aden, adrdy, deeppwd, res, smp19 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:54` | modify | adcal, aden, adrdy, res, smp19, sq1 | **unchecked** |
+
+### `adc3/sqr1` — 2 site(s)
+
+- **rule** (state_gate, write): ADC_CR.ADSTART cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0399): "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/adc.rs:63` | modify | adstart, l, sq1 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:64` | modify | adstart, l | **unchecked** |
+
+### `adc/cfgr` — 2 site(s)
+
+- **rule** (state_gate, write): ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0399): "The software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no regular nor injected conversion is ongoing)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/adc.rs:93` | modify | res, smp0 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:176` | modify | res, smp0 | **unchecked** |
+
+### `adc/smpr1` — 2 site(s)
+
+- **rule** (state_gate, write): ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0399): "The software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/adc.rs:96` | write | smp0 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:179` | write | smp0 | **unchecked** |
+
+### `adc/smpr2` — 2 site(s)
+
+- **rule** (state_gate, write): ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0399): "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/adc.rs:118` | write | smp10 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:201` | write | smp10 | **unchecked** |
+
+### `adc/sqr1` — 2 site(s)
+
+- **rule** (state_gate, write): ADC_CR.ADSTART cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0399): "The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/adc.rs:279` | modify | adstart, l, sq1 | **unchecked** |
+| `fsw/sensor-fw/src/adc.rs:287` | modify | adstart, l | **unchecked** |
+
+### `sdmmc/dlenr` — 2 site(s)
+
+- **rule** (state_gate, write): SDMMC_STAR.DPSMACT cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0399): "This register can only be written by firmware when DPSM is inactive (DPSMACT = 0)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/sdmmc.rs:340` | write | datalength, dblocksize | **corroborated** |
+| `fsw/sensor-fw/src/sdmmc.rs:357` | write | datalength, dblocksize | **unchecked** |
+
+### `adc3/cfgr` — 1 site(s)
+
+- **rule** (state_gate, write): ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0399): "The software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no regular nor injected conversion is ongoing)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/adc.rs:56` | modify | aden, adrdy, adstart, l, res, smp19, sq1 | **unchecked** |
+
+### `adc3/smpr2` — 1 site(s)
+
+- **rule** (state_gate, write): ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared
+- **fields restricted**: whole register
+- **datasheet** (rm0399): "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/adc.rs:57` | modify | aden, adrdy, adstart, l, smp19, sq1 | **unchecked** |
+
+### `sdmmc/argr` — 1 site(s)
+
+- **rule** (state_gate, write): SDMMC_CMDR.CPSMEN cleared
+- **fields restricted**: cmdarg
+- **datasheet** (rm0399): "These bits can only be written by firmware when CPSM is disabled (CPSMEN = 0)."
+
+| file:line | op | fields written | verdict |
+|---|---|---|---|
+| `fsw/sensor-fw/src/sdmmc.rs:789` | write | cmdarg | **unchecked** |
 
 
 ## stm32f7-discovery — 4 candidate sites
