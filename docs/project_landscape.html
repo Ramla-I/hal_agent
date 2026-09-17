@@ -120,21 +120,22 @@ a{color:var(--accent)}
 <header>
 <span class="eyebrow">LIDAR · enforcement arm</span>
 <h1>Where our datasheet rules would bite &mdash; and where the compiler agrees</h1>
-<p class="sub">20 open-source embedded projects read against constraints extracted from their chips' reference manuals. The survey is <b>static</b> &mdash; each project's own Rust source is parsed for register accesses and cross-referenced &mdash; and where a project could be brought to the PAC generation we inject, it was then <b>compiled against the injected crate</b>: 3 projects measured that way (anne-key, hubris, stm32-eth), 1 attempt recorded as blocked, and the scan's blind spot (writes that leave the typed API) is bounded at the bottom of the page.</p>
+<p class="sub">22 open-source embedded projects read against constraints extracted from their chips' reference manuals. The survey is <b>static</b> &mdash; each project's own Rust source is parsed for register accesses and cross-referenced &mdash; and where a project could be brought to the PAC generation we inject, it was then <b>compiled against the injected crate</b>: 4 projects measured that way (anne-key, blackpill-usb-pwdstore, hubris, stm32-eth), 1 attempt recorded as blocked, and the scan's blind spot (writes that leave the typed API) is bounded at the bottom of the page.</p>
 </header>
 <section><h2>Across all projects</h2>
 <div class="row">
-<div class="stat"><span class="k">projects</span><span class="v">20</span></div>
-<div class="stat"><span class="k">register accesses</span><span class="v">5972</span></div>
-<div class="stat hi"><span class="k">candidate sites</span><span class="v">116</span></div>
-<div class="stat warn"><span class="k">unchecked</span><span class="v">49</span></div>
-<div class="stat ok"><span class="k">corroborated</span><span class="v">67</span></div>
+<div class="stat"><span class="k">projects</span><span class="v">22</span></div>
+<div class="stat"><span class="k">register accesses</span><span class="v">6126</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">149</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">76</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">73</span></div>
 </div>
 <p class="note"><b>A hit is a candidate, not a bug.</b> <i>unchecked</i> means no precondition field is referenced before the access; <i>corroborated</i> means the project already performs the datasheet-prescribed check nearby. Guards factored into a same-file helper are followed one level, both the wrap-in-a-closure idiom and a plain call beforehand; deeper chains still read as unchecked.</p>
 </section>
 <section><h2>Summary</h2>
 <div class="scroll"><table><thead><tr><th class="pin">project</th><th>how it reaches the chip</th><th>manuals</th><th>files</th><th>accesses</th><th>candidates</th><th>unchecked</th><th>corroborated</th><th>build-readiness</th></tr></thead><tbody>
 <tr><td class="pin"><a href="#tock">tock</a></td><td class="dim">hand-written register maps</td><td class="mono dim">rm0368, rm0402, rm0390, rm0316</td><td class="num">45</td><td class="num">1203</td><td class="num lead">51</td><td class="num">23</td><td class="num">28</td><td><span class="pill none">not-applicable</span></td></tr>
+<tr><td class="pin"><a href="#elodin-sensor-fw">elodin-sensor-fw</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0399</td><td class="num">31</td><td class="num">154</td><td class="num lead">33</td><td class="num">27</td><td class="num">6</td><td><span class="pill warn">hal-bump</span></td></tr>
 <tr><td class="pin"><a href="#hubris">hubris</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0316, rm0090, rm0433, rm0444, rm0454</td><td class="num">276</td><td class="num">677</td><td class="num lead">22</td><td class="num">11</td><td class="num">11</td><td><span class="pill ok">measured</span></td></tr>
 <tr><td class="pin"><a href="#embassy">embassy</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490</td><td class="num">257</td><td class="num">3240</td><td class="num lead">17</td><td class="num">9</td><td class="num">8</td><td><span class="pill none">not-applicable</span></td></tr>
 <tr><td class="pin"><a href="#bxcan">bxcan</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0008</td><td class="num">35</td><td class="num">65</td><td class="num lead">11</td><td class="num">0</td><td class="num">11</td><td><span class="pill none">not-applicable</span></td></tr>
@@ -142,6 +143,7 @@ a{color:var(--accent)}
 <tr><td class="pin"><a href="#stm32f7-discovery">stm32f7-discovery</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0385</td><td class="num">33</td><td class="num">288</td><td class="num lead">4</td><td class="num">2</td><td class="num">2</td><td><span class="pill ok">measured</span></td></tr>
 <tr><td class="pin"><a href="#anne-key">anne-key</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0038</td><td class="num">22</td><td class="num">91</td><td class="num lead">3</td><td class="num">0</td><td class="num">3</td><td><span class="pill ok">measured</span></td></tr>
 <tr><td class="pin"><a href="#loadstone">loadstone</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0402</td><td class="num">25</td><td class="num">8</td><td class="num lead">1</td><td class="num">1</td><td class="num">0</td><td><span class="pill none">not-applicable</span></td></tr>
+<tr><td class="pin"><a href="#blackpill-usb-pwdstore">blackpill-usb-pwdstore</a></td><td class="dim">everything through a driver</td><td class="mono dim">rm0383</td><td class="num">6</td><td class="num">0</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill ok">measured</span></td></tr>
 <tr><td class="pin"><a href="#blethrs">blethrs</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0090</td><td class="num">6</td><td class="num">85</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">pac-gap</span></td></tr>
 <tr><td class="pin"><a href="#booster">booster</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0090</td><td class="num">35</td><td class="num">24</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">hal-bump</span></td></tr>
 <tr><td class="pin"><a href="#keyboard-labs">keyboard-labs</a></td><td class="dim">talks to the chip crate directly</td><td class="mono dim">rm0368</td><td class="num">53</td><td class="num">2</td><td class="num lead">0</td><td class="num">0</td><td class="num">0</td><td><span class="pill warn">hal-bump</span></td></tr>
@@ -293,6 +295,131 @@ a{color:var(--accent)}
 <p class="quote">These bits can be written only when TXE = 1.<span class="who">rm0316</span></p>
 <div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
 <tr><td class="pin">chips/stm32f303xc/src/i2c.rs:343</td><td class="mono">write</td><td class="mono dim">r, txdata</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on TXE</td></tr>
+</tbody></table></div></div>
+</section>
+<section id="elodin-sensor-fw">
+<h3><a href="https://github.com/elodin-sys/elodin">elodin-sensor-fw</a><span class="sm">talks to the chip crate directly · rm0399</span></h3>
+<p class="note">Commercial aerospace flight software (Elodin&#x27;s Aleph board). Uses stm32-hal2 for setup and then drives ADC3, SDMMC, RCC and DMA registers directly in its own source -- the pre-0.15 field style, which the matcher handles. Found in the 2026-09 ecosystem re-sweep of stm32-hal2 dependents; its manifest hides the HAL behind a RENAMED dependency (`hal = { package = &quot;stm32-hal2&quot; }`), which is why manifest reading had to learn that form.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">31</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">154</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">67</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">214</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">33</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">27</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">6</span></div>
+</div>
+<p class="note"><span class="pill warn">hal-bump</span> &nbsp;stm32h7 0.16.0 &mdash; stm32-hal2 1.8 does not pair with PAC 0.16.0; needs a release built against it</p>
+<div class="rule">
+<div class="hd">adc/cr <span class="dim">&mdash; 6 sites</span></div>
+<div class="meta">state_gate · write · requires ADC_CR.ADEN cleared · fields restricted: adcal</div>
+<p class="quote">Note: The software is allowed to launch a calibration by setting ADCAL only when ADEN=0.<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:87</td><td class="mono">modify</td><td class="mono dim">adcal, deeppwd, res</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADCAL/ADDIS/ADEN/ADSTART/ADSTP/JADSTART/JADSTP</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:89</td><td class="mono">modify</td><td class="mono dim">adcal, deeppwd, res, smp0</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADCAL/ADDIS/ADEN/ADSTART/ADSTP/JADSTART/JADSTP</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:91</td><td class="mono">modify</td><td class="mono dim">adcal, res, smp0</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADEN</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:170</td><td class="mono">modify</td><td class="mono dim">adcal, deeppwd, res</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADCAL/ADDIS/ADEN/ADSTART/ADSTP/JADSTART/JADSTP</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:172</td><td class="mono">modify</td><td class="mono dim">adcal, deeppwd, res, smp0</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADCAL/ADDIS/ADEN/ADSTART/ADSTP/JADSTART/JADSTP</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:174</td><td class="mono">modify</td><td class="mono dim">adcal, res, smp0</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADEN</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">sdmmc/dctrl <span class="dim">&mdash; 5 sites</span></div>
+<div class="meta">state_gate · write · requires SDMMC_STAR.CPSMACT cleared, SDMMC_STAR.DPSMACT cleared · fields restricted: bootacken, sdioen, rwmod, rwstop, rwstart, dblocksize, dtmode, dtdir, dten</div>
+<p class="quote">These bits can only be written when the CPSM and DPSM are not active (CPSMACT = 0 and DPSMACT = 0).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:341</td><td class="mono">write</td><td class="mono dim">dblocksize</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in write</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:362</td><td class="mono">write</td><td class="mono dim">cmdtrans, dblocksize</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in write</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:421</td><td class="mono">modify</td><td class="mono dim">dten</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in wait_card_ready, start_dma_transfer, cmd</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:451</td><td class="mono">modify</td><td class="mono dim">dten</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in card_ready, invalidate, start_dma_transfer, cmd</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:464</td><td class="mono">modify</td><td class="mono dim">dten</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in card_ready, start_dma_transfer, cmd</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">sdmmc/clkcr <span class="dim">&mdash; 4 sites</span></div>
+<div class="meta">state_gate · write · requires SDMMC_STAR.CPSMACT cleared, SDMMC_STAR.DPSMACT cleared · fields restricted: selclkrx, busspeed, ddr, hwfc_en, negedge, widbus, clkdiv</div>
+<p class="quote">These bits can only be written when the CPSM and DPSM are not active (CPSMACT = 0 and DPSMACT = 0).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:195</td><td class="mono">write</td><td class="mono dim">widbus</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in write</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:615</td><td class="mono">modify</td><td class="mono dim">widbus</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in disconnect, power_on, cmd, power_off</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:640</td><td class="mono">modify</td><td class="mono dim">clkdiv</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on CPSMACT/DPSMACT</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:706</td><td class="mono">modify</td><td class="mono dim">busspeed</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in start_datapath_transfer, cmd</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc3/cr <span class="dim">&mdash; 3 sites</span></div>
+<div class="meta">state_gate · write · requires ADC_CR.ADEN cleared · fields restricted: adcal</div>
+<p class="quote">Note: The software is allowed to launch a calibration by setting ADCAL only when ADEN=0.<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:50</td><td class="mono">modify</td><td class="mono dim">adcal, adrdy, deeppwd, res, smp19</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADCAL/ADDIS/ADEN/ADSTART/ADSTP/JADSTART/JADSTP</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:52</td><td class="mono">modify</td><td class="mono dim">adcal, aden, adrdy, deeppwd, res, smp19</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADCAL/ADDIS/ADEN/ADSTART/ADSTP/JADSTART/JADSTP</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:54</td><td class="mono">modify</td><td class="mono dim">adcal, aden, adrdy, res, smp19, sq1</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADEN</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc3/sqr1 <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires ADC_CR.ADSTART cleared · fields restricted: whole register</div>
+<p class="quote">The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:63</td><td class="mono">modify</td><td class="mono dim">adstart, l, sq1</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:64</td><td class="mono">modify</td><td class="mono dim">adstart, l</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc/cfgr <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared · fields restricted: whole register</div>
+<p class="quote">The software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no regular nor injected conversion is ongoing).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:93</td><td class="mono">modify</td><td class="mono dim">res, smp0</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART/JADSTART</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:176</td><td class="mono">modify</td><td class="mono dim">res, smp0</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART/JADSTART</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc/smpr1 <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared · fields restricted: whole register</div>
+<p class="quote">The software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:96</td><td class="mono">write</td><td class="mono dim">smp0</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART/JADSTART</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:179</td><td class="mono">write</td><td class="mono dim">smp0</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART/JADSTART</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc/smpr2 <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared · fields restricted: whole register</div>
+<p class="quote">Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:118</td><td class="mono">write</td><td class="mono dim">smp10</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART/JADSTART</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:201</td><td class="mono">write</td><td class="mono dim">smp10</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART/JADSTART</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc/sqr1 <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires ADC_CR.ADSTART cleared · fields restricted: whole register</div>
+<p class="quote">The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:279</td><td class="mono">modify</td><td class="mono dim">adstart, l, sq1</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:287</td><td class="mono">modify</td><td class="mono dim">adstart, l</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">sdmmc/dlenr <span class="dim">&mdash; 2 sites</span></div>
+<div class="meta">state_gate · write · requires SDMMC_STAR.DPSMACT cleared · fields restricted: whole register</div>
+<p class="quote">This register can only be written by firmware when DPSM is inactive (DPSMACT = 0).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:340</td><td class="mono">write</td><td class="mono dim">datalength, dblocksize</td><td><span class="pill ok">corroborated</span></td><td class="wide">guard found in write</td></tr>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:357</td><td class="mono">write</td><td class="mono dim">datalength, dblocksize</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in write</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc3/cfgr <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared · fields restricted: whole register</div>
+<p class="quote">The software is allowed to write this bit only when ADSTART=0 and JADSTART=0 (which ensures that no regular nor injected conversion is ongoing).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:56</td><td class="mono">modify</td><td class="mono dim">aden, adrdy, adstart, l, res, smp19, sq1</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART/JADSTART</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">adc3/smpr2 <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires ADC_CR.ADSTART cleared, ADC_CR.JADSTART cleared · fields restricted: whole register</div>
+<p class="quote">Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/adc.rs:57</td><td class="mono">modify</td><td class="mono dim">aden, adrdy, adstart, l, smp19, sq1</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on ADSTART/JADSTART</td></tr>
+</tbody></table></div></div>
+<div class="rule">
+<div class="hd">sdmmc/argr <span class="dim">&mdash; 1 site</span></div>
+<div class="meta">state_gate · write · requires SDMMC_CMDR.CPSMEN cleared · fields restricted: cmdarg</div>
+<p class="quote">These bits can only be written by firmware when CPSM is disabled (CPSMEN = 0).<span class="who">rm0399</span></p>
+<div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
+<tr><td class="pin">fsw/sensor-fw/src/sdmmc.rs:789</td><td class="mono">write</td><td class="mono dim">cmdarg</td><td><span class="pill warn">unchecked</span></td><td class="wide">guard found in write</td></tr>
 </tbody></table></div></div>
 </section>
 <section id="hubris">
@@ -645,6 +772,64 @@ a{color:var(--accent)}
 <div class="scroll"><table><thead><tr><th class="pin">file:line</th><th>op</th><th>fields written</th><th>verdict</th><th>why</th></tr></thead><tbody>
 <tr><td class="pin">src/ports/stm32f412/update_signal.rs:49</td><td class="mono">modify</td><td class="mono dim">bre, dbp, rtcen</td><td><span class="pill warn">unchecked</span></td><td class="wide">no check on DBP</td></tr>
 </tbody></table></div></div>
+</section>
+<section id="blackpill-usb-pwdstore">
+<h3><a href="https://github.com/sjm42/blackpill-usb-pwdstore">blackpill-usb-pwdstore</a><span class="sm">everything through a driver · rm0383</span></h3>
+<p class="note">Encrypted USB password store, RTIC 2, stable Rust. The first whole APPLICATION measured end-to-end: it pins stm32f4xx-hal 0.23 -- the release built against the PAC generation we inject -- so the entire binary compiles against an injected crate with zero mechanical edits (experiments/port_blackpill.py). hal_only is verified, not assumed: its own source contains no direct register access, so every gate hit is HAL code its feature selection monomorphises.</p>
+<div class="row">
+<div class="stat "><span class="k">source files</span><span class="v">6</span></div>
+<div class="stat "><span class="k">register accesses</span><span class="v">0</span></div>
+<div class="stat "><span class="k">distinct registers</span><span class="v">0</span></div>
+<div class="stat "><span class="k">rules to check against</span><span class="v">0</span></div>
+<div class="stat hi"><span class="k">candidate sites</span><span class="v">0</span></div>
+<div class="stat warn"><span class="k">unchecked</span><span class="v">0</span></div>
+<div class="stat ok"><span class="k">corroborated</span><span class="v">0</span></div>
+</div>
+<p class="note"><span class="pill ok">measured</span> &nbsp;stm32f4 0.16.0 &mdash; the scan called this <em>hal-bump</em> (stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md)); the gap was then closed and the project built. One version line in the workspace manifest plus 0 mechanical edits, baseline passing against the pristine crate, then <b>39</b> gate-fired sites across 16 gated registers with 0 collateral errors.</p>
+<div class="card"><h4>What the compiler found</h4><div class="scroll"><table><thead><tr><th class="pin">site</th><th>register</th><th>operation</th><th>static verdict</th></tr></thead><tbody>
+<tr><td class="pin mono">stm32f4xx-hal/src/adc.rs:353</td><td class="mono">CR2rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:167</td><td class="mono">TRISErs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:175</td><td class="mono">CCRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:189</td><td class="mono">CCRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/i2c.rs:197</td><td class="mono">CCRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:198</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:227</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:249</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/flash.rs:273</td><td class="mono">CRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:164</td><td class="mono">BDCRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:172</td><td class="mono">BDCRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:310</td><td class="mono">TRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:331</td><td class="mono">TRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:344</td><td class="mono">TRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:358</td><td class="mono">TRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:370</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:383</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:396</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:412</td><td class="mono">DRrs</td><td>modify</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:433</td><td class="mono">DRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:466</td><td class="mono">DRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:475</td><td class="mono">TRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:552</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:561</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/rtc.rs:567</td><td class="mono">WUTRrs</td><td>write</td><td>corroborated</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:129</td><td class="mono">SRrs</td><td>write</td><td>untriaged</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:152</td><td class="mono">CR3rs</td><td>modify</td><td>untriaged</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:155</td><td class="mono">CR3rs</td><td>modify</td><td>untriaged</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:208</td><td class="mono">CR3rs</td><td>write</td><td>untriaged</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:211</td><td class="mono">CR3rs</td><td>write</td><td>untriaged</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/serial/uart_impls.rs:214</td><td class="mono">CR3rs</td><td>write</td><td>untriaged</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/serial.rs:285</td><td class="mono">CR2rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/serial.rs:286</td><td class="mono">CR3rs</td><td>write</td><td>untriaged</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:375</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:391</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:690</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/spi.rs:714</td><td class="mono">CR1rs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/timer/pwm_input.rs:140</td><td class="mono">SMCRrs</td><td>write</td><td>unchecked</td></tr>
+<tr><td class="pin mono">stm32f4xx-hal/src/timer/pwm_input.rs:146</td><td class="mono">SMCRrs</td><td>write</td><td>unchecked</td></tr>
+</tbody></table></div>
+<p class="note"><b>Read the verdicts with this in mind:</b> the first whole APPLICATION measured end-to-end: a binary with a concrete feature set, built against the injected crate through an unmodified stm32f4xx-hal 0.23, zero mechanical edits. Every hit is HAL code that THIS app&#x27;s feature selection actually monomorphises -- driver code its binary would contain, not driver code that merely exists. The app&#x27;s own source contains no direct register access, so app-attributed hits would mean a constraint reached application code itself.</p>
+</div>
+<p class="note dim">No candidate sites.</p>
 </section>
 <section id="blethrs">
 <h3><a href="https://github.com/AirborneEngineering/blethrs">blethrs</a><span class="sm">talks to the chip crate directly · rm0090</span></h3>

@@ -214,6 +214,19 @@ PROJECTS = [
     # --- peripheral drivers that exist BECAUSE the HAL does not cover their
     # peripheral, so they drive registers themselves. Highest density of the
     # set, and on exactly the peripherals where constraints cluster.
+    Project("blackpill-usb-pwdstore",
+            "https://github.com/sjm42/blackpill-usb-pwdstore",
+            "hal_only", ["rm0383"], "stm32f411", "stm32f4",
+            hal="stm32f4xx-hal", hal_pinned="0.23",
+            note="Encrypted USB password store, RTIC 2, stable Rust. The "
+                 "first whole APPLICATION measured end-to-end: it pins "
+                 "stm32f4xx-hal 0.23 -- the release built against the PAC "
+                 "generation we inject -- so the entire binary compiles "
+                 "against an injected crate with zero mechanical edits "
+                 "(experiments/port_blackpill.py). hal_only is verified, not "
+                 "assumed: its own source contains no direct register "
+                 "access, so every gate hit is HAL code its feature "
+                 "selection monomorphises."),
     Project("elodin-sensor-fw", "https://github.com/elodin-sys/elodin",
             "pac_direct", ["rm0399"], "stm32h747cm7", "stm32h7",
             hal="stm32-hal2", hal_pinned="1.8", subdirs=["fsw/sensor-fw"],

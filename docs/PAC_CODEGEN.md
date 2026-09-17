@@ -603,6 +603,19 @@ is kept as a blocked *attempt*, which is a more useful answer than the scan's
 guess. Chasing this also exposed that the scan's pinned-version fields were
 hand-entered and wrong twice; they are now read from each project's manifest.
 
+**`port_blackpill.py` — the first whole application.** Everything above is a
+library. blackpill-usb-pwdstore is a *binary* — an encrypted USB password
+store on an F411 — that pins stm32f4xx-hal 0.23, the release built against
+the PAC generation we inject, on stable Rust. The entire application compiles
+against the injected crate with **zero mechanical edits**: the whole
+experiment is one `[patch.crates-io]` line. What a hit means changes with
+that: the app's own source has no direct register access, so every gate that
+fires is HAL code that *this application's feature selection actually
+monomorphises* — driver code its binary would contain, not driver code that
+merely exists. The sweep asks "does the driver violate the rule anywhere?";
+this asks "does the part of the driver this app uses violate it?" — the
+question `trace_hal` approximates statically, answered by the compiler.
+
 **No project with findings is `ready`.** Everything with findings either pins
 an older PAC, needs its HAL bumped, or has no PAC at all.
 

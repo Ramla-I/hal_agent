@@ -59,6 +59,7 @@ the scan.
 | [stm32f469i-disc](https://github.com/tegimeki/stm32f469i-disc) | hal_only | rm0386 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
 | [booster](https://github.com/quartiq/booster) | pac_direct | rm0090 | 35 | 24 | **0** | 0 | 0 | `hal-bump` |
 | [px4flow_bsp](https://github.com/tstellanova/px4flow_bsp) | pac_direct | rm0090 | 5 | 50 | **0** | 0 | 0 | `hal-bump` |
+| [blackpill-usb-pwdstore](https://github.com/sjm42/blackpill-usb-pwdstore) | hal_only | rm0383 | 6 | 0 | **0** | 0 | 0 | `hal-bump` |
 | [elodin-sensor-fw](https://github.com/elodin-sys/elodin) | pac_direct | rm0399 | 31 | 154 | **33** | 27 | 6 | `hal-bump` |
 | [stm32f7-discovery](https://github.com/embed-rs/stm32f7-discovery) | pac_direct | rm0385 | 33 | 288 | **4** | 2 | 2 | `pac-gap` |
 | [fdcan](https://github.com/stm32-rs/fdcan) | pac_direct | rm0440, rm0433 | 88 | 73 | **7** | 3 | 4 | `not-applicable` |
@@ -94,6 +95,7 @@ injected chip crate — the ranked input to the build phase.
 | stm32f469i-disc | yes | stm32f4 0.16.0 | stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | booster | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | px4flow_bsp | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.8.3 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
+| blackpill-usb-pwdstore | yes | stm32f4 0.16.0 | stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | stm32-usbd | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
 | stm32f103xx-usb | yes | stm32f1 0.16.0 | stm32f1xx-hal 0.3 does not pair with PAC 0.16.0; needs a release built against it; stm32f1xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | stm32-fmc | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
