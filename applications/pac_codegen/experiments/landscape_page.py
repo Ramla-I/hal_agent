@@ -410,10 +410,27 @@ def build(scan: list, trace: dict, excluded: dict) -> str:
           '<th class="pin">project</th><th>how it reaches the chip</th>'
           '<th>manuals</th><th>files</th><th>accesses</th>'
           '<th>candidates</th><th>unchecked</th><th>corroborated</th>'
+          "<th>compiler</th>"
           "<th>build-readiness</th></tr></thead><tbody>"]
     for p in ranked:
         v = p["verdicts"]
-        eff = ("measured" if p["name"] in measured_projects()
+        # Two evidence grades share this table, and until this column a
+        # reader could not tell them apart without opening the section: the
+        # count columns are the SCANNER's claims; this one says what the
+        # COMPILER established, where a build exists.
+        rec = measured_projects().get(p["name"])
+        if rec is None:
+            comp = '<span class="dim">scan only</span>'
+        elif rec.get("baseline") == "FAIL":
+            comp = '<span class="pill no">build blocked</span>'
+        else:
+            n = rec.get("gate_fired", 0)
+            bug = rec.get("possible_bug")
+            comp = (f'<span class="pill ok">{n} confirmed</span>'
+                    + (f' <span class="dim">({bug} possible bug'
+                       f'{"s" if bug != 1 else ""})</span>'
+                       if bug is not None else ""))
+        eff = ("measured" if (rec and rec.get("baseline") == "PASS")
                else p["readiness"]["effort"])
         h.append(
             f'<tr><td class="pin"><a href="#{_e(p["name"])}">{_e(p["name"])}</a></td>'
@@ -424,9 +441,19 @@ def build(scan: list, trace: dict, excluded: dict) -> str:
             f'<td class="num lead">{p["hits"]}</td>'
             f'<td class="num">{v.get("unchecked", 0)}</td>'
             f'<td class="num">{v.get("corroborated", 0)}</td>'
+            f'<td>{comp}</td>'
             f'<td><span class="pill {EFFORT_CLASS.get(eff, "none")}">'
             f'{_e(eff)}</span></td></tr>')
     h += ["</tbody></table></div>",
+          '<p class="note"><b>compiler</b>: <i>N confirmed</i> means the '
+          "project was built against an injected crate and N gates fired "
+          "(compile errors, each a real diagnostic); <i>scan only</i> means "
+          "no build exists yet and the count columns are the static "
+          "scanner&rsquo;s; <i>build blocked</i> means a build was attempted "
+          "and recorded as impossible. Where both grades exist they need not "
+          "match &mdash; the compiler sees only what a build can reach "
+          "(elodin: SDMMC subset), and field gates are finer than "
+          "register-level scanning.</p>"
           '<p class="note"><code>ready</code> already on a driver version that '
           "pairs with our chip crate &middot; <code>hal-bump</code> needs the "
           "driver bumped, then a four-line patch &middot; <code>pac-gap</code> "
