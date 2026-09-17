@@ -119,8 +119,8 @@ a{color:var(--accent)}
 <div class="wrap">
 <header>
 <span class="eyebrow">LIDAR · enforcement arm</span>
-<h1>Where our datasheet rules would bite: a scan of higher-level projects</h1>
-<p class="sub">20 open-source embedded projects read against constraints extracted from their chips' reference manuals. This is a <b>static</b> survey &mdash; each project's own Rust source is parsed for hardware register accesses and cross-referenced. Nothing is compiled.</p>
+<h1>Where our datasheet rules would bite &mdash; and where the compiler agrees</h1>
+<p class="sub">20 open-source embedded projects read against constraints extracted from their chips' reference manuals. The survey is <b>static</b> &mdash; each project's own Rust source is parsed for register accesses and cross-referenced &mdash; and where a project could be brought to the PAC generation we inject, it was then <b>compiled against the injected crate</b>: 3 projects measured that way (anne-key, hubris, stm32-eth), 1 attempt recorded as blocked, and the scan's blind spot (writes that leave the typed API) is bounded at the bottom of the page.</p>
 </header>
 <section><h2>Across all projects</h2>
 <div class="row">
@@ -573,7 +573,6 @@ a{color:var(--accent)}
 <p class="note"><span class="pill no">attempted &mdash; blocked</span> &nbsp;the scan called this <em>pac-gap</em> (the recorded pin (0.7) disagrees with the manifest (0.3.2); the manifest wins; pins stm32f7 0.3.2, injector targets 0.16.0). A build attempt says otherwise: No toolchain builds both. The PAC generation the injector targets needs Rust 1.65 and edition 2021, so it cannot be compiled on the 2019 nightly the project pins; and the project&#x27;s dependency stack -- cortex-m 0.1.8, linked_list_allocator 0.6.4, spin 0.4.10, plus a local crate named `core` -- does not compile on a current one. None of the errors is in the project&#x27;s own source: its register code never gets compiled at all, so the PAC bump is not what blocks it and porting 0.3.2 to 0.16 would not help. Reaching these 4 sites means first moving the application off 2019 Rust, which is a rewrite of the project rather than a port of a dependency.</p>
 <p class="note"><b>Evidence.</b> cargo check on nightly-2025-06-23 with the toolchain pin removed: 40 errors, <b>0</b> of them in the project's own source. By crate: cortex-m-0.1.8 26, core 4, linked_list_allocator-0.6.4 3, spin-0.4.10 1. It pins <code>nightly-2019-04-26</code>; the PAC needs Rust 1.65 / edition 2021.</p>
 <p class="note">the scan&#x27;s 4 sites stand as static claims: i2c.rs:468 (OAR2, unchecked), init/mod.rs:49 (PLLCFGR, corroborated), init/mod.rs:66 and :69 (PWR_CR1, unchecked and corroborated). Note :66 writes ODEN while the gated field is ODSWEN, so field gating would likely not fire there -- the same register-vs-field granularity gap anne-key showed, but unverified here.</p>
-</div>
 <div class="rule">
 <div class="hd">pwr/cr1 <span class="dim">&mdash; 2 sites</span></div>
 <div class="meta">state_gate · write · requires PWR_CSR1.ODRDY set · fields restricted: odswen</div>

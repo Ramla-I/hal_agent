@@ -20,6 +20,7 @@ import argparse
 import functools
 import html
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -256,7 +257,10 @@ def project_section(p: dict, trace: dict) -> list:
             f'Rust {_e(mm["pac_requires"]["rust_version"])} / edition '
             f'{_e(mm["pac_requires"]["edition"])}.</p>')
         h.append(f'<p class="note">{_e(mm["unreached_sites"])}</p>')
-        h.append("</div>")
+        # No closing div: unlike the measured branch, this one opens no card.
+        # A stray </div> here closed the page's content wrapper mid-section,
+        # and every rule block after it rendered flush against the viewport
+        # edge -- visibly, on the published page.
     elif mm:
         h.append(
             f'<p class="note"><span class="pill {cls}">measured</span> '
@@ -354,16 +358,30 @@ def build(scan: list, trace: dict, excluded: dict) -> str:
     tot_corr = sum(p["verdicts"].get("corroborated", 0) for p in scan)
     tot_acc = sum(p["register_accesses"] for p in scan)
 
+    # From the port records, never prose: the subtitle said "Nothing is
+    # compiled" for a while after three projects were.
+    mm = measured_projects()
+    measured_names = sorted(n for n, r in mm.items()
+                            if r.get("baseline") == "PASS")
+    n_measured = len(measured_names)
+    n_blocked = sum(1 for r in mm.values() if r.get("baseline") == "FAIL")
+
     h = [f"<title>Where datasheet rules would bite</title><style>{CSS}</style>",
          '<div class="wrap">', "<header>",
          '<span class="eyebrow">LIDAR · enforcement arm</span>',
-         "<h1>Where our datasheet rules would bite: a scan of "
-         "higher-level projects</h1>",
+         "<h1>Where our datasheet rules would bite &mdash; and where "
+         "the compiler agrees</h1>",
          f'<p class="sub">{len(scan)} open-source embedded projects read '
          "against constraints extracted from their chips' reference manuals. "
-         "This is a <b>static</b> survey &mdash; each project's own Rust source "
-         "is parsed for hardware register accesses and cross-referenced. "
-         "Nothing is compiled.</p>", "</header>"]
+         "The survey is <b>static</b> &mdash; each project's own Rust source "
+         "is parsed for register accesses and cross-referenced &mdash; and "
+         "where a project could be brought to the PAC generation we inject, "
+         "it was then <b>compiled against the injected crate</b>: "
+         f"{n_measured} project{'s' if n_measured != 1 else ''} measured "
+         f"that way ({', '.join(measured_names)}), {n_blocked} attempt "
+         "recorded as blocked, and the scan's blind spot (writes that leave "
+         "the typed API) is bounded at the bottom of the page.</p>",
+         "</header>"]
 
     h += ['<section><h2>Across all projects</h2>', '<div class="row">',
           f'<div class="stat"><span class="k">projects</span>'
@@ -535,8 +553,23 @@ def main() -> None:
         for a in json.loads(tp.read_text()).get("apps", []):
             trace[a["app"]] = a
 
+    html_text = build(scan, trace, excluded) + "\n"
+
+    # The page is assembled from string fragments, so a branch that emits one
+    # </div> too many closes the CONTENT WRAPPER mid-page and everything after
+    # it renders flush against the viewport edge -- which shipped, and a
+    # reader caught it before we did. Unbalanced divs inside any <section>
+    # fail the build rather than the reader.
+    for m in re.finditer(r'<section id="([^"]+)">(.*?)</section>',
+                         html_text, re.S):
+        opens = len(re.findall(r"<div\b", m.group(2)))
+        closes = m.group(2).count("</div>")
+        if opens != closes:
+            sys.exit(f"unbalanced divs in section {m.group(1)!r}: "
+                     f"{opens} opened, {closes} closed")
+
     out = Path(args.out)
-    out.write_text(build(scan, trace, excluded) + "\n")
+    out.write_text(html_text)
     print(f"html: {out}  ({out.stat().st_size // 1024} KB)")
 
 
