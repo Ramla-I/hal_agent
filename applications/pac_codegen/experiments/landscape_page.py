@@ -34,6 +34,9 @@ STYLE_LABEL = {
 }
 EFFORT_CLASS = {"measured": "ok", "ready": "ok", "hal-bump": "warn",
                 "pac-gap": "warn", "missing-manual": "no",
+                # A port ATTEMPT that hit a wall, established by building,
+                # not by reading a version out of a file.
+                "blocked": "no",
                 "not-applicable": "none"}
 
 
@@ -45,12 +48,18 @@ def measured_projects() -> dict:
     is an afternoon or a quarter. Where a harness has since closed one, the row
     should report what the compiler found instead of what the scan guessed."""
     out = {}
-    for name in ("port_hubris.json", "port_anne_key.json"):
+    for name in ("port_hubris.json", "port_anne_key.json",
+                 "port_stm32f7_discovery.json"):
         pth = OUT / name
         if not pth.is_file():
             continue
         r = json.loads(pth.read_text())
         if r.get("baseline") == "PASS" and "gate_fired" in r:
+            out[r["project"]] = r
+        elif r.get("baseline") == "FAIL" and r.get("verdict"):
+            # An attempt that hit a wall is a result too, and a more useful one
+            # than the scan's guess: it says the gap is not the one the scan
+            # named. Rendered separately, since there are no hits to table.
             out[r["project"]] = r
     return out
 
@@ -228,9 +237,27 @@ def project_section(p: dict, trace: dict) -> list:
 
     r = p["readiness"]
     mm = measured_projects().get(p["name"])
-    cls = EFFORT_CLASS.get("measured" if mm else r["effort"], "none")
+    blocked = bool(mm and mm.get("baseline") == "FAIL")
+    cls = EFFORT_CLASS.get("blocked" if blocked else
+                           "measured" if mm else r["effort"], "none")
     blockers = "; ".join(r["blockers"]) or "none"
-    if mm:
+    if blocked:
+        h.append(
+            f'<p class="note"><span class="pill {cls}">attempted &mdash; '
+            f'blocked</span> &nbsp;the scan called this '
+            f'<em>{_e(r["effort"])}</em> ({_e(blockers)}). A build attempt says '
+            f'otherwise: {_e(mm["verdict"])}</p>')
+        h.append(
+            f'<p class="note"><b>Evidence.</b> {_e(mm["attempt"])}: '
+            f'{mm["errors"]} errors, <b>{mm["errors_in_own_src"]}</b> of them '
+            f'in the project\'s own source. By crate: '
+            f'{_e(", ".join(f"{k} {v}" for k, v in mm["errors_by_crate"].items() if k))}. '
+            f'It pins <code>{_e(mm["pinned_toolchain"])}</code>; the PAC needs '
+            f'Rust {_e(mm["pac_requires"]["rust_version"])} / edition '
+            f'{_e(mm["pac_requires"]["edition"])}.</p>')
+        h.append(f'<p class="note">{_e(mm["unreached_sites"])}</p>')
+        h.append("</div>")
+    elif mm:
         h.append(
             f'<p class="note"><span class="pill {cls}">measured</span> '
             f'&nbsp;{_e(r["pac_needed"])} &mdash; the scan called this '

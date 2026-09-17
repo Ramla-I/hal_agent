@@ -55,7 +55,7 @@ the scan.
 | [hubris](https://github.com/oxidecomputer/hubris) | pac_direct | rm0316, rm0090, rm0433, rm0444, rm0454 | 276 | 677 | **22** | 11 | 11 | `pac-gap` |
 | [anne-key](https://github.com/ah-/anne-key) | pac_direct | rm0038 | 22 | 91 | **3** | 0 | 3 | `pac-gap` |
 | [tock](https://github.com/tock/tock) | tock | rm0368, rm0402, rm0390, rm0316 | 45 | 1203 | **51** | 23 | 28 | `not-applicable` |
-| [stm32-eth](https://github.com/stm32-rs/stm32-eth) | pac_direct | rm0090, rm0386, rm0390 | 19 | 104 | **0** | 0 | 0 | `hal-bump` |
+| [stm32-eth](https://github.com/stm32-rs/stm32-eth) | pac_direct | rm0090, rm0386, rm0390 | 19 | 104 | **0** | 0 | 0 | `pac-gap` |
 | [stm32f469i-disc](https://github.com/tegimeki/stm32f469i-disc) | hal_only | rm0386 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
 | [booster](https://github.com/quartiq/booster) | pac_direct | rm0090 | 35 | 24 | **0** | 0 | 0 | `hal-bump` |
 | [px4flow_bsp](https://github.com/tstellanova/px4flow_bsp) | pac_direct | rm0090 | 5 | 50 | **0** | 0 | 0 | `hal-bump` |
@@ -63,13 +63,13 @@ the scan.
 | [fdcan](https://github.com/stm32-rs/fdcan) | pac_direct | rm0440, rm0433 | 88 | 73 | **7** | 3 | 4 | `not-applicable` |
 | [bxcan](https://github.com/stm32-rs/bxcan) | pac_direct | rm0008 | 35 | 65 | **11** | 0 | 11 | `not-applicable` |
 | [stm32-usbd](https://github.com/stm32-rs/stm32-usbd) | pac_direct | rm0008 | 16 | 30 | **0** | 0 | 0 | `not-applicable` |
-| [stm32f103xx-usb](https://github.com/mvirkkunen/stm32f103xx-usb) | pac_direct | rm0008 | 4 | 21 | **0** | 0 | 0 | `ready` |
+| [stm32f103xx-usb](https://github.com/mvirkkunen/stm32f103xx-usb) | pac_direct | rm0008 | 4 | 21 | **0** | 0 | 0 | `hal-bump` |
 | [stm32-fmc](https://github.com/stm32-rs/stm32-fmc) | pac_direct | rm0433 | 18 | 0 | **0** | 0 | 0 | `not-applicable` |
 | [blethrs](https://github.com/AirborneEngineering/blethrs) | pac_direct | rm0090 | 6 | 85 | **0** | 0 | 0 | `pac-gap` |
 | [loadstone](https://github.com/absw/loadstone) | pac_direct | rm0402 | 25 | 8 | **1** | 1 | 0 | `not-applicable` |
 | [lilos](https://github.com/cbiffle/lilos) | pac_direct | rm0090, rm0433, rm0444 | 26 | 10 | **0** | 0 | 0 | `not-applicable` |
-| [keyboard-labs](https://github.com/rgoulter/keyboard-labs) | pac_direct | rm0368 | 53 | 2 | **0** | 0 | 0 | `ready` |
-| [stm32f3-discovery](https://github.com/rubberduck203/stm32f3-discovery) | pac_direct | rm0316 | 5 | 1 | **0** | 0 | 0 | `ready` |
+| [keyboard-labs](https://github.com/rgoulter/keyboard-labs) | pac_direct | rm0368 | 53 | 2 | **0** | 0 | 0 | `hal-bump` |
+| [stm32f3-discovery](https://github.com/rubberduck203/stm32f3-discovery) | pac_direct | rm0316 | 5 | 1 | **0** | 0 | 0 | `hal-bump` |
 | [stm32f407g-disc](https://github.com/stm32-rs/stm32f407g-disc) | hal_only | rm0090 | 4 | 0 | **0** | 0 | 0 | `hal-bump` |
 | [embassy](https://github.com/embassy-rs/embassy) | pac_direct | rm0008, rm0033, rm0038, rm0090, rm0091, rm0316, rm0367, rm0385, rm0394, rm0433, rm0438, rm0440, rm0444, rm0456, rm0481, rm0486, rm0490 | 257 | 3240 | **17** | 9 | 8 | `not-applicable` |
 
@@ -80,25 +80,25 @@ injected chip crate — the ranked input to the build phase.
 
 | project | reachable | PAC needed | blockers |
 |---|---|---|---|
-| stm32f103xx-usb | yes | stm32f1 0.16.0 | none |
-| keyboard-labs | yes | stm32f4 0.16.0 | none |
-| stm32f3-discovery | yes | stm32f3 0.16.0 | none |
 | tock | no | — | hand-written register maps; no PAC to inject into |
 | hubris | yes | stm32h7 0.16.0 | pins stm32h7 0.14, injector targets 0.16.0 |
 | embassy | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
 | bxcan | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
 | fdcan | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
-| stm32f7-discovery | yes | stm32f7 0.16.0 | pins stm32f7 0.7, injector targets 0.16.0 |
+| stm32f7-discovery | yes | stm32f7 0.16.0 | the recorded pin (0.7) disagrees with the manifest (0.3.2); the manifest wins; pins stm32f7 0.3.2, injector targets 0.16.0 |
 | anne-key | yes | stm32l1 0.16.0 | pins stm32l1 0.11.0, injector targets 0.16.0 |
 | loadstone | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
-| stm32-eth | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
+| stm32-eth | yes | stm32f4 0.16.0 | pins stm32f4 0.15, injector targets 0.16.0; stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | stm32f469i-disc | yes | stm32f4 0.16.0 | stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | booster | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.21 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | px4flow_bsp | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.8.3 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | stm32-usbd | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
+| stm32f103xx-usb | yes | stm32f1 0.16.0 | stm32f1xx-hal 0.3 does not pair with PAC 0.16.0; needs a release built against it; stm32f1xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | stm32-fmc | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
-| blethrs | yes | stm32f4 0.16.0 | pins stm32f4 0.11, injector targets 0.16.0 |
+| blethrs | yes | stm32f4 0.16.0 | the recorded pin (0.11) disagrees with the manifest (0.10.0); the manifest wins; pins stm32f4 0.10.0, injector targets 0.16.0 |
 | lilos | no | — | no dependency on a PAC or a *xx-hal in any library manifest (test and example crates excluded); register access goes through the project's own register block, so an injected PAC cannot reach it |
+| keyboard-labs | yes | stm32f4 0.16.0 | stm32f4xx-hal 0.17 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
+| stm32f3-discovery | yes | stm32f3 0.16.0 | stm32f3xx-hal 0.8.0 does not pair with PAC 0.16.0; needs a release built against it; stm32f3xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 | stm32f407g-disc | yes | stm32f4 0.16.0 | stm32f4xx-hal ^0.14 does not pair with PAC 0.16.0; needs the 0.23 bump; stm32f4xx-hal must be patched (4-line associated-type bound; see docs/generic_friction.md) |
 
 Effort key:

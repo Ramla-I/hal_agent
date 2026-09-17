@@ -861,6 +861,124 @@ def declared_pac_dependency(root: Path, pac: str) -> "tuple[bool, str]":
                    "manifest (test and example crates excluded)")
 
 
+_PINNED_RE = re.compile(r'^\s*version\s*=\s*"([^"]+)"', re.M)
+
+
+_HAL_NAME_RE = re.compile(r"stm32\w*xx-hal")
+
+
+def pinned_hal(root: Path) -> "tuple[str, str]":
+    """(hal crate, version) the project declares, read from its manifest.
+
+    `Project.hal` and `Project.hal_pinned` are hand-entered and empty for
+    several projects that do depend on a HAL, so `readiness` recorded no
+    blockers and labelled them `ready` -- which read as "checked and clear"
+    when it meant "nothing was written down". stm32f103xx-usb depends on
+    stm32f1xx-hal 0.3 and stm32f3-discovery on stm32f3xx-hal; neither pairs
+    with PAC 0.16.
+    """
+    for man in sorted(root.rglob("Cargo.toml"))[:80]:
+        rel = str(man.relative_to(root))
+        if _SKIP_MANIFEST.search(rel.replace("\\", "/")):
+            continue
+        try:
+            text = man.read_text(errors="replace")
+        except OSError:
+            continue
+        for m in re.finditer(r'^\s*(stm32\w*xx-hal)\s*=\s*(.+)$', text, re.M):
+            name, rhs = m.group(1), m.group(2)
+            v = re.search(r'version\s*=\s*"([^"]+)"', rhs) or \
+                re.match(r'\s*"([^"]+)"', rhs)
+            if v:
+                return name, v.group(1)
+        m = re.search(r'\[dependencies\.(stm32\w*xx-hal)\]\n(.*?)(?=\n\[|\Z)',
+                      text, re.S)
+        if m:
+            v = _PINNED_RE.search(m.group(2))
+            if v:
+                return m.group(1), v.group(1)
+    return "", ""
+
+
+def pinned_pac_version(root: Path, pac: str) -> str:
+    """What the project ACTUALLY pins, read from its manifest.
+
+    `Project.pac_pinned` is hand-entered, and for stm32f7-discovery it said
+    0.7 where the manifest and the lockfile both say 0.3.2 -- so the blocker
+    text on the landscape page named a version the project does not pin, and
+    understated the gap by four minor versions. Read it; the table value
+    becomes a cross-check, not the source.
+
+    Returns "" when no library manifest names the PAC, in which case the
+    hand-entered value stands (a project that reaches the PAC through a HAL
+    never names it).
+    """
+    for man in sorted(root.rglob("Cargo.toml"))[:80]:
+        rel = str(man.relative_to(root))
+        if _SKIP_MANIFEST.search(rel.replace("\\", "/")):
+            continue
+        try:
+            text = man.read_text(errors="replace")
+        except OSError:
+            continue
+        # `[dependencies.stm32f7]` followed by `version = "0.3.2"`
+        m = re.search(rf'\[dependencies\.{re.escape(pac)}\]\n(.*?)(?=\n\[|\Z)',
+                      text, re.S)
+        if m:
+            v = _PINNED_RE.search(m.group(1))
+            if v:
+                return v.group(1)
+        # `stm32f7 = { version = "0.3.2", ... }` on one line
+        m = re.search(rf'^\s*{re.escape(pac)}\s*=\s*\{{([^}}]*)\}}', text, re.M)
+        if m:
+            v = re.search(r'version\s*=\s*"([^"]+)"', m.group(1))
+            if v:
+                return v.group(1)
+        m = re.search(rf'^\s*{re.escape(pac)}\s*=\s*"([^"]+)"', text, re.M)
+        if m:
+            return m.group(1)
+    return ""
+
+
+# The PAC generation the injector targets declares `edition = "2021"` and
+# `rust-version = "1.65"`, which shipped 2022-11-03. A project that PINS an
+# older dated nightly cannot compile that crate on its own toolchain, and if
+# the project's dependency stack is old enough not to compile on a modern one
+# either, there is no toolchain that builds both. That is not a PAC gap and
+# calling it one tells a reader to bump a version, which does not help.
+_PAC_MIN_RUST, _PAC_MIN_RUST_DATE = "1.65", "2022-11-03"
+_NIGHTLY_RE = re.compile(r"nightly-(\d{4})-(\d{2})-(\d{2})")
+
+
+def pinned_toolchain(root: Path) -> str:
+    for name in ("rust-toolchain", "rust-toolchain.toml",
+                 "rust-toolchain.orig"):
+        f = root / name
+        if f.is_file():
+            try:
+                return f.read_text(errors="replace").strip().splitlines()[0].strip()
+            except (OSError, IndexError):
+                return ""
+    return ""
+
+
+def toolchain_too_old(root: Path) -> str:
+    """The pinned toolchain, if it predates the PAC's minimum. "" otherwise.
+
+    REPORTED, NEVER A VERDICT. An old pin looks like a hard blocker and is
+    usually not one: anne-key pins nightly-2020-03-19 and builds clean on a
+    current nightly once the pin is simply deleted. What actually blocks is the
+    pin AND a dependency stack that no modern compiler accepts, and no static
+    read can tell those apart -- only a build attempt can, which is why the
+    verdict lives in a port record and not here.
+    """
+    tc = pinned_toolchain(root)
+    m = _NIGHTLY_RE.search(tc)
+    if not m:
+        return ""
+    return tc if "-".join(m.groups()) < _PAC_MIN_RUST_DATE else ""
+
+
 def readiness(p: Project, root: Path = None) -> dict:
     """Could this project ever be built against an injected crate, and what
     would it take? This is the ranked shortlist the build phase consumes."""
@@ -884,15 +1002,31 @@ def readiness(p: Project, root: Path = None) -> dict:
                 "blockers": [f"no constraints for this chip "
                              f"({p.device}); its manual is not in the corpus"]}
     blockers = []
-    if p.pac_pinned and p.pac_pinned != PAC_VERSION:
-        blockers.append(f"pins {p.pac} {p.pac_pinned}, injector targets "
+    pinned = (pinned_pac_version(root, p.pac) if root is not None else "") \
+        or p.pac_pinned
+    if pinned and p.pac_pinned and pinned != p.pac_pinned:
+        blockers.append(f"the recorded pin ({p.pac_pinned}) disagrees with the "
+                        f"manifest ({pinned}); the manifest wins")
+    if pinned and pinned != PAC_VERSION:
+        blockers.append(f"pins {p.pac} {pinned}, injector targets "
                         f"{PAC_VERSION}")
-    if p.hal:
-        pairs = p.hal_pinned.lstrip("^").startswith("0.23")
+    hal, hal_pinned = (p.hal, p.hal_pinned)
+    if not hal and root is not None:
+        # Read it, for the same reason the PAC pin is read: an empty
+        # hand-entered field produced `ready` on projects that plainly depend
+        # on a HAL that does not pair with PAC 0.16.
+        hal, hal_pinned = pinned_hal(root)
+    if hal:
+        # 0.23 is the stm32f4xx-hal release built against PAC 0.16; naming it
+        # for an f1 or f3 HAL is wrong advice, and those appeared as soon as
+        # the HAL pin started being read rather than hand-entered.
+        pairs = (hal_pinned or "").lstrip("^").startswith("0.23")
         if not pairs:
-            blockers.append(f"{p.hal} {p.hal_pinned} does not pair with PAC "
-                            f"{PAC_VERSION}; needs the 0.23 bump")
-        blockers.append(f"{p.hal} must be patched (4-line associated-type "
+            fix = ("needs the 0.23 bump" if hal == "stm32f4xx-hal"
+                   else "needs a release built against it")
+            blockers.append(f"{hal} {hal_pinned} does not pair with PAC "
+                            f"{PAC_VERSION}; {fix}")
+        blockers.append(f"{hal} must be patched (4-line associated-type "
                         "bound; see docs/generic_friction.md)")
     effort = ("ready" if not blockers else
               "pac-gap" if any("pins" in b for b in blockers) else "hal-bump")
@@ -947,6 +1081,8 @@ def scan_project(p: Project, root: Path, periph_map: dict) -> dict:
         "name": p.name, "repo": p.repo, "style": p.style, "note": p.note,
         "rms": p.rms, "device": p.device, "pac": p.pac,
         "pac_pinned": p.pac_pinned, "hal": p.hal, "hal_pinned": p.hal_pinned,
+        "pinned_toolchain": pinned_toolchain(root) if root else "",
+        "toolchain_predates_pac": bool(toolchain_too_old(root)) if root else False,
         "rust_files": len(files),
         "register_accesses": len(hits),
         "distinct_registers": len(regs),
