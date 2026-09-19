@@ -1,0 +1,385 @@
+{
+ "stm32f4xx-hal": {
+  "ad57xx": [
+   "^0.20.0",
+   "dev"
+  ],
+  "adafruit-seesaw": [
+   "^0.22",
+   "dev"
+  ],
+  "adf4351": [
+   "^0.8.3",
+   "dev"
+  ],
+  "at42qt1070": [
+   "^0.8.3",
+   "dev"
+  ],
+  "booster": [
+   "^0.21.0",
+   "normal"
+  ],
+  "commune": [
+   "^0.8",
+   "normal"
+  ],
+  "correlation_flow": [
+   "^0.8.3",
+   "dev"
+  ],
+  "dht11": [
+   "^0.8",
+   "dev"
+  ],
+  "dht11-driver": [
+   "^0.23.0",
+   "dev"
+  ],
+  "drogue-bme680": [
+   "^0.8",
+   "normal"
+  ],
+  "drogue-grove-uart-spi": [
+   "^0.8",
+   "dev"
+  ],
+  "embedded-battery-pack": [
+   "^0.22",
+   "normal"
+  ],
+  "f4-w25q": [
+   "^0.22.1",
+   "normal"
+  ],
+  "feagi-hal": [
+   "^0.21",
+   "normal"
+  ],
+  "feather-f405": [
+   "^0.8.2",
+   "normal"
+  ],
+  "ft6x06": [
+   "^0.13.2",
+   "dev"
+  ],
+  "hopter": [
+   "^0.21.0",
+   "dev"
+  ],
+  "hsm-rs": [
+   "^0.23",
+   "normal"
+  ],
+  "ili9341": [
+   "^0.12.0",
+   "dev"
+  ],
+  "ist7920": [
+   "^0.8",
+   "dev"
+  ],
+  "m24c64-driver": [
+   "^0.22.1",
+   "dev"
+  ],
+  "midi-port": [
+   "^0.5.0",
+   "dev"
+  ],
+  "multi-mission-library-rs": [
+   "^0.20.0",
+   "normal"
+  ],
+  "nucleo-f401re": [
+   "^0.8",
+   "normal"
+  ],
+  "nucleo-f411re": [
+   "^0.7.0",
+   "normal"
+  ],
+  "nucleo-f446re": [
+   "^0.20.0",
+   "normal"
+  ],
+  "ockam_transport_ble": [
+   "^0.19.0",
+   "normal"
+  ],
+  "oled_async": [
+   "^0.9",
+   "normal"
+  ],
+  "on-off-sequence-output": [
+   "^0.7.0",
+   "dev"
+  ],
+  "onebitsy": [
+   "^0.8",
+   "normal"
+  ],
+  "pixracer_bsp": [
+   "^0.8.3",
+   "normal"
+  ],
+  "px4flow_bsp": [
+   "^0.8.3",
+   "normal"
+  ],
+  "razorback": [
+   "^0.9.0",
+   "normal"
+  ],
+  "rlvgl-bsps-stm": [
+   "^0.22.1",
+   "normal"
+  ],
+  "sdio_sdhc": [
+   "^0.8",
+   "normal"
+  ],
+  "sht25": [
+   "^0.20",
+   "dev"
+  ],
+  "spi-memory": [
+   "^0.7.0",
+   "dev"
+  ],
+  "spi-memory-async": [
+   "^0.7.0",
+   "dev"
+  ],
+  "srobo_base": [
+   "^0.17.1",
+   "normal"
+  ],
+  "ssd1320": [
+   "^0.8",
+   "dev"
+  ],
+  "st7920": [
+   "^0.20",
+   "dev"
+  ],
+  "stm32-eth": [
+   "^0.21",
+   "normal"
+  ],
+  "stm32f4-prng": [
+   "^0.8.3",
+   "normal"
+  ],
+  "stm32f401ccu6-bsp": [
+   "^0.8.2",
+   "normal"
+  ],
+  "stm32f407g-disc": [
+   "^0.9.0",
+   "normal"
+  ],
+  "stm32f429i-disc": [
+   "^0.5.0",
+   "normal"
+  ],
+  "stm32f469i-disc": [
+   "^0.23",
+   "normal"
+  ],
+  "veml7700": [
+   "^0.20.0",
+   "dev"
+  ],
+  "w25q": [
+   "^0.7.0",
+   "dev"
+  ],
+  "ws2812-pwm-dma": [
+   "^0.15.0",
+   "normal"
+  ],
+  "xpt2046": [
+   "^0.13.0",
+   "dev"
+  ]
+ },
+ "stm32-hal2": {
+  "semtech_radios": [
+   "^2.1.4",
+   "normal"
+  ],
+  "steami-rs": [
+   "^1.8.3",
+   "normal"
+  ]
+ },
+ "stm32f1xx-hal": {
+  "adxl355": [
+   "^0.5.3",
+   "dev"
+  ],
+  "async-stm32f1xx": [
+   "^0.7",
+   "normal"
+  ],
+  "bitbang-hal": [
+   "^0.9",
+   "dev"
+  ],
+  "cmsis-nn-rs": [
+   "^0.10.0",
+   "dev"
+  ],
+  "commune": [
+   "^0.6",
+   "normal"
+  ],
+  "cortex-m-interrupt": [
+   "^0.9",
+   "dev"
+  ],
+  "ds1302": [
+   "^0.7.0",
+   "dev"
+  ],
+  "eeprom": [
+   "^0.9.0",
+   "normal"
+  ],
+  "embedded-async-timer": [
+   "^0.5.3",
+   "normal"
+  ],
+  "embedded-battery-pack": [
+   "^0.10",
+   "normal"
+  ],
+  "gihex-hc-sr04": [
+   "^0.10.0",
+   "dev"
+  ],
+  "hc14-at-rs": [
+   "^0.10.0",
+   "normal"
+  ],
+  "herkulex-drs-0x01-stm32f1xx": [
+   "^0.9",
+   "normal"
+  ],
+  "hx1230": [
+   "^0.9.0",
+   "dev"
+  ],
+  "jrk-g2": [
+   "^0.10.0",
+   "normal"
+  ],
+  "jrk-g2-rs": [
+   "^0.7.0",
+   "normal"
+  ],
+  "light-cli": [
+   "^0.2.1",
+   "dev"
+  ],
+  "max31865": [
+   "^0.7.0",
+   "dev"
+  ],
+  "nucleo-f103rb": [
+   "^0.3.0",
+   "normal"
+  ],
+  "oled_async": [
+   "^0.7.0",
+   "normal"
+  ],
+  "olimex-stm32-p107": [
+   "^0.7.0",
+   "normal"
+  ],
+  "rs-max31865": [
+   "^0.7.0",
+   "dev"
+  ],
+  "sdvx-controller-firmware": [
+   "^0.7.0",
+   "normal"
+  ],
+  "sent-driver": [
+   "^0.6.1",
+   "normal"
+  ],
+  "sh1106": [
+   "^0.7.0",
+   "dev"
+  ],
+  "sh1108": [
+   "^0.10",
+   "dev"
+  ],
+  "ssd1309": [
+   "^0.10",
+   "dev"
+  ],
+  "ssd1331": [
+   "^0.7.0",
+   "dev"
+  ],
+  "stm32-eth": [
+   "^0.10",
+   "normal"
+  ],
+  "stm32-usbd": [
+   "^0.7.0",
+   "dev"
+  ],
+  "stm32-usbd2": [
+   "^0.7.0",
+   "dev"
+  ],
+  "stm32f1xx-futures": [
+   "^0.7.0",
+   "normal"
+  ],
+  "tof10120": [
+   "^0.7.0",
+   "dev"
+  ]
+ },
+ "stm32g4xx-hal": {
+  "NUCLEO-G474RE-blink-for-embedded-rust": [
+   "^0.0.1",
+   "normal"
+  ],
+  "oled_async": [
+   "^0.0.1",
+   "normal"
+  ],
+  "rlvgl-bsps-stm": [
+   "^0.0.1",
+   "normal"
+  ]
+ },
+ "stm32-hrtim": {
+  "embassy-stm32": [
+   "^0.2.0",
+   "normal"
+  ],
+  "stm32g4xx-hal": [
+   "^0.1.0",
+   "normal"
+  ]
+ },
+ "stm32f1-hal": {},
+ "_meta": {
+  "fetched": "2026-09-18",
+  "method": "crates.io /reverse_dependencies per swept driver, then each dependent's latest-version /dependencies for the dependency kind (normal vs dev) and version requirement",
+  "rule": "measurable = the driver is a NORMAL dependency AND the requirement resolves to the generation the sweep measured; a crate pinning an older generation contains none of the code the sites live in",
+  "excluded": {
+   "hsm-rs": "stm32f4xx-hal ^0.23, but optional and pulled only by its blinky-example feature -- the library itself is HAL-free, so it is a dependent of the driver's examples, not of the driver"
+  }
+ }
+}

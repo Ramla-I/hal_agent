@@ -222,6 +222,25 @@ a{color:var(--accent)}
 <p class="note">the scan&#x27;s 4 sites stand as static claims: i2c.rs:468 (OAR2, unchecked), init/mod.rs:49 (PLLCFGR, corroborated), init/mod.rs:66 and :69 (PWR_CR1, unchecked and corroborated). Note :66 writes ODEN while the gated field is ODSWEN, so field gating would likely not fire there -- the same register-vs-field granularity gap anne-key showed, but unverified here.</p>
 </div>
 </section>
+<section id="dependents"><h2>Downstream &mdash; who compiles the swept drivers&rsquo; sites</h2>
+<p class="note">The swept drivers have <b>91</b> dependents on crates.io (51 carrying the driver as a normal, non-example dependency). Impact is only an honest claim where the dependent pins <b>the generation the sweep measured</b> &mdash; an older pin contains none of the code the sites live in &mdash; and that filter leaves the crates below. Each was probed with a bare crate depending on it from crates.io, the chip crate <code>[patch]</code>ed to an injected copy, baseline proven passing against the pristine copy first. A bare probe instantiates no generics, so these are sites the dependent compiles <b>unconditionally</b> &mdash; a floor, not a ceiling. Site identity and human verdicts live on the tracking page and in the review ledger; what this section adds is <b>who ships them</b>.</p>
+<div class="card" id="dependent-semtech_radios">
+<h3>semtech_radios 0.1.6</h3>
+<p class="note"><span class="pill ok">baseline PASS</span>&nbsp; depends on <b>stm32-hal2 2.1.10</b>, probed as stm32g474 (RM0440) against stm32g4 0.16.0, features <code>g474</code>.</p>
+<p class="note"><b>221</b> gate-fired sites, every one inside stm32-hal2 (221) &mdash; this build contains the sweep&rsquo;s fired surface for that pairing verbatim, plus 0 generic-friction errors and 0 collateral.</p>
+</div>
+<div class="card" id="dependent-stm32f469i-disc">
+<h3>stm32f469i-disc 0.3.1</h3>
+<p class="note"><span class="pill ok">baseline PASS</span>&nbsp; depends on <b>stm32f4xx-hal 0.23</b>, probed as stm32f469 (RM0386) against stm32f4 0.16.0, features <code>default</code>.</p>
+<p class="note"><b>42</b> gate-fired sites, every one inside stm32f4xx-hal (42) &mdash; this build contains the sweep&rsquo;s fired surface for that pairing verbatim, plus 7 generic-friction errors and 0 collateral.</p>
+</div>
+<div class="card" id="dependent-embassy-stm32">
+<h3>embassy-stm32 0.6.0</h3>
+<p class="note"><span class="pill ok">baseline PASS</span>&nbsp; depends on <b>stm32-hrtim 0.2.0</b>, probed as stm32g474 (RM0440) against stm32g4 0.16.0, features <code>stm32g474ve, single-bank</code>.</p>
+<p class="note"><b>No true site fires.</b> The build stops on <b>11</b> adoption-friction errors: the driver&rsquo;s generic register API needs witness bounds before anything on this chip compiles &mdash; the encoding&rsquo;s adoption cost surfacing in a dependent, not a bug.</p>
+</div>
+<p class="note dim"><b>hsm-rs</b> is deliberately absent: stm32f4xx-hal ^0.23, but optional and pulled only by its blinky-example feature -- the library itself is HAL-free, so it is a dependent of the driver&#x27;s examples, not of the driver.</p>
+</section>
 <section><h2>Results of the scan &mdash; across all projects</h2>
 <div class="row">
 <div class="stat"><span class="k">projects</span><span class="v">22</span></div>

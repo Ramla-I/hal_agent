@@ -566,6 +566,44 @@ hand-entered field this table ever had was eventually found wrong, including
 two pinned versions and a renamed `package = "stm32-hal2"` dependency that
 made a HAL invisible.
 
+### Downstream dependents — `experiments/dependent_compile.py`
+
+The sweep says a driver *contains* candidate sites; it says nothing about
+who *compiles* them. The dependents probe answers that for the crates.io
+reverse-dependents of the swept drivers. The population rule is strict:
+the driver must be a **normal, non-example dependency** (a dev-dependency
+pulls the driver only into the dependent's examples), and the requirement
+must resolve to **the generation the sweep measured** — an older pin
+contains none of the code the sites live in, so "impact" there would be a
+version join. The census behind the filter is snapshotted with its
+provenance in `experiments/hal_dependents_census.json`; exclusions carry
+their reason in its `_meta` (the inclusion bar above, applied to a second
+population).
+
+Method is `port_blackpill`'s, generalized: a bare probe crate depends on
+the dependent from crates.io, the chip crate is `[patch]`ed to a private
+injected copy, the baseline must PASS against the pristine copy and the
+patch is proven applied in `Cargo.lock`. Two semantics to keep straight
+when reading the records (`out/dependent_*.json`):
+
+- A bare probe instantiates no generics, so fired sites are code the
+  dependent compiles **unconditionally** — a floor, not a ceiling.
+- A definition-side failure on an associated-type path
+  (`<<TIM as Instance>::RB as TimExt>::CPT1CRrs`) whose underlying
+  register is *ungated* is **generic friction** — the driver's generic API
+  needs witness bounds — not a finding. Substring spec-matching once
+  recorded fourteen of these as candidate bugs, wearing ADC fields on G4
+  and a JPEG quote on H7; spec matching is token-exact now
+  (`tests/test_spec_match_determinism.py` pins both failure modes). The
+  same path shape over a register that genuinely **is** gated (f4xx-hal's
+  `UartRB` uart registers) stays enforcement, at the generic site.
+
+One census surprise is worth naming because it reverses a ceiling claim:
+embassy's own register blocks can never be gated, but its G474/G484/F334
+chip features auto-enable `stm32-hrtim` on the stm32-rs PAC backend — so
+an embassy build for those chips compiles a swept pairing after all, and
+what injection surfaces there is the adoption cost in hrtim's generic API.
+
 ## 3. Make more of it compilable — `experiments/port_*.py`
 
 A project that only *reads* can sometimes be made to *build*. `port_hal.py`

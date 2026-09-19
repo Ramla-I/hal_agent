@@ -391,6 +391,81 @@ def compiled_section(scan: list) -> list:
     return h
 
 
+def dependent_records() -> list:
+    """crates.io dependents of the swept drivers, probed by
+    experiments/dependent_compile.py. A different population from the ported
+    projects above: nobody hand-picked these builds -- cargo's resolver pulls
+    the swept driver into them, so a fired site here ships downstream."""
+    out = []
+    for pth in sorted(OUT.glob("dependent_*.json")):
+        r = json.loads(pth.read_text())
+        if r.get("baseline"):
+            out.append(r)
+    return out
+
+
+def dependents_section() -> list:
+    recs = dependent_records()
+    if not recs:
+        return []
+    census_p = APP_DIR / "experiments" / "hal_dependents_census.json"
+    census = json.loads(census_p.read_text()) if census_p.is_file() else {}
+    meta = census.pop("_meta", {})
+    n_dep = sum(len(v) for v in census.values())
+    n_normal = sum(1 for v in census.values()
+                   for req, kind in v.values() if kind == "normal")
+    h = ['<section id="dependents"><h2>Downstream &mdash; who compiles the '
+         'swept drivers&rsquo; sites</h2>',
+         f'<p class="note">The swept drivers have <b>{n_dep}</b> dependents '
+         f'on crates.io ({n_normal} carrying the driver as a normal, '
+         'non-example dependency). Impact is only an honest claim where the '
+         'dependent pins <b>the generation the sweep measured</b> &mdash; '
+         'an older pin contains none of the code the sites live in &mdash; '
+         'and that filter leaves the crates below. Each was probed with a '
+         'bare crate depending on it from crates.io, the chip crate '
+         '<code>[patch]</code>ed to an injected copy, baseline proven '
+         'passing against the pristine copy first. A bare probe '
+         'instantiates no generics, so these are sites the dependent '
+         'compiles <b>unconditionally</b> &mdash; a floor, not a ceiling. '
+         'Site identity and human verdicts live on the tracking page and '
+         'in the review ledger; what this section adds is <b>who ships '
+         'them</b>.</p>']
+    for r in sorted(recs, key=lambda x: -(x.get("gate_fired") or 0)):
+        name = r["dependent"]
+        layers = ", ".join(f"{k} ({v})"
+                           for k, v in (r.get("by_layer") or {}).items())
+        h += [f'<div class="card" id="dependent-{_e(name)}">',
+              f'<h3>{_e(name)} {_e(r["version"])}</h3>',
+              f'<p class="note"><span class="pill ok">baseline PASS</span>'
+              f'&nbsp; depends on <b>{_e(r["hal"])}</b>, probed as '
+              f'{_e(r["device"])} ({_e(r["rm"].upper())}) against '
+              f'{_e(r["pac"])}, features '
+              f'<code>{_e(", ".join(r.get("features") or []) or "default")}'
+              '</code>.</p>']
+        if r.get("gate_fired"):
+            h.append(
+                f'<p class="note"><b>{r["gate_fired"]}</b> gate-fired sites, '
+                f'every one inside {_e(layers)} &mdash; this build contains '
+                'the sweep&rsquo;s fired surface for that pairing verbatim, '
+                f'plus {r.get("generic_friction", 0)} generic-friction '
+                f'errors and {r.get("collateral", 0)} collateral.</p>')
+        else:
+            h.append(
+                f'<p class="note"><b>No true site fires.</b> The build stops '
+                f'on <b>{r.get("generic_friction", 0)}</b> adoption-friction '
+                'errors: the driver&rsquo;s generic register API needs '
+                'witness bounds before anything on this chip compiles '
+                '&mdash; the encoding&rsquo;s adoption cost surfacing in a '
+                'dependent, not a bug.</p>')
+        h.append("</div>")
+    if meta.get("excluded"):
+        for k, why in meta["excluded"].items():
+            h.append(f'<p class="note dim"><b>{_e(k)}</b> is deliberately '
+                     f'absent: {_e(why)}.</p>')
+    h.append("</section>")
+    return h
+
+
 def build(scan: list, trace: dict, excluded: dict) -> str:
     ranked = sorted(scan, key=lambda p: (-p["hits"], p["name"]))
     tot_hits = sum(p["hits"] for p in scan)
@@ -444,6 +519,7 @@ def build(scan: list, trace: dict, excluded: dict) -> str:
           "</section>"]
 
     h += compiled_section(scan)
+    h += dependents_section()
 
     h += ['<section><h2>Results of the scan &mdash; across all projects</h2>',
           '<div class="row">',
