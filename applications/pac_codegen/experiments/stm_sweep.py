@@ -641,6 +641,10 @@ def hal_errors(ws: Path, hal_dirname: str):
 # and the RAII scope-guard test.
 
 _SPEC_REG_RE = re.compile(r"(\w+)rs$")
+# Identifier tokens of a diagnostic message. Spec matching is EXACT against
+# these, never substring-in-message: `CRrs` must not claim a diagnostic about
+# `CPT1CRrs` (see the comment at the match site).
+_IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 
 def _gate_fields(constraints_path: Path) -> dict:
@@ -845,20 +849,26 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
         hit = enforcement.classify_diagnostic(e)
         field_witness = bool(hit and hit.kind == "field")
         witness = hit is not None
-        # MOST SPECIFIC FIRST, AND DETERMINISTIC. Matching is by substring, so
-        # a diagnostic naming `BDCRrs` also matches the gated spec `CRrs` --
-        # seven such collisions in rm0440 alone (ACRrs, AWD2CRrs, AWD3CRrs,
-        # BDCRrs, CCRrs, TDCRrs all contain CRrs; TXDRrs contains DRrs).
-        # `gated_specs` is a SET, and Python randomises string hashing per
-        # process, so `named[0]` picked a different one on different runs.
-        # Everything downstream reads it: the register name comes from
-        # `_SPEC_REG_RE.search(named[0])`, so triage looked up `bdcr`'s
-        # precondition fields or `cr`'s depending on the hash seed, and the
-        # guarded/candidate split was not reproducible -- re-running rm0440
-        # moved stm32-hal2 from 135/86 to 132/89 with no code change.
-        # Longest match wins: `BDCRrs` is the register that fired, `CRrs` is
-        # an artifact of one name containing another.
-        named = sorted((s for s in gated_specs if s in e["message"]),
+        # EXACT TOKENS, MOST SPECIFIC FIRST, AND DETERMINISTIC. Register
+        # names nest (`CRrs` inside `BDCRrs`, `IERrs` inside `DIERrs`), and
+        # substring-in-message matching failed on that twice:
+        #   1. When BOTH names are gated, which one won depended on set
+        #      iteration order -- longest-match-wins fixed that (the
+        #      135/86 vs 132/89 rm0440 drift).
+        #   2. When only the SHORT one is gated, longest-match cannot help:
+        #      hrtim's generic API fails definition-side on the UNGATED
+        #      `<<TIM as Instance>::RB as TimExt>::CPT1CRrs`, the embedded
+        #      `CRrs` matched, and 14 friction errors became "candidate
+        #      bugs" carrying ADC fields on G4 and a JPEG quote on H7.
+        # So a bare spec must match a whole identifier token of the message;
+        # an ungated container name then matches nothing and the error falls
+        # through to generic friction, which is what it is. Qualified specs
+        # (with `::`) are not single tokens and keep substring matching --
+        # the path itself is the specificity.
+        tokens = set(_IDENT_RE.findall(e["message"]))
+        named = sorted((s for s in gated_specs
+                        if (s in tokens if "::" not in s
+                            else s in e["message"])),
                        key=lambda s: (-s.count("::"), -len(s), s))
         if field_witness and not named and hit.spec in gated_specs:
             # A field-gate hit names its register through the witness type, not
