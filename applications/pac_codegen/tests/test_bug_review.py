@@ -262,10 +262,20 @@ class PortSites(unittest.TestCase):
         self.assertIn("[adc1] rule A", r["quote"])
         self.assertIn("[usart1] rule U", r["quote"])
 
-    def test_guarded_hits_stay_out(self):
+    def test_guarded_port_hits_are_included_and_labelled(self):
+        """Port rows carry every verdict: hubris's real bug reads
+        `corroborated` to the static pass (UE is referenced -- set the WRONG
+        way), so hiding corroborated port rows hid the paper's best finding
+        from the review file. The verdict and the machine's own correction
+        ride in their own columns; tp_fp stays the human's."""
         self.write([{"file": "f", "line": 1, "register": "clkcr",
-                     "operation": "write", "verdict": "corroborated"}], [])
-        self.assertEqual(self.br.load_port_sites(), [])
+                     "operation": "write", "verdict": "corroborated",
+                     "triage_note": "verdict is wrong: UE is ENABLED"}], [])
+        rows = self.br.load_port_sites()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["static_verdict"], "corroborated")
+        self.assertIn("UE is ENABLED", rows[0]["machine_note"])
+        self.assertEqual(rows[0]["tp_fp"], "")
 
     def test_failed_baseline_record_contributes_nothing(self):
         (self.root / "out" / "port_x.json").write_text(json.dumps(

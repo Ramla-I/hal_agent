@@ -50,8 +50,9 @@ TABLE = OUT / "bug_review_table.md"
 
 FIELDS = ["status", "tp_fp", "note", "rm", "device", "crate", "version",
           "file", "line", "peripheral", "register", "operation",
-          "gated_field", "count",
-          "precondition_fields", "field_source", "constraint_ids", "quote"]
+          "gated_field", "static_verdict", "count",
+          "precondition_fields", "field_source", "machine_note",
+          "constraint_ids", "quote"]
 
 HUMAN = {"tp_fp", "note"}          # never machine-overwritten
 # gated_field is part of the identity: four field gates firing on one
@@ -108,9 +109,14 @@ def load_port_sites() -> list:
         if r.get("baseline") != "PASS":
             continue
         idx = _constraint_index(r["rm"], r["device"])
+        # Port rows carry EVERY static verdict, labelled, because the ports
+        # are where corroborated has already been wrong once: hubris enables
+        # UE at lib.rs:72 and writes a UE=0-gated register at :76, and the
+        # static pass reads that as corroborated. A reviewer must be able to
+        # see those rows in the same file. (Sweep and ported-HAL rows stay
+        # unchecked-only -- a thousand guarded driver rows would drown the
+        # review, and their counts live on the tracking page.)
         for h in r.get("hits") or []:
-            if h.get("verdict") != "unchecked":
-                continue
             reg = str(h.get("register", "")).split("::")[-1].lower()
             reg = reg[:-2] if reg.endswith("rs") else reg
             cands = idx.get(reg, [])
@@ -134,8 +140,10 @@ def load_port_sites() -> list:
                 "peripheral": per, "register": reg,
                 "operation": h.get("operation", ""),
                 "gated_field": h.get("gated_field", ""),
+                "static_verdict": h.get("verdict", ""),
                 "precondition_fields": " ".join(h.get("fields") or []),
                 "field_source": "exact" if len(cands) == 1 else "union",
+                "machine_note": h.get("triage_note", ""),
                 "constraint_ids": " ".join(ids),
                 "quote": quote,
             })
@@ -187,8 +195,10 @@ def load_measured_hal_sites() -> list:
                 "peripheral": per, "register": reg,
                 "operation": h.get("operation", ""),
                 "gated_field": h.get("gated_field", ""),
+                "static_verdict": "unchecked",
                 "precondition_fields": " ".join(h.get("fields") or []),
                 "field_source": "exact" if len(cands) == 1 else "union",
+                "machine_note": "",
                 "constraint_ids": " ".join(ids),
                 "quote": quote,
             })
@@ -220,8 +230,10 @@ def load_sites() -> list:
                 "peripheral": r.get("peripheral", ""),
                 "register": r["register"], "operation": r["operation"],
                 "gated_field": r.get("gated_field", ""),
+                "static_verdict": "unchecked",
                 "precondition_fields": " ".join(r.get("fields") or []),
                 "field_source": r.get("field_source", ""),
+                "machine_note": "",
                 "constraint_ids": " ".join(ids),
                 "quote": quote,
             })
