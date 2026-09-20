@@ -154,6 +154,13 @@ CASES = {
     "stm32f0xx-hal": ("0.18.0", "stm32f0", [["stm32f051"],
                                             ["stm32f030x8"]]),
     "stm32l1xx-hal": ("0.1.0", "stm32l1", [["stm32l151"]]),
+    # The two dependent-scan port picks (out/dependent_scan.json, 2026-09):
+    # rustuino is DIRECT-PAC application-facing code (781 own accesses, 96
+    # scan hits) at stm32f4 0.14 -- hubris's exact distance; stm32l0x1-hal
+    # is a second, dependent-population L0 driver at stm32l0 0.15 (rm0377's
+    # first driver was the ported stm32l0xx-hal).
+    "rustuino": ("0.1.0", "stm32f4", [[]]),
+    "stm32l0x1-hal": ("0.11.0", "stm32l0", [[]]),
 }
 
 
@@ -197,6 +204,97 @@ MANUAL_PATCHES = {
         ("src/watchdog.rs", "w.key().reset()", "w.key().feed()"),
         ("src/watchdog.rs", "w.key().enable()", "w.key().unlock()"),
     ],
+    "stm32l0x1-hal": [
+        # ADC_CR.ADEN is BitWriter1S in the 0.16 PAC (cr.rs: `ADEN_W =
+        # BitWriter1S`): a set-only bit, so `clear_bit` is gone. The old
+        # crate wrote 0 there, which the hardware ignores (disable is via
+        # ADDIS); `.bit(false)` writes the same 0 the 0.14 build wrote.
+        ("src/adc.rs", "w.aden().clear_bit()", "w.aden().bit(false)"),
+        # ADC_ISR.EOCAL is write-1-to-clear (isr.rs: `EOCAL_W =
+        # BitWriter1C`); same rename hubris needed for USART orecf.
+        ("src/adc.rs", "w.eocal().clear_bit()", "w.eocal().clear_bit_by_one()"),
+        # write/modify return Ux in 0.16, so a bare call no longer types as
+        # `()` in match-arm position. The fix is at the ARM (the exti rule
+        # from stm32l0xx-hal): make the arm a block that discards.
+        ("src/serial/mod.rs",
+         "Event::Rxne => self.usart.cr1().modify(|_, w| w.rxneie().set_bit()),",
+         "Event::Rxne => { self.usart.cr1().modify(|_, w| w.rxneie().set_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Txe => self.usart.cr1().modify(|_, w| w.txeie().set_bit()),",
+         "Event::Txe => { self.usart.cr1().modify(|_, w| w.txeie().set_bit()); },"),
+        ("src/timer.rs",
+         "Event::Timeout => self.timer.dier().write(|w| w.uie().set_bit())",
+         "Event::Timeout => { self.timer.dier().write(|w| w.uie().set_bit()); }"),
+        ("src/timer.rs",
+         "Event::Timeout => self.timer.dier().write(|w| w.uie().clear_bit())",
+         "Event::Timeout => { self.timer.dier().write(|w| w.uie().clear_bit()); }"),
+        ("src/flash.rs",
+         "FlashError::WriteProtect => sr.inner().modify(|_, w| w.wrperr().set_bit()),",
+         "FlashError::WriteProtect => { sr.inner().modify(|_, w| w.wrperr().set_bit()); },"),
+        ("src/flash.rs",
+         "FlashError::Alignment => sr.inner().modify(|_, w| w.pgaerr().set_bit()),",
+         "FlashError::Alignment => { sr.inner().modify(|_, w| w.pgaerr().set_bit()); },"),
+        ("src/flash.rs",
+         "FlashError::Size => sr.inner().modify(|_, w| w.sizerr().set_bit()),",
+         "FlashError::Size => { sr.inner().modify(|_, w| w.sizerr().set_bit()); },"),
+        ("src/flash.rs",
+         "FlashError::ReadProtection => sr.inner().modify(|_, w| w.rderr().set_bit()),",
+         "FlashError::ReadProtection => { sr.inner().modify(|_, w| w.rderr().set_bit()); },"),
+        ("src/flash.rs",
+         "FlashError::NotZero => sr.inner().modify(|_, w| w.notzeroerr().set_bit()),",
+         "FlashError::NotZero => { sr.inner().modify(|_, w| w.notzeroerr().set_bit()); },"),
+        ("src/flash.rs",
+         "FlashError::FetchAbort => sr.inner().modify(|_, w| w.fwwerr().set_bit()),",
+         "FlashError::FetchAbort => { sr.inner().modify(|_, w| w.fwwerr().set_bit()); },"),
+        # The serial listen/unlisten matches have SIX arms here (the l0xx
+        # fork this crate descends from had two) and one copy spells the
+        # closure `|_,w|`. Normalise the spacing first -- a whitespace-only
+        # edit -- so each arm needs one patch, not two.
+        ("src/serial/mod.rs", "modify(|_,w|", "modify(|_, w|"),
+        ("src/serial/mod.rs",
+         "Event::Idle => self.usart.cr1().modify(|_, w| w.idleie().set_bit()),",
+         "Event::Idle => { self.usart.cr1().modify(|_, w| w.idleie().set_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Tc => self.usart.cr1().modify(|_, w| w.tcie().set_bit()),",
+         "Event::Tc => { self.usart.cr1().modify(|_, w| w.tcie().set_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Peie => self.usart.cr1().modify(|_, w| w.peie().set_bit()),",
+         "Event::Peie => { self.usart.cr1().modify(|_, w| w.peie().set_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Eie => self.usart.cr3().modify(|_, w| w.eie().set_bit()),",
+         "Event::Eie => { self.usart.cr3().modify(|_, w| w.eie().set_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Rxne => self.usart.cr1().modify(|_, w| w.rxneie().clear_bit()),",
+         "Event::Rxne => { self.usart.cr1().modify(|_, w| w.rxneie().clear_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Txe => self.usart.cr1().modify(|_, w| w.txeie().clear_bit()),",
+         "Event::Txe => { self.usart.cr1().modify(|_, w| w.txeie().clear_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Idle => self.usart.cr1().modify(|_, w| w.idleie().clear_bit()),",
+         "Event::Idle => { self.usart.cr1().modify(|_, w| w.idleie().clear_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Tc => self.usart.cr1().modify(|_, w| w.tcie().clear_bit()),",
+         "Event::Tc => { self.usart.cr1().modify(|_, w| w.tcie().clear_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Peie => self.usart.cr1().modify(|_, w| w.peie().clear_bit()),",
+         "Event::Peie => { self.usart.cr1().modify(|_, w| w.peie().clear_bit()); },"),
+        ("src/serial/mod.rs",
+         "Event::Eie => self.usart.cr3().modify(|_, w| w.eie().clear_bit()),",
+         "Event::Eie => { self.usart.cr3().modify(|_, w| w.eie().clear_bit()); },"),
+    ],
+    "rustuino": [
+        # I2C SR2 is a 16-bit register; the 0.16 PAC sizes `bits()` to u16
+        # where 0.14 said u32. `_sr` exists only to force the SR1-then-SR2
+        # read that clears ADDR -- its width is incidental, and retyping the
+        # two declarations fixes all eleven assignment sites.
+        ("src/i2c.rs", "let _sr: u32;", "let _sr: u16;"),
+        # `#![deny(warnings)]` turns 2026 rustc's NEW lints (static_mut_refs,
+        # plus 2840 mismatched_lifetime_syntaxes) into errors in a 2022
+        # crate. That is toolchain drift, not port distance -- the crate
+        # would not build warning-free on this compiler at PAC 0.14 either.
+        # Neutralising the build POLICY touches no behaviour.
+        ("src/lib.rs", "#![deny(warnings)]", ""),
+    ],
 }
 
 
@@ -228,14 +326,29 @@ def vendor(hal: str, version: str) -> Path:
         if cand.is_dir():
             src = cand
             break
-    if src is None:
-        sys.exit(f"{hal} {version} is not in the cargo registry cache; "
-                 f"run `cargo fetch` for it first")
     dst = WORK / hal
     if dst.exists():
         shutil.rmtree(dst)
     dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(src, dst)
+    if src is not None:
+        shutil.copytree(src, dst)
+    else:
+        # Not in the local registry cache (never built here): take the
+        # published package straight from crates.io -- the same source of
+        # record the dependent scan reads.
+        import io
+        import tarfile
+        import urllib.request
+        url = f"https://static.crates.io/crates/{hal}/{hal}-{version}.crate"
+        blob = urllib.request.urlopen(urllib.request.Request(
+            url, headers={"User-Agent": "hal_agent port_hal"})).read()
+        tf = tarfile.open(fileobj=io.BytesIO(blob), mode="r:gz")
+        tmp = dst.parent / f".unpack-{hal}"
+        if tmp.exists():
+            shutil.rmtree(tmp)
+        tf.extractall(tmp, filter="data")
+        shutil.move(str(tmp / f"{hal}-{version}"), str(dst))
+        shutil.rmtree(tmp, ignore_errors=True)
     subprocess.run(["chmod", "-R", "u+w", str(dst)], check=False)
     shutil.rmtree(dst / "examples", ignore_errors=True)
 
@@ -489,6 +602,35 @@ def unsafe_edits(stdout: str):
     return set(kept)
 
 
+def into_edits(stdout: str):
+    """rustc's own MachineApplicable `.into()` conversions for E0308.
+
+    The 0.16 PAC widened some field writers (u16 -> u32); the fix rustc
+    suggests is a lossless `.into()` at a span IT computes. Only the exact
+    replacement `.into()` at MachineApplicable applicability is taken --
+    anything else is not this rule's business."""
+    out = []
+    for line in stdout.splitlines():
+        try:
+            m = json.loads(line)
+        except ValueError:
+            continue
+        if m.get("reason") != "compiler-message":
+            continue
+        d = m["message"]
+        if d.get("level") != "error" or \
+                (d.get("code") or {}).get("code") != "E0308":
+            continue
+        for ch in d.get("children") or []:
+            for sp in ch.get("spans") or []:
+                if (sp.get("suggested_replacement") == ".into()"
+                        and sp.get("suggestion_applicability")
+                        == "MachineApplicable"):
+                    out.append((sp["file_name"], sp["byte_start"],
+                                sp["byte_end"], ".into()"))
+    return set(out)
+
+
 def apply(ws: Path, edits, verify: bool, variants=None, skipped=None) -> int:
     variants = variants or {}
     skipped = skipped if skipped is not None else []
@@ -534,7 +676,12 @@ def apply(ws: Path, edits, verify: bool, variants=None, skipped=None) -> int:
             if verify and r == _SEMICOLON and b[s:e] != b"":
                 sys.exit(f"refusing to overwrite {b[s:e]!r} with a semicolon "
                          f"in {f} at {s}:{e}")
-            if verify and r not in ("()", _SEMICOLON, "clear_bit_by_one"):
+            if verify and r == ".into()" and b[s:e] != b"":
+                sys.exit(f"refusing to overwrite {b[s:e]!r} with .into() "
+                         f"in {f} at {s}:{e} -- the rule only inserts at the "
+                         f"span rustc computed")
+            if verify and r not in ("()", _SEMICOLON, "clear_bit_by_one",
+                                    ".into()"):
                 sys.exit(f"refusing unexpected replacement {r!r} in {f}")
             b = b[:s] + r.encode() + b[e:]
             n += 1
@@ -587,6 +734,8 @@ def port(hal: str, verify: bool, target: str) -> dict:
         if not edits:
             edits = semicolon_edits(run.stdout, ws)
         if not edits:
+            edits = into_edits(run.stdout)
+        if not edits:
             if not patched:
                 patched = patch(hal_dir, hal)
                 if patched:
@@ -634,6 +783,17 @@ def main():
 
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / "port_hal.json"
+    # Merge by hal name: `--hal X` used to write its single result over the
+    # whole record -- the same defect stm_sweep --only and scan_projects
+    # --only each had, found here holding one HAL where four had been.
+    if p.is_file():
+        try:
+            existing = {r["hal"]: r for r in json.loads(p.read_text())}
+        except Exception:                                   # noqa: BLE001
+            existing = {}
+        for r in results:
+            existing[r["hal"]] = r
+        results = [existing[h] for h in sorted(existing)]
     p.write_text(json.dumps(results, indent=1))
     print(f"\nreport: {p}")
 

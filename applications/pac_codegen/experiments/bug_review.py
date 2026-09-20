@@ -80,8 +80,8 @@ PORT_RECORDS = ["port_blackpill.json", "port_elodin.json", "port_hubris.json",
                 "port_anne_key.json", "port_stm32_eth.json"]
 
 
-def _constraint_index(rm: str, device: str) -> dict:
-    p = OUT / "constraints" / f"{rm}_{device}.json"
+def _constraint_index(rm: str, device: str, path: Path = None) -> dict:
+    p = path or OUT / "constraints" / f"{rm}_{device}.json"
     if not p.is_file():
         return {}
     idx = {}
@@ -131,6 +131,59 @@ def load_port_sites() -> list:
                 "crate": r["project"],
                 "version": r.get("hal") or r.get("pac") or "",
                 "file": h.get("file", ""), "line": h.get("line", 0),
+                "peripheral": per, "register": reg,
+                "operation": h.get("operation", ""),
+                "gated_field": h.get("gated_field", ""),
+                "precondition_fields": " ".join(h.get("fields") or []),
+                "field_source": "exact" if len(cands) == 1 else "union",
+                "constraint_ids": " ".join(ids),
+                "quote": quote,
+            })
+    return rows
+
+
+def load_measured_hal_sites() -> list:
+    """Possible-bug sites from the PORTED HALs (measure_ported.json).
+
+    These never reached the ledger: the sweep's side files cover released
+    drivers and PORT_RECORDS covers the project ports, but the HALs that
+    only became measurable after port_hal.py moved them to PAC 0.16 --
+    stm32l0xx-hal, stm32f0xx-hal, and the dependent-scan picks -- reported
+    into measure_ported.json and stopped there. Constraint identity is
+    joined from each pairing's saved-constraints file, exactly the way the
+    project ports join theirs."""
+    p = OUT / "measure_ported.json"
+    if not p.is_file():
+        return []
+    rows = []
+    for r in json.loads(p.read_text()):
+        if r.get("baseline") != "PASS" or not r.get("hal"):
+            continue
+        idx = _constraint_index(
+            r["rm"], r["device"],
+            path=OUT / f"{r['rm']}_{r['device']}_ported_constraints.json")
+        for h in r.get("hits") or []:
+            if h.get("verdict") != "unchecked":
+                continue
+            reg = str(h.get("register", "")).split("::")[-1].lower()
+            reg = reg[:-2] if reg.endswith("rs") else reg
+            cands = idx.get(reg, [])
+            if len(cands) == 1:
+                per, ids, quote = (cands[0]["peripheral"],
+                                   cands[0]["constraint_ids"],
+                                   cands[0]["quote"])
+            else:
+                per = ""
+                ids = sorted({i for c in cands for i in c["constraint_ids"]})
+                quote = " | OR: ".join(
+                    f"[{c['peripheral']}] {c['quote']}" for c in cands)
+            f = str(h.get("file", ""))
+            f = f.split(r["hal"] + "/", 1)[-1]
+            rows.append({
+                "status": "", "tp_fp": "", "note": "",
+                "rm": r["rm"], "device": r["device"], "crate": r["hal"],
+                "version": "ported-to-0.16",
+                "file": f, "line": h.get("line", 0),
                 "peripheral": per, "register": reg,
                 "operation": h.get("operation", ""),
                 "gated_field": h.get("gated_field", ""),
@@ -215,7 +268,8 @@ def aggregate(rows: list) -> list:
 
 
 def init() -> None:
-    fresh = aggregate(load_sites() + load_port_sites())
+    fresh = aggregate(load_sites() + load_port_sites()
+                      + load_measured_hal_sites())
     if not fresh:
         sys.exit(f"no triage side files under {OUT/'triage'} — "
                  f"run stm_sweep.py first (the field-mode sweep writes them)")

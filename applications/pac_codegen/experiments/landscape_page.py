@@ -496,10 +496,22 @@ def dependent_scan_rows() -> list:
          'evidence grade); the pinned generation next to it says what a '
          'compile confirmation would cost.</p>']
     if hot:
+        # Where a scanned dependent has since been PORTED and compiled
+        # against an injected crate (measure_ported.json), the compiler's
+        # verdict sits beside the scan's claim.
+        mp = OUT / "measure_ported.json"
+        compiled = {}
+        if mp.is_file():
+            for r in json.loads(mp.read_text()):
+                if r.get("baseline") == "PASS" and r.get("hal"):
+                    compiled[r["hal"]] = (f'{r.get("gate_fired", 0)} fired '
+                                          f'({r.get("possible_bug", 0)} '
+                                          'unchecked)')
         h.append('<div class="scroll"><table><thead><tr>'
                  '<th class="pin">dependent</th><th>pins</th><th>manual</th>'
                  '<th>own accesses</th><th>hits</th><th>unchecked</th>'
-                 '<th>corroborated</th></tr></thead><tbody>')
+                 '<th>corroborated</th><th>compiled (after port)</th>'
+                 '</tr></thead><tbody>')
         for r in hot:
             v = r.get("verdicts") or {}
             h.append(
@@ -510,8 +522,20 @@ def dependent_scan_rows() -> list:
                 f'<td class="num">{r.get("register_accesses", 0)}</td>'
                 f'<td class="num">{r["hits"]}</td>'
                 f'<td class="num">{v.get("unchecked", 0)}</td>'
-                f'<td class="num">{v.get("corroborated", 0)}</td></tr>')
+                f'<td class="num">{v.get("corroborated", 0)}</td>'
+                f'<td>{_e(compiled.get(r["name"], "&mdash;")) if r["name"] in compiled else "&mdash;"}</td></tr>')
         h.append("</tbody></table></div>")
+        if compiled:
+            h.append(
+                '<p class="note">The <b>compiled</b> column is the stronger '
+                'grade catching up with the scan: the crate was ported to '
+                'PAC 0.16 with compiler-dictated edits (port_hal.py), built '
+                'clean against the pristine crate, then against the injected '
+                'one. The gap between a scan count and a fired count is not '
+                'error &mdash; it decomposes into constraints that did not '
+                'survive collection or validation, field-level gates '
+                'narrower than a register-level scan, and code the feature '
+                'selection never compiles.</p>')
     zero_access = sum(1 for r in quiet if not r.get("register_accesses"))
     h.append(
         f'<p class="note dim">Of the {len(quiet)} clean dependents, '

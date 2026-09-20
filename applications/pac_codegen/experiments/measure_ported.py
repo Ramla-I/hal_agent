@@ -54,6 +54,15 @@ PAIRINGS = [
      "stm32f051", "thumbv6m-none-eabi"),
     ("rm0360", "stm32f0", "stm32f0x0", "stm32f0xx-hal",
      "stm32f030x8", "thumbv6m-none-eabi"),
+    # The dependent-scan port picks (2026-09). rustuino is DIRECT-PAC
+    # application-facing code -- the scan claims 96 hits (16 unchecked) in
+    # its own source, so this pairing is the scan-vs-compiler comparison,
+    # not driver coverage. stm32l0x1-hal is a second, dependent-population
+    # L0 driver beside the ported stm32l0xx-hal on the same manual.
+    ("rm0390", "stm32f4", "stm32f446", "rustuino",
+     "", "thumbv7em-none-eabihf"),
+    ("rm0377", "stm32l0", "stm32l0x1", "stm32l0x1-hal",
+     "", "thumbv6m-none-eabi"),
 ]
 # RM0451 (stm32l0x0) has no matching stm32l0xx-hal feature -- the HAL supports
 # stm32l0x1/x2/x3 only -- so it stays unpaired and is NOT silently dropped.
@@ -260,6 +269,20 @@ def main():
 
     p = ((OUT / "register_only") if args.register_only else OUT) / \
         "measure_ported.json"
+    # Merge by (rm, hal): `--only rm0390` used to write its slice over the
+    # whole record -- the fourth instance of this defect (stm_sweep --only,
+    # scan_projects --only, port_hal --hal, now here).
+    if args.only and p.is_file():
+        try:
+            existing = {(r.get("rm"), r.get("hal")): r
+                        for r in json.loads(p.read_text())}
+        except Exception:                                   # noqa: BLE001
+            existing = {}
+        for r in results:
+            existing[(r.get("rm"), r.get("hal"))] = r
+        results = [existing[k] for k in sorted(existing,
+                                               key=lambda k: (str(k[0]),
+                                                              str(k[1])))]
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(results, indent=1))
     print(f"\nreport: {p}")
