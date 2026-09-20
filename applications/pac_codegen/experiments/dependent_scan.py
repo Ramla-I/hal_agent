@@ -329,6 +329,14 @@ def main() -> None:
                     and not str(prev.get("skip", "")).startswith("fetch")):
                 continue
             merged[r["name"]] = r
+        # A multi-family crate scans under `name@device` rows; its bare-name
+        # fetch-failure row from an earlier run is then obsolete, not
+        # unresolved -- without this, four resolved crates kept wearing
+        # "fetch failed" next to their own results.
+        for n in list(merged):
+            if (str(merged[n].get("skip", "")).startswith("fetch failed")
+                    and any(m.startswith(n + "@") for m in merged)):
+                del merged[n]
         results = sorted(merged.values(), key=lambda r: r["name"])
     out.write_text(json.dumps(results, indent=1, default=str) + "\n")
 
