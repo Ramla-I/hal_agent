@@ -1,4 +1,222 @@
 {
+ "stm32-hal2": {
+  "semtech_radios": [
+   "^2.1.4",
+   "normal"
+  ],
+  "steami-rs": [
+   "^1.8.3",
+   "normal"
+  ]
+ },
+ "stm32-hrtim": {
+  "embassy-stm32": [
+   "^0.2.0",
+   "normal"
+  ],
+  "stm32g4xx-hal": [
+   "^0.1.0",
+   "normal"
+  ]
+ },
+ "stm32f0xx-hal": {
+  "embedded-battery-pack": [
+   "^0.18",
+   "normal"
+  ],
+  "hopter": [
+   "^0.18.0",
+   "dev"
+  ],
+  "mcumeter": [
+   "^0.18",
+   "normal"
+  ],
+  "nucleo-f042k6": [
+   "^0.15.0",
+   "normal"
+  ],
+  "rlvgl-bsps-stm": [
+   "^0.18.0",
+   "normal"
+  ],
+  "stm32f072b-disco": [
+   "^0.14.0",
+   "normal"
+  ]
+ },
+ "stm32f1xx-hal": {
+  "adxl355": [
+   "^0.5.3",
+   "dev"
+  ],
+  "async-stm32f1xx": [
+   "^0.7",
+   "normal"
+  ],
+  "bitbang-hal": [
+   "^0.9",
+   "dev"
+  ],
+  "cmsis-nn-rs": [
+   "^0.10.0",
+   "dev"
+  ],
+  "commune": [
+   "^0.6",
+   "normal"
+  ],
+  "cortex-m-interrupt": [
+   "^0.9",
+   "dev"
+  ],
+  "ds1302": [
+   "^0.7.0",
+   "dev"
+  ],
+  "eeprom": [
+   "^0.9.0",
+   "normal"
+  ],
+  "embedded-async-timer": [
+   "^0.5.3",
+   "normal"
+  ],
+  "embedded-battery-pack": [
+   "^0.10",
+   "normal"
+  ],
+  "gihex-hc-sr04": [
+   "^0.10.0",
+   "dev"
+  ],
+  "hc14-at-rs": [
+   "^0.10.0",
+   "normal"
+  ],
+  "herkulex-drs-0x01-stm32f1xx": [
+   "^0.9",
+   "normal"
+  ],
+  "hx1230": [
+   "^0.9.0",
+   "dev"
+  ],
+  "jrk-g2": [
+   "^0.10.0",
+   "normal"
+  ],
+  "jrk-g2-rs": [
+   "^0.7.0",
+   "normal"
+  ],
+  "light-cli": [
+   "^0.2.1",
+   "dev"
+  ],
+  "max31865": [
+   "^0.7.0",
+   "dev"
+  ],
+  "nucleo-f103rb": [
+   "^0.3.0",
+   "normal"
+  ],
+  "oled_async": [
+   "^0.7.0",
+   "normal"
+  ],
+  "olimex-stm32-p107": [
+   "^0.7.0",
+   "normal"
+  ],
+  "rs-max31865": [
+   "^0.7.0",
+   "dev"
+  ],
+  "sdvx-controller-firmware": [
+   "^0.7.0",
+   "normal"
+  ],
+  "sent-driver": [
+   "^0.6.1",
+   "normal"
+  ],
+  "sh1106": [
+   "^0.7.0",
+   "dev"
+  ],
+  "sh1108": [
+   "^0.10",
+   "dev"
+  ],
+  "ssd1309": [
+   "^0.10",
+   "dev"
+  ],
+  "ssd1331": [
+   "^0.7.0",
+   "dev"
+  ],
+  "stm32-eth": [
+   "^0.10",
+   "normal"
+  ],
+  "stm32-usbd": [
+   "^0.7.0",
+   "dev"
+  ],
+  "stm32-usbd2": [
+   "^0.7.0",
+   "dev"
+  ],
+  "stm32f1xx-futures": [
+   "^0.7.0",
+   "normal"
+  ],
+  "tof10120": [
+   "^0.7.0",
+   "dev"
+  ]
+ },
+ "stm32f3xx-hal": {
+  "debounced-pin": [
+   "^0.3.0",
+   "dev"
+  ],
+  "dps310": [
+   "^0.9",
+   "dev"
+  ],
+  "drv8305": [
+   "^0.6.0",
+   "dev"
+  ],
+  "embedded-battery-pack": [
+   "^0.10",
+   "normal"
+  ],
+  "proton-c": [
+   "^0.2.0",
+   "dev"
+  ],
+  "rlvgl-bsps-stm": [
+   "^0.10.0",
+   "normal"
+  ],
+  "stm32f3-discovery": [
+   "^0.7.0",
+   "normal"
+  ],
+  "stm32f303cct6-robotdyn-bsp": [
+   "^0.4.3",
+   "normal"
+  ],
+  "usbd-hid-device": [
+   "^0.4.0",
+   "dev"
+  ]
+ },
  "stm32f4xx-hal": {
   "ad57xx": [
    "^0.20.0",
@@ -205,147 +423,59 @@
    "dev"
   ]
  },
- "stm32-hal2": {
-  "semtech_radios": [
-   "^2.1.4",
+ "stm32f7xx-hal": {
+  "drogue-bme680": [
+   "^0.2",
    "normal"
   ],
-  "steami-rs": [
-   "^1.8.3",
+  "drogue-grove-uart-spi": [
+   "^0.2",
+   "dev"
+  ],
+  "embedded-battery-pack": [
+   "^0.8",
+   "normal"
+  ],
+  "ft5336": [
+   "^0.6.0",
+   "dev"
+  ],
+  "rlvgl-bsps-stm": [
+   "^0.8.0",
+   "normal"
+  ],
+  "rucos-cortex-m": [
+   "^0.8.0",
+   "dev"
+  ],
+  "rustworks": [
+   "^0.3",
+   "normal"
+  ],
+  "stm32-eth": [
+   "^0.8",
    "normal"
   ]
  },
- "stm32f1xx-hal": {
-  "adxl355": [
-   "^0.5.3",
+ "stm32g0xx-hal": {
+  "dps422": [
+   "^0.0.7",
    "dev"
   ],
-  "async-stm32f1xx": [
-   "^0.7",
+  "groundhog-stm32g031": [
+   "^0.1.0",
    "normal"
   ],
-  "bitbang-hal": [
-   "^0.9",
+  "is31fl3729": [
+   "^0.2.0",
    "dev"
   ],
-  "cmsis-nn-rs": [
-   "^0.10.0",
-   "dev"
-  ],
-  "commune": [
-   "^0.6",
+  "rlvgl-bsps-stm": [
+   "^0.2.0",
    "normal"
   ],
-  "cortex-m-interrupt": [
-   "^0.9",
-   "dev"
-  ],
-  "ds1302": [
-   "^0.7.0",
-   "dev"
-  ],
-  "eeprom": [
-   "^0.9.0",
-   "normal"
-  ],
-  "embedded-async-timer": [
-   "^0.5.3",
-   "normal"
-  ],
-  "embedded-battery-pack": [
-   "^0.10",
-   "normal"
-  ],
-  "gihex-hc-sr04": [
-   "^0.10.0",
-   "dev"
-  ],
-  "hc14-at-rs": [
-   "^0.10.0",
-   "normal"
-  ],
-  "herkulex-drs-0x01-stm32f1xx": [
-   "^0.9",
-   "normal"
-  ],
-  "hx1230": [
-   "^0.9.0",
-   "dev"
-  ],
-  "jrk-g2": [
-   "^0.10.0",
-   "normal"
-  ],
-  "jrk-g2-rs": [
-   "^0.7.0",
-   "normal"
-  ],
-  "light-cli": [
-   "^0.2.1",
-   "dev"
-  ],
-  "max31865": [
-   "^0.7.0",
-   "dev"
-  ],
-  "nucleo-f103rb": [
-   "^0.3.0",
-   "normal"
-  ],
-  "oled_async": [
-   "^0.7.0",
-   "normal"
-  ],
-  "olimex-stm32-p107": [
-   "^0.7.0",
-   "normal"
-  ],
-  "rs-max31865": [
-   "^0.7.0",
-   "dev"
-  ],
-  "sdvx-controller-firmware": [
-   "^0.7.0",
-   "normal"
-  ],
-  "sent-driver": [
-   "^0.6.1",
-   "normal"
-  ],
-  "sh1106": [
-   "^0.7.0",
-   "dev"
-  ],
-  "sh1108": [
-   "^0.10",
-   "dev"
-  ],
-  "ssd1309": [
-   "^0.10",
-   "dev"
-  ],
-  "ssd1331": [
-   "^0.7.0",
-   "dev"
-  ],
-  "stm32-eth": [
-   "^0.10",
-   "normal"
-  ],
-  "stm32-usbd": [
-   "^0.7.0",
-   "dev"
-  ],
-  "stm32-usbd2": [
-   "^0.7.0",
-   "dev"
-  ],
-  "stm32f1xx-futures": [
-   "^0.7.0",
-   "normal"
-  ],
-  "tof10120": [
-   "^0.7.0",
+  "ssd1362": [
+   "^0.0.8",
    "dev"
   ]
  },
@@ -363,20 +493,497 @@
    "normal"
   ]
  },
- "stm32-hrtim": {
-  "embassy-stm32": [
-   "^0.2.0",
+ "stm32h7xx-hal": {
+  "alarmo": [
+   "^0.16.0",
    "normal"
   ],
-  "stm32g4xx-hal": [
-   "^0.1.0",
+  "bbx_daisy": [
+   "^0.16",
+   "normal"
+  ],
+  "cu-bdshot": [
+   "^0.16.0",
+   "normal"
+  ],
+  "cu-flight-controller": [
+   "^0.16.0",
+   "normal"
+  ],
+  "cu-micoairh743": [
+   "^0.16.0",
+   "normal"
+  ],
+  "daisy": [
+   "^0.16",
+   "dev"
+  ],
+  "daisy_bsp": [
+   "^0.12.2",
+   "normal"
+  ],
+  "embedded-battery-pack": [
+   "^0.16",
+   "normal"
+  ],
+  "icm20948_driver": [
+   "^0.12.2",
+   "dev"
+  ],
+  "libdaisy": [
+   "^0.9.0",
+   "normal"
+  ],
+  "nucleo-h743zi": [
+   "^0.13.1",
+   "normal"
+  ],
+  "nucleo-h7xx": [
+   "^0.13.0",
+   "normal"
+  ],
+  "ockam_transport_ble": [
+   "^0.16.0",
+   "normal"
+  ],
+  "openmv_h7_bsp": [
+   "^0.7.1",
+   "normal"
+  ],
+  "rlvgl-bsps-stm": [
+   "^0.16.0",
+   "normal"
+  ],
+  "rlvgl-platform": [
+   "^0.16",
+   "normal"
+  ],
+  "stabilizer": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32h7-ethernet": [
+   "^0.6.0",
+   "normal"
+  ],
+  "stm32h7-fmc": [
+   "^0.6.0",
+   "normal"
+  ],
+  "stm32h7-sdmmc": [
+   "^0.6.0",
+   "normal"
+  ],
+  "tca62724fmg": [
+   "^0.4.0",
+   "dev"
+  ],
+  "thermostat-eem": [
+   "^0.16.0",
    "normal"
   ]
  },
- "stm32f1-hal": {},
+ "stm32l0xx-hal": {
+  "embedded-battery-pack": [
+   "^0.10",
+   "normal"
+  ],
+  "epd-gde021a1": [
+   "^0.6.2",
+   "dev"
+  ],
+  "rlvgl-bsps-stm": [
+   "^0.10.0",
+   "normal"
+  ]
+ },
+ "stm32l4xx-hal": {
+  "at-cryptoauth": [
+   "^0.6.0",
+   "dev"
+  ],
+  "embedded-async-timer": [
+   "^0.5.0",
+   "normal"
+  ],
+  "embedded-battery-pack": [
+   "^0.7",
+   "normal"
+  ],
+  "hm11": [
+   "^0.3.3",
+   "dev"
+  ],
+  "max17048": [
+   "^0.3.2",
+   "dev"
+  ],
+  "mwatch-kernel-stm32l4": [
+   "^0.5.0",
+   "normal"
+  ],
+  "rlvgl-bsps-stm": [
+   "^0.7.1",
+   "normal"
+  ],
+  "solo-bsc": [
+   "^0.3.6",
+   "normal"
+  ]
+ },
+ "stm32c0": {
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32c0xx-hal": [
+   "^0.0.0",
+   "normal"
+  ]
+ },
+ "stm32f0": {
+  "stm32f030-hal": [
+   "^0.4.0",
+   "normal"
+  ],
+  "stm32f042-hal": [
+   "^0.4.0",
+   "normal"
+  ],
+  "stm32f072-hal": [
+   "^0.4.0",
+   "normal"
+  ],
+  "stm32f0xx-hal": [
+   "^0.14",
+   "normal"
+  ],
+  "tim-systick-monotonic": [
+   "^0.13",
+   "normal"
+  ]
+ },
+ "stm32f1": {
+  "commune": [
+   "^0.11",
+   "normal"
+  ],
+  "cortex-m-microclock": [
+   "^0.15.1",
+   "dev"
+  ],
+  "embedded-hal-nb": [
+   "^0.15",
+   "dev"
+  ],
+  "sent-driver": [
+   "^0.13.0",
+   "normal"
+  ],
+  "stm32f1-hal": [
+   "^0.16",
+   "normal"
+  ],
+  "stm32f1xx-hal": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32f1xx-hal-bxcan": [
+   "^0.11.0",
+   "normal"
+  ],
+  "stm32f1xx-lal": [
+   "^0.15.1",
+   "normal"
+  ]
+ },
+ "stm32f2": {
+  "semihosting-files": [
+   "^0.14.0",
+   "dev"
+  ]
+ },
+ "stm32f3": {
+  "alt-stm32f30x-hal": [
+   "^0.15.1",
+   "normal"
+  ],
+  "stm32-hal2": [
+   "^0.16.0",
+   "err"
+  ],
+  "stm32-hrtim": [
+   "^0.16.0",
+   "err"
+  ],
+  "stm32f303cct6-robotdyn-bsp": [
+   "^0.10.0",
+   "err"
+  ],
+  "stm32f3xx-hal": [
+   "^0.15.1",
+   "err"
+  ],
+  "stm32f3xx-hal-v2": [
+   "^0.12",
+   "normal"
+  ]
+ },
+ "stm32f4": {
+  "adf4351": [
+   "^0.12.1",
+   "dev"
+  ],
+  "blue_hal": [
+   "^0.12.1",
+   "normal"
+  ],
+  "drogue-bme680": [
+   "^0.11",
+   "normal"
+  ],
+  "drogue-grove-uart-spi": [
+   "^0.11",
+   "dev"
+  ],
+  "midi-port": [
+   "^0.8.0",
+   "dev"
+  ],
+  "pixracer_bsp": [
+   "^0.11",
+   "normal"
+  ],
+  "razorback": [
+   "^0.13.0",
+   "normal"
+  ],
+  "rivet-bsp-stm32f401re": [
+   "^0.16",
+   "normal"
+  ],
+  "rustuino": [
+   "^0.14.0",
+   "normal"
+  ],
+  "st7920": [
+   "^0.15",
+   "dev"
+  ],
+  "stm32-eth": [
+   "^0.15",
+   "normal"
+  ],
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32f401ccu6-bsp": [
+   "^0.10.0",
+   "normal"
+  ],
+  "stm32f446-hal": [
+   "^0.2.2",
+   "normal"
+  ],
+  "stm32f4xx-hal": [
+   "^0.16.0",
+   "normal"
+  ]
+ },
+ "stm32f7": {
+  "drogue-bme680": [
+   "^0.11",
+   "normal"
+  ],
+  "drogue-grove-uart-spi": [
+   "^0.11",
+   "dev"
+  ],
+  "interrupture-stm32f7x6": [
+   "^0.3.2",
+   "normal"
+  ],
+  "stm32f767-hal": [
+   "^0.2.0",
+   "normal"
+  ],
+  "stm32f7x7-hal": [
+   "^0.7.0",
+   "normal"
+  ],
+  "stm32f7xx-hal": [
+   "^0.15",
+   "normal"
+  ],
+  "tle5012": [
+   "^0.7.0",
+   "dev"
+  ]
+ },
+ "stm32g0": {
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32g0xx-hal": [
+   "^0.14.0",
+   "normal"
+  ]
+ },
+ "stm32g4": {
+  "aemics-stm32g4xx-hal": [
+   "^0.15.1",
+   "normal"
+  ],
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32-hrtim": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32g473-hal_oppe": [
+   "^0.14.0",
+   "normal"
+  ],
+  "stm32g4xx-hal": [
+   "^0.16.0",
+   "normal"
+  ]
+ },
+ "stm32h5": {
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ]
+ },
+ "stm32h7": {
+  "openmv_h7_bsp": [
+   "^0.11.0",
+   "normal"
+  ],
+  "rlvgl-bsps-stm": [
+   "^0.15.1",
+   "normal"
+  ],
+  "rlvgl-platform": [
+   "^0.15.1",
+   "normal"
+  ],
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32-hrtim": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32h7xx": [
+   "^0.2.0",
+   "normal"
+  ],
+  "stm32h7xx-hal": [
+   "^0.15.1",
+   "normal"
+  ],
+  "tca62724fmg": [
+   "^0.10.0",
+   "dev"
+  ],
+  "tim-systick-monotonic": [
+   "^0.13.0",
+   "normal"
+  ],
+  "ublox-core": [
+   "^0.10.0",
+   "dev"
+  ]
+ },
+ "stm32l0": {
+  "narc_hal": [
+   "^0.2.3",
+   "normal"
+  ],
+  "nucleo-l011k4-bsp": [
+   "^0.11.0",
+   "normal"
+  ],
+  "nucleo-l031k6-bsp": [
+   "^0.15.1",
+   "normal"
+  ],
+  "stm32l0x1-hal": [
+   "^0.15.1",
+   "normal"
+  ],
+  "stm32l0xx-hal": [
+   "^0.15.1",
+   "normal"
+  ],
+  "tim-systick-monotonic": [
+   "^0.10",
+   "normal"
+  ]
+ },
+ "stm32l1": {
+  "stm32l151-hal": [
+   "^0.3.2",
+   "normal"
+  ],
+  "stm32l1xx-hal": [
+   "^0.5.0",
+   "normal"
+  ]
+ },
+ "stm32l4": {
+  "embed_rs": [
+   "^0.15.1",
+   "normal"
+  ],
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32l4-hal": [
+   "^0.4.0",
+   "normal"
+  ],
+  "stm32l432xx-hal": [
+   "^0.3.2",
+   "normal"
+  ],
+  "stm32l4xx-hal": [
+   "^0.14.0",
+   "normal"
+  ]
+ },
+ "stm32l5": {
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ]
+ },
+ "stm32wb": {
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ]
+ },
+ "stm32wl": {
+  "stm32-hal2": [
+   "^0.16.0",
+   "normal"
+  ],
+  "stm32wlxx-hal": [
+   "^0.15.1",
+   "normal"
+  ]
+ },
  "_meta": {
   "fetched": "2026-09-18",
-  "method": "crates.io /reverse_dependencies per swept driver, then each dependent's latest-version /dependencies for the dependency kind (normal vs dev) and version requirement",
+  "method": "crates.io /reverse_dependencies per swept driver AND per vendored family PAC, then each dependent's latest-version /dependencies for kind and requirement; regenerate with dependent_scan.py --refresh-census",
   "rule": "measurable = the driver is a NORMAL dependency AND the requirement resolves to the generation the sweep measured; a crate pinning an older generation contains none of the code the sites live in",
   "excluded": {
    "hsm-rs": "stm32f4xx-hal ^0.23, but optional and pulled only by its blinky-example feature -- the library itself is HAL-free, so it is a dependent of the driver's examples, not of the driver"
