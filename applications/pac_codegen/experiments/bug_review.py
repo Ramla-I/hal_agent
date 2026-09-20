@@ -78,7 +78,11 @@ def key(row) -> tuple:
 # exact; several peripherals sharing the register name -> the labelled
 # candidate list, same rule as the sweep's union.
 PORT_RECORDS = ["port_blackpill.json", "port_elodin.json", "port_hubris.json",
-                "port_anne_key.json", "port_stm32_eth.json"]
+                "port_anne_key.json", "port_stm32_eth.json",
+                # hubris's other PAC families (drv/stm32fx-* on F3+F4,
+                # drv/stm32g0-usart on G0), each a distinct pkg@device.
+                "port_hubris_stm32f3.json", "port_hubris_stm32f4.json",
+                "port_hubris_g031.json"]
 
 
 def _constraint_index(rm: str, device: str, path: Path = None) -> dict:
@@ -109,6 +113,14 @@ def load_port_sites() -> list:
         if r.get("baseline") != "PASS":
             continue
         idx = _constraint_index(r["rm"], r["device"])
+        if not idx:
+            # A pairing whose device is not the sweep's for that manual
+            # (hubris drives g031, the sweep injects g071) has no shared
+            # constraints file; fall back to the constraints THIS pairing
+            # saved at injection.
+            glob = sorted(OUT.glob(f"{r['rm']}_{r['device']}*_constraints.json"))
+            if glob:
+                idx = _constraint_index(r["rm"], r["device"], path=glob[0])
         # Port rows carry EVERY static verdict, labelled, because the ports
         # are where corroborated has already been wrong once: hubris enables
         # UE at lib.rs:72 and writes a UE=0-gated register at :76, and the

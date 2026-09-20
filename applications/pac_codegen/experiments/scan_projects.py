@@ -386,7 +386,9 @@ SITE_NOTES = {
         "second wrong-way instance: UE is ENABLED at :65, and this is the "
         "cfg(stm32f3) branch -- RM0316 forbids BRR writes with UE=1. The "
         "identical enable line is LEGAL for the f4 branch below (RM0090 "
-        "carries no such rule): one source line, family-dependent bug",
+        "carries no such rule): one source line, family-dependent bug. "
+        "Compile-confirmed both ways by port_hubris.py: the gate fires for "
+        "the f3 pairing (RM0316) and does NOT for f4 (RM0090)",
     ("hubris", "drv/stm32fx-usart/src/main.rs", 81):
         "cfg(stm32f4) branch: only compiles against RM0090, which has no "
         "UE rule for BRR -- the rm0316 match is a path-granularity "
