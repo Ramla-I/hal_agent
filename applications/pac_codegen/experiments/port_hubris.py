@@ -55,7 +55,11 @@ OUT = APP_DIR / "experiments" / "out"
 PHASE1D = Path("/home/ramla/hal_agent-phase-1d")
 
 REPO_URL = "https://github.com/oxidecomputer/hubris.git"
-REF = "4924a12b7da3c1ff864d311532f5f692a33c8aee"
+# Bumped from 4924a12b (the August measurement) after verifying upstream
+# HEAD of 2026-09-18 carries the identical UE-before-BRR ordering at the
+# same lines. The pin is still a pin -- the measurement stays deterministic
+# -- it just names the newest commit the finding is verified against.
+REF = "f6e5849734d4e7d965a2f1cd71ca4ed4b24532de"
 PAC, PAC_VERSION, DEVICE, RM = "stm32h7", "0.16.0", "stm32h753v", "rm0433"
 TARGET = "thumbv7em-none-eabihf"
 DRIVER, DRIVER_FEATURE = "drv-stm32h7-usart", "h753"
@@ -85,7 +89,10 @@ TRIAGE_CAVEAT = (
     "enabled at line 72 and RM0433 requires UE=0)")
 KNOWN_WRONG = {("drv/stm32h7-usart/src/lib.rs", 76): (
     "verdict is wrong: UE is ENABLED at line 72, so the precondition RM0433 "
-    "states (UE=0) is violated, not established")}
+    "states (UE=0) is violated, not established. Present since the driver's "
+    "FIRST commit (ad216b74, 2022-04-04, 'Add usart lib', #475) through "
+    "the measured commit f6e58497 (upstream HEAD of 2026-09-18) -- the "
+    "ordering has never been correct in four and a half years")}
 
 
 def clone(keep: bool) -> Path:
