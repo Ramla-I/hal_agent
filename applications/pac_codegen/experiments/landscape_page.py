@@ -399,7 +399,9 @@ def dependent_records() -> list:
     out = []
     for pth in sorted(OUT.glob("dependent_*.json")):
         r = json.loads(pth.read_text())
-        if r.get("baseline"):
+        # dependent_scan.json matches this glob too and is a LIST (the scan
+        # record, rendered separately by dependent_scan_rows).
+        if isinstance(r, dict) and r.get("baseline"):
             out.append(r)
     return out
 
@@ -462,7 +464,71 @@ def dependents_section() -> list:
         for k, why in meta["excluded"].items():
             h.append(f'<p class="note dim"><b>{_e(k)}</b> is deliberately '
                      f'absent: {_e(why)}.</p>')
+    h += dependent_scan_rows()
     h.append("</section>")
+    return h
+
+
+def dependent_scan_rows() -> list:
+    """The census population SCANNED at its own pin (dependent_scan.py).
+
+    The compile probes above demand the swept driver generation; the
+    scanner does not. Rendered from out/dependent_scan.json, computed,
+    never prose."""
+    pth = OUT / "dependent_scan.json"
+    if not pth.is_file():
+        return []
+    rows = json.loads(pth.read_text())
+    scanned = [r for r in rows if "skip" not in r]
+    hot = sorted((r for r in scanned if r.get("hits")),
+                 key=lambda r: -r["hits"])
+    quiet = [r for r in scanned if not r.get("hits")]
+    skipped = [r for r in rows if "skip" in r]
+    h = ['<h3>The rest of the census, scanned at its own pin</h3>',
+         '<p class="note">A dependent pinning an older driver generation '
+         'cannot be compile-probed, but its <b>own source</b> is readable '
+         'at any pin. Every census dependent not already in the survey was '
+         'scanned from its published crates.io package, the chip and manual '
+         f'read from its own manifest: <b>{len(scanned)}</b> scanned, '
+         f'<b>{len(hot)}</b> with hits on constrained registers, '
+         f'{len(quiet)} clean, {len(skipped)} skipped with the reason '
+         'recorded below. A hit here is a <b>scan claim</b> (the weaker '
+         'evidence grade); the pinned generation next to it says what a '
+         'compile confirmation would cost.</p>']
+    if hot:
+        h.append('<div class="scroll"><table><thead><tr>'
+                 '<th class="pin">dependent</th><th>pins</th><th>manual</th>'
+                 '<th>own accesses</th><th>hits</th><th>unchecked</th>'
+                 '<th>corroborated</th></tr></thead><tbody>')
+        for r in hot:
+            v = r.get("verdicts") or {}
+            h.append(
+                f'<tr><td class="pin mono">{_e(r["name"])} '
+                f'{_e(r.get("version", ""))}</td>'
+                f'<td class="mono dim">{_e(", ".join(r.get("pins") or []))}</td>'
+                f'<td class="mono">{_e((r.get("rms") or ["?"])[0])}</td>'
+                f'<td class="num">{r.get("register_accesses", 0)}</td>'
+                f'<td class="num">{r["hits"]}</td>'
+                f'<td class="num">{v.get("unchecked", 0)}</td>'
+                f'<td class="num">{v.get("corroborated", 0)}</td></tr>')
+        h.append("</tbody></table></div>")
+    zero_access = sum(1 for r in quiet if not r.get("register_accesses"))
+    h.append(
+        f'<p class="note dim">Of the {len(quiet)} clean dependents, '
+        f'{zero_access} contain <b>no register access of their own at all</b> '
+        '&mdash; every access routes through their HAL, so their exposure is '
+        'exactly the driver rows already measured. That list includes the '
+        'deployed firmware the census surfaced: '
+        + _e(", ".join(sorted(r["name"] for r in quiet
+                              if not r.get("register_accesses"))[:10]))
+        + "&hellip;</p>")
+    if skipped:
+        by_reason = {}
+        for r in skipped:
+            by_reason.setdefault(str(r["skip"]).split(":")[0], []).append(r["name"])
+        for reason, names in sorted(by_reason.items()):
+            h.append(f'<p class="note dim"><b>{_e(reason)}</b> '
+                     f'({len(names)}): {_e(", ".join(sorted(names)))}</p>')
     return h
 
 
