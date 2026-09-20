@@ -301,12 +301,22 @@ def project_section(p: dict, trace: dict) -> list:
                    ("check precedes the access" if t["verdict"] == "corroborated"
                     else "no check on "
                          + "/".join(x.upper() for x in t.get("fields", []))))
+            note = s.get("site_note")
+            if note:
+                # A human-verified note beats the computed rationale; when
+                # it contradicts a `corroborated`, say so loudly.
+                pill = ('<span class="pill no">known wrong</span> '
+                        if t["verdict"] == "corroborated"
+                        and "wrong" in note else "")
+                why_cell = pill + _e(note)
+            else:
+                why_cell = _e(why)
             h.append(f'<tr><td class="pin">{_e(s["file"])}:{s["line"]}</td>'
                      f'<td class="mono">{_e(s["operation"])}</td>'
                      f'<td class="mono dim">'
                      f'{_e(", ".join(s.get("fields") or []) or "—")}</td>'
                      f'<td>{verdict_pill(t["verdict"])}</td>'
-                     f'<td class="wide">{_e(why)}</td></tr>')
+                     f'<td class="wide">{why_cell}</td></tr>')
         h.append("</tbody></table></div></div>")
     h.append("</section>")
     return h

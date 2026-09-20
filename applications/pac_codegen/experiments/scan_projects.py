@@ -150,6 +150,9 @@ PROJECTS = [
             ["rm0316", "rm0090", "rm0433", "rm0444", "rm0454"],
             "stm32h753", "stm32h7", pac_pinned="0.14",
             subdirs=["drv"],
+            # Same pin as port_hubris.py, so scan and compile line numbers
+            # agree and the SITE_NOTES below stay anchored.
+            ref="f6e5849734d4e7d965a2f1cd71ca4ed4b24532de",
             chip_paths={
                 "drv/lpc55": [],            # NXP, not STM
                 # features stm32h743/stm32h753 -> RM0433
@@ -368,6 +371,34 @@ PROJECTS = [
 
 # Looked at and deliberately NOT scanned. Recorded because a project absent
 # from the report is indistinguishable from one that scanned clean.
+# Human-verified notes pinned to (project, file, line) at the project's
+# pinned ref. The scan's static verdict stands in the record; these carry
+# what a human established about it -- both directions. They exist because
+# the deterministic scan is ORDER-BLIND: hubris's wrong BRR-after-UE
+# orderings read `corroborated` (UE is referenced -- set the wrong way)
+# while the G0 driver's CORRECT BRR-before-UE reads `unchecked`.
+SITE_NOTES = {
+    ("hubris", "drv/stm32h7-usart/src/lib.rs", 76):
+        "verdict is wrong-way: UE is ENABLED at :72 before this UE=0-gated "
+        "BRR write. Present since the driver's first commit (ad216b74, "
+        "2022-04-04); compile-confirmed by port_hubris.py",
+    ("hubris", "drv/stm32fx-usart/src/main.rs", 74):
+        "second wrong-way instance: UE is ENABLED at :65, and this is the "
+        "cfg(stm32f3) branch -- RM0316 forbids BRR writes with UE=1. The "
+        "identical enable line is LEGAL for the f4 branch below (RM0090 "
+        "carries no such rule): one source line, family-dependent bug",
+    ("hubris", "drv/stm32fx-usart/src/main.rs", 81):
+        "cfg(stm32f4) branch: only compiles against RM0090, which has no "
+        "UE rule for BRR -- the rm0316 match is a path-granularity "
+        "artifact (chip_paths maps files, cfg branches split inside them)",
+    ("hubris", "drv/stm32g0-usart/src/main.rs", 74):
+        "the CONTROL: correct ordering, BRR written before UE is set at "
+        ":75. Reads `unchecked` only because the scan is order-blind -- "
+        "no UE reference precedes a first write",
+    ("hubris", "drv/stm32g0-usart/src/main.rs", 82):
+        "g0b1 branch of the same correct ordering: BRR before UE (:83)",
+}
+
 EXCLUDED = {
     "turbo-resin": (
         "https://github.com/nviennot/turbo-resin",
@@ -1093,6 +1124,17 @@ def clone(p: Project, dest: Path) -> Path | None:
     if p.ref:
         cmd += ["--branch", p.ref]
     try:
+        if p.ref and re.fullmatch(r"[0-9a-f]{7,40}", p.ref):
+            # A COMMIT pin: --branch cannot take a sha. Clone then detach --
+            # hubris is pinned to the same commit its compile measurement
+            # uses, so scan line numbers and port line numbers agree.
+            subprocess.run(["git", "clone", "-q", "--filter=blob:none",
+                            p.repo, str(dest)], check=True,
+                           capture_output=True, timeout=CLONE_TIMEOUT)
+            subprocess.run(["git", "-C", str(dest), "checkout", "-q",
+                            "--detach", p.ref], check=True,
+                           capture_output=True, timeout=CLONE_TIMEOUT)
+            return dest
         subprocess.run(cmd + [p.repo, str(dest)], check=True,
                        capture_output=True, timeout=CLONE_TIMEOUT)
         return dest
@@ -1125,6 +1167,10 @@ def scan_project(p: Project, root: Path, periph_map: dict) -> dict:
     idx = idx_all
     triaged = triage(matched,
                      p.dialect or ("tock" if p.style == "tock" else "pac"))
+    for f in triaged:
+        note = SITE_NOTES.get((p.name, f.get("file", ""), f.get("line")))
+        if note:
+            f["site_note"] = note
     regs = Counter(f"{h['peripheral']}/{h['register']}" for h in hits)
     verdicts = Counter(h["triage"]["verdict"] for h in triaged)
     return {
