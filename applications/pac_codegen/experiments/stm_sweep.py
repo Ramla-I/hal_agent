@@ -719,6 +719,17 @@ def _gate_fields(constraints_path: Path) -> dict:
             for op in ("write", "modify"):
                 if fields:
                     per_op[op] = sorted(set(per_op.get(op, [])) | set(fields))
+        # The GATED field names themselves (the keys of gated_fields), kept
+        # apart from the precondition fields above. An E0061 witness names
+        # the gated field -- Cr2AdonFieldWitness fires on adon's writer --
+        # and matching that hint against PRECONDITION fields is a category
+        # error that only looked right where the two coincide (adon gates
+        # adon); txdr's gated txdata never matched its precondition txe, so
+        # the hint resolved nothing.
+        if e.get("gated_fields"):
+            per_op["_gated"] = sorted(
+                set(per_op.get("_gated", []))
+                | {str(k).lower() for k in e["gated_fields"]})
         if per_op:
             per_op["_ident"] = ident
             out.setdefault(reg, {})[periph] = per_op
@@ -728,25 +739,39 @@ def _gate_fields(constraints_path: Path) -> dict:
         union = {}
         for per_op in by_periph.values():
             for op, fs in per_op.items():
-                if op == "_ident":
+                if op in ("_ident", "_gated"):
                     continue
                 union[op] = sorted(set(union.get(op, [])) | set(fs))
-        distinct = {json.dumps({k: x for k, x in v.items() if k != "_ident"},
+        distinct = {json.dumps({k: x for k, x in v.items()
+                                if k not in ("_ident", "_gated")},
                                sort_keys=True) for v in by_periph.values()}
         resolved[reg] = {"by_peripheral": by_periph, "union": union,
                          "ambiguous": len(distinct) > 1}
     return resolved
 
 
-def _fields_for(gate_fields: dict, spec: str, reg: str, op: str) -> tuple:
+def _fields_for(gate_fields: dict, spec: str, reg: str, op: str,
+                field_hint: str = "", projection: bool = False) -> tuple:
     """(fields, how, peripheral, identity) for one diagnostic.
 
     `spec` is the Rust type the gate names. When it is a full path --
     `stm32f4::stm32f429::i2c1::ccr::CCRrs` -- the module two segments up IS the
-    peripheral, and the lookup is exact. A bare `CR2rs` names no peripheral, so
-    the union stands in and the row records that it did. `identity` is the
-    constraint that built the gate ({constraint_ids, quote}); under a union it
-    is the LIST of candidates, never a silent pick."""
+    peripheral, and the lookup is exact. A bare `CR2rs` names no peripheral;
+    before falling to the union, `field_hint` (the gated FIELD off an E0061
+    witness type) is tried: a field only one candidate peripheral gates
+    identifies it as surely as a path would -- `adon` is the ADC's, `te` the
+    USART's. Only then does the union stand in, and the row records that it
+    did. `identity` is the constraint that built the gate
+    ({constraint_ids, quote}); under a union it is the LIST of candidates,
+    never a silent pick.
+
+    `projection` marks a diagnostic that named its register through an
+    associated type (`<ADC as Instance>::CR2rs`): the peripheral is the
+    TRAIT'S, not proven to be the code's, and rustc reports these at the
+    function signature, definition-side. Whatever the lookup resolves, the
+    row is labelled `projection` so a reviewer knows the attribution is
+    inferred from the gating plan alone -- rm0041's f1xx-hal rows put
+    usart1's TE quote on ADC power_up() this way, with `only` confidence."""
     ent = gate_fields.get(reg)
     if not ent:
         return [], "none", "", {}
@@ -754,6 +779,14 @@ def _fields_for(gate_fields: dict, spec: str, reg: str, op: str) -> tuple:
     periph = parts[-3].lower() if len(parts) >= 3 else ""
     per_op = ent["by_peripheral"].get(periph)
     how = "exact"
+    if per_op is None and field_hint:
+        # Match against the GATED field names, not the precondition fields:
+        # the witness names what is gated (txdata), the preconditions name
+        # what must hold first (txe), and they only coincide by accident.
+        cands = [k for k, v in ent["by_peripheral"].items()
+                 if field_hint in (v.get("_gated") or [])]
+        if len(cands) == 1:
+            periph, per_op, how = cands[0], ent["by_peripheral"][cands[0]], "field"
     if per_op is None:
         per_op, how = ent["union"], ("union" if ent["ambiguous"] else "only")
         if how == "only":
@@ -769,8 +802,11 @@ def _fields_for(gate_fields: dict, spec: str, reg: str, op: str) -> tuple:
     else:
         ident = dict(per_op.get("_ident") or {})
         ident["peripheral"] = periph
+    if projection and how != "exact":
+        how = "projection"
     fields = per_op.get(op) or sorted({f for k, v in per_op.items()
-                                       if k != "_ident" for f in v})
+                                       if k not in ("_ident", "_gated")
+                                       for f in v})
     return fields, how, periph, ident
 
 
@@ -887,10 +923,26 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
             m = _SPEC_REG_RE.search(named[0].split("::")[-1])
             if m:
                 reg = m.group(1).lower()
-            op = ("write" if "write-constrained" in e["message"] else
-                  "modify" if "modify-constrained" in e["message"] else "read")
+            # The op comes from the Hit, never re-derived from message text.
+            # A field gate fires as E0061, whose message says neither
+            # "write-constrained" nor "modify-constrained", so the old
+            # fallback stamped every field-gate row `read` -- 255 ledger
+            # rows, i2c.rs:53 recorded as `write` on the two manuals whose
+            # constraint became a whole-register gate and `read` on the ten
+            # whose constraint became a field gate, same source line.
+            op = hit.operation
+            # A concrete E0277 names the full path -- the peripheral is two
+            # segments up. Pass it through so contested register names
+            # resolve exact instead of union (flash cr rows opened with an
+            # [adc] quote for want of this). A projection path stays bare:
+            # its "peripheral" is the trait's, and _fields_for labels it.
+            lookup = named[0]
+            if hit.kind == "register" and hit.path and not hit.projection \
+                    and hit.path.split("::")[-1] == named[0]:
+                lookup = hit.path
             fields, how, periph, ident = _fields_for(
-                gate_fields, named[0], reg, op)
+                gate_fields, lookup, reg, op,
+                field_hint=hit.field, projection=hit.projection)
             if how == "union":
                 res["fields_from_union"] += 1
             site = e["sites"][0] if e.get("sites") else None
@@ -900,7 +952,8 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
                     "file": site[2] if len(site) > 2 else
                             (e["hal_files"][0] if e["hal_files"] else ""),
                     "line": site[1], "peripheral": periph, "register": reg,
-                    "operation": op, "fields": fields, "field_source": how,
+                    "operation": op, "gated_field": hit.field,
+                    "fields": fields, "field_source": how,
                     "verdict": v["verdict"],
                     "helpers": v.get("helpers_inlined") or [],
                     **ident,
@@ -929,6 +982,7 @@ def classify(errors, gated_specs: set[str], gate_fields=None) -> dict:
                         "file": site[2] if len(site) > 2 else
                                 (e["hal_files"][0] if e["hal_files"] else ""),
                         "line": site[1], "register": reg, "operation": op,
+                        "gated_field": hit.field,
                         "fields": fields, "verdict": v["verdict"],
                         # How the fields were resolved: `exact` means the
                         # diagnostic named the peripheral, `union` means it did

@@ -63,6 +63,12 @@ class Hit(NamedTuple):
     field: str           # gated field for a field hit, "" otherwise
     operation: str       # "read" | "write" | "modify"
     projection: bool     # named through an associated type -> generic friction
+    # The full path the diagnostic named (E0277 only; "" for field hits).
+    # `stm32f4::stm32f429::i2c1::ccr::CCRrs` carries the PERIPHERAL two
+    # segments up -- classify discarded it for years and every contested
+    # register name fell to a union that opened with another peripheral's
+    # datasheet quote.
+    path: str = ""
 
 
 def _code(diag: dict) -> str:
@@ -106,7 +112,7 @@ def classify_diagnostic(diag: dict) -> "Hit | None":
         spec = named.split("::")[-1]
         rm = _SPEC_SUFFIX_RE.search(spec)
         return Hit("register", spec, (rm.group(1).lower() if rm else spec.lower()),
-                   "", op, _is_projection(named))
+                   "", op, _is_projection(named), named)
 
     if code == "E0061":
         fm = _FIELD_WITNESS_RE.search(span_labels(diag))

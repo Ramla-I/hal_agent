@@ -150,6 +150,54 @@ class Review(unittest.TestCase):
         self.assertIn("**1** tp", md)
 
 
+class Duplicates(unittest.TestCase):
+    """Identity is per gated FIELD; what is still identical aggregates.
+
+    Four field gates on one `cfgr.modify(..)` line are four different bits
+    -- with `gated_field` in the key they are four distinguishable rows. A
+    macro body reported once per expansion is ONE site for a reviewer; those
+    byte-identical repeats collapse to a single row with `count`."""
+
+    def setUp(self):
+        Review.setUp(self)
+
+    def tearDown(self):
+        Review.tearDown(self)
+
+    write_sites = Review.write_sites
+    read = Review.read
+
+    def test_identical_repeats_collapse_with_count(self):
+        self.write_sites([make_row(gated_field="txdata")] * 5)
+        self.br.init()
+        rows = list(self.read().values())
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["count"], "5")
+
+    def test_distinct_gated_fields_stay_separate_rows(self):
+        self.write_sites([make_row(gated_field="dcen"),
+                          make_row(gated_field="icen")])
+        self.br.init()
+        rows = self.read()
+        self.assertEqual(len(rows), 2)
+        self.assertEqual({r["gated_field"] for r in rows.values()},
+                         {"dcen", "icen"})
+
+    def test_mark_on_aggregated_row_survives(self):
+        self.write_sites([make_row(gated_field="txdata")] * 3)
+        self.br.init()
+        import csv
+        with open(self.br.REVIEW, newline="") as fh:
+            rows = list(csv.DictReader(fh))
+        rows[0]["tp_fp"] = "fp"
+        self.br.write_review(rows)
+        self.write_sites([make_row(gated_field="txdata")] * 3)
+        self.br.init()
+        row = next(iter(self.read().values()))
+        self.assertEqual(row["tp_fp"], "fp")
+        self.assertEqual(row["count"], "3")
+
+
 class PortSites(unittest.TestCase):
     """The compiled PROJECTS' hits enter the ledger too -- the first version
     covered only the sweep's HALs while the handover advice pointed the

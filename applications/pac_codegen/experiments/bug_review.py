@@ -50,10 +50,19 @@ TABLE = OUT / "bug_review_table.md"
 
 FIELDS = ["status", "tp_fp", "note", "rm", "device", "crate", "version",
           "file", "line", "peripheral", "register", "operation",
+          "gated_field", "count",
           "precondition_fields", "field_source", "constraint_ids", "quote"]
 
 HUMAN = {"tp_fp", "note"}          # never machine-overwritten
-KEY = ("rm", "device", "crate", "file", "line", "register", "operation")
+# gated_field is part of the identity: four field gates firing on one
+# `cfgr.modify(..)` line are four different bits, and without it they were
+# four indistinguishable rows sharing one merge key -- 172 keys covered 397
+# extra rows, and a mark on one of them was ambiguous on the next --init.
+# What remains identical after that (per-macro-expansion, per-instance
+# duplicates) is AGGREGATED into one row whose `count` says how many times
+# the compiler reported it.
+KEY = ("rm", "device", "crate", "file", "line", "register", "operation",
+       "gated_field")
 
 
 def key(row) -> tuple:
@@ -124,6 +133,7 @@ def load_port_sites() -> list:
                 "file": h.get("file", ""), "line": h.get("line", 0),
                 "peripheral": per, "register": reg,
                 "operation": h.get("operation", ""),
+                "gated_field": h.get("gated_field", ""),
                 "precondition_fields": " ".join(h.get("fields") or []),
                 "field_source": "exact" if len(cands) == 1 else "union",
                 "constraint_ids": " ".join(ids),
@@ -156,6 +166,7 @@ def load_sites() -> list:
                 "file": r["file"], "line": r["line"],
                 "peripheral": r.get("peripheral", ""),
                 "register": r["register"], "operation": r["operation"],
+                "gated_field": r.get("gated_field", ""),
                 "precondition_fields": " ".join(r.get("fields") or []),
                 "field_source": r.get("field_source", ""),
                 "constraint_ids": " ".join(ids),
@@ -179,8 +190,32 @@ def write_review(rows) -> None:
             w.writerow({k: r.get(k, "") for k in FIELDS})
 
 
+def aggregate(rows: list) -> list:
+    """Collapse rows identical in every machine column into one, counting.
+
+    A macro body reports once per expansion and a per-instance impl once per
+    instance -- same file, line, register, operation, gated field, fields,
+    constraint identity. Those are one site for a reviewer; `count` keeps the
+    multiplicity honest. Rows differing in ANY machine column stay separate."""
+    out, index = [], {}
+    ident_cols = [c for c in FIELDS if c not in ("status", "tp_fp", "note",
+                                                 "count")]
+    for r in rows:
+        k = tuple(str(r.get(c, "")) for c in ident_cols)
+        prev = index.get(k)
+        if prev is None:
+            r = dict(r, count=int(r.get("count") or 1))
+            index[k] = r
+            out.append(r)
+        else:
+            prev["count"] += int(r.get("count") or 1)
+    for r in out:
+        r["count"] = str(r["count"])
+    return out
+
+
 def init() -> None:
-    fresh = load_sites() + load_port_sites()
+    fresh = aggregate(load_sites() + load_port_sites())
     if not fresh:
         sys.exit(f"no triage side files under {OUT/'triage'} — "
                  f"run stm_sweep.py first (the field-mode sweep writes them)")
