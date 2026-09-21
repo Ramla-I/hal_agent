@@ -48,6 +48,34 @@ OUT = EXP / "out"
 REVIEW = EXP / "bug_review.csv"
 TABLE = OUT / "bug_review_table.md"
 
+
+def _rm_to_pac() -> dict:
+    """manual -> PAC family, so the ledger can be ordered the way the
+    coverage artifact is (by PAC family, not by manual). Built from the
+    sweep's own TARGETS plus the master-PAC manuals."""
+    m = {"rm0505": "stm32wb0", "rm0529": "stm32wb0", "rm0530": "stm32wb0",
+         "rm0493": "stm32wba"}
+    try:
+        sys.path.insert(0, str(EXP))
+        import stm_sweep
+        for t in stm_sweep.TARGETS:
+            m.setdefault(t.rm, t.pac)
+    except Exception:                                      # noqa: BLE001
+        pass
+    return m
+
+
+RM2PAC = _rm_to_pac()
+_MASTER_PACS = {"stm32wb0", "stm32wba"}
+
+
+def artifact_order(r) -> tuple:
+    """Match the coverage artifact's ordering: PAC family (alphabetical,
+    master PACs last) -> crate -> device -> file -> line."""
+    pac = RM2PAC.get(r["rm"], "zzz-" + r["rm"])
+    return (pac in _MASTER_PACS, pac, r["crate"], r["device"],
+            r["file"], int(r["line"] or 0))
+
 FIELDS = ["status", "tp_fp", "note", "rm", "device", "crate", "version",
           "file", "line", "peripheral", "register", "operation",
           "gated_field", "static_verdict", "count",
@@ -320,8 +348,7 @@ def init() -> None:
             prev["status"] = "stale"
             merged.append(prev)
             stale += 1
-    merged.sort(key=lambda r: (r["rm"], r["device"], r["crate"],
-                               r["file"], int(r["line"] or 0)))
+    merged.sort(key=artifact_order)
     write_review(merged)
     print(f"{REVIEW.name}: {len(merged)} rows "
           f"({added} new, {kept} carried marks/blank, {stale} stale-kept)")
