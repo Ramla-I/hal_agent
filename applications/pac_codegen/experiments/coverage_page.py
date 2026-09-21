@@ -94,7 +94,7 @@ def compiled_cell(p):
     hals=HALDEV.get(p,{})
     def hmax(h): return max([x[2] or -1 for x in hals[h]] or [-1])
     for h in sorted(hals, key=lambda h:-hmax(h)):
-        devs=sorted(hals[h], key=lambda x:-(x[2] if x[2] is not None else -1))
+        devs=sorted(hals[h], key=lambda x:x[0])   # devices alphabetical
         out.append(f'<div class="entry">{clink(h)}{HALTAG} {path_html(("direct",None))}'
                    + "".join(dev_line(*d[:1],*d[2:]) for d in devs) + "</div>")
     # a HAL that could not be ported at all (never compiled, shown in scanned if scanned)
