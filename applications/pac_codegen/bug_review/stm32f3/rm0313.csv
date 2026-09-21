@@ -1,0 +1,2 @@
+status,tp_fp,note,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,rm0313,stm32f373,stm32-hal2,2.1.10,src/rtc.rs,382,rtc,wutr,modify,,unchecked,1,wutwf,only,,5dd26bda0628,This register can be written only when WUTWF is set to 1 in RTC_ISR.

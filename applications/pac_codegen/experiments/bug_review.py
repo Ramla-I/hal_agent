@@ -39,13 +39,18 @@ Usage:
 import argparse
 import csv
 import json
+import shutil
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 EXP = Path(__file__).resolve().parent
 OUT = EXP / "out"
-REVIEW = EXP / "bug_review.csv"
+# The review ledger is a TREE, one folder per PAC family, one CSV per
+# manual: applications/pac_codegen/bug_review/<pac>/<rm>.csv. It used to be
+# a single bug_review.csv; splitting it keeps each manual's marks in a small
+# reviewable file and groups families the way the coverage artifact does.
+REVIEW_DIR = EXP.parent / "bug_review"
 TABLE = OUT / "bug_review_table.md"
 
 
@@ -280,19 +285,42 @@ def load_sites() -> list:
     return rows
 
 
+def _pac_of(rm: str) -> str:
+    return RM2PAC.get(rm, "other")
+
+
+def review_path(pac: str, rm: str) -> Path:
+    return REVIEW_DIR / pac / f"{rm}.csv"
+
+
 def read_review() -> list:
-    if not REVIEW.is_file():
-        return []
-    with open(REVIEW, newline="") as fh:
-        return list(csv.DictReader(fh))
+    """Every row across the whole tree, concatenated."""
+    rows = []
+    if REVIEW_DIR.is_dir():
+        for f in sorted(REVIEW_DIR.glob("*/*.csv")):
+            with open(f, newline="") as fh:
+                rows.extend(csv.DictReader(fh))
+    return rows
 
 
 def write_review(rows) -> None:
-    with open(REVIEW, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=FIELDS)
-        w.writeheader()
-        for r in rows:
-            w.writerow({k: r.get(k, "") for k in FIELDS})
+    """Split rows into <pac>/<rm>.csv. The tree is rebuilt from scratch each
+    time: `rows` is the fully-merged set (including stale-kept marked rows),
+    so clearing and rewriting cannot lose a mark and drops files for pairings
+    that no longer have any row."""
+    if REVIEW_DIR.is_dir():
+        shutil.rmtree(REVIEW_DIR)
+    groups = defaultdict(list)
+    for r in rows:
+        groups[(_pac_of(r["rm"]), r["rm"])].append(r)
+    for (pac, rm), grp in groups.items():
+        p = review_path(pac, rm)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with open(p, "w", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=FIELDS)
+            w.writeheader()
+            for r in grp:
+                w.writerow({k: r.get(k, "") for k in FIELDS})
 
 
 def aggregate(rows: list) -> list:
@@ -350,7 +378,10 @@ def init() -> None:
             stale += 1
     merged.sort(key=artifact_order)
     write_review(merged)
-    print(f"{REVIEW.name}: {len(merged)} rows "
+    n_files = len({(_pac_of(r["rm"]), r["rm"]) for r in merged})
+    n_pacs = len({_pac_of(r["rm"]) for r in merged})
+    print(f"{REVIEW_DIR.name}/: {len(merged)} rows across {n_pacs} PAC "
+          f"folders / {n_files} manual files "
           f"({added} new, {kept} carried marks/blank, {stale} stale-kept)")
 
 
@@ -371,7 +402,7 @@ def stats() -> Counter:
 def table() -> None:
     rows = read_review()
     if not rows:
-        sys.exit(f"{REVIEW} is empty — run --init first")
+        sys.exit(f"{REVIEW_DIR} is empty — run --init first")
     c = Counter()
     per = Counter()
     for r in rows:

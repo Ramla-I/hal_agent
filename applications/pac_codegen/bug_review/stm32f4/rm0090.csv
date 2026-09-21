@@ -1,0 +1,23 @@
+status,tp_fp,note,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,rm0090,stm32f429,stm32-hal2,2.1.10,src/spi/baseline.rs,82,spi1,cr1,write,crcen,unchecked,1,spe,field,,ac7c535b6bd8,Note: This bit should be written only when the SPI is disabled (SPE = ‘0’) for correct operation.
+,,,rm0090,stm32f429,stm32-hal2,2.1.10,src/usart.rs,262,usart1,cr3,write,scen,unchecked,1,hdsel,field,,9c1fec44e44c,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+- SCEN and IREN bits in the USART_CR3 register"
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/ltdc.rs,519,dma2d,omar,write,,unchecked,1,start,only,,dc66f3d5b710,"These bits can only be written when data transfers are disabled. Once the transfer has started, they are read-only."
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/ltdc.rs,539,dma2d,oor,write,lo,unchecked,1,start,field,,eed87a35e0d3,"Bits 13:0 **LO[13: 0]** : Line Offset
+
+Line offset used for the output (expressed in pixels). This value is used for the address generation. It is added at the end of each line to determine the starting address of the next line. These bits can only be written when data transfers are disabled. Once the transfer has started, they are read-only."
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/pacext.rs,73,usart1,cr3,write,iren,unchecked,1,hdsel,field,,9c1fec44e44c,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+- SCEN and IREN bits in the USART_CR3 register"
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/serial.rs,260,,cr2,write,,unchecked,1,adon te,projection,,61863c23f9d0 ba5d2720548b,"[adc1] Note: This bit can be set only when ADON = 1 otherwise no conversion is launched. | OR: [usart1] These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled."
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/serial.rs,260,usart1,cr3,write,,unchecked,1,hdsel,projection,,9c1fec44e44c,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+- SCEN and IREN bits in the USART_CR3 register"
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,151,usart1,cr3,modify,,unchecked,1,hdsel,projection,,9c1fec44e44c,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+- SCEN and IREN bits in the USART_CR3 register"
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,154,usart1,cr3,modify,,unchecked,1,hdsel,projection,,9c1fec44e44c,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+- SCEN and IREN bits in the USART_CR3 register"
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,204,usart1,cr3,write,,unchecked,3,hdsel,projection,,9c1fec44e44c,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+- SCEN and IREN bits in the USART_CR3 register"
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,243,usart1,cr3,write,iren,unchecked,1,hdsel,field,,9c1fec44e44c,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+- SCEN and IREN bits in the USART_CR3 register"
+,,,rm0090,stm32f429,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,248,usart1,cr3,write,iren,unchecked,1,hdsel,field,,9c1fec44e44c,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+- SCEN and IREN bits in the USART_CR3 register"

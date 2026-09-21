@@ -1,0 +1,6 @@
+status,tp_fp,note,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,rm0360,stm32f0x0,stm32f0xx-hal,ported-to-0.16,src/adc.rs,580,adc,chselr,write,,unchecked,1,adstart,exact,,4bf31b1215a2,The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing).
+,,,rm0360,stm32f0x0,stm32f0xx-hal,ported-to-0.16,src/adc.rs,584,adc,smpr,write,,unchecked,1,adstart,exact,,fb91f5fb2aaf,Note: The software is allowed to write this bit only when ADSTART = 0 (which ensures that no conversion is ongoing).
+,,,rm0360,stm32f0x0,stm32f0xx-hal,ported-to-0.16,src/i2c.rs,298,i2c1,txdr,write,,unchecked,1,txe,exact,,1eece6ca4c8e,These bits can be written only when TXE = 1.
+,,,rm0360,stm32f0x0,stm32f0xx-hal,ported-to-0.16,src/rcc.rs,116,rcc,cr,write,,unchecked,1,hseon,exact,,a2bf6fc92f48,The HSEBYP bit can be written only if the HSE oscillator is disabled.
+,,,rm0360,stm32f0x0,stm32f0xx-hal,ported-to-0.16,src/serial.rs,345,usart1,brr,write,,unchecked,2,ue,exact,,051045039ddd,This register can only be written when the USART is disabled (UE=0).

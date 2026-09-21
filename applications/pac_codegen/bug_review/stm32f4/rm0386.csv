@@ -1,0 +1,24 @@
+status,tp_fp,note,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,rm0386,stm32f469,stm32-hal2,2.1.10,src/spi/baseline.rs,82,spi1,cr1,write,crcen,unchecked,1,spe,field,,f955c96d290c,Note: This bit should be written only when SPI is disabled (SPE = ‘0’) for correct operation.
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/pacext.rs,73,usart1,cr3,write,hdsel,unchecked,1,clken iren linen scen,field,,2d819833916e,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+      - LINEN and CLKEN bits in the USART_CR2 register,
+      - SCEN and IREN bits in the USART_CR3 register."
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/qspi.rs,290,quadspi,cr,modify,,unchecked,1,busy,exact,,a1407cf5e6fd,_Note: This bitfield can be modified only when BUSY = 0._
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/qspi.rs,344,quadspi,cr,modify,,unchecked,1,busy,exact,,a1407cf5e6fd,_Note: This bitfield can be modified only when BUSY = 0._
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/qspi.rs,368,quadspi,cr,modify,,unchecked,1,busy,exact,,a1407cf5e6fd,_Note: This bitfield can be modified only when BUSY = 0._
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/serial.rs,260,,cr2,write,,unchecked,1,adon te,projection,,11630a129a2a ec8d24a9ebcc,"[adc1] Note: This bit can be set only when ADON = 1 otherwise no conversion is launched. | OR: [usart1] These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled."
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/serial.rs,260,usart1,cr3,write,,unchecked,1,clken iren linen scen,projection,,2d819833916e,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+      - LINEN and CLKEN bits in the USART_CR2 register,
+      - SCEN and IREN bits in the USART_CR3 register."
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,151,usart1,cr3,modify,,unchecked,1,clken iren linen scen,projection,,2d819833916e,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+      - LINEN and CLKEN bits in the USART_CR2 register,
+      - SCEN and IREN bits in the USART_CR3 register."
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,154,usart1,cr3,modify,,unchecked,1,clken iren linen scen,projection,,2d819833916e,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+      - LINEN and CLKEN bits in the USART_CR2 register,
+      - SCEN and IREN bits in the USART_CR3 register."
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,204,usart1,cr3,write,,unchecked,3,clken iren linen scen,projection,,2d819833916e,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+      - LINEN and CLKEN bits in the USART_CR2 register,
+      - SCEN and IREN bits in the USART_CR3 register."
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/watchdog.rs,63,iwdg,pr,modify,,unchecked,1,pvu,exact,,f2ca6217e06f,Reading this register returns the prescaler value from the VDD voltage domain. This value may not be up to date/valid if a write operation to this register is ongoing. For this reason the value read from this register is valid only when the PVU bit in the IWDG_SR register is reset.
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/watchdog.rs,64,iwdg,rlr,modify,,unchecked,1,rvu,only,,c54eee119df8,Reading this register returns the reload value from the VDD voltage domain. This value may not be up to date/valid if a write operation to this register is ongoing. For this reason the value read from this register is valid only when the RVU bit in the IWDG_SR register is reset.
+,,,rm0386,stm32f469,stm32f4xx-hal,0.23.0,src/watchdog.rs,77,iwdg,rlr,read,,unchecked,1,rvu,only,,c54eee119df8,Reading this register returns the reload value from the VDD voltage domain. This value may not be up to date/valid if a write operation to this register is ongoing. For this reason the value read from this register is valid only when the RVU bit in the IWDG_SR register is reset.

@@ -1,0 +1,7 @@
+status,tp_fp,note,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,rm0461,stm32wle5,stm32-hal2,2.1.10,src/clocks/baseline.rs,880,flash,acr,write,dcrst,unchecked,1,dcen icen,field,,539c020e3292 d1a939495f8d,This bit can be written only when the data cache is disabled.
+,,,rm0461,stm32wle5,stm32-hal2,2.1.10,src/clocks/baseline.rs,881,flash,acr,write,icrst,unchecked,1,dcen icen,field,,539c020e3292 d1a939495f8d,This bit can be written only when the data cache is disabled.
+,,,rm0461,stm32wle5,stm32-hal2,2.1.10,src/i2c.rs,53,i2c1,txdr,write,txdata,unchecked,5,txe,field,,f3d17c53c6b4,These bits can be written only when TXE = 1.
+,,,rm0461,stm32wle5,stm32-hal2,2.1.10,src/i2c.rs,461,i2c1,txdr,write,txdata,unchecked,1,txe,field,,f3d17c53c6b4,These bits can be written only when TXE = 1.
+,,,rm0461,stm32wle5,stm32-hal2,2.1.10,src/i2c.rs,491,i2c1,txdr,write,txdata,unchecked,1,txe,field,,f3d17c53c6b4,These bits can be written only when TXE = 1.
+,,,rm0461,stm32wle5,stm32-hal2,2.1.10,src/rtc.rs,382,rtc,wutr,modify,,unchecked,1,wutwf,only,,ac4ce77affac,This register can be written only when WUTWF is set to 1 in RTC_ICSR.

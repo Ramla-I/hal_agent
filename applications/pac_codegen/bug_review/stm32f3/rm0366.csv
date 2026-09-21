@@ -1,0 +1,6 @@
+status,tp_fp,note,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,rm0366,stm32f301,stm32-hal2,2.1.10,src/i2c.rs,53,i2c1,txdr,write,,unchecked,5,txe,only,,50f95dc629c6,Note: These bits can be written only when TXE = 1.
+,,,rm0366,stm32f301,stm32-hal2,2.1.10,src/i2c.rs,461,i2c1,txdr,write,,unchecked,1,txe,only,,50f95dc629c6,Note: These bits can be written only when TXE = 1.
+,,,rm0366,stm32f301,stm32-hal2,2.1.10,src/i2c.rs,491,i2c1,txdr,write,,unchecked,1,txe,only,,50f95dc629c6,Note: These bits can be written only when TXE = 1.
+,,,rm0366,stm32f301,stm32-hal2,2.1.10,src/iwdg.rs,30,iwdg,pr,write,,unchecked,1,pvu,only,,a3c216a97921,Prescaler value can be updated only when PVU bit is reset.
+,,,rm0366,stm32f301,stm32-hal2,2.1.10,src/iwdg.rs,37,iwdg,rlr,write,,unchecked,1,rvu,only,,b99a37dc4c50,Reload value can be updated only when RVU bit is reset.

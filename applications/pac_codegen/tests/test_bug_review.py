@@ -50,7 +50,7 @@ class Review(unittest.TestCase):
         importlib.reload(bug_review)
         bug_review.OUT = root / "out"
         (root / "out" / "constraints").mkdir()
-        bug_review.REVIEW = root / "bug_review.csv"
+        bug_review.REVIEW_DIR = root / "bug_review"
         bug_review.TABLE = root / "out" / "bug_review_table.md"
         self.br = bug_review
         self.tri = root / "out" / "triage" / "rm0399_stm32h747cm7_stm32-hal2.jsonl"
@@ -62,9 +62,7 @@ class Review(unittest.TestCase):
         self.tri.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
 
     def read(self):
-        import csv
-        with open(self.br.REVIEW, newline="") as fh:
-            return {self.br.key(r): r for r in csv.DictReader(fh)}
+        return {self.br.key(r): r for r in self.br.read_review()}
 
     def test_init_builds_rows_with_empty_marks(self):
         self.write_sites([make_row(), make_row(line=200, verdict="corroborated")])
@@ -186,9 +184,7 @@ class Duplicates(unittest.TestCase):
     def test_mark_on_aggregated_row_survives(self):
         self.write_sites([make_row(gated_field="txdata")] * 3)
         self.br.init()
-        import csv
-        with open(self.br.REVIEW, newline="") as fh:
-            rows = list(csv.DictReader(fh))
+        rows = self.br.read_review()
         rows[0]["tp_fp"] = "fp"
         self.br.write_review(rows)
         self.write_sites([make_row(gated_field="txdata")] * 3)
@@ -214,7 +210,7 @@ class PortSites(unittest.TestCase):
         import importlib, bug_review
         importlib.reload(bug_review)
         bug_review.OUT = root / "out"
-        bug_review.REVIEW = root / "bug_review.csv"
+        bug_review.REVIEW_DIR = root / "bug_review"
         bug_review.TABLE = root / "out" / "t.md"
         bug_review.PORT_RECORDS = ["port_x.json"]
         self.br = bug_review
