@@ -999,6 +999,10 @@
     "stm32u5"
    ],
    "note": "verified absence, not just absent-from-sweep: zero HAL/BSP reverse-dependents and no *-hal/*-bsp crate by name. f0/f7/l0/l1 DO have older-pinned HALs (portable); these five have none."
+  },
+  "feature_forwarding_fix": {
+   "date": "2026-09-21",
+   "note": "dependent_scan now follows a crate own [features] that forward <pac|hal>/<chip> (aemics-style default features); recovered 9 chip-specific HAL/BSP scans previously skipped as no-chip-feature. Remaining no-chip-feature skips are chip-generic drivers or the compile-probed embassy/semtech."
   }
  }
 }

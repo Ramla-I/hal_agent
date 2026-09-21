@@ -99,6 +99,15 @@ FAMILY_RM = [
     (r"f0[357]0", "rm0360"),
     (r"f0[4-9][128]|f0x[128]", "rm0091"),
     (r"g0[34]1", "rm0444"),
+    # families whose HAL/BSP feature-forwarding names a device the corpus
+    # device-name doesn't prefix-match (found via the aemics feature-forward
+    # fix). One manual per G4/C0/WL; L4 splits x2/x3 (RM0394) from x5/x6
+    # (RM0351).
+    (r"g4[0-9a][0-9a-z]?", "rm0440"),
+    (r"c0[0-9][0-9x]?", "rm0490"),
+    (r"wl[0-9a-z]+", "rm0461"),
+    (r"l4[23][0-9x]", "rm0394"),
+    (r"l4[4-9a-r][0-9x]?", "rm0351"),
 ]
 
 
@@ -135,11 +144,23 @@ def chips_from_manifest(root: Path) -> tuple:
             feats = spec.get("features", []) if isinstance(spec, dict) else []
             deps[real] = feats
     style = "pac_direct" if PAC_CRATES & set(deps) else "hal_only"
+    known = PAC_CRATES | HAL_CRATES
     tokens = set()
     for name, feats in deps.items():
-        if name in PAC_CRATES or name in HAL_CRATES:
+        if name in known:
             for f in feats:
                 tokens.add(str(f).lower().removeprefix("stm32"))
+    # Also follow the crate's OWN [features] that forward a chip feature onto
+    # a PAC/HAL dep. A HAL/BSP usually names its chip that way, not inline on
+    # the dependency: aemics-stm32g4xx-hal wires
+    # `default=[stm32g473]` -> `stm32g473 = ["stm32g4/stm32g473"]`, so the
+    # chip never appears on the `stm32g4` line. 21 dependents -- most of them
+    # chip-specific HALs/BSPs -- were skipped for want of this.
+    for _fname, flist in (data.get("features") or {}).items():
+        for entry in (flist or []):
+            crate, sep, chip = str(entry).partition("/")
+            if sep and crate in known and chip.lower().startswith("stm32"):
+                tokens.add(chip.lower().removeprefix("stm32"))
     matched, unmatched = {}, []
     for tok in sorted(tokens):
         hit = resolve_token(tok)
