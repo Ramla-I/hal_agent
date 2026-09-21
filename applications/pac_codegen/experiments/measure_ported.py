@@ -63,6 +63,12 @@ PAIRINGS = [
      "", "thumbv7em-none-eabihf"),
     ("rm0377", "stm32l0", "stm32l0x1", "stm32l0x1-hal",
      "", "thumbv6m-none-eabi"),
+    # f7 + l1: the two remaining older-pinned families, ported to close the
+    # gap. f7 is Cortex-M7 (thumbv7em), l1 is Cortex-M3 (thumbv7m).
+    ("rm0385", "stm32f7", "stm32f746", "stm32f7xx-hal",
+     "stm32f746", "thumbv7em-none-eabihf"),
+    ("rm0038", "stm32l1", "stm32l151", "stm32l1xx-hal",
+     "stm32l151", "thumbv7m-none-eabi"),
 ]
 # RM0451 (stm32l0x0) has no matching stm32l0xx-hal feature -- the HAL supports
 # stm32l0x1/x2/x3 only -- so it stays unpaired and is NOT silently dropped.

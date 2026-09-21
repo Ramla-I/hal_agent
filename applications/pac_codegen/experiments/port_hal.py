@@ -154,6 +154,10 @@ CASES = {
     "stm32f0xx-hal": ("0.18.0", "stm32f0", [["stm32f051"],
                                             ["stm32f030x8"]]),
     "stm32l1xx-hal": ("0.1.0", "stm32l1", [["stm32l151"]]),
+    # f7 + l1: the last two released families with an older-pinned HAL,
+    # ported to close the gap (stm32f7xx-hal 0.8 -> stm32f7 ^0.15;
+    # stm32l1xx-hal is the line above, stm32l1 ^0.5.0).
+    "stm32f7xx-hal": ("0.8.0", "stm32f7", [["stm32f746"]]),
     # The two dependent-scan port picks (out/dependent_scan.json, 2026-09):
     # rustuino is DIRECT-PAC application-facing code (781 own accesses, 96
     # scan hits) at stm32f4 0.14 -- hubris's exact distance; stm32l0x1-hal
@@ -714,13 +718,17 @@ def port(hal: str, verify: bool, target: str) -> dict:
                    capture_output=True, text=True, timeout=STEP_TIMEOUT)
 
     patched, history, total = 0, [], 0
+    last_rc, last_had_msgs = 0, False
     for _ in range(80):
         # Every feature set, every round: an edit that fixes one config must
         # not be judged against that config alone.
         stdout, codes = "", collections.Counter()
+        last_rc = 0
         for features in feature_sets:
             run = check(ws, hal, features, target)
             stdout += run.stdout
+            last_rc = last_rc or run.returncode
+        last_had_msgs = '"reason":"compiler-message"' in stdout
         edits, codes = diagnostics(stdout)
         run = type("R", (), {"stdout": stdout})()
         history.append({"errors": sum(codes.values()), "by_code": dict(codes)})
@@ -745,8 +753,16 @@ def port(hal: str, verify: bool, target: str) -> dict:
         total += apply(ws, edits, verify, variants, skipped)
         if total == before:
             break
-    ok = history[-1]["errors"] == 0
+    # A build that never ran is not a build with no errors. cargo emits zero
+    # compiler-messages on a RESOLUTION failure (a feature the new PAC
+    # renamed, a version conflict) and exits nonzero; diagnostics() then sees
+    # no errors and the port would falsely read as compiling. stm32f7xx-hal
+    # 0.8 forwards `stm32f7/stm32f7x2`, renamed to stm32f722 in 0.16, and was
+    # reported as a clean 0-edit port until this guard.
+    did_not_run = last_rc != 0 and not last_had_msgs
+    ok = history[-1]["errors"] == 0 and not did_not_run
     return {"hal": hal, "version": version, "pac": pac,
+            "did_not_run": did_not_run,
             "workspace": str(ws), "feature_sets": feature_sets,
             "edits_applied": total,
             "enum_suffixes_dropped": renamed,

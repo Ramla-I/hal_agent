@@ -987,6 +987,18 @@
   "rule": "measurable = the driver is a NORMAL dependency AND the requirement resolves to the generation the sweep measured; a crate pinning an older generation contains none of the code the sites live in",
   "excluded": {
    "hsm-rs": "stm32f4xx-hal ^0.23, but optional and pulled only by its blinky-example feature -- the library itself is HAL-free, so it is a dependent of the driver's examples, not of the driver"
+  },
+  "no_hal_families": {
+   "checked": "2026-09-21",
+   "method": "crates.io reverse_dependencies + name search for *-hal/*-bsp",
+   "families_with_no_released_hal": [
+    "stm32f2",
+    "stm32mp1",
+    "stm32n6",
+    "stm32u0",
+    "stm32u5"
+   ],
+   "note": "verified absence, not just absent-from-sweep: zero HAL/BSP reverse-dependents and no *-hal/*-bsp crate by name. f0/f7/l0/l1 DO have older-pinned HALs (portable); these five have none."
   }
  }
 }
