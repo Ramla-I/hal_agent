@@ -13,21 +13,21 @@ _Note: This bit should be written only when SPI is disabled (SPE = ‘0’) for 
       - LINEN and CLKEN bits in the USART_CR2 register,
 
       - SCEN and IREN bits in the USART_CR3 register."
-,fp,erase: start-then-wait_ready pattern; BSY clear on entry (idle after unlock; prior op ended with wait_ready). CR modify launches STRT with BSY=0.,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/flash.rs,198,flash,cr,modify,,unchecked,1,,bsy,exact,,a5b2df1202c7,Note: The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared.
-,fp,program: each loop-iteration CR modify runs with BSY clear (idle on entry / cleared by prior iteration's wait_ready at :246).,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/flash.rs,227,flash,cr,modify,,unchecked,1,,bsy,exact,,a5b2df1202c7,Note: The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared.
-,fp,lock: called only from UnlockedFlash::drop after last mutating op already waited for BSY. BSY clear when LOCK set.,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/flash.rs,273,flash,cr,modify,,unchecked,1,,bsy,exact,,a5b2df1202c7,Note: The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared.
-,fp,send_byte spins on `isr.txis().bit_is_clear()` (TXIS=1 implies TXE=1) before writing TXDR. Precondition established.,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/fmpi2c.rs,483,fmpi2c1,txdr,write,,unchecked,1,,txe,only,,23c2e123c967,Note: These bits can be written only when TXE = 1.
-,fp,wrap_w! macro trait-accessor body (no value written); concrete callers (configure_irda) clear HDSEL. FP.,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/pacext.rs,73,usart1,cr3,write,iren,unchecked,1,,hdsel,field,,de328244b4d4,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/flash.rs,198,flash,cr,modify,,unchecked,1,,bsy,exact,,a5b2df1202c7,Note: The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared.
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/flash.rs,227,flash,cr,modify,,unchecked,1,,bsy,exact,,a5b2df1202c7,Note: The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared.
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/flash.rs,273,flash,cr,modify,,unchecked,1,,bsy,exact,,a5b2df1202c7,Note: The FLASH_CR register is not accessible in write mode when the BSY bit in the FLASH_SR register is set. Any attempt to write to it with the BSY bit set will cause the AHB bus to stall until the BSY bit is cleared.
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/fmpi2c.rs,483,fmpi2c1,txdr,write,,unchecked,1,,txe,only,,23c2e123c967,Note: These bits can be written only when TXE = 1.
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/pacext.rs,73,usart1,cr3,write,iren,unchecked,1,,hdsel,field,,de328244b4d4,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
 
       - LINEN and CLKEN bits in the USART_CR2 register,
 
       - SCEN and IREN bits in the USART_CR3 register."
-,fp,"new(): clears EN as first CR access right after QUADSPI::enable; fresh peripheral idle, BUSY=0.",rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/qspi.rs,290,quadspi,cr,modify,,unchecked,1,,busy,exact,,2a98a9239344,_Note: This bitfield can be modified only when BUSY = 0._
-,fp,new() DualFlash: identical init-time EN-disable with BUSY=0 on fresh peripheral.,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/qspi.rs,344,quadspi,cr,modify,,unchecked,1,,busy,exact,,2a98a9239344,_Note: This bitfield can be modified only when BUSY = 0._
-,fp,"abort_transmission writes only the ABORT bit, which is EXEMPT from the BUSY=0 rule (exists to abort an in-flight transfer). Field mismatch → FP.",rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/qspi.rs,368,quadspi,cr,modify,,unchecked,1,,busy,exact,,2a98a9239344,_Note: This bitfield can be modified only when BUSY = 0._
-,fp,pllsrc write in the PLL-Unused branch (returns Self::Unused); PLLON never set on this path. FP.,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/rcc/f4/pll.rs,206,rcc,pllcfgr,write,,unchecked,1,,pllon,only,,39a6dedcc500,These bits should be written only if PLL is disabled.
-,fp,PLLCFGR write in from_cfgr (mod.rs:367) strictly before PLLON set (mod.rs:442); PLL off (reset). FP.,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/rcc/f4/pll.rs,259,rcc,pllcfgr,write,,unchecked,1,,pllon,only,,39a6dedcc500,These bits should be written only if PLL is disabled.
-,fp,PLLI2SCFGR write in from_cfgr before PLLON(:442) and PLLI2SON(:467); both off. FP.,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/rcc/f4/pll.rs,481,rcc,plli2scfgr,modify,,unchecked,1,,plli2son pllon,only,,8df81be6e859,This bit can be written only when PLL and PLLI2S are disabled.
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/qspi.rs,290,quadspi,cr,modify,,unchecked,1,,busy,exact,,2a98a9239344,_Note: This bitfield can be modified only when BUSY = 0._
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/qspi.rs,344,quadspi,cr,modify,,unchecked,1,,busy,exact,,2a98a9239344,_Note: This bitfield can be modified only when BUSY = 0._
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/qspi.rs,368,quadspi,cr,modify,,unchecked,1,,busy,exact,,2a98a9239344,_Note: This bitfield can be modified only when BUSY = 0._
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/rcc/f4/pll.rs,206,rcc,pllcfgr,write,,unchecked,1,,pllon,only,,39a6dedcc500,These bits should be written only if PLL is disabled.
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/rcc/f4/pll.rs,259,rcc,pllcfgr,write,,unchecked,1,,pllon,only,,39a6dedcc500,These bits should be written only if PLL is disabled.
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/rcc/f4/pll.rs,481,rcc,plli2scfgr,modify,,unchecked,1,,plli2son pllon,only,,8df81be6e859,This bit can be written only when PLL and PLLI2S are disabled.
 ,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/serial.rs,260,adc1,cr2,write,,unchecked,1,,adon,projection,,c7d1c4be7cb2,Note: This bit can be set only when ADON = 1 otherwise no conversion is launched.
 ,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/serial.rs,260,usart1,cr3,write,,unchecked,1,,hdsel,projection,,de328244b4d4,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
 
@@ -49,12 +49,12 @@ _Note: This bit should be written only when SPI is disabled (SPE = ‘0’) for 
       - LINEN and CLKEN bits in the USART_CR2 register,
 
       - SCEN and IREN bits in the USART_CR3 register."
-,fp,configure_irda uses full cr3().write() driving HDSEL=0; CR3 also reset at serial.rs:286 just before. IREN and HDSEL never co-set (HDSEL never written in crate).,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,243,usart1,cr3,write,iren,unchecked,1,,hdsel,field,,de328244b4d4,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,243,usart1,cr3,write,iren,unchecked,1,,hdsel,field,,de328244b4d4,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
 
       - LINEN and CLKEN bits in the USART_CR2 register,
 
       - SCEN and IREN bits in the USART_CR3 register."
-,fp,configure_irda LowPower path; same full-write drives HDSEL=0. FP.,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,248,usart1,cr3,write,iren,unchecked,1,,hdsel,field,,de328244b4d4,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
+,,,rm0430,stm32f413,stm32f4xx-hal,0.23.0,src/serial/uart_impls.rs,248,usart1,cr3,write,iren,unchecked,1,,hdsel,field,,de328244b4d4,"The single-wire half-duplex mode is selected by setting the HDSEL bit in the USART_CR3 register. In this mode, the following bits must be kept cleared:
 
       - LINEN and CLKEN bits in the USART_CR2 register,
 
