@@ -146,6 +146,9 @@ def show(row, path, pos, total, left):
     cnt = row.get("count", "")
     if cnt and cnt not in ("1", ""):
         line("count", f"{cnt} identical compiler reports")
+    if row.get("compiled_in"):
+        line("hit in", CYAN(row["compiled_in"])
+             + DIM("  (downstream crates that compile this HAL site)"))
     if row.get("machine_note"):
         line("machine", RED(row["machine_note"]))
     q = " ".join((row.get("quote", "") or "").split())

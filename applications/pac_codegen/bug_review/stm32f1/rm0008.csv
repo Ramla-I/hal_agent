@@ -1,9 +1,9 @@
-status,tp_fp,note,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,precondition_fields,field_source,machine_note,constraint_ids,quote
-,,,rm0008,stm32f103,stm32f1-hal,0.14.1,src/rcc/mod.rs,87,rcc,cr,write,hsebyp,unchecked,1,hseon,field,,dd3055252b76,The HSEBYP bit can be written only if the HSE oscillator is disabled.
-,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,300,usart1,cr2,modify,,unchecked,1,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
-,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,310,usart1,cr2,modify,,unchecked,1,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
-,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,326,usart1,cr2,modify,,unchecked,2,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
-,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,336,usart1,cr2,modify,,unchecked,1,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
-,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,395,usart1,cr2,modify,,unchecked,1,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
-,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,419,usart1,cr2,modify,,unchecked,1,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
-,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/rcc.rs,234,rcc,cr,write,hsebyp,unchecked,1,hseon,field,,dd3055252b76,The HSEBYP bit can be written only if the HSE oscillator is disabled.
+status,tp_fp,note,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,compiled_in,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,rm0008,stm32f103,stm32f1-hal,0.14.1,src/rcc/mod.rs,87,rcc,cr,write,hsebyp,unchecked,1,,hseon,field,,dd3055252b76,The HSEBYP bit can be written only if the HSE oscillator is disabled.
+,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,300,usart1,cr2,modify,,unchecked,1,,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
+,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,310,usart1,cr2,modify,,unchecked,1,,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
+,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,326,usart1,cr2,modify,,unchecked,2,,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
+,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,336,usart1,cr2,modify,,unchecked,1,,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
+,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,395,usart1,cr2,modify,,unchecked,1,,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
+,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/adc.rs,419,usart1,cr2,modify,,unchecked,1,,te,projection,,b7c38eaf5559,"_Note:_ _These 3 bits (CPOL, CPHA, LBCL) should not be written while the transmitter is enabled._"
+,,,rm0008,stm32f103,stm32f1xx-hal,0.11.0,src/rcc.rs,234,rcc,cr,write,hsebyp,unchecked,1,,hseon,field,,dd3055252b76,The HSEBYP bit can be written only if the HSE oscillator is disabled.

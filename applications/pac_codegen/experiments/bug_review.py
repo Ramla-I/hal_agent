@@ -83,7 +83,7 @@ def artifact_order(r) -> tuple:
 
 FIELDS = ["status", "tp_fp", "note", "rm", "device", "crate", "version",
           "file", "line", "peripheral", "register", "operation",
-          "gated_field", "static_verdict", "count",
+          "gated_field", "static_verdict", "count", "compiled_in",
           "precondition_fields", "field_source", "machine_note",
           "constraint_ids", "quote"]
 
@@ -136,6 +136,75 @@ def _constraint_index(rm: str, device: str, path: Path = None) -> dict:
     return idx
 
 
+_HAL_MARKERS = ("-hal", "hal2", "hrtim")
+
+# Records whose HAL-layer hits tell us which downstream crates COMPILE a HAL
+# site (the dependent-compile probes + the whole-app ports). Their fired
+# gates all land in a HAL, so they are not ledger rows of their own (that
+# would duplicate the sweep); instead they annotate the sweep's HAL rows.
+_DOWNSTREAM_RECORDS = ["port_blackpill.json", "port_stm32_eth.json",
+                       "dependent_semtech_radios.json",
+                       "dependent_stm32f469i_disc.json",
+                       "dependent_embassy_stm32.json"]
+
+
+def _rel_src(f: str) -> str:
+    """Normalise a hit's file to the crate-relative `src/...` path so a
+    dependent's absolute path matches the sweep row's relative one."""
+    return "src/" + f.split("src/", 1)[1] if "src/" in f else f
+
+
+def _downstream_map() -> dict:
+    """(rm, device, crate, rel_file, line) -> set(project) : which compiled
+    dependents fire a gate at each HAL site. Keyed by device too, so a g4
+    dependent (semtech) only annotates the g4 rows, not another family's
+    same-named source line."""
+    m = defaultdict(set)
+    for name in _DOWNSTREAM_RECORDS:
+        p = OUT / name
+        if not p.is_file():
+            continue
+        r = json.loads(p.read_text())
+        if r.get("baseline") != "PASS":
+            continue
+        proj = r.get("project") or r.get("dependent") or name
+        for h in r.get("hits") or []:
+            if not _is_hal_site(h):
+                continue
+            lay = h.get("layer") or h.get("file", "").split("/", 1)[0]
+            crate = lay if any(x in lay for x in _HAL_MARKERS) else \
+                h.get("file", "").split("/", 1)[0]
+            key = (r["rm"], r["device"], crate,
+                   _rel_src(h.get("file", "")), str(h.get("line", "")))
+            m[key].add(proj)
+    return m
+
+
+DOWNSTREAM = None   # built lazily on first init
+
+
+def _is_hal_site(h: dict) -> bool:
+    """A compiled project's hit that fired INSIDE a HAL, not the project's own
+    source. Those sites are already in the ledger from the sweep's HAL rows
+    (and shown per-dependent on the coverage artifact), so ingesting them here
+    only duplicates review -- e.g. every blackpill hit is a stm32f4xx-hal
+    site the sweep already recorded. The ledger keeps a project's OWN-code
+    hits (hubris's drivers, elodin's SDMMC, rustuino's ADC); HAL-layer hits
+    are pruned."""
+    if (h.get("where") or "").lower() == "hal":
+        return True
+    lay = (h.get("layer") or "")
+    if any(m in lay for m in _HAL_MARKERS):
+        return True
+    f = h.get("file", "")
+    root = f.split("/", 1)[0]
+    if any(m in root for m in _HAL_MARKERS):
+        return True
+    if "/.cargo/" in f and any(m in f for m in _HAL_MARKERS):
+        return True
+    return False
+
+
 def load_port_sites() -> list:
     rows = []
     for name in PORT_RECORDS:
@@ -162,6 +231,8 @@ def load_port_sites() -> list:
         # unchecked-only -- a thousand guarded driver rows would drown the
         # review, and their counts live on the tracking page.)
         for h in r.get("hits") or []:
+            if _is_hal_site(h):
+                continue          # HAL-layer hit; covered by the sweep rows
             reg = str(h.get("register", "")).split("::")[-1].lower()
             reg = reg[:-2] if reg.endswith("rs") else reg
             cands = idx.get(reg, [])
@@ -251,6 +322,7 @@ def load_measured_hal_sites() -> list:
 
 
 def load_sites() -> list:
+    dmap = DOWNSTREAM if DOWNSTREAM is not None else _downstream_map()
     rows = []
     tri = OUT / "triage"
     for f in sorted(tri.glob("*.jsonl")) if tri.is_dir() else []:
@@ -276,6 +348,9 @@ def load_sites() -> list:
                 "register": r["register"], "operation": r["operation"],
                 "gated_field": r.get("gated_field", ""),
                 "static_verdict": "unchecked",
+                "compiled_in": ", ".join(sorted(dmap.get(
+                    (r["rm"], r["device"], r["crate"],
+                     _rel_src(r["file"]), str(r["line"])), set()))),
                 "precondition_fields": " ".join(r.get("fields") or []),
                 "field_source": r.get("field_source", ""),
                 "machine_note": "",
@@ -308,8 +383,13 @@ def write_review(rows) -> None:
     time: `rows` is the fully-merged set (including stale-kept marked rows),
     so clearing and rewriting cannot lose a mark and drops files for pairings
     that no longer have any row."""
+    # Clear only the per-PAC subdirectories, NOT the whole REVIEW_DIR: the
+    # reviewer (review.py) and any notes live directly in bug_review/, and an
+    # rmtree of the parent would delete them on every --init.
     if REVIEW_DIR.is_dir():
-        shutil.rmtree(REVIEW_DIR)
+        for sub in REVIEW_DIR.iterdir():
+            if sub.is_dir():
+                shutil.rmtree(sub)
     groups = defaultdict(list)
     for r in rows:
         groups[(_pac_of(r["rm"]), r["rm"])].append(r)
