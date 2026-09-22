@@ -143,6 +143,10 @@ def show(row, path, pos, total, left):
     sv = row.get("static_verdict", "")
     svc = {"unchecked": YEL, "corroborated": GRN}.get(sv, DIM)
     line("static", f"{svc(sv)}   {DIM('(field_source: '+row.get('field_source','')+')')}")
+    cr = (row.get("claude_review") or "").strip()
+    if cr:
+        crc = {"tp": RED, "fp": GRN, "unsure": YEL}.get(cr, DIM)
+        line("claude", crc(cr) + DIM("  (automated triage verdict — see claude_review.md)"))
     cnt = row.get("count", "")
     if cnt and cnt not in ("1", ""):
         line("count", f"{cnt} identical compiler reports")

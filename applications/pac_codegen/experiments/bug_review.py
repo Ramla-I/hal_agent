@@ -81,13 +81,16 @@ def artifact_order(r) -> tuple:
     return (pac in _MASTER_PACS, pac, r["crate"], r["device"],
             r["file"], int(r["line"] or 0))
 
-FIELDS = ["status", "tp_fp", "note", "rm", "device", "crate", "version",
-          "file", "line", "peripheral", "register", "operation",
+FIELDS = ["status", "tp_fp", "note", "claude_review", "rm", "device", "crate",
+          "version", "file", "line", "peripheral", "register", "operation",
           "gated_field", "static_verdict", "count", "compiled_in",
           "precondition_fields", "field_source", "machine_note",
           "constraint_ids", "quote"]
 
-HUMAN = {"tp_fp", "note"}          # never machine-overwritten
+# claude_review holds a one-time automated triage verdict (tp/fp/unsure). Like
+# the human marks it is preserved verbatim across --init (never recomputed from
+# the sweep); a genuinely new row gets it blank.
+HUMAN = {"tp_fp", "note", "claude_review"}   # never machine-overwritten
 # gated_field is part of the identity: four field gates firing on one
 # `cfgr.modify(..)` line are four different bits, and without it they were
 # four indistinguishable rows sharing one merge key -- 172 keys covered 397
@@ -287,7 +290,7 @@ def load_measured_hal_sites() -> list:
             r["rm"], r["device"],
             path=OUT / f"{r['rm']}_{r['device']}_ported_constraints.json")
         for h in r.get("hits") or []:
-            if h.get("verdict") != "unchecked":
+            if h.get("verdict") not in ("unchecked", "corroborated"):
                 continue
             reg = str(h.get("register", "")).split("::")[-1].lower()
             reg = reg[:-2] if reg.endswith("rs") else reg
@@ -311,7 +314,7 @@ def load_measured_hal_sites() -> list:
                 "peripheral": per, "register": reg,
                 "operation": h.get("operation", ""),
                 "gated_field": h.get("gated_field", ""),
-                "static_verdict": "unchecked",
+                "static_verdict": h.get("verdict", "unchecked"),
                 "precondition_fields": " ".join(h.get("fields") or []),
                 "field_source": "exact" if len(cands) == 1 else "union",
                 "machine_note": "",
@@ -328,7 +331,11 @@ def load_sites() -> list:
     for f in sorted(tri.glob("*.jsonl")) if tri.is_dir() else []:
         for line in f.read_text().splitlines():
             r = json.loads(line)
-            if r.get("verdict") != "unchecked":
+            # Include corroborated too (per request): the static scan's
+            # "corroborated" auto-clear is value-blind and has been wrong (it
+            # cleared the confirmed hubris UE/BRR bug), so keep those rows in
+            # the ledger, tagged by static_verdict, rather than dropping them.
+            if r.get("verdict") not in ("unchecked", "corroborated"):
                 continue
             if "candidates" in r:
                 ids = sorted({i for c in r["candidates"]
@@ -347,7 +354,7 @@ def load_sites() -> list:
                 "peripheral": r.get("peripheral", ""),
                 "register": r["register"], "operation": r["operation"],
                 "gated_field": r.get("gated_field", ""),
-                "static_verdict": "unchecked",
+                "static_verdict": r.get("verdict", "unchecked"),
                 "compiled_in": ", ".join(sorted(dmap.get(
                     (r["rm"], r["device"], r["crate"],
                      _rel_src(r["file"]), str(r["line"])), set()))),
@@ -412,7 +419,7 @@ def aggregate(rows: list) -> list:
     multiplicity honest. Rows differing in ANY machine column stay separate."""
     out, index = [], {}
     ident_cols = [c for c in FIELDS if c not in ("status", "tp_fp", "note",
-                                                 "count")]
+                                                 "claude_review", "count")]
     for r in rows:
         k = tuple(str(r.get(c, "")) for c in ident_cols)
         prev = index.get(k)

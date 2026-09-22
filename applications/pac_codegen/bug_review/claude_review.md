@@ -2,21 +2,21 @@
 
 **Scope:** every witness gate that fired when the injected-constraint PACs were
 compiled against the HAL crates, across **both** verdict piles — the *unchecked*
-candidates (the `bug_review/` ledger) **and** the *corroborated* gates (which the
-pipeline auto-cleared; these live only in the raw triage JSONLs). ~450 distinct
-HAL gate-sites triaged. Generated 2026-09-22.
+candidates and the *corroborated* gates (the static scan's value-blind auto-clear).
+~450 distinct HAL gate-sites triaged. Generated 2026-09-22.
 
 These are **candidate** verdicts from source+datasheet analysis, for you to
-confirm. Nothing here is written into the ledger CSVs — mark those yourself.
+confirm. Nothing here is written into the ledger's `tp_fp` column — mark those
+yourself (e.g. via `review.py`).
 
 - **Confirmed true bugs: 12** (7 from the unchecked pile, 5 from the corroborated pile)
 - **Unsure (unguarded API / conditional): 8**
 - **Bonus (off our precondition axis): 2** — one wrong injected constraint, one copy-paste code bug
 
-Link column: for unchecked bugs, the `bug_review/` CSV(s) the site appears in
-(open with `review.py`). For corroborated bugs, **not in the ledger** — the raw
-triage JSONL instead (a corroborated site fires on several devices; one
-representative linked).
+**Links:** each bug points to the `bug_review/` CSV(s) its site appears in.
+Corroborated gates are now included in the ledger too, tagged
+`static_verdict=corroborated` (a site fires on several devices, so it can appear
+in several family CSVs).
 
 ---
 
@@ -31,14 +31,17 @@ representative linked).
 | 5 | stm32-hal2 | `clocks/baseline.rs:881` | ICRST=1 while I-cache enabled | unchecked | [stm32c0/rm0490.csv](stm32c0/rm0490.csv), [stm32g0/rm0454.csv](stm32g0/rm0454.csv), [stm32l4/rm0351.csv](stm32l4/rm0351.csv), [stm32l4/rm0394.csv](stm32l4/rm0394.csv), [stm32wb/rm0434.csv](stm32wb/rm0434.csv), [stm32wl/rm0461.csv](stm32wl/rm0461.csv) |
 | 6 | stm32-hal2 | `clocks/baseline.rs:1016` | LSE enabled without DBP unlock (G0 setup) | unchecked | [stm32g0/rm0444.csv](stm32g0/rm0444.csv) |
 | 7 | stm32-hal2 | `clocks/baseline.rs:1452` | LSE enabled without DBP unlock (G0 reselect) | unchecked | [stm32g0/rm0444.csv](stm32g0/rm0444.csv) |
-| 8 | stm32-hal2 | `clocks/baseline.rs:1053` | HSEBYPPWR written after HSEON=1 | corroborated | *not in ledger* → [triage](../experiments/out/triage/rm0461_stm32wle5_stm32-hal2.jsonl) |
-| 9 | stm32-hal2 | `clocks/baseline.rs:1055` | HSEBYP written after HSEON=1 | corroborated | *not in ledger* → [triage](../experiments/out/triage/rm0440_stm32g474_stm32-hal2.jsonl) |
-| 10 | stm32-hal2 | `clocks/f.rs:494` | HSEBYP written after HSEON=1 | corroborated | *not in ledger* → [triage](../experiments/out/triage/rm0316_stm32f303_stm32-hal2.jsonl) |
-| 11 | stm32-hal2 | `usart.rs:265` | IREN=1 while UE=1 (IrDA config after enable) | corroborated | *not in ledger* → [triage](../experiments/out/triage/rm0430_stm32f413_stm32-hal2.jsonl) |
-| 12 | stm32-hal2 | `usart.rs:263` | HDSEL written while UE=1 (same block) | corroborated | *not in ledger* → [triage](../experiments/out/triage/rm0386_stm32f469_stm32-hal2.jsonl) |
+| 8 | stm32-hal2 | `clocks/baseline.rs:1053` | HSEBYPPWR written after HSEON=1 | corroborated | [stm32wl/rm0461.csv](stm32wl/rm0461.csv) |
+| 9 | stm32-hal2 | `clocks/baseline.rs:1055` | HSEBYP written after HSEON=1 | corroborated | [stm32g0/rm0454.csv](stm32g0/rm0454.csv), [stm32g4/rm0440.csv](stm32g4/rm0440.csv) |
+| 10 | stm32-hal2 | `clocks/f.rs:494` | HSEBYP written after HSEON=1 | corroborated | [stm32f3/rm0313.csv](stm32f3/rm0313.csv), [stm32f3/rm0316.csv](stm32f3/rm0316.csv), [stm32f4/rm0401.csv](stm32f4/rm0401.csv) |
+| 11 | stm32-hal2 | `usart.rs:265` | IREN=1 while UE=1 (IrDA config after enable) | corroborated | [stm32f4/rm0090.csv](stm32f4/rm0090.csv), [stm32f4/rm0390.csv](stm32f4/rm0390.csv), [stm32f4/rm0430.csv](stm32f4/rm0430.csv) |
+| 12 | stm32-hal2 | `usart.rs:263` | HDSEL written while UE=1 (same block) | corroborated | [stm32f4/rm0386.csv](stm32f4/rm0386.csv) |
 
 Per-HAL: **stm32-hal2 = 9**, stm32f4xx-hal = 1, stm32l0xx-hal = 1, stm32g4xx-hal = 1.
 Clean (0 bugs): stm32f1xx-hal, stm32f0xx-hal, stm32f1-hal, stm32l0x1-hal.
+
+To find a corroborated row in `review.py`, its `static_verdict` field reads
+`corroborated` (unchecked candidates read `unchecked`).
 
 ---
 
@@ -83,12 +86,12 @@ after enabling → the write is ignored or takes effect at an illegal time.
   *value-relation* (keep IREN/SCEN cleared), which the code satisfies — value-blind
   to IREN itself being written post-enable.
 - **Reachable:** any `IrdaMode::Normal`/`LowPower`. **Impact:** IrDA mode misconfigured.
-- **Present in (corroborated, not in ledger):** [triage jsonl](../experiments/out/triage/rm0430_stm32f413_stm32-hal2.jsonl) (also fires rm0090/rm0390/…)
+- **Present in:** [stm32f4/rm0090.csv](stm32f4/rm0090.csv), [stm32f4/rm0390.csv](stm32f4/rm0390.csv), [stm32f4/rm0430.csv](stm32f4/rm0430.csv) (corroborated)
 
 ### Bug 12 — stm32-hal2 `usart.rs:263` `new`
 - Same IrDA `cr3().modify()` after `enable()`, writing `HDSEL` (also UE=0-gated) with UE=1.
   The written value is 0 (=reset) so the effect is benign; the harmful payload is IREN at :265.
-- **Present in (corroborated):** [triage jsonl](../experiments/out/triage/rm0386_stm32f469_stm32-hal2.jsonl)
+- **Present in:** [stm32f4/rm0386.csv](stm32f4/rm0386.csv) (corroborated)
 
 ### Bug 2 — stm32l0xx-hal `adc.rs:259` `configure`
 - **Rule (RM0376/RM0377):** *"software is allowed to program ADC_CFGR1 only when ADEN is cleared."*
@@ -114,16 +117,16 @@ after enabling → the write is ignored or takes effect at an illegal time.
   HSEBYPPWR is written at 1047–1056 → written with HSE running.
 - **Impact (honest):** limited — writing the bypass value while HSE runs is a no-op, and a
   genuine `hse_bypass=true` config would fail HSERDY earlier. But it's a real ordering violation.
-- **Present in (corroborated):** [triage jsonl](../experiments/out/triage/rm0461_stm32wle5_stm32-hal2.jsonl)
+- **Present in:** [stm32wl/rm0461.csv](stm32wl/rm0461.csv) (corroborated; also fires on other devices)
 
 ### Bug 9 — stm32-hal2 `clocks/baseline.rs:1055` `setup`
 - Same block, `HSEBYP` written after `HSEON=1`.
-- **Present in (corroborated):** [triage jsonl](../experiments/out/triage/rm0440_stm32g474_stm32-hal2.jsonl)
+- **Present in:** [stm32g0/rm0454.csv](stm32g0/rm0454.csv), [stm32g4/rm0440.csv](stm32g4/rm0440.csv) (corroborated)
 
 ### Bug 10 — stm32-hal2 `clocks/f.rs:494` `setup`
 - Same root cause in the F-series clock path: `hseon=1`+HSERDY-wait at 457/475, then
   unconditional `w.hsebyp(self.hse_bypass)` at 492–495.
-- **Present in (corroborated):** [triage jsonl](../experiments/out/triage/rm0316_stm32f303_stm32-hal2.jsonl)
+- **Present in:** [stm32f3/rm0313.csv](stm32f3/rm0313.csv), [stm32f3/rm0316.csv](stm32f3/rm0316.csv), [stm32f4/rm0401.csv](stm32f4/rm0401.csv) (corroborated)
 
 ### Bug 3 — stm32f4xx-hal `rcc/f4/mod.rs:641` `config_clocksel` (f412)
 - **Rule (RM0402):** `DCKCFGR.I2S1SRC/I2S2SRC` (bits 26:25 / 28:27) writable only while
@@ -167,6 +170,7 @@ after enabling → the write is ignored or takes effect at an illegal time.
 
 The 5 corroborated TPs (8–12) were **auto-cleared by the pipeline** because the precondition
 field is *referenced* nearby — but value-blind corroboration missed that it is set in the
-**wrong order** (the hubris UE/BRR shape). Any headline "bug" count resting only on the
-unchecked pile undercounts by these 5. To reproduce a corroborated verdict, open its triage
-JSONL (linked above) and read the enclosing function in the crate source.
+**wrong order** (the hubris UE/BRR shape). The ledger now carries the corroborated gates too
+(tagged `static_verdict=corroborated`) so they can be reviewed; before this change they lived
+only in the raw triage JSONLs. Any headline "bug" count resting only on the unchecked pile
+undercounts by these 5 (a ~2.5% false-negative rate for the static auto-clear on these HALs).
