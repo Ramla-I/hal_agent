@@ -81,6 +81,9 @@ ported-to-0.16. Genuinely buildable = the **stm32f4xx-hal 0.23** and
   or bump the dep to 0.23; re-run with the `patch_applied` guard.
 - More 0.23 f4 dependents build directly. stm32-hal2 dependents beyond semtech:
   only `steami-rs` (pins hal2 1.8 = old gen).
-- Reproduce: scripts in `scratchpad/` (ephemeral) — `build_dep_examples.py`
-  (examples), `build_hrtim.py` (bins+feature), `build_batch.py` (batch), plus
-  `dependent_compile.py` (committed, bare-probe, has the patch_applied guard).
+- Reproduce (committed): `dependent_compile.py --work DIR` (bare-probe floor) and
+  `dependent_compile.py --work DIR --examples [--only NAME]` (example/firmware
+  ceiling). Both bake in the `patch_applied` guard — an unused patch reports
+  UNMEASURED, never a false 0. `EXAMPLE_TARGETS` = dht11-driver, stm32f469i-disc,
+  stm32-hrtim; `DEPENDENTS` (bare probe) = stm32f469i-disc, semtech_radios,
+  embassy-stm32. Verified: `--examples --only dht11-driver` → 16 gates (11+5).

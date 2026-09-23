@@ -42,9 +42,16 @@ Because a bare probe instantiates no generics, gates that fire here are in
 code the dependent compiles UNCONDITIONALLY -- a floor, not a ceiling: a
 real firmware instantiating generic entry points can only add sites.
 
+A crate's own examples/bins DO instantiate the HAL, so `--examples` builds those
+(a ceiling) instead of the bare probe (floor). Both paths bake in the
+`patch_applied` guard: an unused [patch] (e.g. stm32f4xx-hal 0.22 pulls
+`stm32f4-staging`, not `stm32f4`) reports UNMEASURED, never a silent false 0.
+
 Usage:
     python applications/pac_codegen/experiments/dependent_compile.py --work DIR
     python applications/pac_codegen/experiments/dependent_compile.py --work DIR --only embassy-stm32
+    python applications/pac_codegen/experiments/dependent_compile.py --work DIR --examples
+    python applications/pac_codegen/experiments/dependent_compile.py --work DIR --examples --only stm32-hrtim
 """
 
 import argparse
@@ -203,39 +210,16 @@ def precondition_fields(saved_c: dict) -> dict:
     return fields_by
 
 
-def measure(name: str, cfg: dict, work: Path) -> dict:
-    print(f"=== {name} {cfg['version']} (features {cfg['features'] or '[]'}) "
-          f"-> {cfg['pac']} 0.16.0 / {cfg['device']} ===")
-    pac_dir = work / f"pac-{name}"
-    copy_pristine(APP_DIR / "vendored" / "pac" / cfg["pac"], pac_dir)
-    probe = work / f"probe-{name}"
-    write_probe(probe, name, cfg, pac_dir)
-
-    base = errors(probe)
-    if not patch_applied(probe, cfg["pac"]):
-        return {"baseline": "UNMEASURED",
-                "why": "the [patch] did not apply; nothing was measured"}
-    if base:
-        codes = collections.Counter(
-            (e.get("code") or {}).get("code", "?") for e in base)
-        print(f"  baseline FAILS ({len(base)} errors {dict(codes)})")
-        return {"baseline": "FAIL", "baseline_errors": len(base),
-                "by_code": dict(codes),
-                "sample": [e["message"][:140] for e in base[:4]]}
-    print("  baseline PASS (pristine PAC)")
-
-    rep = inject(cfg, pac_dir, work / f"{name}_constraints.json",
-                 work / f"{name}_inject.json")
-    saved_c = json.loads((work / f"{name}_constraints.json").read_text())
+def classify(rep: dict, saved_c: dict, diags: list) -> dict:
+    """Turn a build's error diagnostics into hits / friction / collateral.
+    Shared by the bare-probe (floor) and example-build (ceiling) paths."""
     gated_specs = sorted({f"{r['register'].upper()}rs"
                           for r in rep.get("rows", [])
                           if r.get("fate") == "planned"},
                          key=lambda s: (-len(s), s))
     fields_by = precondition_fields(saved_c)
-
-    run(["cargo", "clean", "-p", cfg["pac"]], cwd=probe)
     hits, collateral, friction = [], [], []
-    for d in errors(probe):
+    for d in diags:
         h = enforcement.classify_diagnostic(d)
         spans = [s for s in d.get("spans") or [] if s.get("is_primary")]
         loc = spans[0]["file_name"] if spans else "?"
@@ -290,27 +274,179 @@ def measure(name: str, cfg: dict, work: Path) -> dict:
             "hits": hits}
 
 
+def measure(name: str, cfg: dict, work: Path) -> dict:
+    print(f"=== {name} {cfg['version']} (features {cfg['features'] or '[]'}) "
+          f"-> {cfg['pac']} 0.16.0 / {cfg['device']} ===")
+    pac_dir = work / f"pac-{name}"
+    copy_pristine(APP_DIR / "vendored" / "pac" / cfg["pac"], pac_dir)
+    probe = work / f"probe-{name}"
+    write_probe(probe, name, cfg, pac_dir)
+
+    base = errors(probe)
+    if not patch_applied(probe, cfg["pac"]):
+        return {"baseline": "UNMEASURED",
+                "why": "the [patch] did not apply; nothing was measured"}
+    if base:
+        codes = collections.Counter(
+            (e.get("code") or {}).get("code", "?") for e in base)
+        print(f"  baseline FAILS ({len(base)} errors {dict(codes)})")
+        return {"baseline": "FAIL", "baseline_errors": len(base),
+                "by_code": dict(codes),
+                "sample": [e["message"][:140] for e in base[:4]]}
+    print("  baseline PASS (pristine PAC)")
+
+    rep = inject(cfg, pac_dir, work / f"{name}_constraints.json",
+                 work / f"{name}_inject.json")
+    saved_c = json.loads((work / f"{name}_constraints.json").read_text())
+    run(["cargo", "clean", "-p", cfg["pac"]], cwd=probe)
+    return classify(rep, saved_c, errors(probe))
+
+
+# --------------------------------------------------------------------------- #
+# Example / firmware ceiling: build the dependent's OWN examples/bins, which
+# instantiate the HAL's generic entry points (a bare probe does not), so gates
+# fire in monomorphised code -- a ceiling, >= the floor. Same inject + classify.
+# --------------------------------------------------------------------------- #
+EXAMPLE_TARGETS = {
+    "dht11-driver": {
+        "repo": "https://github.com/Wkesther2/dht11-driver-rust.git",
+        "subdir": ".", "build": ["--examples"],
+        "rm": "rm0090", "device": "stm32f407", "pac": "stm32f4",
+        "hal": "stm32f4xx-hal 0.23", "downloads": 95,
+    },
+    "stm32f469i-disc": {
+        "repo": "https://codeberg.org/tegimeki/stm32f469i-disc.git",
+        "subdir": ".", "build": ["--examples"],
+        "rm": "rm0386", "device": "stm32f469", "pac": "stm32f4",
+        "hal": "stm32f4xx-hal 0.23", "downloads": 2851,
+    },
+    "stm32-hrtim": {
+        # actual HRTIM firmware for the embassy/hrtim pairing -- embassy's own
+        # peripherals go through stm32-metapac (uninjected); only this path
+        # touches the injected stm32g4. Nested example crate, bins + feature.
+        "repo": "https://github.com/usbalbin/stm32-hrtim",
+        "subdir": "examples/stm32g4",
+        "build": ["--bins", "--features", "stm32g474"],
+        "rm": "rm0440", "device": "stm32g474", "pac": "stm32g4",
+        "hal": "stm32-hrtim 0.2 + stm32g4xx-hal", "downloads": None,
+    },
+    # NOTE: stm32f4xx-hal 0.22.x dependents (adafruit-seesaw, f4-w25q) depend on
+    # `stm32f4-staging` aliased as `stm32f4`; a `stm32f4` [patch] is silently
+    # unused (the guard below flags them UNMEASURED, not a false 0). Measuring
+    # them needs an injected `stm32f4-staging` PAC or a bump of the dep to 0.23.
+}
+
+
+def clone_repo(repo: str, dest: Path) -> None:
+    if dest.is_dir():
+        shutil.rmtree(dest)
+    r = run(["git", "clone", "--depth", "1", repo, str(dest)])
+    if r.returncode != 0:
+        sys.exit(f"clone failed ({repo}):\n{(r.stderr or r.stdout)[-400:]}")
+
+
+def add_patch(cargo_toml: Path, pac_crate: str, pac_dir: Path) -> None:
+    """Redirect `pac_crate` to the injected copy, preserving any existing
+    [patch.crates-io] block (e.g. stm32-hrtim's own path patch)."""
+    txt = cargo_toml.read_text()
+    line = f'{pac_crate} = {{ path = "{pac_dir}" }}'
+    if line in txt:
+        return
+    if "[patch.crates-io]" in txt:
+        txt = txt.replace("[patch.crates-io]\n",
+                          f"[patch.crates-io]\n{line}\n", 1)
+    else:
+        txt += f"\n[patch.crates-io]\n{line}\n"
+    cargo_toml.write_text(txt)
+
+
+def build_diags(crate_dir: Path, extra: list) -> tuple:
+    r = run(["cargo", "build", *extra, "--target", TARGET,
+             "--message-format=json"], cwd=crate_dir)
+    diags = []
+    for line in r.stdout.splitlines():
+        try:
+            m = json.loads(line)
+        except ValueError:
+            continue
+        if m.get("reason") == "compiler-message" and \
+                m["message"].get("level") == "error":
+            diags.append(m["message"])
+    return diags, r.stderr, r.returncode
+
+
+def measure_examples(name: str, cfg: dict, work: Path) -> dict:
+    print(f"=== {name} EXAMPLES ({cfg['hal']}) "
+          f"-> {cfg['pac']} 0.16.0 / {cfg['device']} ===")
+    repo_dir = work / f"repo-{name}"
+    clone_repo(cfg["repo"], repo_dir)
+    crate = repo_dir / cfg.get("subdir", ".")
+    pac_dir = work / f"pac-{name}"
+    copy_pristine(APP_DIR / "vendored" / "pac" / cfg["pac"], pac_dir)
+    pac_crate = cfg.get("pac_crate", cfg["pac"])
+    add_patch(crate / "Cargo.toml", pac_crate, pac_dir)
+
+    base, base_err, base_rc = build_diags(crate, cfg["build"])
+    # THE GUARD: cargo only warns on an unused [patch], then builds against the
+    # pristine registry PAC -- a false 0. Refuse to report a number then.
+    if "was not used in the crate graph" in base_err or \
+            not patch_applied(crate, pac_crate):
+        return {"baseline": "UNMEASURED",
+                "why": f"[patch] for {pac_crate} not applied -- would build "
+                       f"against the pristine PAC (a false 0). 0.22-era "
+                       f"stm32f4xx-hal uses stm32f4-staging; bump to 0.23 or "
+                       f"patch stm32f4-staging."}
+    base_gates = [d for d in base if enforcement.classify_diagnostic(d)]
+    if base_gates:
+        return {"baseline": "FAIL",
+                "why": f"{len(base_gates)} gate errors on the pristine PAC"}
+    if base_rc != 0 and not base:
+        return {"baseline": "UNMEASURED", "why": "baseline build did not run"}
+    print("  baseline PASS (pristine PAC, patch applied)")
+
+    rep = inject(cfg, pac_dir, work / f"{name}_constraints.json",
+                 work / f"{name}_inject.json")
+    saved_c = json.loads((work / f"{name}_constraints.json").read_text())
+    run(["cargo", "clean"], cwd=crate)   # full clean: examples pull the HAL in
+    diags, _, _ = build_diags(crate, cfg["build"])
+    res = classify(rep, saved_c, diags)
+    res["note"] = ("example/firmware ceiling -- instantiates the HAL, so >= the "
+                   "bare-probe floor")
+    return res
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--work", required=True)
-    ap.add_argument("--only", choices=sorted(DEPENDENTS))
+    ap.add_argument("--examples", action="store_true",
+                    help="build each dependent's OWN examples/bins (ceiling) "
+                         "instead of a bare probe (floor)")
+    ap.add_argument("--only", help="a single target name")
     args = ap.parse_args()
     work = Path(args.work)
     work.mkdir(parents=True, exist_ok=True)
 
-    names = [args.only] if args.only else list(DEPENDENTS)
+    table = EXAMPLE_TARGETS if args.examples else DEPENDENTS
+    measure_fn = measure_examples if args.examples else measure
+    if args.only and args.only not in table:
+        sys.exit(f"unknown target {args.only!r}; choices: {sorted(table)}")
+    names = [args.only] if args.only else list(table)
     for name in names:
-        cfg = DEPENDENTS[name]
-        result = measure(name, cfg, work)
-        result.update({"dependent": name, "version": cfg["version"],
-                       "features": cfg["features"], "hal": cfg["hal"],
+        cfg = table[name]
+        result = measure_fn(name, cfg, work)
+        result.update({"dependent": name, "hal": cfg["hal"],
                        "pac": f"{cfg['pac']} 0.16.0",
                        "rm": cfg["rm"], "device": cfg["device"],
-                       "floor_note":
-                           "a bare probe instantiates no generics, so these "
-                           "are sites the dependent compiles UNCONDITIONALLY "
-                           "-- a floor; real firmware can only add sites"})
-        out = OUT / f"dependent_{name.replace('-', '_')}.json"
+                       "mode": "examples" if args.examples else "bare-probe"})
+        if not args.examples:
+            result.update({"version": cfg["version"],
+                           "features": cfg["features"],
+                           "floor_note":
+                               "a bare probe instantiates no generics, so these "
+                               "are sites the dependent compiles UNCONDITIONALLY "
+                               "-- a floor; real firmware can only add sites"})
+        tag = "depexamples" if args.examples else "dependent"
+        out = OUT / f"{tag}_{name.replace('-', '_')}.json"
         out.write_text(json.dumps(result, indent=1) + "\n")
         print(f"  report: {out}\n")
 
