@@ -96,7 +96,7 @@ SEGMENTS = [
     ("rejected",       "deterministic",        "#eda100", (45, 135)),
     ("never_judged",   "quote anchor",         "#e87ba4", (90,)),
     ("validator",      "validator",            "#2a78d6", (0,)),
-    ("remaining",      "review",               "#c9d3e2", ()),
+    ("remaining",      "passed validation",    "#c9d3e2", ()),
 ]
 
 # Every segment carries its own texture, so hue and texture each identify a
@@ -146,10 +146,11 @@ SOURCES = [
      "the pipeline handled, not the ones the generator wrote. `duplicate` "
      "also has a second source, constraints dropped between collect and the "
      "review file; both parts are printed on its line"),
-    ("quote anchor / validator / review",
+    ("quote anchor / validator / passed validation",
      "evaluation/stm/<rm>/1/<rm>_constraints_review.jsonl",
-     "one row per constraint that reached the validator. `review` is the "
-     "judge's `confirmed`; `validator` is its two rejecting verdicts. "
+     "one row per constraint that reached the validator. `passed "
+     "validation` is the judge's `confirmed`; `validator` is its two "
+     "rejecting verdicts. "
      "`verdict` empty and `anchor_tier` unanchored coincide exactly "
      "(490/490): the quote anchor is a gate BEFORE the judge, so an "
      "unanchorable sentence is never judged"),
@@ -195,6 +196,13 @@ def write_figure(parts: dict, path: Path, width_in=3.4, height_in=None):
     bh = 21.0
     TOP_PAD, TITLE_GAP, LABEL_GAP = 16.0, 6.0, 13.0
     F_TITLE, F_LEG = 8.0, 7.6
+    # Two centred lines rather than one: the full heading is ~229pt of 8pt
+    # Helvetica against a 222.8pt column, so a single line would overrun the
+    # bar it sits on. Both lines carry the same size and colour, so they read
+    # as one heading and not as a title plus a subtitle.
+    TITLE = ("breakdown of constraints,",
+             "by the stage that dropped them")
+    TITLE_LEAD = F_TITLE + 2.0
 
     segs = [(lab, parts.get(k, 0), c, h) for k, lab, c, h in SEGMENTS]
     total = sum(n for _l, n, _c, _h in segs)
@@ -212,14 +220,18 @@ def write_figure(parts: dict, path: Path, width_in=3.4, height_in=None):
         cx += w
 
     H = (height_in * 72.0 if height_in else
-         TOP_PAD + F_TITLE + TITLE_GAP + bh + LABEL_GAP
+         TOP_PAD + len(TITLE) * F_TITLE + (len(TITLE) - 1) * 2.0
+         + TITLE_GAP + bh + LABEL_GAP
          + (rows - 1) * (F_LEG + 4) + 12.0)
     p = Pdf(W, H)
 
-    top = H - TOP_PAD - TITLE_GAP - F_TITLE
+    top = (H - TOP_PAD - TITLE_GAP - len(TITLE) * F_TITLE
+           - (len(TITLE) - 1) * 2.0)
     p.fill("#5c6675")
-    p.text(ml + pw / 2, top + TITLE_GAP, "Breakdown of Constraints",
-           F_TITLE, "F1", "middle")
+    for i, line in enumerate(TITLE):
+        p.text(ml + pw / 2,
+               H - TOP_PAD - F_TITLE - i * TITLE_LEAD,
+               line, F_TITLE, "F1", "middle")
 
     y, x = top - bh, ml
     for _lab, n, col, hat in segs:
@@ -492,7 +504,7 @@ def main():
         for s, v in subs:          # numbers land under the `dropped` column
             print("        %-48s %8s" % (s, f"{v:,}"))
     print("  %-54s %8s %9s"
-          % ("review  judge: confirmed -- what a human reviews", "",
+          % ("passed validation   judge: confirmed", "",
              f"{left:,}"))
     assert left == verd.get("confirmed", 0), (left, verd.get("confirmed", 0))
 
