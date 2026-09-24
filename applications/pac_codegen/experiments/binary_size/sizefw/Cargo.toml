@@ -1,0 +1,23 @@
+[package]
+name = "sizefw"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "sizefw"
+path = "src/main.rs"
+
+[dependencies]
+# PACPATH is rewritten by verify_binary_size.py to point at the pristine / injected crate.
+stm32g4 = { path = "PACPATH", features = ["stm32g474", "rt"] }
+cortex-m = "0.7"
+cortex-m-rt = "0.7"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+debug = false
+
+[workspace]

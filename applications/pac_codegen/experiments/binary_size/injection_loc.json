@@ -1,0 +1,478 @@
+{
+ "mode": "field-level (inject_from_run default)",
+ "rows": [
+  {
+   "rm": "rm0008",
+   "pac": "stm32f1",
+   "device": "stm32f103",
+   "total": 8264,
+   "modules": 543,
+   "markers": 4231,
+   "scaffolding": 7721
+  },
+  {
+   "rm": "rm0033",
+   "pac": "stm32f2",
+   "device": "stm32f215",
+   "total": 5662,
+   "modules": 730,
+   "markers": 2623,
+   "scaffolding": 4932
+  },
+  {
+   "rm": "rm0038",
+   "pac": "stm32l1",
+   "device": "stm32l151",
+   "total": 6515,
+   "modules": 1164,
+   "markers": 2910,
+   "scaffolding": 5351
+  },
+  {
+   "rm": "rm0091",
+   "pac": "stm32f0",
+   "device": "stm32f0x1",
+   "total": 7680,
+   "modules": 1973,
+   "markers": 3058,
+   "scaffolding": 5707
+  },
+  {
+   "rm": "rm0313",
+   "pac": "stm32f3",
+   "device": "stm32f373",
+   "total": 8820,
+   "modules": 938,
+   "markers": 4369,
+   "scaffolding": 7882
+  },
+  {
+   "rm": "rm0316",
+   "pac": "stm32f3",
+   "device": "stm32f303",
+   "total": 9699,
+   "modules": 1797,
+   "markers": 4356,
+   "scaffolding": 7902
+  },
+  {
+   "rm": "rm0360",
+   "pac": "stm32f0",
+   "device": "stm32f0x0",
+   "total": 6765,
+   "modules": 1087,
+   "markers": 3075,
+   "scaffolding": 5678
+  },
+  {
+   "rm": "rm0365",
+   "pac": "stm32f3",
+   "device": "stm32f302",
+   "total": 9073,
+   "modules": 1183,
+   "markers": 4366,
+   "scaffolding": 7890
+  },
+  {
+   "rm": "rm0366",
+   "pac": "stm32f3",
+   "device": "stm32f301",
+   "total": 9344,
+   "modules": 1467,
+   "markers": 4359,
+   "scaffolding": 7877
+  },
+  {
+   "rm": "rm0367",
+   "pac": "stm32l0",
+   "device": "stm32l0x3",
+   "total": 7960,
+   "modules": 3193,
+   "markers": 2459,
+   "scaffolding": 4767
+  },
+  {
+   "rm": "rm0368",
+   "pac": "stm32f4",
+   "device": "stm32f401",
+   "total": 23382,
+   "modules": 762,
+   "markers": 12733,
+   "scaffolding": 22620
+  },
+  {
+   "rm": "rm0376",
+   "pac": "stm32l0",
+   "device": "stm32l0x2",
+   "total": 6916,
+   "modules": 2207,
+   "markers": 2468,
+   "scaffolding": 4709
+  },
+  {
+   "rm": "rm0377",
+   "pac": "stm32l0",
+   "device": "stm32l0x1",
+   "total": 6598,
+   "modules": 1892,
+   "markers": 2474,
+   "scaffolding": 4706
+  },
+  {
+   "rm": "rm0383",
+   "pac": "stm32f4",
+   "device": "stm32f411",
+   "total": 23720,
+   "modules": 1081,
+   "markers": 12729,
+   "scaffolding": 22639
+  },
+  {
+   "rm": "rm0385",
+   "pac": "stm32f7",
+   "device": "stm32f746",
+   "total": 44852,
+   "modules": 1817,
+   "markers": 24183,
+   "scaffolding": 43035
+  },
+  {
+   "rm": "rm0386",
+   "pac": "stm32f4",
+   "device": "stm32f469",
+   "total": 24445,
+   "modules": 1817,
+   "markers": 12711,
+   "scaffolding": 22628
+  },
+  {
+   "rm": "rm0390",
+   "pac": "stm32f4",
+   "device": "stm32f446",
+   "total": 23970,
+   "modules": 1362,
+   "markers": 12717,
+   "scaffolding": 22608
+  },
+  {
+   "rm": "rm0394",
+   "pac": "stm32l4",
+   "device": "stm32l412",
+   "total": 27307,
+   "modules": 2818,
+   "markers": 13807,
+   "scaffolding": 24489
+  },
+  {
+   "rm": "rm0401",
+   "pac": "stm32f4",
+   "device": "stm32f410",
+   "total": 24074,
+   "modules": 1410,
+   "markers": 12725,
+   "scaffolding": 22664
+  },
+  {
+   "rm": "rm0402",
+   "pac": "stm32f4",
+   "device": "stm32f412",
+   "total": 24520,
+   "modules": 1890,
+   "markers": 12709,
+   "scaffolding": 22630
+  },
+  {
+   "rm": "rm0410",
+   "pac": "stm32f7",
+   "device": "stm32f767",
+   "total": 45399,
+   "modules": 2338,
+   "markers": 24178,
+   "scaffolding": 43061
+  },
+  {
+   "rm": "rm0430",
+   "pac": "stm32f4",
+   "device": "stm32f413",
+   "total": 26714,
+   "modules": 4133,
+   "markers": 12652,
+   "scaffolding": 22581
+  },
+  {
+   "rm": "rm0431",
+   "pac": "stm32f7",
+   "device": "stm32f722",
+   "total": 45300,
+   "modules": 2305,
+   "markers": 24167,
+   "scaffolding": 42995
+  },
+  {
+   "rm": "rm0434",
+   "pac": "stm32wb",
+   "device": "stm32wb55",
+   "total": 7931,
+   "modules": 5313,
+   "markers": 1240,
+   "scaffolding": 2618
+  },
+  {
+   "rm": "rm0444",
+   "pac": "stm32g0",
+   "device": "stm32g071",
+   "total": 22744,
+   "modules": 1624,
+   "markers": 11557,
+   "scaffolding": 21120
+  },
+  {
+   "rm": "rm0451",
+   "pac": "stm32l0",
+   "device": "stm32l0x0",
+   "total": 6207,
+   "modules": 1486,
+   "markers": 2484,
+   "scaffolding": 4721
+  },
+  {
+   "rm": "rm0454",
+   "pac": "stm32g0",
+   "device": "stm32g070",
+   "total": 22832,
+   "modules": 1702,
+   "markers": 11564,
+   "scaffolding": 21130
+  },
+  {
+   "rm": "rm0490",
+   "pac": "stm32c0",
+   "device": "stm32c031",
+   "total": 5263,
+   "modules": 936,
+   "markers": 2258,
+   "scaffolding": 4327
+  },
+  {
+   "rm": "rm0041",
+   "pac": "stm32f1",
+   "device": "stm32f100",
+   "total": 8224,
+   "modules": 470,
+   "markers": 4238,
+   "scaffolding": 7754
+  },
+  {
+   "rm": "rm0090",
+   "pac": "stm32f4",
+   "device": "stm32f429",
+   "total": 23855,
+   "modules": 1216,
+   "markers": 12725,
+   "scaffolding": 22639
+  },
+  {
+   "rm": "rm0351",
+   "pac": "stm32l4",
+   "device": "stm32l4x6",
+   "total": 28926,
+   "modules": 4360,
+   "markers": 13793,
+   "scaffolding": 24566
+  },
+  {
+   "rm": "rm0399",
+   "pac": "stm32h7",
+   "device": "stm32h747cm7",
+   "total": 36990,
+   "modules": 6079,
+   "markers": 17313,
+   "scaffolding": 30911
+  },
+  {
+   "rm": "rm0432",
+   "pac": "stm32l4",
+   "device": "stm32l4r9",
+   "total": 30360,
+   "modules": 5907,
+   "markers": 13734,
+   "scaffolding": 24453
+  },
+  {
+   "rm": "rm0433",
+   "pac": "stm32h7",
+   "device": "stm32h753",
+   "total": 38146,
+   "modules": 7214,
+   "markers": 17291,
+   "scaffolding": 30932
+  },
+  {
+   "rm": "rm0436",
+   "pac": "stm32mp1",
+   "device": "stm32mp157",
+   "total": 61200,
+   "modules": 29649,
+   "markers": 16656,
+   "scaffolding": 31551
+  },
+  {
+   "rm": "rm0438",
+   "pac": "stm32l5",
+   "device": "stm32l562",
+   "total": 18506,
+   "modules": 10881,
+   "markers": 3995,
+   "scaffolding": 7625
+  },
+  {
+   "rm": "rm0440",
+   "pac": "stm32g4",
+   "device": "stm32g4a1",
+   "total": 27655,
+   "modules": 4343,
+   "markers": 13040,
+   "scaffolding": 23312
+  },
+  {
+   "rm": "rm0440",
+   "pac": "stm32g4",
+   "device": "stm32g474",
+   "total": 27501,
+   "modules": 4189,
+   "markers": 13042,
+   "scaffolding": 23312
+  },
+  {
+   "rm": "rm0442",
+   "pac": "stm32mp1",
+   "device": "stm32mp153",
+   "total": 58696,
+   "modules": 27114,
+   "markers": 16713,
+   "scaffolding": 31582
+  },
+  {
+   "rm": "rm0453",
+   "pac": "stm32wl",
+   "device": "stm32wl5x_cm4",
+   "total": 10416,
+   "modules": 4302,
+   "markers": 3227,
+   "scaffolding": 6114
+  },
+  {
+   "rm": "rm0455",
+   "pac": "stm32h7",
+   "device": "stm32h7b3",
+   "total": 41512,
+   "modules": 10671,
+   "markers": 17229,
+   "scaffolding": 30841
+  },
+  {
+   "rm": "rm0456",
+   "pac": "stm32u5",
+   "device": "stm32u5a9",
+   "total": 60547,
+   "modules": 15510,
+   "markers": 24958,
+   "scaffolding": 45037
+  },
+  {
+   "rm": "rm0461",
+   "pac": "stm32wl",
+   "device": "stm32wle5",
+   "total": 9687,
+   "modules": 3548,
+   "markers": 3249,
+   "scaffolding": 6139
+  },
+  {
+   "rm": "rm0468",
+   "pac": "stm32h7",
+   "device": "stm32h735",
+   "total": 41528,
+   "modules": 10626,
+   "markers": 17235,
+   "scaffolding": 30902
+  },
+  {
+   "rm": "rm0477",
+   "pac": "stm32h7",
+   "device": "stm32h7s",
+   "total": 37752,
+   "modules": 6764,
+   "markers": 17307,
+   "scaffolding": 30988
+  },
+  {
+   "rm": "rm0481",
+   "pac": "stm32h5",
+   "device": "stm32h573",
+   "total": 39415,
+   "modules": 11636,
+   "markers": 15095,
+   "scaffolding": 27779
+  },
+  {
+   "rm": "rm0486",
+   "pac": "stm32n6",
+   "device": "stm32n657",
+   "total": 123056,
+   "modules": 33331,
+   "markers": 49759,
+   "scaffolding": 89725
+  },
+  {
+   "rm": "rm0492",
+   "pac": "stm32h5",
+   "device": "stm32h503",
+   "total": 33696,
+   "modules": 5986,
+   "markers": 15204,
+   "scaffolding": 27710
+  },
+  {
+   "rm": "rm0503",
+   "pac": "stm32u0",
+   "device": "stm32u083",
+   "total": 10582,
+   "modules": 3922,
+   "markers": 3450,
+   "scaffolding": 6660
+  },
+  {
+   "rm": "rm0493",
+   "pac": "stm32wba",
+   "device": "stm32wba55",
+   "total": 16612,
+   "modules": 5563,
+   "scaffolding": 11049
+  },
+  {
+   "rm": "rm0505",
+   "pac": "stm32wb0",
+   "device": "stm32wb09",
+   "total": 7106,
+   "modules": 615,
+   "scaffolding": 6491
+  },
+  {
+   "rm": "rm0529",
+   "pac": "stm32wb0",
+   "device": "stm32wb05",
+   "total": 6970,
+   "modules": 491,
+   "scaffolding": 6479
+  },
+  {
+   "rm": "rm0530",
+   "pac": "stm32wb0",
+   "device": "stm32wb06",
+   "total": 7242,
+   "modules": 733,
+   "scaffolding": 6509
+  }
+ ]
+}
