@@ -530,7 +530,7 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
          [(k, tot[k], STAGE_PAINT[i][0], STAGE_PAINT[i][1])
           for i, k in enumerate(stages_but_last)]
          + [("remaining", tot["remaining"], ZOOM_FILL, ZOOM_HATCH)]),
-        ("judgement by reviewer: FP | TP",   # rendered with colour boxes via _title_boxes
+        ("judgement by reviewer: trivial | real",   # rendered with colour boxes via _title_boxes
          [(k, agg[k]["remaining"], CAT_FILL, CAT_HATCH[i % len(CAT_HATCH)])
           for i, k in enumerate(cats)]),
     ]
@@ -579,7 +579,7 @@ def write_cascade(stats, level, path: Path, width_in=3.4, height_in=None):
         is_cat = bi == len(bands) - 1            # last band: split each category by TP/FP
         if is_cat:
             _title_boxes(p, ml + pw / 2, top + TITLE_GAP, F_TITLE,
-                         "judgement by reviewer:  ", FP_FILL, "FP", TP_FILL, "TP")
+                         "judgement by reviewer:  ", FP_FILL, "trivial", TP_FILL, "real")
         else:
             p.fill("#5c6675")
             p.text(ml + pw / 2, top + TITLE_GAP, title, F_TITLE, "F1", "middle")
