@@ -113,10 +113,19 @@ The count unions `bug_reports/bug_tracker.csv` with every reviewed
 counted once. Compute it with:
 
 ```bash
-python scripts/count_bugs.py                 # tracker + checked, upstream-patched excluded
-python scripts/count_bugs.py --no-checked    # tracker only
-python scripts/count_bugs.py --by pr         # broken down by PR (--by rm|status too)
+python scripts/count_bugs_stm.py               # tracker + checked, upstream-patched excluded
+python scripts/count_bugs_stm.py --no-checked  # tracker only
+python scripts/count_bugs_stm.py --unchecked   # tracker + checked + all bug_reports/*_bug_report.csv
+python scripts/count_bugs_stm.py --dedup       # value-aware dedup of derived register/peripheral instances
+python scripts/count_bugs_stm.py --by pr       # broken down by PR (--by rm|status too)
 ```
+
+It also reports the number of SVD files containing ≥1 bug and the total SVDs scanned.
+
+Related tools:
+- `scripts/add_bugs_to_tracker.py` — turn a structure review's reviewer-TP rows into a `bug_reports/{rm}_bug_report.csv`.
+- `scripts/show_tp.py` — list just the reviewer-TP rows of a structure review (`--key`, `--csv`).
+- `scripts/svd_lookup.py` — query SVD entries by peripheral/register/key; compare a field across multiple SVDs.
 
 ## Documentation
 
