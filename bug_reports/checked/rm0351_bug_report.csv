@@ -1,0 +1,10 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32l476, stm32l496",stm32-rs,rm0351,"CAN1_BTR: reset value: svd = 0x0, agent = 0x1230000",,
+stm32l496,stm32-rs,rm0351,"CAN2_BTR: reset value: svd = 0x0, agent = 0x1230000",,
+"stm32l476, stm32l496",stm32-rs,rm0351,"DBGMCU_IDCODE_DEV_ID: bit width: svd = 16, agent = 12",,
+"stm32l476, stm32l496",stm32-rs,rm0351,"FMC_BCR1: reset value: svd = 0x30D0, agent = 0x30DB",,
+"stm32l476, stm32l496",stm32-rs,rm0351,"FMC_BCR2\3\4: reset value: svd = 0x30D0, RM = 0x30D2",,
+stm32l496,stm32-rs,rm0351,"HASH_CSR0: reset value: svd = 0x0, agent = 0x2",,
+stm32l496,stm32-rs,rm0351,"SYSCFG_EXTICR1_EXTI0\1\2\3: bit width: svd = 3, agent = 4",,
+stm32l496,stm32-rs,rm0351,"SYSCFG_EXTICR2_EXTI4\5\6\7: bit width: svd = 3, agent = 4",,
+stm32l496,stm32-rs,rm0351,"SYSCFG_EXTICR3_EXTI8\9\10\11: bit width: svd = 3, agent = 4",,

@@ -1,0 +1,3 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32f0x0,stm32-rs,rm0360,"FLASH_ACR: reset value: svd = 0x30, agent = 0x0",,
+stm32f0x0,stm32-rs,rm0360,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,

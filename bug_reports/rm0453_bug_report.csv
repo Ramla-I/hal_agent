@@ -1,0 +1,3 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32wl5x_cm0p, stm32wl5x_cm4",stm32-rs,rm0453,"ADC_AWD2TR: reset value: svd = 0x0, agent = 0xFFF0000",,
+"stm32wl5x_cm0p, stm32wl5x_cm4",stm32-rs,rm0453,"IWDG_PR: reset value: svd = 0x7, agent = 0x0",,

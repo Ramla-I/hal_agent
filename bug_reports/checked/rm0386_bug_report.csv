@@ -1,0 +1,6 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32f469, stm32f479",stm32-rs,rm0386,"CAN1\2_BTR: reset value: svd = 0x0, agent = 0x1230000",,
+"stm32f469, stm32f479",stm32-rs,rm0386,"HASH_CSR0: reset value: svd = 0x0, agent = 0x2",,
+"stm32f469, stm32f479",stm32-rs,rm0386,"I2S2\3EXT_I2SPR: reset value: svd = 10\0xA, agent = 0x2",,
+stm32f469,stm32-rs,rm0386,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,
+"stm32f469, stm32f479",stm32-rs,rm0386,"SPI1\2\3\4\5\6_I2SPR: reset value: svd = 00000010\0xA, agent = 0x2",,

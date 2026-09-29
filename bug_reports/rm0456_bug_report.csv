@@ -1,0 +1,9 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32u535, stm32u545, stm32u595, stm32u599, stm32u5a5, stm32u5a9, stm32u5fx, stm32u5gx",stm32-rs,rm0456,"DBGMCU_DBG_AUTH_DEVICE_AUTH_ID: bit width: svd = 16, agent = 32",,
+"stm32u535, stm32u545, stm32u575, stm32u585, stm32u595, stm32u599, stm32u5a5, stm32u5a9, stm32u5fx, stm32u5gx",stm32-rs,rm0456,"DBGMCU_SR_AP_PRESENT: bit width: svd = 8, agent = 16",,
+"stm32u535, stm32u545, stm32u575, stm32u585, stm32u595, stm32u599, stm32u5a5, stm32u5a9",stm32-rs,rm0456,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,
+"stm32u535, stm32u545, stm32u575, stm32u585, stm32u595, stm32u599, stm32u5a5, stm32u5a9, stm32u5fx",stm32-rs,rm0456,"TIM15_CR2_MMS: bit width: svd = 2, agent = 3",,
+"stm32u535, stm32u545, stm32u575, stm32u585, stm32u595, stm32u599, stm32u5a5, stm32u5a9, stm32u5fx",stm32-rs,rm0456,"TIM16_DCR: reset value: svd = 0x1, agent = 0x0",,
+"stm32u535, stm32u545, stm32u575, stm32u585, stm32u595, stm32u599, stm32u5a5, stm32u5a9, stm32u5fx",stm32-rs,rm0456,"TIM16_DMAR: reset value: svd = 0x1, agent = 0x0",,
+"stm32u535, stm32u545, stm32u575, stm32u585, stm32u595, stm32u599, stm32u5a5, stm32u5a9, stm32u5fx",stm32-rs,rm0456,"TIM17_DCR: reset value: svd = 0x1, agent = 0x0",,
+"stm32u535, stm32u545, stm32u575, stm32u585, stm32u595, stm32u599, stm32u5a5, stm32u5a9, stm32u5fx",stm32-rs,rm0456,"TIM17_DMAR: reset value: svd = 0x1, agent = 0x0",,

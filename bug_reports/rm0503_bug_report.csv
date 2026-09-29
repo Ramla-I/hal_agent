@@ -1,0 +1,5 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+"stm32u031, stm32u073, stm32u083",stm32-rs,rm0503,"GPIOA_MODER: reset value: svd = 0xFFFFFFFF, agent = 0xEBFFFFFF",,
+"stm32u031, stm32u073, stm32u083",stm32-rs,rm0503,"GPIOA_OSPEEDR: reset value: svd = 0x0, agent = 0xC000000",,
+"stm32u031, stm32u073, stm32u083",stm32-rs,rm0503,"RCC_APBSMENR1: reset value: svd = 0xFF7E4C33, agent = 0xF7FFFEB3",,
+"stm32u031, stm32u073, stm32u083",stm32-rs,rm0503,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,

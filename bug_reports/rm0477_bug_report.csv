@@ -1,0 +1,11 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32h7s,stm32-rs,rm0477,"EXTI_EMR1: address offset: svd = 0x1C, agent = 0x84",,
+stm32h7s,stm32-rs,rm0477,"EXTI_EMR2: address offset: svd = 0x28, agent = 0x94",,
+stm32h7s,stm32-rs,rm0477,"EXTI_FTSR2: address offset: svd = 0x10, agent = 0x24",,
+stm32h7s,stm32-rs,rm0477,"EXTI_IMR1: address offset: svd = 0x18, agent = 0x80",,
+stm32h7s,stm32-rs,rm0477,"EXTI_IMR2: address offset: svd = 0x24, agent = 0x90",,
+stm32h7s,stm32-rs,rm0477,"EXTI_PR2: address offset: svd = 0x2C, agent = 0x98",,
+stm32h7s,stm32-rs,rm0477,"EXTI_RTSR2: address offset: svd = 0xC, agent = 0x20",,
+stm32h7s,stm32-rs,rm0477,"EXTI_SWIER2: address offset: svd = 0x14, agent = 0x28",,
+stm32h7s,stm32-rs,rm0477,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,
+stm32h7s,stm32-rs,rm0477,"XSPI2_DR: address offset: svd = 0x50, agent = 0xC",,
