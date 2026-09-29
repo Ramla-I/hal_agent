@@ -130,24 +130,38 @@ Generated (`.gitignore`d, regenerate to reproduce): `pipeline/register_info/`,
 
 ## Reproduce
 
+Run from the repo root, in the venv (needs `pandas openai fastembed chromadb tiktoken`).
+All scripts self-locate the repo, and the pipeline arm writes only into
+`gen_vs_claude_rm0041/pipeline/` (gitignored).
+
 ```bash
-source .venv/bin/activate   # needs pandas etc.
+source .venv/bin/activate
+export GROQ_API_KEY=...        # generator = gpt-oss-120b via Groq
 
-# 1. Pipeline arm — regenerate register_info/ (needs GROQ_API_KEY; the evolved
-#    retriever is vendored in pipeline/retriever/, so no external worktree needed):
-python gen_vs_claude_rm0041/pipeline/run_noenum_rm0041.py     # writes register_info/ + metrics.json
+# --- Pipeline arm (Arm A) ---
+# Generates register_info/, metrics.json AND analysis/ (it invokes the vendored
+# scorer at the end). The vendored retriever means no external worktree is needed.
+# Refuses to clobber a populated register_info/ -- move it aside to re-run.
+python gen_vs_claude_rm0041/pipeline/run_noenum_rm0041.py
 
-# 2. Score it against the verified datasheet (writes ./analysis/):
-cd gen_vs_claude_rm0041/pipeline && \
-  PYTHONPATH=<repo> python compare_generator_with_verified.py \
-    -v <repo>/verified_datasheet/stm/rm0041_stm32f100.csv register_info
-
-# 3. Apply the bit-position + representation credit:
+# Apply the bit-position + representation credit (prints 74.7% -> 82.1% -> 82.6%):
 python gen_vs_claude_rm0041/pipeline/rescore_bitpos.py
-```
 
-The **Claude arm** is reproduced by running headless Claude Code on the rm0041 PDF+SVDs
-with `claude_baseline/prompt.md` (model `claude-fable-5-1`, Docker-isolated, budget $100).
+# (Re-score existing output only, without regenerating:)
+# cd gen_vs_claude_rm0041/pipeline && PYTHONPATH="$(git rev-parse --show-toplevel)" \
+#   python compare_generator_with_verified.py \
+#     -v "$(git rev-parse --show-toplevel)"/verified_datasheet/stm/rm0041_stm32f100.csv register_info
+
+# --- Claude arm (Arm B) ---
+# Headless Claude Code on the rm0041 PDF + SVDs with the committed prompt. Parameters:
+# model claude-fable-5-1, budget $100, one JSON file per {peripheral}_{register}.
+claude -p "$(cat gen_vs_claude_rm0041/claude_baseline/prompt.md)" \
+  --model claude-fable-5-1 --max-budget-usd 100 --permission-mode dontAsk \
+  --allowedTools Read Glob Grep Edit Write Bash --output-format json
+# NOTE: the recorded run used a Docker isolation harness (work dir only; egress
+# allow-listed to api.anthropic.com) that lived OUTSIDE this repo at
+# ~/rm0041_headless_baseline/ and is not vendored here — the command above is the
+# equivalent invocation without that sandbox.
 
 **Reproducibility boundary.** The numbers above are the recorded reference. Regenerating
 the pipeline arm needs a `GROQ_API_KEY` (the exact evolved retriever is vendored in

@@ -5,10 +5,11 @@ evolved rm0041 retrieval + gpt-oss-120b generator over the FULL device, but with
 enums too) + retry/backoff + a higher completion-token cap so large registers no
 longer truncate mid-JSON.
 
-Isolation: writes ONLY into this folder (register_info/, metrics.json, analysis/).
-The prior with-enums output is preserved as *_with_enums. Reads everything else RO.
+Isolation: writes ONLY into this folder (register_info/, metrics.json, analysis/),
+which are gitignored. Reads everything else read-only. Refuses to clobber a populated
+register_info/ (move it aside to re-run).
 
-Run:  GROQ_API_KEY=... python oneoff_evolved_rm0041/run_noenum_rm0041.py
+Run:  GROQ_API_KEY=... python gen_vs_claude_rm0041/pipeline/run_noenum_rm0041.py
 """
 import os, sys, re, json, time, importlib.util, subprocess
 from pathlib import Path
@@ -24,18 +25,30 @@ def query_name(register: str) -> str:
     the verified datasheet uses `ccmr1_input`/`ccmr1_output`."""
     return re.sub(r"_(input|output)$", "", register, flags=re.I)
 
-REPO = "/home/ramla/hal_agent-phase-1d"
-# The evolved retriever is vendored next to this script (sha256 in README), so the
-# experiment is self-contained. Source: hal_agent-retrieval v6_rm0041_seed42_labelfix.
+# Auto-detect the repo root (walk up until we find the verified datasheet), so this
+# runs wherever the folder is checked out -- no hard-coded absolute path.
 HERE = os.path.dirname(os.path.abspath(__file__))
+def _repo_root(start):
+    d = start
+    while d != os.path.dirname(d):
+        if os.path.exists(os.path.join(d, "verified_datasheet/stm/rm0041_stm32f100.csv")):
+            return d
+        d = os.path.dirname(d)
+    sys.exit("could not locate repo root (verified_datasheet/) above " + start)
+REPO = _repo_root(HERE)
+
+# The evolved retriever + the scorer are vendored next to this script (sha256 in
+# README), so the experiment is self-contained. Source: hal_agent-retrieval
+# v6_rm0041_seed42_labelfix.
 EVOLVED = os.path.join(HERE, "retriever", "best_program.py")
 DEVICE_DIR = f"{REPO}/devices/stm/rm0041"
 CHUNKS_DIR = f"{REPO}/chunked_datasheets/stm/rm0041/chunks/md"
 CHUNKS_INDEX = f"{CHUNKS_DIR}/chunks_index.csv"
 VERIFIED = f"{REPO}/verified_datasheet/stm/rm0041_stm32f100.csv"
-COMPARE = f"{REPO}/optimization/common/compare_generator_with_verified.py"
+COMPARE = os.path.join(HERE, "compare_generator_with_verified.py")   # vendored copy
 
-OUT = Path(f"{REPO}/oneoff_evolved_rm0041")
+# Outputs land next to this script (gitignored) -- same dir rescore_bitpos.py reads.
+OUT = Path(HERE)
 REGDIR = OUT / "register_info"
 METRICS = OUT / "metrics.json"
 
