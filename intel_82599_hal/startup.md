@@ -24,8 +24,15 @@ export GROQ_API_KEY=...                    # generator = gpt-oss-120b via Groq (
 export OPENAI_API_KEY=...                  # fallbacks
 ```
 - **Datasheet:** `devices/intel/82599/82599.md` (~827 KB markdown).
-- **Chunks:** live in `hal_agent-retrieval/chunked_datasheets/intel/82599/chunks` — copy
-  them in (or re-chunk `82599.md` with the preprocessing pipeline) so retrieval runs here.
+- **Chunks:** point the generate script straight at the existing ones (same
+  `chunks/md` + `chunks_index.csv` layout as the MCU runs):
+  ```python
+  CHUNKS_DIR   = "/home/ramla/hal_agent-retrieval/chunked_datasheets/intel/82599/chunks/md"
+  CHUNKS_INDEX = CHUNKS_DIR + "/chunks_index.csv"
+  col, proc = ev.setup_database(CHUNKS_DIR, CHUNKS_INDEX)
+  ```
+  No need to copy them in. (Fallback on a fresh machine where that path doesn't exist:
+  re-chunk `devices/intel/82599/82599.md` with the preprocessing pipeline.)
 - Rust toolchain + `make` + qemu for the Theseus build (eval step).
 
 ## Plan / scripts to write (keep everything under this folder; gitignore outputs)
