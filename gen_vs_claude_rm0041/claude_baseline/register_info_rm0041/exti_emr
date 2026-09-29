@@ -1,0 +1,236 @@
+{
+  "datasheet_register_abbreviation": "EXTI_EMR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MR0",
+      "description": "Event Mask on line 0",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "MR1",
+      "description": "Event Mask on line 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "MR2",
+      "description": "Event Mask on line 2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "MR3",
+      "description": "Event Mask on line 3",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "MR4",
+      "description": "Event Mask on line 4",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "MR5",
+      "description": "Event Mask on line 5",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "MR6",
+      "description": "Event Mask on line 6",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "MR7",
+      "description": "Event Mask on line 7",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "MR8",
+      "description": "Event Mask on line 8",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "MR9",
+      "description": "Event Mask on line 9",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "MR10",
+      "description": "Event Mask on line 10",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "MR11",
+      "description": "Event Mask on line 11",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "MR12",
+      "description": "Event Mask on line 12",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "MR13",
+      "description": "Event Mask on line 13",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "MR14",
+      "description": "Event Mask on line 14",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "MR15",
+      "description": "Event Mask on line 15",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "MR16",
+      "description": "Event Mask on line 16",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "MR17",
+      "description": "Event Mask on line 17",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "If the trigger edge is not selected before/together with unmasking, no event pulse is generated on the line.",
+      "datasheet_text": "To generate the event, the event line should be configured and enabled. This is done by programming the two trigger registers with the desired edge detection and by enabling the event request by writing a \u20181\u2019 to the corresponding bit in the event mask register.",
+      "steps": [
+        {
+          "register": "EXTI_RTSR",
+          "operation": "write"
+        },
+        {
+          "register": "EXTI_FTSR",
+          "operation": "write"
+        },
+        {
+          "register": "EXTI_EMR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "EXTI_EMR",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The line does not generate events if the mask and trigger selection bits are not both configured.",
+      "datasheet_text": "To configure the 18 lines as event sources, use the following procedure: Configure the mask bits of the 18 Event lines (EXTI_EMR) Configure the Trigger Selection bits of the Event lines (EXTI_RTSR and EXTI_FTSR)",
+      "steps": [
+        {
+          "register": "EXTI_EMR",
+          "operation": "write"
+        },
+        {
+          "register": "EXTI_RTSR",
+          "operation": "write"
+        },
+        {
+          "register": "EXTI_FTSR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "EXTI_EMR",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Half-word or byte accesses to EXTI_EMR are not allowed.",
+      "datasheet_text": "The peripheral registers have to be accessed by words (32-bit).",
+      "description": "EXTI_EMR must be accessed with 32-bit (word) accesses only.",
+      "involved": [
+        {
+          "register": "EXTI_EMR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

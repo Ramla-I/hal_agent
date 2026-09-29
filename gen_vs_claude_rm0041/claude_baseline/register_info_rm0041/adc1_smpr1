@@ -1,0 +1,133 @@
+{
+  "datasheet_register_abbreviation": "ADC1_SMPR1",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SMP10",
+      "description": "Channel 10 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "SMP11",
+      "description": "Channel 11 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "SMP12",
+      "description": "Channel 12 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "SMP13",
+      "description": "Channel 13 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "SMP14",
+      "description": "Channel 14 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "SMP15",
+      "description": "Channel 15 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "SMP16",
+      "description": "Channel 16 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 20
+      }
+    },
+    {
+      "name": "SMP17",
+      "description": "Channel 17 sample time selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 23
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte or half-word accesses to ADC registers are not supported and may return or write incorrect data.",
+      "datasheet_text": "The peripheral registers have to be accessed by words (32-bit).",
+      "description": "All ADC registers must be accessed with 32-bit (word) read/write accesses only.",
+      "involved": [
+        {
+          "register": "ADC1_SMPR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Changing the channel selection while the ADC is sampling corrupts the sampled value.",
+      "datasheet_text": "SMPx[2:0]: Channel x Sample time selection These bits are written by software to select the sample time individually for each channel. During sample cycles channel selection bits must remain unchanged.",
+      "description": "The channel selection bits (SQx/JSQx in ADC_SQRx and ADC_JSQR) must not be changed while the ADC is in its sampling phase.",
+      "involved": [
+        {
+          "register": "ADC1_SMPR1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "ADC1_SQR3",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "ADC1_JSQR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "warning",
+      "consequence": "A sample time shorter than required for the source impedance (e.g. 17.1 \u00b5s for the temperature sensor) gives inaccurate results.",
+      "datasheet_text": "ADC samples the input voltage for a number of ADC_CLK cycles which can be modified using the SMP[2:0] bits in the ADC_SMPR1 and ADC_SMPR2 registers. Each channel can be sampled with a different sample time. The total conversion time is calculated as follows: Tconv = Sampling time + 12.5 cycles",
+      "fields": [
+        {
+          "register": "ADC1_SMPR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

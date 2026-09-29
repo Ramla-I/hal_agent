@@ -1,0 +1,60 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR2",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PREDIV1",
+      "description": "PREDIV1 division factor",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to PREDIV1 is ignored while the PLL is enabled; the PREDIV1 division factor is unchanged.",
+      "datasheet_text": "Set and cleared by software to select the PREDIV1 division factor. These bits can be written only when the PLL is disabled.",
+      "target_register": "RCC_CFGR2",
+      "target_fields": [
+        "PREDIV1"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "RCC_CR",
+          "field": "PLLON",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Writing PREDIV1 bit 0 silently changes RCC_CFGR.PLLXTPRE and vice versa, so one register write can appear to modify the other register.",
+      "datasheet_text": "Note: Bit 0 is the same as bit 17 in the RCC_CFGR register, so modifying bit 17 in the RCC_CFGR register changes bit 0 accordingly.",
+      "description": "PREDIV1 bit 0 (RCC_CFGR2 bit 0) and PLLXTPRE (RCC_CFGR bit 17) are the same physical bit.",
+      "involved": [
+        {
+          "register": "RCC_CFGR2",
+          "field": "PREDIV1",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR",
+          "field": "PLLXTPRE",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

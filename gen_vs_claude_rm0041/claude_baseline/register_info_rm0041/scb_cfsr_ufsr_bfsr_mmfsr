@@ -1,0 +1,180 @@
+{
+  "datasheet_register_abbreviation": "SCB_CFSR_UFSR_BFSR_MMFSR",
+  "address_offset": "0x28",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "IACCVIOL",
+      "description": "IACCVIOL",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "DACCVIOL",
+      "description": "DACCVIOL",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "MUNSTKERR",
+      "description": "MUNSTKERR",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "MSTKERR",
+      "description": "MSTKERR",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "MLSPERR",
+      "description": "MLSPERR",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "MMARVALID",
+      "description": "MMARVALID",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "IBUSERR",
+      "description": "Instruction bus error",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "PRECISERR",
+      "description": "Precise data bus error",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "IMPRECISERR",
+      "description": "Imprecise data bus error",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "UNSTKERR",
+      "description": "Bus fault on unstacking for a return from exception",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "STKERR",
+      "description": "Bus fault on stacking for exception entry",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "LSPERR",
+      "description": "Bus fault on floating-point lazy state preservation",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "BFARVALID",
+      "description": "Bus Fault Address Register (BFAR) valid flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "UNDEFINSTR",
+      "description": "Undefined instruction usage fault",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "INVSTATE",
+      "description": "Invalid state usage fault",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "INVPC",
+      "description": "Invalid PC load usage fault",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "NOCP",
+      "description": "No coprocessor usage fault.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      }
+    },
+    {
+      "name": "UNALIGNED",
+      "description": "Unaligned access usage fault",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      }
+    },
+    {
+      "name": "DIVBYZERO",
+      "description": "Divide by zero usage fault",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

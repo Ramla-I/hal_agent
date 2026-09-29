@@ -1,0 +1,549 @@
+{
+  "datasheet_register_abbreviation": "DAC_CR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EN1",
+      "description": "DAC channel1 enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "BOFF1",
+      "description": "DAC channel1 output buffer disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "TEN1",
+      "description": "DAC channel1 trigger enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "TSEL1",
+      "description": "DAC channel1 trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "WAVE1",
+      "description": "DAC channel1 noise/triangle wave generation enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "MAMP1",
+      "description": "DAC channel1 mask/amplitude selector",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "DMAEN1",
+      "description": "DAC channel1 DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "DMAUDRIE1",
+      "description": "DAC channel1 DMA underrun interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "EN2",
+      "description": "DAC channel2 enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "BOFF2",
+      "description": "DAC channel2 output buffer disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "TEN2",
+      "description": "DAC channel2 trigger enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "TSEL2",
+      "description": "DAC channel2 trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 21
+      }
+    },
+    {
+      "name": "WAVE2",
+      "description": "DAC channel2 noise/triangle wave generation enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 23
+      }
+    },
+    {
+      "name": "MAMP2",
+      "description": "DAC channel2 mask/amplitude selector",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 27
+      }
+    },
+    {
+      "name": "DMAEN2",
+      "description": "DAC channel2 DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      }
+    },
+    {
+      "name": "DMAUDRIE2",
+      "description": "DAC channel2 DMA underrun interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A conversion started before tWAKEUP has elapsed does not produce the expected analog output.",
+      "datasheet_text": "Each DAC channel can be powered on by setting its corresponding ENx bit in the DAC_CR register. The DAC channel is then enabled after a startup time tWAKEUP.",
+      "description": "After setting ENx the analog DAC channel is only operational after the startup time tWAKEUP; conversions triggered before that are not valid. The digital interface of the channel is active even when ENx is 0.",
+      "involved": [
+        {
+          "register": "DAC_CR",
+          "field": "EN1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "EN2",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to TSEL1[2:0] is ignored while channel 1 is enabled.",
+      "datasheet_text": "Note: TSELx[2:0] bit cannot be changed when the ENx bit is set.",
+      "target_register": "DAC_CR",
+      "target_fields": [
+        "TSEL1"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "DAC_CR",
+          "field": "EN1",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "modify"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to TSEL2[2:0] is ignored while channel 2 is enabled.",
+      "datasheet_text": "Note: TSELx[2:0] bit cannot be changed when the ENx bit is set.",
+      "target_register": "DAC_CR",
+      "target_fields": [
+        "TSEL2"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "DAC_CR",
+          "field": "EN2",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "modify"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "MAMP1[3:0] can no longer be changed once the DAC channel is enabled.",
+      "datasheet_text": "The MAMPx[3:0] bits must be configured before enabling the DAC, otherwise they cannot be changed.",
+      "target_register": "DAC_CR",
+      "target_fields": [
+        "MAMP1"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "DAC_CR",
+          "field": "EN1",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "modify"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "MAMP2[3:0] can no longer be changed once the DAC channel is enabled.",
+      "datasheet_text": "The MAMPx[3:0] bits must be configured before enabling the DAC, otherwise they cannot be changed.",
+      "target_register": "DAC_CR",
+      "target_fields": [
+        "MAMP2"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "DAC_CR",
+          "field": "EN2",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "modify"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "If MAMPx[3:0] is programmed after ENx has been set, the amplitude/mask value cannot be changed any more.",
+      "datasheet_text": "The MAMPx[3:0] bits must be configured before enabling the DAC, otherwise they cannot be changed.",
+      "steps": [
+        {
+          "register": "DAC_CR",
+          "operation": "write"
+        },
+        {
+          "register": "DAC_CR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "DAC_CR",
+        "field": "EN1",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Noise or triangle wave generation does not work if the channel trigger is not enabled.",
+      "datasheet_text": "Note: The DAC trigger must be enabled for noise generation by setting the TENx bit in the DAC_CR register.",
+      "target_register": "DAC_CR",
+      "target_fields": [
+        "WAVE1"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "DAC_CR",
+          "field": "TEN1",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "modify"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Noise or triangle wave generation does not work if the channel trigger is not enabled.",
+      "datasheet_text": "Note: The DAC trigger must be enabled for noise generation by setting the TENx bit in the DAC_CR register.",
+      "target_register": "DAC_CR",
+      "target_fields": [
+        "WAVE2"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "DAC_CR",
+          "field": "TEN2",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "modify"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The programmed wave generation / trigger selection has no effect while TEN1 = 0.",
+      "datasheet_text": "Note: Only used if bit TEN1 = 1 (DAC channel1 trigger enabled).",
+      "description": "WAVE1[1:0] and TSEL1[2:0] are only used when TEN1 = 1.",
+      "involved": [
+        {
+          "register": "DAC_CR",
+          "field": "WAVE1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "TSEL1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "TEN1",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The programmed wave generation / trigger selection has no effect while TEN2 = 0.",
+      "datasheet_text": "Note: Only used if bit TEN2 = 1 (DAC channel2 trigger enabled).",
+      "description": "WAVE2[1:0] and TSEL2[2:0] are only used when TEN2 = 1.",
+      "involved": [
+        {
+          "register": "DAC_CR",
+          "field": "WAVE2",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "TSEL2",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "TEN2",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Parasitic consumption on the PA4/PA5 pin.",
+      "datasheet_text": "Note: Once the DAC channelx is enabled, the corresponding GPIO pin (PA4 or PA5) is automatically connected to the analog converter output (DAC_OUTx). In order to avoid parasitic consumption, the PA4 or PA5 pin should first be configured to analog (AIN).",
+      "description": "The PA4 / PA5 pin must be configured as analog input (AIN) before the corresponding DAC channel is enabled, because enabling the channel automatically connects the pin to the converter output.",
+      "involved": [
+        {
+          "register": "DAC_CR",
+          "field": "EN1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "EN2",
+          "whole_register": false
+        },
+        {
+          "register": "GPIOA_CRL",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "No DMA request is issued when the software trigger is used.",
+      "datasheet_text": "A DAC DMA request is generated when an external trigger (but not a software trigger) occurs while the DMAENx bit is set. The value of the DAC_DHRx register is then transferred into the DAC_DORx register.",
+      "description": "A DAC DMA request is only generated by an external trigger while DMAENx is set; a software trigger never generates a DMA request.",
+      "involved": [
+        {
+          "register": "DAC_CR",
+          "field": "DMAEN1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "DMAEN2",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "TEN1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "TSEL1",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The wave generator restarts from its preloaded value.",
+      "datasheet_text": "It is possible to reset LFSR wave generation by resetting the WAVEx[1:0] bits.",
+      "description": "Resetting WAVEx[1:0] resets the LFSR / triangle wave generation.",
+      "involved": [
+        {
+          "register": "DAC_CR",
+          "field": "WAVE1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "WAVE2",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The wrong timer TRGO is used as DAC trigger 3.",
+      "datasheet_text": "For High-density value line devices,  the TIM15 TRGO event is selected as DAC Trigger 3 only if the MISC_REMAP  bit in the AFIO_MAPR2 register is set and DAC Trigger 3 is connected to TIM5 TRGO when the MISC_REMAP bit in the AFIO_MAPR2 register is reset. On low- and medium -density devices the TIM15 TRGO event is always selected as DAC Trigger 3.",
+      "description": "On high-density value line devices, AFIO_MAPR2.MISC_REMAP must be set for TSELx = 011 to select the TIM15 TRGO event; otherwise trigger 3 is TIM5 TRGO.",
+      "involved": [
+        {
+          "register": "DAC_CR",
+          "field": "TSEL1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "TSEL2",
+          "whole_register": false
+        },
+        {
+          "register": "AFIO_MAPR2",
+          "field": "MISC_REMAP",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Half-word or byte accesses to the DAC registers may not take effect.",
+      "datasheet_text": "The peripheral registers have to be accessed by words (32 bits).",
+      "description": "All DAC registers have to be accessed by words (32 bits).",
+      "involved": [
+        {
+          "register": "DAC_CR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_SWTRIGR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12R1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12L1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR8R1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12R2",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12L2",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR8R2",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12RD",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12LD",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR8RD",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DOR1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DOR2",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_SR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

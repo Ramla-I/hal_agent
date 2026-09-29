@@ -1,0 +1,65 @@
+{
+  "datasheet_register_abbreviation": "TIM12_ARR",
+  "address_offset": "0x2C",
+  "reset_value": "0x0000FFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ARR",
+      "description": "Auto-reload value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A byte (8-bit) write to the register does not work as expected.",
+      "datasheet_text": "The peripheral registers have to be written by half-words (16 bits) or words (32 bits). Read accesses can be done by bytes (8 bits), half-words (16 bits) or words (32 bits).",
+      "description": "The register must be written by half-words (16 bits) or words (32 bits); byte writes are not allowed. Reads may be 8-, 16- or 32-bit.",
+      "involved": [
+        {
+          "register": "TIM12_ARR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "The counter does not count at all.",
+      "datasheet_text": "The counter is blocked while the auto-reload value is null.",
+      "fields": [
+        {
+          "register": "TIM12_ARR",
+          "field": "ARR",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "With ARPE=1 a newly written auto-reload value is only used from the next update event onwards.",
+      "datasheet_text": "The auto-reload register is preloaded. Writing to or reading from the auto-reload register accesses the preload register. The content of the preload register are transferred into the shadow register permanently or at each update event (UEV), depending on the auto-reload preload enable bit (ARPE) in TIMx_CR1 register.",
+      "description": "Reads and writes of TIMx_ARR access the preload register; the transfer into the shadow register happens permanently (ARPE=0) or at each update event (ARPE=1).",
+      "involved": [
+        {
+          "register": "TIM12_ARR",
+          "field": "ARR",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_CR1",
+          "field": "ARPE",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

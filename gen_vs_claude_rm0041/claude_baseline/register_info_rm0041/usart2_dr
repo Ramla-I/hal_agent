@@ -1,0 +1,115 @@
+{
+  "datasheet_register_abbreviation": "USART2_DR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DR",
+      "description": "Data value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 8
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "read_effect",
+      "severity": "warning",
+      "consequence": "The RXNE flag is cleared, so a pending receive event is consumed by the read.",
+      "datasheet_text": "It is cleared by a read to the USART_DR register. The RXNE flag can also be cleared by writing a zero to it. This clearing sequence is recommended only for multibuffer communication.",
+      "read_register": "USART2_DR",
+      "effects": [
+        {
+          "field": "RXNE",
+          "becomes": "cleared"
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "TXE cannot be cleared in any other way than writing the data register.",
+      "datasheet_text": "Clearing the TXE bit is always performed by a write to the data register.",
+      "description": "Writing USART_DR clears the TXE flag in USART_SR.",
+      "involved": [
+        {
+          "register": "USART2_DR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "USART2_SR",
+          "field": "TXE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The previously written data that has not yet been moved to the shift register is overwritten and lost.",
+      "datasheet_text": "The TXE bit is set by hardware and it indicates: The data has been moved from TDR to the shift register and the data transmission has started. The TDR register is empty. The next data can be written in the USART_DR register without overwriting the previous data.",
+      "target_register": "USART2_DR",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "USART2_SR",
+          "field": "TXE",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The last transmission is corrupted if the USART is disabled or low-power mode is entered too early.",
+      "datasheet_text": "After writing the last data into the USART_DR register, it is mandatory to wait for TC=1 before disabling the USART or causing the microcontroller to enter the low-power mode (see Figure 246: TC/TXE behavior when transmitting).",
+      "steps": [
+        {
+          "register": "USART2_DR",
+          "operation": "write"
+        },
+        {
+          "register": "USART2_SR",
+          "operation": "read"
+        }
+      ],
+      "enables": {
+        "register": "USART2_CR1",
+        "field": "UE",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The MSB written is ignored on transmission; on reception the MSB read is the parity bit, not data.",
+      "datasheet_text": "When transmitting with the parity enabled (PCE bit set to 1 in the USART_CR1 register), the value written in the MSB (bit 7 or bit 8 depending on the data length) has no effect because it is replaced by the parity. When receiving with the parity enabled, the value read in the MSB bit is the received parity bit.",
+      "description": "With PCE=1 the MSB of DR (bit 7 if M=0, bit 8 if M=1) is the parity bit and not a data bit.",
+      "involved": [
+        {
+          "register": "USART2_DR",
+          "field": "DR",
+          "whole_register": false
+        },
+        {
+          "register": "USART2_CR1",
+          "field": "PCE",
+          "whole_register": false
+        },
+        {
+          "register": "USART2_CR1",
+          "field": "M",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

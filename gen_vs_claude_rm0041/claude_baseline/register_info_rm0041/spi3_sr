@@ -1,0 +1,177 @@
+{
+  "datasheet_register_abbreviation": "SPI3_SR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000002",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "RXNE",
+      "description": "Receive buffer not empty",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "TXE",
+      "description": "Transmit buffer empty",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "CRCERR",
+      "description": "CRC error flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "MODF",
+      "description": "Mode fault",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "OVR",
+      "description": "Overrun flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "BSY",
+      "description": "Busy flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The MODF flag stays set and hardware keeps blocking the setting of SPE and MSTR.",
+      "datasheet_text": "Use the following software sequence to clear the MODF bit: 1. Make a read or write access to the SPI_SR register while the MODF bit is set. 2. Then write to the SPI_CR1 register.",
+      "steps": [
+        {
+          "register": "SPI3_SR",
+          "operation": "read"
+        },
+        {
+          "register": "SPI3_CR1",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "SPI3_CR1",
+        "field": "SPE",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Multiple slave conflicts may occur in a system comprising several MCUs.",
+      "datasheet_text": "To avoid any multiple slave conflicts in a system comprising several MCUs, the NSS pin must be pulled high during the MODF bit clearing sequence. The SPE and MSTR bits can be restored to their original state after this clearing sequence.",
+      "description": "NSS must be held high during the MODF clearing sequence; SPE and MSTR are restored only afterwards.",
+      "involved": [
+        {
+          "register": "SPI3_SR",
+          "field": "MODF",
+          "whole_register": false
+        },
+        {
+          "register": "SPI3_CR1",
+          "field": "SPE",
+          "whole_register": false
+        },
+        {
+          "register": "SPI3_CR1",
+          "field": "MSTR",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The OVR flag remains set and further overrun events cannot be detected.",
+      "datasheet_text": "Clearing the OVR bit is done by a read from the SPI_DR register followed by a read access to the SPI_SR register.",
+      "steps": [
+        {
+          "register": "SPI3_DR",
+          "operation": "read"
+        },
+        {
+          "register": "SPI3_SR",
+          "operation": "read"
+        }
+      ],
+      "enables": null
+    },
+    {
+      "kind": "read_effect",
+      "severity": "warning",
+      "consequence": "The OVR flag is cleared as a side effect of the SPI_DR read followed by the SPI_SR read.",
+      "datasheet_text": "Clearing the OVR bit is done by a read from the SPI_DR register followed by a read access to the SPI_SR register.",
+      "read_register": "SPI3_SR",
+      "effects": [
+        {
+          "field": "OVR",
+          "becomes": "cleared"
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Using BSY for per-byte handling can lead to data handling errors; TXE and RXNE must be used instead.",
+      "datasheet_text": "Do not use the BSY flag to handle each data transmission or reception. It is better to use the TXE and RXNE flags instead.",
+      "description": "The BSY flag must not be polled to manage individual data transfers; TXE/RXNE are to be used.",
+      "involved": [
+        {
+          "register": "SPI3_SR",
+          "field": "BSY",
+          "whole_register": false
+        },
+        {
+          "register": "SPI3_SR",
+          "field": "TXE",
+          "whole_register": false
+        },
+        {
+          "register": "SPI3_SR",
+          "field": "RXNE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte (8-bit) accesses to the SPI registers are not supported.",
+      "datasheet_text": "The peripheral registers have to be accessed by half-words (16 bits) or words (32 bits).",
+      "description": "SPI registers must be accessed with 16-bit or 32-bit accesses only.",
+      "involved": [
+        {
+          "register": "SPI3_SR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

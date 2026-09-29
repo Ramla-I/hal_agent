@@ -1,0 +1,281 @@
+{
+  "datasheet_register_abbreviation": "DMA1_IFCR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CGIF1",
+      "description": "Channel 1 Global interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CTCIF1",
+      "description": "Channel 1 Transfer Complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "CHTIF1",
+      "description": "Channel 1 Half Transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "CTEIF1",
+      "description": "Channel 1 Transfer Error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "CGIF2",
+      "description": "Channel 2 Global interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "CTCIF2",
+      "description": "Channel 2 Transfer Complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "CHTIF2",
+      "description": "Channel 2 Half Transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "CTEIF2",
+      "description": "Channel 2 Transfer Error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "CGIF3",
+      "description": "Channel 3 Global interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "CTCIF3",
+      "description": "Channel 3 Transfer Complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "CHTIF3",
+      "description": "Channel 3 Half Transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "CTEIF3",
+      "description": "Channel 3 Transfer Error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "CGIF4",
+      "description": "Channel 4 Global interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "CTCIF4",
+      "description": "Channel 4 Transfer Complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "CHTIF4",
+      "description": "Channel 4 Half Transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "CTEIF4",
+      "description": "Channel 4 Transfer Error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "CGIF5",
+      "description": "Channel 5 Global interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "CTCIF5",
+      "description": "Channel 5 Transfer Complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "CHTIF5",
+      "description": "Channel 5 Half Transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "CTEIF5",
+      "description": "Channel 5 Transfer Error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      }
+    },
+    {
+      "name": "CGIF6",
+      "description": "Channel 6 Global interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      }
+    },
+    {
+      "name": "CTCIF6",
+      "description": "Channel 6 Transfer Complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 21
+      }
+    },
+    {
+      "name": "CHTIF6",
+      "description": "Channel 6 Half Transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      }
+    },
+    {
+      "name": "CTEIF6",
+      "description": "Channel 6 Transfer Error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      }
+    },
+    {
+      "name": "CGIF7",
+      "description": "Channel 7 Global interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 24
+      }
+    },
+    {
+      "name": "CTCIF7",
+      "description": "Channel 7 Transfer Complete clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      }
+    },
+    {
+      "name": "CHTIF7",
+      "description": "Channel 7 Half Transfer clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      }
+    },
+    {
+      "name": "CTEIF7",
+      "description": "Channel 7 Transfer Error clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Writing CGIFx also clears the TEIF, HTIF and TCIF flags of that channel, so pending events can be lost; writing 0 to a bit has no effect.",
+      "datasheet_text": "CGIFx: Channel x global interrupt clear (x = 1 ..7) This bit is set and cleared by software. 0: No effect 1: Clears the GIF, TEIF, HTIF and TCIF flags in the DMA_ISR register",
+      "description": "DMA_IFCR is write-only: writing 1 to CGIFx clears all four flags (GIF, TEIF, HTIF, TCIF) of channel x in DMA_ISR at once, while writing 0 has no effect.",
+      "involved": [
+        {
+          "register": "DMA1_IFCR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DMA1_ISR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

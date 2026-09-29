@@ -1,0 +1,83 @@
+{
+  "datasheet_register_abbreviation": "IWDG_PR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PR",
+      "description": "Prescaler divider",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 2
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "Without first writing 0x5555 to IWDG_KR the write to PR[2:0] is ignored.",
+      "datasheet_text": "Bits 2:0 PR[2:0]: Prescaler divider\nThese bits are write access protected seeSection 18.3.2. They are written by software to select the prescaler divider feeding the counter clock. PVU bit of IWDG_SR must be reset in order to be able to change the prescaler divider.",
+      "steps": [
+        {
+          "register": "IWDG_KR",
+          "operation": "write",
+          "value": 21845
+        },
+        {
+          "register": "IWDG_PR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "IWDG_PR",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The new prescaler value is not taken into account while a previous prescaler update is still ongoing.",
+      "datasheet_text": "PVU bit of IWDG_SR must be reset in order to be able to change the prescaler divider.",
+      "target_register": "IWDG_PR",
+      "target_fields": [
+        "PR"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "IWDG_SR",
+          "field": "PVU",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The value read back may be stale/invalid while a prescaler write is ongoing.",
+      "datasheet_text": "Note: Reading this register returns the prescaler value from the VDD voltage domain. This value may not be up to date/valid if a write operation to this register is ongoing. For this reason the value read from this register is valid only when the PVU bit in the IWDG_SR register is reset.",
+      "target_register": "IWDG_PR",
+      "target_fields": [
+        "PR"
+      ],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register": "IWDG_SR",
+          "field": "PVU",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    }
+  ]
+}

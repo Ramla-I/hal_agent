@@ -1,0 +1,75 @@
+{
+  "datasheet_register_abbreviation": "DMA1_CMAR5",
+  "address_offset": "0x64",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MA",
+      "description": "Memory address",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Writing the memory address while the channel is enabled corrupts the ongoing transfer.",
+      "datasheet_text": "This register must not be written when the channel is enabled.",
+      "target_register": "DMA1_CMAR5",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "DMA1_CCR5",
+          "field": "EN",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "The low address bits are ignored and the access is realigned, so the transfer does not use the intended address.",
+      "datasheet_text": "Base address of the memory area from/to which the data are read/written. When MSIZE is 01 (16-bit), the MA[0] bit is ignored. Access is automatically aligned to a half-word address. When MSIZE is 10 (32-bit), MA[1:0] are ignored. Access is automatically aligned to a word address.",
+      "fields": [
+        {
+          "register": "DMA1_CMAR5",
+          "field": "MA",
+          "whole_register": false
+        },
+        {
+          "register": "DMA1_CCR5",
+          "field": "MSIZE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "Unaligned source/destination addresses lead to misaligned accesses and wrong data.",
+      "datasheet_text": "Independent source and destination transfer size (byte, half word, word), emulating packing and unpacking. Source/destination addresses must be aligned on the data size.",
+      "fields": [
+        {
+          "register": "DMA1_CMAR5",
+          "field": "MA",
+          "whole_register": false
+        },
+        {
+          "register": "DMA1_CCR5",
+          "field": "MSIZE",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

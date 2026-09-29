@@ -1,0 +1,74 @@
+{
+  "datasheet_register_abbreviation": "I2C2_OAR1",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ADD0",
+      "description": "Interface address",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "ADD7",
+      "description": "Interface address",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "ADD10",
+      "description": "Interface address",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "ADDMODE",
+      "description": "Addressing mode (slave mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Address recognition may not work if bit 14 is not written to 1.",
+      "datasheet_text": "Bit 14 Should always be kept at 1 by software.",
+      "description": "Bit 14 of I2C_OAR1 must always be written to 1 by software.",
+      "involved": [
+        {
+          "register": "I2C2_OAR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte (8-bit) accesses to the I2C registers are not supported.",
+      "datasheet_text": "The peripheral registers have to be accessed by half-words (16 bits) or words (32 bits).",
+      "description": "I2C registers must be accessed with 16-bit or 32-bit accesses only.",
+      "involved": [
+        {
+          "register": "I2C2_OAR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

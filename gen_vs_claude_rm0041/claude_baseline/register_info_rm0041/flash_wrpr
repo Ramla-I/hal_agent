@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "FLASH_WRPR",
+  "address_offset": "0x20",
+  "reset_value": "0xFFFFFFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "WRP",
+      "description": "Write protect",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

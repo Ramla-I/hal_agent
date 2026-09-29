@@ -1,0 +1,78 @@
+{
+  "datasheet_register_abbreviation": "RCC_AHBENR",
+  "address_offset": "0x14",
+  "reset_value": "0x00000014",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DMA1EN",
+      "description": "DMA1 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "DMA2EN",
+      "description": "DMA2 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "SRAMEN",
+      "description": "SRAM interface clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "FLITFEN",
+      "description": "FLITF clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "CRCEN",
+      "description": "CRC clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "FSMCEN",
+      "description": "FSMC clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Reads of the peripheral's registers return 0x0 and writes are lost.",
+      "datasheet_text": "Note: When the peripheral clock is not active, the peripheral register values may not be readable by software and the returned value is always 0x0.",
+      "description": "The clock enable bit of an AHB peripheral in RCC_AHBENR must be set before its registers are accessed; with the clock off the register values are not readable and read back as 0x0.",
+      "involved": [
+        {
+          "register": "RCC_AHBENR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

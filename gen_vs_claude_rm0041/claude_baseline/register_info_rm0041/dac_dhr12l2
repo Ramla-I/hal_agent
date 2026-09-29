@@ -1,0 +1,90 @@
+{
+  "datasheet_register_abbreviation": "DAC_DHR12L2",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DACC2DHR",
+      "description": "DAC channel2 12-bit left-aligned data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Data written with the wrong alignment produces a wrong analog output value.",
+      "datasheet_text": "12-bit left alignment: the software has to load data into the DAC_DHR12Lx [15:4] bits (stored into the DHRx[11:0] bits)",
+      "description": "Data must be written into this register at the alignment documented for it; the value is then shifted into the internal DHRx register.",
+      "involved": [
+        {
+          "register": "DAC_DHR12L2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "delay",
+      "severity": "warning",
+      "consequence": "Reading DAC_DOR2 immediately after the write still returns the previous value.",
+      "datasheet_text": "Data stored in the DAC_DHRx register are automatically transferred to the DAC_DORx register after one APB1 clock cycle, if no hardware trigger is selected (TENx bit in DAC_CR register is reset). However, when a hardware trigger is selected (TENx bit in DAC_CR register is set) and a trigger occurs, the transfer is performed three APB1 clock cycles later.",
+      "after": {
+        "register": "DAC_DHR12L2",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 1,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "DAC_DOR2",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "delay",
+      "severity": "warning",
+      "consequence": "With a hardware trigger selected (TENx = 1) the transfer to DAC_DOR2 only happens three APB1 clock cycles after the trigger event.",
+      "datasheet_text": "Data stored in the DAC_DHRx register are automatically transferred to the DAC_DORx register after one APB1 clock cycle, if no hardware trigger is selected (TENx bit in DAC_CR register is reset). However, when a hardware trigger is selected (TENx bit in DAC_CR register is set) and a trigger occurs, the transfer is performed three APB1 clock cycles later.",
+      "after": {
+        "register": "DAC_DHR12L2",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 3,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "DAC_DOR2",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Writing DAC_DOR2 directly is ignored.",
+      "datasheet_text": "The DAC_DORx cannot be written directly and any data transfer to the DAC channelx must be performed by loading the DAC_DHRx register (write to DAC_DHR8Rx, DAC_DHR12Lx, DAC_DHR12Rx, DAC_DHR8RD, DAC_DHR12LD or DAC_DHR12LD).",
+      "description": "Writing this data holding register is the only way to update DAC_DOR2; DAC_DOR2 cannot be written directly.",
+      "involved": [
+        {
+          "register": "DAC_DHR12L2",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DOR2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

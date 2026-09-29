@@ -1,0 +1,62 @@
+{
+  "datasheet_register_abbreviation": "CEC_OAR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "OA",
+      "description": "Own address",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Received message blocks addressed to this device are not acknowledged and the controller returns to the Idle state.",
+      "datasheet_text": "Once the header has been received, the destination address is compared to the value programmed in the own address register. If the two do not match and the address is not the broadcast address 0xF, the block is not acknowledged and the controller reverts to the Idle state.",
+      "description": "The own address OA[3:0] must be programmed in CEC_OAR before reception, because the received destination address is compared against it.",
+      "involved": [
+        {
+          "register": "CEC_OAR",
+          "field": "OA",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_CSR",
+          "field": "RBTF",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_CFGR",
+          "field": "PE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Arbitration is lost or the message is sent with an inconsistent initiator address.",
+      "datasheet_text": "Note that it is the responsibility of the software driver to send an initiator address consistent with the logical address programmed in the own address register.",
+      "description": "The initiator address placed in the transmitted header (CEC_TXD) must match OA[3:0] in CEC_OAR.",
+      "involved": [
+        {
+          "register": "CEC_OAR",
+          "field": "OA",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_TXD",
+          "field": "TXD",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

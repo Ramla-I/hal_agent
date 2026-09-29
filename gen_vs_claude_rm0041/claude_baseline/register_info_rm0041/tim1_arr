@@ -1,0 +1,117 @@
+{
+  "datasheet_register_abbreviation": "TIM1_ARR",
+  "address_offset": "0x2C",
+  "reset_value": "0x0000FFFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ARR",
+      "description": "Auto-reload value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "With ARR = 0 the counter does not run at all.",
+      "datasheet_text": "The counter is blocked while the auto-reload value is null.",
+      "description": "The auto-reload value must not be 0, otherwise the counter is blocked.",
+      "involved": [
+        {
+          "register": "TIM1_ARR",
+          "field": "ARR",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "With ARPE=1 a value written to TIMx_ARR is only transferred to the active auto-reload register at the next update event.",
+      "datasheet_text": "The auto-reload register is preloaded. Writing to or reading from the auto-reload register accesses the preload register. The content of the preload register are transferred into the shadow register permanently or at each update event (UEV), depending on the auto-reload preload enable bit (ARPE) in TIMx_CR1 register.",
+      "description": "Accesses to TIMx_ARR address the preload register; the transfer to the shadow register is immediate only if ARPE=0, otherwise it happens at the update event.",
+      "involved": [
+        {
+          "register": "TIM1_ARR",
+          "field": "ARR",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CR1",
+          "field": "ARPE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "If TIMx_ARR is not configured before the counter is started in encoder mode, the counting range is wrong.",
+      "datasheet_text": "This means that the counter just counts continuously between 0 and the auto-reload value in the TIMx_ARR register (0 to ARR or ARR down to 0 depending on the direction). So user must configure TIMx_ARR before starting.",
+      "steps": [
+        {
+          "register": "TIM1_ARR",
+          "operation": "write"
+        },
+        {
+          "register": "TIM1_CR1",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "TIM1_CR1",
+        "field": "CEN",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "If the compare value equals the counter initial value, or CCRx is 0 / greater than ARR, the one-pulse waveform is not generated correctly.",
+      "datasheet_text": "A pulse can be correctly generated only if the compare value is different from the counter initial value. Before starting (when the timer is waiting for the trigger), the configuration must be: \u2022 In upcounting: CNT < CCRx \u2264 ARR (in particular, 0 < CCRx) \u2022 In downcounting: CNT > CCRx",
+      "fields": [
+        {
+          "register": "TIM1_CNT",
+          "field": "CNT",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCR1",
+          "field": "CCR1",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_ARR",
+          "field": "ARR",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "warning",
+      "consequence": "If the time base is not programmed to its maximum value before enabling the Hall interface, the counter can wrap between two sensor changes.",
+      "datasheet_text": "Program the time base: write the TIMx_ARR to the max value (the counter must be cleared by the TI1 change. Set the prescaler to get a maximum counter period longer than the time between 2 changes on the sensors,",
+      "steps": [
+        {
+          "register": "TIM1_ARR",
+          "operation": "write"
+        },
+        {
+          "register": "TIM1_PSC",
+          "operation": "write"
+        },
+        {
+          "register": "TIM1_CCMR1",
+          "operation": "write"
+        }
+      ],
+      "enables": null
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "datasheet_register_abbreviation": "DAC_DOR1",
+  "address_offset": "0x2C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DACC1DOR",
+      "description": "DAC channel1 data output",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A write to DAC_DORx is ignored and the analog output does not change.",
+      "datasheet_text": "The DAC_DORx cannot be written directly and any data transfer to the DAC channelx must be performed by loading the DAC_DHRx register (write to DAC_DHR8Rx, DAC_DHR12Lx, DAC_DHR12Rx, DAC_DHR8RD, DAC_DHR12LD or DAC_DHR12LD).",
+      "description": "DAC_DORx is read-only: it cannot be written directly, and the only way to change the DAC output is to write one of the DAC_DHRyyyx data holding registers.",
+      "involved": [
+        {
+          "register": "DAC_DOR1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12R1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12L1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR8R1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12R2",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12L2",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR8R2",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12RD",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR12LD",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DHR8RD",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "delay",
+      "severity": "warning",
+      "consequence": "Reading DAC_DORx immediately after writing the data holding register still returns the previous value.",
+      "datasheet_text": "Data stored in the DAC_DHRx register are automatically transferred to the DAC_DORx register after one APB1 clock cycle, if no hardware trigger is selected (TENx bit in DAC_CR register is reset). However, when a hardware trigger is selected (TENx bit in DAC_CR register is set) and a trigger occurs, the transfer is performed three APB1 clock cycles later.",
+      "after": {
+        "register": "DAC_DHR12R1",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 1,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "DAC_DOR1",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "delay",
+      "severity": "warning",
+      "consequence": "With a hardware trigger enabled, DAC_DORx is only updated three APB1 cycles after the trigger.",
+      "datasheet_text": "Data stored in the DAC_DHRx register are automatically transferred to the DAC_DORx register after one APB1 clock cycle, if no hardware trigger is selected (TENx bit in DAC_CR register is reset). However, when a hardware trigger is selected (TENx bit in DAC_CR register is set) and a trigger occurs, the transfer is performed three APB1 clock cycles later.",
+      "after": {
+        "register": "DAC_DHR12R1",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 3,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "DAC_DOR1",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The analog output read/used too early is not yet at its final value.",
+      "datasheet_text": "When DAC_DORx is loaded with the DAC_DHRx contents, the analog output voltage becomes available after a time tSETTLING that depends on the power supply voltage and the analog output load.",
+      "description": "After DAC_DORx has been loaded the analog voltage on the pin is only valid after the settling time tSETTLING.",
+      "involved": [
+        {
+          "register": "DAC_DOR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

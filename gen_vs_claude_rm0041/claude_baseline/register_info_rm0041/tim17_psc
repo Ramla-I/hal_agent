@@ -1,0 +1,52 @@
+{
+  "datasheet_register_abbreviation": "TIM17_PSC",
+  "address_offset": "0x28",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PSC",
+      "description": "Prescaler value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The counter keeps using the previous prescaler ratio until the next update event.",
+      "datasheet_text": "It can be changed on the fly as this control register is buffered. The new prescaler ratio is taken into account at the next update event.",
+      "description": "The prescaler register is buffered: a value written to TIMx_PSC is only loaded into the active prescaler at the next update event, so the new ratio does not take effect immediately.",
+      "involved": [
+        {
+          "register": "TIM17_PSC",
+          "field": "PSC",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The written prescaler value is not used until an update event occurs.",
+      "datasheet_text": "PSC contains the value to be loaded in the active prescaler register at each update event (including when the counter is cleared through UG bit of TIMx_EGR register or through trigger controller when configured in \u201creset mode\u201d).",
+      "description": "The value written into PSC is transferred into the active prescaler register at each update event, including when the counter is cleared through the UG bit of TIMx_EGR or by the trigger controller in reset mode.",
+      "involved": [
+        {
+          "register": "TIM17_PSC",
+          "field": "PSC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM17_EGR",
+          "field": "UG",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

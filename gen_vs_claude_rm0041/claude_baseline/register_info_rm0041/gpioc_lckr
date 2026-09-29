@@ -1,0 +1,289 @@
+{
+  "datasheet_register_abbreviation": "GPIOC_LCKR",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "LCK0",
+      "description": "Port A Lock bit 0",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "LCK1",
+      "description": "Port A Lock bit 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "LCK2",
+      "description": "Port A Lock bit 2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "LCK3",
+      "description": "Port A Lock bit 3",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "LCK4",
+      "description": "Port A Lock bit 4",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "LCK5",
+      "description": "Port A Lock bit 5",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "LCK6",
+      "description": "Port A Lock bit 6",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "LCK7",
+      "description": "Port A Lock bit 7",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "LCK8",
+      "description": "Port A Lock bit 8",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "LCK9",
+      "description": "Port A Lock bit 9",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "LCK10",
+      "description": "Port A Lock bit 10",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "LCK11",
+      "description": "Port A Lock bit 11",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "LCK12",
+      "description": "Port A Lock bit 12",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "LCK13",
+      "description": "Port A Lock bit 13",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "LCK14",
+      "description": "Port A Lock bit 14",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "LCK15",
+      "description": "Port A Lock bit 15",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "LCKK",
+      "description": "Lock key",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "Without the exact write 1 / write 0 / write 1 / read 0 sequence on LCKK the lock is not activated and the port configuration stays modifiable.",
+      "datasheet_text": "LOCK key writing sequence: Write 1 Write 0 Write 1 Read 0 Read 1 (this read is optional but confirms that the lock is active)",
+      "steps": [
+        {
+          "register": "GPIOC_LCKR",
+          "operation": "write"
+        },
+        {
+          "register": "GPIOC_LCKR",
+          "operation": "write"
+        },
+        {
+          "register": "GPIOC_LCKR",
+          "operation": "write"
+        },
+        {
+          "register": "GPIOC_LCKR",
+          "operation": "read"
+        },
+        {
+          "register": "GPIOC_LCKR",
+          "operation": "read"
+        }
+      ],
+      "enables": {
+        "register": "GPIOC_LCKR",
+        "field": "LCKK",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Any change of LCK[15:0] during the sequence, or any deviation from the sequence, aborts the lock and the configuration is not frozen.",
+      "datasheet_text": "Note: During the LOCK Key Writing sequence, the value of LCK[15:0] must not change. Any error in the lock sequence will abort the lock.",
+      "description": "The LCK[15:0] bits must keep the same value in every access of the LOCK key writing sequence; any error in the sequence aborts the lock.",
+      "involved": [
+        {
+          "register": "GPIOC_LCKR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "GPIOC_LCKR",
+          "field": "LCKK",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Writes to the LCK[15:0] bits are ignored once LCKK is set.",
+      "datasheet_text": "Bits 15:0 LCKy: Port x Lock bit y (y= 0 .. 15) These bits are read write but can only be written when the LCKK bit is 0.",
+      "target_register": "GPIOC_LCKR",
+      "target_fields": [
+        "LCK0",
+        "LCK1",
+        "LCK2",
+        "LCK3",
+        "LCK4",
+        "LCK5",
+        "LCK6",
+        "LCK7",
+        "LCK8",
+        "LCK9",
+        "LCK10",
+        "LCK11",
+        "LCK12",
+        "LCK13",
+        "LCK14",
+        "LCK15"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "GPIOC_LCKR",
+          "field": "LCKK",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "write_once",
+      "severity": "error",
+      "consequence": "Once LCKK has been set by the lock key sequence, the whole GPIOx_LCKR register is locked and further writes have no effect until the next reset.",
+      "datasheet_text": "0: Port configuration lock key not active 1: Port configuration lock key active. GPIOx_LCKR register is locked until the next reset.",
+      "target_register": "GPIOC_LCKR",
+      "target_fields": [],
+      "reset_scope": "system_reset"
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Writing LCKK outside the lock key writing sequence does not change the bit.",
+      "datasheet_text": "Bit 16 LCKK[16]: Lock key This bit can be read anytime. It can only be modified using the Lock Key Writing Sequence.",
+      "description": "LCKK can be read at any time but can only be modified through the LOCK key writing sequence.",
+      "involved": [
+        {
+          "register": "GPIOC_LCKR",
+          "field": "LCKK",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Half-word or byte accesses to GPIOx_LCKR are not allowed.",
+      "datasheet_text": "Each I/O port bit is freely programmable, however the I/O port registers have to be accessed as 32-bit words (half-word or byte accesses are not allowed).",
+      "description": "GPIOx_LCKR must be accessed with 32-bit (word) accesses only.",
+      "involved": [
+        {
+          "register": "GPIOC_LCKR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

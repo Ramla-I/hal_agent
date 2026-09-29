@@ -1,0 +1,204 @@
+{
+  "datasheet_register_abbreviation": "BKP_CSR",
+  "address_offset": "0x34",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CTE",
+      "description": "Clear Tamper event",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CTI",
+      "description": "Clear Tamper Interrupt",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "TPIE",
+      "description": "Tamper Pin interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "TEF",
+      "description": "Tamper Event Flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "TIF",
+      "description": "Tamper Interrupt Flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "Accesses to the backup registers have no effect while the backup interface clock is disabled.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows: \u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register \u2022 set the DBP bit in the Power control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "clock": {
+        "register": "RCC_APB1ENR",
+        "field": "BKPEN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "write"
+      }
+    },
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "PWR_CR.DBP cannot be set (PWR clock off), so the backup registers stay write-protected.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows: \u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register \u2022 set the DBP bit in the Power control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "clock": {
+        "register": "RCC_APB1ENR",
+        "field": "PWREN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "write"
+      }
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the backup domain register is ignored (backup domain is write-protected).",
+      "datasheet_text": "In reset state, the RTC and backup registers are protected against parasitic write access. This bit must be set to enable write access to these registers.",
+      "target_register": "BKP_CSR",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "PWR_CR",
+          "field": "DBP",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "Write accesses to the backup registers are ignored.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows: \u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register \u2022 set the DBP bit in the Power control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "steps": [
+        {
+          "register": "RCC_APB1ENR",
+          "operation": "write"
+        },
+        {
+          "register": "PWR_CR",
+          "operation": "write"
+        },
+        {
+          "register": "BKP_CSR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "BKP_CSR",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte (8-bit) accesses are not supported; use 16-bit or 32-bit accesses.",
+      "datasheet_text": "The peripheral registers can be accessed by half-words (16-bit) or words (32-bit).",
+      "description": "BKP_CSR must be accessed with half-word (16-bit) or word (32-bit) accesses only.",
+      "involved": [
+        {
+          "register": "BKP_CSR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "No Tamper interrupt is generated if TPE is not set.",
+      "datasheet_text": "1: Tamper interrupt enabled (the TPE bit must also be set in the BKP_CR register",
+      "description": "TPIE is only effective when BKP_CR.TPE is also set.",
+      "involved": [
+        {
+          "register": "BKP_CSR",
+          "field": "TPIE",
+          "whole_register": false
+        },
+        {
+          "register": "BKP_CR",
+          "field": "TPE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "TIF stays set (interrupt remains pending) unless CTI is written to 1 or TPIE is cleared.",
+      "datasheet_text": "This bit is set by hardware when a Tamper event is detected and the TPIE bit is set. It is cleared by writing 1 to the CTI bit (also clears the interrupt). It is also cleared if the TPIE bit is reset.",
+      "description": "TIF is read-only; clear it by writing 1 to CTI (or by clearing TPIE).",
+      "involved": [
+        {
+          "register": "BKP_CSR",
+          "field": "TIF",
+          "whole_register": false
+        },
+        {
+          "register": "BKP_CSR",
+          "field": "CTI",
+          "whole_register": false
+        },
+        {
+          "register": "BKP_CSR",
+          "field": "TPIE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "TEF stays set and the BKP_DRx registers remain held in reset (writes to them are lost) until CTE is written to 1.",
+      "datasheet_text": "This bit is set by hardware when a Tamper event is detected. It is cleared by writing 1 to the CTE bit.",
+      "description": "TEF is read-only; clear it (and release the BKP_DRx registers from reset) by writing 1 to CTE.",
+      "involved": [
+        {
+          "register": "BKP_CSR",
+          "field": "TEF",
+          "whole_register": false
+        },
+        {
+          "register": "BKP_CSR",
+          "field": "CTE",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

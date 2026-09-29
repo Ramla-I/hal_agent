@@ -1,0 +1,129 @@
+{
+  "datasheet_register_abbreviation": "DAC_DHR12RD",
+  "address_offset": "0x20",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DACC1DHR",
+      "description": "DAC channel1 12-bit right-aligned data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "DACC2DHR",
+      "description": "DAC channel2 12-bit right-aligned data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 27
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Data written with the wrong alignment produces wrong analog output values.",
+      "datasheet_text": "12-bit right alignment: data for DAC channel1 to be loaded into the DAC_DHR12RD [11:0] bits (stored into the DHR1[11:0] bits) and data for DAC channel2 to be loaded into the DAC_DHR12LD [27:16] bits (stored into the DHR2[11:0] bits)",
+      "description": "In dual DAC channel mode the data for both channels must be written with the alignment documented for this register in a single 32-bit access.",
+      "involved": [
+        {
+          "register": "DAC_DHR12RD",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "If TEN1/TEN2 and TSEL1/TSEL2 are not configured before the dual data register is loaded, the conversions are not triggered as intended.",
+      "datasheet_text": "To configure the DAC in this conversion mode, the following sequence is required:\n\u2022 Set the two DAC channel trigger enable bits TEN1 and TEN2\n\u2022 Configure different trigger sources by setting different values in the TSEL1[2:0] and TSEL2[2:0] bits\n\u2022 Load the dual DAC channel data into the desired DHR register (DAC_DHR12RD, DAC_DHR12LD or DAC_DHR8RD)",
+      "steps": [
+        {
+          "register": "DAC_CR",
+          "operation": "write"
+        },
+        {
+          "register": "DAC_CR",
+          "operation": "write"
+        },
+        {
+          "register": "DAC_DHR12RD",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "DAC_DHR12RD",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "delay",
+      "severity": "warning",
+      "consequence": "DAC_DOR1/DAC_DOR2 still hold the previous values if read immediately after the write.",
+      "datasheet_text": "In this configuration, one APB1 clock cycle later, the DHR1 and DHR2 registers are transferred into DAC_DOR1 and DAC_DOR2, respectively.",
+      "after": {
+        "register": "DAC_DHR12RD",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 1,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "DAC_DOR1",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "delay",
+      "severity": "warning",
+      "consequence": "With hardware triggers enabled DAC_DOR1/DAC_DOR2 are only updated three APB1 cycles after the trigger.",
+      "datasheet_text": "When a trigger arrives, the DHR1 and DHR2 registers are transferred into DAC_DOR1 and DAC_DOR2, respectively (after three APB1 clock cycles).",
+      "after": {
+        "register": "DAC_DHR12RD",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 3,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "DAC_DOR1",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Writing DAC_DORx directly is ignored.",
+      "datasheet_text": "The DAC_DORx cannot be written directly and any data transfer to the DAC channelx must be performed by loading the DAC_DHRx register (write to DAC_DHR8Rx, DAC_DHR12Lx, DAC_DHR12Rx, DAC_DHR8RD, DAC_DHR12LD or DAC_DHR12LD).",
+      "description": "Writing this dual data holding register is the only way to update DAC_DOR1/DAC_DOR2; the DAC_DORx registers cannot be written directly.",
+      "involved": [
+        {
+          "register": "DAC_DHR12RD",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DOR1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "DAC_DOR2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

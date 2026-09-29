@@ -1,0 +1,176 @@
+{
+  "datasheet_register_abbreviation": "TIM4_CCMR1_Input",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "IC1PSC",
+      "description": "Input capture 1 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "IC1F",
+      "description": "Input capture 1 filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/compare 2 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "IC2PSC",
+      "description": "Input capture 2 prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "IC2F",
+      "description": "Input capture 2 filter",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to CC1S is ignored while the channel is enabled.",
+      "datasheet_text": "Note: CC1S bits are writable only when the channel is OFF (CC1E = 0 in TIMx_CCER).",
+      "target_register": "TIM4_CCMR1",
+      "target_fields": [
+        "CC1S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM4_CCER",
+          "field": "CC1E",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to CC2S is ignored while the channel is enabled.",
+      "datasheet_text": "Note: CC2S bits are writable only when the channel is OFF (CC2E = 0 in TIMx_CCER).",
+      "target_register": "TIM4_CCMR1",
+      "target_fields": [
+        "CC2S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM4_CCER",
+          "field": "CC2E",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Selecting CCxS=11 (TRC) without an internal trigger selected in TS leaves the channel input unconnected, so no capture occurs.",
+      "datasheet_text": "11: CC1 channel is configured as input, IC1 is mapped on TRC. This mode is working only if an internal trigger input is selected through TS bit (TIMx_SMCR register)",
+      "description": "CC1S (and likewise CC2S) may only be programmed to 11 (IC mapped on TRC) if an internal trigger input is selected through the TS bits of TIMx_SMCR.",
+      "involved": [
+        {
+          "register": "TIM4_CCMR1",
+          "field": "CC1S",
+          "whole_register": false
+        },
+        {
+          "register": "TIM4_CCMR1",
+          "field": "CC2S",
+          "whole_register": false
+        },
+        {
+          "register": "TIM4_SMCR",
+          "field": "TS",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Disabling the channel resets the input capture prescaler, so the event count restarts from zero.",
+      "datasheet_text": "This bit-field defines the ratio of the prescaler acting on CC1 input (IC1). The prescaler is reset as soon as CC1E=0 (TIMx_CCER register).",
+      "description": "The IC1PSC input capture prescaler counter is reset whenever CC1E is cleared in TIMx_CCER.",
+      "involved": [
+        {
+          "register": "TIM4_CCMR1",
+          "field": "IC1PSC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM4_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "warning",
+      "consequence": "If CC1E is set before the input selection, filter, polarity and prescaler are programmed, captures are performed with an unintended configuration.",
+      "datasheet_text": "The following example shows how to capture the counter value in TIMx_CCR1 when TI1 input rises. To do this, use the following procedure: \u2022 Select the active input: TIMx_CCR1 must be linked to the TI1 input, so write the CC1S bits to 01 in the TIMx_CCMR1 register. As soon as CC1S becomes different from 00, the channel is configured in input and the TIMx_CCR1 register becomes read-only.",
+      "steps": [
+        {
+          "register": "TIM4_CCMR1",
+          "operation": "write"
+        },
+        {
+          "register": "TIM4_CCER",
+          "operation": "write"
+        },
+        {
+          "register": "TIM4_DIER",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "TIM4_CCER",
+        "field": "CC1E",
+        "whole_register": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "datasheet_register_abbreviation": "FLASH_OBR",
+  "address_offset": "0x1C",
+  "reset_value": "0x03FFFFFC",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "OPTERR",
+      "description": "Option byte error",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "RDPRT",
+      "description": "Read protection",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "WDG_SW",
+      "description": "WDG_SW",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "nRST_STOP",
+      "description": "nRST_STOP",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "nRST_STDBY",
+      "description": "nRST_STDBY",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "Data0",
+      "description": "Data0",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "Data1",
+      "description": "Data1",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 25
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

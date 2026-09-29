@@ -1,0 +1,45 @@
+{
+  "datasheet_register_abbreviation": "NVIC_IPR13",
+  "address_offset": "0x334",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "IPR_N0",
+      "description": "IPR_N0",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "IPR_N1",
+      "description": "IPR_N1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "IPR_N2",
+      "description": "IPR_N2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 23
+      }
+    },
+    {
+      "name": "IPR_N3",
+      "description": "IPR_N3",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

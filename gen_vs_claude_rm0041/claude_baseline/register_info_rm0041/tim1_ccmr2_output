@@ -1,0 +1,474 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCMR2_Output",
+  "address_offset": "0x1C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CC3S",
+      "description": "Capture/Compare 3 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "OC3FE",
+      "description": "Output compare 3 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "OC3PE",
+      "description": "Output compare 3 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "OC3M",
+      "description": "Output compare 3 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "OC3CE",
+      "description": "Output compare 3 clear enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "CC4S",
+      "description": "Capture/Compare 4 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "OC4FE",
+      "description": "Output compare 4 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "OC4PE",
+      "description": "Output compare 4 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "OC4M",
+      "description": "Output compare 4 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "OC4CE",
+      "description": "Output compare 4 clear enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Writes to the CCxS bits are ignored while the channel is enabled; the channel direction cannot be changed on the fly.",
+      "datasheet_text": "Note: CC3S bits are writable only when the channel is OFF (CC3E = \u20180\u2019 in TIMx_CCER).",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "CC3S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_CCER",
+          "field": "CC3E",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "warning",
+      "consequence": "Mapping ICx on TRC (CCxS=11) only works if an internal trigger input is selected by the TS bits.",
+      "datasheet_text": "11: CC3 channel is configured as input, IC3 is mapped on TRC. This mode is working only if an internal trigger input is selected through TS bit (TIMx_SMCR register)",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "CC3S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_SMCR",
+          "field": "TS",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 3 is programmed, writes to OCxM are ignored for channels configured as output until the next reset.",
+      "datasheet_text": "Note: 1: These bits can not be modified as long as LOCK level 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201900\u2019 (the channel is configured in output).",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "OC3M"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 3 is programmed, writes to OCxPE are ignored for channels configured as output until the next reset.",
+      "datasheet_text": "Note: These bits can not be modified as long as LOCK level 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201900\u2019 (the channel is configured in output).",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "OC3PE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "warning",
+      "consequence": "The fast enable bit has no effect unless the channel is in PWM mode 1 or PWM mode 2.",
+      "datasheet_text": "OCFE acts only if the channel is configured in PWM1 or PWM2 mode.",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "OC3FE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC3M",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            6,
+            7
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "OCxCE has no effect in forced output mode; OCxREF is not cleared by ETRF.",
+      "datasheet_text": "This function can only be used in output compare and PWM modes, and does not work in forced mode.",
+      "description": "Clearing OCxREF on an external event (OCxCE=1) is only usable in output compare and PWM modes, not in forced output mode.",
+      "involved": [
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC3CE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC3M",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Forcing the output level with OCxM=100/101 only works when the channel is configured as output (CCxS=00).",
+      "datasheet_text": "In output mode (CCxS bits = 00 in the TIMx_CCMRx register), each output compare signal (OCxREF and then OCx/OCxN) can be forced to active or inactive level directly by software, independently of any comparison between the output compare register and the counter.",
+      "description": "The forced output modes (OCxM=100 or 101) require the channel to be configured as output, i.e. CCxS=00.",
+      "involved": [
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC3M",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR2",
+          "field": "CC3S",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "With OCxPE=1 a value written to TIMx_CCRx is transferred to the active register only at the next update event, so it does not act immediately.",
+      "datasheet_text": "1: Preload register on TIMx_CCR1 enabled. Read/Write operations access the preload register. TIMx_CCR1 preload value is loaded in the active register at each update event.",
+      "description": "When OCxPE=1, reads/writes of TIMx_CCRx access the preload register and the value becomes active only at the next update event.",
+      "involved": [
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC3PE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCR3",
+          "field": "CCR3",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Writes to the CCxS bits are ignored while the channel is enabled; the channel direction cannot be changed on the fly.",
+      "datasheet_text": "Note: CC4S bits are writable only when the channel is OFF (CC4E = \u20180\u2019 in TIMx_CCER).",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "CC4S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_CCER",
+          "field": "CC4E",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "warning",
+      "consequence": "Mapping ICx on TRC (CCxS=11) only works if an internal trigger input is selected by the TS bits.",
+      "datasheet_text": "11: CC4 channel is configured as input, IC4 is mapped on TRC. This mode is working only if an internal trigger input is selected through TS bit (TIMx_SMCR register)",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "CC4S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_SMCR",
+          "field": "TS",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 3 is programmed, writes to OCxM are ignored for channels configured as output until the next reset.",
+      "datasheet_text": "Note: 1: These bits can not be modified as long as LOCK level 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201900\u2019 (the channel is configured in output).",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "OC4M"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 3 is programmed, writes to OCxPE are ignored for channels configured as output until the next reset.",
+      "datasheet_text": "Note: These bits can not be modified as long as LOCK level 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201900\u2019 (the channel is configured in output).",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "OC4PE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "warning",
+      "consequence": "The fast enable bit has no effect unless the channel is in PWM mode 1 or PWM mode 2.",
+      "datasheet_text": "OCFE acts only if the channel is configured in PWM1 or PWM2 mode.",
+      "target_register": "TIM1_CCMR2",
+      "target_fields": [
+        "OC4FE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC4M",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            6,
+            7
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "OCxCE has no effect in forced output mode; OCxREF is not cleared by ETRF.",
+      "datasheet_text": "This function can only be used in output compare and PWM modes, and does not work in forced mode.",
+      "description": "Clearing OCxREF on an external event (OCxCE=1) is only usable in output compare and PWM modes, not in forced output mode.",
+      "involved": [
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC4CE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC4M",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Forcing the output level with OCxM=100/101 only works when the channel is configured as output (CCxS=00).",
+      "datasheet_text": "In output mode (CCxS bits = 00 in the TIMx_CCMRx register), each output compare signal (OCxREF and then OCx/OCxN) can be forced to active or inactive level directly by software, independently of any comparison between the output compare register and the counter.",
+      "description": "The forced output modes (OCxM=100 or 101) require the channel to be configured as output, i.e. CCxS=00.",
+      "involved": [
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC4M",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR2",
+          "field": "CC4S",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "With OCxPE=1 a value written to TIMx_CCRx is transferred to the active register only at the next update event, so it does not act immediately.",
+      "datasheet_text": "1: Preload register on TIMx_CCR1 enabled. Read/Write operations access the preload register. TIMx_CCR1 preload value is loaded in the active register at each update event.",
+      "description": "When OCxPE=1, reads/writes of TIMx_CCRx access the preload register and the value becomes active only at the next update event.",
+      "involved": [
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC4PE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCR4",
+          "field": "CCR4",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

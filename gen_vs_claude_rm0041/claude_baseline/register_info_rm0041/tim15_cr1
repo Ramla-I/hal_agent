@@ -1,0 +1,198 @@
+{
+  "datasheet_register_abbreviation": "TIM15_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CEN",
+      "description": "Counter enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "UDIS",
+      "description": "Update disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "URS",
+      "description": "Update request source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "OPM",
+      "description": "One-pulse mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "ARPE",
+      "description": "Auto-reload preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "CKD",
+      "description": "Clock division",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "delay",
+      "severity": "warning",
+      "consequence": "The counter value read immediately after enabling the counter has not yet been incremented.",
+      "datasheet_text": "Note that the counter starts counting 1 clock cycle after setting the CEN bit in the TIMx_CR1 register.",
+      "after": {
+        "register": "TIM15_CR1",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 1,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "TIM15_CNT",
+        "field": "CNT",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Undefined dead-time / digital filter sampling clock behaviour.",
+      "datasheet_text": "11: Reserved, do not program this value",
+      "description": "The CKD[1:0] clock division field must not be programmed with the reserved value 11.",
+      "involved": [
+        {
+          "register": "TIM15_CR1",
+          "field": "CKD",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte writes to the timer registers are not supported and may not update the register.",
+      "datasheet_text": "The peripheral registers have to be written by half-words (16 bits) or words (32 bits). Read accesses can be done by bytes (8 bits), half-words (16 bits) or words (32 bits).",
+      "description": "All registers of this timer must be written using 16-bit (half-word) or 32-bit (word) accesses; byte writes are not allowed. Read accesses may be 8, 16 or 32 bits.",
+      "involved": [
+        {
+          "register": "TIM15_CR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "warning",
+      "consequence": "An update event occurring in the middle of the reprogramming sequence transfers a partially updated set of preload values into the shadow registers.",
+      "datasheet_text": "The UEV event can be disabled by software by setting the UDIS bit in the TIMx_CR1 register. This is to avoid updating the shadow registers while writing new values in the preload registers. Then no update event occurs until the UDIS bit has been written to 0.",
+      "steps": [
+        {
+          "register": "TIM15_CR1",
+          "operation": "write"
+        },
+        {
+          "register": "TIM15_ARR",
+          "operation": "write"
+        },
+        {
+          "register": "TIM15_CR1",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "TIM15_ARR",
+        "field": "ARR",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "sequence",
+      "severity": "warning",
+      "consequence": "The shadow registers still hold their old (reset) values when the counter starts, so the first PWM period is wrong.",
+      "datasheet_text": "As the preload registers are transferred to the shadow registers only when an update event occurs, before starting the counter, initialize all the registers by setting the UG bit in the TIMx_EGR register.",
+      "steps": [
+        {
+          "register": "TIM15_ARR",
+          "operation": "write"
+        },
+        {
+          "register": "TIM15_EGR",
+          "operation": "write",
+          "value": 1
+        },
+        {
+          "register": "TIM15_CR1",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "TIM15_CR1",
+        "field": "CEN",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "External clock mode 1 and gated mode do not start the counter if CEN was not set by software beforehand.",
+      "datasheet_text": "External clock and gated mode can work only if the CEN bit has been previously set by software. However trigger mode can set the CEN bit automatically by hardware.",
+      "target_register": "TIM15_SMCR",
+      "target_fields": [
+        "SMS"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_CR1",
+          "field": "CEN",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "The timer does not receive the trigger events from the master timer.",
+      "datasheet_text": "The clock of the slave timer must be enabled prior to receiving events from the master timer, and must not be changed on-the-fly while triggers are received from the master timer.",
+      "clock": {
+        "register": "RCC_APB2ENR",
+        "field": "TIM15EN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "write"
+      }
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "datasheet_register_abbreviation": "TIM17_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CC1IF",
+      "description": "Capture/compare 1 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "COMIF",
+      "description": "COM interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "TIF",
+      "description": "Trigger interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "BIF",
+      "description": "Break interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "CC1OF",
+      "description": "Capture/Compare 1 overcapture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "read_effect",
+      "severity": "error",
+      "consequence": "The capture flag is cleared unintentionally when the captured value is read.",
+      "datasheet_text": "This bit is set by hardware on a capture. It is cleared by software or by reading the TIMx_CCR1 register.",
+      "read_register": "TIM17_CCR1",
+      "effects": [
+        {
+          "field": "CC1IF",
+          "becomes": "cleared"
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The write clearing BIF is ignored as long as the break input stays active.",
+      "datasheet_text": "This flag is set by hardware as soon as the break input goes active. It can be cleared by software if the break input is not active.",
+      "description": "The BIF break flag can only be cleared by software while the break input is not active.",
+      "involved": [
+        {
+          "register": "TIM17_SR",
+          "field": "BIF",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The write clearing BIF has no effect and the break condition persists.",
+      "datasheet_text": "The break inputs is acting on level. Thus, the MOE cannot be set while the break input is active (neither automatically nor by software). In the meantime, the status flag BIF cannot be cleared.",
+      "description": "BIF cannot be cleared while the break input is active; the break input acts on level.",
+      "involved": [
+        {
+          "register": "TIM17_SR",
+          "field": "BIF",
+          "whole_register": false
+        },
+        {
+          "register": "TIM17_BDTR",
+          "field": "MOE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "warning",
+      "consequence": "An overcapture that occurs between reading the flag and reading the data is missed.",
+      "datasheet_text": "In order to handle the overcapture, it is recommended to read the data before the overcapture flag. This is to avoid missing an overcapture which could happen after reading the flag and before reading the data.",
+      "steps": [
+        {
+          "register": "TIM17_CCR1",
+          "operation": "read"
+        },
+        {
+          "register": "TIM17_SR",
+          "operation": "read"
+        }
+      ],
+      "enables": null
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The flag stays set and further overcaptures cannot be distinguished.",
+      "datasheet_text": "This flag is set by hardware only when the corresponding channel is configured in input capture mode. It is cleared by software by writing it to \u20180\u2019.",
+      "description": "The CCxOF overcapture flags (and the other status flags of this register) are cleared only by writing 0 to them; writing 1 leaves them set.",
+      "involved": [
+        {
+          "register": "TIM17_SR",
+          "field": "CC1OF",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

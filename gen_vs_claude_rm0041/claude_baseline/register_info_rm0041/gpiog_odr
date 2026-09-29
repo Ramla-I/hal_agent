@@ -1,0 +1,187 @@
+{
+  "datasheet_register_abbreviation": "GPIOG_ODR",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ODR0",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "ODR1",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "ODR2",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "ODR3",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "ODR4",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "ODR5",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "ODR6",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "ODR7",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "ODR8",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "ODR9",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "ODR10",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "ODR11",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "ODR12",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "ODR13",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "ODR14",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "ODR15",
+      "description": "Port output data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Half-word or byte accesses to GPIOx_ODR are not allowed and do not work as expected.",
+      "datasheet_text": "These bits can be read and written by software and can be accessed in Word mode only.",
+      "description": "GPIOx_ODR must be accessed with 32-bit (word) accesses only.",
+      "involved": [
+        {
+          "register": "GPIOG_ODR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "A read-modify-write of GPIOx_ODR is not atomic; an interrupt occurring between the read and the write can corrupt the other port bits.",
+      "datasheet_text": "Note: For atomic bit set/reset, the ODR bits can be individually set and cleared by writing to the GPIOx_BSRR register (x = A .. E).",
+      "description": "To modify individual ODR bits atomically, write GPIOx_BSRR (or GPIOx_BRR) instead of performing a read-modify-write of GPIOx_ODR.",
+      "involved": [
+        {
+          "register": "GPIOG_ODR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "GPIOG_BSRR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

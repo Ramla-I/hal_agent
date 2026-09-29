@@ -1,0 +1,169 @@
+{
+  "datasheet_register_abbreviation": "WWDG_CR",
+  "address_offset": "0x00",
+  "reset_value": "0x0000007F",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "T",
+      "description": "7-bit counter (MSB to LSB)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "WDGA",
+      "description": "Activation bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "An immediate MCU reset is generated.",
+      "datasheet_text": "Warning: When writing to the WWDG_CR register, always write 1 in the T6 bit to avoid generating an immediate reset.",
+      "description": "Every write to WWDG_CR must set bit T6 (i.e. the value written to T[6:0] must be >= 0x40), otherwise the downcounter immediately rolls over and an MCU reset is generated.",
+      "involved": [
+        {
+          "register": "WWDG_CR",
+          "field": "T",
+          "whole_register": false
+        },
+        {
+          "register": "WWDG_CR",
+          "field": "WDGA",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "An immediate MCU reset is generated.",
+      "datasheet_text": "This downcounter is free-running, counting down even if the watchdog is disabled. When the watchdog is enabled, the T6 bit must be set to prevent generating an immediate reset.",
+      "description": "When the watchdog is enabled, T6 must be set when writing WWDG_CR to avoid an immediate reset. The T6 bit can deliberately be written to 0 while WDGA=1 to force a software reset.",
+      "involved": [
+        {
+          "register": "WWDG_CR",
+          "field": "T",
+          "whole_register": false
+        },
+        {
+          "register": "WWDG_CR",
+          "field": "WDGA",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "An MCU reset is generated because the counter was refreshed outside the allowed window.",
+      "datasheet_text": "The application program must write in the WWDG_CR register at regular intervals during normal operation to prevent an MCU reset. This operation must occur only when the counter value is lower than the window register value. The value to be stored in the WWDG_CR register must be between 0xFF and 0xC0.",
+      "fields": [
+        {
+          "register": "WWDG_CR",
+          "field": "T",
+          "whole_register": false
+        },
+        {
+          "register": "WWDG_CFR",
+          "field": "W",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "An MCU reset is generated.",
+      "datasheet_text": "The Configuration register (WWDG_CFR) contains the high limit of the window: To prevent a reset, the downcounter must be reloaded when its value is lower than the window register value and greater than 0x3F.",
+      "fields": [
+        {
+          "register": "WWDG_CR",
+          "field": "T",
+          "whole_register": false
+        },
+        {
+          "register": "WWDG_CFR",
+          "field": "W",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "An MCU reset is generated.",
+      "datasheet_text": "If the watchdog is activated (the WDGA bit is set in the WWDG_CR register) and when the 7-bit downcounter (T[6:0] bits) rolls over from 0x40 to 0x3F (T6 becomes cleared), it initiates a reset. If the software reloads the counter while the counter is greater than the value stored in the window register, then a reset is generated.",
+      "fields": [
+        {
+          "register": "WWDG_CR",
+          "field": "T",
+          "whole_register": false
+        },
+        {
+          "register": "WWDG_CFR",
+          "field": "W",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "write_once",
+      "severity": "error",
+      "consequence": "The watchdog cannot be switched off again; clearing WDGA by software has no effect.",
+      "datasheet_text": "The watchdog is always disabled after a reset. It is enabled by setting the WDGA bit in the WWDG_CR register, then it cannot be disabled again except by a reset.",
+      "target_register": "WWDG_CR",
+      "target_fields": [
+        "WDGA"
+      ],
+      "reset_scope": "system_reset"
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A software attempt to clear WDGA is ignored; the watchdog keeps running.",
+      "datasheet_text": "Bit 7 WDGA: Activation bit\nThis bit is set by software and only cleared by hardware after a reset. When WDGA = 1, the watchdog can generate a reset.",
+      "description": "WDGA is a set-only bit (rs): it is set by software and can only be cleared by a hardware reset.",
+      "involved": [
+        {
+          "register": "WWDG_CR",
+          "field": "WDGA",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Accesses of an unsupported width may not take effect.",
+      "datasheet_text": "The peripheral registers have to be accessed by half-words (16 bits) or words (32 bits).",
+      "description": "The WWDG_CR, WWDG_CFR and WWDG_SR registers have to be accessed by half-words (16 bits) or words (32 bits); byte accesses are not supported.",
+      "involved": [
+        {
+          "register": "WWDG_CR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "WWDG_CFR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "WWDG_SR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

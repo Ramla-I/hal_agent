@@ -1,0 +1,304 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CCPC",
+      "description": "Capture/compare preloaded control",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CCUS",
+      "description": "Capture/compare control update selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "CCDS",
+      "description": "Capture/compare DMA selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "MMS",
+      "description": "Master mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "TI1S",
+      "description": "TI1 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "OIS1",
+      "description": "Output Idle state 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "OIS1N",
+      "description": "Output Idle state 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "OIS2",
+      "description": "Output Idle state 2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "OIS2N",
+      "description": "Output Idle state 2",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "OIS3",
+      "description": "Output Idle state 3",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "OIS3N",
+      "description": "Output Idle state 3",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "OIS4",
+      "description": "Output Idle state 4",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once any LOCK level (1, 2 or 3) is programmed, writes to the OISx/OISxN bits are ignored until the next reset.",
+      "datasheet_text": "Note: This bit can not be modified as long as LOCK level 1, 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM1_CR2",
+      "target_fields": [
+        "OIS1",
+        "OIS1N",
+        "OIS2",
+        "OIS2N",
+        "OIS3",
+        "OIS3N",
+        "OIS4"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Leaving OISx/OISxN (and CCxP/CCxNP) set on an unused channel can drive the output pins to an unexpected level.",
+      "datasheet_text": "When both outputs of a channel are not used (CCxE = CCxNE = 0), the OISx, OISxN, CCxP and CCxNP bits must be kept cleared.",
+      "description": "When both outputs of a channel are unused (CCxE = CCxNE = 0) the OISx, OISxN, CCxP and CCxNP bits must be left at 0.",
+      "involved": [
+        {
+          "register": "TIM1_CR2",
+          "field": "OIS1",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CR2",
+          "field": "OIS1N",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1P",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1NP",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A slave timer or the ADC whose clock is not yet enabled, or whose clock is changed while triggers arrive, misses or mis-handles the trigger events.",
+      "datasheet_text": "Note: The clock of the slave timer and ADC must be enabled prior to receiving events from the master timer, and must not be changed on-the-fly while triggers are received from the master timer.",
+      "description": "Before programming MMS to send TRGO events, the clock of the slave timer and of the ADC must be enabled, and it must not be changed while triggers are being received.",
+      "involved": [
+        {
+          "register": "TIM1_CR2",
+          "field": "MMS",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "With CCPC=1, values written to CCxE, CCxNE and OCxM stay in the preload registers and do not act on the outputs until a COM event is generated.",
+      "datasheet_text": "1: CCxE, CCxNE and OCxM bits are preloaded, after having been written, they are updated only when a commutation event (COM) occurs (COMG bit set or rising edge detected on TRGI, depending on the CCUS bit).",
+      "description": "When CCPC=1 writes to CCxE, CCxNE and OCxM only become effective at the next commutation (COM) event, generated by setting COMG or by a rising edge on TRGI according to CCUS.",
+      "involved": [
+        {
+          "register": "TIM1_CR2",
+          "field": "CCPC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CR2",
+          "field": "CCUS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_EGR",
+          "field": "COMG",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR1",
+          "field": "OC1M",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Without preloading (CCPC=0) the channel configuration bits take effect immediately and the channels of a 6-step sequence are not switched simultaneously.",
+      "datasheet_text": "When complementary outputs are used on a channel, preload bits are available on the OCxM, CCxE and CCxNE bits. The preload bits are transferred to the shadow bits at the COM commutation event.",
+      "description": "For 6-step PWM the next step configuration (OCxM, CCxE, CCxNE) is written in advance into the preload bits and is transferred to the active bits only at the COM event.",
+      "involved": [
+        {
+          "register": "TIM1_CR2",
+          "field": "CCPC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_EGR",
+          "field": "COMG",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR1",
+          "field": "OC1M",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "If the PWM control bits are not rewritten after each COM event, the next commutation step applies the previous configuration.",
+      "datasheet_text": "In the advanced-control timer TIM1, the right ITR input must be selected as trigger input, the timer is programmed to generate PWM signals, the capture/compare control signals are preloaded (CCPC=1 in the TIMx_CR2 register) and the COM event is controlled by the trigger input (CCUS=1 in the TIMx_CR2 register). The PWM control bits (CCxE, OCxM) are written after a COM event for the next step (this can be done in an interrupt subroutine generated by the rising edge of OC2REF).",
+      "description": "For Hall-sensor/6-step operation set CCPC=1 and CCUS=1, then write the PWM control bits (CCxE, OCxM) for the next step after each COM event.",
+      "involved": [
+        {
+          "register": "TIM1_CR2",
+          "field": "CCPC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CR2",
+          "field": "CCUS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR1",
+          "field": "OC1M",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,552 @@
+{
+  "datasheet_register_abbreviation": "ADC1_CR2",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ADON",
+      "description": "A/D converter ON / OFF",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CONT",
+      "description": "Continuous conversion",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "CAL",
+      "description": "A/D calibration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "RSTCAL",
+      "description": "Reset calibration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "DMA",
+      "description": "Direct memory access mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "ALIGN",
+      "description": "Data alignment",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "JEXTSEL",
+      "description": "External event select for injected group",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "JEXTTRIG",
+      "description": "External trigger conversion mode for injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "EXTSEL",
+      "description": "External event select for regular group",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 19
+      }
+    },
+    {
+      "name": "EXTTRIG",
+      "description": "External trigger conversion mode for regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      }
+    },
+    {
+      "name": "JSWSTART",
+      "description": "Start conversion of injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 21,
+        "end_bit": 21
+      }
+    },
+    {
+      "name": "SWSTART",
+      "description": "Start conversion of regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      }
+    },
+    {
+      "name": "TSVREFE",
+      "description": "Temperature sensor and VREFINT enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte or half-word accesses to ADC registers are not supported and may return or write incorrect data.",
+      "datasheet_text": "The peripheral registers have to be accessed by words (32-bit).",
+      "description": "All ADC registers must be accessed with 32-bit (word) read/write accesses only.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "A single write of ADON only wakes the ADC up from power-down mode; no conversion is started until ADON is written to 1 a second time.",
+      "datasheet_text": "The ADC can be powered-on by setting the ADON bit in the ADC_CR2 register. When the ADON bit is set for the first time, it wakes up the ADC from Power Down mode. Conversion starts when ADON bit is set for a second time by software after ADC power-up time (tSTAB).",
+      "steps": [
+        {
+          "register": "ADC1_CR2",
+          "operation": "write",
+          "value": 1
+        },
+        {
+          "register": "ADC1_CR2",
+          "operation": "write",
+          "value": 1
+        }
+      ],
+      "enables": {
+        "register": "ADC1_CR2",
+        "field": "ADON",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "If the second ADON write occurs before tSTAB has elapsed, the ADC has not stabilized and the conversion result is inaccurate.",
+      "datasheet_text": "This bit is set and cleared by software. If this bit holds a value of zero and a 1 is written to it then it wakes up the ADC from Power Down state. Conversion starts when this bit holds a value of 1 and a 1 is written to it. The application should allow a delay of tSTAB between power up and start of conversion. Refer to Figure 25.",
+      "description": "After powering up the ADC by writing ADON = 1, software must wait the ADC power-up / stabilization time tSTAB before writing ADON = 1 again to start a conversion.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "ADON",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The ADC converts before it has stabilized, giving inaccurate results.",
+      "datasheet_text": "As shown in Figure 25, the ADC needs a stabilization time of tSTAB before it starts converting accurately. After the start of ADC conversion and after 14 clock cycles, the EOC flag is set and the 16-bit ADC Data register contains the result of the conversion.",
+      "description": "The ADC needs the stabilization time tSTAB after power-on (ADON) before conversions are accurate.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "ADON",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The intended conversion start is not triggered because other bits of ADC_CR2 were modified by the same write.",
+      "datasheet_text": "Note: If any other bit in this register apart from ADON is changed at the same time, then conversion is not triggered. This is to prevent triggering an erroneous conversion.",
+      "description": "The write to ADC_CR2 that starts a conversion must change only the ADON bit; if any other bit of ADC_CR2 is changed by the same write, no conversion is triggered.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "ADON",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Calibration started before the ADC has been powered on gives incorrect calibration codes.",
+      "datasheet_text": "Before starting a calibration, the ADC must have been in power-on state (ADON bit = \u20181\u2019) for at least two ADC clock cycles.",
+      "target_register": "ADC1_CR2",
+      "target_fields": [
+        "CAL"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "ADC1_CR2",
+          "field": "ADON",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "delay",
+      "severity": "error",
+      "consequence": "Calibration started too soon after power-on produces incorrect calibration codes.",
+      "datasheet_text": "Before starting a calibration, the ADC must have been in power-on state (ADON bit = \u20181\u2019) for at least two ADC clock cycles.",
+      "after": {
+        "register": "ADC1_CR2",
+        "operation": "write",
+        "value": 1
+      },
+      "duration": {
+        "value": 2,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "ADC1_CR2",
+        "field": "CAL",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Conversions started while calibration is still running are not valid; software must poll CAL until hardware clears it.",
+      "datasheet_text": "Calibration is started by setting the CAL bit in the ADC_CR2 register. Once calibration is over, the CAL bit is reset by hardware and normal conversion can be performed. It is recommended to calibrate the ADC once at power-on. The calibration codes are stored in the ADC_DR as soon as the calibration phase ends.",
+      "target_register": "ADC1_CR2",
+      "target_fields": [
+        "ADON",
+        "SWSTART",
+        "JSWSTART"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "ADC1_CR2",
+          "field": "CAL",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Without calibration the conversion results keep the accuracy errors caused by internal capacitor bank variations.",
+      "datasheet_text": "Note: It is recommended to perform a calibration after each power-up.",
+      "description": "A calibration (CAL bit in ADC_CR2) should be performed after each power-up of the ADC.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "CAL",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Clearing the calibration registers takes longer than expected, delaying a subsequent calibration.",
+      "datasheet_text": "Note: If RSTCAL is set when conversion is ongoing, additional cycles are required to clear the calibration registers.",
+      "description": "RSTCAL should not be set while a conversion is ongoing; doing so requires additional cycles before the calibration registers are cleared. RSTCAL is cleared by hardware once the calibration registers are initialized.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "RSTCAL",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_SR",
+          "field": "STRT",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Without DMA the converted data of the regular group channels is overwritten in ADC_DR at each conversion and data is lost.",
+      "datasheet_text": "When using scan mode, DMA bit must be set and the direct memory access controller is used to transfer the converted data of regular group channels to SRAM after each update of the ADC_DR register.",
+      "target_register": "ADC1_CR2",
+      "target_fields": [
+        "DMA"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "ADC1_CR1",
+          "field": "SCAN",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Using an external injected trigger together with auto-injection leads to conflicting injected conversion starts.",
+      "datasheet_text": "If the JAUTO bit is set, then the injected group channels are automatically converted after the regular group channels. This can be used to convert a sequence of up to 20 conversions programmed in the ADC_SQRx and ADC_JSQR registers. In this mode, external trigger on injected channels must be disabled.",
+      "target_register": "ADC1_CR2",
+      "target_fields": [
+        "JEXTTRIG"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "ADC1_CR1",
+          "field": "JAUTO",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Setting SWSTART does not start a regular conversion unless SWSTART (111) is selected by EXTSEL[2:0].",
+      "datasheet_text": "SWSTART: Start conversion of regular channels This bit is set by software to start conversion and cleared by hardware as soon as conversion starts. It starts a conversion of a group of regular channels if SWSTART is selected as trigger event by the EXTSEL[2:0] bits.",
+      "target_register": "ADC1_CR2",
+      "target_fields": [
+        "SWSTART"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "ADC1_CR2",
+          "field": "EXTSEL",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            7
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Setting JSWSTART does not start an injected conversion unless JSWSTART (111) is selected by JEXTSEL[2:0].",
+      "datasheet_text": "JSWSTART: Start conversion of injected channels This bit is set by software and cleared by software or by hardware as soon as the conversion starts. It starts a conversion of a group of injected channels (if JSWSTART is selected as trigger event by the JEXTSEL[2:0] bits.",
+      "target_register": "ADC1_CR2",
+      "target_fields": [
+        "JSWSTART"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "ADC1_CR2",
+          "field": "JEXTSEL",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            7
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "External events, including the software triggers SWSTART/JSWSTART, cannot start a conversion while EXTTRIG/JEXTTRIG is cleared.",
+      "datasheet_text": "Conversion can be triggered by an external event (e.g. timer capture, EXTI line). If the EXTTRIG control bit is set then external events are able to trigger a conversion. The EXTSEL[2:0] and JEXTSEL[2:0] control bits allow the application to select decide which out of 8 possible events can trigger conversion for the regular and injected groups.",
+      "description": "The EXTTRIG (regular) / JEXTTRIG (injected) bits must be set for the selected external event (including the SWSTART/JSWSTART software triggers) to be able to start a conversion.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "EXTTRIG",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR2",
+          "field": "JEXTTRIG",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR2",
+          "field": "EXTSEL",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR2",
+          "field": "JEXTSEL",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "A trigger arriving before the previous injected sequence is finished resets the ongoing conversion.",
+      "datasheet_text": "Note: When using triggered injection, the interval between trigger events must be longer than the injection sequence. For instance, if the sequence length is 28 ADC clock cycles (that is two conversions with a 1.5 clock-period sampling time), the minimum interval between triggers must be 29 ADC clock cycles.",
+      "description": "With triggered injection (JEXTTRIG set) the interval between injected trigger events must be longer than the whole injected sequence duration.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "JEXTTRIG",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_JSQR",
+          "field": "JL",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Conversions of channel 16 (temperature sensor) or channel 17 (VREFINT) return meaningless values while TSVREFE is cleared.",
+      "datasheet_text": "Note: The TSVREFE bit must be set to enable both internal channels: ADCx_IN16 (temperature sensor) and ADCx_IN17 (VREFINT) conversion.",
+      "description": "TSVREFE in ADC_CR2 must be set before converting the internal channels ADC_IN16 (temperature sensor) and ADC_IN17 (VREFINT).",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "TSVREFE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "If the sample time, TSVREFE and ADON are not programmed in this order the temperature sensor output is not valid when it is converted.",
+      "datasheet_text": "To use the sensor: 1. Select the ADCx_IN16 input channel. 2. Select a sample time of 17.1 \u00b5s 3. Set the TSVREFE bit in the ADC control register 2 (ADC_CR2) to wake up the temperature sensor from power down mode. 4. Start the ADC conversion by setting the ADON bit (or by external trigger). 5. Read the resulting VSENSE data in the ADC data register",
+      "steps": [
+        {
+          "register": "ADC1_SQR3",
+          "operation": "write"
+        },
+        {
+          "register": "ADC1_SMPR1",
+          "operation": "write"
+        },
+        {
+          "register": "ADC1_CR2",
+          "operation": "write"
+        },
+        {
+          "register": "ADC1_CR2",
+          "operation": "write",
+          "value": 1
+        },
+        {
+          "register": "ADC1_DR",
+          "operation": "read"
+        }
+      ],
+      "enables": null
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "If TSVREFE is set later than ADON, the sensor may not yet deliver VSENSE at the correct level when the conversion takes place.",
+      "datasheet_text": "Note: The sensor has a startup time after waking from power down mode before it can output VSENSE at the correct level. The ADC also has a startup time after power-on, so to minimize the delay, the ADON and TSVREFE bits should be set at the same time.",
+      "description": "ADON and TSVREFE in ADC_CR2 should be set by the same write so that the sensor and ADC startup times overlap.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "ADON",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR2",
+          "field": "TSVREFE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Only rising edges start a conversion; a trigger source configured for a falling edge never starts a conversion.",
+      "datasheet_text": "Note: When an external trigger is selected for ADC regular or injected conversion, only the rising edge of the signal can start the conversion.",
+      "description": "External trigger sources selected by EXTSEL/JEXTSEL only start a conversion on their rising edge.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "EXTSEL",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR2",
+          "field": "JEXTSEL",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Without DMA, the data of a previous regular conversion stored in ADC_DR is lost when the next regular channel is converted.",
+      "datasheet_text": "Since converted regular channels value are stored in a unique data register, it is necessary to use DMA for conversion of more than one regular channel. This avoids the loss of data already stored in the ADC_DR register.",
+      "description": "The DMA bit of ADC_CR2 must be set when converting more than one regular channel, because all regular results share the single ADC_DR register.",
+      "involved": [
+        {
+          "register": "ADC1_CR2",
+          "field": "DMA",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_DR",
+          "field": "DATA",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

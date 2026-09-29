@@ -1,0 +1,66 @@
+{
+  "datasheet_register_abbreviation": "ADC1_HTR",
+  "address_offset": "0x24",
+  "reset_value": "0x00000FFF",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "HT",
+      "description": "Analog watchdog higher threshold",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte or half-word accesses to ADC registers are not supported and may return or write incorrect data.",
+      "datasheet_text": "The peripheral registers have to be accessed by words (32-bit).",
+      "description": "All ADC registers must be accessed with 32-bit (word) read/write accesses only.",
+      "involved": [
+        {
+          "register": "ADC1_HTR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The new threshold does not take effect immediately; the exact conversion from which it is applied is uncertain.",
+      "datasheet_text": "Note: The software can write to these registers when an ADC conversion is ongoing. The programmed value will be effective when the next conversion is complete. Writing to this register is performed with a write delay that can create uncertainty on the effective time at which the new value is programmed.",
+      "description": "The analog watchdog threshold register may be written while a conversion is ongoing, but the new value only becomes effective when the next conversion is complete, with an additional write delay.",
+      "involved": [
+        {
+          "register": "ADC1_HTR",
+          "field": "HT",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "If the threshold is programmed pre-aligned with ALIGN = 1 (left alignment), the analog watchdog compares against a wrong value.",
+      "datasheet_text": "The threshold value is independent of the alignment selected by the ALIGN bit in the ADC_CR2 register. The comparison is done before the alignment (see Section 10.5).",
+      "description": "The analog watchdog threshold must always be written as a plain 12-bit right-aligned value, independently of the ALIGN bit in ADC_CR2, because the comparison is performed before data alignment.",
+      "involved": [
+        {
+          "register": "ADC1_HTR",
+          "field": "HT",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR2",
+          "field": "ALIGN",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

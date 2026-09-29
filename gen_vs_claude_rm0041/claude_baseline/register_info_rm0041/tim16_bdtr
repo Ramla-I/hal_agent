@@ -1,0 +1,373 @@
+{
+  "datasheet_register_abbreviation": "TIM16_BDTR",
+  "address_offset": "0x44",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DTG",
+      "description": "Dead-time generator setup",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "LOCK",
+      "description": "Lock configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "OSSI",
+      "description": "Off-state selection for Idle mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "OSSR",
+      "description": "Off-state selection for Run mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "BKE",
+      "description": "Break enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "BKP",
+      "description": "Break polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "AOE",
+      "description": "Automatic output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "MOE",
+      "description": "Main output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "write_once",
+      "severity": "error",
+      "consequence": "Further writes to the LOCK bits are ignored; the selected protection level stays frozen until the next reset.",
+      "datasheet_text": "The LOCK bits can be written only once after the reset. Once the TIMx_BDTR register has been written, their content is frozen until the next reset.",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "LOCK"
+      ],
+      "reset_scope": "system_reset"
+    },
+    {
+      "kind": "write_once",
+      "severity": "error",
+      "consequence": "The LOCK level cannot be changed any more until an MCU reset.",
+      "datasheet_text": "The LOCK bits can be written only once after an MCU reset.",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "LOCK"
+      ],
+      "reset_scope": "system_reset"
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to AOE is ignored.",
+      "datasheet_text": "This bit can not be modified as long as LOCK level 1 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "AOE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to BKP is ignored.",
+      "datasheet_text": "This bit can not be modified as long as LOCK level 1 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "BKP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to BKE is ignored.",
+      "datasheet_text": "This bit cannot be modified when LOCK level 1 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "BKE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the DTG[7:0] dead-time field is ignored.",
+      "datasheet_text": "This bit-field can not be modified as long as LOCK level 1, 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "DTG"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The writes to DTG, BKE, BKP and AOE are ignored (and to OISx/OISxN in TIMx_CR2).",
+      "datasheet_text": "01: LOCK Level 1 = DTG bits in TIMx_BDTR register, OISx and OISxN bits in TIMx_CR2 register and BKE/BKP/AOE bits in TIMx_BDTR register can no longer be written",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "DTG",
+        "AOE",
+        "BKP",
+        "BKE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to OSSR / OSSI is ignored.",
+      "datasheet_text": "This bit can not be modified as soon as the LOCK level 2 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "OSSR",
+        "OSSI"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to OSSR / OSSI is ignored.",
+      "datasheet_text": "10: LOCK Level 2 = LOCK Level 1 + CC Polarity bits (CCxP/CCxNP bits in TIMx_CCER register, as long as the related channel is configured in output through the CCxS bits) as well as OSSR and OSSI bits can no longer be written.",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "OSSR",
+        "OSSI"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Bits left at their reset value can no longer be changed once the LOCK level has been programmed.",
+      "datasheet_text": "As the bits AOE, BKP, BKE, OSSI, OSSR and DTG[7:0] can be write-locked depending on the LOCK configuration, it can be necessary to configure all of them during the first write access to the TIMx_BDTR register.",
+      "description": "Because AOE, BKP, BKE, OSSI, OSSR and DTG[7:0] become write-locked depending on the LOCK level, all of them should be programmed during the very first write access to TIMx_BDTR.",
+      "involved": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "delay",
+      "severity": "error",
+      "consequence": "A read back performed immediately after the write returns the old value of the bit.",
+      "datasheet_text": "When the BKE and BKP bits are written, a delay of 1 APB clock cycle is applied before the writing is effective. Consequently, it is necessary to wait one APB clock period to correctly read back the bit after the write operation.",
+      "after": {
+        "register": "TIM16_BDTR",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 1,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "TIM16_BDTR",
+        "field": "BKE",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "delay",
+      "severity": "error",
+      "consequence": "A read back performed immediately after the write returns the old value of the bit.",
+      "datasheet_text": "Any write operation to this bit takes a delay of 1 APB clock cycle to become effective.",
+      "after": {
+        "register": "TIM16_BDTR",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 1,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "TIM16_BDTR",
+        "field": "BKP",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "MOE read back immediately after the write still reads 0.",
+      "datasheet_text": "Because MOE falling edge can be asynchronous, a resynchronization circuit has been inserted between the actual signal (acting on the outputs) and the synchronous control bit (accessed in the TIMx_BDTR register). It results in some delays between the asynchronous and the synchronous signals. In particular, if user writes MOE to 1 whereas it was low, a delay (dummy instruction) must be inserted before reading it correctly.",
+      "description": "After writing MOE from 0 to 1 a delay (dummy instruction) must be inserted before reading MOE back, because the write acts on the asynchronous signal while the read returns the resynchronized one.",
+      "involved": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "MOE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write setting MOE is ignored while the break input is active.",
+      "datasheet_text": "The break inputs is acting on level. Thus, the MOE cannot be set while the break input is active (neither automatically nor by software). In the meantime, the status flag BIF cannot be cleared.",
+      "target_register": "TIM16_BDTR",
+      "target_fields": [
+        "MOE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_SR",
+          "field": "BIF",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    }
+  ]
+}

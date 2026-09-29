@@ -1,0 +1,52 @@
+{
+  "datasheet_register_abbreviation": "WWDG_SR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EWIF",
+      "description": "Early wakeup interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Writing 1 does not clear the flag, so the pending early wakeup interrupt is re-entered.",
+      "datasheet_text": "Bit 0 EWIF: Early wakeup interrupt flag\nThis bit is set by hardware when the counter has reached the value 0x40. It must be cleared by software by writing \u20180\u2019. A write of \u20181\u2019 has no effect. This bit is also set if the interrupt is not enabled.",
+      "description": "EWIF is set by hardware when the downcounter reaches 0x40 and must be cleared by software by writing 0 to it; writing 1 has no effect. The flag is set even when the EWI interrupt is not enabled.",
+      "involved": [
+        {
+          "register": "WWDG_SR",
+          "field": "EWIF",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "If the counter is not reloaded inside the EWI service routine, the WWDG reset is eventually generated.",
+      "datasheet_text": "In some applications, the EWI interrupt can be used to manage a software system check and/or system recovery/graceful degradation, without generating a WWDG reset. In this case, the corresponding interrupt service routine (ISR) should reload the WWDG counter to avoid the WWDG reset, then trigger the required actions.",
+      "description": "The early wakeup interrupt service routine must reload the WWDG counter (write WWDG_CR) before returning if a WWDG reset is to be avoided.",
+      "involved": [
+        {
+          "register": "WWDG_SR",
+          "field": "EWIF",
+          "whole_register": false
+        },
+        {
+          "register": "WWDG_CR",
+          "field": "T",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

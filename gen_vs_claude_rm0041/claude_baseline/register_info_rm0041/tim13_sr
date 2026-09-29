@@ -1,0 +1,129 @@
+{
+  "datasheet_register_abbreviation": "TIM13_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CC1IF",
+      "description": "Capture/compare 1 interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "CC1OF",
+      "description": "Capture/Compare 1 overcapture flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A byte (8-bit) write to the register does not work as expected.",
+      "datasheet_text": "The peripheral registers have to be written by half-words (16 bits) or words (32 bits). Read accesses can be done by bytes (8 bits), half-words (16 bits) or words (32 bits).",
+      "description": "The register must be written by half-words (16 bits) or words (32 bits); byte writes are not allowed. Reads may be 8-, 16- or 32-bit.",
+      "involved": [
+        {
+          "register": "TIM13_SR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "read_effect",
+      "severity": "error",
+      "consequence": "A pending capture interrupt flag is cleared unintentionally when the captured value is read.",
+      "datasheet_text": "If channel CC1 is configured as input: This bit is set by hardware on a capture. It is cleared by software or by reading the TIMx_CCR1 register.",
+      "read_register": "TIM13_CCR1",
+      "effects": [
+        {
+          "field": "CC1IF",
+          "becomes": "cleared"
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The overcapture flag stays set if it is not written to 0.",
+      "datasheet_text": "This flag is set by hardware only when the corresponding channel is configured in input capture mode. It is cleared by software by writing it to '0'.",
+      "description": "The overcapture flag CC1OF is only set while the channel is configured in input capture mode, and is cleared by software by writing it to 0 (writing 1 has no effect).",
+      "involved": [
+        {
+          "register": "TIM13_SR",
+          "field": "CC1OF",
+          "whole_register": false
+        },
+        {
+          "register": "TIM13_CCMR1",
+          "field": "CC1S",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "No update interrupt flag is set, so the update interrupt never fires.",
+      "datasheet_text": "1: Update interrupt pending. This bit is set by hardware when the registers are updated: -At overflow and if UDIS='0' in the TIMx_CR1 register. - When CNT is reinitialized by software using the UG bit in TIMx_EGR register, if URS='0' and UDIS='0' in the TIMx_CR1 register.",
+      "description": "UIF is only set on an update event when UDIS=0, and for an update caused by the UG bit only when URS=0 and UDIS=0.",
+      "involved": [
+        {
+          "register": "TIM13_SR",
+          "field": "UIF",
+          "whole_register": false
+        },
+        {
+          "register": "TIM13_CR1",
+          "field": "UDIS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM13_CR1",
+          "field": "URS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM13_EGR",
+          "field": "UG",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "warning",
+      "consequence": "An overcapture that happens between reading the flag and reading the data is missed.",
+      "datasheet_text": "In order to handle the overcapture, it is recommended to read the data before the overcapture flag. This is to avoid missing an overcapture which could happen after reading the flag and before reading the data.",
+      "steps": [
+        {
+          "register": "TIM13_CCR1",
+          "operation": "read"
+        },
+        {
+          "register": "TIM13_SR",
+          "operation": "read"
+        }
+      ],
+      "enables": null
+    }
+  ]
+}

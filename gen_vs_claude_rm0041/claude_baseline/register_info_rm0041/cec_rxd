@@ -1,0 +1,66 @@
+{
+  "datasheet_register_abbreviation": "CEC_RXD",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "RXD",
+      "description": "Rx data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "A byte that has not been received yet is read, or the received byte is read twice.",
+      "datasheet_text": "Once the header has been received, the destination address is compared to the value programmed in the own address register. If the two do not match and the address is not the broadcast address 0xF, the block is not acknowledged and the controller reverts to the Idle state. Otherwise, in case of a match, the controller remains in the RX state where the host CPU is requested to retrieve all message bytes from the RX buffer one by one. An available byte is signaled by the RBTF bit being set in the control status register.",
+      "target_register": "CEC_RXD",
+      "target_fields": [
+        "RXD"
+      ],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register": "CEC_CSR",
+          "field": "RBTF",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The received byte is overwritten by the next block, which is then not acknowledged.",
+      "datasheet_text": "Poll RBTF or wait until an interrupt occurs. A header is received (RTBF and RSOM are set). Read header from RX buffer. Acknowledge received byte by writing 0x00.",
+      "steps": [
+        {
+          "register": "CEC_CSR",
+          "operation": "read"
+        },
+        {
+          "register": "CEC_RXD",
+          "operation": "read"
+        },
+        {
+          "register": "CEC_CSR",
+          "operation": "write",
+          "value": 0
+        }
+      ],
+      "enables": {
+        "register": "CEC_CSR",
+        "field": "RBTF",
+        "whole_register": false
+      }
+    }
+  ]
+}

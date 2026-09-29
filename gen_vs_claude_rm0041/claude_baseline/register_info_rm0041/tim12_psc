@@ -1,0 +1,66 @@
+{
+  "datasheet_register_abbreviation": "TIM12_PSC",
+  "address_offset": "0x28",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PSC",
+      "description": "Prescaler value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A byte (8-bit) write to the register does not work as expected.",
+      "datasheet_text": "The peripheral registers have to be written by half-words (16 bits) or words (32 bits). Read accesses can be done by bytes (8 bits), half-words (16 bits) or words (32 bits).",
+      "description": "The register must be written by half-words (16 bits) or words (32 bits); byte writes are not allowed. Reads may be 8-, 16- or 32-bit.",
+      "involved": [
+        {
+          "register": "TIM12_PSC",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The counting frequency does not change until the next update event.",
+      "datasheet_text": "It can be changed on the fly as this control register is buffered. The new prescaler ratio is taken into account at the next update event.",
+      "description": "TIMx_PSC is buffered, so it may be written on the fly, but the new prescaler ratio only becomes effective at the next update event.",
+      "involved": [
+        {
+          "register": "TIM12_PSC",
+          "field": "PSC",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The new prescaler value is not used until an update event occurs.",
+      "datasheet_text": "PSC contains the value to be loaded in the active prescaler register at each update event (including when the counter is cleared through UG bit of TIMx_EGR register or through trigger controller when configured in \u201creset mode\u201d).",
+      "description": "The value written in TIMx_PSC is loaded into the active prescaler register at each update event, including an update generated through the UG bit or by the trigger controller in reset mode.",
+      "involved": [
+        {
+          "register": "TIM12_PSC",
+          "field": "PSC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_EGR",
+          "field": "UG",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

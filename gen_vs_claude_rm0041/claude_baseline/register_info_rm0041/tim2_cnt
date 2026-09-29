@@ -1,0 +1,62 @@
+{
+  "datasheet_register_abbreviation": "TIM2_CNT",
+  "address_offset": "0x24",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CNT",
+      "description": "counter value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Writing the counter while it is running in center-aligned mode can leave the counting direction unchanged or suppress the update event, producing unexpected results.",
+      "datasheet_text": "Writing to the counter while running in center-aligned mode is not recommended as it can lead to unexpected results. In particular: \u2013The direction is not updated if the user writes a value in the counter that is greater than the auto-reload value (TIMx_CNT>TIMx_ARR). For example, if the counter was counting up, it continues to count up. \u2013The direction is updated if the user writes 0 or write the TIMx_ARR value in the counter but no Update Event UEV is generated.",
+      "description": "TIMx_CNT should not be written while the counter runs in center-aligned mode (CMS != 00).",
+      "involved": [
+        {
+          "register": "TIM2_CNT",
+          "field": "CNT",
+          "whole_register": false
+        },
+        {
+          "register": "TIM2_CR1",
+          "field": "CMS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM2_CR1",
+          "field": "CEN",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Not observing this makes the counter start from an arbitrary value instead of the intended offset.",
+      "datasheet_text": "In this example both timers are initialized before starting (by setting their respective UG bits). Both counters starts from 0, but the user can easily insert an offset between them by writing any of the counter registers (TIMx_CNT).",
+      "description": "To start synchronized timers from a defined value, reset them with the UG bit of TIMx_EGR and then write the desired offset into TIMx_CNT before enabling the counters.",
+      "involved": [
+        {
+          "register": "TIM2_CNT",
+          "field": "CNT",
+          "whole_register": false
+        },
+        {
+          "register": "TIM2_EGR",
+          "field": "UG",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

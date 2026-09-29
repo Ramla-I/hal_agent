@@ -1,0 +1,374 @@
+{
+  "datasheet_register_abbreviation": "CEC_CSR",
+  "address_offset": "0x10",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "TSOM",
+      "description": "Tx start of message",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "TEOM",
+      "description": "Tx end of message",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "TERR",
+      "description": "Tx error",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "TBTRF",
+      "description": "Tx byte transfer request or block transfer finished",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "RSOM",
+      "description": "Rx start of message",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "REOM",
+      "description": "Rx end of message",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "RERR",
+      "description": "Rx error",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "RBTF",
+      "description": "Rx byte/block transfer finished",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "A message transmission is started while the TX buffer does not contain the header byte.",
+      "datasheet_text": "This bit is set by software to request transmission of a new message. The TX data byte is supposed to contain the header byte.",
+      "steps": [
+        {
+          "register": "CEC_TXD",
+          "operation": "write"
+        },
+        {
+          "register": "CEC_CSR",
+          "operation": "write",
+          "value": 1
+        }
+      ],
+      "enables": {
+        "register": "CEC_CSR",
+        "field": "TSOM",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The transmitted message is malformed or a byte request is not served in time and a transmit error occurs.",
+      "datasheet_text": "Write header to TX buffer. Initiate message transmission by writing TSOM=1. Poll TBTRF or wait until an interrupt occurs. The TX buffer is empty (TBTRF is set). Write opcode to TX buffer. Acknowledge byte request by writing 0x00.",
+      "steps": [
+        {
+          "register": "CEC_TXD",
+          "operation": "write"
+        },
+        {
+          "register": "CEC_CSR",
+          "operation": "write",
+          "value": 1
+        },
+        {
+          "register": "CEC_CSR",
+          "operation": "read"
+        },
+        {
+          "register": "CEC_TXD",
+          "operation": "write"
+        },
+        {
+          "register": "CEC_CSR",
+          "operation": "write",
+          "value": 0
+        }
+      ],
+      "enables": {
+        "register": "CEC_CSR",
+        "field": "TBTRF",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The received byte is lost or the next received block is not acknowledged.",
+      "datasheet_text": "Poll RBTF or wait until an interrupt occurs. A header is received (RTBF and RSOM are set). Read header from RX buffer. Acknowledge received byte by writing 0x00.",
+      "steps": [
+        {
+          "register": "CEC_CSR",
+          "operation": "read"
+        },
+        {
+          "register": "CEC_RXD",
+          "operation": "read"
+        },
+        {
+          "register": "CEC_CSR",
+          "operation": "write",
+          "value": 0
+        }
+      ],
+      "enables": {
+        "register": "CEC_CSR",
+        "field": "RBTF",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The end of message is not signalled, so the last byte is transmitted without the EOM bit.",
+      "datasheet_text": "Write Operand2 to TX buffer. Acknowledge byte request and signal end of message: Write 0x02. Poll TBTRF or wait until an interrupt occurs. Message transmission is completed (TBTRF and TEOM are set). Acknowledge successful completion by writing 0x0.",
+      "steps": [
+        {
+          "register": "CEC_TXD",
+          "operation": "write"
+        },
+        {
+          "register": "CEC_CSR",
+          "operation": "write",
+          "value": 2
+        },
+        {
+          "register": "CEC_CSR",
+          "operation": "read"
+        },
+        {
+          "register": "CEC_CSR",
+          "operation": "write",
+          "value": 0
+        }
+      ],
+      "enables": {
+        "register": "CEC_CSR",
+        "field": "TEOM",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to TEOM is ignored.",
+      "datasheet_text": "This bit is set and cleared by software except if RTBF or RERR is set.",
+      "target_register": "CEC_CSR",
+      "target_fields": [
+        "TEOM"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "CEC_CSR",
+          "field": "RBTF",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        },
+        {
+          "register": "CEC_CSR",
+          "field": "RERR",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The end of message event is acknowledged too early and the last received byte may be lost.",
+      "datasheet_text": "Note: Do not clear the REOM bit before the RBTF flag/interrupt is set.",
+      "target_register": "CEC_CSR",
+      "target_fields": [
+        "REOM"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "CEC_CSR",
+          "field": "RBTF",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "No message can be transmitted because the controller stays in the Disabled state.",
+      "datasheet_text": "The Disabled state is entered either on an APB reset or on resetting the PE bit in the CEC configuration register. Any ongoing transmission or reception is not interrupted and completes normally. The controller actually switches to Disabled when the PE bit is read back as 0. While the controller is in the Disabled state, activity on the CEC line is ignored and the clock prescaler is stopped for minimum power consumption purposes. The controller exits the Disabled state when the PE bit is set.",
+      "target_register": "CEC_CSR",
+      "target_fields": [
+        "TSOM"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "CEC_CFGR",
+          "field": "PE",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The newly received block is not acknowledged, forcing the initiator to restart the message transmission.",
+      "datasheet_text": "If the RBTF bit is not cleared by the time a new block is received, the newly received block is not acknowledged to force the initiator to restart the message transmission, thus giving the host CPU a second chance to retrieve all message bytes in time.",
+      "description": "RBTF must be cleared (after reading CEC_RXD) before the next block has been received.",
+      "involved": [
+        {
+          "register": "CEC_CSR",
+          "field": "RBTF",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_ESR",
+          "field": "RBTFE",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_RXD",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A transmit error (TBTFE) is generated and the message is aborted.",
+      "datasheet_text": "The TX_ERROR state is entered if one of the following error conditions occurs: a directly addressed message block is not acknowledged or a broadcast message block is negatively acknowledged (acknowledge error), the TBTRF bit is not cleared while the requested byte needs to be transmitted (TBTFE error), an unexpected bit is detected by the bit timing checker/generator (line error).",
+      "description": "TBTRF must be cleared (after writing the next byte to CEC_TXD) before the byte is required for transmission.",
+      "involved": [
+        {
+          "register": "CEC_CSR",
+          "field": "TBTRF",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_ESR",
+          "field": "TBTFE",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_TXD",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The controller stays in the TX_ERROR state and no further message can be processed.",
+      "datasheet_text": "The controller remains in the TX_ERROR state until the transmit error flag TERR is cleared. It then waits for an interframe spacing of 2 bit times before of being ready to process the next message.",
+      "description": "Software must clear TERR to leave the TX_ERROR state; a further 2 bit times of interframe spacing elapse before the next message can be processed.",
+      "involved": [
+        {
+          "register": "CEC_CSR",
+          "field": "TERR",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_CSR",
+          "field": "TSOM",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Software cannot tell which error occurred.",
+      "datasheet_text": "This bit is set by hardware when a transmission error occurs. The software can read the CEC_ESR register to better know which error occurred. If the IE bit in the CEC_CFGR register is set, an interrupt is generated. It is cleared by software by writing it to 0 to acknowledge the error and clear the associated interrupt.",
+      "description": "CEC_ESR should be read while TERR is still set, because clearing TERR also clears the error flags in CEC_ESR.",
+      "involved": [
+        {
+          "register": "CEC_CSR",
+          "field": "TERR",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_ESR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Software cannot tell which reception error occurred.",
+      "datasheet_text": "This bit is set by hardware when a reception error occurs. The software can read the CEC_ESR register to better know which error occurred. If the IE bit in the CEC_CFGR register is set, an interrupt is generated. It is cleared by software by writing it to 0 to acknowledge the error and clear the associated interrupt.",
+      "description": "CEC_ESR should be read while RERR is still set, because clearing RERR also clears the error flags in CEC_ESR.",
+      "involved": [
+        {
+          "register": "CEC_CSR",
+          "field": "RERR",
+          "whole_register": false
+        },
+        {
+          "register": "CEC_ESR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

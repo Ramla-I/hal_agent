@@ -1,0 +1,160 @@
+{
+  "datasheet_register_abbreviation": "TIM16_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CCPC",
+      "description": "Capture/compare preloaded control",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CCUS",
+      "description": "Capture/compare control update selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "CCDS",
+      "description": "Capture/compare DMA selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "OIS1",
+      "description": "Output Idle state 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "OIS1N",
+      "description": "Output Idle state 1",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the OISx/OISxN bits is ignored.",
+      "datasheet_text": "This bit can not be modified as long as LOCK level 1, 2 or 3 has been programmed (LOCK bits in TIMx_BKR register).",
+      "target_register": "TIM16_CR2",
+      "target_fields": [
+        "OIS1",
+        "OIS1N"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the OISx/OISxN bits is ignored.",
+      "datasheet_text": "01: LOCK Level 1 = DTG bits in TIMx_BDTR register, OISx and OISxN bits in TIMx_CR2 register and BKE/BKP/AOE bits in TIMx_BDTR register can no longer be written",
+      "target_register": "TIM16_CR2",
+      "target_fields": [
+        "OIS1",
+        "OIS1N"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM16_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Writes to CCxE, CCxNE and OCxM have no immediate effect on the outputs.",
+      "datasheet_text": "1: CCxE, CCxNE and OCxM bits are preloaded, after having been written, they are updated only when COM bit is set.",
+      "description": "When CCPC=1 the CCxE, CCxNE and OCxM bits are preloaded: writes to them only take effect when a COM event occurs (COMG bit set in TIMx_EGR, or rising edge on TRGI if CCUS=1).",
+      "involved": [
+        {
+          "register": "TIM16_CR2",
+          "field": "CCPC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM16_CCER",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "TIM16_EGR",
+          "field": "COMG",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Unexpected output levels are driven on the unused channel outputs.",
+      "datasheet_text": "When both outputs of a channel are not used (CCxE = CCxNE = 0), the OISx, OISxN, CCxP and CCxNP bits must be kept cleared.",
+      "description": "When neither output of a channel is used (CCxE = CCxNE = 0) the OISx and OISxN bits (as well as CCxP/CCxNP) must be left cleared.",
+      "involved": [
+        {
+          "register": "TIM16_CR2",
+          "field": "OIS1",
+          "whole_register": false
+        },
+        {
+          "register": "TIM16_CR2",
+          "field": "OIS1N",
+          "whole_register": false
+        },
+        {
+          "register": "TIM16_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM16_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

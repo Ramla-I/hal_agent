@@ -1,0 +1,103 @@
+{
+  "datasheet_register_abbreviation": "TIM15_SMCR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SMS",
+      "description": "Slave mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "TS",
+      "description": "Trigger selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "MSM",
+      "description": "Master/Slave mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Changing the trigger source while it is in use generates spurious edge detections on the trigger input.",
+      "datasheet_text": "These bits must be changed only when they are not used (e.g. when SMS=000) to avoid wrong edge detections at the transition.",
+      "target_register": "TIM15_SMCR",
+      "target_fields": [
+        "TS"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_SMCR",
+          "field": "SMS",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The gated mode misbehaves because TI1F_ED delivers pulses instead of a level.",
+      "datasheet_text": "The gated mode must not be used if TI1F_ED is selected as the trigger input (TS=\u2019100\u2019). Indeed, TI1F_ED outputs 1 pulse for each transition on TI1F, whereas the gated mode checks the level of the trigger signal.",
+      "description": "Gated mode (SMS=101) must not be selected while TS=100 (TI1F_ED) is used as trigger input.",
+      "involved": [
+        {
+          "register": "TIM15_SMCR",
+          "field": "SMS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_SMCR",
+          "field": "TS",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "External clock mode 1 and gated mode do not start the counter if CEN was not set by software beforehand.",
+      "datasheet_text": "External clock and gated mode can work only if the CEN bit has been previously set by software. However trigger mode can set the CEN bit automatically by hardware.",
+      "target_register": "TIM15_SMCR",
+      "target_fields": [
+        "SMS"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_CR1",
+          "field": "CEN",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "datasheet_register_abbreviation": "TIM6_PSC",
+  "address_offset": "0x28",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PSC",
+      "description": "Prescaler value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The new prescaler ratio is not effective until the next update event.",
+      "datasheet_text": "It can be changed on the fly as the TIMx_PSC control register is buffered. The new prescaler ratio is taken into account at the next update event.",
+      "description": "TIMx_PSC is buffered: a value written to it is loaded into the active prescaler register only at the next update event (including an update forced through the UG bit of TIMx_EGR).",
+      "involved": [
+        {
+          "register": "TIM6_PSC",
+          "field": "PSC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM6_EGR",
+          "field": "UG",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Until an update event occurs the old prescaler ratio remains in use.",
+      "datasheet_text": "PSC contains the value to be loaded in the active prescaler register at each update event (including when the counter is cleared through UG bit of TIMx_EGR register or through trigger controller when configured in \u201creset mode\u201d).",
+      "description": "The value in TIMx_PSC is transferred to the active prescaler register at every update event, including when the counter is cleared through the UG bit.",
+      "involved": [
+        {
+          "register": "TIM6_PSC",
+          "field": "PSC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM6_EGR",
+          "field": "UG",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

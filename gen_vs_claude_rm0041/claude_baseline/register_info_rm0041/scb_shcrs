@@ -1,0 +1,135 @@
+{
+  "datasheet_register_abbreviation": "SCB_SHCRS",
+  "address_offset": "0x24",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MEMFAULTACT",
+      "description": "Memory management fault exception active bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "BUSFAULTACT",
+      "description": "Bus fault exception active bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "USGFAULTACT",
+      "description": "Usage fault exception active bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "SVCALLACT",
+      "description": "SVC call active bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "MONITORACT",
+      "description": "Debug monitor active bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "PENDSVACT",
+      "description": "PendSV exception active bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "SYSTICKACT",
+      "description": "SysTick exception active bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "USGFAULTPENDED",
+      "description": "Usage fault exception pending bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "MEMFAULTPENDED",
+      "description": "Memory management fault exception pending bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "BUSFAULTPENDED",
+      "description": "Bus fault exception pending bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "SVCALLPENDED",
+      "description": "SVC call pending bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "MEMFAULTENA",
+      "description": "Memory management fault enable bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "BUSFAULTENA",
+      "description": "Bus fault enable bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "USGFAULTENA",
+      "description": "Usage fault enable bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

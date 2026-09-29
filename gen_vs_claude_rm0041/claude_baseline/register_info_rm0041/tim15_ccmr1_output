@@ -1,0 +1,304 @@
+{
+  "datasheet_register_abbreviation": "TIM15_CCMR1_Output",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "OC1FE",
+      "description": "Output Compare 1 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "OC1PE",
+      "description": "Output Compare 1 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "OC1M",
+      "description": "Output Compare 1 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "OC2FE",
+      "description": "Output Compare 2 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "OC2PE",
+      "description": "Output Compare 2 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "OC2M",
+      "description": "Output Compare 2 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to CC1S is ignored while the channel is enabled.",
+      "datasheet_text": "CC1S bits are writable only when the channel is OFF (CC1E = \u20180\u2019 in TIMx_CCER).",
+      "target_register": "TIM15_CCMR1",
+      "target_fields": [
+        "CC1S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1E",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to CC2S is ignored while the channel is enabled.",
+      "datasheet_text": "CC2S bits are writable only when the channel is OFF (CC2E = \u20180\u2019 in TIMx_CCER).",
+      "target_register": "TIM15_CCMR1",
+      "target_fields": [
+        "CC2S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_CCER",
+          "field": "CC2E",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the OCxM / OCxPE bits is ignored.",
+      "datasheet_text": "These bits can not be modified as long as LOCK level 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201900\u2019 (the channel is configured in output).",
+      "target_register": "TIM15_CCMR1",
+      "target_fields": [
+        "OC1M",
+        "OC1PE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "warning",
+      "consequence": "The fast-enable feature has no effect in the currently selected output compare mode.",
+      "datasheet_text": "1: An active edge on the trigger input acts like a compare match on CC1 output. Then, OC is set to the compare level independently of the result of the comparison. Delay to sample the trigger input and to activate CC1 output is reduced to 3 clock cycles. OCFE acts only if the channel is configured in PWM1 or PWM2 mode.",
+      "target_register": "TIM15_CCMR1",
+      "target_fields": [
+        "OC1FE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_CCMR1",
+          "field": "OC1M",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            6,
+            7
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The written bits configure a different function than intended.",
+      "datasheet_text": "The channels can be used in input (capture mode) or in output (compare mode). The direction of a channel is defined by configuring the corresponding CCxS bits. All the other bits of this register have a different function in input and in output mode. For a given bit, OCxx describes its function when the channel is configured in output, ICxx describes its function when the channel is configured in input. Take care that the same bit can have a different meaning for the input stage and for the output stage.",
+      "description": "The meaning of every bit of CCMR1 other than CCxS depends on the channel direction selected by the CCxS bits; the register must be interpreted/programmed as the output (OCxx) or the input (ICxx) variant accordingly.",
+      "involved": [
+        {
+          "register": "TIM15_CCMR1",
+          "field": "CC1S",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The new output compare mode is not applied until a COM event occurs.",
+      "datasheet_text": "1: CCxE, CCxNE and OCxM bits are preloaded, after having been written, they are updated only when COM bit is set.",
+      "description": "When CCPC=1 (TIMx_CR2) the OCxM bits are preloaded; writes to them are only taken into account on a COM event.",
+      "involved": [
+        {
+          "register": "TIM15_CR2",
+          "field": "CCPC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_CCMR1",
+          "field": "OC1M",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_EGR",
+          "field": "COMG",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the OCxM / OCxPE bits is ignored.",
+      "datasheet_text": "11: LOCK Level 3 = LOCK Level 2 + CC Control bits (OCxM and OCxPE bits in TIMx_CCMRx registers, as long as the related channel is configured in output through the CCxS bits) can no longer be written.",
+      "target_register": "TIM15_CCMR1",
+      "target_fields": [
+        "OC1M",
+        "OC1PE",
+        "OC2M",
+        "OC2PE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Mapping IC1 on TRC does not work if no internal trigger is selected.",
+      "datasheet_text": "11: CC1 channel is configured as input, IC1 is mapped on TRC. This mode is working only if an internal trigger input is selected through TS bit (TIMx_SMCR register)",
+      "target_register": "TIM15_CCMR1",
+      "target_fields": [
+        "CC1S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_SMCR",
+          "field": "TS",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Mapping IC2 on TRC does not work if no internal trigger is selected.",
+      "datasheet_text": "11: CC2 channel is configured as input, IC2 is mapped on TRC. This mode is working only if an internal trigger input is selected through the TS bit (TIMx_SMCR register)",
+      "target_register": "TIM15_CCMR1",
+      "target_fields": [
+        "CC2S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_SMCR",
+          "field": "TS",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    }
+  ]
+}

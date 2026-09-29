@@ -1,0 +1,159 @@
+{
+  "datasheet_register_abbreviation": "RCC_APB2ENR",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "AFIOEN",
+      "description": "Alternate function I/O clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "IOPAEN",
+      "description": "I/O port A clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "IOPBEN",
+      "description": "I/O port B clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "IOPCEN",
+      "description": "I/O port C clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "IOPDEN",
+      "description": "I/O port D clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "IOPEEN",
+      "description": "I/O port E clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "IOPFEN",
+      "description": "I/O port F clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "IOPGEN",
+      "description": "I/O port G clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "ADC1EN",
+      "description": "ADC 1 interface clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "TIM1EN",
+      "description": "TIM1 Timer clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "SPI1EN",
+      "description": "SPI 1 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "USART1EN",
+      "description": "USART1 clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "TIM15EN",
+      "description": "TIM15 Timer clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "TIM16EN",
+      "description": "TIM16 Timer clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "TIM17EN",
+      "description": "TIM17 Timer clock enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Reads of the peripheral's registers return 0x0 and writes are lost.",
+      "datasheet_text": "Note: When the peripheral clock is not active, the peripheral register values may not be readable by software and the returned value is always 0x0.",
+      "description": "The clock enable bit of an APB2 peripheral in RCC_APB2ENR must be set before its registers are accessed; with the clock off the register values are not readable and read back as 0x0.",
+      "involved": [
+        {
+          "register": "RCC_APB2ENR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

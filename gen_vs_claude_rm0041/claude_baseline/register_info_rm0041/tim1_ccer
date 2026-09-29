@@ -1,0 +1,493 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "CC1NE",
+      "description": "Capture/Compare 1 complementary output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "CC2NE",
+      "description": "Capture/Compare 2 complementary output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "CC2NP",
+      "description": "Capture/Compare 2 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "CC3E",
+      "description": "Capture/Compare 3 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "CC3P",
+      "description": "Capture/Compare 3 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "CC3NE",
+      "description": "Capture/Compare 3 complementary output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "CC3NP",
+      "description": "Capture/Compare 3 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "CC4E",
+      "description": "Capture/Compare 4 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "CC4P",
+      "description": "Capture/Compare 3 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 2 or 3 is programmed, writes to CCxP are ignored until the next reset.",
+      "datasheet_text": "Note: This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM1_CCER",
+      "target_fields": [
+        "CC1P"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 2 or 3 is programmed, writes to CCxP are ignored until the next reset.",
+      "datasheet_text": "Note: This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM1_CCER",
+      "target_fields": [
+        "CC2P"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 2 or 3 is programmed, writes to CCxP are ignored until the next reset.",
+      "datasheet_text": "Note: This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM1_CCER",
+      "target_fields": [
+        "CC3P"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 2 or 3 is programmed, writes to CCxP are ignored until the next reset.",
+      "datasheet_text": "Note: This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM1_CCER",
+      "target_fields": [
+        "CC4P"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 2 or 3 is programmed, writes to CCxNP are ignored for channels configured as output until the next reset.",
+      "datasheet_text": "Note: This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201d00\u201d (the channel is configured in output).",
+      "target_register": "TIM1_CCER",
+      "target_fields": [
+        "CC1NP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 2 or 3 is programmed, writes to CCxNP are ignored for channels configured as output until the next reset.",
+      "datasheet_text": "Note: This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201d00\u201d (the channel is configured in output).",
+      "target_register": "TIM1_CCER",
+      "target_fields": [
+        "CC2NP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 2 or 3 is programmed, writes to CCxNP are ignored for channels configured as output until the next reset.",
+      "datasheet_text": "Note: This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201d00\u201d (the channel is configured in output).",
+      "target_register": "TIM1_CCER",
+      "target_fields": [
+        "CC3NP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Once LOCK level 2 or 3 is programmed, writes to CCxNP are ignored for channels configured as output until the next reset.",
+      "datasheet_text": "Note: This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201d00\u201d (the channel is configured in output).",
+      "target_register": "TIM1_CCER",
+      "target_fields": [
+        "CC4NP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "With LOCK level 2 (or 3) programmed, the CC polarity bits of channels configured as output as well as OSSR and OSSI can no longer be written.",
+      "datasheet_text": "10: LOCK Level 2 = LOCK Level 1 + CC Polarity bits (CCxP/CCxNP bits in TIMx_CCER register, as long as the related channel is configured in output through the CCxS bits) as well as OSSR and OSSI bits can no longer be written.",
+      "target_register": "TIM1_CCER",
+      "target_fields": [
+        "CC1P",
+        "CC1NP",
+        "CC2P",
+        "CC2NP",
+        "CC3P",
+        "CC3NP",
+        "CC4P",
+        "CC4NP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "With CCPC=1, values written to CCxE and CCxNE remain in the preload bits and do not reach the outputs until a COM event occurs.",
+      "datasheet_text": "1: CCxE, CCxNE and OCxM bits are preloaded, after having been written, they are updated only when a commutation event (COM) occurs (COMG bit set or rising edge detected on TRGI, depending on the CCUS bit).",
+      "description": "When CCPC=1 in TIMx_CR2, writes to CCxE/CCxNE are preloaded and become effective only at the next commutation (COM) event.",
+      "involved": [
+        {
+          "register": "TIM1_CR2",
+          "field": "CCPC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_EGR",
+          "field": "COMG",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Leaving CCxP/CCxNP (and OISx/OISxN) set on a channel whose outputs are both disabled can drive the pins to an unexpected level.",
+      "datasheet_text": "When both outputs of a channel are not used (CCxE = CCxNE = 0), the OISx, OISxN, CCxP and CCxNP bits must be kept cleared.",
+      "description": "When both outputs of a channel are unused (CCxE = CCxNE = 0) the CCxP, CCxNP, OISx and OISxN bits must be left cleared.",
+      "involved": [
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1P",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1NP",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CR2",
+          "field": "OIS1",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CR2",
+          "field": "OIS1N",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Dead-time is only inserted when both CCxE and CCxNE are set and MOE is set; otherwise the complementary outputs are not generated with dead-time.",
+      "datasheet_text": "Dead-time insertion is enabled by setting both CCxE and CCxNE bits, and the MOE bit if the break circuit is present. DTG[7:0] bits of the TIMx_BDTR register are used to control the dead-time generation for all channels.",
+      "description": "To obtain complementary outputs with dead-time, CCxE, CCxNE and MOE must all be set.",
+      "involved": [
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_BDTR",
+          "field": "MOE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_BDTR",
+          "field": "DTG",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The input capture prescaler counter is reset whenever the capture is disabled, so the capture ratio restarts from the beginning.",
+      "datasheet_text": "The prescaler is reset as soon as CC1E=\u20190\u2019 (TIMx_CCER register).",
+      "description": "Clearing CC1E resets the input capture 1 prescaler (IC1PSC) counter.",
+      "involved": [
+        {
+          "register": "TIM1_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR1",
+          "field": "IC1PSC",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

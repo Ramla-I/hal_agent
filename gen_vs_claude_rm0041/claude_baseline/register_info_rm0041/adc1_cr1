@@ -1,0 +1,284 @@
+{
+  "datasheet_register_abbreviation": "ADC1_CR1",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "AWDCH",
+      "description": "Analog watchdog channel select bits",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "EOCIE",
+      "description": "Interrupt enable for EOC",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "AWDIE",
+      "description": "Analog watchdog interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "JEOCIE",
+      "description": "Interrupt enable for injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "SCAN",
+      "description": "Scan mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "AWDSGL",
+      "description": "Enable the watchdog on a single channel in scan mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "JAUTO",
+      "description": "Automatic injected group conversion",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "DISCEN",
+      "description": "Discontinuous mode on regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "JDISCEN",
+      "description": "Discontinuous mode on injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "DISCNUM",
+      "description": "Discontinuous mode channel count",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "JAWDEN",
+      "description": "Analog watchdog enable on injected channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      }
+    },
+    {
+      "name": "AWDEN",
+      "description": "Analog watchdog enable on regular channels",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte or half-word accesses to ADC registers are not supported and may return or write incorrect data.",
+      "datasheet_text": "The peripheral registers have to be accessed by words (32-bit).",
+      "description": "All ADC registers must be accessed with 32-bit (word) read/write accesses only.",
+      "involved": [
+        {
+          "register": "ADC1_CR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Auto-injected and discontinuous mode cannot work together; the conversion sequence behaves unpredictably.",
+      "datasheet_text": "Note: It is not possible to use both auto-injected and discontinuous modes simultaneously.",
+      "description": "JAUTO must not be set at the same time as the discontinuous mode bits DISCEN/JDISCEN in ADC_CR1.",
+      "involved": [
+        {
+          "register": "ADC1_CR1",
+          "field": "JAUTO",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "DISCEN",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "JDISCEN",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Enabling discontinuous mode on both groups at once is not supported.",
+      "datasheet_text": "The user must avoid setting discontinuous mode for both regular and injected groups together. Discontinuous mode must be enabled only for one group conversion.",
+      "description": "DISCEN (regular group) and JDISCEN (injected group) must not be set simultaneously; discontinuous mode may be enabled for one group only.",
+      "involved": [
+        {
+          "register": "ADC1_CR1",
+          "field": "DISCEN",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "JDISCEN",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Triggered injection does not work as described if JAUTO is set or SCAN is cleared.",
+      "datasheet_text": "To use triggered injection, the JAUTO bit must be cleared and SCAN bit must be set in the ADC_CR1 register.",
+      "description": "For triggered injection JAUTO must be cleared and SCAN must be set in ADC_CR1.",
+      "involved": [
+        {
+          "register": "ADC1_CR1",
+          "field": "JAUTO",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "SCAN",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "A discontinuous sub-group longer than the programmed regular sequence length is not converted as expected.",
+      "datasheet_text": "This mode is enabled by setting the DISCEN bit in the ADC_CR1 register. It can be used to convert a short sequence of n conversions (n <=8) which is a part of the sequence of conversions selected in the ADC_SQRx registers. The value of n is specified by writing to the DISCNUM[2:0] bits in the ADC_CR1 register. When an external trigger occurs, it starts the next n conversions selected in the ADC_SQRx registers until all the conversions in the sequence are done. The total sequence length is defined by the L[3:0] bits in the ADC_SQR1 register.",
+      "fields": [
+        {
+          "register": "ADC1_CR1",
+          "field": "DISCNUM",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "DISCEN",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_SQR1",
+          "field": "L",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Reserved AWDCH values select no valid channel for the analog watchdog.",
+      "datasheet_text": "AWDCH[4:0]: Analog watchdog channel select bits These bits are set and cleared by software. They select the input channel to be guarded by the Analog watchdog. 00000: ADC analog Channel0 00001: ADC analog Channel1 .... 01111: ADC analog Channel15 10000: ADC analog Channel16 10001: ADC analog Channel17 Other values: reserved.",
+      "description": "AWDCH[4:0] may only be programmed with values 0 to 17 (0b00000..0b10001); other values are reserved.",
+      "involved": [
+        {
+          "register": "ADC1_CR1",
+          "field": "AWDCH",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Software expecting an interrupt per converted channel in scan mode never gets it; only the end of the last channel conversion raises the interrupt.",
+      "datasheet_text": "Note: An EOC or JEOC interrupt is generated only on the end of conversion of the last channel if the corresponding EOCIE or JEOCIE bit is set",
+      "description": "In scan mode (SCAN set), the EOC/JEOC interrupt is generated only at the end of conversion of the last channel of the group.",
+      "involved": [
+        {
+          "register": "ADC1_CR1",
+          "field": "SCAN",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "EOCIE",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "JEOCIE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The analog watchdog does not guard the intended channels if AWDSGL/AWDEN/JAWDEN are not combined as in Table 58.",
+      "datasheet_text": "The analog watchdog can be enabled on one or more channels by configuring the ADC_CR1 register as shown in Table 58.",
+      "description": "The channels guarded by the analog watchdog are selected by the combination of the AWDSGL, AWDEN and JAWDEN bits (Table 58); when AWDSGL is set the single guarded channel is the one selected by AWDCH[4:0].",
+      "involved": [
+        {
+          "register": "ADC1_CR1",
+          "field": "AWDSGL",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "AWDEN",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "JAWDEN",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR1",
+          "field": "AWDCH",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

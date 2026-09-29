@@ -1,0 +1,36 @@
+{
+  "datasheet_register_abbreviation": "MPU_MPU_RBAR",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "REGION",
+      "description": "MPU region field",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "VALID",
+      "description": "MPU region number valid",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "ADDR",
+      "description": "Region base address field",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

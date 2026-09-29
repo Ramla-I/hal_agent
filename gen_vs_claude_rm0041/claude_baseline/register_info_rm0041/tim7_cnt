@@ -1,0 +1,43 @@
+{
+  "datasheet_register_abbreviation": "TIM7_CNT",
+  "address_offset": "0x24",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CNT",
+      "description": "Low counter value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "No malfunction: these registers are accessible while the timer runs.",
+      "datasheet_text": "The counter, the auto-reload register and the prescaler register can be written or read by software. This is true even when the counter is running.",
+      "description": "The counter, the auto-reload register and the prescaler register may be read and written by software at any time, including while the counter is running.",
+      "involved": [
+        {
+          "register": "TIM7_CNT",
+          "field": "CNT",
+          "whole_register": false
+        },
+        {
+          "register": "TIM7_ARR",
+          "field": "ARR",
+          "whole_register": false
+        },
+        {
+          "register": "TIM7_PSC",
+          "field": "PSC",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,415 @@
+{
+  "datasheet_register_abbreviation": "UART4_CR1",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SBK",
+      "description": "Send break",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "RWU",
+      "description": "Receiver wakeup",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "RE",
+      "description": "Receiver enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "TE",
+      "description": "Transmitter enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "IDLEIE",
+      "description": "IDLE interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "RXNEIE",
+      "description": "RXNE interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "TCIE",
+      "description": "Transmission complete interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "TXEIE",
+      "description": "TXE interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "PEIE",
+      "description": "PE interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "PS",
+      "description": "Parity selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "PCE",
+      "description": "Parity control enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "WAKE",
+      "description": "Wakeup method",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "M",
+      "description": "Word length",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "UE",
+      "description": "USART enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "OVER8",
+      "description": "Oversampling mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The frame being transmitted or received is corrupted.",
+      "datasheet_text": "Note: The M bit must not be modified during a data transfer (both transmission and reception)",
+      "description": "The word length bit M may only be changed while no transmission or reception is ongoing.",
+      "involved": [
+        {
+          "register": "UART4_CR1",
+          "field": "M",
+          "whole_register": false
+        },
+        {
+          "register": "UART4_CR1",
+          "field": "TE",
+          "whole_register": false
+        },
+        {
+          "register": "UART4_CR1",
+          "field": "RE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The data on the TX pin is corrupted and the data being transmitted is lost.",
+      "datasheet_text": "Note: The TE bit should not be reset during transmission of data. Resetting the TE bit during the transmission corrupts the data on the TX pin as the baud rate counters get frozen. The current data being transmitted are lost.",
+      "description": "TE must not be cleared while a transmission is in progress.",
+      "involved": [
+        {
+          "register": "UART4_CR1",
+          "field": "TE",
+          "whole_register": false
+        },
+        {
+          "register": "UART4_SR",
+          "field": "TC",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The reception of the current byte is aborted.",
+      "datasheet_text": "Note: The RE bit should not be reset while receiving data. If the RE bit is disabled during reception, the reception of the current byte is aborted.",
+      "description": "RE must not be cleared while a reception is in progress.",
+      "involved": [
+        {
+          "register": "UART4_CR1",
+          "field": "RE",
+          "whole_register": false
+        },
+        {
+          "register": "UART4_SR",
+          "field": "RXNE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The break character is not transmitted, or two consecutive breaks are merged into one.",
+      "datasheet_text": "Note: If the software resets the SBK bit before the commencement of break transmission, the break character is not transmitted. For two consecutive breaks, the SBK bit should be set after the stop bit of the previous break.",
+      "description": "SBK must not be cleared before the break transmission has started; for a second break, set SBK only after the stop bit of the previous break.",
+      "involved": [
+        {
+          "register": "UART4_CR1",
+          "field": "SBK",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the RWU bit is ignored.",
+      "datasheet_text": "The RWU bit can be written to as 0 or 1 when the receiver buffer contains no data (RXNE=0 in the USART_SR register). Otherwise the write attempt is ignored.",
+      "target_register": "UART4_CR1",
+      "target_fields": [
+        "RWU"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "UART4_SR",
+          "field": "RXNE",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The RWU bit cannot be modified by software while RXNE is set.",
+      "datasheet_text": "Note: In Address Mark Detection wakeup configuration (WAKE bit=1) the RWU bit cannot be modified by software while the RXNE bit is set.",
+      "target_register": "UART4_CR1",
+      "target_fields": [
+        "RWU"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "UART4_CR1",
+          "field": "WAKE",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        },
+        {
+          "register": "UART4_SR",
+          "field": "RXNE",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Mute mode with wakeup by idle line detection does not work.",
+      "datasheet_text": "Note: Before selecting Mute mode (by setting the RWU bit) the USART must first receive a data byte, otherwise it cannot function in Mute mode with wakeup by Idle line detection.",
+      "description": "At least one data byte must have been received before RWU is set to enter mute mode.",
+      "involved": [
+        {
+          "register": "UART4_CR1",
+          "field": "RWU",
+          "whole_register": false
+        },
+        {
+          "register": "UART4_CR1",
+          "field": "WAKE",
+          "whole_register": false
+        },
+        {
+          "register": "UART4_SR",
+          "field": "RXNE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The last transmission is corrupted.",
+      "datasheet_text": "After writing the last data into the USART_DR register, it is mandatory to wait for TC=1 before disabling the USART or causing the microcontroller to enter the low-power mode (see Figure 246: TC/TXE behavior when transmitting).",
+      "target_register": "UART4_CR1",
+      "target_fields": [
+        "UE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "UART4_SR",
+          "field": "TC",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The parity setting takes effect only from the next byte on.",
+      "datasheet_text": "This bit selects the hardware parity control (generation and detection). When the parity control is enabled, the computed parity is inserted at the MSB position (9th bit if M=1; 8th bit if M=0) and parity is checked on the received data. This bit is set and cleared by software. Once it is set, PCE is active after the current byte (in reception and in transmission).",
+      "description": "A change of PCE only becomes active after the byte currently being transferred.",
+      "involved": [
+        {
+          "register": "UART4_CR1",
+          "field": "PCE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The new parity selection takes effect only from the next byte on.",
+      "datasheet_text": "This bit selects the odd or even parity when the parity generation/detection is enabled (PCE bit set). It is set and cleared by software. The parity is selected after the current byte.",
+      "description": "A change of PS only becomes active after the byte currently being transferred.",
+      "involved": [
+        {
+          "register": "UART4_CR1",
+          "field": "PS",
+          "whole_register": false
+        },
+        {
+          "register": "UART4_CR1",
+          "field": "PCE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "An unexpected idle frame (preamble) is sent and transmission starts one bit time later.",
+      "datasheet_text": "Note: During transmission, a \u201c0\u201d pulse on the TE bit (\u201c0\u201d followed by \u201c1\u201d) sends a preamble (idle line) after the current word, except in smartcard mode. When TE is set, there is a 1 bit-time delay before the transmission starts.",
+      "description": "Toggling TE during transmission inserts an idle frame; after setting TE the transmission starts only after a 1 bit-time delay.",
+      "involved": [
+        {
+          "register": "UART4_CR1",
+          "field": "TE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "OVER8 is forced to 0 by hardware, so oversampling by 8 cannot be used.",
+      "datasheet_text": "Note: Oversampling by 8 is not available in the Smartcard, IrDA and LIN modes: when SCEN=1,IREN=1 or LINEN=1 then OVER8 is forced to \u20180 by hardware.",
+      "target_register": "UART4_CR1",
+      "target_fields": [
+        "OVER8"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "UART4_CR3",
+          "field": "IREN",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        },
+        {
+          "register": "UART4_CR2",
+          "field": "LINEN",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "8-bit word length is not selected, so the LIN break/frame format is wrong.",
+      "datasheet_text": "The same procedure explained in Section 23.3.2 has to be applied for LIN Master transmission than for normal USART transmission with the following differences: Clear the M bit to configure 8-bit word length. Set the LINEN bit to enter LIN mode.",
+      "target_register": "UART4_CR1",
+      "target_fields": [
+        "M"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "UART4_CR2",
+          "field": "LINEN",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    }
+  ]
+}

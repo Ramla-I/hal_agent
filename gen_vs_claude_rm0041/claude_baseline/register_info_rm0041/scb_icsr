@@ -1,0 +1,90 @@
+{
+  "datasheet_register_abbreviation": "SCB_ICSR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "VECTACTIVE",
+      "description": "Active vector",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "RETTOBASE",
+      "description": "Return to base level",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "VECTPENDING",
+      "description": "Pending vector",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "ISRPENDING",
+      "description": "Interrupt pending flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 22,
+        "end_bit": 22
+      }
+    },
+    {
+      "name": "PENDSTCLR",
+      "description": "SysTick exception clear-pending bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 25,
+        "end_bit": 25
+      }
+    },
+    {
+      "name": "PENDSTSET",
+      "description": "SysTick exception set-pending bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 26,
+        "end_bit": 26
+      }
+    },
+    {
+      "name": "PENDSVCLR",
+      "description": "PendSV clear-pending bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 27,
+        "end_bit": 27
+      }
+    },
+    {
+      "name": "PENDSVSET",
+      "description": "PendSV set-pending bit",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 28,
+        "end_bit": 28
+      }
+    },
+    {
+      "name": "NMIPENDSET",
+      "description": "NMI set-pending bit.",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 31,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

@@ -1,0 +1,74 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EXTICR4",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "EXTI12",
+      "description": "EXTI12 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "EXTI13",
+      "description": "EXTI13 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "EXTI14",
+      "description": "EXTI14 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "EXTI15",
+      "description": "EXTI15 configuration",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "The EXTI line to GPIO mapping is not programmed: writes to AFIO_EXTICR4 have no effect while the AFIO clock is disabled.",
+      "datasheet_text": "To configure the AFIO_EXTICRx for the mapping of external interrupt/event lines onto GPIOs, the AFIO clock should first be enabled. Refer to Section 6.3.7: APB2 peripheral clock enable register (RCC_APB2ENR).",
+      "clock": {
+        "register": "RCC_APB2ENR",
+        "field": "AFIOEN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "write"
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Half-word or byte accesses to AFIO_EXTICR4 are not allowed.",
+      "datasheet_text": "The peripheral registers have to be accessed by words (32-bit).",
+      "description": "AFIO_EXTICR4 must be accessed with 32-bit (word) accesses only.",
+      "involved": [
+        {
+          "register": "AFIO_EXTICR4",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

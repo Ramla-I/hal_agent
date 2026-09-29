@@ -1,0 +1,63 @@
+{
+  "datasheet_register_abbreviation": "SCB_CCR",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "NONBASETHRDENA",
+      "description": "Configures how the processor enters Thread mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "USERSETMPEND",
+      "description": "USERSETMPEND",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "UNALIGN__TRP",
+      "description": "UNALIGN_ TRP",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "DIV_0_TRP",
+      "description": "DIV_0_TRP",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "BFHFNMIGN",
+      "description": "BFHFNMIGN",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "STKALIGN",
+      "description": "STKALIGN",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

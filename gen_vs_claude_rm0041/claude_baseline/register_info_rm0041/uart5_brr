@@ -1,0 +1,179 @@
+{
+  "datasheet_register_abbreviation": "UART5_BRR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DIV_Fraction",
+      "description": "DIV_Fraction",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "DIV_Mantissa",
+      "description": "DIV_Mantissa",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The baud rate changes in the middle of a frame and the communication is corrupted.",
+      "datasheet_text": "The baud counters are updated to the new value in the baud registers after a write operation to USART_BRR. Hence the baud rate register value should not be changed during communication.",
+      "description": "USART_BRR must only be written while no transmission/reception is in progress.",
+      "involved": [
+        {
+          "register": "UART5_BRR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "UART5_CR1",
+          "field": "TE",
+          "whole_register": false
+        },
+        {
+          "register": "UART5_CR1",
+          "field": "RE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The first transmitted frame uses a wrong configuration or baud rate.",
+      "datasheet_text": "Procedure: 1. Enable the USART by writing the UE bit in USART_CR1 register to 1. 2. Program the M bit in USART_CR1 to define the word length. 3. Program the number of stop bits in USART_CR2. 4. Select DMA enable (DMAT) in USART_CR3 if Multi buffer Communication is to take place. Configure the DMA register as explained in multibuffer communication. 5. Select the desired baud rate using the USART_BRR register. 6. Set the TE bit in USART_CR1 to send an idle frame as first transmission. 7. Write the data to send in the USART_DR register (this clears the TXE bit). Repeat this for each data to be transmitted in case of single buffer. 8. After writing the last data into the USART_DR register, wait until TC=1. This indicates that the transmission of the last frame is complete. This is required for instance when the USART is disabled or enters the Halt mode to avoid corrupting the last transmission.",
+      "steps": [
+        {
+          "register": "UART5_CR1",
+          "operation": "write"
+        },
+        {
+          "register": "UART5_CR2",
+          "operation": "write"
+        },
+        {
+          "register": "UART5_BRR",
+          "operation": "write"
+        },
+        {
+          "register": "UART5_CR1",
+          "operation": "write"
+        },
+        {
+          "register": "UART5_DR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "UART5_CR1",
+        "field": "TE",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The receiver starts searching for a start bit with a wrong configuration or baud rate.",
+      "datasheet_text": "Procedure: 1. Enable the USART by writing the UE bit in USART_CR1 register to 1. 2. Program the M bit in USART_CR1 to define the word length. 3. Program the number of stop bits in USART_CR2. 4. Select DMA enable (DMAR) in USART_CR3 if multibuffer communication is to take place. Configure the DMA register as explained in multibuffer communication. 5. Select the desired baud rate using the baud rate register USART_BRR 6. Set the RE bit USART_CR1. This enables the receiver which begins searching for a start bit.",
+      "steps": [
+        {
+          "register": "UART5_CR1",
+          "operation": "write"
+        },
+        {
+          "register": "UART5_CR2",
+          "operation": "write"
+        },
+        {
+          "register": "UART5_BRR",
+          "operation": "write"
+        },
+        {
+          "register": "UART5_CR1",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "UART5_CR1",
+        "field": "RE",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "The programmed baud rate is wrong when oversampling by 8 is selected.",
+      "datasheet_text": "When OVER8=1, the DIV_Fraction3 bit is not considered and must be kept cleared.",
+      "fields": [
+        {
+          "register": "UART5_BRR",
+          "field": "DIV_Fraction",
+          "whole_register": false
+        },
+        {
+          "register": "UART5_CR1",
+          "field": "OVER8",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "The resulting USARTDIV, and therefore the baud rate, is not the intended one.",
+      "datasheet_text": "USARTDIV is an unsigned fixed point number that is coded on the USART_BRR register. When OVER8=0, the fractional part is coded on 4 bits and programmed by the DIV_fraction[3:0] bits in the USART_BRR register. When OVER8=1, the fractional part is coded on 3 bits and programmed by the DIV_fraction[2:0] bits in the USART_BRR register, and bit DIV_fraction[3] must be kept cleared.",
+      "fields": [
+        {
+          "register": "UART5_BRR",
+          "field": "DIV_Fraction",
+          "whole_register": false
+        },
+        {
+          "register": "UART5_BRR",
+          "field": "DIV_Mantissa",
+          "whole_register": false
+        },
+        {
+          "register": "UART5_CR1",
+          "field": "OVER8",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "No baud clock is generated, so the value written in USART_BRR has no effect until TE or RE is set.",
+      "datasheet_text": "Note: The baud counters stop counting if the TE or RE bits are disabled respectively.",
+      "description": "The baud rate counters only run while TE (transmitter) respectively RE (receiver) are enabled.",
+      "involved": [
+        {
+          "register": "UART5_BRR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "UART5_CR1",
+          "field": "TE",
+          "whole_register": false
+        },
+        {
+          "register": "UART5_CR1",
+          "field": "RE",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

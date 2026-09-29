@@ -1,0 +1,36 @@
+{
+  "datasheet_register_abbreviation": "MPU_MPU_TYPER",
+  "address_offset": "0x00",
+  "reset_value": "0x00000800",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SEPARATE",
+      "description": "Separate flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "DREGION",
+      "description": "Number of MPU data regions",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "IREGION",
+      "description": "Number of MPU instruction regions",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 23
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

@@ -1,0 +1,347 @@
+{
+  "datasheet_register_abbreviation": "TIM12_CCMR1_Output",
+  "address_offset": "0x18",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CC1S",
+      "description": "Capture/Compare 1 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "OC1FE",
+      "description": "Output Compare 1 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "OC1PE",
+      "description": "Output Compare 1 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "OC1M",
+      "description": "Output Compare 1 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "CC2S",
+      "description": "Capture/Compare 2 selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "OC2FE",
+      "description": "Output Compare 2 fast enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "OC2PE",
+      "description": "Output Compare 2 preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "OC2M",
+      "description": "Output Compare 2 mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 14
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A byte (8-bit) write to the register does not work as expected.",
+      "datasheet_text": "The peripheral registers have to be written by half-words (16 bits) or words (32 bits). Read accesses can be done by bytes (8 bits), half-words (16 bits) or words (32 bits).",
+      "description": "The register must be written by half-words (16 bits) or words (32 bits); byte writes are not allowed. Reads may be 8-, 16- or 32-bit.",
+      "involved": [
+        {
+          "register": "TIM12_CCMR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to CC1S is ignored while the channel is enabled, so the channel direction does not change.",
+      "datasheet_text": "The CC1S bits are writable only when the channel is OFF (CC1E = 0 in TIMx_CCER).",
+      "target_register": "TIM12_CCMR1",
+      "target_fields": [
+        "CC1S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM12_CCER",
+          "field": "CC1E",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to CC2S is ignored while the channel is enabled, so the channel direction does not change.",
+      "datasheet_text": "The CC2S bits are writable only when the channel is OFF (CC2E = 0 in TIMx_CCER).",
+      "target_register": "TIM12_CCMR1",
+      "target_fields": [
+        "CC2S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM12_CCER",
+          "field": "CC2E",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "IC1 mapped on TRC (CC1S='11') does not work unless an internal trigger input is selected by TS.",
+      "datasheet_text": "11: CC1 channel is configured as input, IC1 is mapped on TRC. This mode works only if an internal trigger input is selected through the TS bit (TIMx_SMCR register)",
+      "target_register": "TIM12_CCMR1",
+      "target_fields": [
+        "CC1S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM12_SMCR",
+          "field": "TS",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "IC2 mapped on TRC (CC2S='11') does not work unless an internal trigger input is selected by TS.",
+      "datasheet_text": "11: CC2 channel is configured as input, IC2 is mapped on TRC. This mode works only if an internal trigger input is selected through the TS bit (TIMx_SMCR register)",
+      "target_register": "TIM12_CCMR1",
+      "target_fields": [
+        "CC2S"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM12_SMCR",
+          "field": "TS",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Forcing the output level with OC1M='100'/'101' has no effect unless the channel is configured as output.",
+      "datasheet_text": "In output mode (CCxS bits = '00' in the TIMx_CCMRx register), each output compare signal (OCxREF and then OCx) can be forced to active or inactive level directly by software, independently of any comparison between the output compare register and the counter.",
+      "target_register": "TIM12_CCMR1",
+      "target_fields": [
+        "OC1M"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM12_CCMR1",
+          "field": "CC1S",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Forcing the output level with OC2M='100'/'101' has no effect unless the channel is configured as output.",
+      "datasheet_text": "In output mode (CCxS bits = '00' in the TIMx_CCMRx register), each output compare signal (OCxREF and then OCx) can be forced to active or inactive level directly by software, independently of any comparison between the output compare register and the counter.",
+      "target_register": "TIM12_CCMR1",
+      "target_fields": [
+        "OC2M"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM12_CCMR1",
+          "field": "CC2S",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "warning",
+      "consequence": "Setting OC1FE has no effect when the channel is not in PWM mode 1 or 2.",
+      "datasheet_text": "1: An active edge on the trigger input acts like a compare match on the CC1 output. Then, OC is set to the compare level independently of the result of the comparison. Delay to sample the trigger input and to activate CC1 output is reduced to 3 clock cycles. OC1FE acts only if the channel is configured in PWM1 or PWM2 mode.",
+      "target_register": "TIM12_CCMR1",
+      "target_fields": [
+        "OC1FE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM12_CCMR1",
+          "field": "OC1M",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            6,
+            7
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "A new PWM configuration written while the comparison result does not change is not reflected on the output immediately.",
+      "datasheet_text": "In PWM mode 1 or 2, the OCREF level changes only when the result of the comparison changes or when the output compare mode switches from \u201cfrozen\u201d mode to \u201cPWM\u201d mode.",
+      "description": "In PWM mode the OCxREF level is only re-evaluated when the comparison result changes or when OCxM switches from frozen mode to a PWM mode.",
+      "involved": [
+        {
+          "register": "TIM12_CCMR1",
+          "field": "OC1M",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_CCMR1",
+          "field": "OC2M",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "A compare value written while OC1PE=1 is not used until the next update event.",
+      "datasheet_text": "1: Preload register on TIMx_CCR1 enabled. Read/Write operations access the preload register. TIMx_CCR1 preload value is loaded into the active register at each update event",
+      "description": "With OC1PE=0 the TIMx_CCR1 preload register is bypassed and a new compare value takes effect immediately; with OC1PE=1 read/write accesses go to the preload register and the value is only loaded into the active register at the next update event.",
+      "involved": [
+        {
+          "register": "TIM12_CCMR1",
+          "field": "OC1PE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_CCR1",
+          "field": "CCR1",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The output compare waveform is not generated correctly if the compare value, output mode, polarity and output enable are not programmed before the counter is enabled.",
+      "datasheet_text": "Procedure: 1. Select the counter clock (internal, external, prescaler). 2. Write the desired data in the TIMx_ARR and TIMx_CCRx registers. 3. Set the CCxIE bit if an interrupt request is to be generated. 4. Select the output mode. For example: - Write OCxM = '011' to toggle OCx output pin when CNT matches CCRx - Write OCxPE = '0' to disable preload register - Write CCxP = '0' to select active high polarity - Write CCxE = '1' to enable the output 5. Enable the counter by setting the CEN bit in the TIMx_CR1 register.",
+      "steps": [
+        {
+          "register": "TIM12_ARR",
+          "operation": "write"
+        },
+        {
+          "register": "TIM12_CCR1",
+          "operation": "write"
+        },
+        {
+          "register": "TIM12_DIER",
+          "operation": "write"
+        },
+        {
+          "register": "TIM12_CCMR1",
+          "operation": "write"
+        },
+        {
+          "register": "TIM12_CCER",
+          "operation": "write"
+        },
+        {
+          "register": "TIM12_CR1",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "TIM12_CR1",
+        "field": "CEN",
+        "whole_register": false
+      }
+    }
+  ]
+}

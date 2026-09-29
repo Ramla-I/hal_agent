@@ -1,0 +1,71 @@
+{
+  "datasheet_register_abbreviation": "TIM16_DCR",
+  "address_offset": "0x48",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DBA",
+      "description": "DMA base address",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "DBL",
+      "description": "DMA burst length",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 12
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The DMA burst transfer accesses the wrong registers or the wrong number of registers.",
+      "datasheet_text": "This is done in the following steps: 1. Configure the corresponding DMA channel as follows: \u2013DMA channel peripheral address is the DMAR register address \u2013 DMA channel memory address is the address of the buffer in the RAM containing the data to be transferred by DMA into CCRx registers. \u2013Number of data to transfer = 3 (See note below). \u2013Circular mode disabled. 2. Configure the DCR register by configuring the DBA and DBL bit fields as follows: DBL = 3 transfers, DBA = 0xE. 3. Enable the TIMx update DMA request (set the UDE bit in the DIER register). 4. Enable TIMx 5. Enable the DMA channel",
+      "steps": [
+        {
+          "register": "TIM16_DCR",
+          "operation": "write"
+        },
+        {
+          "register": "TIM16_DIER",
+          "operation": "write"
+        },
+        {
+          "register": "TIM16_CR1",
+          "operation": "write"
+        },
+        {
+          "register": "TIM16_DMAR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "TIM16_DMAR",
+        "field": "DMAB",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The burst transfer accesses more registers than intended.",
+      "datasheet_text": "This 5-bit vector defines the length of DMA transfers (the timer recognizes a burst transfer when a read or a write access is done to the TIMx_DMAR address). 00000: 1 transfer, 00001: 2 transfers, 00010: 3 transfers, ... 10001: 18 transfers.",
+      "description": "DBL[4:0] defines the number of transfers of a DMA burst (0 = 1 transfer up to 10001 = 18 transfers); values above 10001 are not defined.",
+      "involved": [
+        {
+          "register": "TIM16_DCR",
+          "field": "DBL",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

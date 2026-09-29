@@ -1,0 +1,1 @@
+{"datasheet_register_abbreviation": "TIM7_CR2", "address_offset": "0x04", "reset_value": "0x0000", "size": 16, "subfields": [{"name": "MMS", "description": "Master mode selection", "access": "read-write", "bit_number": {"start_bit": 4, "end_bit": 6}}], "access_constraints_v2": []}

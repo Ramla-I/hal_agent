@@ -1,0 +1,187 @@
+{
+  "datasheet_register_abbreviation": "GPIOF_IDR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "IDR0",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "IDR1",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "IDR2",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "IDR3",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "IDR4",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "IDR5",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "IDR6",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "IDR7",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "IDR8",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "IDR9",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "IDR10",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "IDR11",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "IDR12",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "IDR13",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "IDR14",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "IDR15",
+      "description": "Port input data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Half-word or byte accesses to GPIOx_IDR are not allowed and do not return the expected value.",
+      "datasheet_text": "These bits are read only and can be accessed in Word mode only. They contain the input value of the corresponding I/O port.",
+      "description": "GPIOx_IDR is read-only and must be accessed with 32-bit (word) accesses only.",
+      "involved": [
+        {
+          "register": "GPIOF_IDR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Reading GPIOx_IDR for a pin configured in analog mode always returns 0 instead of the pin state.",
+      "datasheet_text": "When the I/O Port is programmed as Analog configuration: The Output Buffer is disabled. The Schmitt Trigger Input is de-activated providing zero consumption for every analog value of the I/O pin. The output of the Schmitt Trigger is forced to a constant value (0). The weak pull-up and pull-down resistors are disabled. Read access to the Input Data register gets the value \u201c0\u201d.",
+      "description": "A read of GPIOx_IDR returns 0 for port bits configured in analog mode (CNF=00 with MODE=00 in GPIOx_CRL/CRH).",
+      "involved": [
+        {
+          "register": "GPIOF_IDR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "GPIOF_CRL",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

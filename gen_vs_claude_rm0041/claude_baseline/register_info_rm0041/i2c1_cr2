@@ -1,0 +1,209 @@
+{
+  "datasheet_register_abbreviation": "I2C1_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "FREQ",
+      "description": "Peripheral clock frequency",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "ITERREN",
+      "description": "Error interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "ITEVTEN",
+      "description": "Event interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "ITBUFEN",
+      "description": "Buffer interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "DMAEN",
+      "description": "DMA requests enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "LAST",
+      "description": "DMA last transfer",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "Data setup and hold times are not compliant with the I2C specification; values below 2 MHz or above 50 MHz are not allowed.",
+      "datasheet_text": "The FREQ bits must be configured with the APB clock frequency value (I2C peripheral connected to APB). The FREQ field is used by the peripheral to generate data setup and hold times compliant with the I2C specifications. The minimum allowed frequency is 2 MHz, the maximum frequency is limited by the maximum APB frequency and cannot exceed 50 MHz (peripheral intrinsic maximum limit).",
+      "fields": [
+        {
+          "register": "I2C1_CR2",
+          "field": "FREQ",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "The required SCL timings cannot be generated if the peripheral input clock is below the minimum for the selected mode.",
+      "datasheet_text": "The peripheral input clock frequency must be at least: 2 MHz in Sm mode 4 MHz in Fm mode",
+      "fields": [
+        {
+          "register": "I2C1_CR2",
+          "field": "FREQ",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_CCR",
+          "field": "F_S",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "DMA requests are not served for the transfer and data are lost.",
+      "datasheet_text": "The DMA must be initialized and enabled before the I2C data transfer. The DMAEN bit must be set in the I2C_CR2 register before the ADDR event. In master mode or in slave mode when clock stretching is enabled, the DMAEN bit can also be set during the ADDR event, before clearing the ADDR flag.",
+      "description": "DMAEN must be set before the ADDR event (or at the latest during the ADDR event, before ADDR is cleared, in master mode or in slave mode with clock stretching enabled).",
+      "involved": [
+        {
+          "register": "I2C1_CR2",
+          "field": "DMAEN",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_SR1",
+          "field": "ADDR",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Buffer interrupts conflict with the DMA requests during transmission.",
+      "datasheet_text": "Do not enable the ITBUFEN bit in the I2C_CR2 register if DMA is used for transmission.",
+      "description": "ITBUFEN must be kept cleared when DMA is used for transmission.",
+      "involved": [
+        {
+          "register": "I2C1_CR2",
+          "field": "ITBUFEN",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_CR2",
+          "field": "DMAEN",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Buffer interrupts conflict with the DMA requests during reception.",
+      "datasheet_text": "Do not enable the ITBUFEN bit in the I2C_CR2 register if DMA is used for reception.",
+      "description": "ITBUFEN must be kept cleared when DMA is used for reception.",
+      "involved": [
+        {
+          "register": "I2C1_CR2",
+          "field": "ITBUFEN",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_CR2",
+          "field": "DMAEN",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Programming the Stop condition before BTF is set truncates the last transmitted byte.",
+      "datasheet_text": "Master transmitter: In the interrupt routine after the EOT interrupt, disable DMA requests then wait for a BTF event before programming the Stop condition.",
+      "description": "After the DMA end of transfer in master transmitter mode, DMAEN must be cleared and BTF awaited before setting STOP.",
+      "involved": [
+        {
+          "register": "I2C1_CR2",
+          "field": "DMAEN",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_SR1",
+          "field": "BTF",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_CR1",
+          "field": "STOP",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Without LAST set, no NACK is generated on the last byte received by DMA in master receiver mode.",
+      "datasheet_text": "Master receiver: when the number of bytes to be received is equal to or greater than two, the DMA controller sends a hardware signal, EOT_1, corresponding to the last but one data byte (number_of_bytes - 1). If, in the I2C_CR2 register, the LAST bit is set, I2C automatically sends a NACK after the next byte following EOT_1.",
+      "description": "In DMA master receiver mode the LAST bit must be set so that a NACK is automatically generated after the byte following EOT_1.",
+      "involved": [
+        {
+          "register": "I2C1_CR2",
+          "field": "LAST",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_CR2",
+          "field": "DMAEN",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte (8-bit) accesses to the I2C registers are not supported.",
+      "datasheet_text": "The peripheral registers have to be accessed by half-words (16 bits) or words (32 bits).",
+      "description": "I2C registers must be accessed with 16-bit or 32-bit accesses only.",
+      "involved": [
+        {
+          "register": "I2C1_CR2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

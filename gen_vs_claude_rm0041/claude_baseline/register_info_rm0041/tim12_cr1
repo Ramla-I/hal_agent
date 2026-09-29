@@ -1,0 +1,217 @@
+{
+  "datasheet_register_abbreviation": "TIM12_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CEN",
+      "description": "Counter enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "UDIS",
+      "description": "Update disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "URS",
+      "description": "Update request source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "OPM",
+      "description": "One-pulse mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "ARPE",
+      "description": "Auto-reload preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "CKD",
+      "description": "Clock division",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A byte (8-bit) write to the register does not work as expected.",
+      "datasheet_text": "The peripheral registers have to be written by half-words (16 bits) or words (32 bits). Read accesses can be done by bytes (8 bits), half-words (16 bits) or words (32 bits).",
+      "description": "The register must be written by half-words (16 bits) or words (32 bits); byte writes are not allowed. Reads may be 8-, 16- or 32-bit.",
+      "involved": [
+        {
+          "register": "TIM12_CR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The counter does not count.",
+      "datasheet_text": "The counter is clocked by the prescaler output CK_CNT, which is enabled only when the counter enable bit (CEN) in TIMx_CR1 register is set (refer also to the slave mode controller description to get more details on counter enabling).",
+      "description": "The prescaler/counter clock CK_CNT is only enabled while CEN is set, so CEN must be set before the counter can count.",
+      "involved": [
+        {
+          "register": "TIM12_CR1",
+          "field": "CEN",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "delay",
+      "severity": "warning",
+      "consequence": "The counter value read back immediately after setting CEN has not been incremented yet.",
+      "datasheet_text": "Note that the counter starts counting 1 clock cycle after setting the CEN bit in the TIMx_CR1 register.",
+      "after": {
+        "register": "TIM12_CR1",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 1,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "TIM12_CNT",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "An update event occurring while the preload registers are being written transfers a partially updated configuration into the shadow registers.",
+      "datasheet_text": "The UEV event can be disabled by software by setting the UDIS bit in the TIMx_CR1 register. This is to avoid updating the shadow registers while writing new values in the preload registers. Then no update event occurs until the UDIS bit has been written to 0. However, the counter restarts from 0, as well as the counter of the prescaler (but the prescale rate does not change).",
+      "description": "To write several preload registers coherently, set UDIS=1 first; no update event (and hence no shadow-register transfer) occurs until UDIS has been written back to 0.",
+      "involved": [
+        {
+          "register": "TIM12_CR1",
+          "field": "UDIS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_ARR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "TIM12_CCR1",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "TIM12_CCR2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "New values written to the preload registers are not taken into account while UDIS=1.",
+      "datasheet_text": "1: UEV disabled. No UEV is generated, shadow registers keep their value (ARR, PSC, CCRx). The counter and the prescaler are reinitialized if the UG bit is set.",
+      "description": "While UDIS=1 no update event is generated and the ARR, PSC and CCRx shadow registers keep their value; setting UG still reinitializes the counter and the prescaler.",
+      "involved": [
+        {
+          "register": "TIM12_CR1",
+          "field": "UDIS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_EGR",
+          "field": "UG",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_ARR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "TIM12_PSC",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "TIM12_CCR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "No update interrupt is generated for a software-generated update event.",
+      "datasheet_text": "In addition, if the URS bit (update request selection) in TIMx_CR1 register is set, setting the UG bit generates an update event UEV but without setting the UIF flag (thus no interrupt is sent). This is to avoid generating both update and capture interrupts when clearing the counter on the capture event.",
+      "description": "With URS=1, setting UG generates the update event but does not set UIF, so no update interrupt is sent.",
+      "involved": [
+        {
+          "register": "TIM12_CR1",
+          "field": "URS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_EGR",
+          "field": "UG",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_SR",
+          "field": "UIF",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The counter stops and stays stopped until software sets CEN again.",
+      "datasheet_text": "CEN is cleared automatically in one-pulse mode, when an update event occurs.",
+      "description": "In one-pulse mode the hardware clears CEN at the update event, so software must set CEN again for each new pulse.",
+      "involved": [
+        {
+          "register": "TIM12_CR1",
+          "field": "CEN",
+          "whole_register": false
+        },
+        {
+          "register": "TIM12_CR1",
+          "field": "OPM",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

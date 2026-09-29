@@ -1,0 +1,308 @@
+{
+  "datasheet_register_abbreviation": "RTC_CRL",
+  "address_offset": "0x04",
+  "reset_value": "0x00000020",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SECF",
+      "description": "Second Flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "ALRF",
+      "description": "Alarm Flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "OWF",
+      "description": "Overflow Flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "RSF",
+      "description": "Registers Synchronized Flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "CNF",
+      "description": "Configuration Flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "RTOFF",
+      "description": "RTC operation OFF",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "Access to the RTC registers is disabled: writes are ignored (the backup domain is write-protected) and the peripheral is not clocked.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows:\n\u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register\n\u2022 set the DBP bit the Power Control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "steps": [
+        {
+          "register": "RCC_APB1ENR",
+          "operation": "write"
+        },
+        {
+          "register": "PWR_CR",
+          "operation": "write"
+        },
+        {
+          "register": "RTC_CRL",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "RTC_CRL",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "The power interface is not clocked and RTC/backup-domain access stays disabled.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows:\n\u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register\n\u2022 set the DBP bit the Power Control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "clock": {
+        "register": "RCC_APB1ENR",
+        "field": "PWREN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "modify"
+      }
+    },
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "The backup interface is not clocked and RTC/backup-domain access stays disabled.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows:\n\u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register\n\u2022 set the DBP bit the Power Control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "clock": {
+        "register": "RCC_APB1ENR",
+        "field": "BKPEN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "modify"
+      }
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The backup domain is write protected, so the write to the RTC register is ignored.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows:\n\u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register\n\u2022 set the DBP bit the Power Control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "target_register": "RTC_CRL",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "PWR_CR",
+          "field": "DBP",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "modify"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write is ignored while a previous write operation on the RTC registers is still in progress.",
+      "datasheet_text": "In addition, writing to any RTC register is only enabled if the previous write operation is finished. To enable the software to detect this situation, the RTOFF status bit is provided in the RTC_CR register to indicate that an update of the registers is in progress. A new value can be written to the RTC registers only when the RTOFF status bit value is \u20191\u2019.",
+      "target_register": "RTC_CRL",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "RTC_CRL",
+          "field": "RTOFF",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to RTC_CRL is not possible and is lost.",
+      "datasheet_text": "The functions of the RTC are controlled by this control register. It is not possible to write to the RTC_CR register while the peripheral is completing a previous write operation (flagged by RTOFF=0, see Section 17.3.4: Configuring RTC registers).",
+      "target_register": "RTC_CRL",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "RTC_CRL",
+          "field": "RTOFF",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "hardware"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The values written to RTC_PRL/RTC_CNT/RTC_ALR are never transferred to the RTC core if CNF is not cleared after having been set.",
+      "datasheet_text": "Bit 4 CNF: Configuration flag\nThis bit must be set by software to enter in configuration mode so as to allow new values to be written in the RTC_CNT, RTC_ALR or RTC_PRL registers. The write operation is only executed when the CNF bit is reset by software after has been set.",
+      "steps": [
+        {
+          "register": "RTC_CRL",
+          "operation": "write",
+          "value": 16
+        },
+        {
+          "register": "RTC_PRLL",
+          "operation": "write"
+        },
+        {
+          "register": "RTC_CRL",
+          "operation": "write",
+          "value": 0
+        }
+      ],
+      "enables": {
+        "register": "RTC_CRL",
+        "field": "CNF",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Writes to RTC registers are ignored while RTOFF = 0.",
+      "datasheet_text": "Bit 5 RTOFF: RTC operation OFF\nWith this bit the RTC reports the status of the last write operation performed on its registers, indicating if it has been completed or not. If its value is \u20180\u2019 then it is not possible to write to any of the RTC registers. This bit is read only.",
+      "description": "RTOFF is a read-only status bit: while it reads 0 no RTC register may be written.",
+      "involved": [
+        {
+          "register": "RTC_CRL",
+          "field": "RTOFF",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "delay",
+      "severity": "error",
+      "consequence": "Reading RTOFF too early, or writing another RTC register before the operation completed, results in the write being ignored.",
+      "datasheet_text": "The write operation only executes when the CNF bit is cleared; it takes at least three RTCCLK cycles to complete.",
+      "after": {
+        "register": "RTC_CRL",
+        "operation": "write",
+        "value": 0
+      },
+      "duration": {
+        "value": 3,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "RTC_CRL",
+        "field": "RTOFF",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Writing 1 to a flag does not clear it, so the interrupt stays pending; flags read while the APB1 clock is stopped are not up to date.",
+      "datasheet_text": "The OWF, ALRF, SECF and RSF bits are not updated when the APB1 clock is not running. The OWF, ALRF, SECF and RSF bits can only be set by hardware and only cleared by software.",
+      "description": "OWF, ALRF, SECF and RSF are set by hardware only and must be cleared by software by writing 0 (writing 1 has no effect). They are not updated while the APB1 clock is not running.",
+      "involved": [
+        {
+          "register": "RTC_CRL",
+          "field": "OWF",
+          "whole_register": false
+        },
+        {
+          "register": "RTC_CRL",
+          "field": "ALRF",
+          "whole_register": false
+        },
+        {
+          "register": "RTC_CRL",
+          "field": "SECF",
+          "whole_register": false
+        },
+        {
+          "register": "RTC_CRL",
+          "field": "RSF",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The interrupt is re-entered indefinitely if the flag is not cleared.",
+      "datasheet_text": "Note: Any flag remains pending until the appropriate RTC_CR request bit is reset by software, indicating that the interrupt request has been granted.",
+      "description": "An interrupt flag stays pending until the corresponding request bit is reset by software.",
+      "involved": [
+        {
+          "register": "RTC_CRL",
+          "field": "OWF",
+          "whole_register": false
+        },
+        {
+          "register": "RTC_CRL",
+          "field": "ALRF",
+          "whole_register": false
+        },
+        {
+          "register": "RTC_CRL",
+          "field": "SECF",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The RTC APB1 interface cannot resynchronize the RTC core registers correctly.",
+      "datasheet_text": "Two separate clocks: PCLK1 for the APB1 interface and RTC clock (must be at least four times slower than the PCLK1 clock)",
+      "description": "The RTC clock (RTCCLK) must be at least four times slower than PCLK1 for the APB1 interface to work correctly.",
+      "involved": [
+        {
+          "register": "RTC_CRL",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "RCC_BDCR",
+          "field": "RTCSEL",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

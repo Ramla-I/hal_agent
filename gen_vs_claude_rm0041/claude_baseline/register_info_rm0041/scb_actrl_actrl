@@ -1,0 +1,45 @@
+{
+  "datasheet_register_abbreviation": "SCB_ACTRL_ACTRL",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DISFOLD",
+      "description": "DISFOLD",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "FPEXCODIS",
+      "description": "FPEXCODIS",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "DISRAMODE",
+      "description": "DISRAMODE",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "DISITMATBFLUSH",
+      "description": "DISITMATBFLUSH",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

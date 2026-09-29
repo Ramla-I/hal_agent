@@ -1,0 +1,2 @@
+directory,registers_found,total_registers,correct,wrong,missing,total_facts,found_accuracy,correct_all,wrong_all,missing_all,total_facts_all,complete_accuracy,coverage
+register_info,203,245,2506,57,299,2862,87.56114605171209,2506,57,793,3356,74.67222884386175,85.28009535160905

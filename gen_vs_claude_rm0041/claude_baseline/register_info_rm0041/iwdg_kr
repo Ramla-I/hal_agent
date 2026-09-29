@@ -1,0 +1,125 @@
+{
+  "datasheet_register_abbreviation": "IWDG_KR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "KEY",
+      "description": "Key value",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "IWDG_PR stays write-protected and the write to it is ignored.",
+      "datasheet_text": "Write access to the IWDG_PR and IWDG_RLR registers is protected. To modify them, first write the code 0x5555 in the IWDG_KR register. A write access to this register with a different value breaks the sequence and register access is protected again. This implies that it is the case of the reload operation (writing 0xAAAA).",
+      "steps": [
+        {
+          "register": "IWDG_KR",
+          "operation": "write",
+          "value": 21845
+        },
+        {
+          "register": "IWDG_PR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "IWDG_PR",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "IWDG_RLR stays write-protected and the write to it is ignored.",
+      "datasheet_text": "Write access to the IWDG_PR and IWDG_RLR registers is protected. To modify them, first write the code 0x5555 in the IWDG_KR register. A write access to this register with a different value breaks the sequence and register access is protected again. This implies that it is the case of the reload operation (writing 0xAAAA).",
+      "steps": [
+        {
+          "register": "IWDG_KR",
+          "operation": "write",
+          "value": 21845
+        },
+        {
+          "register": "IWDG_RLR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "IWDG_RLR",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "If the key value 0xAAAA is not written before the downcounter reaches 0x000, the IWDG generates a system reset.",
+      "datasheet_text": "When the independent watchdog is started by writing the value 0xCCCC in the Key register (IWDG_KR), the counter starts counting down from the reset value of 0xFFF. When it reaches the end of count value (0x000) a reset signal is generated (IWDG reset). Whenever the key value 0xAAAA is written in the IWDG_KR register, the IWDG_RLR value is reloaded in the counter and the watchdog reset is prevented.",
+      "steps": [
+        {
+          "register": "IWDG_KR",
+          "operation": "write",
+          "value": 52428
+        },
+        {
+          "register": "IWDG_KR",
+          "operation": "write",
+          "value": 43690
+        }
+      ],
+      "enables": null
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Missing the periodic 0xAAAA refresh causes an IWDG reset; writing a value other than 0x5555 re-protects IWDG_PR/IWDG_RLR.",
+      "datasheet_text": "Bits 15:0 KEY[15:0]: Key value (write only, read 0000h)\nThese bits must be written by software at regular intervals with the key value AAAAh, otherwise the watchdog generates a reset when the counter reaches 0.\nWriting the key value 5555h to enable access to the IWDG_PR and IWDG_RLR registers (see Section 18.3.2)\nWriting the key value CCCCh starts the watchdog (except if the hardware watchdog option is selected)",
+      "description": "KEY must be written with 0xAAAA at regular intervals to refresh the watchdog; 0x5555 unlocks IWDG_PR/IWDG_RLR; 0xCCCC starts the watchdog. Any other value written to IWDG_KR breaks a pending unlock sequence.",
+      "involved": [
+        {
+          "register": "IWDG_KR",
+          "field": "KEY",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Accesses of an unsupported width may not take effect.",
+      "datasheet_text": "The peripheral registers have to be accessed by half-words (16 bits) or words (32 bits).",
+      "description": "All IWDG registers have to be accessed by half-words (16 bits) or words (32 bits); byte accesses are not supported.",
+      "involved": [
+        {
+          "register": "IWDG_KR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "IWDG_PR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "IWDG_RLR",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "IWDG_SR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

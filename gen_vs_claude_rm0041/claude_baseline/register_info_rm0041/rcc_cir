@@ -1,0 +1,406 @@
+{
+  "datasheet_register_abbreviation": "RCC_CIR",
+  "address_offset": "0x08",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "LSIRDYF",
+      "description": "LSI Ready Interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "LSERDYF",
+      "description": "LSE Ready Interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "HSIRDYF",
+      "description": "HSI Ready Interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "HSERDYF",
+      "description": "HSE Ready Interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "PLLRDYF",
+      "description": "PLL Ready Interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "CSSF",
+      "description": "Clock Security System Interrupt flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "LSIRDYIE",
+      "description": "LSI Ready Interrupt Enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "LSERDYIE",
+      "description": "LSE Ready Interrupt Enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "HSIRDYIE",
+      "description": "HSI Ready Interrupt Enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "HSERDYIE",
+      "description": "HSE Ready Interrupt Enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "PLLRDYIE",
+      "description": "PLL Ready Interrupt Enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "LSIRDYC",
+      "description": "LSI Ready Interrupt Clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "LSERDYC",
+      "description": "LSE Ready Interrupt Clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "HSIRDYC",
+      "description": "HSI Ready Interrupt Clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 18
+      }
+    },
+    {
+      "name": "HSERDYC",
+      "description": "HSE Ready Interrupt Clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 19,
+        "end_bit": 19
+      }
+    },
+    {
+      "name": "PLLRDYC",
+      "description": "PLL Ready Interrupt Clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 20,
+        "end_bit": 20
+      }
+    },
+    {
+      "name": "CSSC",
+      "description": "Clock security system interrupt clear",
+      "access": "write-only",
+      "bit_number": {
+        "start_bit": 23,
+        "end_bit": 23
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The NMI triggered by the clock security system is executed indefinitely.",
+      "datasheet_text": "Note: Once the CSS is enabled and if the HSE clock fails, the CSS interrupt occurs and an NMI is automatically generated. The NMI will be executed indefinitely unless the CSS interrupt pending bit is cleared. As a consequence, in the NMI ISR user must clear the CSS interrupt by setting the CSSC bit in the Clock interrupt register (RCC_CIR).",
+      "description": "In the NMI interrupt service routine software must clear the CSS interrupt by setting CSSC in RCC_CIR, otherwise the NMI keeps re-triggering.",
+      "involved": [
+        {
+          "register": "RCC_CIR",
+          "field": "CSSC",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CIR",
+          "field": "CSSF",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "CSSF stays set and the interrupt remains pending; writing 0 to CSSC or writing to CSSF has no effect.",
+      "datasheet_text": "Bit 23 CSSC: Clock security system interrupt clear This bit is set by software to clear the CSSF flag. 0: No effect 1: Clear CSSF flag",
+      "description": "CSSF is read-only and can only be cleared by writing 1 to the separate CSSC bit of RCC_CIR.",
+      "involved": [
+        {
+          "register": "RCC_CIR",
+          "field": "CSSF",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CIR",
+          "field": "CSSC",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "PLLRDYF stays set and the PLL ready interrupt remains pending, retriggering the RCC interrupt.",
+      "datasheet_text": "Bit 20 PLLRDYC: PLL ready interrupt clear This bit is set by software to clear the PLLRDYF flag. 0: No effect 1: PLLRDYF cleared",
+      "description": "PLLRDYF is read-only and is cleared only by writing 1 to PLLRDYC in RCC_CIR.",
+      "involved": [
+        {
+          "register": "RCC_CIR",
+          "field": "PLLRDYF",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CIR",
+          "field": "PLLRDYC",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "HSERDYF stays set and the HSE ready interrupt remains pending.",
+      "datasheet_text": "Bit 19 HSERDYC: HSE ready interrupt clear This bit is set by software to clear the HSERDYF flag. 0: No effect 1: HSERDYF cleared",
+      "description": "HSERDYF is read-only and is cleared only by writing 1 to HSERDYC in RCC_CIR.",
+      "involved": [
+        {
+          "register": "RCC_CIR",
+          "field": "HSERDYF",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CIR",
+          "field": "HSERDYC",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "HSIRDYF stays set and the HSI ready interrupt remains pending.",
+      "datasheet_text": "Bit 18 HSIRDYC: HSI ready interrupt clear This bit is set software to clear the HSIRDYF flag. 0: No effect 1: HSIRDYF cleared",
+      "description": "HSIRDYF is read-only and is cleared only by writing 1 to HSIRDYC in RCC_CIR.",
+      "involved": [
+        {
+          "register": "RCC_CIR",
+          "field": "HSIRDYF",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CIR",
+          "field": "HSIRDYC",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "LSERDYF stays set and the LSE ready interrupt remains pending.",
+      "datasheet_text": "Bit 17 LSERDYC: LSE ready interrupt clear This bit is set by software to clear the LSERDYF flag. 0: No effect 1: LSERDYF cleared",
+      "description": "LSERDYF is read-only and is cleared only by writing 1 to LSERDYC in RCC_CIR.",
+      "involved": [
+        {
+          "register": "RCC_CIR",
+          "field": "LSERDYF",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CIR",
+          "field": "LSERDYC",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "LSIRDYF stays set and the LSI ready interrupt remains pending.",
+      "datasheet_text": "Bit 16 LSIRDYC: LSI ready interrupt clear This bit is set by software to clear the LSIRDYF flag. 0: No effect 1: LSIRDYF cleared",
+      "description": "LSIRDYF is read-only and is cleared only by writing 1 to LSIRDYC in RCC_CIR.",
+      "involved": [
+        {
+          "register": "RCC_CIR",
+          "field": "LSIRDYF",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CIR",
+          "field": "LSIRDYC",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "PLLRDYF is never set, so polling it waits forever.",
+      "datasheet_text": "Bit 4 PLLRDYF: PLL ready interrupt flag Set by hardware when the PLL locks and PLLRDYDIE is set. Cleared by software setting the PLLRDYC bit.",
+      "target_register": "RCC_CIR",
+      "target_fields": [
+        "PLLRDYF"
+      ],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register": "RCC_CIR",
+          "field": "PLLRDYIE",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "HSERDYF is never set, so polling it waits forever.",
+      "datasheet_text": "Bit3 HSERDYF: HSE ready interrupt flag Set by hardware when External High Speed clock becomes stable and HSERDYDIE is set. Cleared by software setting the HSERDYC bit.",
+      "target_register": "RCC_CIR",
+      "target_fields": [
+        "HSERDYF"
+      ],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register": "RCC_CIR",
+          "field": "HSERDYIE",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "HSIRDYF is never set, so polling it waits forever.",
+      "datasheet_text": "Bit 2 HSIRDYF: HSI ready interrupt flag Set by hardware when the Internal High Speed clock becomes stable and HSIRDYDIE is set. Cleared by software setting the HSIRDYC bit.",
+      "target_register": "RCC_CIR",
+      "target_fields": [
+        "HSIRDYF"
+      ],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register": "RCC_CIR",
+          "field": "HSIRDYIE",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "LSERDYF is never set, so polling it waits forever.",
+      "datasheet_text": "Bit 1 LSERDYF: LSE ready interrupt flag Set by hardware when the External Low Speed clock becomes stable and LSERDYDIE is set. Cleared by software setting the LSERDYC bit.",
+      "target_register": "RCC_CIR",
+      "target_fields": [
+        "LSERDYF"
+      ],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register": "RCC_CIR",
+          "field": "LSERDYIE",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "LSIRDYF is never set, so polling it waits forever.",
+      "datasheet_text": "Bit 0 LSIRDYF: LSI ready interrupt flag Set by hardware when the internal low speed clock becomes stable and LSIRDYDIE is set. Cleared by software setting the LSIRDYC bit.",
+      "target_register": "RCC_CIR",
+      "target_fields": [
+        "LSIRDYF"
+      ],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register": "RCC_CIR",
+          "field": "LSIRDYIE",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    }
+  ]
+}

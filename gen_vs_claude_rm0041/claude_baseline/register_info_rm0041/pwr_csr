@@ -1,0 +1,167 @@
+{
+  "datasheet_register_abbreviation": "PWR_CSR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "WUF",
+      "description": "Wake-Up Flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "SBF",
+      "description": "STANDBY Flag",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "PVDO",
+      "description": "PVD Output",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "EWUP",
+      "description": "Enable WKUP pin",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "Accesses to the PWR registers have no effect while the PWR interface clock is disabled.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows: \u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register \u2022 set the DBP bit in the Power control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "clock": {
+        "register": "RCC_APB1ENR",
+        "field": "PWREN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "write"
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte (8-bit) accesses are not supported; use 16-bit or 32-bit accesses.",
+      "datasheet_text": "The peripheral registers can be accessed by half-words (16-bit) or words (32-bit).",
+      "description": "PWR_CSR must be accessed with half-word (16-bit) or word (32-bit) accesses only.",
+      "involved": [
+        {
+          "register": "PWR_CSR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "A read of PWR_CSR takes longer than a standard APB read.",
+      "datasheet_text": "Additional APB cycles are needed to read this register versus a standard APB read.",
+      "description": "Reading PWR_CSR requires additional APB cycles compared with a standard APB register read.",
+      "involved": [
+        {
+          "register": "PWR_CSR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "warning",
+      "consequence": "PVDO does not reflect the VDD/VDDA level; it reads 0 until PVDE is set.",
+      "datasheet_text": "This bit is set and cleared by hardware. It is valid only if PVD is enabled by the PVDE bit. Note: The PVD is stopped by Standby mode. For this reason, this bit is equal to 0 after Standby or reset until the PVDE bit is set.",
+      "target_register": "PWR_CSR",
+      "target_fields": [
+        "PVDO"
+      ],
+      "target_operation": "read",
+      "preconditions": [
+        {
+          "register": "PWR_CR",
+          "field": "PVDE",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Writing PWR_CSR cannot clear SBF; the flag stays set.",
+      "datasheet_text": "This bit is set by hardware and cleared only by a POR/PDR (power on reset/power down reset) or by setting the CSBF bit in the Power control register (PWR_CR)",
+      "description": "SBF is read-only in PWR_CSR; to clear it software must write 1 to PWR_CR.CSBF.",
+      "involved": [
+        {
+          "register": "PWR_CSR",
+          "field": "SBF",
+          "whole_register": false
+        },
+        {
+          "register": "PWR_CR",
+          "field": "CSBF",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Writing PWR_CSR cannot clear WUF; the flag stays set.",
+      "datasheet_text": "This bit is set by hardware and cleared by hardware, by a system reset or by setting the CWUF bit in the Power control register (PWR_CR)",
+      "description": "WUF is read-only in PWR_CSR; to clear it software must write 1 to PWR_CR.CWUF.",
+      "involved": [
+        {
+          "register": "PWR_CSR",
+          "field": "WUF",
+          "whole_register": false
+        },
+        {
+          "register": "PWR_CR",
+          "field": "CWUF",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "A spurious wakeup event (WUF set) is detected when EWUP is set while the WKUP pin is already high.",
+      "datasheet_text": "Note: An additional wakeup event is detected if the WKUP pin is enabled (by setting the EWUP bit) when the WKUP pin level is already high.",
+      "description": "Setting EWUP while the WKUP pin is already high generates an additional wakeup event; ensure the pin is low (or clear WUF afterwards via PWR_CR.CWUF) when enabling it.",
+      "involved": [
+        {
+          "register": "PWR_CSR",
+          "field": "EWUP",
+          "whole_register": false
+        },
+        {
+          "register": "PWR_CSR",
+          "field": "WUF",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "datasheet_register_abbreviation": "TIM12_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "MMS",
+      "description": "Master mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "A byte (8-bit) write to the register does not work as expected.",
+      "datasheet_text": "The peripheral registers have to be written by half-words (16 bits) or words (32 bits). Read accesses can be done by bytes (8 bits), half-words (16 bits) or words (32 bits).",
+      "description": "The register must be written by half-words (16 bits) or words (32 bits); byte writes are not allowed. Reads may be 8-, 16- or 32-bit.",
+      "involved": [
+        {
+          "register": "TIM12_CR2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The slave timer or ADC misses or mis-handles the trigger events sent by the master timer.",
+      "datasheet_text": "The clock of the slave timer and ADC must be enabled prior to receiving events from the master timer, and must not be changed on-the-fly while triggers are received from the master timer.",
+      "description": "Before using TIM12 as a master (MMS) for a slave timer or the ADC, the clock of the slave must already be enabled, and it must not be changed while triggers are being received.",
+      "involved": [
+        {
+          "register": "TIM12_CR2",
+          "field": "MMS",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

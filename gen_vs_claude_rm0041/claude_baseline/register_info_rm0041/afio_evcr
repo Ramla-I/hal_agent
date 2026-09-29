@@ -1,0 +1,65 @@
+{
+  "datasheet_register_abbreviation": "AFIO_EVCR",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PIN",
+      "description": "Pin selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "PORT",
+      "description": "Port selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "EVOE",
+      "description": "Event Output Enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "Reads and writes of AFIO_EVCR have no effect while the AFIO clock is disabled.",
+      "datasheet_text": "Note: To read/write the AFIO_EVCR, AFIO_MAPR, AFIO_MAPR2 and AFIO_EXTICRX registers, the AFIO clock should first be enabled. Refer to APB2 peripheral clock enable register (RCC_APB2ENR).",
+      "clock": {
+        "register": "RCC_APB2ENR",
+        "field": "AFIOEN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "write"
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Half-word or byte accesses to AFIO_EVCR are not allowed.",
+      "datasheet_text": "The peripheral registers have to be accessed by words (32-bit).",
+      "description": "AFIO_EVCR must be accessed with 32-bit (word) accesses only.",
+      "involved": [
+        {
+          "register": "AFIO_EVCR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}

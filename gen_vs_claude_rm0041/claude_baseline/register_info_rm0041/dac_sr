@@ -1,0 +1,101 @@
+{
+  "datasheet_register_abbreviation": "DAC_SR",
+  "address_offset": "0x34",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DMAUDR1",
+      "description": "DAC channel1 DMA underrun flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 13,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "DMAUDR2",
+      "description": "DAC channel2 DMA underrun flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 29,
+        "end_bit": 29
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The underrun condition stays flagged and the DMA underrun interrupt is re-entered.",
+      "datasheet_text": "Bit 13 DMAUDR1: DAC channel1 DMA underrun flag\nThis bit is set by hardware and cleared by software (by writing it to 1).",
+      "description": "DMAUDRx is set by hardware and must be cleared by software by writing 1 to it.",
+      "involved": [
+        {
+          "register": "DAC_SR",
+          "field": "DMAUDR1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_SR",
+          "field": "DMAUDR2",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The DAC channel keeps converting old data and no further DMA request is served until the recovery sequence is performed.",
+      "datasheet_text": "The software should clear the DMAUDRx flag by writing \u201c1\u201d, clear the DMAEN bit of the used DMA stream and re-initialize both DMA and DAC channelx to restart the transfer correctly. The software should modify the DAC trigger conversion frequency or lighten the DMA workload to avoid a new DMA underrun. Finally, the DAC conversion could be resumed by enabling both DMA data transfer and conversion trigger.",
+      "steps": [
+        {
+          "register": "DAC_SR",
+          "operation": "write"
+        },
+        {
+          "register": "DAC_CR",
+          "operation": "write"
+        },
+        {
+          "register": "DAC_CR",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "DAC_CR",
+        "field": "DMAEN1",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The DAC output freezes on the last converted sample.",
+      "datasheet_text": "The DAC DMA request is not queued so that if a second external trigger arrives before the acknowledgement for the first external trigger is received (first request), then no new request is issued and the DMA channelx underrun flag DMAUDRx in the DAC_SR register is set, reporting the error condition. DMA data transfers are then disabled and no further DMA request is treated. The DAC channelx continues to convert old data.",
+      "description": "Once a DMA underrun is flagged, DMA data transfers are disabled and no further DMA request is served; the channel keeps converting the old data until software re-initializes DMA and DAC.",
+      "involved": [
+        {
+          "register": "DAC_SR",
+          "field": "DMAUDR1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_SR",
+          "field": "DMAUDR2",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "DMAEN1",
+          "whole_register": false
+        },
+        {
+          "register": "DAC_CR",
+          "field": "DMAEN2",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

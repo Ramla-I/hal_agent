@@ -1,0 +1,102 @@
+{
+  "datasheet_register_abbreviation": "SPI3_CR2",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "RXDMAEN",
+      "description": "Rx buffer DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "TXDMAEN",
+      "description": "Tx buffer DMA enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "SSOE",
+      "description": "SS output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "ERRIE",
+      "description": "Error interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "RXNEIE",
+      "description": "RX buffer not empty interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "TXEIE",
+      "description": "Tx buffer empty interrupt enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte (8-bit) accesses to the SPI registers are not supported.",
+      "datasheet_text": "The peripheral registers have to be accessed by half-words (16 bits) or words (32 bits).",
+      "description": "SPI registers must be accessed with 16-bit or 32-bit accesses only.",
+      "involved": [
+        {
+          "register": "SPI3_CR2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Without waiting for TXE=1 and then BSY=0, the last transmission is corrupted when the SPI is disabled or Stop mode is entered.",
+      "datasheet_text": "In transmission mode, when the DMA has written all the data to be transmitted (flag TCIF is set in the DMA_ISR register), the BSY flag can be monitored to ensure that the SPI communication is complete. This is required to avoid corrupting the last transmission before disabling the SPI or entering the Stop mode. The software must first wait until TXE=1 and then until BSY=0.",
+      "description": "When transmitting with TXDMAEN set, software must wait for TXE=1 and then BSY=0 after the DMA transfer complete flag before disabling the SPI or entering Stop mode.",
+      "involved": [
+        {
+          "register": "SPI3_CR2",
+          "field": "TXDMAEN",
+          "whole_register": false
+        },
+        {
+          "register": "SPI3_SR",
+          "field": "TXE",
+          "whole_register": false
+        },
+        {
+          "register": "SPI3_SR",
+          "field": "BSY",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

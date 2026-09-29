@@ -1,0 +1,27 @@
+{
+  "datasheet_register_abbreviation": "SCB_SHPR3",
+  "address_offset": "0x20",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "PRI_14",
+      "description": "Priority of system handler 14",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 23
+      }
+    },
+    {
+      "name": "PRI_15",
+      "description": "Priority of system handler 15",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

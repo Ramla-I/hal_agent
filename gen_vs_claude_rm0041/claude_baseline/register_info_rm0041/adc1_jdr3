@@ -1,0 +1,57 @@
+{
+  "datasheet_register_abbreviation": "ADC1_JDR3",
+  "address_offset": "0x44",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "JDATA",
+      "description": "Injected data",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte or half-word accesses to ADC registers are not supported and may return or write incorrect data.",
+      "datasheet_text": "The peripheral registers have to be accessed by words (32-bit).",
+      "description": "All ADC registers must be accessed with 32-bit (word) read/write accesses only.",
+      "involved": [
+        {
+          "register": "ADC1_JDR3",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Interpreting the result without taking ALIGN and the JOFRx offset into account gives a wrong value; the result may be negative.",
+      "datasheet_text": "The injected group channels converted data value is decreased by the user-defined offset written in the ADC_JOFRx registers so the result can be a negative value. The SEXT bit is the extended sign value.",
+      "description": "ADC_JDRx is read-only; its content is the raw conversion result minus the offset programmed in ADC_JOFRx, sign-extended, and aligned according to the ALIGN bit of ADC_CR2.",
+      "involved": [
+        {
+          "register": "ADC1_JDR3",
+          "field": "JDATA",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_JOFR3",
+          "field": "JOFFSET3",
+          "whole_register": false
+        },
+        {
+          "register": "ADC1_CR2",
+          "field": "ALIGN",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

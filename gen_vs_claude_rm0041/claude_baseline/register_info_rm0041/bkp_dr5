@@ -1,0 +1,158 @@
+{
+  "datasheet_register_abbreviation": "BKP_DR5",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "D5",
+      "description": "Backup data",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "Accesses to the backup registers have no effect while the backup interface clock is disabled.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows: \u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register \u2022 set the DBP bit in the Power control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "clock": {
+        "register": "RCC_APB1ENR",
+        "field": "BKPEN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "write"
+      }
+    },
+    {
+      "kind": "clock_gate",
+      "severity": "error",
+      "consequence": "PWR_CR.DBP cannot be set (PWR clock off), so the backup registers stay write-protected.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows: \u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register \u2022 set the DBP bit in the Power control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "clock": {
+        "register": "RCC_APB1ENR",
+        "field": "PWREN",
+        "whole_register": false,
+        "state": "set",
+        "established_by": "software",
+        "action_operation": "write"
+      }
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the backup domain register is ignored (backup domain is write-protected).",
+      "datasheet_text": "In reset state, the RTC and backup registers are protected against parasitic write access. This bit must be set to enable write access to these registers.",
+      "target_register": "BKP_DR5",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "PWR_CR",
+          "field": "DBP",
+          "whole_register": false,
+          "state": "set",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "Write accesses to the backup registers are ignored.",
+      "datasheet_text": "After reset, access to the Backup registers and RTC is disabled and the Backup domain (BKP) is protected against possible parasitic write access. To enable access to the Backup registers and the RTC, proceed as follows: \u2022 enable the power and backup interface clocks by setting the PWREN and BKPEN bits in the RCC_APB1ENR register \u2022 set the DBP bit in the Power control register (PWR_CR) to enable access to the Backup registers and RTC.",
+      "steps": [
+        {
+          "register": "RCC_APB1ENR",
+          "operation": "write"
+        },
+        {
+          "register": "PWR_CR",
+          "operation": "write"
+        },
+        {
+          "register": "BKP_DR5",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "BKP_DR5",
+        "field": "",
+        "whole_register": true
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte (8-bit) accesses are not supported; use 16-bit or 32-bit accesses.",
+      "datasheet_text": "The peripheral registers can be accessed by half-words (16-bit) or words (32-bit).",
+      "description": "BKP_DR5 must be accessed with half-word (16-bit) or word (32-bit) accesses only.",
+      "involved": [
+        {
+          "register": "BKP_DR5",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The written value is not stored (register held in reset while TEF is set).",
+      "datasheet_text": "Note: A Tamper event resets all the BKP_DRx registers. They are held in reset as long as the TEF bit is set. If a write to the BKP_DRx registers is performed while this bit is set, the value will not be stored.",
+      "target_register": "BKP_DR5",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "BKP_CSR",
+          "field": "TEF",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "sequence",
+      "severity": "warning",
+      "consequence": "Data may be written while the TAMPER pin still indicates a tamper condition and be lost by a new tamper reset.",
+      "datasheet_text": "After a Tamper event has been detected and cleared, the TAMPER pin should be disabled and then re-enabled with TPE before writing to the backup data registers (BKP_DRx) again. This prevents software from writing to the backup data registers (BKP_DRx), while the TAMPER pin value still indicates a Tamper detection. This is equivalent to a level detection on the TAMPER pin.",
+      "steps": [
+        {
+          "register": "BKP_CSR",
+          "operation": "write",
+          "value": 1
+        },
+        {
+          "register": "BKP_CR",
+          "operation": "write",
+          "value": 0
+        },
+        {
+          "register": "BKP_CR",
+          "operation": "write",
+          "value": 1
+        },
+        {
+          "register": "BKP_DR5",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "BKP_DR5",
+        "field": "",
+        "whole_register": true
+      }
+    }
+  ]
+}

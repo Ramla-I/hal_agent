@@ -1,0 +1,45 @@
+{
+  "datasheet_register_abbreviation": "STK_CTRL",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "ENABLE",
+      "description": "Counter enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "TICKINT",
+      "description": "SysTick exception request enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "CLKSOURCE",
+      "description": "Clock source selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "COUNTFLAG",
+      "description": "COUNTFLAG",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

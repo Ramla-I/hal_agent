@@ -1,0 +1,255 @@
+{
+  "datasheet_register_abbreviation": "TIM15_CCER",
+  "address_offset": "0x20",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CC1E",
+      "description": "Capture/Compare 1 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "CC1P",
+      "description": "Capture/Compare 1 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "CC1NE",
+      "description": "Capture/Compare 1 complementary output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "CC1NP",
+      "description": "Capture/Compare 1 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "CC2E",
+      "description": "Capture/Compare 2 output enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "CC2P",
+      "description": "Capture/Compare 2 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 5
+      }
+    },
+    {
+      "name": "CC2NP",
+      "description": "Capture/Compare 2 output Polarity",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the CC polarity bit is ignored.",
+      "datasheet_text": "This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register).",
+      "target_register": "TIM15_CCER",
+      "target_fields": [
+        "CC1P"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the CC complementary polarity bit is ignored.",
+      "datasheet_text": "This bit is not writable as soon as LOCK level 2 or 3 has been programmed (LOCK bits in TIMx_BDTR register) and CC1S=\u201d00\u201d (the channel is configured in output).",
+      "target_register": "TIM15_CCER",
+      "target_fields": [
+        "CC1NP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to the CCxP/CCxNP polarity bits is ignored.",
+      "datasheet_text": "10: LOCK Level 2 = LOCK Level 1 + CC Polarity bits (CCxP/CCxNP bits in TIMx_CCER register, as long as the related channel is configured in output through the CCxS bits) as well as OSSR and OSSI bits can no longer be written.",
+      "target_register": "TIM15_CCER",
+      "target_fields": [
+        "CC1P",
+        "CC2P",
+        "CC1NP",
+        "CC2NP"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM15_BDTR",
+          "field": "LOCK",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            1
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The channel enable/disable does not take effect until a COM event occurs.",
+      "datasheet_text": "1: CCxE, CCxNE and OCxM bits are preloaded, after having been written, they are updated only when COM bit is set.",
+      "description": "When CCPC=1 (TIMx_CR2) the CCxE and CCxNE bits are preloaded; writes to them are only taken into account when a COM event occurs.",
+      "involved": [
+        {
+          "register": "TIM15_CR2",
+          "field": "CCPC",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_EGR",
+          "field": "COMG",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Unexpected levels are driven on the unused outputs.",
+      "datasheet_text": "When both outputs of a channel are not used (CCxE = CCxNE = 0), the OISx, OISxN, CCxP and CCxNP bits must be kept cleared.",
+      "description": "When both outputs of a channel are not used (CCxE = CCxNE = 0) the CCxP and CCxNP bits (and OISx/OISxN) must be kept cleared.",
+      "involved": [
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1P",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1NP",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "No dead-time is inserted between the complementary outputs.",
+      "datasheet_text": "Dead-time insertion is enabled by setting both CCxE and CCxNE bits, and the MOE bit if the break circuit is present.",
+      "description": "Dead-time insertion requires CCxE and CCxNE to be set as well as MOE in TIMx_BDTR.",
+      "involved": [
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1E",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1NE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_BDTR",
+          "field": "MOE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Undefined edge/polarity selection for the input capture and trigger circuitry.",
+      "datasheet_text": "10: reserved, do not use this configuration.",
+      "description": "When the channel is configured as input, the CC1NP/CC1P combination 10 is reserved and must not be programmed.",
+      "involved": [
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1P",
+          "whole_register": false
+        },
+        {
+          "register": "TIM15_CCER",
+          "field": "CC1NP",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

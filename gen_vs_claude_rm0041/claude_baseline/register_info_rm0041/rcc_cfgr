@@ -1,0 +1,396 @@
+{
+  "datasheet_register_abbreviation": "RCC_CFGR",
+  "address_offset": "0x04",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SW",
+      "description": "System clock Switch",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "SWS",
+      "description": "System Clock Switch Status",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "HPRE",
+      "description": "AHB prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "PPRE1",
+      "description": "APB Low speed prescaler (APB1)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "PPRE2",
+      "description": "APB High speed prescaler (APB2)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 13
+      }
+    },
+    {
+      "name": "ADCPRE",
+      "description": "ADC prescaler",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 15
+      }
+    },
+    {
+      "name": "PLLSRC",
+      "description": "PLL entry clock source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 16
+      }
+    },
+    {
+      "name": "PLLXTPRE",
+      "description": "HSE divider for PLL entry",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 17,
+        "end_bit": 17
+      }
+    },
+    {
+      "name": "PLLMUL",
+      "description": "PLL Multiplication Factor",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 18,
+        "end_bit": 21
+      }
+    },
+    {
+      "name": "MCO",
+      "description": "Microcontroller clock output",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 24,
+        "end_bit": 26
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to PLLMUL is ignored while the PLL is enabled; the PLL keeps its previous multiplication factor.",
+      "datasheet_text": "These bits are written by software to define the PLL multiplication factor. These bits can be written only when PLL is disabled.",
+      "target_register": "RCC_CFGR",
+      "target_fields": [
+        "PLLMUL"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "RCC_CR",
+          "field": "PLLON",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to PLLXTPRE is ignored while the PLL is enabled; the PREDIV1 division factor is unchanged.",
+      "datasheet_text": "Set and cleared by software to select the least significant bit of the PREDIV1 division factor. It is the same bit as bit 0 in the RCC_CFGR2 register, so modifying bit 0 in the RCC_CFGR2 register changes this bit accordingly. If bits[3:1] in the RCC_CFGR2 register are not set, the PLLXTPRE bit controls if PREDIV1 divides its input clock by 2 (PLLXTPRE=1) or not (PLLXTPRE=0). This bit can be written only when the PLL is disabled.",
+      "target_register": "RCC_CFGR",
+      "target_fields": [
+        "PLLXTPRE"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "RCC_CR",
+          "field": "PLLON",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write to PLLSRC is ignored while the PLL is enabled; the PLL keeps its previous input clock source.",
+      "datasheet_text": "Set and cleared by software to select PLL clock source. This bit can be written only when PLL is disabled.",
+      "target_register": "RCC_CFGR",
+      "target_fields": [
+        "PLLSRC"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "RCC_CR",
+          "field": "PLLON",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "A write to RCC_CFGR2 bit 0 silently changes RCC_CFGR.PLLXTPRE (and vice versa), so a read-modify-write of one register can appear to corrupt the other.",
+      "datasheet_text": "It is the same bit as bit 0 in the RCC_CFGR2 register, so modifying bit 0 in the RCC_CFGR2 register changes this bit accordingly.",
+      "description": "PLLXTPRE (RCC_CFGR bit 17) and PREDIV1 bit 0 (RCC_CFGR2 bit 0) are physically the same bit; writing either location changes both.",
+      "involved": [
+        {
+          "register": "RCC_CFGR",
+          "field": "PLLXTPRE",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR2",
+          "field": "PREDIV1",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "If PREDIV1[3:1] are not zero, PLLXTPRE is only the LSB of the PREDIV1 field and does not act as a simple divide-by-2 control, so the resulting PLL input frequency differs from the expected one.",
+      "datasheet_text": "If bits[3:1] in the RCC_CFGR2 register are not set, the PLLXTPRE bit controls if PREDIV1 divides its input clock by 2 (PLLXTPRE=1) or not (PLLXTPRE=0).",
+      "description": "PLLXTPRE has its legacy divide-by-1/divide-by-2 meaning only while RCC_CFGR2 PREDIV1[3:1] = 0; otherwise it is simply the LSB of PREDIV1.",
+      "involved": [
+        {
+          "register": "RCC_CFGR",
+          "field": "PLLXTPRE",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR2",
+          "field": "PREDIV1",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "A PLL output outside 16-24 MHz is out of specification; the PLL may not lock or the device may not operate correctly.",
+      "datasheet_text": "Caution: The PLL output frequency must be in the 16-24 MHz range.",
+      "fields": [
+        {
+          "register": "RCC_CFGR",
+          "field": "PLLMUL",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR",
+          "field": "PLLSRC",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR",
+          "field": "PLLXTPRE",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR2",
+          "field": "PREDIV1",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "The PLL may fail to lock or produce an out-of-specification clock.",
+      "datasheet_text": "Note: The PLL output frequency must be in the range of 16-24 MHz.",
+      "fields": [
+        {
+          "register": "RCC_CFGR",
+          "field": "PLLMUL",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR",
+          "field": "PLLSRC",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR2",
+          "field": "PREDIV1",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "The APB1 domain is clocked above its maximum frequency and the peripherals on it may malfunction.",
+      "datasheet_text": "Warning: the software has to set correctly these bits to not exceed 36 MHz on this domain.",
+      "fields": [
+        {
+          "register": "RCC_CFGR",
+          "field": "PPRE1",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR",
+          "field": "HPRE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "value_relation",
+      "severity": "error",
+      "consequence": "Clocking AHB, APB1 or APB2 above 24 MHz is out of specification and the device may malfunction.",
+      "datasheet_text": "Several prescalers allow the configuration of the AHB frequency, the high speed APB (APB2) and the low speed APB (APB1) domains. The maximum frequency of the AHB, APB1 and APB2 domains is 24 MHz.",
+      "fields": [
+        {
+          "register": "RCC_CFGR",
+          "field": "HPRE",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR",
+          "field": "PPRE1",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR",
+          "field": "PPRE2",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The system clock switch does not take effect when the write is performed; it happens later, when the selected source becomes ready, so code assuming the new frequency immediately after writing SW runs at the old frequency.",
+      "datasheet_text": "A switch from one clock source to another occurs only if the target clock source is ready (clock stable after startup delay or PLL locked). If a clock source which is not yet ready is selected, the switch will occur when the clock source will be ready. Status bits in the Clock control register (RCC_CR) indicate which clock(s) is (are) ready and which clock is currently used as system clock.",
+      "description": "Before (or after) writing SW, software must check the ready flag of the target clock source (HSIRDY/HSERDY/PLLRDY) and confirm the switch by reading SWS, because the switch is postponed until the target source is ready.",
+      "involved": [
+        {
+          "register": "RCC_CFGR",
+          "field": "SW",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR",
+          "field": "SWS",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CR",
+          "field": "HSIRDY",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CR",
+          "field": "HSERDY",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CR",
+          "field": "PLLRDY",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Programming the reserved combination gives undefined system clock selection.",
+      "datasheet_text": "Bits 1:0 SW: System clock switch Set and cleared by software to select SYSCLK source. Set by hardware to force HSI selection when leaving Stop and Standby mode or in case of failure of the HSE oscillator used directly or indirectly as system clock (if the Clock Security System is enabled). 00: HSI selected as system clock 01: HSE selected as system clock 10: PLL selected as system clock 11: not allowed",
+      "description": "SW must not be written with the value 11 (not allowed); only 00, 01 and 10 are valid system clock selections.",
+      "involved": [
+        {
+          "register": "RCC_CFGR",
+          "field": "SW",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Software may read back a system clock source it did not select, because hardware forces HSI after Stop/Standby or on HSE failure.",
+      "datasheet_text": "Set by hardware to force HSI selection when leaving Stop and Standby mode or in case of failure of the HSE oscillator used directly or indirectly as system clock (if the Clock Security System is enabled).",
+      "description": "SW is overwritten by hardware (HSI selected) when leaving Stop/Standby mode or on a CSS-detected HSE failure; software must re-select the wanted source afterwards.",
+      "involved": [
+        {
+          "register": "RCC_CFGR",
+          "field": "SW",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CFGR",
+          "field": "SWS",
+          "whole_register": false
+        },
+        {
+          "register": "RCC_CR",
+          "field": "CSSON",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Without the GPIO port configured in alternate function mode no clock appears on the MCO pin.",
+      "datasheet_text": "The microcontroller clock output (MCO) capability allows the clock to be output onto the external MCO pin. The configuration registers of the corresponding GPIO port must be programmed in alternate function mode. One of 4 clock signals can be selected as the MCO clock.",
+      "description": "Before using MCO, the GPIO port configuration registers of the MCO pin must be programmed in alternate function mode.",
+      "involved": [
+        {
+          "register": "RCC_CFGR",
+          "field": "MCO",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The MCO output may present truncated clock cycles right after enabling it or when changing its source.",
+      "datasheet_text": "Note: This clock output may have some truncated cycles at startup or during MCO clock source switching.",
+      "description": "Consumers of the MCO signal must tolerate truncated cycles at startup and while the MCO source selection is being changed.",
+      "involved": [
+        {
+          "register": "RCC_CFGR",
+          "field": "MCO",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

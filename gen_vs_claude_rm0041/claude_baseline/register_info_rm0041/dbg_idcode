@@ -1,0 +1,56 @@
+{
+  "datasheet_register_abbreviation": "DBG_IDCODE",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "DEV_ID",
+      "description": "DEV_ID",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "REV_ID",
+      "description": "REV_ID",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 16,
+        "end_bit": 31
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Non-32-bit accesses are not supported; writes have no effect.",
+      "datasheet_text": "Only 32-bits access supported. Read-only.",
+      "description": "DBGMCU_IDCODE (DBG_IDCODE) must be read with 32-bit accesses only and is read-only.",
+      "involved": [
+        {
+          "register": "DBG_IDCODE",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "Device identification based on REV_ID or reserved bits may fail across revisions.",
+      "datasheet_text": "Only the DEV_ID[11:0] must be used for identification by the debugger/programmer tools.",
+      "description": "Use only DEV_ID[11:0] for device identification.",
+      "involved": [
+        {
+          "register": "DBG_IDCODE",
+          "field": "DEV_ID",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

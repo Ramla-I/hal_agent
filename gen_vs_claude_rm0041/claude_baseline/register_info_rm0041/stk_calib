@@ -1,0 +1,18 @@
+{
+  "datasheet_register_abbreviation": "STK_CALIB",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "TENMS",
+      "description": "Calibration value",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 23
+      }
+    }
+  ],
+  "access_constraints_v2": []
+}

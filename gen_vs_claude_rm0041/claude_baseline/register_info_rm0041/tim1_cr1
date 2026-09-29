@@ -1,0 +1,303 @@
+{
+  "datasheet_register_abbreviation": "TIM1_CR1",
+  "address_offset": "0x00",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "CEN",
+      "description": "Counter enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "UDIS",
+      "description": "Update disable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "URS",
+      "description": "Update request source",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "OPM",
+      "description": "One-pulse mode",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "DIR",
+      "description": "Direction",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "CMS",
+      "description": "Center-aligned mode selection",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 5,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "ARPE",
+      "description": "Auto-reload preload enable",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "CKD",
+      "description": "Clock division",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 9
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Switching CMS from edge-aligned to center-aligned mode while the counter runs is not allowed and leads to unpredictable counter behaviour.",
+      "datasheet_text": "Note: It is not allowed to switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1)",
+      "target_register": "TIM1_CR1",
+      "target_fields": [
+        "CMS"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_CR1",
+          "field": "CEN",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "In center-aligned mode or encoder mode DIR is read-only (driven by hardware); the write is ignored.",
+      "datasheet_text": "Note: This bit is read only when the timer is configured in Center-aligned mode or Encoder mode.",
+      "target_register": "TIM1_CR1",
+      "target_fields": [
+        "DIR"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "TIM1_CR1",
+          "field": "CMS",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        },
+        {
+          "register": "TIM1_SMCR",
+          "field": "SMS",
+          "whole_register": false,
+          "state": "equals",
+          "values": [
+            0,
+            4,
+            5,
+            6,
+            7
+          ],
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "DIR is driven by hardware in center-aligned mode; a software write has no effect.",
+      "datasheet_text": "In this mode, the DIR direction bit in the TIMx_CR1 register cannot be written. It is updated by hardware and gives the current direction of the counter.",
+      "description": "While center-aligned mode is selected (CMS != 00) the DIR bit must not be written by software; it is updated by hardware.",
+      "involved": [
+        {
+          "register": "TIM1_CR1",
+          "field": "DIR",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CR1",
+          "field": "CMS",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "In encoder mode DIR is overwritten by hardware at each input transition, so software values are lost.",
+      "datasheet_text": "Depending on the sequence the counter counts up or down, the DIR bit in the TIMx_CR1 register is modified by hardware accordingly.",
+      "description": "In encoder interface mode (SMS=001/010/011) DIR is modified by hardware and must not be written by software.",
+      "involved": [
+        {
+          "register": "TIM1_CR1",
+          "field": "DIR",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_SMCR",
+          "field": "SMS",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Changing DIR and CMS in the same write access can lead to an unexpected counting direction.",
+      "datasheet_text": "Moreover, the DIR and CMS bits must not be changed at the same time by the software.",
+      "description": "DIR and CMS must not be modified in the same write access; they must be changed one after the other.",
+      "involved": [
+        {
+          "register": "TIM1_CR1",
+          "field": "DIR",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CR1",
+          "field": "CMS",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "External clock mode 1, gated mode and encoder mode do not start counting if CEN was not previously set by software.",
+      "datasheet_text": "Note: External clock, gated mode and encoder mode can work only if the CEN bit has been previously set by software. However trigger mode can set the CEN bit automatically by hardware.",
+      "description": "CEN must be set by software before external clock mode, gated mode or encoder mode can operate (only trigger mode sets CEN by hardware).",
+      "involved": [
+        {
+          "register": "TIM1_CR1",
+          "field": "CEN",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_SMCR",
+          "field": "SMS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_SMCR",
+          "field": "ECE",
+          "whole_register": false
+        }
+      ]
+    },
+    {
+      "kind": "delay",
+      "severity": "warning",
+      "consequence": "The first counter increment is seen only one clock cycle after CEN has been set; reading CNT immediately still returns the old value.",
+      "datasheet_text": "Note that the counter starts counting 1 clock cycle after setting the CEN bit in the TIMx_CR1 register.",
+      "after": {
+        "register": "TIM1_CR1",
+        "operation": "write"
+      },
+      "duration": {
+        "value": 1,
+        "unit": "cycles_apb"
+      },
+      "before": {
+        "register": "TIM1_CNT",
+        "field": "CNT",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "sequence",
+      "severity": "warning",
+      "consequence": "If UDIS is not used, an update event occurring in the middle of the reprogramming sequence transfers a partially updated set of preload values into the shadow registers.",
+      "datasheet_text": "The UEV event can be disabled by software by setting the UDIS bit in the TIMx_CR1 register. This is to avoid updating the shadow registers while writing new values in the preload registers. Then no update event occurs until the UDIS bit has been written to 0.",
+      "steps": [
+        {
+          "register": "TIM1_CR1",
+          "operation": "write"
+        },
+        {
+          "register": "TIM1_ARR",
+          "operation": "write"
+        },
+        {
+          "register": "TIM1_CR1",
+          "operation": "write"
+        }
+      ],
+      "enables": {
+        "register": "TIM1_CR1",
+        "field": "UDIS",
+        "whole_register": false
+      }
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Without ARPE (and OCxPE) set, the PWM period and duty cycle registers are not buffered and the waveform can be corrupted when they are changed on the fly.",
+      "datasheet_text": "The corresponding preload register must be enabled by setting the OCxPE bit in the TIMx_CCMRx register, and eventually the auto-reload preload register (in upcounting or center-aligned modes) by setting the ARPE bit in the TIMx_CR1 register.",
+      "description": "For PWM mode the OCxPE bits must be set and, in upcounting or center-aligned mode, ARPE must be set so that TIMx_ARR and TIMx_CCRx are buffered.",
+      "involved": [
+        {
+          "register": "TIM1_CR1",
+          "field": "ARPE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR1",
+          "field": "OC1PE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR1",
+          "field": "OC2PE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC3PE",
+          "whole_register": false
+        },
+        {
+          "register": "TIM1_CCMR2",
+          "field": "OC4PE",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

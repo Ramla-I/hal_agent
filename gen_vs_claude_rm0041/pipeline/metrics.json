@@ -1,0 +1,21 @@
+{
+  "model": "openai/gpt-oss-120b",
+  "evolved_program": "/home/ramla/hal_agent-retrieval/openevolve_retrieval/v6_rm0041_seed42_labelfix/best/best_program.py",
+  "variant": "enums_dropped + query_name_reconciled",
+  "query_names_reconciled": 32,
+  "max_completion_tokens": 8000,
+  "max_retries": 5,
+  "registers_attempted": 589,
+  "registers_written": 429,
+  "empty_retrieval": 0,
+  "no_json": 160,
+  "still_failing": 0,
+  "truncated_finish_length": 0,
+  "prompt_tokens": 3724859,
+  "cached_input_tokens": 2323200,
+  "completion_tokens": 793654,
+  "cost_usd_est": 0.8607,
+  "embeddings": "FastEmbed local ($0)",
+  "setup_seconds": 2.0,
+  "generate_seconds": 2671.1
+}

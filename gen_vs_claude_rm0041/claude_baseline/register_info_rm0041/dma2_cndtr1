@@ -1,0 +1,80 @@
+{
+  "datasheet_register_abbreviation": "DMA2_CNDTR1",
+  "address_offset": "0x0C",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "NDT",
+      "description": "Number of data to transfer",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "The write is ignored: once the channel is enabled the register is read-only and returns the remaining number of data to be transferred.",
+      "datasheet_text": "Number of data to be transferred (0 up to 65535). This register can only be written when the channel is disabled. Once the channel is enabled, this register is read-only, indicating the remaining bytes to be transmitted.",
+      "target_register": "DMA2_CNDTR1",
+      "target_fields": [],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "DMA2_CCR1",
+          "field": "EN",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "A new number of data items cannot be loaded and no further DMA request is served.",
+      "datasheet_text": "If the channel is configured in non-circular mode, no DMA request is served after the last transfer (that is once the number of data items to be transferred has reached zero). In order to reload a new number of data items to be transferred into the DMA_CNDTRx register, the DMA channel must be disabled.",
+      "target_register": "DMA2_CNDTR1",
+      "target_fields": [
+        "NDT"
+      ],
+      "target_operation": "write",
+      "preconditions": [
+        {
+          "register": "DMA2_CCR1",
+          "field": "EN",
+          "whole_register": false,
+          "state": "cleared",
+          "established_by": "software",
+          "action_operation": "write"
+        }
+      ],
+      "postconditions": []
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "No DMA transfer takes place even though the channel is enabled.",
+      "datasheet_text": "If this register is zero, no transaction can be served whether the channel is enabled or not.",
+      "description": "DMA_CNDTRx must be programmed with a non-zero number of data items before enabling the channel, otherwise no transaction is served.",
+      "involved": [
+        {
+          "register": "DMA2_CNDTR1",
+          "field": "NDT",
+          "whole_register": false
+        },
+        {
+          "register": "DMA2_CCR1",
+          "field": "EN",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

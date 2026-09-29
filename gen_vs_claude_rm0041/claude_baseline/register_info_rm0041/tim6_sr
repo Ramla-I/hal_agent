@@ -1,0 +1,48 @@
+{
+  "datasheet_register_abbreviation": "TIM6_SR",
+  "address_offset": "0x10",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "UIF",
+      "description": "Update interrupt flag",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "If UIF is not cleared the update interrupt is re-entered continuously.",
+      "datasheet_text": "Bit 0 UIF: Update interrupt flag\nThis bit is set by hardware on an update event. It is cleared by software.\n0: No update occurred.\n1: Update interrupt pending. This bit is set by hardware when the registers are updated:\n\u2013At overflow or underflow and if UDIS = 0 in the TIMx_CR1 register.\n\u2013 When CNT is reinitialized by software using the UG bit in the TIMx_EGR register, if URS = 0 and UDIS = 0 in the TIMx_CR1 register.",
+      "description": "UIF is set by hardware on an update event and must be cleared by software by writing 0 to it (rc_w0). It is only set at overflow when UDIS = 0, and on a software UG update only when URS = 0 and UDIS = 0.",
+      "involved": [
+        {
+          "register": "TIM6_SR",
+          "field": "UIF",
+          "whole_register": false
+        },
+        {
+          "register": "TIM6_CR1",
+          "field": "UDIS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM6_CR1",
+          "field": "URS",
+          "whole_register": false
+        },
+        {
+          "register": "TIM6_EGR",
+          "field": "UG",
+          "whole_register": false
+        }
+      ]
+    }
+  ]
+}

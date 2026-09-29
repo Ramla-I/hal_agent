@@ -1,0 +1,1 @@
+{"datasheet_register_abbreviation": "BKP_DR27", "address_offset": null, "reset_value": null, "size": null, "subfields": [{"name": "D[15:0]", "description": "Backup data", "access": "read-write", "bit_number": {"start_bit": 0, "end_bit": 15}}], "access_constraints_v2": []}

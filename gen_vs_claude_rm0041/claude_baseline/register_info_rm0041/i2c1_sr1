@@ -1,0 +1,345 @@
+{
+  "datasheet_register_abbreviation": "I2C1_SR1",
+  "address_offset": "0x14",
+  "reset_value": "0x00000000",
+  "size": 32,
+  "subfields": [
+    {
+      "name": "SB",
+      "description": "Start bit (Master mode)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 0,
+        "end_bit": 0
+      }
+    },
+    {
+      "name": "ADDR",
+      "description": "Address sent (master mode)/matched (slave mode)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 1,
+        "end_bit": 1
+      }
+    },
+    {
+      "name": "BTF",
+      "description": "Byte transfer finished",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 2,
+        "end_bit": 2
+      }
+    },
+    {
+      "name": "ADD10",
+      "description": "10-bit header sent (Master mode)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 3,
+        "end_bit": 3
+      }
+    },
+    {
+      "name": "STOPF",
+      "description": "Stop detection (slave mode)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 4,
+        "end_bit": 4
+      }
+    },
+    {
+      "name": "RxNE",
+      "description": "Data register not empty (receivers)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 6,
+        "end_bit": 6
+      }
+    },
+    {
+      "name": "TxE",
+      "description": "Data register empty (transmitters)",
+      "access": "read-only",
+      "bit_number": {
+        "start_bit": 7,
+        "end_bit": 7
+      }
+    },
+    {
+      "name": "BERR",
+      "description": "Bus error",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 8,
+        "end_bit": 8
+      }
+    },
+    {
+      "name": "ARLO",
+      "description": "Arbitration lost (master mode)",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 9,
+        "end_bit": 9
+      }
+    },
+    {
+      "name": "AF",
+      "description": "Acknowledge failure",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 10,
+        "end_bit": 10
+      }
+    },
+    {
+      "name": "OVR",
+      "description": "Overrun/Underrun",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 11,
+        "end_bit": 11
+      }
+    },
+    {
+      "name": "PECERR",
+      "description": "PEC Error in reception",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 12,
+        "end_bit": 12
+      }
+    },
+    {
+      "name": "TIMEOUT",
+      "description": "Timeout or Tlow error",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 14,
+        "end_bit": 14
+      }
+    },
+    {
+      "name": "SMBALERT",
+      "description": "SMBus alert",
+      "access": "read-write",
+      "bit_number": {
+        "start_bit": 15,
+        "end_bit": 15
+      }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The ADDR flag stays set and the interface keeps stretching SCL low.",
+      "datasheet_text": "This bit is cleared by software reading SR1 register followed reading SR2, or by hardware when PE=0.",
+      "steps": [
+        {
+          "register": "I2C1_SR1",
+          "operation": "read"
+        },
+        {
+          "register": "I2C1_SR2",
+          "operation": "read"
+        }
+      ],
+      "enables": null
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The STOPF flag stays set and the interface keeps stretching SCL low.",
+      "datasheet_text": "Cleared by software reading the SR1 register followed by a write in the CR1 register, or by hardware when PE=0",
+      "steps": [
+        {
+          "register": "I2C1_SR1",
+          "operation": "read"
+        },
+        {
+          "register": "I2C1_CR1",
+          "operation": "write"
+        }
+      ],
+      "enables": null
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The SB flag stays set and the master keeps stretching SCL low waiting for the address.",
+      "datasheet_text": "Cleared by software by reading the SR1 register followed by writing the DR register, or by hardware when PE=0",
+      "steps": [
+        {
+          "register": "I2C1_SR1",
+          "operation": "read"
+        },
+        {
+          "register": "I2C1_DR",
+          "operation": "write"
+        }
+      ],
+      "enables": null
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The ADD10 flag stays set and the 10-bit addressing sequence does not progress.",
+      "datasheet_text": "Cleared by software reading the SR1 register followed by a write in the DR register of the second address byte, or by hardware when PE=0.",
+      "steps": [
+        {
+          "register": "I2C1_SR1",
+          "operation": "read"
+        },
+        {
+          "register": "I2C1_DR",
+          "operation": "write"
+        }
+      ],
+      "enables": null
+    },
+    {
+      "kind": "sequence",
+      "severity": "error",
+      "consequence": "The BTF flag stays set and the interface keeps stretching SCL low.",
+      "datasheet_text": "Cleared by software reading SR1 followed by either a read or write in the DR register or by hardware after a start or a stop condition in transmission or when PE=0.",
+      "steps": [
+        {
+          "register": "I2C1_SR1",
+          "operation": "read"
+        },
+        {
+          "register": "I2C1_DR",
+          "operation": "read"
+        }
+      ],
+      "enables": null
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "If a flag found set is not fully cleared, it remains pending and the interface keeps stretching the clock.",
+      "datasheet_text": "After checking the SR1 register content, the user should perform the complete clearing sequence for each flag found set. Thus, for ADDR and STOPF flags, the following sequence is required inside the I2C interrupt routine: READ SR1 if (ADDR == 1) {READ SR1; READ SR2} if (STOPF == 1) {READ SR1; WRITE CR1} The purpose is to make sure that both ADDR and STOPF flags are cleared if both are found set.",
+      "description": "In the interrupt routine, each flag found set in SR1 must be cleared with its complete clearing sequence (READ SR1 + READ SR2 for ADDR, READ SR1 + WRITE CR1 for STOPF).",
+      "involved": [
+        {
+          "register": "I2C1_SR1",
+          "field": "ADDR",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_SR1",
+          "field": "STOPF",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_SR2",
+          "field": "",
+          "whole_register": true
+        },
+        {
+          "register": "I2C1_CR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The STOPF flag may remain set if the complete clearing sequence is not performed.",
+      "datasheet_text": "It is recommended to perform the complete clearing sequence (READ SR1 then WRITE CR1) after the STOPF is set. Refer to Figure 236.",
+      "description": "The full READ SR1 / WRITE CR1 sequence should be executed once STOPF is set.",
+      "involved": [
+        {
+          "register": "I2C1_SR1",
+          "field": "STOPF",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_CR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "warning",
+      "consequence": "The ADDR flag may remain set if the complete clearing sequence is not performed.",
+      "datasheet_text": "In slave mode, it is recommended to perform the complete clearing sequence (READ SR1 then READ SR2) after ADDR is set. Refer to Figure 236.",
+      "description": "In slave mode the full READ SR1 / READ SR2 sequence should be executed once ADDR is set.",
+      "involved": [
+        {
+          "register": "I2C1_SR1",
+          "field": "ADDR",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_SR2",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The last received byte is lost and communication cannot continue correctly.",
+      "datasheet_text": "In case of Overrun error, software should clear the RxNE bit and the transmitter should re-transmit the last received byte.",
+      "description": "After an overrun (OVR) in slave mode with clock stretching disabled, software must clear RxNE (by reading DR) and the last byte must be re-transmitted.",
+      "involved": [
+        {
+          "register": "I2C1_SR1",
+          "field": "OVR",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_SR1",
+          "field": "RxNE",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_DR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "The EV2/EV7 software sequence completed too late leads to an overrun or to the loss of the byte.",
+      "datasheet_text": "The EV2 software sequence must be completed before the end of the current byte transfer",
+      "description": "The flag-clearing/data-handling sequence for a received byte must complete before the end of the current byte transfer.",
+      "involved": [
+        {
+          "register": "I2C1_SR1",
+          "field": "RxNE",
+          "whole_register": false
+        },
+        {
+          "register": "I2C1_DR",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    },
+    {
+      "kind": "other",
+      "severity": "error",
+      "consequence": "Byte (8-bit) accesses to the I2C registers are not supported.",
+      "datasheet_text": "The peripheral registers have to be accessed by half-words (16 bits) or words (32 bits).",
+      "description": "I2C registers must be accessed with 16-bit or 32-bit accesses only.",
+      "involved": [
+        {
+          "register": "I2C1_SR1",
+          "field": "",
+          "whole_register": true
+        }
+      ]
+    }
+  ]
+}
