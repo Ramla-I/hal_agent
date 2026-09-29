@@ -40,8 +40,13 @@ export OPENAI_API_KEY=...                  # fallbacks
 1. **Enumerate registers (no SVD → two sources).**
    - Recall denominator: parse the datasheet's **register-summary / memory-map** section
      from `82599.md`.
-   - End-to-end target: the register set the **current driver** uses (extract the field
-     names + offsets from `reference/src/regs.rs` + `queue_registers.rs`).
+   - End-to-end target = **the registers the driver actually calls** (`regs.rs` defines a
+     *superset*; the driver uses only some). Get this by scanning the driver for register
+     accesses — in the current Theseus driver they look like
+     `regs<N>.<name>.read()` / `.write()` and array indexing (`regs.eitr[i]`), plus the
+     bit-field constants it references (e.g. `SWSM_SMBI`, `SW_FW_SYNC_SW_MAC`). (Some
+     drivers wrap this as a `.reg()` accessor — grep for that too.) Example:
+     `grep -rhoE 'regs[0-9]*\.[a-z0-9_]+\.(read|write)' reference/src | sort -u`.
    Start with the **driver-needed set** (cheaper, makes the compile metric concrete), then
    layer the datasheet-summary coverage estimate.
 
@@ -49,6 +54,11 @@ export OPENAI_API_KEY=...                  # fallbacks
    generator (gpt-oss-120b), same prompt module as the MCU pipeline. Config for **recall,
    not precision**: do NOT drop low-confidence specs. Extract structure **and**
    `access_constraints_v2`. Smoke-test on a handful of registers before the full run.
+   - **Tunable for Intel:** the generator **prompt** and **batch size** are knobs — the
+     MCU prompt/batching is not sacred here. Dense NIC datasheet prose (and larger register
+     descriptions) may want a different prompt (`prompts/register_info_stm.py` variant) and
+     a different batch size (`--constraint-batch-size` for the constraint pass, and the
+     generator's per-call register batching); adjust them for 82599 and record what you used.
 
 3. **Constraint extraction:** run the grammar-v2 constraint pass on the 82599 registers the
    driver touches (queue enable/disable ordering, link-setup sequences, etc.).
