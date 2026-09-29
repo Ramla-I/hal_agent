@@ -73,6 +73,11 @@ Reproduction inputs are vendored; generated outputs are `.gitignore`d.
   adaptation, categorized (naming / packaging / adjudicated access divergence /
   policy constants / gate-required driver diff / source-document artifacts),
   kept separate from the genuine findings.
+- **`reports/retrofit.md`** — extension: ixy.rs / RedLeaf / Redox ixgbed vs
+  the generated HAL — coverage complete for all three (41/30/17 registers),
+  full compiling port of ixy.rs with gates active (85 replacements, violation
+  demo), plus the leads the gates exposed (live-FCTRL promiscuous toggle,
+  DMATXCTL.VT clobber, legacy 0x5400 alias reliance).
 - `pipeline/` — enumerate_targets.py, generate.py (+completion passes),
   collect_constraints_intel.py, emit_hal.py (structural + --gated), the
   committed contracts (packaging.json, name_map.json, access_overrides.json,
