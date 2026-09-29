@@ -1,0 +1,2 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32l412,stm32-rs,rm0394,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,

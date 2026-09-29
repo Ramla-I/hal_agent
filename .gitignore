@@ -273,3 +273,7 @@ applications/pac_codegen/experiments/out/
 /out/
 # local-only working docs (paper draft + analysis/results reports; not for the shared repo)
 temp_docs/
+
+# Generated figures. Reproducible from scripts/stm_*_statistics.py, so
+# tracking them only creates binary churn and a second source of truth.
+docs/figures/*.pdf

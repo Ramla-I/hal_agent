@@ -1,0 +1,5 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32f100,stm32-rs,rm0041,"TIM1_ARR: reset value: svd = 0x0, agent = 0xFFFF",,
+stm32f100,stm32-rs,rm0041,"TIM2/3/4/5_ARR: reset value: svd = 0x0, agent = 0xFFFF",,
+stm32f100,stm32-rs,rm0041,"TIM6/7_ARR: reset value: svd = 0x0, agent = 0xFFFF",,
+stm32f100,stm32-rs,rm0041,"TIM12/13/14_ARR: reset value: svd = 0x0, agent = 0xFFFF",,

@@ -1,0 +1,4 @@
+SVD File,Crate,RM,Bug Description,PR,Status
+stm32f302,stm32-rs,rm0365,"FMC_BCR1: reset value: svd = 0x30D0, agent = 0x30DB",,
+stm32f302,stm32-rs,rm0365,"FMC_BCR2\3\4: reset value: svd = 0x30D0, agent = 0x30D2",,
+stm32f302,stm32-rs,rm0365,"RTC_TSDR: reset value: svd = 0x2101, agent = 0x0",,
