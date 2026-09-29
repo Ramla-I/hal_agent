@@ -114,13 +114,14 @@ def parse_c_style_defs(path):
     return defs
 
 
-WRITE_HELPERS = r"set_reg32|set_flags32|clear_flags32|write_reg|write_reg_idx|write_reg_tdt|write_reg_rdt"
-READ_HELPERS = r"get_reg32|wait_clear_reg32|wait_set_reg32|read_reg|read_reg_idx|read_qreg|wait_"
+WRITE_HELPERS = r"set_reg32|set_flags32|clear_flags32|write_flag|clear_flag|write_reg|write_reg_idx|write_reg_tdt|write_reg_rdt"
+READ_HELPERS = r"get_reg32|wait_clear_reg32|wait_set_reg32|wait_write_reg|wait_clear_reg|read_reg|read_reg_idx|read_qreg|wait_"
 
 
 def scan_ixy_style(src_files, defs):
     used = defaultdict(lambda: {"ops": set(), "sites": 0})
-    call_re = re.compile(r"(" + WRITE_HELPERS + r"|" + READ_HELPERS + r")\s*\(\s*"
+    # (?<![\w]) so 'wait_write_reg' cannot match its embedded 'write_reg'
+    call_re = re.compile(r"(?<![A-Za-z0-9_])(" + READ_HELPERS + r"|" + WRITE_HELPERS + r")\s*\(\s*"
                          r"(?:(?!IXGBE_)[\w.:]+,\s*)*IXGBE_([A-Z0-9_]+)")
     for path in src_files:
         for line in open(path):
@@ -128,7 +129,7 @@ def scan_ixy_style(src_files, defs):
                 helper, sym = m.groups()
                 if sym not in defs:
                     continue
-                op = "write" if re.match(WRITE_HELPERS, helper) else "read"
+                op = "read" if re.match(READ_HELPERS, helper) else "write"
                 if helper in ("set_flags32", "clear_flags32"):
                     used[sym]["ops"].add("read")
                 used[sym]["ops"].add(op)

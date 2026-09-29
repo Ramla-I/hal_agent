@@ -3,26 +3,41 @@
 **Question** (Ramla): can ixy.rs, RedLeaf's ixgbe, and Redox's ixgbed be
 retrofitted to use the intralingual HAL we generated for Theseus?
 
-**Answer: yes.** Register coverage is already complete for all three, and the
-retrofit is demonstrated end-to-end for ixy.rs: a full mechanical port that
-compiles (`cargo check` + `cargo build`) with the constraint gates active.
+**Answer: yes — all three now compile against it.** ixy.rs and Redox ixgbed
+via full call-site ports; RedLeaf via a layer retarget with zero call-site
+changes. Compile-testing needed no OS build environment for any of them.
 
-## Register coverage (analyze_drivers.py — address-based join, names only cross-checked)
+## Register coverage (analyze_drivers.py — address-based join over the PRISTINE sources)
 
 | driver | registers used | matched in Table 8-2 | covered by the generated 75 | gated regs touched (write sites) |
 |---|---|---|---|---|
 | ixy.rs | 41 | 39* | 39* | **7 (14)** |
-| Redox ixgbed | 30 | 28* | 28* | 4 (4) |
+| Redox ixgbed | 37 | 35* | 35* | **7 (9)** |
 | RedLeaf ixgbe | 17 | 17 | 17 | 1 (5) |
 
 \* the only unmatched addresses are RAL/RAH read through the legacy 82598
 `0x5400` alias (observation 3) — the registers themselves are modeled at their
-documented `0xA200` home, so effective coverage is 41/41 and 30/30.
+documented `0xA200` home, so effective coverage is 41/41 and 37/37.
 
 Coverage is complete because the Theseus-derived 75-register target is a
 superset of what these minimal drivers touch; any register outside it would be
-one more entry in the generation list (the pipeline is push-button per
-register). All three drivers write TDH — every retrofit exercises the gates.
+one more entry in the generation list. All three drivers write TDH — every
+retrofit exercises the gates. (Two analyzer defects were found and fixed while
+finalizing: Redox's `write_flag`/`clear_flag` helpers were missing from the
+write-helper list — its first-pass numbers under-counted — and `wait_write_reg`
+polls had matched their embedded `write_reg` and been misread as writes.)
+
+## Compile-test recipes (no OS build env, no booting)
+
+- **ixy.rs**: plain `cargo check`/`cargo build` on Linux.
+- **Redox**: `cargo check -p ixgbed` in the `base` workspace on Linux — its
+  pinned nightly auto-installs and every dep compiles on the host.
+- **RedLeaf**: pinned `nightly-2021-12-15` (rustup auto-installs) + two setup
+  steps: generate its IDL interface crate (`git submodule update --init
+  tools/redIDL`, install `cargo-expand`, `make -C interface`) and pin
+  era-appropriate dep versions (`cargo update -p quote --precise 1.0.10`,
+  `syn 1.0.82`, `proc-macro2 1.0.34`, `byteorder 1.4.3`, `log 0.4.14`);
+  then `cargo check` in `lib/devices/ixgbe`.
 
 ## Demonstrated: the ixy.rs port (`port_ixy.py`, 85 asserted replacements)
 
@@ -61,14 +76,42 @@ register). All three drivers write TDH — every retrofit exercises the gates.
    (`read_reg_idx` reads the neighbouring register too — a hazard next to
    read-to-clear registers).
 
-## Feasibility per driver
+## Demonstrated: the Redox ixgbed port (`port_redox.py`, 67 asserted replacements)
 
-- **ixy.rs — done** (compiling; runtime validation needs 82599 hardware).
-- **Redox ixgbed** — same Linux-style idiom, ~30 sites, single queue: the
-  smallest mechanical port; verifying the compile needs the Redox build env.
-- **RedLeaf** — structurally the easiest target: every access already funnels
-  through one enum-keyed layer, so the retrofit can replace that layer's
-  internals with the typed structs; needs RedLeaf's no_std build env.
+Same shape as ixy: the four offset helpers deleted, seven typed casts, all 52+
+sites ported, witnesses threaded (RXEN window over rx-init and both
+promiscuous toggles — Redox also rewrote FCTRL with the receiver live; TDH
+witness; CRC-strip coupling; EIAC clamp; **DMATXCTL hold — Redox has ixy's
+exact absolute `DMATXCTL = TE` write, so the VT-clobber bug exists in a second
+driver and is auto-repaired the same way**). `cargo check -p ixgbed` green;
+violation demo: removing the establish line → E0425 at both dependent sites.
+Semantic note: Redox's `write_reg` did a volatile read-back after every write
+(posted-write flush); the typed writes do not — matching the Theseus
+reference semantics.
+
+## Demonstrated: the RedLeaf retarget (`port_redleaf.py`, layer-internal, zero call-site changes)
+
+RedLeaf funnels all access through one enum-keyed layer, so Tier A replaces
+only that layer's internals (~3 function bodies + typed accessors) under the
+unchanged enum API. `cargo check` green on the pinned 2021 nightly. What the
+retarget fixed by construction:
+1. **`RDLEN` was declared with stride `0x60` instead of `0x40`** — for any
+   queue > 0 the raw math would have accessed RXDCTL of that queue instead of
+   RDLEN (dormant only because RedLeaf uses queue 0). A new finding, spotted
+   by laying the declaration against the typed model.
+2. The 64-bit volatile reads of 32-bit registers are gone (typed u32 access);
+   the raw-fallback arms for the few unmodeled stats registers now use
+   correct 32-bit reads too.
+3. The dormant `STATUS = 0x00004` entry (CTRL's alias offset) is bypassed —
+   the typed arm reads the real STATUS at 0x8.
+4. SRRCTL/DCA_TXCTRL normalize from legacy 82598-compat banks to the
+   documented primary banks.
+Gates apply force-the-action style inside the layer (as in Theseus's
+`set_tdh`): `write_reg_idx(Tdh, ...)` mints the queue-disabled witness;
+scalar FCTRL writes establish/release the RXEN window. Registers outside the
+75-register model (19 stats scalars, TxpbThresh, Qptc, Rxmpc, RAL/RAH beyond
+entry 0) keep a documented raw path. Tier B (call-site port, ~65 sites) stays
+available if call-site gate visibility is wanted for RedLeaf too.
 
 ## Caveats
 

@@ -606,11 +606,11 @@
   {
     "driver": "redox ixgbed",
     "summary": {
-      "registers": 30,
-      "matched": 28,
-      "in_75": 28,
-      "gated_regs": 4,
-      "gated_write_sites": 4,
+      "registers": 37,
+      "matched": 35,
+      "in_75": 35,
+      "gated_regs": 7,
+      "gated_write_sites": 9,
       "unmatched": 2
     },
     "rows": [
@@ -619,9 +619,10 @@
         "addr": "0x42a0",
         "extra_addrs": [],
         "ops": [
-          "read"
+          "read",
+          "write"
         ],
-        "sites": 2,
+        "sites": 3,
         "matched": "AUTOC",
         "via_alias": false,
         "in_generated_75": true,
@@ -633,11 +634,40 @@
         "addr": "0x0",
         "extra_addrs": [],
         "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "CTRL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "CTRL_EXT",
+        "addr": "0x18",
+        "extra_addrs": [],
+        "ops": [
           "write"
         ],
         "sites": 1,
-        "matched": "CTRL",
+        "matched": "CTRL_EXT",
         "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "DCA_RXCTRL",
+        "addr": "0x2200",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "DCA_RXCTRL",
+        "via_alias": true,
         "in_generated_75": true,
         "gated": false,
         "name_agrees": true
@@ -675,7 +705,7 @@
         "addr": "0x10010",
         "extra_addrs": [],
         "ops": [
-          "write"
+          "read"
         ],
         "sites": 1,
         "matched": "EEC",
@@ -739,6 +769,20 @@
         "via_alias": false,
         "in_generated_75": true,
         "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "FCTRL",
+        "addr": "0x5080",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 3,
+        "matched": "FCTRL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
         "name_agrees": true
       },
       {
@@ -823,6 +867,20 @@
         "via_alias": false,
         "in_generated_75": true,
         "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "HLREG0",
+        "addr": "0x4240",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "HLREG0",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
         "name_agrees": true
       },
       {
@@ -913,6 +971,20 @@
         "name_agrees": true
       },
       {
+        "sym": "RDRXCTL",
+        "addr": "0x2f00",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "RDRXCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
         "sym": "RDT",
         "addr": "0x1018",
         "extra_addrs": [],
@@ -927,13 +999,42 @@
         "name_agrees": true
       },
       {
-        "sym": "RXDCTL",
-        "addr": "0x1028",
+        "sym": "RTTDCS",
+        "addr": "0x4900",
         "extra_addrs": [],
         "ops": [
           "write"
         ],
         "sites": 1,
+        "matched": "RTTDCS",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RXCTRL",
+        "addr": "0x3000",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RXCTRL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RXDCTL",
+        "addr": "0x1028",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
         "matched": "RXDCTL",
         "via_alias": false,
         "in_generated_75": true,
@@ -959,9 +1060,10 @@
         "addr": "0x2100",
         "extra_addrs": [],
         "ops": [
-          "read"
+          "read",
+          "write"
         ],
-        "sites": 1,
+        "sites": 2,
         "matched": "SRRCTL",
         "via_alias": true,
         "in_generated_75": true,
@@ -1018,7 +1120,7 @@
           "read",
           "write"
         ],
-        "sites": 3,
+        "sites": 4,
         "matched": "TXDCTL",
         "via_alias": false,
         "in_generated_75": true,
