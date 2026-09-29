@@ -78,6 +78,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("run", help="run tag under register_info/, e.g. r003")
     ap.add_argument("--offset-source", choices=["llm", "summary"], default="llm")
+    ap.add_argument("--no-overrides", action="store_true",
+                    help="pure datasheet access typing (no adjudicated overrides)")
     args = ap.parse_args()
 
     run_dir = os.path.join(HERE, "register_info", args.run)
@@ -87,7 +89,11 @@ def main():
     join = {r["abbrev_base"].upper(): r
             for r in load_json(os.path.join(HERE, "targets", "registers_join.json"))["registers"]}
     pack = load_json(os.path.join(HERE, "packaging.json"))
-    name_map = load_json(os.path.join(HERE, "name_map.json"), default={})
+    name_map = {k.upper(): v for k, v in
+                load_json(os.path.join(HERE, "name_map.json"), default={}).items()
+                if not k.startswith("_")}
+    overrides = load_json(os.path.join(HERE, "access_overrides.json"),
+                          default={"overrides": {}})["overrides"]
 
     report = {"offset_mismatches": [], "offset_fallbacks": [], "collisions": [],
               "access": [], "missing_specs": [], "skipped_ranges": [],
@@ -117,6 +123,11 @@ def main():
                 {"register": abbrev, "llm": hex(llm_addr), "summary": hex(summary_addr)})
 
         rtype = map_access(spec.get("register_access"), spec.get("subfields"))
+        if abbrev in overrides and not args.no_overrides:
+            report.setdefault("access_overridden", []).append(
+                {"register": abbrev, "datasheet_type": rtype,
+                 "override": overrides[abbrev]["type"]})
+            rtype = overrides[abbrev]["type"]
         report["access"].append({"register": abbrev,
                                  "code": spec.get("register_access"),
                                  "type": rtype,

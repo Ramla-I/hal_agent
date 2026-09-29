@@ -1,0 +1,7 @@
+{
+  "_note": "Adjudicated access-type divergences (friction category: adjudicated access divergence). Each entry overrides the datasheet-derived volatile wrapper for the STRUCTURAL drop-in configuration, with the adjudication recorded. The constraint-encoded configuration instead gates these writes with witnesses (the datasheet's own authorization rule).",
+  "overrides": {
+    "RDH": {"type": "Volatile", "reason": "datasheet marks RDH[n] RO ('controlled by hardware') yet the driver, like ixgbe/DPDK, must initialize the head pointer while the queue is disabled; the RDH description itself documents software-visible init semantics"},
+    "TDH": {"type": "Volatile", "reason": "datasheet heading marks TDH[n] RO but its own description states 'the only time software should write this register is after a reset (hardware reset or CTRL.RST) and before enabling the transmit function' — an authorization rule, encoded as a witness gate in the constraint configuration"}
+  }
+}
