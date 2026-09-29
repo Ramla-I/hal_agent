@@ -1,0 +1,7 @@
+# Generated experiment outputs — reproducible from the scripts, kept locally but not committed.
+pipeline/register_info/
+pipeline/analysis/
+pipeline/metrics.json
+claude_baseline/register_info_rm0041/
+claude_baseline/run.json
+claude_baseline/summary.txt

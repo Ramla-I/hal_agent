@@ -1,1 +1,0 @@
-{"datasheet_register_abbreviation": "SPI_DR", "address_offset": "0x0C", "reset_value": "0x0000", "size": 16, "subfields": [{"name": "DR", "description": "Data register; Data received or to be transmitted.", "access": "read-write", "bit_number": {"start_bit": 0, "end_bit": 15}}], "access_constraints_v2": []}

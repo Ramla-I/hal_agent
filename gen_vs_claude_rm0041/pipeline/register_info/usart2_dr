@@ -1,1 +1,0 @@
-{"datasheet_register_abbreviation": "USART_DR", "address_offset": "0x04", "reset_value": null, "size": 32, "subfields": [{"name": "DR", "description": "Data value (bits 8:0). Contains the Received or Transmitted data character, depending on whether it is read from or written to.", "access": "read-write", "bit_number": {"start_bit": 0, "end_bit": 8}}], "access_constraints_v2": []}
