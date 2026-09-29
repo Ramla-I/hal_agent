@@ -46,7 +46,7 @@ recorded reason in `constants_map.json`.
 
 `pipeline/driver_diff_gated.patch`: **2 files, +27/−15 lines** for 9 encoded
 constraints — the measured cost of adopting the field-level gates:
-- `enable_rx_function`: mint `RxctrlRxenCleared`, pass proof to the `fctrl`
+- `enable_rx_function`: mint `RxctrlRxenCleared`, pass its token to the `fctrl`
   write, `release` re-enables (replaces two manual RXEN writes).
 - `set_tdh`: mint `TxdctlEnableCleared` before the head write.
 - CRC strip: the two independent OR-writes (one of them the RDRXCTL bug)

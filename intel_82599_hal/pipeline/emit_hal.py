@@ -80,6 +80,9 @@ def main():
     ap.add_argument("--offset-source", choices=["llm", "summary"], default="llm")
     ap.add_argument("--no-overrides", action="store_true",
                     help="pure datasheet access typing (no adjudicated overrides)")
+    ap.add_argument("--plain", action="store_true",
+                    help="portable variant: no zerocopy/FromBytes derives "
+                    "(for consumers outside Theseus, e.g. the ixy.rs retrofit)")
     ap.add_argument("--gated", action="store_true",
                     help="constraint-encoded configuration: witness-gate the "
                     "registers whose extracted state_gates match the "
@@ -88,7 +91,8 @@ def main():
     args = ap.parse_args()
 
     run_dir = os.path.join(HERE, "register_info", args.run)
-    out_dir = os.path.join(HERE, "hal_out", args.run + ("-gated" if args.gated else ""))
+    out_dir = os.path.join(HERE, "hal_out", args.run + ("-gated" if args.gated else "")
+                           + ("-plain" if args.plain else ""))
     os.makedirs(out_dir, exist_ok=True)
 
     join = {r["abbrev_base"].upper(): r
@@ -360,7 +364,8 @@ def main():
     w("//! packaging.json; offsets, access types, and array sizes are extracted.")
     w("")
     w("use volatile::{Volatile, ReadOnly, WriteOnly};")
-    w("use zerocopy::FromBytes;")
+    if not args.plain:
+        w("use zerocopy::FromBytes;")
     w("")
 
     def field_name(abbrev):
@@ -371,7 +376,7 @@ def main():
         struct covers [start, end) of ONE element (queue struct)."""
         pad_i = [0]
         w(f"/// {doc}")
-        w("#[derive(FromBytes)]")
+        args.plain or w("#[derive(FromBytes)]")
         w("#[repr(C)]")
         w(f"pub struct {struct_name} {{")
         cursor = start
@@ -443,7 +448,7 @@ def main():
                 queue_elem_emitted[elem] = (qc["elem_doc"], elem_members)
             # region struct is just the container array
             w(f"/// {r['doc']}")
-            w("#[derive(FromBytes)]")
+            args.plain or w("#[derive(FromBytes)]")
             w("#[repr(C)]")
             w(f"pub struct {r['struct']} {{")
             w(f"    /// {qc['field_doc']}")
@@ -495,7 +500,7 @@ def main():
             w(f"/// Datasheet: \"{wit['quote']}\"")
             w(f"/// Violation consequence: {wit['consequence']}")
             state = "cleared" if wit["mode"] == "cleared" else "set"
-            w(f"/// Proof that {pr}.{pf} is {state}.")
+            w(f"/// Witness token attesting {pr}.{pf} is {state}.")
             w(f"pub struct {nm}(());")
             w(f"/// Bit mask of {pr}.{pf} (from extraction).")
             w(f"pub const GATE_{pr}_{re.sub(r'[^A-Za-z0-9]', '_', pf).upper()}: u32 = {hex(pm)};")
@@ -509,7 +514,7 @@ def main():
                     w(f"        reg.write(v & !{mconst});")
                     w(f"        {nm}(())")
                     w("    }")
-                    w(f"    /// Leave the gated state: re-set {pr}.{pf}, consuming the proof.")
+                    w(f"    /// Leave the gated state: re-set {pr}.{pf}, consuming the witness.")
                     w(f"    pub fn release(self, reg: &mut Volatile<u32>) {{")
                     w(f"        let v = reg.read();")
                     w(f"        reg.write(v | {mconst});")
@@ -531,15 +536,15 @@ def main():
             hold, clamp = g["hold_mask"], g["clamp_mask"]
             wmask = g.get("wit_mask", 0)
             w(f"/// {abbrev}: constraint-gated register (see the quotes on its methods).")
-            w("#[derive(FromBytes)]")
+            args.plain or w("#[derive(FromBytes)]")
             w("#[repr(transparent)]")
             w(f"pub struct {gt}(Volatile<u32>);")
             w(f"impl {gt} {{")
             w("    pub fn read(&self) -> u32 { self.0.read() }")
             if g["whole"]:
                 w(f"    /// Datasheet: \"{wit['quote']}\"")
-                w(f"    /// Whole-register gated write — requires proof {wit['name']}.")
-                w(f"    pub fn write(&mut self, value: u32, _proof: &{wit['name']}) {{ self.0.write(value) }}")
+                w(f"    /// Whole-register gated write — requires the {wit['name']} witness token.")
+                w(f"    pub fn write(&mut self, value: u32, _witness: &{wit['name']}) {{ self.0.write(value) }}")
             else:
                 pres = hold | clamp
                 w(f"    /// Free write that CANNOT change the protected bits:")
@@ -553,7 +558,7 @@ def main():
                     keep = hold & ~wmask
                     w(f"    /// Witnessed write: may change the gated fields (mask {hex(wmask)}),")
                     w(f"    /// still preserving other protected bits and never-set bits.")
-                    w(f"    pub fn write_full(&mut self, value: u32, _proof: &{wit['name']}) {{")
+                    w(f"    pub fn write_full(&mut self, value: u32, _witness: &{wit['name']}) {{")
                     w(f"        let cur = self.0.read();")
                     w(f"        self.0.write((value & !{hex(clamp | keep)}) | (cur & {hex(keep)}));")
                     w("    }")

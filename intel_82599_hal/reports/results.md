@@ -96,7 +96,7 @@ dmatxctl TE toggles, eiac). The adoption diff is **2 files, +27/−15** — and 
 become one `set_rxcrcstrp_crcstrip(..., true)` call, so finding 1 cannot be
 re-introduced. After the diff, `cargo check` and `cargo build` are green.
 
-Honest limits: witnesses are type-level, not instance-bound (a proof minted
+Honest limits: witnesses are type-level, not instance-bound (a witness token minted
 for queue 3 type-checks a write to queue 5); minting/checking still reads
 hardware at runtime (TOCTOU parity with a correct handwritten driver, as
 settled for the MCU arm); the AUTOC SW/FW-semaphore protocol remains doc-only

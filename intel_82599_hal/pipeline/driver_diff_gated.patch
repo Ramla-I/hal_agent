@@ -1,5 +1,5 @@
 diff --git a/kernel/ixgbe/src/lib.rs b/kernel/ixgbe/src/lib.rs
-index 79c1d86..d8e5f48 100644
+index 79c1d86..7267b2c 100644
 --- a/kernel/ixgbe/src/lib.rs
 +++ b/kernel/ixgbe/src/lib.rs
 @@ -770,11 +770,12 @@ impl IxgbeNic {
@@ -24,7 +24,7 @@ index 79c1d86..d8e5f48 100644
      /// enable receive functionality
      fn enable_rx_function(regs1: &mut IntelIxgbeRegisters1,regs: &mut IntelIxgbeRegisters2) {
 +        // Gate (datasheet): receive filters may only be updated while
-+        // RXCTRL.RXEN = 0b. Establishing the proof clears RXEN.
++        // RXCTRL.RXEN = 0b. Establishing the witness clears RXEN.
 +        let rx_disabled = RxctrlRxenCleared::establish(&mut regs.rxctrl);
 +
          // set rx parameters of which type of packets are accepted by the nic
@@ -38,7 +38,7 @@ index 79c1d86..d8e5f48 100644
 -        // enable receive functionality
 -        let val = regs.rxctrl.read();
 -        regs.rxctrl.write(val | RECEIVE_ENABLE); 
-+        // enable receive functionality: re-set RXCTRL.RXEN, consuming the proof
++        // enable receive functionality: re-set RXCTRL.RXEN, consuming the witness
 +        rx_disabled.release(&mut regs.rxctrl);
      }
  
@@ -86,7 +86,7 @@ index 79c1d86..d8e5f48 100644
          //clear eicr 
          let _val = regs.eicr.read();
 diff --git a/kernel/ixgbe/src/queue_registers.rs b/kernel/ixgbe/src/queue_registers.rs
-index 43e645f..b3520d8 100644
+index 43e645f..7e84477 100644
 --- a/kernel/ixgbe/src/queue_registers.rs
 +++ b/kernel/ixgbe/src/queue_registers.rs
 @@ -71,7 +71,11 @@ impl TxQueueRegisters for IxgbeTxQueueRegisters {
@@ -95,10 +95,10 @@ index 43e645f..b3520d8 100644
      fn set_tdh(&mut self, value: u32) {
 -        self.regs.tdh.write(value)
 +        // Gate (datasheet): TDH may only be written after reset and before the
-+        // transmit queue is enabled. Establishing the proof clears
++        // transmit queue is enabled. Establishing the witness clears
 +        // TXDCTL.ENABLE, so moving the head forces the queue disabled.
-+        let proof = super::regs::TxdctlEnableCleared::establish(&mut self.regs.txdctl);
-+        self.regs.tdh.write(value, &proof)
++        let witness = super::regs::TxdctlEnableCleared::establish(&mut self.regs.txdctl);
++        self.regs.tdh.write(value, &witness)
      }
      fn set_tdt(&mut self, value: u32) {
          self.regs.tdt.write(value)

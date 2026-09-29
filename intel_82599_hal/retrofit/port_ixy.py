@@ -193,7 +193,7 @@ s = sub(s, r"self\.clear_flags32\(IXGBE_DCA_RXCTRL\(" + I + r"\), 1 << 12\);",
         "                d.write(v);\n"
         "            }")
 s = sub(s, r"self\.set_flags32\(IXGBE_RXCTRL, IXGBE_RXCTRL_RXEN\);",
-        "// re-enable the receiver, consuming the proof\n"
+        "// re-enable the receiver, consuming the witness\n"
         "        rx_disabled.release(&mut self.regs2().rxctrl);")
 
 # --- init_tx ---
@@ -247,11 +247,11 @@ s = sub(s, r"self\.set_reg32\(\s*IXGBE_RDT\(" + Q + r"\),\s*\(queue\.num_descrip
         flags=re.S)
 s = sub(s, r"self\.set_reg32\(IXGBE_TDH\(" + Q + r"\), 0\);",
         "// Gate: TDH is writable only while the queue is disabled; minting the\n"
-        "        // proof clears TXDCTL.ENABLE (a no-op here, before enable)\n"
+        "        // witness clears TXDCTL.ENABLE (a no-op here, before enable)\n"
         "        {\n"
         "            let txq = &mut self.tx_regs().tx_regs[queue_id as usize];\n"
-        "            let proof = TxdctlEnableCleared::establish(&mut txq.txdctl);\n"
-        "            txq.tdh.write(0, &proof);\n"
+        "            let witness = TxdctlEnableCleared::establish(&mut txq.txdctl);\n"
+        "            txq.tdh.write(0, &witness);\n"
         "        }")
 s = sub(s, r"self\.set_reg32\(IXGBE_TDT\(" + Q + r"\), 0\);",
         "self.tx_regs().tx_regs[queue_id as usize].tdt.write(0);")

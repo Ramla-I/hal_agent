@@ -34,8 +34,8 @@ register). All three drivers write TDH — every retrofit exercises the gates.
   `volatile 0.2` — the Theseus-specific bits are packaging config, not
   architecture.
 - **Gates active in a second OS's driver:** the RXEN-cleared witness spans
-  ixy's rx-init filter window; all 3 FCTRL writes take the proof; TDH init
-  writes mint the queue-disabled proof; the two independent CRC-strip bit-ORs
+  ixy's rx-init filter window; all 3 FCTRL writes take the witness token; TDH init
+  writes mint the queue-disabled witness; the two independent CRC-strip bit-ORs
   become the coupled `set_rxcrcstrp_crcstrip()`; EIAC writes go through the
   never-set clamp; DMATXCTL through the VT hold.
 - **Violation demo:** deleting the single `RxctrlRxenCleared::establish` line
