@@ -25,7 +25,10 @@ def query_name(register: str) -> str:
     return re.sub(r"_(input|output)$", "", register, flags=re.I)
 
 REPO = "/home/ramla/hal_agent-phase-1d"
-EVOLVED = "/home/ramla/hal_agent-retrieval/openevolve_retrieval/v6_rm0041_seed42_labelfix/best/best_program.py"
+# The evolved retriever is vendored next to this script (sha256 in README), so the
+# experiment is self-contained. Source: hal_agent-retrieval v6_rm0041_seed42_labelfix.
+HERE = os.path.dirname(os.path.abspath(__file__))
+EVOLVED = os.path.join(HERE, "retriever", "best_program.py")
 DEVICE_DIR = f"{REPO}/devices/stm/rm0041"
 CHUNKS_DIR = f"{REPO}/chunked_datasheets/stm/rm0041/chunks/md"
 CHUNKS_INDEX = f"{CHUNKS_DIR}/chunks_index.csv"
@@ -56,7 +59,7 @@ if REGDIR.exists() and any(REGDIR.iterdir()):
 REGDIR.mkdir(parents=True, exist_ok=True)
 
 sys.path.insert(0, REPO)
-sys.path.insert(0, "/home/ramla/hal_agent-retrieval/openevolve_retrieval")
+sys.path.insert(0, os.path.join(HERE, "retriever"))   # so best_program.py finds _shared_cache
 from prompts.register_info_stm import (
     create_register_info_stm_system_prompt, create_register_info_stm_user_prompt)
 from utils.parse_output import get_reasoning_from_response, get_json_block_from_response

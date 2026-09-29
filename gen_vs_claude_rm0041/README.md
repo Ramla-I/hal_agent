@@ -27,9 +27,12 @@ Both systems extract the same thing — per-register structure (`address_offset`
   representation credit (see Scoring below).
 
 ### Arm A — evolved pipeline (`pipeline/run_noenum_rm0041.py`)
-- **Retriever:** the evolved OpenEvolve program
-  `hal_agent-retrieval/openevolve_retrieval/v6_rm0041_seed42_labelfix/best/best_program.py`
-  — local **FastEmbed** embeddings, ephemeral in-memory Chroma → **$0**, no API.
+- **Retriever:** the evolved OpenEvolve program, **vendored** at `pipeline/retriever/best_program.py`
+  (+ its sibling `_shared_cache.py`) so this experiment is self-contained — local
+  **FastEmbed** embeddings, ephemeral in-memory Chroma → **$0**, no API.
+  - Source: `hal_agent-retrieval` · `openevolve_retrieval/v6_rm0041_seed42_labelfix/best/best_program.py`
+  - `sha256(best_program.py) = d392e04fdf127d14f92da929d5ecfb864f20142072b3e5046722b4ae197d11f1`
+  - (only external dep is `context_retrieval.vector_db.embeddings`, which is in this repo.)
 - **Generator:** `gpt-oss-120b` via Groq, **one focused call per register**.
 - **Parameters (all in `run_noenum_rm0041.py`):**
   - `enumerated_values` **dropped** from the prompt (to match the Claude baseline).
@@ -110,7 +113,10 @@ gen_vs_claude_rm0041/
 └── pipeline/
     ├── run_noenum_rm0041.py        # Arm A run driver (all parameters above)
     ├── compare_generator_with_verified.py  # the scorer (verbatim repo copy)
-    └── rescore_bitpos.py           # bit-position + representation credit
+    ├── rescore_bitpos.py           # bit-position + representation credit
+    └── retriever/                  # the exact evolved retriever we used (vendored)
+        ├── best_program.py         #   v6_rm0041_seed42_labelfix (sha256 above)
+        └── _shared_cache.py        #   its embedding-cache dependency
 ```
 Generated (`.gitignore`d, regenerate to reproduce): `pipeline/register_info/`,
 `pipeline/analysis/`, `pipeline/metrics.json`, `claude_baseline/register_info_rm0041/`,
@@ -121,8 +127,8 @@ Generated (`.gitignore`d, regenerate to reproduce): `pipeline/register_info/`,
 ```bash
 source .venv/bin/activate   # needs pandas etc.
 
-# 1. Pipeline arm — regenerate register_info/ (needs GROQ_API_KEY + the evolved
-#    retriever in the hal_agent-retrieval worktree, path hard-coded in the script):
+# 1. Pipeline arm — regenerate register_info/ (needs GROQ_API_KEY; the evolved
+#    retriever is vendored in pipeline/retriever/, so no external worktree needed):
 python gen_vs_claude_rm0041/pipeline/run_noenum_rm0041.py     # writes register_info/ + metrics.json
 
 # 2. Score it against the verified datasheet (writes ./analysis/):
@@ -138,5 +144,6 @@ The **Claude arm** is reproduced by running headless Claude Code on the rm0041 P
 with `claude_baseline/prompt.md` (model `claude-fable-5-1`, Docker-isolated, budget $100).
 
 **Reproducibility boundary.** The numbers above are the recorded reference. Regenerating
-the pipeline arm needs a `GROQ_API_KEY` and the evolved retrieval program (separate
-worktree); regenerating the Claude arm needs an Anthropic key and the headless harness.
+the pipeline arm needs a `GROQ_API_KEY` (the exact evolved retriever is vendored in
+`pipeline/retriever/`, so no external worktree is required); regenerating the Claude arm
+needs an Anthropic key and the headless harness.
