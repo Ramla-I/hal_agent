@@ -1,0 +1,9 @@
+# Generated experiment outputs — reproducible from the scripts, kept locally but not committed.
+pipeline/register_info/
+pipeline/analysis/
+pipeline/metrics.json
+claude_baseline/register_info_rm0041/
+claude_baseline/run.json
+claude_baseline/summary.txt
+claude_baseline/work/       # inputs staged at reproduce time (PDF + SVDs from devices/)
+claude_baseline/runs/       # per-run outputs written by run-docker.sh
