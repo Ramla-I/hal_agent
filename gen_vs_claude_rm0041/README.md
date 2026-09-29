@@ -34,6 +34,12 @@ Both systems extract the same thing — per-register structure (`address_offset`
   - `sha256(best_program.py) = d392e04fdf127d14f92da929d5ecfb864f20142072b3e5046722b4ae197d11f1`
   - (only external dep is `context_retrieval.vector_db.embeddings`, which is in this repo.)
 - **Generator:** `gpt-oss-120b` via Groq, **one focused call per register**.
+- **Prompt:** the **actual production generator prompt** (`prompts/register_info_stm.py`
+  `create_register_info_stm_system_prompt` / `_user_prompt`), run in a stripped form:
+  - **enums removed** (the `enumerated_values` schema block is stripped from the system prompt);
+  - **function-calling disabled** (`function_calls_description=None` — the model cannot request more context);
+  - **few-shot examples disabled** (`examples=None`);
+  - the **single-register** prompt (one register per call), *not* the production `*_batched` variant.
 - **Parameters (all in `run_noenum_rm0041.py`):**
   - `enumerated_values` **dropped** from the prompt (to match the Claude baseline).
   - **retry + exponential backoff:** `MAX_RETRIES=5`, `BASE_BACKOFF=2.0s`.
