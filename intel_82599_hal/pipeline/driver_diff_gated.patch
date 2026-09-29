@@ -1,8 +1,25 @@
 diff --git a/kernel/ixgbe/src/lib.rs b/kernel/ixgbe/src/lib.rs
-index 79c1d86..4360d05 100644
+index 79c1d86..d8e5f48 100644
 --- a/kernel/ixgbe/src/lib.rs
 +++ b/kernel/ixgbe/src/lib.rs
-@@ -822,16 +822,19 @@ impl IxgbeNic {
+@@ -770,11 +770,12 @@ impl IxgbeNic {
+         for i in 1..8 {
+             regs.rxpbsize[i].write(0);
+         }
+-        //CRC offloading
+-        regs.hlreg0.write(regs.hlreg0.read() | HLREG0_CRC_STRIP);
+-        regs.rdrxctl.write(regs.rdrxctl.read() | RDRXCTL_CRC_STRIP);
++        //CRC offloading — the datasheet requires HLREG0.RXCRCSTRP and
++        // RDRXCTL.CRCStrip to be set the same; the coupled setter changes both
++        // together (independent writes preserve those bits).
++        set_rxcrcstrp_crcstrip(&mut regs.hlreg0, &mut regs.rdrxctl, true);
+         // Clear bits
+-        regs.rdrxctl.write(regs.rdrxctl.read() & !RDRXCTL_RSCFRSTSIZE);
++        regs.rdrxctl.write_preserving(regs.rdrxctl.read() & !RDRXCTL_RSCFRSTSIZE);
+ 
+         for qid in 0..IXGBE_NUM_RX_QUEUES_ENABLED {
+             let rxq = &mut rx_regs[qid as usize];        
+@@ -822,16 +823,19 @@ impl IxgbeNic {
  
      /// enable receive functionality
      fn enable_rx_function(regs1: &mut IntelIxgbeRegisters1,regs: &mut IntelIxgbeRegisters2) {
@@ -26,6 +43,48 @@ index 79c1d86..4360d05 100644
      }
  
      /// Initialize the array of transmit descriptors for all queues and returns them.
+@@ -845,8 +849,9 @@ impl IxgbeNic {
+         // disable transmission
+         Self::disable_transmission(regs);
+ 
+-        // CRC offload and small packet padding enable
+-        regs.hlreg0.write(regs.hlreg0.read() | HLREG0_TXCRCEN | HLREG0_TXPADEN);
++        // CRC offload and small packet padding enable (write_preserving: the
++        // coupled RXCRCSTRP bit can only change via set_rxcrcstrp_crcstrip)
++        regs.hlreg0.write_preserving(regs.hlreg0.read() | HLREG0_TXCRCEN | HLREG0_TXPADEN);
+ 
+         // Set RTTFCS.ARBDIS to 1
+         regs.rttdcs.write(regs.rttdcs.read() | RTTDCS_ARBDIS);
+@@ -893,13 +898,15 @@ impl IxgbeNic {
+     /// disable transmit functionality
+     fn disable_transmission(regs: &mut IntelIxgbeRegisters2) {
+         let val = regs.dmatxctl.read();
+-        regs.dmatxctl.write(val & !TE); 
++        // write_preserving: DMATXCTL.VT must not change (802.3ac tag value)
++        regs.dmatxctl.write_preserving(val & !TE); 
+     }
+ 
+     /// enable transmit functionality
+     fn enable_transmission(regs: &mut IntelIxgbeRegisters2) {
+         let val = regs.dmatxctl.read();
+-        regs.dmatxctl.write(val | TE); 
++        // write_preserving: DMATXCTL.VT must not change (802.3ac tag value)
++        regs.dmatxctl.write_preserving(val | TE); 
+     }
+ 
+     /// Enable multiple receive queues with RSS.
+@@ -1117,8 +1124,9 @@ impl IxgbeNic {
+         regs.eims.write(val); 
+         // debug!("EIMS: {:#X}", regs.eims.read());
+ 
+-        //enable auto-clear of receive interrupts 
+-        regs.eiac.write(EIAC_RTXQ_AUTO_CLEAR);
++        //enable auto-clear of receive interrupts (write_preserving: the shared
++        // MSI-X vector bits 29:20 must never set auto-clear — forced to 0)
++        regs.eiac.write_preserving(EIAC_RTXQ_AUTO_CLEAR);
+ 
+         //clear eicr 
+         let _val = regs.eicr.read();
 diff --git a/kernel/ixgbe/src/queue_registers.rs b/kernel/ixgbe/src/queue_registers.rs
 index 43e645f..b3520d8 100644
 --- a/kernel/ixgbe/src/queue_registers.rs

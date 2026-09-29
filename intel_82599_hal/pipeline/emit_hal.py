@@ -101,44 +101,187 @@ def main():
                           default={"overrides": {}})["overrides"]
 
     gates = {}
+    couplings = []
+    gate_report = {"encoded": [], "not_encoded": []}
     if args.gated:
         cpath = os.path.join(HERE, "constraints", f"{args.run}_constraints.json")
         cons = load_json(cpath)
-        specs_for_gates = {}
+
+        def spec_of(reg):
+            p = os.path.join(run_dir, reg.upper() + ".json")
+            return load_json(p) if os.path.exists(p) else None
+
+        def fields_mask(reg, names):
+            """Union bit mask of the named fields, from extraction. None if any
+            name fails to resolve (constraint then not encodable faithfully)."""
+            sp = spec_of(reg)
+            mask = 0
+            resolved = []
+            for n in names:
+                sf, matched = find_field(sp, [n])
+                if not sf or not sf.get("bit_number"):
+                    return None, None
+                lo, hi = sf["bit_number"]["start_bit"], sf["bit_number"]["end_bit"]
+                mask |= ((1 << (hi - lo + 1)) - 1) << lo
+                resolved.append(matched)
+            return mask, resolved
+
+        def gate_for(reg):
+            return gates.setdefault(reg.upper(), {
+                "gtype": f"Gated{reg.title().replace('_','')}",
+                "hold_mask": 0,      # bits write_preserving keeps at current value
+                "clamp_mask": 0,     # bits write_preserving forces to 0 (never-set)
+                "whole": False,      # whole-register witness gate (no free write)
+                "witness": None,     # witnessed write_full / write
+                "quotes": [],
+            })
+
+        def wname(reg, field, suffix):
+            return (f"{reg.title().replace('_','')}"
+                    f"{re.sub(r'[^A-Za-z0-9]', '', field.title())}{suffix}")
+
+        # --- pass 1: state_gates (field-level is the DEFAULT; target_fields=[]
+        #     is the whole-register special case) ---
         for a in cons["accepted"]:
             c = a["constraint"]
-            # Deterministic selection rule (mirrors pac_codegen's default:
-            # whole-register gating, field-level opt-in): a driver-relevant
-            # state_gate on the whole register's write, with exactly one
-            # software-established 'cleared' precondition and no postconditions.
-            if not (a["in_driver_set"] and c["kind"] == "state_gate"
-                    and not c.get("target_fields")
-                    and c.get("target_operation") in ("write", "any")
-                    and len(c.get("preconditions", [])) == 1
-                    and not c.get("postconditions")):
-                continue
-            p = c["preconditions"][0]
-            if not (p["state"] == "cleared" and p["established_by"] == "software"
-                    and p.get("field") and not p.get("whole_register")):
-                continue
-            # the precondition field's mask comes from extraction
-            pr = p["register"].upper()
-            sp = os.path.join(run_dir, pr + ".json")
-            if not os.path.exists(sp):
-                continue
-            sf, matched = find_field(load_json(sp), [p["field"]])
-            if not sf:
-                continue
-            gates[c["target_register"].upper()] = {
-                "witness": f"{p['register'].title().replace('_','')}"
-                           f"{p['field'].title().replace('_','')}Cleared",
-                "gtype": f"Gated{c['target_register'].title().replace('_','')}",
-                "pre_register": pr,
-                "pre_field": matched,
-                "mask_bit": sf["bit_number"]["start_bit"],
-                "quote": c["datasheet_text"],
-                "consequence": c.get("consequence", ""),
-            }
+            reg = c.get("target_register", a["register"]).upper()
+            entry = {"register": reg, "kind": c["kind"],
+                     "text": c["datasheet_text"][:90]}
+            if c["kind"] == "state_gate":
+                if not (c.get("target_operation") in ("write", "any")
+                        and len(c.get("preconditions", [])) == 1
+                        and not c.get("postconditions")):
+                    gate_report["not_encoded"].append(dict(entry,
+                        reason="state_gate shape outside the one-precondition write-gate rule"))
+                    continue
+                p = c["preconditions"][0]
+                tf = c.get("target_fields") or []
+                # self-referential 'field must stay cleared when written' ->
+                # the only always-satisfying encoding is never-set (clamp)
+                if (tf and p["register"].upper() == reg
+                        and p.get("field") in tf and p["state"] == "cleared"):
+                    mask, resolved = fields_mask(reg, tf)
+                    if mask is None:
+                        gate_report["not_encoded"].append(dict(entry,
+                            reason="target field not resolvable in extraction"))
+                        continue
+                    g = gate_for(reg)
+                    g["clamp_mask"] |= mask
+                    g["quotes"].append(("clamp", c["datasheet_text"],
+                                        c.get("consequence", "")))
+                    gate_report["encoded"].append(dict(entry,
+                        encoding=f"never-set clamp of {resolved} (mask {hex(mask)})"))
+                    continue
+                if not (p.get("field") and not p.get("whole_register")
+                        and p["state"] in ("cleared", "set")):
+                    gate_report["not_encoded"].append(dict(entry,
+                        reason="precondition not a single named-field cleared/set state"))
+                    continue
+                pmask, presolved = fields_mask(p["register"], [p["field"]])
+                if pmask is None:
+                    gate_report["not_encoded"].append(dict(entry,
+                        reason="precondition field not resolvable in extraction"))
+                    continue
+                g = gate_for(reg)
+                suffix = "Cleared" if p["state"] == "cleared" else "Set"
+                g["witness"] = {
+                    "name": wname(p["register"], p["field"], suffix),
+                    "pre_register": p["register"].upper(),
+                    "pre_field": presolved[0],
+                    "pre_mask": pmask,
+                    "mode": p["state"],
+                    # hardware-established state -> fallible check() mints the
+                    # witness; software-established -> establish() performs the
+                    # action (clear/set) and mints it
+                    "minted_by": "check" if p["established_by"] == "hardware"
+                                 else "establish",
+                    "quote": c["datasheet_text"],
+                    "consequence": c.get("consequence", ""),
+                }
+                if tf:
+                    mask, resolved = fields_mask(reg, tf)
+                    if mask is None:
+                        gate_report["not_encoded"].append(dict(entry,
+                            reason="target fields not resolvable in extraction"))
+                        g["witness"] = None
+                        continue
+                    g["hold_mask"] |= mask
+                    g["wit_mask"] = g.get("wit_mask", 0) | mask
+                    what = f"fields {resolved} (mask {hex(mask)})"
+                else:
+                    g["whole"] = True
+                    what = "whole register"
+                g["quotes"].append(("witness", c["datasheet_text"],
+                                    c.get("consequence", "")))
+                gate_report["encoded"].append(dict(entry,
+                    encoding=f"{g['witness']['minted_by']}-minted witness "
+                             f"{g['witness']['name']} gating {what}"))
+            elif c["kind"] == "value_relation":
+                flds = c.get("fields") or []
+                text = c["datasheet_text"]
+                emitted_regs = {r.upper() for r in join}
+                if (len(flds) == 2
+                        and re.search(r"set the same|same as", text, re.I)
+                        and all(f["register"].upper() in emitted_regs for f in flds)
+                        and flds[0]["register"].upper() != flds[1]["register"].upper()):
+                    pair = []
+                    ok = True
+                    for f in flds:
+                        m, resolved = fields_mask(f["register"], [f["field"]])
+                        if m is None:
+                            ok = False
+                            break
+                        pair.append({"register": f["register"].upper(),
+                                     "field": resolved[0], "mask": m})
+                    if not ok:
+                        gate_report["not_encoded"].append(dict(entry,
+                            reason="relation field not resolvable in extraction"))
+                        continue
+                    key = frozenset((x["register"], x["field"]) for x in pair)
+                    if any(cp["key"] == key for cp in couplings):
+                        # the relation is stated on both registers; one coupling
+                        for cp in couplings:
+                            if cp["key"] == key:
+                                cp["quotes"].append(text)
+                        gate_report["encoded"].append(dict(entry,
+                            encoding="same coupled setter (relation stated on both sides)"))
+                        continue
+                    pair.sort(key=lambda x: x["register"])
+                    fn = "set_" + "_".join(
+                        re.sub(r"[^a-z0-9]", "", x["field"].lower()) for x in pair)
+                    couplings.append({"key": key, "fn": fn, "pair": pair,
+                                      "quotes": [text]})
+                    for x in pair:
+                        g = gate_for(x["register"])
+                        g["hold_mask"] |= x["mask"]
+                        g["quotes"].append(("coupled", text, c.get("consequence", "")))
+                    gate_report["encoded"].append(dict(entry,
+                        encoding=f"coupled setter {fn}() — independent writes "
+                                 f"preserve the related bits"))
+                elif re.search(r"must not change", text, re.I) and flds:
+                    own = [f for f in flds if f["register"].upper() in emitted_regs
+                           and f["register"].upper() == reg]
+                    if own:
+                        m, resolved = fields_mask(reg, [own[0]["field"]])
+                        if m is not None:
+                            g = gate_for(reg)
+                            g["hold_mask"] |= m
+                            g["quotes"].append(("hold", text, c.get("consequence", "")))
+                            gate_report["encoded"].append(dict(entry,
+                                encoding=f"hold mask on {resolved} (field kept at "
+                                         f"current value; no API can change it)"))
+                            continue
+                    gate_report["not_encoded"].append(dict(entry,
+                        reason="'must not change' field not on an emitted register"))
+                else:
+                    gate_report["not_encoded"].append(dict(entry,
+                        reason="relation semantics live in the value (alignment/"
+                               "inequality/conditional) — not visible at u32 "
+                               "granularity; runtime tier"))
+            else:
+                gate_report["not_encoded"].append(dict(entry,
+                    reason=f"kind {c['kind']} is {a['enforceability']} by the "
+                           f"computed taxonomy"))
 
     report = {"offset_mismatches": [], "offset_fallbacks": [], "collisions": [],
               "access": [], "missing_specs": [], "skipped_ranges": [],
@@ -169,9 +312,7 @@ def main():
 
         rtype = map_access(spec.get("register_access"), spec.get("subfields"))
         if abbrev in gates:
-            report.setdefault("gated", []).append(
-                {"register": abbrev, **{k: gates[abbrev][k]
-                 for k in ("witness", "pre_register", "pre_field", "mask_bit")}})
+            pass  # gate supersedes overrides; recorded in report["gating"]
         elif abbrev in overrides and not args.no_overrides:
             report.setdefault("access_overridden", []).append(
                 {"register": abbrev, "datasheet_type": rtype,
@@ -254,7 +395,10 @@ def main():
                 w(f"    pub {name}: [{m['rtype']}<u32>; {m['count']}], // {hex(addr)} - {hex(addr + 4 * m['count'] - 1)}")
                 cursor = addr + 4 * m["count"]
             elif gate:
-                w(f"    pub {name}: {gate['gtype']}, // {hex(addr)} — write gated on {gate['pre_register']}.{gate['pre_field']}=0")
+                wnote = (f"write gated on {gate['witness']['pre_register']}."
+                         f"{gate['witness']['pre_field']}" if gate.get("witness")
+                         else "protected bits — see gating section")
+                w(f"    pub {name}: {gate['gtype']}, // {hex(addr)} — {wnote}")
                 cursor = addr + 4
             else:
                 w(f"    pub {name}: {m['rtype']}<u32>, // {hex(addr)}")
@@ -326,42 +470,116 @@ def main():
     w("")
 
     # ---- gating section (constraint-encoded configuration) ----
-    if gates:
+    if gates or couplings:
         w("// ============================================================================")
         w("// Access-constraint gating — GENERATED from extracted access_constraints_v2.")
-        w("// A gated register's write() takes a witness: code that writes it without")
-        w("// first establishing the datasheet's precondition does not compile.")
+        w("// Field-level by default: a gated register exposes write_preserving(), which")
+        w("// structurally cannot change protected bits (witnessed fields, coupled")
+        w("// relation bits, held fields; never-set bits are forced to 0), and — where a")
+        w("// witness exists — write_full(value, &Witness). Whole-register gates expose")
+        w("// only write(value, &Witness). The raw write() does not exist on gated")
+        w("// registers: every previously-legal raw write site fails to compile and the")
+        w("// author must choose the preserving, witnessed, or coupled path.")
         w("// ============================================================================")
         w("")
+        # witness types, deduped by name
+        seen_w = set()
         for abbrev, g in gates.items():
-            wit, gt = g["witness"], g["gtype"]
-            w(f"/// Datasheet ({abbrev} gate): \"{g['quote']}\"")
-            w(f"/// Violation consequence: {g['consequence']}")
-            w(f"/// Proof that {g['pre_register']}.{g['pre_field']} is cleared.")
-            w(f"pub struct {wit}(());")
-            w(f"/// Bit mask of {g['pre_register']}.{g['pre_field']} (from extraction).")
-            w(f"pub const GATE_{g['pre_register']}_{g['pre_field'].upper()}: u32 = 1 << {g['mask_bit']};")
-            w(f"impl {wit} {{")
-            w(f"    /// Establish the precondition (action witness): clear {g['pre_register']}.{g['pre_field']}.")
-            w(f"    pub fn establish(reg: &mut Volatile<u32>) -> {wit} {{")
-            w(f"        let v = reg.read();")
-            w(f"        reg.write(v & !GATE_{g['pre_register']}_{g['pre_field'].upper()});")
-            w(f"        {wit}(())")
-            w("    }")
-            w(f"    /// Leave the gated state: re-set {g['pre_register']}.{g['pre_field']}, consuming the proof.")
-            w(f"    pub fn release(self, reg: &mut Volatile<u32>) {{")
-            w(f"        let v = reg.read();")
-            w(f"        reg.write(v | GATE_{g['pre_register']}_{g['pre_field'].upper()});")
-            w("    }")
-            w("}")
-            w(f"/// {abbrev}: write permitted only with the {wit} proof.")
+            wit = g.get("witness")
+            if not wit or wit["name"] in seen_w:
+                continue
+            seen_w.add(wit["name"])
+            nm = wit["name"]
+            pm = wit["pre_mask"]
+            pr, pf = wit["pre_register"], wit["pre_field"]
+            w(f"/// Datasheet: \"{wit['quote']}\"")
+            w(f"/// Violation consequence: {wit['consequence']}")
+            state = "cleared" if wit["mode"] == "cleared" else "set"
+            w(f"/// Proof that {pr}.{pf} is {state}.")
+            w(f"pub struct {nm}(());")
+            w(f"/// Bit mask of {pr}.{pf} (from extraction).")
+            w(f"pub const GATE_{pr}_{re.sub(r'[^A-Za-z0-9]', '_', pf).upper()}: u32 = {hex(pm)};")
+            mconst = f"GATE_{pr}_{re.sub(r'[^A-Za-z0-9]', '_', pf).upper()}"
+            if wit["minted_by"] == "establish":
+                w(f"impl {nm} {{")
+                if wit["mode"] == "cleared":
+                    w(f"    /// Establish the precondition (action witness): clear {pr}.{pf}.")
+                    w(f"    pub fn establish(reg: &mut Volatile<u32>) -> {nm} {{")
+                    w(f"        let v = reg.read();")
+                    w(f"        reg.write(v & !{mconst});")
+                    w(f"        {nm}(())")
+                    w("    }")
+                    w(f"    /// Leave the gated state: re-set {pr}.{pf}, consuming the proof.")
+                    w(f"    pub fn release(self, reg: &mut Volatile<u32>) {{")
+                    w(f"        let v = reg.read();")
+                    w(f"        reg.write(v | {mconst});")
+                    w("    }")
+                else:
+                    w(f"    /// Establish the precondition (action witness): set {pr}.{pf}.")
+                    w(f"    /// No release: the condition must persist while gated fields are in use.")
+                    w(f"    pub fn establish(reg: &mut Volatile<u32>) -> {nm} {{")
+                    w(f"        let v = reg.read();")
+                    w(f"        reg.write(v | {mconst});")
+                    w(f"        {nm}(())")
+                    w("    }")
+                w("}")
+            w("")
+        # gated register types
+        for abbrev, g in gates.items():
+            gt = g["gtype"]
+            wit = g.get("witness")
+            hold, clamp = g["hold_mask"], g["clamp_mask"]
+            wmask = g.get("wit_mask", 0)
+            w(f"/// {abbrev}: constraint-gated register (see the quotes on its methods).")
             w("#[derive(FromBytes)]")
             w("#[repr(transparent)]")
             w(f"pub struct {gt}(Volatile<u32>);")
             w(f"impl {gt} {{")
             w("    pub fn read(&self) -> u32 { self.0.read() }")
-            w(f"    /// Gated write — compile-time proof that {g['pre_register']}.{g['pre_field']} is cleared.")
-            w(f"    pub fn write(&mut self, value: u32, _proof: &{wit}) {{ self.0.write(value) }}")
+            if g["whole"]:
+                w(f"    /// Datasheet: \"{wit['quote']}\"")
+                w(f"    /// Whole-register gated write — requires proof {wit['name']}.")
+                w(f"    pub fn write(&mut self, value: u32, _proof: &{wit['name']}) {{ self.0.write(value) }}")
+            else:
+                pres = hold | clamp
+                w(f"    /// Free write that CANNOT change the protected bits:")
+                for tag, quote, _cons in g["quotes"]:
+                    w(f"    /// - ({tag}) \"{quote[:140]}\"")
+                w(f"    pub fn write_preserving(&mut self, value: u32) {{")
+                w(f"        let cur = self.0.read();")
+                w(f"        self.0.write((value & !{hex(pres)}) | (cur & {hex(hold)}));")
+                w("    }")
+                if wit:
+                    keep = hold & ~wmask
+                    w(f"    /// Witnessed write: may change the gated fields (mask {hex(wmask)}),")
+                    w(f"    /// still preserving other protected bits and never-set bits.")
+                    w(f"    pub fn write_full(&mut self, value: u32, _proof: &{wit['name']}) {{")
+                    w(f"        let cur = self.0.read();")
+                    w(f"        self.0.write((value & !{hex(clamp | keep)}) | (cur & {hex(keep)}));")
+                    w("    }")
+                    if wit["minted_by"] == "check" and wit["pre_register"] == abbrev:
+                        nm = wit["name"]
+                        mconst = f"GATE_{wit['pre_register']}_{re.sub(r'[^A-Za-z0-9]', '_', wit['pre_field']).upper()}"
+                        cmp_expr = f"(v & {mconst}) == {mconst}" if wit["mode"] == "set" else f"(v & {mconst}) == 0"
+                        w(f"    /// Fallible check minting the state witness: {wit['pre_register']}.{wit['pre_field']} must read {wit['mode']}.")
+                        w(f"    pub fn check_{re.sub(r'[^A-Za-z0-9]', '_', wit['pre_field']).lower()}(&self) -> Option<{nm}> {{")
+                        w(f"        let v = self.0.read();")
+                        w(f"        if {cmp_expr} {{ Some({nm}(())) }} else {{ None }}")
+                        w("    }")
+            w("}")
+            w("")
+        # coupled relation setters
+        for cp in couplings:
+            a, b = cp["pair"]
+            ga, gb = gates[a["register"]]["gtype"], gates[b["register"]]["gtype"]
+            for q in cp["quotes"]:
+                w(f"/// Datasheet: \"{q}\"")
+            w(f"/// The related bits can ONLY be changed together, keeping them equal —")
+            w(f"/// independent writes preserve them (write_preserving).")
+            w(f"pub fn {cp['fn']}(a: &mut {ga}, b: &mut {gb}, enable: bool) {{")
+            for var, x in (("a", a), ("b", b)):
+                w(f"    let v = {var}.0.read();")
+                w(f"    {var}.0.write(if enable {{ v | {hex(x['mask'])} }} else {{ v & !{hex(x['mask'])} }}); // {x['register']}.{x['field']}")
             w("}")
             w("")
 
@@ -397,6 +615,10 @@ def main():
         const_lines, const_report = emit_constants(cmap, specs, report)
         lines.extend(const_lines)
 
+    if args.gated:
+        report["gating"] = gate_report
+        report["couplings"] = [{k: v for k, v in cp.items() if k != "key"}
+                               for cp in couplings]
     with open(os.path.join(out_dir, "regs.rs"), "w") as f:
         f.write("\n".join(lines))
     with open(os.path.join(out_dir, "emit_report.json"), "w") as f:
@@ -409,8 +631,14 @@ def main():
             print(f"  {k}: {len(report[k])}")
             for item in report[k][:10]:
                 print("    ", item)
-    if report.get("gated"):
-        print(f"  gated registers: {report['gated']}")
+    if args.gated:
+        print(f"  gating: {len(gate_report['encoded'])} constraints encoded on "
+              f"{len(gates)} registers (+{len(couplings)} coupled setters); "
+              f"{len(gate_report['not_encoded'])} not encoded")
+        for e in gate_report["encoded"]:
+            print(f"    ENCODED {e['register']:9s} {e['kind']:14s} -> {e['encoding']}")
+        for e in gate_report["not_encoded"]:
+            print(f"    -       {e['register']:9s} {e['kind']:14s} {e['reason']}")
     if "constants" in report:
         cr = report["constants"]
         print(f"  constants: {len(cr['derived_agree'])} field-derived agree, "

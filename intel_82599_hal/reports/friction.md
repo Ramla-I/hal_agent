@@ -44,14 +44,19 @@ recorded reason in `constants_map.json`.
 
 ## E. Driver diff required by the constraint layer (by design)
 
-`pipeline/driver_diff_gated.patch`: **2 files, +12/−5 lines** — the measured
-cost of adopting compile-time gates:
-- `enable_rx_function`: mint `RxctrlRxenCleared` (clears RXEN), pass proof to
-  the `fctrl` write, `release` re-enables — replacing two manual RXEN writes.
-- `set_tdh`: mint `TxdctlEnableCleared` (clears TXDCTL.ENABLE) before the head
-  write — the type now *forces* the "queue disabled" precondition.
-The original driver already satisfied both rules implicitly (RXEN was still 0
-during init); the gates make that ordering structural instead of accidental.
+`pipeline/driver_diff_gated.patch`: **2 files, +27/−15 lines** for 9 encoded
+constraints — the measured cost of adopting the field-level gates:
+- `enable_rx_function`: mint `RxctrlRxenCleared`, pass proof to the `fctrl`
+  write, `release` re-enables (replaces two manual RXEN writes).
+- `set_tdh`: mint `TxdctlEnableCleared` before the head write.
+- CRC strip: the two independent OR-writes (one of them the RDRXCTL bug)
+  collapse into one coupled `set_rxcrcstrp_crcstrip(..., true)` call.
+- 5 mechanical renames `write` → `write_preserving` (hlreg0 tx site, rdrxctl
+  RSC clear, both dmatxctl TE toggles, eiac) — loud-by-design: gated registers
+  drop raw `write()` so every old site must consciously pick the preserving,
+  witnessed, or coupled path; silent clamping would hide driver intent.
+The original driver already satisfied the FCTRL/TDH rules implicitly; the
+gates make the ordering structural instead of accidental.
 
 ## F. Source-document artifacts (md conversion of the datasheet)
 

@@ -60,34 +60,47 @@ registers — the last 3 needed model escalation, not more context).
 
 ## Constraint encoding (the safety the hand-written HAL lacks)
 
-34 raw constraints → 29 grammar-valid across 26 registers (5 state_gate,
-7 read_effect, 8 value_relation, 8 other, 1 delay); computed enforceability:
-4 action_witnessed, 1 state_witnessed, 1 dynamic_check, 23 doc_only.
-The deterministic whole-register action-witness rule (the pac_codegen default,
-retargeted to MMIO newtypes) selects **2 gates**, both driver-relevant:
+34 raw constraints → 29 grammar-valid across 26 registers. Encoding is
+**field-level by default** (a case-study extension of the settled 4-class
+enforceability taxonomy, which stays untouched in `defs.py`): a gated register
+loses its raw `write()` — it exposes `write_preserving()` (structurally cannot
+change protected bits; never-set bits forced to 0) plus, where a witness
+exists, `write_full(value, &Witness)`; whole-register gates (`target_fields=[]`)
+expose only `write(value, &Witness)`.
 
-- **FCTRL** — "Before receive filters are updated/modified the RXCTRL.RXEN bit
-  should be set to 0b." → `GatedFctrl::write(v, &RxctrlRxenCleared)`; the
-  witness is minted by clearing RXEN and consumed by the re-enable.
-- **TDH** — "The only time software should write to this register is after a
-  reset and before enabling the transmit function." →
-  `GatedTdh::write(v, &TxdctlEnableCleared)`; minting the proof *clears
-  TXDCTL.ENABLE*, so the type forces the precondition.
+**9 of 29 constraints encoded, on 8 registers:**
 
-**Enforcement demonstrated:** against the gated HAL the *unmodified* driver
-fails to compile with exactly two E0061 errors at the two datasheet-relevant
-write sites (`lib.rs:827` fctrl, `queue_registers.rs:74` set_tdh) — the gate
-firing is the violation demo. After the +12/−5 driver diff both `cargo check`
-and `cargo build` are green. The original driver satisfied both rules only
-implicitly (RXEN happened to still be 0 during init); the gates make the
-ordering structural.
+| Register | Constraint | Encoding |
+|---|---|---|
+| FCTRL | write only while RXCTRL.RXEN=0 | whole-register witness (`RxctrlRxenCleared`: establish clears RXEN, release re-enables) |
+| TDH | write only after reset, before TXDCTL.ENABLE | whole-register witness (`TxdctlEnableCleared`; minting clears ENABLE — the type forces the precondition) |
+| EEC | EE_SK/EE_CS/EE_DI/EE_REQ usable only when EE_GNT=1 (hardware-established) | field gate + **check-minted state witness**: `check_ee_gnt() -> Option<EecEeGntSet>` |
+| EIAM | Auto Mask bits require GPIE.EIAME set | field gate + set-mode action witness (`GpieEiameSet::establish`, no release — condition must persist) |
+| EIAC | bits that share the MSI-X vector "should never set auto clear" | **never-set clamp**: `write_preserving` forces them to 0 — the illegal value is unrepresentable |
+| HLREG0 + RDRXCTL | RXCRCSTRP "must be set the same as" CRCStrip (2 constraints, stated on both sides) | **coupled setter** `set_rxcrcstrp_crcstrip(a, b, enable)`; independent writes preserve both bits — the inconsistent state (finding 1!) is unwritable |
+| DMATXCTL | "software must not change" the VT field | **hold mask**: no API can change it |
 
-Honest limits: gates are whole-register and type-level (a proof minted for
-queue 3 type-checks a write to queue 5 — instance binding would need branded
-lifetimes); EIAC/EIAM field-value gates and the CTRL 10 ms post-reset delay
-remain runtime concerns; the SW/FW semaphore protocol for AUTOC is only
-present as a doc_only note because §10.5.4 lies outside the register chapter
-in our source md.
+**The 20 not encoded, with computed/deterministic reasons** (all recorded in
+`emit_report.json`): 7 `read_effect` + 6 `other` + CTRL's bare delay are
+doc/runtime-tier by the computed taxonomy; 5 `value_relation`s whose semantics
+live in the value (RDBAL/TDBAL 128-byte alignment, SRRCTL and EITR
+conditionals, FCRTH inequality) are invisible at `u32` granularity — they need
+typed value builders (runtime-checked constructors) and stay runtime-tier; 1
+`state_gate` shape (TXDCTL's WTHRESH note arrived as `other`) fits no rule.
+
+**Enforcement demonstrated:** the *unmodified* driver against the gated HAL
+fails with **9 errors at 9 sites — every one a datasheet-relevant write**
+(fctrl, set_tdh, the two CRC-strip lines, the second hlreg0 site, both
+dmatxctl TE toggles, eiac). The adoption diff is **2 files, +27/−15** — and it
+*deletes the CRC-strip bug*: the two independent ORs (one with the wrong bit)
+become one `set_rxcrcstrp_crcstrip(..., true)` call, so finding 1 cannot be
+re-introduced. After the diff, `cargo check` and `cargo build` are green.
+
+Honest limits: witnesses are type-level, not instance-bound (a proof minted
+for queue 3 type-checks a write to queue 5); minting/checking still reads
+hardware at runtime (TOCTOU parity with a correct handwritten driver, as
+settled for the MCU arm); the AUTOC SW/FW-semaphore protocol remains doc-only
+because §10.5.4 is outside the register chapter in our source md.
 
 ## Reproduction
 
