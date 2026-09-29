@@ -62,10 +62,17 @@ def run_bug_finding(
             for d, reason in fp_pairs
         ]
 
+        # Access candidates skip the context-free LLM analyzer (which can't judge
+        # access, and there are many) — they go straight to the review and are
+        # validated downstream by s6 against the datasheet. Everything else is
+        # analyzed as before.
+        access_cands = [d for d in candidates if d.key == "access"]
+        other_cands = [d for d in candidates if d.key != "access"]
         if run_analyzer_enabled:
-            analyzer_bugs = run_analyzer(svd_name, candidates, out_dir, models=analyzer_models)
+            analyzer_bugs = run_analyzer(svd_name, other_cands, out_dir, models=analyzer_models)
         else:
-            analyzer_bugs = [Bug(diff=d) for d in candidates]
+            analyzer_bugs = [Bug(diff=d) for d in other_cands]
+        analyzer_bugs += [Bug(diff=d) for d in access_cands]
         # Generator reasoning is attached to the CSV as evidence for the human
         # reviewer (the analyzer itself stays context-free; the validator retrieves
         # datasheet context downstream).

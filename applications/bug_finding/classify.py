@@ -78,7 +78,59 @@ def _register_bit_shift_classes(diffs: list[Diff]) -> dict[tuple[str, str], str]
     return classes
 
 
-def mechanical_fp_reason(diff: Diff, shift_classes: dict[tuple[str, str], str]) -> Optional[str]:
+# Min registers for a whole-peripheral address shift to be trusted as a base-convention artifact.
+_PERIPHERAL_ADDR_SHIFT_MIN_REGS = 3
+# Peripheral baseAddresses are aligned to at least this; a base off by less has
+# absorbed a register offset (the base-convention signature).
+_PERIPHERAL_BASE_ALIGN = 0x100
+
+
+def _peripheral_address_shift_classes(diffs: list[Diff]) -> dict[str, int]:
+    """Peripherals whose address_offset diffs are a base-convention artifact.
+
+    The generator reports register offsets relative to the datasheet's peripheral
+    base; an SVD may bake part of that offset into `baseAddress` instead (STM32
+    BKP: base 0x40006C04 + offset 0x0 == datasheet base 0x40006C00 + offset 0x4).
+    Then every register differs from the datasheet by the same constant while the
+    *absolute* address matches — a representation difference, not a bug.
+
+    A uniform whole-peripheral shift is NOT enough on its own: the generator
+    anchoring a peripheral to the wrong register bank produces the same signature
+    but is a REAL bug (rm0090 f417 HASH: the SVD carries the F43x-only digest bank
+    at 0x310, which does not exist on the f417 — the generator's 0xC is correct).
+    So we require the SVD baseAddress to actually prove the convention: it must be
+    non-aligned and removing the uniform shift must re-align it (0x40006C04 - 4 ==
+    0x40006C00). A peripheral with an already-aligned base is left as a candidate.
+    """
+    by_per: dict[str, list[int]] = {}
+    base_of: dict[str, int] = {}
+    for d in diffs:
+        if d.key == "address_offset":
+            s, g = _as_int(d.svd_value), _as_int(d.generator_value)
+            if s is not None and g is not None:
+                by_per.setdefault(d.peripheral, []).append(g - s)
+                if d.peripheral_base is not None:
+                    base_of[d.peripheral] = d.peripheral_base
+    classes: dict[str, int] = {}
+    for per, deltas in by_per.items():
+        if len(deltas) < _PERIPHERAL_ADDR_SHIFT_MIN_REGS:
+            continue
+        if set(deltas) != {deltas[0]} or deltas[0] == 0:
+            continue
+        shift, base = deltas[0], base_of.get(per)
+        # Base-convention proof: an aligned "real" base + the shift == the SVD base.
+        if (base is not None and abs(shift) < _PERIPHERAL_BASE_ALIGN
+                and base % _PERIPHERAL_BASE_ALIGN != 0
+                and (base - shift) % _PERIPHERAL_BASE_ALIGN == 0):
+            classes[per] = shift
+    return classes
+
+
+def mechanical_fp_reason(
+    diff: Diff,
+    shift_classes: dict[tuple[str, str], str],
+    addr_shift_classes: Optional[dict[str, int]] = None,
+) -> Optional[str]:
     """Reason string if *diff* is a clear generator false positive, else None.
 
     Deterministic signatures only (no LLM): not-found placeholders, absolute
@@ -89,6 +141,13 @@ def mechanical_fp_reason(diff: Diff, shift_classes: dict[tuple[str, str], str]) 
     if g.lower() in _NOT_FOUND_TOKENS:
         return "generator value empty / not-found"
     gi = _as_int(g)
+    if diff.key == "reset_value":
+        # A reset value that needs more bits than the register is wide is impossible
+        # (svdtools rejects it: "doesn't fit in N bits") -> a generator misread, not a
+        # real bug. e.g. USART SR svd=0xC0 (correct: TXE+TC) vs generator 0xC00000.
+        if gi is not None and diff.reg_size and gi.bit_length() > diff.reg_size:
+            return f"reset value 0x{gi:X} exceeds register width ({diff.reg_size} bits)"
+        return None
     if diff.key == "address_offset":
         if "%" in diff.register:
             return "array/template register reported as range/formula"
@@ -96,6 +155,11 @@ def mechanical_fp_reason(diff: Diff, shift_classes: dict[tuple[str, str], str]) 
             return "address_offset is a range/formula, not a single offset"
         if gi >= _OFFSET_ABS_THRESHOLD:
             return "absolute address emitted instead of peripheral offset"
+        delta = (addr_shift_classes or {}).get(diff.peripheral)
+        if delta is not None:
+            sign = "+" if delta > 0 else "-"
+            return (f"whole-peripheral uniform address shift ({sign}0x{abs(delta):X}) "
+                    "— SVD baseAddress absorbs it (absolute address matches), not a bug")
         return None
     if diff.key in ("bit_offset", "bit_width"):
         if gi is None:
@@ -118,10 +182,11 @@ def split_mechanical_fps(diffs: list[Diff]) -> tuple[list[tuple[Diff, str]], lis
     """
     mism = [d for d in diffs if d.is_value_mismatch]
     shift_classes = _register_bit_shift_classes(mism)
+    addr_shift_classes = _peripheral_address_shift_classes(mism)
     fps: list[tuple[Diff, str]] = []
     candidates: list[Diff] = []
     for d in mism:
-        reason = mechanical_fp_reason(d, shift_classes)
+        reason = mechanical_fp_reason(d, shift_classes, addr_shift_classes)
         (fps.append((d, reason)) if reason else candidates.append(d))
     return fps, candidates
 

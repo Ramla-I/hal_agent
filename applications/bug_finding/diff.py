@@ -24,13 +24,32 @@ from typing import Any, Optional
 
 from agent_tools.svd_parsing import resolve_peripheral_registers, expand_dim_indices
 from utils.generator_facts import convert_generator_register_to_svd_like
+from utils.utils import setup_logger
 from .models import Diff, Presence
+
+logger = setup_logger(__name__)
 
 # Register-level attributes compared (in a stable order).
 _REGISTER_KEYS = ("address_offset", "reset_value", "size")
 _HEX_KEYS = ("address_offset", "reset_value")
-# Field-level attributes compared.
-_FIELD_KEYS = ("bit_offset", "bit_width")
+# Field-level attributes compared. `access` is validated downstream (s6, datasheet-
+# grounded) rather than by the context-free analyzer — see pipeline.run_bug_finding.
+_FIELD_KEYS = ("bit_offset", "bit_width", "access")
+
+# Access is canonicalized to read-write/read-only/write-only via the SAME shared
+# notation map the validator uses (optimization_validator/access_notations.json),
+# so vocabulary variants (rw, write, rc_w1, write-1-to-clear, …) collapse and don't
+# become spurious diffs. Unicode hyphens (U+2011 etc.) -> ASCII first, since the
+# generator sometimes emits them. An unrecognized token falls back to its cleaned
+# form so a genuinely novel value still compares.
+from optimization_validator.access_notation import canonical_access  # noqa: E402
+
+_UNI_HYPHENS = str.maketrans({c: "-" for c in "‐‑‒–—−"})
+
+
+def _norm_access(a) -> str:
+    s = str(a or "").strip().lower().translate(_UNI_HYPHENS)
+    return canonical_access(s) or s
 
 
 # ---------------------------------------------------------------------------
@@ -98,6 +117,7 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
 
     dev_size = _int0(root.find(f"{ns}size"))
     dev_reset = _reset(root)
+    dev_access = (root.findtext(f"{ns}access") or "").strip().lower()
 
     per_elem = {(p.findtext(f"{ns}name") or "").strip().lower(): p for p in root.iter(f"{ns}peripheral")}
     reg_index: dict[tuple[str, str], Any] = {}
@@ -112,7 +132,11 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
         p = per_elem.get(pn)
         return (_int0(p.find(f"{ns}size")) if p is not None else None, _reset(p))
 
-    def _fields_of(reg):
+    def _per_access(pn):
+        p = per_elem.get(pn)
+        return ((p.findtext(f"{ns}access") or "").strip().lower() if p is not None else "") or dev_access
+
+    def _fields_of(reg, fallback_access=""):
         fe = reg.find(f"{ns}fields")
         if fe is None:
             return None  # not specified locally -> inheritable
@@ -132,6 +156,8 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
                 "bit_offset": int(field.find(f"{ns}bitOffset").text.strip()),
                 "bit_width": int(field.find(f"{ns}bitWidth").text.strip()),
                 "enumerated_values": enum_values,
+                # access cascades field -> register -> peripheral -> device (CMSIS).
+                "access": (field.findtext(f"{ns}access") or "").strip().lower() or fallback_access,
             })
         return out
 
@@ -148,7 +174,8 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
                           else (base["address_offset"] if base else None))
         size = _int0(reg.find(f"{ns}size"))
         reset_value = _reset(reg)
-        fields = _fields_of(reg)
+        reg_access = (reg.findtext(f"{ns}access") or "").strip().lower() or _per_access(pn)
+        fields = _fields_of(reg, reg_access)
         per_size, per_reset = _per_defaults(pn)
         if size is None:
             size = base["size"] if base and base.get("size") is not None else (per_size if per_size is not None else dev_size)
@@ -168,6 +195,16 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
         prefix = peripheral_name + "_"
         return name[len(prefix):] if name.startswith(prefix) else name
 
+    def _assign(registers, collisions, key, value):
+        # Registers are keyed by prefix-stripped name; if two SVD registers strip
+        # to the same key with different offsets (e.g. HASH `HR0` @0xC vs
+        # `HASH_HR0` @0x310), one silently overwrites the other. Record it so the
+        # diff can warn — the kept register may be mispaired against the generator.
+        prev = registers.get(key)
+        if prev is not None and prev.get("address_offset") != value.get("address_offset"):
+            collisions.append((key, value.get("address_offset"), prev.get("address_offset")))
+        registers[key] = value
+
     # Expand <dim> arrays to match the generator (which now expands them too).
     # Set SVD_DIM_EXPAND=0 only to regenerate reviews against LEGACY generator
     # output that still has the collapsed `%s` files (else bcr2/3/4 would show as
@@ -176,10 +213,14 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
 
     peripherals: dict[str, dict[str, dict]] = {}
     for peripheral_name, registers_elem in resolved.items():
+        pel = per_elem.get(peripheral_name)
+        per_base = _int0(pel.find(f"{ns}baseAddress")) if pel is not None else None
         registers: dict[str, dict] = {}
+        collisions: list = []
         if registers_elem is not None:
             for reg in registers_elem.findall(f"{ns}register"):
                 base = _resolve_reg(peripheral_name, reg)
+                base["_peripheral_base"] = per_base
                 raw = reg.find(f"{ns}name").text.strip()
                 idxs = expand_dim_indices(reg, ns) if (expand_dim and "%s" in raw) else []
                 if idxs:
@@ -196,9 +237,17 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
                     for pos, ix in enumerate(idxs):
                         inst = dict(base)
                         inst["address_offset"] = base_off + pos * inc
-                        registers[_strip(tmpl.replace("%s", ix).lower())] = inst
+                        _assign(registers, collisions, _strip(tmpl.replace("%s", ix).lower()), inst)
                 else:
-                    registers[_strip(raw.lower())] = base
+                    _assign(registers, collisions, _strip(raw.lower()), base)
+        if collisions:
+            detail = ", ".join(f"{k} (kept {_hex_display(new)}, dropped {_hex_display(old)})"
+                               for k, new, old in collisions)
+            logger.warning(
+                "%s peripheral '%s': %d register name collision(s) after prefix-stripping; "
+                "the diff keeps one register per name and may mispair it against the generator "
+                "-- verify these manually: %s",
+                os.path.basename(svd_path), peripheral_name, len(collisions), detail)
         peripherals[peripheral_name] = registers
     return peripherals
 
@@ -276,6 +325,8 @@ def _compare_fields(peripheral: str, register: str,
         sf, gf = svd_by[name], gen_by[name]
         for key in _FIELD_KEYS:
             sv, gv = sf.get(key), gf.get(key)
+            if key == "access":
+                sv, gv = _norm_access(sv), _norm_access(gv)
             if sv != gv:
                 diffs.append(Diff(
                     peripheral=peripheral, register=register, field=name, key=key,
@@ -302,6 +353,8 @@ def _compare_register(peripheral: str, register: str,
             diffs.append(Diff(
                 peripheral=peripheral, register=register, key=key,
                 svd_value=svd_disp, generator_value=gen_disp, presence=Presence.BOTH,
+                reg_size=svd_reg.get("size"),
+                peripheral_base=svd_reg.get("_peripheral_base"),
             ))
     diffs.extend(_compare_fields(peripheral, register,
                                  svd_reg.get("fields", []), gen_reg.get("fields", [])))
