@@ -78,6 +78,77 @@ def load_targets(scope):
     return regs
 
 
+def incomplete_registers(base_dir, regs):
+    """Registers to re-generate: (a) subfield bit coverage does not span 0..31
+    or no subfields at all; (b) a driver-needed field (constants_map.json) is
+    absent from the spec — the interface contract names the field, the bits
+    still come from extraction."""
+    sys.path.insert(0, HERE)
+    from emit_hal import find_field
+    retry = set()
+    specs = {}
+    for r in regs:
+        key = r["abbrev_base"].upper()
+        p = os.path.join(base_dir, key + ".json")
+        if not os.path.exists(p):
+            retry.add(key)
+            continue
+        with open(p) as f:
+            specs[key] = json.load(f)
+        sf = specs[key].get("subfields") or []
+        bits = [s["bit_number"] for s in sf if s.get("bit_number")]
+        hi = max((b.get("end_bit", -1) for b in bits), default=-1)
+        lo = min((b.get("start_bit", 99) for b in bits), default=99)
+        if not sf or hi < 31 or lo > 1:
+            retry.add(key)
+    cmap_p = os.path.join(HERE, "constants_map.json")
+    if os.path.exists(cmap_p):
+        with open(cmap_p) as f:
+            cmap = json.load(f)
+        for c in cmap["constants"]:
+            if c["kind"] == "policy":
+                continue
+            key = c["register"].upper()
+            sfound, _ = find_field(specs.get(key), [c.get("field")] + c.get("alt", []))
+            if sfound is None:
+                retry.add(key)
+    return retry
+
+
+def build_page_index():
+    """page_number -> ordered full text of that page's chunks."""
+    pages = {}
+    with open(CHUNKS_INDEX) as f:
+        for row in csv.DictReader(f):
+            path = os.path.join(CHUNKS_DIR, os.path.basename(row["file_path"]))
+            with open(path) as cf:
+                text = cf.read()
+            pages.setdefault(int(row["page_number"]), []).append(
+                (int(row["chunk_index"]), text))
+    return {p: "\n".join(t for _, t in sorted(v)) for p, v in pages.items()}
+
+
+def expand_context(ctx, full_page_ctx, extra_pages=2, cap_chars=40000):
+    """Replace a retrieved context by the FULL pages it touched plus the next
+    extra_pages pages — the deterministic neighbour expansion used by the
+    completion pass (long register tables run past chunk boundaries)."""
+    pages = sorted({int(m) for m in re.findall(r"\[Page (\d+)\]", ctx)})
+    if not pages:
+        return ctx
+    want = sorted(set(pages) | {pages[-1] + i for i in range(1, extra_pages + 1)})
+    parts = []
+    total = 0
+    for p in want:
+        if p not in full_page_ctx:
+            continue
+        block = f"[Page {p}]\n{full_page_ctx[p]}"
+        total += len(block)
+        if total > cap_chars:
+            break
+        parts.append(block)
+    return "\n\n---\n\n".join(parts) if parts else ctx
+
+
 def next_run_tag():
     os.makedirs(OUT_BASE, exist_ok=True)
     existing = [d for d in os.listdir(OUT_BASE) if re.fullmatch(r"r\d{3}", d)]
@@ -93,6 +164,12 @@ def main():
     ap.add_argument("--model", default="gpt-oss-120b")
     ap.add_argument("--max-output-per-reg", type=int, default=4000)
     ap.add_argument("--resume", help="existing run tag (e.g. r001): only missing registers")
+    ap.add_argument("--complete-from", help="base run tag: new run = copy of base, "
+                    "re-generating registers with incomplete bit coverage or with "
+                    "driver-needed fields missing (constants_map), using full-page "
+                    "neighbour-expanded context (the MCU empty-subfield-retry analog)")
+    ap.add_argument("--extra-pages", type=int, default=2,
+                    help="completion pass: pages appended past the last context page")
     ap.add_argument("--dry-run", action="store_true", help="retrieval only, no LLM")
     args = ap.parse_args()
 
@@ -107,6 +184,20 @@ def main():
     out_dir = os.path.join(OUT_BASE, run_tag)
     info_dir = os.path.join(out_dir, "info")
     os.makedirs(info_dir, exist_ok=True)
+
+    full_page_ctx = None
+    if args.complete_from:
+        import shutil
+        base_dir = os.path.join(OUT_BASE, args.complete_from)
+        retry = incomplete_registers(base_dir, regs)
+        for f in os.listdir(base_dir):
+            srcp = os.path.join(base_dir, f)
+            if f.endswith(".json") and os.path.isfile(srcp):
+                shutil.copy(srcp, os.path.join(out_dir, f))
+        print(f"completion pass from {args.complete_from}: re-generating "
+              f"{len(retry)}: {sorted(retry)}")
+        regs = [r for r in regs if r["abbrev_base"].upper() in retry]
+        full_page_ctx = build_page_index()
 
     if args.resume:
         regs = [r for r in regs
@@ -153,6 +244,9 @@ def main():
         labels = [r["abbrev_base"] for r in batch]
         contexts = [ev.run_retrieval("82599", r["abbrev_base"], col, proc)
                     for r in batch]
+        if full_page_ctx is not None:
+            contexts = [expand_context(c, full_page_ctx, args.extra_pages)
+                        for c in contexts]
         for r, ctx in zip(batch, contexts):
             with open(os.path.join(info_dir, f"context_{r['abbrev_base'].upper()}.txt"),
                       "w") as f:

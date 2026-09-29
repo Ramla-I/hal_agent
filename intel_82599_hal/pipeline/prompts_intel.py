@@ -76,7 +76,13 @@ INTEL_DISCIPLINE_NOTE = (
     "otherwise kind \"other\" quoting the note and naming the involved "
     "registers). Likewise 'this register/field should only be written/changed "
     "while X is disabled (Y.Z = 0b)' is a state_gate, and 'poll bit X until it "
-    "reads 1b before doing Y' is a state_gate with established_by hardware."
+    "reads 1b before doing Y' is a state_gate with established_by hardware.\n"
+    "- Bit tables often CONTINUE across page markers: a second table whose bit "
+    "ranges pick up where the previous table stopped belongs to the SAME "
+    "register — merge it. Conversely, a continuation table whose bits overlap "
+    "rows you already have belongs to the PREVIOUS register's section — ignore "
+    "it. Never leave high bits unextracted when a continuation table in the "
+    "excerpts covers them."
 )
 
 INTEL_EXAMPLE = """\

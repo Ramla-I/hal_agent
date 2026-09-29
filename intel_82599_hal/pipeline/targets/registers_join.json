@@ -28,6 +28,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x042A0",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 17056,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 17056
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -46,6 +61,21 @@
       "rw": "RW",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 17064,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 17064
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x042A8",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 17064,
@@ -87,6 +117,21 @@
           }
         ],
         "alias_raw": "0x00004"
+      },
+      "offset_raw_detail": "0x00000 / 0x00004",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 0,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 0
+          }
+        ],
+        "alias_raw": "0x00004"
       }
     },
     {
@@ -106,6 +151,21 @@
       "rw": "RW",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 24,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 24
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x00018",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 24,
@@ -146,6 +206,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x0E200 + 4*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 57856,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 57856
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -175,6 +250,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x11074",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 69748,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 69748
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -191,6 +281,21 @@
       "rw": "RO",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 69744,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 69744
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x11070",
+      "rw_detail": "RO",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 69744,
@@ -240,6 +345,29 @@
           }
         ],
         "alias_raw": "0x02200+4*n, [n=0...15]"
+      },
+      "offset_raw_detail": "0x0100C + 0x40*n, n=0...63 and 0x0D00C + 0x40*(n-64), n=64...127 / 0x02200 + 4*n, [n=0...15]",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 4108,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 63,
+            "count": 64,
+            "start_addr": 4108
+          },
+          {
+            "base": 53260,
+            "stride": 64,
+            "n_first": 64,
+            "n_last": 127,
+            "count": 64,
+            "start_addr": 53260
+          }
+        ],
+        "alias_raw": "0x02200 + 4*n, [n=0...15]"
       }
     },
     {
@@ -256,6 +384,21 @@
       "rw": "RW",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 24588,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 24588
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x0600C + 0x40*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 24588,
@@ -297,6 +440,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x04A80",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 19072,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 19072
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -315,6 +473,21 @@
       "rw": "RW",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 33024,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 33024
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x08100",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 33024,
@@ -353,6 +526,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x04A8C",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 19084,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 19084
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -369,6 +557,21 @@
       "rw": "RW",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 19080,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 19080
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x04A88",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 19080,
@@ -409,6 +612,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x10010",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 65552,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 65552
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -425,6 +643,21 @@
       "rw": "RW",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 65556,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 65556
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x10014",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 65556,
@@ -465,6 +698,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x00810",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 2064,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 2064
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -481,6 +729,21 @@
       "rw": "RW",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 2192,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 2192
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x00890",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 2192,
@@ -521,6 +784,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x00800",
+      "rw_detail": "RW1C",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 2048,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 2048
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -537,6 +815,21 @@
       "rw": "WO",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 2056,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 2056
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x00808",
+      "rw_detail": "WO",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 2056,
@@ -577,6 +870,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x00888",
+      "rw_detail": "WO",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 2184,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 2184
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -596,6 +904,21 @@
       "rw": "RWS",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 2176,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 2176
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x00880",
+      "rw_detail": "RWS",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 2176,
@@ -644,6 +967,29 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x00820 + 4*n, n=0...23 and 0x012300 + 4*(n-24), n=24...128",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 2080,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 23,
+            "count": 24,
+            "start_addr": 2080
+          },
+          {
+            "base": 74496,
+            "stride": 4,
+            "n_first": 24,
+            "n_last": 128,
+            "count": 105,
+            "start_addr": 74496
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -671,6 +1017,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x05128 + 4*n, n=0...7",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 20776,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 7,
+            "count": 8,
+            "start_addr": 20776
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -687,6 +1048,21 @@
       "rw": "RW",
       "section": "Receive Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 60416,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 7,
+            "count": 8,
+            "start_addr": 60416
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x0EC00 + 4*n, n=0...7",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 60416,
@@ -727,6 +1103,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x03D00",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 15616,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 15616
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -745,6 +1136,21 @@
       "rw": "RW",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 12896,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 7,
+            "count": 8,
+            "start_addr": 12896
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x03260 + 4*n, n=0...7",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 12896,
@@ -785,6 +1191,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x03220 + 4*n, n=0...7",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 12832,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 7,
+            "count": 8,
+            "start_addr": 12832
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -803,6 +1224,21 @@
       "rw": "RW",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 12960,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 12960
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x032A0",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 12960,
@@ -843,6 +1279,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x05080",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 20608,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 20608
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -861,6 +1312,21 @@
       "rw": "RW",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 12800,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 3,
+            "count": 4,
+            "start_addr": 12800
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x03200 + 4*n, n=0...3",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 12800,
@@ -902,6 +1368,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x0E600 + 4*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 58880,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 58880
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -920,6 +1401,21 @@
       "rw": "RC",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 16524,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 16524
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x0408C",
+      "rw_detail": "RC",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 16524,
@@ -960,6 +1456,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x04088",
+      "rw_detail": "RC",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 16520,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 16520
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -989,6 +1500,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x04094",
+      "rw_detail": "RC",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 16532,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 16532
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1007,6 +1533,21 @@
       "rw": "RC",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 16528,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 16528
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x04090",
+      "rw_detail": "RC",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 16528,
@@ -1048,6 +1589,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x00898",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 2200,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 2200
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1077,6 +1633,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x04074",
+      "rw_detail": "RO",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 16500,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 16500
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1095,6 +1666,21 @@
       "rw": "RO",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 16512,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 16512
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x04080",
+      "rw_detail": "RC",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 16512,
@@ -1136,6 +1722,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x04240",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 16960,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 16960
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1152,6 +1753,21 @@
       "rw": "RW",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 40,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 40
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x00028",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 40,
@@ -1193,6 +1809,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x00900 + 4*n, n=0...63",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 2304,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 63,
+            "count": 64,
+            "start_addr": 2304
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1211,6 +1842,21 @@
       "rw": "RW",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 59392,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 59392
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x0E800 + 4*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 59392,
@@ -1251,6 +1897,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x042A4",
+      "rw_detail": "RO",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 17060,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 17060
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1269,6 +1930,21 @@
       "rw": "RO",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 17188,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 17188
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x04324",
+      "rw_detail": "RO",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 17188,
@@ -1309,6 +1985,21 @@
           }
         ],
         "alias_raw": "0x05818"
+      },
+      "offset_raw_detail": "0x0EC80 / 0x05818",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 60544,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 60544
+          }
+        ],
+        "alias_raw": "0x05818"
       }
     },
     {
@@ -1327,6 +2018,21 @@
       "rw": "RW",
       "section": "Receive Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 41476,
+            "stride": 8,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 41476
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x0A204 + 8*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 41476,
@@ -1367,6 +2073,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x0A200 + 8*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 41472,
+            "stride": 8,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 41472
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1393,6 +2114,29 @@
             "n_last": 63,
             "count": 64,
             "start_addr": 4100
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x01004 + 0x40*n, n=0...63 and 0x0D004 + 0x40*(n-64), n=64...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 4100,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 63,
+            "count": 64,
+            "start_addr": 4100
+          },
+          {
+            "base": 53252,
+            "stride": 64,
+            "n_first": 64,
+            "n_last": 127,
+            "count": 64,
+            "start_addr": 53252
           }
         ],
         "alias_raw": null
@@ -1425,6 +2169,29 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x01000 + 0x40*n, n=0...63 and 0x0D000 + 0x40*(n-64), n=64...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 4096,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 63,
+            "count": 64,
+            "start_addr": 4096
+          },
+          {
+            "base": 53248,
+            "stride": 64,
+            "n_first": 64,
+            "n_last": 127,
+            "count": 64,
+            "start_addr": 53248
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1451,6 +2218,29 @@
             "n_last": 63,
             "count": 64,
             "start_addr": 4112
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x01010 + 0x40*n, n=0...63 and 0x0D010 + 0x40*(n-64), n=64...127",
+      "rw_detail": "RO",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 4112,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 63,
+            "count": 64,
+            "start_addr": 4112
+          },
+          {
+            "base": 53264,
+            "stride": 64,
+            "n_first": 64,
+            "n_last": 127,
+            "count": 64,
+            "start_addr": 53264
           }
         ],
         "alias_raw": null
@@ -1483,6 +2273,29 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x01008 + 0x40*n, n=0...63 and 0x0D008 + 0x40*(n-64), n=64...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 4104,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 63,
+            "count": 64,
+            "start_addr": 4104
+          },
+          {
+            "base": 53256,
+            "stride": 64,
+            "n_first": 64,
+            "n_last": 127,
+            "count": 64,
+            "start_addr": 53256
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1502,6 +2315,21 @@
       "rw": "RW",
       "section": "Receive DMA Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 12032,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 12032
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x02F00",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 12032,
@@ -1542,6 +2370,29 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x01018 + 0x40*n, n=0...63 and 0x0D018 + 0x40*(n-64), n=64...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 4120,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 63,
+            "count": 64,
+            "start_addr": 4120
+          },
+          {
+            "base": 53272,
+            "stride": 64,
+            "n_first": 64,
+            "n_last": 127,
+            "count": 64,
+            "start_addr": 53272
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1571,6 +2422,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x0EB00 + 4*n, n=0...31 / 0x05C00 + 4*n, n=0...31",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 60160,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 31,
+            "count": 32,
+            "start_addr": 60160
+          }
+        ],
+        "alias_raw": "0x05C00 + 4*n, n=0...31"
       }
     },
     {
@@ -1600,6 +2466,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x0EB80 + 4*n, n=0...9 / 0x05C80 + 4*n, n=0...9",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 60288,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 9,
+            "count": 10,
+            "start_addr": 60288
+          }
+        ],
+        "alias_raw": "0x05C80 + 4*n, n=0...9"
       }
     },
     {
@@ -1630,6 +2511,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x04900",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 18688,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 18688
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1648,6 +2544,21 @@
       "rw": "RW",
       "section": "Receive Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 20480,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 20480
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x05000",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 20480,
@@ -1689,6 +2600,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x03000",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 12288,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 12288
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1716,6 +2642,29 @@
             "n_last": 63,
             "count": 64,
             "start_addr": 4136
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x01028 + 0x40*n, n=0...63 and 0x0D028 + 0x40*(n-64), n=64...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 4136,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 63,
+            "count": 64,
+            "start_addr": 4136
+          },
+          {
+            "base": 53288,
+            "stride": 64,
+            "n_first": 64,
+            "n_last": 127,
+            "count": 64,
+            "start_addr": 53288
           }
         ],
         "alias_raw": null
@@ -1748,6 +2697,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x03C00 + 4*n, n=0...7",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 15360,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 7,
+            "count": 8,
+            "start_addr": 15360
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1766,6 +2730,21 @@
       "rw": "RW",
       "section": "Receive Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 57344,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 57344
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x0E000 + 4*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 57344,
@@ -1807,6 +2786,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x0E400 + 4*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 58368,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 58368
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1837,6 +2831,29 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x01014 + 0x40*n, n=0...63 and 0x0D014 + 0x40*(n-64), n=64...127 / 0x02100 + 4*n, [n=0...15]",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 4116,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 63,
+            "count": 64,
+            "start_addr": 4116
+          },
+          {
+            "base": 53268,
+            "stride": 64,
+            "n_first": 64,
+            "n_last": 127,
+            "count": 64,
+            "start_addr": 53268
+          }
+        ],
+        "alias_raw": "0x02100 + 4*n, [n=0...15]"
       }
     },
     {
@@ -1855,6 +2872,21 @@
       "rw": "RO",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 8,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 8
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x00008",
+      "rw_detail": "RO",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 8,
@@ -1896,6 +2928,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x10160",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 65888,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 65888
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1915,6 +2962,21 @@
       "rw": "RW",
       "section": "",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 65856,
+            "stride": null,
+            "n_first": null,
+            "n_last": null,
+            "count": null,
+            "start_addr": 65856
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x10140",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 65856,
@@ -1955,6 +3017,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x06004+0x40*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 24580,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 24580
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -1973,6 +3050,21 @@
       "rw": "RW",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 24576,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 24576
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x06000+0x40*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 24576,
@@ -2013,6 +3105,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x06010+0x40*n, n=0...127",
+      "rw_detail": "RO",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 24592,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 24592
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -2031,6 +3138,21 @@
       "rw": "RW",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 24584,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 24584
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x06008+0x40*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 24584,
@@ -2071,6 +3193,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x06018+0x40*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 24600,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 24600
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -2098,6 +3235,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x0603C+0x40*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 24636,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 24636
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -2114,6 +3266,21 @@
       "rw": "RW",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 24632,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 24632
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x06038+0x40*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 24632,
@@ -2155,6 +3322,21 @@
           }
         ],
         "alias_raw": null
+      },
+      "offset_raw_detail": "0x06028+0x40*n, n=0...127",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
+        "ranges": [
+          {
+            "base": 24616,
+            "stride": 64,
+            "n_first": 0,
+            "n_last": 127,
+            "count": 128,
+            "start_addr": 24616
+          }
+        ],
+        "alias_raw": null
       }
     },
     {
@@ -2173,6 +3355,21 @@
       "rw": "RW",
       "section": "Transmit Registers",
       "offset_parsed": {
+        "ranges": [
+          {
+            "base": 52224,
+            "stride": 4,
+            "n_first": 0,
+            "n_last": 7,
+            "count": 8,
+            "start_addr": 52224
+          }
+        ],
+        "alias_raw": null
+      },
+      "offset_raw_detail": "0x0CC00 + 0x4*n, n=0...7",
+      "rw_detail": "RW",
+      "offset_parsed_detail": {
         "ranges": [
           {
             "base": 52224,

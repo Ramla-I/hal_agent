@@ -168,6 +168,43 @@ def parse_table_8_2():
     return rows
 
 
+def parse_detail_headings():
+    """Parse every detailed register-description heading:
+
+        # <Full Name> \u2014 ABBREV[n] (<offset expr>; <ACCESS>)
+
+    Returns {abbrev_base_lower: {"abbrev", "offset_raw", "rw", "line"}} keeping
+    the FIRST occurrence (PF sections precede any VF/duplicate mention). The
+    Table 8-2 summary omits second register banks (e.g. the 0x0D000 Rx queue
+    bank) that these headings carry, so the join records both sources.
+    """
+    # separator is an em-dash or a plain hyphen glued to the name ("...Register- EICR");
+    # the offset expr may itself contain parentheses ("4*(n-24)") — split at the LAST ';'
+    head_re = re.compile(r"^#+\s*(?:[\d.]+\s+)?(.*?)\s*(?:\u2014|-)\s*"
+                         r"([A-Z0-9_]+n?(?:\[[^\]]*\])?)\s*\((.*);\s*([^);]*)\)")
+    out = {}
+    with open(DATASHEET_MD) as f:
+        for ln, line in enumerate(f, 1):
+            if not line.startswith("#"):
+                continue
+            m = head_re.match(line.strip())
+            if not m:
+                continue
+            _name, abbrev, expr, rw = m.groups()
+            if "0x" not in expr:
+                continue
+            base = abbrev_base(abbrev).lower()
+            keys = [base]
+            # FCTTVn-style trailing index letter (no brackets)
+            if base.endswith("n") and "n=" in expr.replace(" ", ""):
+                keys.append(base[:-1])
+            for k in keys:
+                if k not in out:
+                    out[k] = {"abbrev": abbrev, "offset_raw": expr.strip(),
+                              "rw": rw.strip(), "line": ln}
+    return out
+
+
 def abbrev_base(abbrev):
     """Normalize a Table 8-2 abbreviation to a joinable base name.
 
@@ -307,9 +344,11 @@ def main():
         else:
             unmatched.append(r)
 
+    detail = parse_detail_headings()
     join_out = []
     for r, hits in matched:
         h = hits[0]
+        det = detail.get(abbrev_base(h["abbrev"]).lower())
         join_out.append({
             "field": r["field"],
             "struct": r["struct"],
@@ -324,6 +363,9 @@ def main():
             "rw": h["rw"],
             "section": h.get("section", ""),
             "offset_parsed": parse_offset_expr(h["offset_raw"]),
+            "offset_raw_detail": det["offset_raw"] if det else None,
+            "rw_detail": det["rw"] if det else None,
+            "offset_parsed_detail": parse_offset_expr(det["offset_raw"]) if det else None,
         })
     with open(os.path.join(OUT, "registers_join.json"), "w") as f:
         json.dump({
