@@ -182,6 +182,51 @@ def abbrev_base(abbrev):
     return a
 
 
+_RANGE_RE = re.compile(
+    r"(0x[0-9A-Fa-f]+)"                                   # base
+    r"(?:\s*\+\s*(0x[0-9A-Fa-f]+|\d+)\s*\*\s*\(?\s*n(?:\s*-\s*(\d+))?\s*\)?)?"  # +stride*(n-k)
+    r"(?:\s*,\s*n\s*=\s*(\d+)\s*(?:\.\.\.|\u2026)\s*(\d+))?"                        # , n=A...B
+)
+
+
+def parse_offset_expr(offset_raw):
+    """Deterministically parse a Table 8-2 offset expression into ranges.
+
+    Handles: plain '0x00008'; alias '0x00000 / 0x00004' (first kept, alias
+    recorded); arrays '0x01000+0x40*n, n=0...63'; shifted second banks
+    '0x0D000 + 0x40*(n-64), n=64...127'; multi-range 'A and B'; hex or
+    decimal strides; unicode ellipsis. Returns {"ranges": [...], "alias_raw":
+    str|None}; each range = {base, stride, n_first, n_last, count} with ints
+    (stride/count None for scalars).
+    """
+    s = offset_raw.strip()
+    parts = re.split(r"\s+and\s+", s)
+    ranges, alias_raw = [], None
+    for pi, part in enumerate(parts):
+        aliases = [a.strip() for a in part.split("/")]
+        if len(aliases) > 1:
+            alias_raw = "/".join(aliases[1:])
+        m = _RANGE_RE.search(aliases[0])
+        if not m:
+            return {"ranges": [], "alias_raw": alias_raw, "unparsed": s}
+        base = int(m.group(1), 16)
+        stride = m.group(2)
+        stride = int(stride, 0) if stride else None
+        shift = int(m.group(3)) if m.group(3) else 0
+        n_first = int(m.group(4)) if m.group(4) else None
+        n_last = int(m.group(5)) if m.group(5) else None
+        count = (n_last - n_first + 1) if n_first is not None else None
+        # element-0 address of THIS range: base + stride*(n_first - shift)
+        start_addr = base
+        if stride is not None and n_first is not None:
+            start_addr = base + stride * (n_first - shift)
+        ranges.append({
+            "base": base, "stride": stride, "n_first": n_first,
+            "n_last": n_last, "count": count, "start_addr": start_addr,
+        })
+    return {"ranges": ranges, "alias_raw": alias_raw}
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
 
@@ -261,6 +306,35 @@ def main():
             matched.append((r, hits))
         else:
             unmatched.append(r)
+
+    join_out = []
+    for r, hits in matched:
+        h = hits[0]
+        join_out.append({
+            "field": r["field"],
+            "struct": r["struct"],
+            "access_type_ref": r["access_type"],
+            "array_len_ref": r["array_len"],
+            "offset_comment_ref": r["offset_comment"],
+            "driver_uses": r["driver_uses"],
+            "in_driver_set": r["in_driver_set"],
+            "abbrev": h["abbrev"],
+            "abbrev_base": abbrev_base(h["abbrev"]),
+            "offset_raw": h["offset_raw"],
+            "rw": h["rw"],
+            "section": h.get("section", ""),
+            "offset_parsed": parse_offset_expr(h["offset_raw"]),
+        })
+    with open(os.path.join(OUT, "registers_join.json"), "w") as f:
+        json.dump({
+            "note": "Machine-readable driver<->Table 8-2 join. offset_parsed is "
+                    "deterministic geometry (base/stride/count) from the summary "
+                    "offset expression; *_ref fields are the reference regs.rs "
+                    "shape (used for evaluation only, never fed to generation).",
+            "registers": join_out,
+        }, f, indent=2)
+    unparsed = [j["field"] for j in join_out if j["offset_parsed"].get("unparsed")]
+    assert not unparsed, f"offset expressions failed to parse: {unparsed}"
 
     uniq_ds_abbrevs = {abbrev_base(r["abbrev"]).lower() for r in ds_rows}
     lines = []
