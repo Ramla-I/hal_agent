@@ -57,8 +57,12 @@ Both systems extract the same thing — per-register structure (`address_offset`
   `api.anthropic.com`. Budget cap **$100**.
 - **Prompt:** the exact task text is in `claude_baseline/prompt.md` (enums excluded,
   one JSON file per `{peripheral}_{register}`, grammar-v2 access constraints).
-- (The Claude run harness — Dockerfile / run-docker.sh / settings — lived outside the
-  repo at `~/rm0041_headless_baseline/`; only the prompt, a parameter, is kept here.)
+- **Harness (vendored):** `claude_baseline/{Dockerfile, run-docker.sh, squid.conf}` —
+  the exact runner used. `run-docker.sh` builds the image, stands up an internal
+  Docker network + a squid egress-allowlist proxy (only `api.anthropic.com`), mounts
+  only `work/`, and invokes `claude` with the prompt/model/budget above. (The
+  superseded bwrap variant and its `settings.json` are not vendored — Docker does the
+  isolation via networks/mounts, not Claude's in-process sandbox.)
 
 ---
 
@@ -115,7 +119,10 @@ gen_vs_claude_rm0041/
 ├── README.md                       # this file
 ├── DISCUSSION.md                   # paper-style write-up of the finding
 ├── claude_baseline/
-│   └── prompt.md                   # the exact prompt the Claude agent was given
+│   ├── prompt.md                   # the exact prompt the Claude agent was given
+│   ├── Dockerfile                  # image for the headless-Claude run
+│   ├── run-docker.sh               # the runner: fs-locked + egress-allowlisted Docker run
+│   └── squid.conf                  # egress allowlist (api.anthropic.com only)
 └── pipeline/
     ├── run_noenum_rm0041.py        # Arm A run driver (all parameters above)
     ├── compare_generator_with_verified.py  # the scorer (verbatim repo copy)
@@ -152,16 +159,15 @@ python gen_vs_claude_rm0041/pipeline/rescore_bitpos.py
 #   python compare_generator_with_verified.py \
 #     -v "$(git rev-parse --show-toplevel)"/verified_datasheet/stm/rm0041_stm32f100.csv register_info
 
-# --- Claude arm (Arm B) ---
-# Headless Claude Code on the rm0041 PDF + SVDs with the committed prompt. Parameters:
-# model claude-fable-5-1, budget $100, one JSON file per {peripheral}_{register}.
-claude -p "$(cat gen_vs_claude_rm0041/claude_baseline/prompt.md)" \
-  --model claude-fable-5-1 --max-budget-usd 100 --permission-mode dontAsk \
-  --allowedTools Read Glob Grep Edit Write Bash --output-format json
-# NOTE: the recorded run used a Docker isolation harness (work dir only; egress
-# allow-listed to api.anthropic.com) that lived OUTSIDE this repo at
-# ~/rm0041_headless_baseline/ and is not vendored here — the command above is the
-# equivalent invocation without that sandbox.
+# --- Claude arm (Arm B) --- vendored harness (needs a working Nix rootless Docker)
+cd gen_vs_claude_rm0041/claude_baseline
+REPO="$(git rev-parse --show-toplevel)"
+mkdir -p work                                   # stage the inputs the agent sees
+cp "$REPO"/devices/stm/rm0041/rm0041.pdf work/
+cp "$REPO"/devices/stm/rm0041/svd/*.svd  work/
+export ANTHROPIC_API_KEY=...
+MODEL=claude-fable-5-1 BUDGET=100 ./run-docker.sh   # -> runs/<label>/{run.json,summary.txt,register_info_rm0041/}
+./run-docker.sh --teardown                          # remove the proxy + networks when done
 
 **Reproducibility boundary.** The numbers above are the recorded reference. Regenerating
 the pipeline arm needs a `GROQ_API_KEY` (the exact evolved retriever is vendored in
