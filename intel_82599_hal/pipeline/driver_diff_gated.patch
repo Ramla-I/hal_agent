@@ -1,0 +1,45 @@
+diff --git a/kernel/ixgbe/src/lib.rs b/kernel/ixgbe/src/lib.rs
+index 79c1d86..4360d05 100644
+--- a/kernel/ixgbe/src/lib.rs
++++ b/kernel/ixgbe/src/lib.rs
+@@ -822,16 +822,19 @@ impl IxgbeNic {
+ 
+     /// enable receive functionality
+     fn enable_rx_function(regs1: &mut IntelIxgbeRegisters1,regs: &mut IntelIxgbeRegisters2) {
++        // Gate (datasheet): receive filters may only be updated while
++        // RXCTRL.RXEN = 0b. Establishing the proof clears RXEN.
++        let rx_disabled = RxctrlRxenCleared::establish(&mut regs.rxctrl);
++
+         // set rx parameters of which type of packets are accepted by the nic
+         // right now we allow the nic to receive all types of packets, even incorrectly formed ones
+-        regs.fctrl.write(STORE_BAD_PACKETS | MULTICAST_PROMISCUOUS_ENABLE | UNICAST_PROMISCUOUS_ENABLE | BROADCAST_ACCEPT_MODE); 
++        regs.fctrl.write(STORE_BAD_PACKETS | MULTICAST_PROMISCUOUS_ENABLE | UNICAST_PROMISCUOUS_ENABLE | BROADCAST_ACCEPT_MODE, &rx_disabled); 
+         
+         // some magic numbers
+         regs1.ctrl_ext.write(regs1.ctrl_ext.read() | CTRL_EXT_NO_SNOOP_DIS);
+ 
+-        // enable receive functionality
+-        let val = regs.rxctrl.read();
+-        regs.rxctrl.write(val | RECEIVE_ENABLE); 
++        // enable receive functionality: re-set RXCTRL.RXEN, consuming the proof
++        rx_disabled.release(&mut regs.rxctrl);
+     }
+ 
+     /// Initialize the array of transmit descriptors for all queues and returns them.
+diff --git a/kernel/ixgbe/src/queue_registers.rs b/kernel/ixgbe/src/queue_registers.rs
+index 43e645f..b3520d8 100644
+--- a/kernel/ixgbe/src/queue_registers.rs
++++ b/kernel/ixgbe/src/queue_registers.rs
+@@ -71,7 +71,11 @@ impl TxQueueRegisters for IxgbeTxQueueRegisters {
+         self.regs.tdlen.write(value)
+     }
+     fn set_tdh(&mut self, value: u32) {
+-        self.regs.tdh.write(value)
++        // Gate (datasheet): TDH may only be written after reset and before the
++        // transmit queue is enabled. Establishing the proof clears
++        // TXDCTL.ENABLE, so moving the head forces the queue disabled.
++        let proof = super::regs::TxdctlEnableCleared::establish(&mut self.regs.txdctl);
++        self.regs.tdh.write(value, &proof)
+     }
+     fn set_tdt(&mut self, value: u32) {
+         self.regs.tdt.write(value)

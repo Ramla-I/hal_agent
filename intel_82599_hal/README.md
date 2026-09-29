@@ -57,5 +57,22 @@ Intel ships no SVD/verified datasheet for the 82599. Therefore:
 3. **Enforcement result:** the access constraints we encoded that the hand-written HAL
    lacks, and the driver-side diff required to satisfy them.
 
-See `startup.md` for the step-by-step execution plan, environment, and the scripts to
-write. Reproduction inputs are vendored; generated outputs are `.gitignore`d.
+See `startup.md` for the step-by-step execution plan and environment.
+Reproduction inputs are vendored; generated outputs are `.gitignore`d.
+
+## Status: done — see the reports
+
+- **`reports/results.md`** — the numbers: 3 first-compile errors on the full
+  drop-in (1 rename + 2 adjudicated RO-vs-init-write divergences), then green;
+  75/75 offsets correct; 54 driver constants field-derived (1 disagreement =
+  a real Theseus bug, RDRXCTL_CRC_STRIP sets a reserved bit); 2 extracted
+  constraints become compile-time witness gates at a driver-diff cost of
+  +12/−5 lines.
+- **`reports/friction.md`** — the friction ledger: every manual/contract-level
+  adaptation, categorized (naming / packaging / adjudicated access divergence /
+  policy constants / gate-required driver diff / source-document artifacts),
+  kept separate from the genuine findings.
+- `pipeline/` — enumerate_targets.py, generate.py (+completion passes),
+  collect_constraints_intel.py, emit_hal.py (structural + --gated), the
+  committed contracts (packaging.json, name_map.json, access_overrides.json,
+  constants_map.json), and driver_diff_gated.patch.

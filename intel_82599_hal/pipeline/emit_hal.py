@@ -80,10 +80,15 @@ def main():
     ap.add_argument("--offset-source", choices=["llm", "summary"], default="llm")
     ap.add_argument("--no-overrides", action="store_true",
                     help="pure datasheet access typing (no adjudicated overrides)")
+    ap.add_argument("--gated", action="store_true",
+                    help="constraint-encoded configuration: witness-gate the "
+                    "registers whose extracted state_gates match the "
+                    "whole-register action-witness rule; output goes to "
+                    "hal_out/<run>-gated/")
     args = ap.parse_args()
 
     run_dir = os.path.join(HERE, "register_info", args.run)
-    out_dir = os.path.join(HERE, "hal_out", args.run)
+    out_dir = os.path.join(HERE, "hal_out", args.run + ("-gated" if args.gated else ""))
     os.makedirs(out_dir, exist_ok=True)
 
     join = {r["abbrev_base"].upper(): r
@@ -94,6 +99,46 @@ def main():
                 if not k.startswith("_")}
     overrides = load_json(os.path.join(HERE, "access_overrides.json"),
                           default={"overrides": {}})["overrides"]
+
+    gates = {}
+    if args.gated:
+        cpath = os.path.join(HERE, "constraints", f"{args.run}_constraints.json")
+        cons = load_json(cpath)
+        specs_for_gates = {}
+        for a in cons["accepted"]:
+            c = a["constraint"]
+            # Deterministic selection rule (mirrors pac_codegen's default:
+            # whole-register gating, field-level opt-in): a driver-relevant
+            # state_gate on the whole register's write, with exactly one
+            # software-established 'cleared' precondition and no postconditions.
+            if not (a["in_driver_set"] and c["kind"] == "state_gate"
+                    and not c.get("target_fields")
+                    and c.get("target_operation") in ("write", "any")
+                    and len(c.get("preconditions", [])) == 1
+                    and not c.get("postconditions")):
+                continue
+            p = c["preconditions"][0]
+            if not (p["state"] == "cleared" and p["established_by"] == "software"
+                    and p.get("field") and not p.get("whole_register")):
+                continue
+            # the precondition field's mask comes from extraction
+            pr = p["register"].upper()
+            sp = os.path.join(run_dir, pr + ".json")
+            if not os.path.exists(sp):
+                continue
+            sf, matched = find_field(load_json(sp), [p["field"]])
+            if not sf:
+                continue
+            gates[c["target_register"].upper()] = {
+                "witness": f"{p['register'].title().replace('_','')}"
+                           f"{p['field'].title().replace('_','')}Cleared",
+                "gtype": f"Gated{c['target_register'].title().replace('_','')}",
+                "pre_register": pr,
+                "pre_field": matched,
+                "mask_bit": sf["bit_number"]["start_bit"],
+                "quote": c["datasheet_text"],
+                "consequence": c.get("consequence", ""),
+            }
 
     report = {"offset_mismatches": [], "offset_fallbacks": [], "collisions": [],
               "access": [], "missing_specs": [], "skipped_ranges": [],
@@ -123,7 +168,11 @@ def main():
                 {"register": abbrev, "llm": hex(llm_addr), "summary": hex(summary_addr)})
 
         rtype = map_access(spec.get("register_access"), spec.get("subfields"))
-        if abbrev in overrides and not args.no_overrides:
+        if abbrev in gates:
+            report.setdefault("gated", []).append(
+                {"register": abbrev, **{k: gates[abbrev][k]
+                 for k in ("witness", "pre_register", "pre_field", "mask_bit")}})
+        elif abbrev in overrides and not args.no_overrides:
             report.setdefault("access_overridden", []).append(
                 {"register": abbrev, "datasheet_type": rtype,
                  "override": overrides[abbrev]["type"]})
@@ -197,13 +246,16 @@ def main():
                 w(f"    _padding{pad_i[0]}: [u8; {addr - cursor}], // {hex(cursor)} - {hex(addr - 1)}")
                 pad_i[0] += 1
             name = field_name(m["abbrev"])
-            fullname = m["j"]["abbrev"] if not elem_mode else m["j"]["abbrev"]
             doc_name = m.get("doc_name") or ""
             if doc_name:
                 w(f"    /// {doc_name}")
+            gate = gates.get(m["abbrev"])
             if m["count"] and m["stride"] == 4 and not elem_mode:
                 w(f"    pub {name}: [{m['rtype']}<u32>; {m['count']}], // {hex(addr)} - {hex(addr + 4 * m['count'] - 1)}")
                 cursor = addr + 4 * m["count"]
+            elif gate:
+                w(f"    pub {name}: {gate['gtype']}, // {hex(addr)} — write gated on {gate['pre_register']}.{gate['pre_field']}=0")
+                cursor = addr + 4
             else:
                 w(f"    pub {name}: {m['rtype']}<u32>, // {hex(addr)}")
                 cursor = addr + 4
@@ -273,6 +325,46 @@ def main():
     w(");")
     w("")
 
+    # ---- gating section (constraint-encoded configuration) ----
+    if gates:
+        w("// ============================================================================")
+        w("// Access-constraint gating — GENERATED from extracted access_constraints_v2.")
+        w("// A gated register's write() takes a witness: code that writes it without")
+        w("// first establishing the datasheet's precondition does not compile.")
+        w("// ============================================================================")
+        w("")
+        for abbrev, g in gates.items():
+            wit, gt = g["witness"], g["gtype"]
+            w(f"/// Datasheet ({abbrev} gate): \"{g['quote']}\"")
+            w(f"/// Violation consequence: {g['consequence']}")
+            w(f"/// Proof that {g['pre_register']}.{g['pre_field']} is cleared.")
+            w(f"pub struct {wit}(());")
+            w(f"/// Bit mask of {g['pre_register']}.{g['pre_field']} (from extraction).")
+            w(f"pub const GATE_{g['pre_register']}_{g['pre_field'].upper()}: u32 = 1 << {g['mask_bit']};")
+            w(f"impl {wit} {{")
+            w(f"    /// Establish the precondition (action witness): clear {g['pre_register']}.{g['pre_field']}.")
+            w(f"    pub fn establish(reg: &mut Volatile<u32>) -> {wit} {{")
+            w(f"        let v = reg.read();")
+            w(f"        reg.write(v & !GATE_{g['pre_register']}_{g['pre_field'].upper()});")
+            w(f"        {wit}(())")
+            w("    }")
+            w(f"    /// Leave the gated state: re-set {g['pre_register']}.{g['pre_field']}, consuming the proof.")
+            w(f"    pub fn release(self, reg: &mut Volatile<u32>) {{")
+            w(f"        let v = reg.read();")
+            w(f"        reg.write(v | GATE_{g['pre_register']}_{g['pre_field'].upper()});")
+            w("    }")
+            w("}")
+            w(f"/// {abbrev}: write permitted only with the {wit} proof.")
+            w("#[derive(FromBytes)]")
+            w("#[repr(transparent)]")
+            w(f"pub struct {gt}(Volatile<u32>);")
+            w(f"impl {gt} {{")
+            w("    pub fn read(&self) -> u32 { self.0.read() }")
+            w(f"    /// Gated write — compile-time proof that {g['pre_register']}.{g['pre_field']} is cleared.")
+            w(f"    pub fn write(&mut self, value: u32, _proof: &{wit}) {{ self.0.write(value) }}")
+            w("}")
+            w("")
+
     # ---- geometry-derived layout constants the driver imports ----
     def range_info(abbrev, idx):
         j = join[abbrev]
@@ -317,6 +409,8 @@ def main():
             print(f"  {k}: {len(report[k])}")
             for item in report[k][:10]:
                 print("    ", item)
+    if report.get("gated"):
+        print(f"  gated registers: {report['gated']}")
     if "constants" in report:
         cr = report["constants"]
         print(f"  constants: {len(cr['derived_agree'])} field-derived agree, "
