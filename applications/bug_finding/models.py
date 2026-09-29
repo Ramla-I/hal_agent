@@ -39,6 +39,8 @@ class Diff(BaseModel):
     svd_value: Optional[str] = None
     generator_value: Optional[str] = None
     presence: Presence = Presence.BOTH
+    reg_size: Optional[int] = None   # SVD register width in bits (for reset_value sanity)
+    peripheral_base: Optional[int] = None  # SVD peripheral baseAddress (for the address-shift screen)
 
     @property
     def is_field_level(self) -> bool:
