@@ -1,0 +1,574 @@
+{
+  "note": "pub consts in regs.rs; used = referenced by driver sources. These are the field/bit-level specs the driver depends on.",
+  "counts": {
+    "defined": 113,
+    "driver_used": 71
+  },
+  "constants": {
+    "AUTOC2_10G_PMA_PMD_S_CLEAR": {
+      "type": "u32",
+      "value": "0x0003_0000",
+      "driver_used": false
+    },
+    "AUTOC2_10G_PMA_PMD_S_SFI": {
+      "type": "u32",
+      "value": "1 << 17",
+      "driver_used": false
+    },
+    "AUTOC_10G_PMA_PMD_CLEAR": {
+      "type": "u32",
+      "value": "0x0000_0180",
+      "driver_used": false
+    },
+    "AUTOC_10G_PMA_PMD_XAUI": {
+      "type": "u32",
+      "value": "0 << 7",
+      "driver_used": false
+    },
+    "AUTOC_1G_PMA_PMD": {
+      "type": "u32",
+      "value": "0x0000_0200",
+      "driver_used": false
+    },
+    "AUTOC_FLU": {
+      "type": "u32",
+      "value": "1",
+      "driver_used": false
+    },
+    "AUTOC_LMS_10_GBE_P": {
+      "type": "u32",
+      "value": "1 << 13",
+      "driver_used": false
+    },
+    "AUTOC_LMS_10_GBE_S": {
+      "type": "u32",
+      "value": "3 << 13",
+      "driver_used": false
+    },
+    "AUTOC_LMS_1_GB": {
+      "type": "u32",
+      "value": "0x0000_E000",
+      "driver_used": false
+    },
+    "AUTOC_LMS_CLEAR": {
+      "type": "u32",
+      "value": "0x0000_E000",
+      "driver_used": false
+    },
+    "AUTOC_LMS_KX_KX4_AUTONEG": {
+      "type": "u32",
+      "value": "6<<13",
+      "driver_used": false
+    },
+    "AUTOC_RESTART_AN": {
+      "type": "u32",
+      "value": "1<<12",
+      "driver_used": false
+    },
+    "BROADCAST_ACCEPT_MODE": {
+      "type": "u32",
+      "value": "1 << 10",
+      "driver_used": true
+    },
+    "BSIZEHEADER_0B": {
+      "type": "u32",
+      "value": "0",
+      "driver_used": true
+    },
+    "BSIZEHEADER_256B": {
+      "type": "u32",
+      "value": "4",
+      "driver_used": false
+    },
+    "BSIZEPACKET_8K": {
+      "type": "u32",
+      "value": "8",
+      "driver_used": false
+    },
+    "CTRL_EXT_NO_SNOOP_DIS": {
+      "type": "u32",
+      "value": "1 << 16",
+      "driver_used": true
+    },
+    "CTRL_LRST": {
+      "type": "u32",
+      "value": "1<<3",
+      "driver_used": true
+    },
+    "CTRL_RST": {
+      "type": "u32",
+      "value": "1<<26",
+      "driver_used": true
+    },
+    "DCA_CPUID_SHIFT": {
+      "type": "u32",
+      "value": "24",
+      "driver_used": true
+    },
+    "DCA_CTRL_ENABLE": {
+      "type": "u32",
+      "value": "0",
+      "driver_used": true
+    },
+    "DCA_MODE_1": {
+      "type": "u32",
+      "value": "0 << 1",
+      "driver_used": false
+    },
+    "DCA_MODE_2": {
+      "type": "u32",
+      "value": "1 << 1",
+      "driver_used": true
+    },
+    "DCA_RXCTRL_CLEAR_BIT_12": {
+      "type": "u32",
+      "value": "1 << 12",
+      "driver_used": true
+    },
+    "DESCTYPE_ADV_1BUFFER": {
+      "type": "u32",
+      "value": "1",
+      "driver_used": true
+    },
+    "DESCTYPE_ADV_HS": {
+      "type": "u32",
+      "value": "2",
+      "driver_used": false
+    },
+    "DESCTYPE_LEG": {
+      "type": "u32",
+      "value": "0",
+      "driver_used": false
+    },
+    "DISABLE_INTERRUPTS": {
+      "type": "u32",
+      "value": "0x7FFFFFFF",
+      "driver_used": true
+    },
+    "DROP_ENABLE": {
+      "type": "u32",
+      "value": "1 << 28",
+      "driver_used": true
+    },
+    "DTXMXSZRQ_MAX_BYTES": {
+      "type": "u32",
+      "value": "0xFFF",
+      "driver_used": true
+    },
+    "EEC_AUTO_RD": {
+      "type": "u32",
+      "value": "9",
+      "driver_used": true
+    },
+    "EIAC_RTXQ_AUTO_CLEAR": {
+      "type": "u32",
+      "value": "0xFFFF",
+      "driver_used": true
+    },
+    "EIMS_INTERRUPT_ENABLE": {
+      "type": "u32",
+      "value": "1",
+      "driver_used": true
+    },
+    "EITR_ITR_INTERVAL_SHIFT": {
+      "type": "u32",
+      "value": "3",
+      "driver_used": true
+    },
+    "FTQF_DEST_ADDRESS_MASK": {
+      "type": "u32",
+      "value": "1 << 26",
+      "driver_used": true
+    },
+    "FTQF_DEST_PORT_MASK": {
+      "type": "u32",
+      "value": "1 << 28",
+      "driver_used": true
+    },
+    "FTQF_POOL_MASK": {
+      "type": "u32",
+      "value": "1 << 30",
+      "driver_used": false
+    },
+    "FTQF_PRIORITY": {
+      "type": "u32",
+      "value": "7",
+      "driver_used": true
+    },
+    "FTQF_PRIORITY_SHIFT": {
+      "type": "u32",
+      "value": "2",
+      "driver_used": true
+    },
+    "FTQF_PROTOCOL": {
+      "type": "u32",
+      "value": "3",
+      "driver_used": false
+    },
+    "FTQF_PROTOCOL_MASK": {
+      "type": "u32",
+      "value": "1 << 29",
+      "driver_used": true
+    },
+    "FTQF_PROTOCOL_SCTP": {
+      "type": "u32",
+      "value": "2",
+      "driver_used": false
+    },
+    "FTQF_PROTOCOL_TCP": {
+      "type": "u32",
+      "value": "0",
+      "driver_used": false
+    },
+    "FTQF_PROTOCOL_UDP": {
+      "type": "u32",
+      "value": "1",
+      "driver_used": false
+    },
+    "FTQF_Q_ENABLE": {
+      "type": "u32",
+      "value": "1 << 31",
+      "driver_used": true
+    },
+    "FTQF_SOURCE_ADDRESS_MASK": {
+      "type": "u32",
+      "value": "1 << 25",
+      "driver_used": true
+    },
+    "FTQF_SOURCE_PORT_MASK": {
+      "type": "u32",
+      "value": "1 << 27",
+      "driver_used": true
+    },
+    "GPIE_EIMEN": {
+      "type": "u32",
+      "value": "1 << 6",
+      "driver_used": true
+    },
+    "GPIE_MULTIPLE_MSIX": {
+      "type": "u32",
+      "value": "1 << 4",
+      "driver_used": true
+    },
+    "GPIE_PBA_SUPPORT": {
+      "type": "u32",
+      "value": "1 << 31",
+      "driver_used": true
+    },
+    "HLREG0_CRC_STRIP": {
+      "type": "u32",
+      "value": "1 << 1",
+      "driver_used": true
+    },
+    "HLREG0_TXCRCEN": {
+      "type": "u32",
+      "value": "1",
+      "driver_used": true
+    },
+    "HLREG0_TXPADEN": {
+      "type": "u32",
+      "value": "1 << 10",
+      "driver_used": true
+    },
+    "IXGBE_MAX_MSIX_VECTORS": {
+      "type": "usize",
+      "value": "64",
+      "driver_used": true
+    },
+    "L34TIMIR_BYPASS_SIZE_CHECK": {
+      "type": "u32",
+      "value": "1 << 12",
+      "driver_used": true
+    },
+    "L34TIMIR_LLI_ENABLE": {
+      "type": "u32",
+      "value": "1 << 20",
+      "driver_used": false
+    },
+    "L34TIMIR_RESERVED": {
+      "type": "u32",
+      "value": "0x40 << 13",
+      "driver_used": true
+    },
+    "L34TIMIR_RX_Q_SHIFT": {
+      "type": "u32",
+      "value": "21",
+      "driver_used": true
+    },
+    "LINKS_SPEED_MASK": {
+      "type": "u32",
+      "value": "0x3 << 28",
+      "driver_used": true
+    },
+    "MRQC_IPV4": {
+      "type": "u32",
+      "value": "1 << 17",
+      "driver_used": false
+    },
+    "MRQC_IPV6": {
+      "type": "u32",
+      "value": "1 << 20",
+      "driver_used": false
+    },
+    "MRQC_MRQE_RSS": {
+      "type": "u32",
+      "value": "1",
+      "driver_used": true
+    },
+    "MRQC_TCPIPV4": {
+      "type": "u32",
+      "value": "1 << 16",
+      "driver_used": false
+    },
+    "MRQC_TCPIPV6": {
+      "type": "u32",
+      "value": "1 << 21",
+      "driver_used": false
+    },
+    "MRQC_UDPIPV4": {
+      "type": "u32",
+      "value": "1 << 22",
+      "driver_used": true
+    },
+    "MRQC_UDPIPV6": {
+      "type": "u32",
+      "value": "1 << 23",
+      "driver_used": false
+    },
+    "MULTICAST_PROMISCUOUS_ENABLE": {
+      "type": "u32",
+      "value": "1 << 8",
+      "driver_used": true
+    },
+    "RCTL_BSIZE_1024": {
+      "type": "u32",
+      "value": "1 << 16",
+      "driver_used": false
+    },
+    "RCTL_BSIZE_16384": {
+      "type": "u32",
+      "value": "(1 << 16) | (1 << 25)",
+      "driver_used": false
+    },
+    "RCTL_BSIZE_2048": {
+      "type": "u32",
+      "value": "0 << 16",
+      "driver_used": false
+    },
+    "RCTL_BSIZE_256": {
+      "type": "u32",
+      "value": "3 << 16",
+      "driver_used": false
+    },
+    "RCTL_BSIZE_4096": {
+      "type": "u32",
+      "value": "(3 << 16) | (1 << 25)",
+      "driver_used": false
+    },
+    "RCTL_BSIZE_512": {
+      "type": "u32",
+      "value": "2 << 16",
+      "driver_used": false
+    },
+    "RCTL_BSIZE_8192": {
+      "type": "u32",
+      "value": "(2 << 16) | (1 << 25)",
+      "driver_used": false
+    },
+    "RDRXCTL_CRC_STRIP": {
+      "type": "u32",
+      "value": "1",
+      "driver_used": true
+    },
+    "RDRXCTL_RSCFRSTSIZE": {
+      "type": "u32",
+      "value": "0x1F << 17",
+      "driver_used": true
+    },
+    "RDT_1": {
+      "type": "usize",
+      "value": "0x1018",
+      "driver_used": false
+    },
+    "RDT_2": {
+      "type": "usize",
+      "value": "0xD018",
+      "driver_used": false
+    },
+    "RDT_DIST": {
+      "type": "usize",
+      "value": "0x40",
+      "driver_used": false
+    },
+    "RECEIVE_ENABLE": {
+      "type": "u32",
+      "value": "1",
+      "driver_used": true
+    },
+    "RETA_ENTRY_0_OFFSET": {
+      "type": "u32",
+      "value": "0",
+      "driver_used": true
+    },
+    "RETA_ENTRY_1_OFFSET": {
+      "type": "u32",
+      "value": "8",
+      "driver_used": true
+    },
+    "RETA_ENTRY_2_OFFSET": {
+      "type": "u32",
+      "value": "16",
+      "driver_used": true
+    },
+    "RETA_ENTRY_3_OFFSET": {
+      "type": "u32",
+      "value": "24",
+      "driver_used": true
+    },
+    "RTTDCS_ARBDIS": {
+      "type": "u32",
+      "value": "1 << 6",
+      "driver_used": true
+    },
+    "RXCSUM_PCSD": {
+      "type": "u32",
+      "value": "1 << 13",
+      "driver_used": true
+    },
+    "RXPBSIZE_512KB": {
+      "type": "u32",
+      "value": "0x200 << 10",
+      "driver_used": true
+    },
+    "RX_DATA_W_RELAX_ORDER_EN": {
+      "type": "u32",
+      "value": "1 << 13",
+      "driver_used": false
+    },
+    "RX_DESC_DCA_ENABLE": {
+      "type": "u32",
+      "value": "1 << 5",
+      "driver_used": true
+    },
+    "RX_DESC_R_RELAX_ORDER_EN": {
+      "type": "u32",
+      "value": "1 << 9",
+      "driver_used": true
+    },
+    "RX_HEADER_DCA_ENABLE": {
+      "type": "u32",
+      "value": "1 << 6",
+      "driver_used": true
+    },
+    "RX_PAYLOAD_DCA_ENABLE": {
+      "type": "u32",
+      "value": "1 << 7",
+      "driver_used": true
+    },
+    "RX_Q_ENABLE": {
+      "type": "u32",
+      "value": "1 << 25",
+      "driver_used": true
+    },
+    "RX_SP_HEAD_RELAX_ORDER_EN": {
+      "type": "u32",
+      "value": "1 << 15",
+      "driver_used": false
+    },
+    "SPDQF_DEST_SHIFT": {
+      "type": "u32",
+      "value": "16",
+      "driver_used": true
+    },
+    "SPDQF_SOURCE_SHIFT": {
+      "type": "u32",
+      "value": "0",
+      "driver_used": true
+    },
+    "STORE_BAD_PACKETS": {
+      "type": "u32",
+      "value": "1 << 1",
+      "driver_used": true
+    },
+    "SWSM_SMBI": {
+      "type": "u32",
+      "value": "1 << 0",
+      "driver_used": true
+    },
+    "SWSM_SWESMBI": {
+      "type": "u32",
+      "value": "1 << 1",
+      "driver_used": true
+    },
+    "SW_FW_SYNC_FW_MAC": {
+      "type": "u32",
+      "value": "1 << 8",
+      "driver_used": true
+    },
+    "SW_FW_SYNC_SMBITS_FW": {
+      "type": "u32",
+      "value": "0x3E0",
+      "driver_used": true
+    },
+    "SW_FW_SYNC_SMBITS_MASK": {
+      "type": "u32",
+      "value": "0x3FF",
+      "driver_used": true
+    },
+    "SW_FW_SYNC_SMBITS_SW": {
+      "type": "u32",
+      "value": "0x1F",
+      "driver_used": true
+    },
+    "SW_FW_SYNC_SW_MAC": {
+      "type": "u32",
+      "value": "1 << 3",
+      "driver_used": true
+    },
+    "TDT": {
+      "type": "usize",
+      "value": "0x6018",
+      "driver_used": false
+    },
+    "TDT_DIST": {
+      "type": "usize",
+      "value": "0x40",
+      "driver_used": false
+    },
+    "TE": {
+      "type": "u32",
+      "value": "1",
+      "driver_used": true
+    },
+    "TXDCTL_HTHRESH": {
+      "type": "u32",
+      "value": "8 << 8",
+      "driver_used": true
+    },
+    "TXDCTL_PTHRESH": {
+      "type": "u32",
+      "value": "36",
+      "driver_used": true
+    },
+    "TXDCTL_WTHRESH": {
+      "type": "u32",
+      "value": "4 << 16",
+      "driver_used": true
+    },
+    "TXPBSIZE_160KB": {
+      "type": "u32",
+      "value": "0xA0 << 10",
+      "driver_used": true
+    },
+    "TX_Q_ENABLE": {
+      "type": "u32",
+      "value": "1 << 25",
+      "driver_used": true
+    },
+    "UNICAST_PROMISCUOUS_ENABLE": {
+      "type": "u32",
+      "value": "1 << 9",
+      "driver_used": true
+    }
+  }
+}
