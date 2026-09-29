@@ -1,0 +1,1306 @@
+[
+  {
+    "driver": "ixy.rs (PF driver)",
+    "summary": {
+      "registers": 41,
+      "matched": 39,
+      "in_75": 39,
+      "gated_regs": 7,
+      "gated_write_sites": 14,
+      "unmatched": 2
+    },
+    "rows": [
+      {
+        "sym": "AUTOC",
+        "addr": "0x42a0",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 3,
+        "matched": "AUTOC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "CTRL",
+        "addr": "0x0",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "CTRL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "CTRL_EXT",
+        "addr": "0x18",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 1,
+        "matched": "CTRL_EXT",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "DCA_RXCTRL",
+        "addr": "0x2200",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 1,
+        "matched": "DCA_RXCTRL",
+        "via_alias": true,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "DMATXCTL",
+        "addr": "0x4a80",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "DMATXCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "DTXMXSZRQ",
+        "addr": "0x8100",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "DTXMXSZRQ",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "EEC",
+        "addr": "0x10010",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "EEC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "EIAC",
+        "addr": "0x810",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "EIAC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "EICR",
+        "addr": "0x800",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 2,
+        "matched": "EICR",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "EIMC",
+        "addr": "0x888",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "EIMC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "EIMS",
+        "addr": "0x880",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 7,
+        "matched": "EIMS",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "EITR",
+        "addr": "0x820",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "EITR",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "FCTRL",
+        "addr": "0x5080",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 3,
+        "matched": "FCTRL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "GORCH",
+        "addr": "0x408c",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 2,
+        "matched": "GORCH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GORCL",
+        "addr": "0x4088",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 2,
+        "matched": "GORCL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GOTCH",
+        "addr": "0x4094",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 2,
+        "matched": "GOTCH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GOTCL",
+        "addr": "0x4090",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 2,
+        "matched": "GOTCL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GPIE",
+        "addr": "0x898",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "GPIE",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GPRC",
+        "addr": "0x4074",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 2,
+        "matched": "GPRC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GPTC",
+        "addr": "0x4080",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 2,
+        "matched": "GPTC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "HLREG0",
+        "addr": "0x4240",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "HLREG0",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "IVAR",
+        "addr": "0x900",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "IVAR",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "LINKS",
+        "addr": "0x42a4",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "LINKS",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RAH",
+        "addr": "0x5404",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": null,
+        "via_alias": null,
+        "in_generated_75": false,
+        "gated": false,
+        "name_agrees": false
+      },
+      {
+        "sym": "RAL",
+        "addr": "0x5400",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": null,
+        "via_alias": null,
+        "in_generated_75": false,
+        "gated": false,
+        "name_agrees": false
+      },
+      {
+        "sym": "RDBAH",
+        "addr": "0x1004",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "RDBAH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RDH",
+        "addr": "0x1010",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RDH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RDLEN",
+        "addr": "0x1008",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "RDLEN",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RDRXCTL",
+        "addr": "0x2f00",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 5,
+        "matched": "RDRXCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "RDT",
+        "addr": "0x1018",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RDT",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RTTDCS",
+        "addr": "0x4900",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 1,
+        "matched": "RTTDCS",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RXCTRL",
+        "addr": "0x3000",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RXCTRL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RXDCTL",
+        "addr": "0x1028",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RXDCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RXPBSIZE",
+        "addr": "0x3c00",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RXPBSIZE",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "SRRCTL",
+        "addr": "0x2100",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "SRRCTL",
+        "via_alias": true,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "TDBAH",
+        "addr": "0x6004",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "TDBAH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "TDH",
+        "addr": "0x6010",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "TDH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "TDLEN",
+        "addr": "0x6008",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "TDLEN",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "TDT",
+        "addr": "0x6018",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "TDT",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "TXDCTL",
+        "addr": "0x6028",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 4,
+        "matched": "TXDCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "TXPBSIZE",
+        "addr": "0xcc00",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "TXPBSIZE",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      }
+    ]
+  },
+  {
+    "driver": "redox ixgbed",
+    "summary": {
+      "registers": 30,
+      "matched": 28,
+      "in_75": 28,
+      "gated_regs": 4,
+      "gated_write_sites": 4,
+      "unmatched": 2
+    },
+    "rows": [
+      {
+        "sym": "AUTOC",
+        "addr": "0x42a0",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 2,
+        "matched": "AUTOC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "CTRL",
+        "addr": "0x0",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "CTRL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "DMATXCTL",
+        "addr": "0x4a80",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "DMATXCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "DTXMXSZRQ",
+        "addr": "0x8100",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "DTXMXSZRQ",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "EEC",
+        "addr": "0x10010",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "EEC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "EIAC",
+        "addr": "0x810",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "EIAC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "EICR",
+        "addr": "0x800",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "EICR",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "EIMC",
+        "addr": "0x888",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "EIMC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "EIMS",
+        "addr": "0x880",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "EIMS",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GORCH",
+        "addr": "0x408c",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "GORCH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GORCL",
+        "addr": "0x4088",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "GORCL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GOTCH",
+        "addr": "0x4094",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "GOTCH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GOTCL",
+        "addr": "0x4090",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "GOTCL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GPRC",
+        "addr": "0x4074",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "GPRC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "GPTC",
+        "addr": "0x4080",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "GPTC",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IVAR",
+        "addr": "0x900",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "IVAR",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "LINKS",
+        "addr": "0x42a4",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "LINKS",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RAH",
+        "addr": "0x5404",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": null,
+        "via_alias": null,
+        "in_generated_75": false,
+        "gated": false,
+        "name_agrees": false
+      },
+      {
+        "sym": "RAL",
+        "addr": "0x5400",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": null,
+        "via_alias": null,
+        "in_generated_75": false,
+        "gated": false,
+        "name_agrees": false
+      },
+      {
+        "sym": "RDBAL",
+        "addr": "0x1000",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "RDBAL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RDH",
+        "addr": "0x1010",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RDH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RDT",
+        "addr": "0x1018",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RDT",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RXDCTL",
+        "addr": "0x1028",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "RXDCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "RXPBSIZE",
+        "addr": "0x3c00",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RXPBSIZE",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "SRRCTL",
+        "addr": "0x2100",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "SRRCTL",
+        "via_alias": true,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "TDBAL",
+        "addr": "0x6000",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "TDBAL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "TDH",
+        "addr": "0x6010",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 1,
+        "matched": "TDH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "TDT",
+        "addr": "0x6018",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "TDT",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "TXDCTL",
+        "addr": "0x6028",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 3,
+        "matched": "TXDCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "TXPBSIZE",
+        "addr": "0xcc00",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "TXPBSIZE",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      }
+    ]
+  },
+  {
+    "driver": "redleaf ixgbe",
+    "summary": {
+      "registers": 17,
+      "matched": 17,
+      "in_75": 17,
+      "gated_regs": 1,
+      "gated_write_sites": 5
+    },
+    "rows": [
+      {
+        "sym": "IxgbeDmaArrayRegs::Eitr",
+        "addr": "0x820",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "EITR",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Ivar",
+        "addr": "0x900",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "IVAR",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Rdbah",
+        "addr": "0x1004",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RDBAH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Rdbal",
+        "addr": "0x1000",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RDBAL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Rdh",
+        "addr": "0x1010",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 5,
+        "matched": "RDH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Rdlen",
+        "addr": "0x1008",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 1,
+        "matched": "RDLEN",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Rdt",
+        "addr": "0x1018",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 9,
+        "matched": "RDT",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Rxdctl",
+        "addr": "0x1028",
+        "extra_addrs": [],
+        "ops": [
+          "write"
+        ],
+        "sites": 2,
+        "matched": "RXDCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Rxpbsize",
+        "addr": "0x3c00",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 3,
+        "matched": "RXPBSIZE",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Srrctl",
+        "addr": "0x2100",
+        "extra_addrs": [],
+        "ops": [
+          "read"
+        ],
+        "sites": 3,
+        "matched": "SRRCTL",
+        "via_alias": true,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Tdbah",
+        "addr": "0x6004",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "TDBAH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Tdbal",
+        "addr": "0x6000",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "TDBAL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Tdh",
+        "addr": "0x6010",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 5,
+        "matched": "TDH",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": true,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Tdlen",
+        "addr": "0x6008",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 2,
+        "matched": "TDLEN",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Tdt",
+        "addr": "0x6018",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 10,
+        "matched": "TDT",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Txdctl",
+        "addr": "0x6028",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 4,
+        "matched": "TXDCTL",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      },
+      {
+        "sym": "IxgbeDmaArrayRegs::Txpbsize",
+        "addr": "0xcc00",
+        "extra_addrs": [],
+        "ops": [
+          "read",
+          "write"
+        ],
+        "sites": 3,
+        "matched": "TXPBSIZE",
+        "via_alias": false,
+        "in_generated_75": true,
+        "gated": false,
+        "name_agrees": true
+      }
+    ]
+  }
+]
