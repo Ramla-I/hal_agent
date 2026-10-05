@@ -352,9 +352,9 @@ def _load_svd_index(svd_dir: str) -> dict:
     if svd_arg.is_file():
         svd_files = [svd_arg]
     else:
-        svd_files = sorted(svd_arg.glob("*.svd"))
+        svd_files = sorted(list(svd_arg.glob("*.svd")) + list(svd_arg.glob("*.xml")))   # NXP SVDs use .xml
     if not svd_files:
-        raise FileNotFoundError(f"No .svd files found in {svd_dir}")
+        raise FileNotFoundError(f"No .svd/.xml files found in {svd_dir}")
 
     for svd_path in svd_files:
         try:

@@ -70,7 +70,11 @@ OVERLAP_PROBE = 20         # probe length used to find the chunk overlap
                            # (must be <= MIN_CHUNK_OVERLAP so no genuine
                            # overlap is shorter than the probe)
 
-CHUNK_FILE_RE = re.compile(r"^(?P<rm>rm\w+)_p(?P<page>\d+)_c(?P<chunk>\d+)\.txt$")
+# The chunk-file prefix is the device/reference-manual id, which is `rm0041` for STM
+# but a device name for other vendors (e.g. `lpc845`, `s32k1xx`, `mimxrt685s`). Match
+# any prefix up to the `_p<page>_c<chunk>.txt` suffix, not just `rm...`, so quote
+# anchoring loads pages for NXP/Intel devices instead of silently loading zero.
+CHUNK_FILE_RE = re.compile(r"^(?P<rm>.+?)_p(?P<page>\d+)_c(?P<chunk>\d+)\.txt$")
 
 # ---------------------------------------------------------------------------
 # Normalization

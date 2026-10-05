@@ -681,6 +681,21 @@ def run_pipeline_for_device(
             result.false_count = false_count
             print(f"  Validator: {true_count} true, {false_count} false")
 
+        # -- Step 2b: NXP summary-table fill (deterministic, NXP only) --
+        # The openevolve retriever surfaces each register's bit-field section but
+        # downranks the register-overview tables where NXP states address offset +
+        # reset value, so the generator often leaves those null. Fill them straight
+        # from the summary rows (fills empties only, never overwrites; header-aware,
+        # peripheral-scoped, unambiguous-only). lpc845: +174 offset, +125 reset.
+        if str(paths.manufacturer).lower() == "nxp":
+            from nxp_summary_fill import fill_run
+            _chunks_md = os.path.join(_REPO_ROOT, "chunked_datasheets", paths.manufacturer,
+                                      paths.device_name, "chunks", "md")
+            _fs = fill_run(paths.agent_output_dir, _chunks_md)
+            print(f"\n--- Step 2b: NXP summary fill --- filled address_offset="
+                  f"{_fs.get('filled_offset', 0)} reset_value={_fs.get('filled_reset', 0)} "
+                  f"(of {_fs.get('registers_with_gaps', 0)} registers with gaps)")
+
         # -- Step 6: Constraint validation (v2 grammar, optional) --
         # The generator emits grammar v2 natively; this stage runs the
         # constraint pipeline on that output: static quote validation (does
