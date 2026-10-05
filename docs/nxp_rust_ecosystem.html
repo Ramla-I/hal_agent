@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NXP Rust ecosystem — one table</title>
+<style>
+  :root{--bg:#fafafa;--card:#fff;--ink:#1b1f24;--muted:#6a727c;--line:#e4e7eb;
+    --green:#1a7f45;--greenbg:#e7f5ec;--amber:#8a6100;--amberbg:#fdf3df;
+    --red:#a3281f;--redbg:#fbe9e7;--gray:#555c66;--graybg:#eef0f2;--blue:#1d4ed8;--accent:#4f46e5;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1500px;margin:0 auto;padding:30px 18px 70px}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 16px;font-size:13px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+    background:#f1f2f4;padding:1px 4px;border-radius:4px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+  .active{background:var(--greenbg);color:var(--green)} .stale{background:var(--amberbg);color:var(--amber)}
+  .dead{background:var(--redbg);color:var(--red)} .neutral{background:var(--graybg);color:var(--gray)}
+  .tool{font-weight:600;font-size:11px;white-space:nowrap}
+  .t-svd2rust{color:var(--green)} .t-chiptool{color:var(--blue)} .t-raltool{color:var(--accent)}
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+  table{width:100%;border-collapse:collapse;background:var(--card);font-size:12.8px;min-width:1240px}
+  thead th{background:#f3f4f6;text-align:left;padding:9px 11px;font-size:11px;letter-spacing:.02em;
+    text-transform:uppercase;color:var(--muted);position:sticky;top:0;white-space:nowrap}
+  td{padding:8px 11px;border-top:1px solid var(--line);vertical-align:top}
+  tbody tr:hover{background:#f7f8fa}
+  td.pac code{background:#eef2ff;color:#3730a3}
+  .dim{color:var(--muted)} .none{color:var(--red);font-weight:600} .strong{font-weight:600}
+  .warn{color:var(--amber);font-weight:600}
+  .grp td{background:#f0f1f3;font-weight:700;font-size:11px;text-transform:uppercase;
+    letter-spacing:.03em;color:var(--muted)}
+  .notes{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-top:18px;font-size:13px}
+  .notes li{margin:5px 0}
+  footer{color:var(--muted);font-size:12px;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>NXP microcontroller Rust ecosystem</h1>
+  <p class="sub">One table: PAC → devices → SVD → reference manual → HAL → downstream → tool → status.
+     Verified Oct 2026 against live GitHub / crates.io. Downstream = external
+     <code>Cargo.toml</code> dependents (self-repos, org-siblings, forks, templates excluded).</p>
+
+  <div class="legend">
+    <span class="pill active">active</span><span class="pill stale">stale (~2022)</span>
+    <span class="pill dead">dead / abandoned</span><span class="pill neutral">standalone / early</span>
+    &nbsp;<span class="tool t-svd2rust">svd2rust</span>
+    <span class="tool t-chiptool">chiptool / metapac</span><span class="tool t-raltool">raltool</span>
+  </div>
+
+  <div class="scroll">
+  <table>
+    <thead><tr>
+      <th>PAC</th><th>Devices</th><th>SVD</th><th>RM (doc ID)</th><th>HAL</th>
+      <th>Downstream crates</th><th>Tool</th><th>Status</th>
+    </tr></thead>
+    <tbody>
+      <tr class="grp"><td colspan="8">Active, with real downstream</td></tr>
+      <tr>
+        <td class="pac"><code>imxrt-ral</code></td>
+        <td>MIMXRT1011–1189 <span class="dim">(1176/1189 dual-core)</span></td>
+        <td><code>MIMXRT*.xml</code> per device <span class="dim">(raltool-merged)</span></td>
+        <td>IMXRT1010/1015/1020/1050/1060/1064/1170/1180RM</td>
+        <td><code>imxrt-hal</code></td>
+        <td><span class="strong">teensy4-rs / -bsp, RTIC</span>, imxrt-rs (usbd/enet/rt), robotics (RoboJackets, Case Rocket, rust-copter)</td>
+        <td class="tool t-raltool">raltool</td><td><span class="pill active">very active</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>lpc55-pac</code></td><td>LPC55S69 (S6x)</td>
+        <td><code>LPC55S69_cm33_core0.xml</code> <span class="dim">(dual-core)</span></td>
+        <td>UM11126</td><td><code>lpc55-hal</code></td>
+        <td><span class="strong">Nitrokey&nbsp;3, SoloKeys&nbsp;Solo2, Oxide Hubris + bootleby, mcuboot-rs</span>, Nitrokey se05x</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill active">HAL active</span> <span class="dim">PAC '22</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>nxp-pac</code> <span class="dim">(embassy-rs)</span></td>
+        <td>LPC55S16/S69, MCXA156/256/577, MCXN947, MIMXRT1011/1062/1064/685S</td>
+        <td>per-device <code>.xml</code> <span class="dim">(mcux-soc-svd)</span></td>
+        <td>UM11295/11126, MCXAP…, MCXNP…, IMXRT…, UM11147</td>
+        <td><code>embassy-nxp</code>, <code>embassy-mcxa</code></td>
+        <td>mcxa5xx-trustzone, ODP odp-embedded-controller, jamesmunns/multi-platform-demo, crusty</td>
+        <td class="tool t-chiptool">chiptool→metapac</td><td><span class="pill active">active</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>mimxrt685s-pac</code> <span class="dim">(ODP)</span></td><td>mimxrt685s</td>
+        <td><code>MIMXRT685S_cm33.xml</code></td><td>UM11147 <span class="dim">(RT600)</span></td>
+        <td><code>embassy-imxrt</code></td><td>mimxrt685-eval, crusty</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill active">active</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>mimxrt633s-pac</code> <span class="dim">(ODP)</span></td><td>mimxrt633s</td>
+        <td><code>MIMXRT633S.xml</code></td><td>UM11147 <span class="dim">(RT600)</span></td>
+        <td><code>embassy-imxrt</code></td><td class="dim">via embassy-imxrt</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill active">active</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>mcx-pac</code> <span class="dim">(mcx-rs)</span></td><td>MCX A/N (mcxa156/256/346…, mcxn…)</td>
+        <td><span class="none">— no SVD (chiptool from C headers)</span></td><td class="dim">per-family RM</td>
+        <td><code>mcx-hal</code>, <code>embassy-mcx</code></td><td>lrtic</td>
+        <td class="tool t-chiptool">chiptool</td><td><span class="pill active">active (v0.2.2)</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>s32k1-pacs</code></td><td>s32k116 … s32k148 (+142w/144w)</td>
+        <td><code>S32Kxxx.svd</code> per part</td><td>S32K1XXRM <span class="dim">(one RM, all 8)</span></td>
+        <td><span class="none">— no S32K HAL</span></td><td>canadensis <span class="dim">(s32k146 example)</span></td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill stale">minimal '22</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>mk20d5-pac</code> / <code>mk20d7-pac</code></td><td>MK20DX128 / MK20DX256 (Teensy 3.x)</td>
+        <td><code>MK20D5.svd</code> / <code>MK20D7.svd</code></td><td>K20P64M50SF0RM / K20P64M72SF1RM</td>
+        <td><code>mk20dx-hal</code></td><td class="dim">author-only</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill active">HAL active</span></td>
+      </tr>
+
+      <tr class="grp"><td colspan="8">Standalone / early / no external users</td></tr>
+      <tr>
+        <td class="pac"><code>mcxa-pac</code> <span class="dim">(ODP)</span></td><td>mcxa256</td>
+        <td><code>MCXA256.xml</code></td><td>MCXAP144M240F61RM</td><td class="none">—</td>
+        <td class="dim">ODP-internal only</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill neutral">standalone</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>mcxn947-pac</code></td><td>mcxn947</td>
+        <td><code>MCXN947_cm33_core0.xml</code></td><td>MCXNP184M150F70RM</td><td class="none">—</td>
+        <td class="none">none</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill neutral">early (v0.0.3)</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>k32l3a60-cm4</code> / <code>-cm0plus</code></td><td>K32L3A60 (dual-core)</td>
+        <td><code>K32L3A60_cm4.xml</code> / <code>…_cm0plus.xml</code></td><td>K32L3ARM</td><td class="none">—</td>
+        <td class="none">none</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill neutral">2023</span></td>
+      </tr>
+
+      <tr class="grp"><td colspan="8">Stale / dead</td></tr>
+      <tr>
+        <td class="pac"><code>lpc845-pac</code></td><td>lpc845</td>
+        <td><code>lpc845.svd</code></td><td>UM11029</td><td><code>lpc8xx-hal</code> (lpc-rs)</td>
+        <td class="dim">workshop/example code (japaric, smart-leds)</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill stale">stale '22</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>lpc82x-pac</code></td><td>lpc82x (lpc824)</td>
+        <td><code>lpc82x.svd</code></td><td>UM10800</td><td><code>lpc8xx-hal</code></td>
+        <td class="dim">via lpc8xx-hal</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill stale">stale '22</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>lpc546xx-pac</code></td><td>lpc546xx (lpc54608)</td>
+        <td><code>lpc54608.svd</code></td><td>UM10912</td><td><code>lpc546xx-hal</code></td>
+        <td>lpc-usbd</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill stale">stale '22</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>mkw41z</code></td><td>mkw41z</td>
+        <td><code>MKW41Z4.svd</code></td><td>MKW41Z512RM</td><td><code>mkw41z-hal</code></td>
+        <td class="dim">author board demo only</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill dead">abandoned '18</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>ke04z4-pac</code></td><td>MKE04Z4</td>
+        <td><code>MKE04Z4.svd</code></td><td>MKE04P80M48SF0RM</td><td class="none">—</td>
+        <td class="none">none</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill dead">dead '21</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>mk66f18</code></td><td>MK66 (Teensy 3.6)</td>
+        <td><code>MK66F18.svd</code></td><td>K66P144M180SF5RMV2</td><td class="none">—</td>
+        <td class="none">none</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill dead">no HAL/users</span></td>
+      </tr>
+      <tr>
+        <td class="pac"><code>k64</code></td><td>mk64f12</td>
+        <td><code>MK64F12.svd</code></td><td>K64P144M120SF5RM</td><td class="none">—</td>
+        <td class="none">none</td>
+        <td class="tool t-svd2rust">svd2rust</td><td><span class="pill dead">ancient '19</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="notes">
+    <strong>Notes &amp; caveats</strong>
+    <ul>
+      <li><strong>SVD sources:</strong> canonical = <code>github.com/nxp-mcuxpresso/mcux-soc-svd</code> (<code>.xml</code>); legacy Kinetis (MK*, MKE04Z4, MKW41Z4) via community <code>cmsis-svd/cmsis-svd-data</code>; S32K via NXP CMSIS-PACK. No consumable single SVD for i.MX RT (raltool merges 12 per-device SVDs) or <code>mcx-pac</code> (chiptool from C headers in <code>mcux-devices-mcx</code>).</li>
+      <li><strong>Dual-core → two SVDs:</strong> LPC55S69, MCXN947, K32L3A60 (M4+M0+), MIMXRT1176/1189. <code>lpc55-pac</code> / <code>mcxn947-pac</code> use core0 only; embassy <code>nxp-pac</code> uses both.</li>
+      <li><strong>Shared RMs:</strong> <code>S32K1XXRM</code> → all 8 S32K; <code>UM11147</code> → both RT600 (685S+633S, a <em>User Manual</em>); IMXRT1050RM → 1051/1052; IMXRT1060RM → 1061/1062 (1064 separate).</li>
+      <li><strong>Two parallel MCX stacks:</strong> embassy-rs (<code>nxp-pac</code>→<code>embassy-nxp</code>/<code>embassy-mcxa</code>) and community mcx-rs (<code>mcx-pac</code>→<code>mcx-hal</code>/<code>embassy-mcx</code>). <code>mcx-hal</code> depends on <code>mcx-pac</code>, not <code>mcxn947-pac</code>.</li>
+      <li><span class="warn">⚠</span> Soft spots: MCXA577 RM is login-gated (no public ID); <code>mk66f18</code>/<code>k64</code> crate↔SVD links inferred. No NXP-official Rust HAL/PAC — NXP ships only SVDs.</li>
+      <li><strong>Method:</strong> downstream = GitHub <code>Cargo.toml</code> dependent search (not exhaustive; crates.io reverse-deps not queried) — "none" = no public GitHub dependent found.</li>
+    </ul>
+  </div>
+
+  <footer>NXP Rust ecosystem survey · verified Oct 2026 · hal_agent project.</footer>
+</div>
+</body>
+</html>
