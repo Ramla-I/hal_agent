@@ -68,7 +68,7 @@ change protected bits; never-set bits forced to 0) plus, where a witness
 exists, `write_full(value, &Witness)`; whole-register gates (`target_fields=[]`)
 expose only `write(value, &Witness)`.
 
-**9 of 29 constraints encoded, on 8 registers:**
+**8 of 29 constraints encoded, on 8 registers:**
 
 | Register | Constraint | Encoding |
 |---|---|---|
@@ -80,7 +80,7 @@ expose only `write(value, &Witness)`.
 | HLREG0 + RDRXCTL | RXCRCSTRP "must be set the same as" CRCStrip (2 constraints, stated on both sides) | **coupled setter** `set_rxcrcstrp_crcstrip(a, b, enable)`; independent writes preserve both bits — the inconsistent state (finding 1!) is unwritable |
 | DMATXCTL | "software must not change" the VT field | **hold mask**: no API can change it |
 
-**The 20 not encoded, with computed/deterministic reasons** (all recorded in
+**The 21 not encoded, with computed/deterministic reasons** (all recorded in
 `emit_report.json`): 7 `read_effect` + 6 `other` + CTRL's bare delay are
 doc/runtime-tier by the computed taxonomy; 5 `value_relation`s whose semantics
 live in the value (RDBAL/TDBAL 128-byte alignment, SRRCTL and EITR

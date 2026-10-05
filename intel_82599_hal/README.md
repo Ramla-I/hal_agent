@@ -65,7 +65,7 @@ Reproduction inputs are vendored; generated outputs are `.gitignore`d.
 - **`reports/results.md`** — the numbers: 3 first-compile errors on the full
   drop-in (1 rename + 2 adjudicated RO-vs-init-write divergences), then green;
   75/75 offsets correct; 54 driver constants field-derived (1 disagreement =
-  a real Theseus bug, RDRXCTL_CRC_STRIP sets a reserved bit); 9 extracted
+  a real Theseus bug, RDRXCTL_CRC_STRIP sets a reserved bit); 8 extracted
   constraints become compile-time gates (field-level default: witnesses,
   never-set clamps, a coupled CRC-strip setter that makes the bug in finding 1
   unwritable) at a driver-diff cost of +27/−15 lines.
