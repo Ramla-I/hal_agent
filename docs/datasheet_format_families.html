@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Datasheet Format Families — NXP vs STM Reference Manuals</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b6673; --line:#e2e6ea; --bg:#fcfcfd;
+    --a:#0b7285; --b:#b5651d; --c:#2b6cb0; --d:#6b46c1; --stm:#2f855a;
+    --chipbg:#f1f3f5;
+  }
+  *{box-sizing:border-box}
+  body{font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);margin:0;padding:0 20px}
+  .wrap{max-width:900px;margin:0 auto;padding:48px 0 80px}
+  h1{font-size:30px;line-height:1.2;margin:0 0 6px}
+  .sub{color:var(--muted);font-size:17px;margin:0 0 28px}
+  h2{font-size:22px;margin:40px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:17px;margin:24px 0 6px}
+  p{margin:10px 0}
+  code{background:var(--chipbg);padding:1px 6px;border-radius:4px;font-size:13.5px;
+       font-family:"SF Mono",Menlo,Consolas,monospace}
+  pre{background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:8px;overflow-x:auto;
+      font-size:13px;line-height:1.5;font-family:"SF Mono",Menlo,Consolas,monospace}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f6f8fa;font-weight:600}
+  .tag{display:inline-block;font-weight:700;color:#fff;border-radius:5px;padding:1px 8px;font-size:12.5px}
+  .tA{background:var(--a)} .tB{background:var(--b)} .tC{background:var(--c)} .tD{background:var(--d)}
+  .tSTM{background:var(--stm)}
+  .lead{background:#eef6f9;border:1px solid #cfe6ee;border-radius:10px;padding:16px 18px;margin:18px 0}
+  .lead strong{color:var(--a)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff}
+  .card h3{margin-top:0}
+  .muted{color:var(--muted)}
+  .good{color:#1b7a43;font-weight:600}
+  .warn{color:#b5651d;font-weight:600}
+  .bad{color:#b02a37;font-weight:600}
+  ul{margin:8px 0;padding-left:22px}
+  li{margin:4px 0}
+  .foot{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  .kpi{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}
+  .kpi div{flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
+  .kpi b{display:block;font-size:26px;line-height:1.1}
+  .kpi span{color:var(--muted);font-size:13px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Datasheet Format Families</h1>
+<p class="sub">How NXP and STM reference manuals present register structure — and why it shapes our extraction pipeline.</p>
+
+<div class="lead">
+<strong>The headline.</strong> The two vendors sit at opposite ends of a spectrum.
+<strong>STM is one uniform family</strong> — all 53 reference manuals we process, spanning ~15 years
+(STM32F1 → STM32U5), use the <em>same</em> house style. <strong>NXP splits into four distinct
+families</strong>, a legacy of the mergers that formed the company (Freescale's Kinetis, NXP's own LPC,
+the i.MX line). That difference is the root cause of the NXP register-extraction recall gaps we fixed,
+and it explains why one fix doesn't cover all NXP parts.
+</div>
+
+<div class="kpi">
+  <div><b>1</b><span>STM documentation style (53 manuals)</span></div>
+  <div><b>4</b><span>NXP documentation styles</span></div>
+  <div><b>85→93%</b><span>lpc845 address coverage after fix</span></div>
+  <div><b>0</b><span>wrong values introduced</span></div>
+</div>
+
+<h2>Why this matters</h2>
+<p>
+Our pipeline reads a chip's reference manual and extracts, for every hardware register, its
+<em>structure</em> — the <b>address offset</b> (where the register sits, relative to its peripheral's
+base) and the <b>reset value</b> (its power-on default) — and its <em>access rules</em>. We then diff
+that against the vendor's machine-readable spec (an <b>SVD</b> file) to catch errors. How the manual
+<em>presents</em> those facts determines how hard they are to extract. A manual that puts the offset in a
+clean table is easy; one that hides it in a table caption, or gives an absolute address instead of an
+offset, needs format-specific handling.
+</p>
+
+<h2>NXP — four families</h2>
+<p>Classified by how each register's address/reset is presented in the manual:</p>
+
+<table>
+<tr>
+  <th>Group</th><th>Devices</th><th>How the address is given</th><th>Name cell</th><th>Size col?</th>
+</tr>
+<tr>
+  <td><span class="tag tA">A</span><br>modern Kinetis</td>
+  <td>k32l3a, s32k1xx</td>
+  <td>Summary table, <b>relative offset</b><br><code>Offset | Register | Width | Access | Reset value</code></td>
+  <td>plain</td><td class="good">yes</td>
+</tr>
+<tr>
+  <td><span class="tag tB">B</span><br>classic Kinetis</td>
+  <td>ke04, ke04_old, k64, mk20d7, mk20d5*</td>
+  <td>Summary table, <b>absolute address</b><br><code>Absolute address | Register name | Width | Access | Reset value | Section/page</code></td>
+  <td><code>Label (NAME)</code></td><td class="good">yes</td>
+</tr>
+<tr>
+  <td><span class="tag tC">C</span><br>classic LPC</td>
+  <td>lpc845</td>
+  <td>Summary table, <b>relative offset</b><br><code>Name | Access | Address offset | Description | Reset value | Reference</code></td>
+  <td>plain</td><td class="warn">no</td>
+</tr>
+<tr>
+  <td><span class="tag tD">D</span><br>modern NXP</td>
+  <td>lpc55s69, mimxrt685s, mimxrt633s</td>
+  <td><b>No summary table.</b> Offset is in each register's table caption:<br><code>Table N. … (REGNAME: offset = 0x620)</code></td>
+  <td>—</td><td>—</td>
+</tr>
+</table>
+<p class="muted" style="font-size:13.5px">
+Confidence: A &amp; C confirmed from processed chunks; B confirmed for ke04/k64 (chunks) and mk20d7 (PDF);
+D confirmed for lpc55s69 (265 caption-offsets, 0 summary headers) and mimxrt685s (511 / 0).
+<code>*mk20d5</code> is inferred (same K20 template as mk20d7); mimxrt633s is the identical PDF to mimxrt685s.
+</p>
+
+<div class="grid">
+  <div class="card">
+    <h3>Two traps that break naïve extraction</h3>
+    <ul>
+      <li><b>Group B absolute addresses</b> — the table gives <code>0x4004_8000</code>, not an offset.
+          Stored as-is it would be wrong; it must have the peripheral base subtracted.</li>
+      <li><b>Group B name cells</b> — written <code>Entry (ROM_ENTRY0)</code>, so the real name
+          (<code>ROM_ENTRY0</code>) has to be unwrapped from the human label.</li>
+      <li><b>Group D has no table at all</b> — the offset lives in the per-register table caption.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>What our summary-fill fix covers</h3>
+    <ul>
+      <li><span class="tag tC">C</span> <span class="good">Handled</span> — the +8pp lpc845 win.</li>
+      <li><span class="tag tA">A</span> <span class="warn">Mostly</span> — format is close; needs per-device validation (no verified ground truth yet).</li>
+      <li><span class="tag tB">B</span> <span class="warn">Safe no-op</span> — needs an absolute→offset + name-unwrap adapter (covers 5 parts at once).</li>
+      <li><span class="tag tD">D</span> <span class="muted">N/A</span> — no table; a small caption parser would be the fix if recall is weak.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>STM — one family</h2>
+<p>
+Every STM32 reference manual states each register's location and default <em>inline</em>, inside that
+register's own subsection — not in a summary table:
+</p>
+<pre>Address offset: 0x008
+Reset value:    0x0000 0000</pre>
+<p>
+This is uniform across all 53 manuals we process. The tell: in every single one, the count of
+<code>Address&nbsp;offset:</code> and <code>Reset&nbsp;value:</code> labels tracks ~1:1 — meaning each
+register subsection declares both, in the same template, everywhere.
+</p>
+<table>
+<tr><th>Manual</th><th>Chip family / era</th><th><code>Address offset:</code></th><th><code>Reset value:</code></th></tr>
+<tr><td>rm0008</td><td>STM32F1 (~2008, oldest)</td><td>352</td><td>363</td></tr>
+<tr><td>rm0041</td><td>STM32F1 value-line</td><td>244</td><td>241</td></tr>
+<tr><td>rm0436</td><td>STM32 (large)</td><td>2240</td><td>2292</td></tr>
+<tr><td>rm0481</td><td>STM32U5 (~2023, newest)</td><td>1260</td><td>1277</td></tr>
+<tr><td>rm0486</td><td>STM32 (largest scanned)</td><td>2584</td><td>2628</td></tr>
+</table>
+<p>
+Even the array notation is identical old-to-new — <code>Address offset: 0x010 + 0x004 * x, (x = 1 to 4)</code>
+appears the same way in F1 and U5 manuals. There is no second STM format: summary-style tables show up only
+incidentally (memory-boundary maps), and the NXP caption style is essentially absent.
+</p>
+
+<h2>Why the contrast exists</h2>
+<p>
+It's corporate history. ST is a single company that kept one documentation template for the whole STM32
+line, so one extractor generalizes across every family. "NXP" is the product of mergers — Freescale
+(Kinetis), NXP's own LPC line, and the i.MX series — and each legacy family carried its own manual style
+forward. That fragmentation is exactly why NXP extraction needed format-specific work and STM did not.
+</p>
+
+<h2>Consequences for the pipeline</h2>
+<ul>
+  <li><b>STM needs no per-family format adapters.</b> The inline <code>Address offset:</code> /
+      <code>Reset value:</code> labels sit right in each register's text, so the generator reads them
+      directly — which is why the STM pipeline scales to 53 manuals with one extractor and never needed a
+      summary-table fill.</li>
+  <li><b>NXP needs per-group handling.</b> The split-summary-table fix we shipped took lpc845 (Group C)
+      address coverage from <b>85% → 93%</b> (+59 offsets, +20 resets) with <b>zero</b> disagreements
+      against the SVD. On Group B (classic Kinetis) it is a verified safe no-op (0 filled, 0 wrong on
+      ke04).</li>
+  <li><b>One high-value next investment:</b> a Group B adapter (absolute→offset + <code>Label (NAME)</code>
+      unwrap) would extend the same recall win to ke04, k64, mk20d7, mk20d5 and ke04_old at once.</li>
+  <li><b>Related fix, same root cause:</b> NXP access-rule (constraint) extraction was silently dropping
+      everything because the quote-anchor step assumed STM file naming; after the fix, the lpc845 re-run
+      anchored and confirmed its constraints end-to-end (0 → 3 surviving).</li>
+</ul>
+
+<div class="foot">
+<b>Method &amp; evidence.</b> NXP groups A/B/C derived from processed chunks
+(<code>chunked_datasheets/nxp/{k32l3a,k64,ke04,lpc845,s32k1xx}/</code>); groups B/D and the unprocessed
+parts classified by extracting signature header phrases directly from the PDFs with PyMuPDF
+(<code>devices/nxp/{mk20d7,lpc55s69,mimxrt685s}/</code>). STM uniformity measured across all 53
+<code>chunked_datasheets/stm/*/chunks/md/</code> by counting inline <code>Address offset:</code> /
+<code>Reset value:</code> labels vs summary-table headers vs caption offsets. Verified ground truth exists
+only for NXP Group B (<code>verified_datasheet/nxp/{ke04_mke04z4,k64_mk64f12}.csv</code>); the lpc845
+coverage numbers were checked against the SVD. Summary-table fill: <code>core/nxp_summary_fill.py</code>.
+</div>
+
+</div>
+</body>
+</html>
