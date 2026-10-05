@@ -36,6 +36,23 @@ NXP_EXTRACTION_DISCIPLINE_NOTE = EXTRACTION_DISCIPLINE_NOTE + (
     "registers) has NO fixed reset value: output reset_value = null. NEVER emit the "
     "literal string 'Undefined', 'unknown', 'device-specific', 'N/A', or 'x' for any "
     "attribute — null is the only allowed not-found value."
+    # --- RECALL: don't null-out values that CAN be determined from the text ---
+    "\n- RESET VALUE — assemble it, don't give up: the reset value may appear as a "
+    "consolidated value in the register summary/memory-map row (a 'Reset value' column), "
+    "OR only as a per-bit 'Reset value' column inside the bit-field table. If no "
+    "consolidated value is printed, ASSEMBLE the register reset from the per-bit reset "
+    "values (each field's reset occupies its bit range; bits with no stated reset are 0) "
+    "and report that hex value. Only use null when the reset is genuinely undefined "
+    "(previous rule) — NOT merely because a single consolidated number wasn't printed. "
+    "Most LPC/Kinetis control/status registers reset to 0."
+    "\n- SIZE / ADDRESS — always populate when derivable: take address_offset and size "
+    "from the register's summary/memory-map row when present; if size is not stated, infer "
+    "it as the smallest of 8/16/32 bits that covers the highest documented bit (many "
+    "Kinetis registers are 8-bit). Use null only when truly not derivable from the text."
+    "\n- WRITE SEQUENCES — capture ordered write protocols stated in a register's own "
+    "description as a 'sequence' constraint: e.g. a watchdog feed ('write 0xAA then 0x55 "
+    "to reload'), an unlock key, or any 'write X then write Y' required for an effect. "
+    "Do not reduce these to a bare field description."
 )
 
 

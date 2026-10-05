@@ -84,6 +84,9 @@ def load_raw_chunks(chunks_dir: str, chunks_index_csv: str) -> List[Dict[str, An
     return chunks
 
 
+_MAX_ADD = 5000
+
+
 def build_ephemeral_store(processed_chunks: List[Dict[str, Any]]) -> chromadb.Collection:
     """Build an in-memory ChromaDB collection from processed chunks.
 
@@ -107,79 +110,52 @@ def build_ephemeral_store(processed_chunks: List[Dict[str, Any]]) -> chromadb.Co
 
     embeddings = compute_embeddings_cached(texts, provider)
     ids = [f"doc_{i}" for i in range(len(processed_chunks))]
-    collection.add(
-        ids=ids,
-        documents=texts,
-        embeddings=embeddings,
-        metadatas=metadatas,
-    )
+    # ChromaDB rejects a single add above ~5461 records, and the larger
+    # reference manuals are already at that scale (RM0433 is 5183 chunks, and it
+    # is not the biggest one shipped). Both evolved winners were hand-patched
+    # after the fact for exactly this; batching here means a run evolved on a
+    # large manual does not die on its first evaluation.
+    for start in range(0, len(ids), _MAX_ADD):
+        stop = start + _MAX_ADD
+        collection.add(
+            ids=ids[start:stop],
+            documents=texts[start:stop],
+            embeddings=embeddings[start:stop],
+            metadatas=metadatas[start:stop],
+        )
     return collection
 
 
 # EVOLVE-BLOCK-START
-# Helper for table detection, defined once for efficiency
-_table_regex = re.compile(r"\|.*\|(?:\n\|[-=]+\|)+") # More robust markdown table detection
-
 def process_chunks(raw_chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Preprocess raw markdown chunks and attach metadata.
-
-    Called once per evaluation. Takes raw chunk dicts and returns processed
-    chunk dicts ready for vector DB ingestion.
-
-    Each returned dict must have:
-        - "text": str  (the text to embed and store)
-        - "metadata": dict  (searchable metadata — values must be str/int/float/bool)
-
-    Available raw chunk fields:
-        text, page_number, chunk_index, chunk_id, source, token_count
-
-    The LLM is free to:
-        - Modify chunk text (add headers, extract key terms, summarize)
-        - Split or merge chunks
-        - Compute and attach metadata (register names, has_tables, section, etc.)
-        - Filter out irrelevant chunks
-    """
     processed = []
     for chunk in raw_chunks:
-        # Detect if the chunk contains a markdown table using a more robust regex
-        has_tables = bool(_table_regex.search(chunk["text"]))
-        
-        # Prepend a header with page number for better context in embeddings
-        # and to make it easier for the LLM to identify page boundaries
-        processed_text = f"Page {chunk['page_number']}:\n\n" + chunk["text"]
-
         processed.append({
-            "text": processed_text,
+            "text": chunk["text"],
             "metadata": {
+                "chunk_id": chunk["chunk_id"],
                 "page_number": chunk["page_number"],
                 "chunk_index": chunk["chunk_index"],
-                "chunk_id": chunk["chunk_id"], # Add chunk_id for direct lookup in search_and_format
-                "has_tables": has_tables, # Add has_tables metadata
             },
         })
     return processed
 
 
+def _build_spaced_regex(name: str, allow_bank: bool = False) -> str:
+    """Build regex handling OCR spaces/markdown and parameterized digits/ports."""
+    parts = []
+    for c in name:
+        if allow_bank and (c.isdigit() or c in 'xXnN'):
+            parts.append(r'(?:[0-9xXnN]|\s*[0-9xXnN]\s*)')
+        else:
+            parts.append(re.escape(c))
+    return r'[\s_\-\*`#]*'.join(parts)
+
+
 def build_query(peripheral_name: str, register_name: str) -> str:
-    """Construct a search query for retrieving register information.
-
-    Args:
-        peripheral_name: e.g. "afio"
-        register_name: e.g. "evcr"
-
-    Returns:
-        Query string for semantic search.
-    """
-    # Use both full PERIPHERAL_REGISTER name and just the REGISTER name
-    # NXP KE04 registers often use short names (c0, c1, sc1, bdh)
-    reg_full_name = f"{peripheral_name.upper()}_{register_name.upper()}"
-    reg_short_name = register_name.upper()
-    return (
-        f"Retrieve detailed information for the {reg_full_name} register "
-        f"({reg_short_name}). Include its memory offset, reset value, "
-        f"bit field definitions, access types (read-only, write-only, read/write), "
-        f"and any enumerated values for its fields. Focus on tables describing bit fields."
-    )
+    p_up = peripheral_name.upper()
+    r_up = register_name.upper()
+    return f"{p_up}_{r_up} {p_up} {r_up} register address offset reset value bit fields table"
 
 
 def search_and_format(
@@ -190,168 +166,170 @@ def search_and_format(
     register_name: str,
     all_processed_chunks: List[Dict[str, Any]],
 ) -> str:
-    """Search the vector DB, post-process results, and return formatted context.
+    p_up = peripheral_name.upper()
+    r_up = register_name.upper()
+    full_name = f"{p_up}_{r_up}"
 
-    Args:
-        collection: ChromaDB collection to search
-        query: Search query string
-        embedding_fn: Callable that takes a list of strings, returns list of embeddings
-        peripheral_name: e.g. "afio"
-        register_name: e.g. "evcr"
-        all_processed_chunks: All processed chunks (for expansion lookups)
+    # Generate peripheral base families (e.g. FGPIOA -> GPIOA, GPIO; FTM0 -> FTM; UART0 -> UART)
+    p_base = re.sub(r'\d+$', '', p_up)
+    p_base_stripped = p_base[1:] if p_base.startswith('F') and len(p_base) > 2 else p_base
+    p_core = re.sub(r'[A-Z]$', '', p_base_stripped) if len(p_base_stripped) > 2 else p_base_stripped
 
-    Returns:
-        Formatted context string to feed to the generator LLM.
-        Return empty string if no relevant results found.
+    # Generate specific banked register patterns without digit wildcards
+    r_candidates = [r_up]
+    if re.search(r'\d+', r_up):
+        r_candidates.append(re.sub(r'\d+', 'n', r_up))
+        r_candidates.append(re.sub(r'\d+', 'x', r_up))
+        r_candidates.append(re.sub(r'(\d+)', r' \1 ', r_up))
+        r_candidates.append(re.sub(r'(\d+)', r' n ', r_up))
+        r_candidates.append(re.sub(r'(\d+)', r' x ', r_up))
 
-    The LLM is free to:
-        - Use metadata filtering (where clauses)
-        - Adjust n_results
-        - Run multiple queries (decompose by aspect)
-        - Rerank results using heuristics
-        - Expand results with adjacent chunks
-        - Order results by page number
-        - Format results in any way
-    """
+    exact_full_pat = re.compile(r'\b' + _build_spaced_regex(full_name) + r'\b', re.I)
+
+    p_patterns = list(set(filter(None, [p_up, p_base, p_base_stripped, p_core])))
+    p_pat_str = '|'.join(_build_spaced_regex(p, allow_bank=True) for p in p_patterns)
+
+    r_patterns = list(set(filter(None, r_candidates)))
+    r_pat_str = '|'.join(_build_spaced_regex(r, allow_bank=False) for r in r_patterns)
+
+    heading_pat = re.compile(
+        rf'#+.*?(?:{p_pat_str})[\s_\-\*`#]*(?:x|n|\d)?[\s_\-\*`#]*(?:{r_pat_str})',
+        re.I
+    )
+    paren_reg_pat = re.compile(
+        rf'\([\s\*`#]*(?:(?:{p_pat_str})[\s_\-\*`#]*(?:x|n|\d)?[\s_\-\*`#]*)?(?:{r_pat_str})[\s\*`#]*\)',
+        re.I
+    )
+
+    offset_pat = re.compile(r'(?:address\s*offset|offset)\s*[:=]?\s*0?x?[0-9a-fA-F]+', re.I)
+    reset_pat = re.compile(r'reset\s*(?:value)?\s*[:=]?', re.I)
+    table_pat = re.compile(r'\|(?:\s*Bits?\s*|\s*\d+\s*)\|', re.I)
+    summary_map_pat = re.compile(r'memory\s*map|register\s*summary', re.I)
+
+    # 1. Vector Search Candidates
     query_embedding = embedding_fn([query])[0]
-    
-    reg_full_name = f"{peripheral_name.upper()}_{register_name.upper()}"
-    reg_short_name = register_name.upper()
-    
-    # Define text search keywords for where_document filter
-    text_keywords = [reg_full_name, reg_short_name]
-    # Add peripheral name + short name if it's a distinct useful pattern, e.g., "ADC SC1"
-    if peripheral_name.upper() != reg_full_name.split('_')[0] and f"{peripheral_name.upper()} {reg_short_name}" not in text_keywords:
-        text_keywords.append(f"{peripheral_name.upper()} {reg_short_name}")
-    
-    where_doc_clause = {"$or": [{"$contains": kw} for kw in text_keywords]}
-
-    # --- Query 1: Prioritize chunks with tables and register name match ---
-    # Retrieve more results initially to allow for reranking and selection
-    results_primary = collection.query(
+    n_search = min(15, len(all_processed_chunks))
+    results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=7, # Retrieve a reasonable number to allow for filtering/reranking
-        where={"has_tables": True},
-        where_document=where_doc_clause,
+        n_results=n_search,
         include=["documents", "metadatas", "distances"],
     )
 
-    all_retrieved_items = []
-    seen_chunk_ids = set()
+    candidate_map = {}
+    docs = results["documents"][0] if results.get("documents") and results["documents"] else []
+    metas = results["metadatas"][0] if results.get("metadatas") and results["metadatas"] else []
+    dists = results["distances"][0] if results.get("distances") and results["distances"] else []
 
-    def add_unique_results(res_list):
-        for i in range(len(res_list["documents"][0])):
-            doc = res_list["documents"][0][i]
-            meta = res_list["metadatas"][0][i]
-            dist = res_list["distances"][0][i]
-            # Use page_number and chunk_index as a proxy for unique chunk ID
-            unique_id = (meta.get("page_number"), meta.get("chunk_index"))
-            if unique_id not in seen_chunk_ids:
-                all_retrieved_items.append({"doc": doc, "meta": meta, "dist": dist})
-                seen_chunk_ids.add(unique_id)
+    for doc, meta, dist in zip(docs, metas, dists):
+        cid = meta.get("chunk_id")
+        candidate_map[cid] = {
+            "text": doc,
+            "metadata": meta,
+            "vec_sim": 1.0 - (dist if dist is not None else 0.5),
+        }
 
-    add_unique_results(results_primary)
+    # 2. Add candidates with direct heading or pattern hits across whole corpus
+    for chunk in all_processed_chunks:
+        cid = chunk["metadata"]["chunk_id"]
+        if cid not in candidate_map:
+            text = chunk["text"]
+            if heading_pat.search(text) or paren_reg_pat.search(text) or exact_full_pat.search(text):
+                candidate_map[cid] = {
+                    "text": text,
+                    "metadata": chunk["metadata"],
+                    "vec_sim": 0.0,
+                }
 
-    # --- Fallback Query: If primary query yields too few results, try without table filter ---
-    # This helps catch introductory text or definitions without explicit tables in the chunk
-    if len(all_retrieved_items) < 2: # If less than 2 strong results, broaden the search
-        results_fallback = collection.query(
-            query_embeddings=[query_embedding],
-            n_results=5, # Get fewer additional results for fallback
-            where_document=where_doc_clause, # Still try to match register name in text
-            include=["documents", "metadatas", "distances"],
-        )
-        add_unique_results(results_fallback)
-    
-    if not all_retrieved_items:
+    # 3. Score candidate chunks
+    scored_candidates = []
+    for cid, data in candidate_map.items():
+        text = data["text"]
+        score = data["vec_sim"] * 10.0
+
+        has_heading = bool(heading_pat.search(text))
+        has_paren = bool(paren_reg_pat.search(text))
+        has_exact = bool(exact_full_pat.search(text))
+        has_offset = bool(offset_pat.search(text))
+        has_reset = bool(reset_pat.search(text))
+        has_table = bool(table_pat.search(text) or "|" in text)
+        is_summary = bool(summary_map_pat.search(text))
+
+        if has_heading:
+            score += 70.0
+        if has_paren:
+            score += 50.0
+        if has_exact:
+            score += 30.0
+
+        if has_offset:
+            score += 25.0
+        if has_reset:
+            score += 15.0
+        if has_table:
+            score += 10.0
+
+        # Penalize pure memory map tables that list all registers without section headings
+        if is_summary and not has_heading:
+            score -= 50.0
+
+        if score > 20.0:
+            scored_candidates.append((score, data))
+
+    scored_candidates.sort(key=lambda x: x[0], reverse=True)
+
+    if not scored_candidates:
+        if candidate_map:
+            best_c = next(iter(candidate_map.values()))
+            page = best_c["metadata"].get("page_number", "?")
+            return f"[Page {page}]\n{best_c['text']}"
         return ""
 
-    # Rerank combined results based on distance, table presence, and register name match
-    def rank_key(item):
-        doc = item["doc"]
-        meta = item["meta"]
-        distance = item["dist"]
-        
-        has_table_score = 1 if meta.get("has_tables", False) else 0
-        
-        # Check for register name presence in the document text
-        reg_name_present = 0
-        if re.search(r'\b' + re.escape(reg_full_name) + r'\b', doc, re.IGNORECASE):
-            reg_name_present = 2
-        elif re.search(r'\b' + re.escape(reg_short_name) + r'\b', doc, re.IGNORECASE):
-            reg_name_present = 1
-        
-        # Sort by: distance (ascending), then has_table (descending), then reg_name_present (descending)
-        return (distance, -has_table_score, -reg_name_present)
+    # 4. Select top definition chunk and multi-chunk continuation
+    top_score, top_candidate = scored_candidates[0]
+    top_cid = top_candidate["metadata"]["chunk_id"]
 
-    all_retrieved_items.sort(key=rank_key)
+    chunk_id_to_idx = {c["metadata"]["chunk_id"]: i for i, c in enumerate(all_processed_chunks)}
+    best_idx = chunk_id_to_idx.get(top_cid, 0)
 
-    # Create a lookup for all processed chunks by (page_number, chunk_index)
-    chunk_lookup_by_page_idx = {(c["metadata"]["page_number"], c["metadata"]["chunk_index"]): i 
-                                 for i, c in enumerate(all_processed_chunks)}
+    # Check if preceding chunk was the definition header
+    top_text = top_candidate["text"]
+    if not (offset_pat.search(top_text) or heading_pat.search(top_text)) and best_idx > 0:
+        prev_chunk = all_processed_chunks[best_idx - 1]
+        prev_text = prev_chunk["text"]
+        if (heading_pat.search(prev_text) or paren_reg_pat.search(prev_text) or exact_full_pat.search(prev_text)) and offset_pat.search(prev_text):
+            best_idx = best_idx - 1
 
-    expanded_chunks_to_add = []
-    # Consider the top N initial results for expansion candidates
-    # We use a slightly larger pool here to find good candidates before final truncation
-    expansion_candidates = all_retrieved_items[:7] # Consider top 7 for expansion
+    selected_indices = [best_idx]
 
-    for item in expansion_candidates:
-        meta = item['meta']
-        doc = item['doc']
-        
-        # If the chunk is highly relevant but lacks a table, try to find an adjacent table
-        # And it must contain the register name to be a strong candidate for expansion
-        if not meta.get('has_tables', False) and \
-           (re.search(r'\b' + re.escape(reg_full_name) + r'\b', doc, re.IGNORECASE) or \
-            re.search(r'\b' + re.escape(reg_short_name) + r'\b', doc, re.IGNORECASE)):
-            
-            page_num = meta['page_number']
-            chunk_idx = meta['chunk_index']
-            
-            # Check immediate neighbors for a table-containing chunk
-            # Priority: same page adjacent, then previous page, then next page
-            for offset_page, offset_chunk in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
-                adj_page_num = page_num + offset_page
-                adj_chunk_idx = chunk_idx + offset_chunk
-                
-                adj_key = (adj_page_num, adj_chunk_idx)
-                if adj_key in chunk_lookup_by_page_idx:
-                    adj_original_idx = chunk_lookup_by_page_idx[adj_key]
-                    adj_chunk = all_processed_chunks[adj_original_idx]
-                    adj_meta = adj_chunk["metadata"]
-                    adj_doc = adj_chunk["text"]
+    # Expand forward for continuation chunks (up to 5 subsequent chunks)
+    for next_idx in range(best_idx + 1, min(len(all_processed_chunks), best_idx + 6)):
+        next_chunk = all_processed_chunks[next_idx]
+        next_text = next_chunk["text"]
 
-                    # Only add if the adjacent chunk has a table and is not already retrieved
-                    unique_id = (adj_meta.get("page_number"), adj_meta.get("chunk_index"))
-                    if adj_meta.get('has_tables', False) and unique_id not in seen_chunk_ids:
-                        # Add this expanded chunk with a slightly penalized distance
-                        # It will compete for final MAX_CHUNKS_FINAL slots.
-                        expanded_chunks_to_add.append({
-                            "doc": adj_doc,
-                            "meta": adj_meta,
-                            "dist": item['dist'] + 0.01 # Small penalty, slightly worse than original
-                        })
-                        seen_chunk_ids.add(unique_id)
-                        break # Found one, move to next primary item
-    
-    # Add expanded chunks to the general pool
-    all_retrieved_items.extend(expanded_chunks_to_add)
+        # Stop expansion if next chunk introduces a completely new register definition
+        has_new_reg = bool(re.search(r'(?:^|\n)\s*#{1,6}\s+.*?\([A-Z0-9_\s\*`#-]+\)', next_text))
+        has_new_offset = bool(re.search(r'\b(?:address\s*offset|offset)\s*[:=]?\s*0?x?[0-9a-fA-F]+', next_text, re.I))
+        has_section_num = bool(re.search(r'(?:^|\n)\s*#{1,6}\s+\d+\.\d+\.\d+', next_text))
 
-    # Rerank all combined results (original + expanded)
-    all_retrieved_items.sort(key=rank_key)
+        if (has_new_reg and has_new_offset) or (has_new_reg and has_section_num) or (has_new_offset and "register" in next_text.lower() and "#" in next_text):
+            break
 
-    # Select top N chunks, allowing a bit more context for expanded info
-    MAX_CHUNKS_FINAL = 5 # Increase from 4 to 5, to accommodate potential expanded context
-    final_context_items = all_retrieved_items[:MAX_CHUNKS_FINAL]
+        # Check for field tables, bit descriptions, or register continuation markers
+        is_continuation = (
+            "|" in next_text
+            or bool(re.search(r'\b(rw|ro|wo|w1c|bits?|field|fields|description|descriptions|reset|reserved|function|value|0x[0-9a-fA-F]+)\b', next_text, re.I))
+        )
+        if is_continuation:
+            selected_indices.append(next_idx)
+        else:
+            break
 
-    # Sort final selected chunks by page number and chunk index for coherent reading
-    final_context_items.sort(key=lambda x: (x['meta'].get('page_number', 0), x['meta'].get('chunk_index', 0)))
+    selected_chunks = [all_processed_chunks[i] for i in sorted(set(selected_indices))]
 
-    # Format results
     parts = []
-    for item in final_context_items:
-        page = item['meta'].get("page_number", "?")
-        parts.append(f"[Page {page}]\n{item['doc']}")
+    for c in selected_chunks:
+        page = c["metadata"].get("page_number", "?")
+        parts.append(f"[Page {page}]\n{c['text']}")
 
     return "\n\n---\n\n".join(parts)
 # EVOLVE-BLOCK-END
