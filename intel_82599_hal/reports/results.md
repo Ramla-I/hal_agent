@@ -15,8 +15,33 @@ HAL never had — at a driver-diff cost of 2 files, +12/−5 lines.
 - **Pipeline:** vendored evolved retriever (per-register chunk selection) →
   gpt-oss-120b, batch size 1, Intel prompt variant with the unchanged
   grammar-v2 constraint schema; bounded completion passes with full-page
-  context expansion; final pass escalates 5 registers to gpt-5.2.
+  context expansion; final pass escalates to gpt-5.2.
   97 LLM calls, 693 k input / 199 k output tokens (≲ $1).
+
+### Generator retry cadence (across the 75 registers)
+
+The batched first pass extracted 65 of 75 registers cleanly. The rest were
+recovered by the enhanced retry mechanism, and the cadence itself is a result —
+most registers need nothing, and model escalation is reserved for the genuine
+residue:
+
+| Outcome | Count | Registers |
+|---|---:|---|
+| Clean on the first batched pass (no retry) | 65 | — |
+| Needed ≥1 **context-expansion** retry (runs r004/r005) | 10 | AUTOC, EICR, HLREG0, L34TIMIR, LINKS, RTTDCS, SRRCTL, SWSM, SW_FW_SYNC, TXDCTL |
+| Of those, **escalated to gpt-5.2** (run r006) | 5 | AUTOC, HLREG0, L34TIMIR, LINKS, TXDCTL |
+| — genuine unresolved miss that gpt-5.2 actually fixed | 3 | L34TIMIR, LINKS, TXDCTL |
+| — swept in by the conservative `hi<31` coverage trigger, no real miss | 2 | AUTOC, HLREG0 |
+
+The expansion trigger fires when a register's extracted subfields fail to span
+bits 0–31 **or** a driver-needed field is missing. The two "no real miss" cases
+(AUTOC, HLREG0) are false positives of the first clause: their datasheet field
+tables legitimately end below bit 31 (at 24 and 19), with no fields documented
+above, so `hi<31` holds and the gate flags them — the full subfield census
+confirms 0 missed fields for both, and gpt-5.2 reproduced the same coverage.
+Separately, 2 registers (AUTOC, LINKS) hit a `NO JSON` truncation on the base
+pass and were recovered by a same-model budget resume (larger output-token
+limit, same context) before any expansion; both are already in the 10 above.
 
 ## Structural recall (compile metric)
 
