@@ -84,3 +84,17 @@ siblings and not run separately unless a difference is suspected.
 
 **reset 58%** is the weak axis (as everywhere) — reset values, not offsets, are the structural bottleneck.
 
+### k64 — COMPLETE (Group B — confirms ke04)
+
+**Run:** s0 end-to-end, `--generator-concurrency 6`, rc=0 (~58 min, 1086 regs).
+
+**Structure coverage (vs SVD 1086; 853 matched, 233 absent):** address **73%** · reset **21%** · size **74%**.
+- Confirms ke04: generator handles Group B offsets with **no adapter** (73% here, 90% on ke04). **Group B adapter retracted — don't build it.**
+- 233 absent + 192 array-indexed missing offset — arrays again (`FTFE_FlashConfig_BACKKEY0..7`, etc.).
+- **reset 21%** — the lowest of any device; Group B reset values are especially poorly extracted (absolute-address tables carry reset in a column the generator isn't reading; this is where a Group-B-aware *reset* harvest — not offset — could help).
+
+**Constraints:** collected 344 → survived lint 324 → anchored 302 → **confirmed 210** (enforceable 200). Rich.
+
+### Group B verdict (ke04 + k64)
+Generator handles offsets (73–90%) and size (74–89%) **without any fill or adapter**; constraint-rich (43, 210). The absolute→offset **offset** adapter is unnecessary. The gaps are the same cross-group ones — **array/dim reconciliation** and **reset values** (Group B reset is the worst, 21–58%).
+
