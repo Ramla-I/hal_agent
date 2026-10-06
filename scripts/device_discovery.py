@@ -1,80 +1,59 @@
 """Per-device extraction discovery: structure coverage + constraint funnel +
 residual-gap breakdown + group-aware recommendations.
 
-Standalone (no config/LLM import): reads the generator output, the review CSV, and
-the constraint_validation artifacts for a device, and compares structure against
-the SVD ground truth. Run after a device's s0 pipeline completes.
+Standalone. Structure coverage is measured against the generator's OWN register
+enumeration (``agent_tools.svd_parsing.get_register_names_for_peripheral``, the
+exact names it writes files under) — NOT a second hand-rolled SVD walk, which
+mis-keyed cluster/array registers (``FTFE_FlashConfig_BACKKEY0`` vs the generator's
+``ftfe_flashconfig_backkey0``) and inflated "absent" ~3x. "Expected" = what the
+generator was asked to produce; "absent" = expected minus files actually written.
 
     python3 scripts/device_discovery.py <device> [--manufacturer nxp] [--run 1]
 """
 from __future__ import annotations
-import argparse, csv, glob, json, os, re
-import xml.etree.ElementTree as ET
-from collections import Counter
+import argparse, csv, glob, json, os, re, sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from agent_tools.svd_parsing import get_peripheral_names, get_register_names_for_peripheral
 
 FORMAT_GROUP = {
-    "lpc845": "C (classic LPC: summary table, relative offset, no size col)",
-    "k32l3a": "A (modern Kinetis: summary table, relative offset, has Width)",
-    "s32k1xx": "A (modern Kinetis: summary table, relative offset, has Width)",
-    "ke04": "B (classic Kinetis: summary table, ABSOLUTE addr, Label(NAME), Width)",
-    "ke04_old": "B (classic Kinetis)",
-    "k64": "B (classic Kinetis: summary table, ABSOLUTE addr, Label(NAME), Width)",
-    "mk20d7": "B (classic Kinetis)",
-    "mk20d5": "B (classic Kinetis)",
-    "lpc55s69": "D (modern NXP: caption offset, no summary table)",
-    "mimxrt685s": "D (modern NXP: caption offset, no summary table)",
-    "mimxrt633s": "D (modern NXP: caption offset, no summary table)",
+    "lpc845": "C (classic LPC)", "k32l3a": "A (modern Kinetis)",
+    "s32k1xx": "A (modern Kinetis)", "ke04": "B (classic Kinetis)",
+    "ke04_old": "B", "k64": "B (classic Kinetis)", "mk20d7": "B (classic Kinetis)",
+    "mk20d5": "B", "lpc55s69": "D (modern NXP, caption offset)",
+    "mimxrt685s": "D (modern NXP, caption offset)", "mimxrt633s": "D",
 }
 
 
-def _sns(t): return t.rsplit("}", 1)[-1]
 def _nn(s): return re.sub(r"[^A-Z0-9]", "", (s or "").upper())
-def _hx(v):
-    try: return int(str(v).replace(" ", "").replace("_", ""), 16)
-    except Exception: return None
+def _empty(v): return v is None or (isinstance(v, str) and not v.strip()) or v == 0
 def _digit_tail(s): return bool(re.search(r"\d$", s or ""))
 
 
-def load_svd(dev_dir):
-    out = {}
-    for s in glob.glob(os.path.join(dev_dir, "svd", "*.svd")) + glob.glob(os.path.join(dev_dir, "svd", "*.xml")):
-        for per in ET.parse(s).getroot().iter():
-            if _sns(per.tag) != "peripheral":
-                continue
-            pn = next((c.text for c in per if _sns(c.tag) == "name"), None)
-            if not pn:
-                continue
-            for reg in per.iter():
-                if _sns(reg.tag) != "register":
-                    continue
-                rn = ro = rr = None
-                for c in reg:
-                    t = _sns(c.tag)
-                    if t == "name": rn = c.text
-                    elif t == "addressOffset": ro = c.text
-                    elif t == "resetValue": rr = c.text
-                if rn:
-                    out[(_nn(pn).rstrip("0123456789"), _nn(rn))] = {"peripheral": pn, "register": rn,
-                                                                     "address_offset": ro, "reset_value": rr}
-    return out
+def expected_registers(dev_dir):
+    """The exact register filenames the generator enumerates (keyed normalized)."""
+    svds = glob.glob(os.path.join(dev_dir, "svd", "*.svd")) + glob.glob(os.path.join(dev_dir, "svd", "*.xml"))
+    exp = {}
+    for p in get_peripheral_names(svds):
+        try:
+            for r in get_register_names_for_peripheral(svds, p):
+                exp[_nn(f"{p}_{r}")] = f"{p}_{r}"
+        except ValueError:
+            pass
+    return exp
 
 
-def load_gen(ao_dir):
+def load_produced(ao_dir):
     out = {}
     for f in glob.glob(os.path.join(ao_dir, "*")):
-        if os.path.isdir(f):
-            continue
-        n = os.path.basename(f)
-        if "_" not in n:
+        if os.path.isdir(f) or "_" not in os.path.basename(f):
             continue
         try:
             d = json.loads(open(f).read())
         except Exception:
             continue
-        if not isinstance(d, dict):
-            continue
-        per, reg = n.split("_", 1)
-        out[(_nn(per).rstrip("0123456789"), _nn(reg))] = (n, d)
+        if isinstance(d, dict):
+            out[_nn(os.path.basename(f))] = d
     return out
 
 
@@ -91,35 +70,34 @@ def main():
 
     print(f"{'='*72}\nDISCOVERY: {dev}  (group {FORMAT_GROUP.get(dev,'?')})\n{'='*72}")
 
-    svd = load_svd(dev_dir)
-    gen = load_gen(ao_dir)
-    if not gen:
+    produced = load_produced(ao_dir)
+    if not produced:
         print(f"  NO generator output at {ao_dir} — run s0 first.")
         return
-    matched = [k for k in svd if k in gen]
-    has_off = sum(1 for k in matched if gen[k][1].get("address_offset") not in (None, ""))
-    has_rst = sum(1 for k in matched if gen[k][1].get("reset_value") not in (None, ""))
-    has_sz = sum(1 for k in matched if gen[k][1].get("size") not in (None, "", 0))
-    absent = [svd[k] for k in svd if k not in gen]
+    expected = expected_registers(dev_dir)
+    matched = [k for k, v in expected.items() if k in produced]
+    absent = sorted(v for k, v in expected.items() if k not in produced)
     m = max(len(matched), 1)
-    print(f"\n-- STRUCTURE COVERAGE (vs SVD) --")
-    print(f"  SVD registers: {len(svd)} | matched in generator: {len(matched)} | absent: {len(absent)}")
-    print(f"  address_offset: {has_off}/{m} = {100*has_off//m}%")
-    print(f"  reset_value   : {has_rst}/{m} = {100*has_rst//m}%")
-    print(f"  size          : {has_sz}/{m} = {100*has_sz//m}%")
-
-    # residual missing offset: array vs name-variant
-    miss_off = [svd[k] for k in matched_keys(svd, gen) if gen[k][1].get("address_offset") in (None, "")]
-    arr = [x for x in miss_off if _digit_tail(x["register"])]
-    print(f"  missing offset (matched): {len(miss_off)} | array-indexed names: {len(arr)} | absent regs: {len(absent)}")
+    ao = sum(1 for k in matched if not _empty(produced[k].get("address_offset")))
+    rv = sum(1 for k in matched if not _empty(produced[k].get("reset_value")))
+    sz = sum(1 for k in matched if not _empty(produced[k].get("size")))
+    print(f"\n-- STRUCTURE COVERAGE (vs generator's own SVD enumeration) --")
+    print(f"  expected registers: {len(expected)} | produced+matched: {len(matched)} "
+          f"({100*len(matched)//max(len(expected),1)}%) | absent: {len(absent)}")
+    print(f"  address_offset: {ao}/{m} = {100*ao//m}%")
+    print(f"  reset_value   : {rv}/{m} = {100*rv//m}%")
+    print(f"  size          : {sz}/{m} = {100*sz//m}%")
+    arr = [x for x in absent if _digit_tail(x)]
+    print(f"  absent: {len(absent)} | array-indexed (ends in digit): {len(arr)}")
     if absent[:8]:
-        print(f"    absent sample: {[a['peripheral']+'_'+a['register'] for a in absent[:8]]}")
+        print(f"    sample: {absent[:8]}")
 
     # constraint funnel
     print(f"\n-- CONSTRAINT FUNNEL --")
     raw = 0
+    from collections import Counter
     kinds = Counter()
-    for _, d in gen.values():
+    for d in produced.values():
         for c in (d.get("access_constraints_v2") or []):
             raw += 1
             kinds[c.get("kind")] += 1
@@ -136,22 +114,15 @@ def main():
         print(f"  collect: native_v2={sm.get('constraints_native_v2')} survived_lint={sm.get('constraints_v2')} "
               f"rejected={sm.get('constraints_rejected')} reasons={sm.get('reject_reasons')}")
 
-    # structure review
-    rv = os.path.join(ev_dir, f"{dev}_structure_review.csv")
-    if os.path.isfile(rv):
-        rows = list(csv.DictReader(open(rv)))
+    rv_path = os.path.join(ev_dir, f"{dev}_structure_review.csv")
+    if os.path.isfile(rv_path):
+        rows = list(csv.DictReader(open(rv_path)))
         print(f"\n-- STRUCTURE REVIEW --  rows={len(rows)}")
         print(f"  by key: {dict(Counter(r.get('key','') for r in rows))}")
         print(f"  by status: {dict(Counter(r.get('status','') for r in rows))}")
-
-    cr = os.path.join(ev_dir, f"{dev}_constraints_review.jsonl")
-    if os.path.isfile(cr):
-        n = sum(1 for _ in open(cr))
-        print(f"  constraints_review records: {n}")
-
-
-def matched_keys(svd, gen):
-    return [k for k in svd if k in gen]
+    cr_path = os.path.join(ev_dir, f"{dev}_constraints_review.jsonl")
+    if os.path.isfile(cr_path):
+        print(f"  constraints_review records: {sum(1 for _ in open(cr_path))}")
 
 
 if __name__ == "__main__":
