@@ -87,6 +87,7 @@ def incomplete_registers(base_dir, regs):
     from emit_hal import find_field
     retry = set()
     specs = {}
+    regs_keys = {r["abbrev_base"].upper() for r in regs}
     for r in regs:
         key = r["abbrev_base"].upper()
         p = os.path.join(base_dir, key + ".json")
@@ -109,6 +110,10 @@ def incomplete_registers(base_dir, regs):
             if c["kind"] == "policy":
                 continue
             key = c["register"].upper()
+            # only registers in scope (regs); a key absent from `specs` because
+            # it is out of scope must NOT be flagged as a driver-field miss.
+            if key not in regs_keys:
+                continue
             sfound, _ = find_field(specs.get(key), [c.get("field")] + c.get("alt", []))
             if sfound is None:
                 retry.add(key)
