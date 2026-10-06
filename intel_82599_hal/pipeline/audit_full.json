@@ -1,0 +1,4585 @@
+{
+  "run": "r006",
+  "grades": {
+    "AGREE": 402,
+    "MISSED": 9,
+    "POS_FLAG": 4
+  },
+  "unparsed": [],
+  "rows": [
+    {
+      "reg": "AUTOC",
+      "name": "FLU",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FLU"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "ANACK2",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ANACK2"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "ANSF",
+      "lo": 2,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ANSF"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "10G_PMA_PMD_PARALLEL",
+      "lo": 7,
+      "hi": 8,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "10G_PMA_PMD_PARALLEL"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "1G_PMA_PMD",
+      "lo": 9,
+      "hi": 9,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "1G_PMA_PMD"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "D10GMP",
+      "lo": 10,
+      "hi": 10,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "D10GMP"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "RATD",
+      "lo": 11,
+      "hi": 11,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RATD"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "Restart_AN",
+      "lo": 12,
+      "hi": 12,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Restart_AN"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "LMS",
+      "lo": 13,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LMS"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "KR_support",
+      "lo": 16,
+      "hi": 16,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KR_support"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "FECR",
+      "lo": 17,
+      "hi": 17,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FECR"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "FECA",
+      "lo": 18,
+      "hi": 18,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FECA"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "ANRXAT",
+      "lo": 19,
+      "hi": 22,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ANRXAT"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "ANRXDM",
+      "lo": 23,
+      "hi": 23,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ANRXDM"
+      ]
+    },
+    {
+      "reg": "AUTOC",
+      "name": "ANRXLM",
+      "lo": 24,
+      "hi": 24,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ANRXLM"
+      ]
+    },
+    {
+      "reg": "AUTOC2",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 15,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "AUTOC2",
+      "name": "10G_PMA_PMD_Serial",
+      "lo": 16,
+      "hi": 17,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "10G_PMA_PMD_Serial"
+      ]
+    },
+    {
+      "reg": "AUTOC2",
+      "name": "DDPT",
+      "lo": 18,
+      "hi": 18,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "DDPT"
+      ]
+    },
+    {
+      "reg": "AUTOC2",
+      "name": "Reserved",
+      "lo": 19,
+      "hi": 27,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "AUTOC2",
+      "name": "FASM",
+      "lo": 28,
+      "hi": 28,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FASM"
+      ]
+    },
+    {
+      "reg": "AUTOC2",
+      "name": "Reserved",
+      "lo": 29,
+      "hi": 29,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "AUTOC2",
+      "name": "PDD",
+      "lo": 30,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PDD"
+      ]
+    },
+    {
+      "reg": "AUTOC2",
+      "name": "Reserved",
+      "lo": 31,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "CTRL",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 1,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "CTRL",
+      "name": "PCIe Master Disable",
+      "lo": 2,
+      "hi": 2,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PCIe Master Disable"
+      ]
+    },
+    {
+      "reg": "CTRL",
+      "name": "LRST",
+      "lo": 3,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LRST"
+      ]
+    },
+    {
+      "reg": "CTRL",
+      "name": "Reserved",
+      "lo": 4,
+      "hi": 25,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "CTRL",
+      "name": "RST",
+      "lo": 26,
+      "hi": 26,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RST"
+      ]
+    },
+    {
+      "reg": "CTRL",
+      "name": "Reserved",
+      "lo": 27,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 13,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "PFRSTD",
+      "lo": 14,
+      "hi": 14,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PFRSTD (SC)"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "Reserved",
+      "lo": 15,
+      "hi": 15,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "NS_DIS",
+      "lo": 16,
+      "hi": 16,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "NS_DIS"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "RO_DIS",
+      "lo": 17,
+      "hi": 17,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RO_DIS"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "Reserved",
+      "lo": 18,
+      "hi": 25,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "Extended VLAN",
+      "lo": 26,
+      "hi": 26,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Extended VLAN"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "Reserved",
+      "lo": 27,
+      "hi": 27,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "DRV_LOAD",
+      "lo": 28,
+      "hi": 28,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "DRV_LOAD"
+      ]
+    },
+    {
+      "reg": "CTRL_EXT",
+      "name": "Reserved",
+      "lo": 29,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DAQF",
+      "name": "Destination Address",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Destination Address"
+      ]
+    },
+    {
+      "reg": "DCA_CTRL",
+      "name": "DCA_DIS",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "DCA_DIS"
+      ]
+    },
+    {
+      "reg": "DCA_CTRL",
+      "name": "DCA_MODE",
+      "lo": 1,
+      "hi": 4,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "DCA_MODE"
+      ]
+    },
+    {
+      "reg": "DCA_CTRL",
+      "name": "Reserved",
+      "lo": 5,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_ID",
+      "name": "Function Number",
+      "lo": 0,
+      "hi": 2,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Function Number"
+      ]
+    },
+    {
+      "reg": "DCA_ID",
+      "name": "Device Number",
+      "lo": 3,
+      "hi": 7,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Device Number"
+      ]
+    },
+    {
+      "reg": "DCA_ID",
+      "name": "Bus Number",
+      "lo": 8,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Bus Number"
+      ]
+    },
+    {
+      "reg": "DCA_ID",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 4,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "Rx Descriptor DCA EN",
+      "lo": 5,
+      "hi": 5,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rx Descriptor DCA EN"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "Rx Header DCA EN",
+      "lo": 6,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rx Header DCA EN"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "Rx Payload DCA EN",
+      "lo": 7,
+      "hi": 7,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rx Payload DCA EN"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "Reserved",
+      "lo": 8,
+      "hi": 8,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "RXdescReadROEn",
+      "lo": 9,
+      "hi": 9,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RXdescReadROEn"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "Reserved",
+      "lo": 10,
+      "hi": 10,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "RXdescWBROen",
+      "lo": 11,
+      "hi": 11,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RXdescWBROen"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "Reserved",
+      "lo": 12,
+      "hi": 12,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "RXdataWriteROEn",
+      "lo": 13,
+      "hi": 13,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RXdataWriteROEn"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "Reserved",
+      "lo": 14,
+      "hi": 14,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "RxRepHeaderROEn",
+      "lo": 15,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RxRepHeaderROEn"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 23,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_RXCTRL",
+      "name": "CPUID",
+      "lo": 24,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CPUID"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 4,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "Tx Descriptor DCA EN",
+      "lo": 5,
+      "hi": 5,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Tx Descriptor DCA EN"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "Reserved",
+      "lo": 6,
+      "hi": 7,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "Reserved",
+      "lo": 8,
+      "hi": 8,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "TXdescRDROEn",
+      "lo": 9,
+      "hi": 9,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TXdescRDROEn"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "Reserved",
+      "lo": 10,
+      "hi": 10,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "TXdescWBROen",
+      "lo": 11,
+      "hi": 11,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TXdescWBROen"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "Reserved",
+      "lo": 12,
+      "hi": 12,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "TXDataReadROEn",
+      "lo": 13,
+      "hi": 13,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TXDataReadROEn"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "Reserved",
+      "lo": 14,
+      "hi": 23,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DCA_TXCTRL",
+      "name": "CPUID",
+      "lo": 24,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CPUID"
+      ]
+    },
+    {
+      "reg": "DMATXCTL",
+      "name": "TE",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TE"
+      ]
+    },
+    {
+      "reg": "DMATXCTL",
+      "name": "Reserved",
+      "lo": 1,
+      "hi": 1,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DMATXCTL",
+      "name": "Reserved",
+      "lo": 2,
+      "hi": 2,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DMATXCTL",
+      "name": "GDV",
+      "lo": 3,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "GDV"
+      ]
+    },
+    {
+      "reg": "DMATXCTL",
+      "name": "Reserved",
+      "lo": 4,
+      "hi": 15,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DMATXCTL",
+      "name": "VT",
+      "lo": 16,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "VT"
+      ]
+    },
+    {
+      "reg": "DTXMXSZRQ",
+      "name": "Max_bytes_num_req",
+      "lo": 0,
+      "hi": 11,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Max_bytes_num_req"
+      ]
+    },
+    {
+      "reg": "DTXMXSZRQ",
+      "name": "Reserved",
+      "lo": 12,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DTXTCPFLGH",
+      "name": "TCP_Flg_lst_seg",
+      "lo": 0,
+      "hi": 11,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TCP_Flg_lst_seg"
+      ]
+    },
+    {
+      "reg": "DTXTCPFLGH",
+      "name": "Reserved",
+      "lo": 12,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DTXTCPFLGL",
+      "name": "TCP_flg_first_seg",
+      "lo": 0,
+      "hi": 11,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TCP_flg_first_seg"
+      ]
+    },
+    {
+      "reg": "DTXTCPFLGL",
+      "name": "Reserved",
+      "lo": 12,
+      "hi": 15,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "DTXTCPFLGL",
+      "name": "TCP_Flg_mid_seg",
+      "lo": 16,
+      "hi": 27,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TCP_Flg_mid_seg"
+      ]
+    },
+    {
+      "reg": "DTXTCPFLGL",
+      "name": "Reserved",
+      "lo": 28,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "EE_SK",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EE_SK"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "EE_CS",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EE_CS"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "EE_DI",
+      "lo": 2,
+      "hi": 2,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EE_DI"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "EE_DO",
+      "lo": 3,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EE_DO (RO field)"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "FWE",
+      "lo": 4,
+      "hi": 5,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FWE"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "EE_REQ",
+      "lo": 6,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EE_REQ"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "EE_GNT",
+      "lo": 7,
+      "hi": 7,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EE_GNT (RO field)"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "EE_PRES",
+      "lo": 8,
+      "hi": 8,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EE_PRES (RO field)"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "Auto_RD",
+      "lo": 9,
+      "hi": 9,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Auto_RD (RO field)"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "Reserved",
+      "lo": 10,
+      "hi": 10,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "EE_Size",
+      "lo": 11,
+      "hi": 14,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EE_Size (RO field)"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "PCI_ANA_done",
+      "lo": 15,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PCI _ANA_done"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "PCI_Core_done",
+      "lo": 16,
+      "hi": 16,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PCI _Core_done"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "PCI_genarl_done",
+      "lo": 17,
+      "hi": 17,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PCI _genarl_done"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "PCI_FUNC_DONE",
+      "lo": 18,
+      "hi": 18,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PCI_FUNC_DONE"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "CORE_DONE",
+      "lo": 19,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CORE_DONE"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "CORE_CSR_DONE",
+      "lo": 20,
+      "hi": 20,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CORE_CSR_DONE"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "MAC_DONE",
+      "lo": 21,
+      "hi": 21,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "MAC_DONE"
+      ]
+    },
+    {
+      "reg": "EEC",
+      "name": "Reserved",
+      "lo": 22,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EERD",
+      "name": "START",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "START"
+      ]
+    },
+    {
+      "reg": "EERD",
+      "name": "DONE",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "DONE"
+      ]
+    },
+    {
+      "reg": "EERD",
+      "name": "ADDR",
+      "lo": 2,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ADDR"
+      ]
+    },
+    {
+      "reg": "EERD",
+      "name": "DATA",
+      "lo": 16,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "DATA"
+      ]
+    },
+    {
+      "reg": "EIAC",
+      "name": "RTxQ Auto Clear",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RTxQ Auto Clear"
+      ]
+    },
+    {
+      "reg": "EIAC",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 29,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EIAC",
+      "name": "TCP Timer Auto Clear",
+      "lo": 30,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TCP Timer Auto Clear"
+      ]
+    },
+    {
+      "reg": "EIAC",
+      "name": "Reserved",
+      "lo": 31,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EIAM",
+      "name": "Auto Mask",
+      "lo": 0,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Auto Mask"
+      ]
+    },
+    {
+      "reg": "EIAM",
+      "name": "Reserved",
+      "lo": 31,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EIAM",
+      "name": "Interrupt Cause Set",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "MISSED",
+      "ds_names": []
+    },
+    {
+      "reg": "EIAM",
+      "name": "Interrupt Enable",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "MISSED",
+      "ds_names": []
+    },
+    {
+      "reg": "EIAM",
+      "name": "Interrupt Mask",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "MISSED",
+      "ds_names": []
+    },
+    {
+      "reg": "EIAM",
+      "name": "Auto Mask",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "MISSED",
+      "ds_names": []
+    },
+    {
+      "reg": "EICR",
+      "name": "RTxQ",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RTxQ"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "Flow Director",
+      "lo": 16,
+      "hi": 16,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Flow Director"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "Rx Miss",
+      "lo": 17,
+      "hi": 17,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rx Miss"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "PCI Exception",
+      "lo": 18,
+      "hi": 18,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PCI Exception"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "MailBox",
+      "lo": 19,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "MailBox"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "LSC",
+      "lo": 20,
+      "hi": 20,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LSC"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "LinkSec",
+      "lo": 21,
+      "hi": 21,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LinkSec"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "MNG",
+      "lo": 22,
+      "hi": 22,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "MNG"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "Reserved",
+      "lo": 23,
+      "hi": 23,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "GPI_SDP0",
+      "lo": 24,
+      "hi": 24,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "GPI_SDP0"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "GPI_SDP1",
+      "lo": 25,
+      "hi": 25,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "GPI_SDP1"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "GPI_SDP2",
+      "lo": 26,
+      "hi": 26,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "GPI_SDP2"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "GPI_SDP3",
+      "lo": 27,
+      "hi": 27,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "GPI_SDP3"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "ECC",
+      "lo": 28,
+      "hi": 28,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ECC"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "Reserved",
+      "lo": 29,
+      "hi": 29,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "TCP Timer",
+      "lo": 30,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TCP Timer"
+      ]
+    },
+    {
+      "reg": "EICR",
+      "name": "Other Cause Interrupt",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Other Cause Interrupt"
+      ]
+    },
+    {
+      "reg": "EICS",
+      "name": "Interrupt Cause Set",
+      "lo": 0,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Interrupt Cause Set"
+      ]
+    },
+    {
+      "reg": "EICS",
+      "name": "Reserved",
+      "lo": 31,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EIMC",
+      "name": "Interrupt Mask",
+      "lo": 0,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Interrupt Mask"
+      ]
+    },
+    {
+      "reg": "EIMC",
+      "name": "Reserved",
+      "lo": 31,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EIMS",
+      "name": "Interrupt Enable",
+      "lo": 0,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Interrupt Enable"
+      ]
+    },
+    {
+      "reg": "EIMS",
+      "name": "Reserved",
+      "lo": 31,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EITR",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 2,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EITR",
+      "name": "ITR Interval",
+      "lo": 3,
+      "hi": 11,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ITR Interval"
+      ]
+    },
+    {
+      "reg": "EITR",
+      "name": "Reserved",
+      "lo": 12,
+      "hi": 14,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EITR",
+      "name": "LLI Moderation",
+      "lo": 15,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LLI Moderation"
+      ]
+    },
+    {
+      "reg": "EITR",
+      "name": "LLI Credit",
+      "lo": 16,
+      "hi": 20,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LLI Credit"
+      ]
+    },
+    {
+      "reg": "EITR",
+      "name": "ITR Counter",
+      "lo": 21,
+      "hi": 27,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ITR Counter"
+      ]
+    },
+    {
+      "reg": "EITR",
+      "name": "Reserved",
+      "lo": 28,
+      "hi": 30,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "EITR",
+      "name": "CNT_WDIS",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CNT_WDIS"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "EType",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EType"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "UP",
+      "lo": 16,
+      "hi": 18,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "UP"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "UP Enable",
+      "lo": 19,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "UP Enable"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "Pool",
+      "lo": 20,
+      "hi": 25,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Pool"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "Pool Enable",
+      "lo": 26,
+      "hi": 26,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Pool Enable"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "FCoE",
+      "lo": 27,
+      "hi": 27,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FCoE"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "Reserved",
+      "lo": 28,
+      "hi": 28,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "Reserved",
+      "lo": 29,
+      "hi": 29,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "1588 time stamp",
+      "lo": 30,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "1588 time stamp"
+      ]
+    },
+    {
+      "reg": "ETQF",
+      "name": "Filter Enable",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Filter Enable"
+      ]
+    },
+    {
+      "reg": "ETQS",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 15,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "ETQS",
+      "name": "Rx Queue",
+      "lo": 16,
+      "hi": 22,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rx Queue"
+      ]
+    },
+    {
+      "reg": "ETQS",
+      "name": "Reserved",
+      "lo": 23,
+      "hi": 24,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "ETQS",
+      "name": "Reserved",
+      "lo": 25,
+      "hi": 28,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "ETQS",
+      "name": "Low Latency Interrupt",
+      "lo": 29,
+      "hi": 29,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Low Latency Interrupt"
+      ]
+    },
+    {
+      "reg": "ETQS",
+      "name": "Reserved",
+      "lo": 30,
+      "hi": 30,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "ETQS",
+      "name": "Queue Enable",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Queue Enable"
+      ]
+    },
+    {
+      "reg": "FCCFG",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 2,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCCFG",
+      "name": "TFCE",
+      "lo": 3,
+      "hi": 4,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TFCE"
+      ]
+    },
+    {
+      "reg": "FCCFG",
+      "name": "Reserved",
+      "lo": 5,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCRTH",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 4,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCRTH",
+      "name": "RTH",
+      "lo": 5,
+      "hi": 18,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RTH"
+      ]
+    },
+    {
+      "reg": "FCRTH",
+      "name": "Reserved",
+      "lo": 19,
+      "hi": 30,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCRTH",
+      "name": "FCEN",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FCEN"
+      ]
+    },
+    {
+      "reg": "FCRTL",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 4,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCRTL",
+      "name": "RTL",
+      "lo": 5,
+      "hi": 18,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RTL"
+      ]
+    },
+    {
+      "reg": "FCRTL",
+      "name": "Reserved",
+      "lo": 19,
+      "hi": 30,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCRTL",
+      "name": "XONE",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "XONE"
+      ]
+    },
+    {
+      "reg": "FCRTV",
+      "name": "FC_refresh_th",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FC_refresh_th"
+      ]
+    },
+    {
+      "reg": "FCRTV",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCTRL",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 0,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCTRL",
+      "name": "SBP",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SBP"
+      ]
+    },
+    {
+      "reg": "FCTRL",
+      "name": "Reserved",
+      "lo": 2,
+      "hi": 7,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCTRL",
+      "name": "MPE",
+      "lo": 8,
+      "hi": 8,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "MPE"
+      ]
+    },
+    {
+      "reg": "FCTRL",
+      "name": "UPE",
+      "lo": 9,
+      "hi": 9,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "UPE"
+      ]
+    },
+    {
+      "reg": "FCTRL",
+      "name": "BAM",
+      "lo": 10,
+      "hi": 10,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "BAM"
+      ]
+    },
+    {
+      "reg": "FCTRL",
+      "name": "Reserved",
+      "lo": 11,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FCTTVN",
+      "name": "TTV(2n)",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TTV(2n)"
+      ]
+    },
+    {
+      "reg": "FCTTVN",
+      "name": "TTV(2n+1)",
+      "lo": 16,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TTV(2n+1)"
+      ]
+    },
+    {
+      "reg": "FTQF",
+      "name": "Protocol",
+      "lo": 0,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Protocol"
+      ]
+    },
+    {
+      "reg": "FTQF",
+      "name": "Priority",
+      "lo": 2,
+      "hi": 4,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Priority"
+      ]
+    },
+    {
+      "reg": "FTQF",
+      "name": "Reserved",
+      "lo": 5,
+      "hi": 7,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FTQF",
+      "name": "Pool",
+      "lo": 8,
+      "hi": 13,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Pool"
+      ]
+    },
+    {
+      "reg": "FTQF",
+      "name": "Reserved",
+      "lo": 14,
+      "hi": 24,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "FTQF",
+      "name": "Mask",
+      "lo": 25,
+      "hi": 29,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Mask"
+      ]
+    },
+    {
+      "reg": "FTQF",
+      "name": "Pool Mask",
+      "lo": 30,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Pool Mask"
+      ]
+    },
+    {
+      "reg": "FTQF",
+      "name": "Queue Enable",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Queue Enable"
+      ]
+    },
+    {
+      "reg": "GORCH",
+      "name": "CNT_H",
+      "lo": 0,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CNT_H"
+      ]
+    },
+    {
+      "reg": "GORCH",
+      "name": "Reserved",
+      "lo": 4,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "GORCL",
+      "name": "CNT_L",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CNT_L"
+      ]
+    },
+    {
+      "reg": "GOTCH",
+      "name": "CNT_H",
+      "lo": 0,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CNT_H",
+        "BCH"
+      ]
+    },
+    {
+      "reg": "GOTCH",
+      "name": "Reserved",
+      "lo": 4,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved",
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "GOTCH",
+      "name": "GPTC",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "MISSED",
+      "ds_names": []
+    },
+    {
+      "reg": "GOTCH",
+      "name": "BCL",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "MISSED",
+      "ds_names": []
+    },
+    {
+      "reg": "GOTCL",
+      "name": "CNT_L",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CNT_L"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "SDP0_GPIEN",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SDP0_GPIEN"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "SDP1_GPIEN",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SDP1_GPIEN"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "SDP2_GPIEN",
+      "lo": 2,
+      "hi": 2,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SDP2_GPIEN"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "SDP3_GPIEN",
+      "lo": 3,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SDP3_GPIEN"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "Multiple_MSIX",
+      "lo": 4,
+      "hi": 4,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Multiple_MSIX"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "OCD",
+      "lo": 5,
+      "hi": 5,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "OCD"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "EIMEN",
+      "lo": 6,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EIMEN"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "LL Interval",
+      "lo": 7,
+      "hi": 10,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LL Interval"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "RSC Delay",
+      "lo": 11,
+      "hi": 13,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RSC Delay"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "VT_Mode",
+      "lo": 14,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "VT_Mode"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 29,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "EIAME",
+      "lo": 30,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "EIAME"
+      ]
+    },
+    {
+      "reg": "GPIE",
+      "name": "PBA_support",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PBA_support"
+      ]
+    },
+    {
+      "reg": "GPRC",
+      "name": "GPRC",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "GPRC"
+      ]
+    },
+    {
+      "reg": "GPTC",
+      "name": "GPTC",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "GPTC"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "TXCRCEN",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TXCRCEN"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "Reserved",
+      "lo": 1,
+      "hi": 1,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved",
+        "RXCRCSTRP"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "RXCRCSTRP",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved",
+        "RXCRCSTRP"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "JUMBOEN",
+      "lo": 2,
+      "hi": 2,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "JUMBOEN"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "Reserved",
+      "lo": 3,
+      "hi": 9,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "TXPADEN",
+      "lo": 10,
+      "hi": 10,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TXPADEN"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "Reserved",
+      "lo": 11,
+      "hi": 14,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "LPBK",
+      "lo": 15,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LPBK"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "MDCSPD",
+      "lo": 16,
+      "hi": 16,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "MDCSPD"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "CONTMDC",
+      "lo": 17,
+      "hi": 17,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CONTMDC"
+      ]
+    },
+    {
+      "reg": "HLREG0",
+      "name": "Reserved",
+      "lo": 18,
+      "hi": 19,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "I2CCTL",
+      "name": "I2C_CLK_IN",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "I2C_CLK_IN"
+      ]
+    },
+    {
+      "reg": "I2CCTL",
+      "name": "I2C_CLK_OUT",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "I2C_CLK_OUT"
+      ]
+    },
+    {
+      "reg": "I2CCTL",
+      "name": "I2C_DATA_IN",
+      "lo": 2,
+      "hi": 2,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "I2C_DATA_IN"
+      ]
+    },
+    {
+      "reg": "I2CCTL",
+      "name": "I2C_DATA_OUT",
+      "lo": 3,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "I2C_DATA_OUT"
+      ]
+    },
+    {
+      "reg": "I2CCTL",
+      "name": "Reserved",
+      "lo": 4,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "INT_Alloc[0]",
+      "lo": 0,
+      "hi": 5,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "INT_Alloc[0]"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "Reserved",
+      "lo": 6,
+      "hi": 6,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "INT_Alloc_val[0]",
+      "lo": 7,
+      "hi": 7,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "INT_Alloc_val[0]"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "INT_Alloc[1]",
+      "lo": 8,
+      "hi": 13,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "INT_Alloc[1]"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "Reserved",
+      "lo": 14,
+      "hi": 14,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "INT_Alloc_val[1]",
+      "lo": 15,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "INT_Alloc_val[1]"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "INT_Alloc[2]",
+      "lo": 16,
+      "hi": 21,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "INT_Alloc[2]"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "Reserved",
+      "lo": 22,
+      "hi": 22,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "INT_Alloc_val[2]",
+      "lo": 23,
+      "hi": 23,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "INT_Alloc_val[2]"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "INT_Alloc[3]",
+      "lo": 24,
+      "hi": 29,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "INT_Alloc[3]"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "Reserved",
+      "lo": 30,
+      "hi": 30,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "IVAR",
+      "name": "INT_Alloc_val[3]",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "INT_Alloc_val[3]"
+      ]
+    },
+    {
+      "reg": "L34TIMIR",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 11,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "L34TIMIR",
+      "name": "Size_BP",
+      "lo": 12,
+      "hi": 12,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Size_BP"
+      ]
+    },
+    {
+      "reg": "L34TIMIR",
+      "name": "Reserved",
+      "lo": 13,
+      "hi": 19,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "L34TIMIR",
+      "name": "Low Latency Interrupt",
+      "lo": 20,
+      "hi": 20,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Low Latency Interrupt"
+      ]
+    },
+    {
+      "reg": "L34TIMIR",
+      "name": "Rx Queue",
+      "lo": 21,
+      "hi": 27,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rx Queue"
+      ]
+    },
+    {
+      "reg": "L34TIMIR",
+      "name": "Reserved",
+      "lo": 28,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "KX_SIG_DET",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KX_SIG_DET"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "FEC_SIG_DET",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FEC_SIG_DET"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "FEC_BLOCK_LOCK",
+      "lo": 2,
+      "hi": 2,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FEC_BLOCK_LOCK"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "KR_HI_BERR",
+      "lo": 3,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KR_HI_BERR"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "KR_PCS_BLOCK_LOCK",
+      "lo": 4,
+      "hi": 4,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KR_PCS_BLOCK_LOCK"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "KX/KX4/KR Backplane AN Next Page received",
+      "lo": 5,
+      "hi": 5,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KX/KX4/KR Backplane AN Next Page received"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "KX/KX4/KR Backplane",
+      "lo": 6,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KX/KX4/KR Backplane"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "Link Status",
+      "lo": 7,
+      "hi": 7,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Link Status"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "KX4_SIG_DET",
+      "lo": 8,
+      "hi": 11,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KX4_SIG_DET"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "KR_SIG_DET",
+      "lo": 12,
+      "hi": 12,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KR_SIG_DET"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "10G lane sync_status",
+      "lo": 13,
+      "hi": 16,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "10G lane sync_status"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "10G Align Status",
+      "lo": 17,
+      "hi": 17,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "10G Align Status"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "1G Sync Status",
+      "lo": 18,
+      "hi": 18,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "1G Sync Status"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "KX/KX4/KR Backplane AN Receiver Idle",
+      "lo": 19,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KX/KX4/KR Backplane AN Receiver Idle"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "1G AN enabled (clause 37 AN)",
+      "lo": 20,
+      "hi": 20,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "1G AN enabled (clause 37 AN)"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "1G link Enabled",
+      "lo": 21,
+      "hi": 21,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "1G link Enabled"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "10G link Enabled (XGXS)",
+      "lo": 22,
+      "hi": 22,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "10G link Enabled (XGXS)"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "FEC_EN",
+      "lo": 23,
+      "hi": 23,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FEC_EN"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "10G_SER_EN",
+      "lo": 24,
+      "hi": 24,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "10G_SER_EN"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "SGMII_EN",
+      "lo": 25,
+      "hi": 25,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SGMII_EN"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "MLINK_MODE",
+      "lo": 26,
+      "hi": 27,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "MLINK_MODE"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "LINK_SPEED",
+      "lo": 28,
+      "hi": 29,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PB",
+        "LINK_SPEED"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "Link Up",
+      "lo": 30,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Link Up"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "KX/KX4/KR Backplane",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "KX/KX4/KR Backplane"
+      ]
+    },
+    {
+      "reg": "LINKS",
+      "name": "ANPDT",
+      "lo": 25,
+      "hi": 26,
+      "reserved": false,
+      "grade": "MISSED",
+      "ds_names": []
+    },
+    {
+      "reg": "LINKS",
+      "name": "RF",
+      "lo": 27,
+      "hi": 27,
+      "reserved": false,
+      "grade": "MISSED",
+      "ds_names": []
+    },
+    {
+      "reg": "LINKS",
+      "name": "KX_support",
+      "lo": 30,
+      "hi": 31,
+      "reserved": false,
+      "grade": "MISSED",
+      "ds_names": []
+    },
+    {
+      "reg": "LINKS2",
+      "name": "MAC Rx Link Mode",
+      "lo": 0,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "MAC Rx Link Mode"
+      ]
+    },
+    {
+      "reg": "LINKS2",
+      "name": "Reserved",
+      "lo": 2,
+      "hi": 2,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "LINKS2",
+      "name": "MAC Tx Link Mode",
+      "lo": 3,
+      "hi": 4,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "MAC Tx Link Mode"
+      ]
+    },
+    {
+      "reg": "LINKS2",
+      "name": "Reserved",
+      "lo": 5,
+      "hi": 5,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "LINKS2",
+      "name": "Link-Partner AN",
+      "lo": 6,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Link-Partner AN"
+      ]
+    },
+    {
+      "reg": "LINKS2",
+      "name": "Reserved",
+      "lo": 7,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "MRQC",
+      "name": "MRQE",
+      "lo": 0,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "MRQE"
+      ]
+    },
+    {
+      "reg": "MRQC",
+      "name": "Reserved",
+      "lo": 4,
+      "hi": 14,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "MRQC",
+      "name": "Reserved",
+      "lo": 15,
+      "hi": 15,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "MRQC",
+      "name": "RSS Field Enable",
+      "lo": 16,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RSS Field Enable"
+      ]
+    },
+    {
+      "reg": "RAH",
+      "name": "RAH",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RAH"
+      ]
+    },
+    {
+      "reg": "RAH",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 21,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RAH",
+      "name": "Reserved",
+      "lo": 22,
+      "hi": 30,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RAH",
+      "name": "AV",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "AV"
+      ]
+    },
+    {
+      "reg": "RAL",
+      "name": "RAL",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RAL"
+      ]
+    },
+    {
+      "reg": "RDBAH",
+      "name": "RDBAH",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RDBAH"
+      ]
+    },
+    {
+      "reg": "RDBAL",
+      "name": "0",
+      "lo": 0,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "0"
+      ]
+    },
+    {
+      "reg": "RDBAL",
+      "name": "RDBAL",
+      "lo": 7,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RDBAL"
+      ]
+    },
+    {
+      "reg": "RDH",
+      "name": "RDH",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RDH"
+      ]
+    },
+    {
+      "reg": "RDH",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RDLEN",
+      "name": "LEN",
+      "lo": 0,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LEN"
+      ]
+    },
+    {
+      "reg": "RDLEN",
+      "name": "Reserved",
+      "lo": 20,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "CRCStrip",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "CRCStrip"
+      ]
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "Reserved",
+      "lo": 2,
+      "hi": 2,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "DMAIDONE",
+      "lo": 3,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "DMAIDONE"
+      ]
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "Reserved",
+      "lo": 4,
+      "hi": 16,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "RSCFRSTSIZE",
+      "lo": 17,
+      "hi": 21,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RSCFRSTSIZE"
+      ]
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "Reserved",
+      "lo": 22,
+      "hi": 24,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "RSCACKC",
+      "lo": 25,
+      "hi": 25,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RSCACKC"
+      ]
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "FCOE_WRFIX",
+      "lo": 26,
+      "hi": 26,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "FCOE_WRFIX"
+      ]
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "Reserved",
+      "lo": 27,
+      "hi": 27,
+      "reserved": true,
+      "grade": "POS_FLAG",
+      "ds_names": []
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "Drop_En",
+      "lo": 28,
+      "hi": 28,
+      "reserved": false,
+      "grade": "POS_FLAG",
+      "ds_names": []
+    },
+    {
+      "reg": "RDRXCTL",
+      "name": "Reserved",
+      "lo": 29,
+      "hi": 31,
+      "reserved": true,
+      "grade": "POS_FLAG",
+      "ds_names": []
+    },
+    {
+      "reg": "RDT",
+      "name": "RDT",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RDT"
+      ]
+    },
+    {
+      "reg": "RDT",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RETA",
+      "name": "Entry0",
+      "lo": 0,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Entry0"
+      ]
+    },
+    {
+      "reg": "RETA",
+      "name": "Reserved",
+      "lo": 4,
+      "hi": 7,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RETA",
+      "name": "Entry1",
+      "lo": 8,
+      "hi": 11,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Entry1"
+      ]
+    },
+    {
+      "reg": "RETA",
+      "name": "Reserved",
+      "lo": 12,
+      "hi": 15,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RETA",
+      "name": "Entry2",
+      "lo": 16,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Entry2"
+      ]
+    },
+    {
+      "reg": "RETA",
+      "name": "Reserved",
+      "lo": 20,
+      "hi": 23,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RETA",
+      "name": "Entry3",
+      "lo": 24,
+      "hi": 27,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Entry3"
+      ]
+    },
+    {
+      "reg": "RETA",
+      "name": "Reserved",
+      "lo": 28,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RSSRK",
+      "name": "K0",
+      "lo": 0,
+      "hi": 7,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "K0"
+      ]
+    },
+    {
+      "reg": "RSSRK",
+      "name": "K1",
+      "lo": 8,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "K1"
+      ]
+    },
+    {
+      "reg": "RSSRK",
+      "name": "K2",
+      "lo": 16,
+      "hi": 23,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "K2"
+      ]
+    },
+    {
+      "reg": "RSSRK",
+      "name": "K3",
+      "lo": 24,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "K3"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "TDPAC",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TDPAC"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "VMPAC",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "VMPAC"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "Reserved",
+      "lo": 2,
+      "hi": 3,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "TDRM",
+      "lo": 4,
+      "hi": 4,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TDRM"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "Reserved",
+      "lo": 5,
+      "hi": 5,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "ARBDIS",
+      "lo": 6,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ARBDIS"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "Reserved",
+      "lo": 7,
+      "hi": 16,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "LTTDESC",
+      "lo": 17,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LTTDESC (RO)"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "Reserved",
+      "lo": 20,
+      "hi": 21,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "BDPM",
+      "lo": 22,
+      "hi": 22,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "BDPM"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "BPBFSM",
+      "lo": 23,
+      "hi": 23,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "BPBFSM"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "Reserved",
+      "lo": 24,
+      "hi": 30,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RTTDCS",
+      "name": "SPEED_CHG",
+      "lo": 31,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SPEED_CHG"
+      ]
+    },
+    {
+      "reg": "RXCSUM",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 11,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXCSUM",
+      "name": "IPPCSE",
+      "lo": 12,
+      "hi": 12,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "IPPCSE"
+      ]
+    },
+    {
+      "reg": "RXCSUM",
+      "name": "PCSD",
+      "lo": 13,
+      "hi": 13,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PCSD"
+      ]
+    },
+    {
+      "reg": "RXCSUM",
+      "name": "Reserved",
+      "lo": 14,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXCTRL",
+      "name": "RXEN",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RXEN"
+      ]
+    },
+    {
+      "reg": "RXCTRL",
+      "name": "Reserved",
+      "lo": 1,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 13,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "Reserved",
+      "lo": 14,
+      "hi": 14,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "Reserved",
+      "lo": 15,
+      "hi": 15,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 22,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "Reserved",
+      "lo": 23,
+      "hi": 24,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "ENABLE",
+      "lo": 25,
+      "hi": 25,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ENABLE"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "Reserved",
+      "lo": 26,
+      "hi": 26,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "Reserved",
+      "lo": 27,
+      "hi": 29,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "VME",
+      "lo": 30,
+      "hi": 30,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "VME"
+      ]
+    },
+    {
+      "reg": "RXDCTL",
+      "name": "Reserved",
+      "lo": 31,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXPBSIZE",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 9,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "RXPBSIZE",
+      "name": "SIZE",
+      "lo": 10,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SIZE"
+      ]
+    },
+    {
+      "reg": "RXPBSIZE",
+      "name": "Reserved",
+      "lo": 20,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "SAQF",
+      "name": "Source Address",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Source Address"
+      ]
+    },
+    {
+      "reg": "SDPQF",
+      "name": "Source Port",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Source Port"
+      ]
+    },
+    {
+      "reg": "SDPQF",
+      "name": "Destination Port",
+      "lo": 16,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Destination Port"
+      ]
+    },
+    {
+      "reg": "SRRCTL",
+      "name": "BSIZEPACKET",
+      "lo": 0,
+      "hi": 4,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "BSIZEPACKET"
+      ]
+    },
+    {
+      "reg": "SRRCTL",
+      "name": "Rsv",
+      "lo": 5,
+      "hi": 7,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rsv"
+      ]
+    },
+    {
+      "reg": "SRRCTL",
+      "name": "BSIZEHEADER",
+      "lo": 8,
+      "hi": 13,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "BSIZEHEADER"
+      ]
+    },
+    {
+      "reg": "SRRCTL",
+      "name": "Reserved",
+      "lo": 14,
+      "hi": 21,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "SRRCTL",
+      "name": "RDMTS",
+      "lo": 22,
+      "hi": 24,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "RDMTS"
+      ]
+    },
+    {
+      "reg": "SRRCTL",
+      "name": "DESCTYPE",
+      "lo": 25,
+      "hi": 27,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "DESCTYPE"
+      ]
+    },
+    {
+      "reg": "SRRCTL",
+      "name": "Drop_En",
+      "lo": 28,
+      "hi": 28,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Drop_En"
+      ]
+    },
+    {
+      "reg": "SRRCTL",
+      "name": "VME",
+      "lo": 30,
+      "hi": 30,
+      "reserved": false,
+      "grade": "POS_FLAG",
+      "ds_names": []
+    },
+    {
+      "reg": "SRRCTL",
+      "name": "Reserved",
+      "lo": 29,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rsv"
+      ]
+    },
+    {
+      "reg": "STATUS",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 1,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "STATUS",
+      "name": "LAN ID",
+      "lo": 2,
+      "hi": 3,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LAN ID"
+      ]
+    },
+    {
+      "reg": "STATUS",
+      "name": "Reserved",
+      "lo": 4,
+      "hi": 6,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "STATUS",
+      "name": "LinkUp",
+      "lo": 7,
+      "hi": 7,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LinkUp"
+      ]
+    },
+    {
+      "reg": "STATUS",
+      "name": "Reserved",
+      "lo": 8,
+      "hi": 9,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "STATUS",
+      "name": "Num VFs",
+      "lo": 10,
+      "hi": 17,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Num VFs"
+      ]
+    },
+    {
+      "reg": "STATUS",
+      "name": "IOV Active",
+      "lo": 18,
+      "hi": 18,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "IOV Active"
+      ]
+    },
+    {
+      "reg": "STATUS",
+      "name": "PCIe Master Enable Status",
+      "lo": 19,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PCIe Master Enable Status"
+      ]
+    },
+    {
+      "reg": "STATUS",
+      "name": "Reserved",
+      "lo": 20,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "SWSM",
+      "name": "SMBI",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SMBI"
+      ]
+    },
+    {
+      "reg": "SWSM",
+      "name": "SWESMBI",
+      "lo": 1,
+      "hi": 1,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SWESMBI"
+      ]
+    },
+    {
+      "reg": "SWSM",
+      "name": "RSV",
+      "lo": 2,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "RSV"
+      ]
+    },
+    {
+      "reg": "SW_FW_SYNC",
+      "name": "SMBITS",
+      "lo": 0,
+      "hi": 9,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SMBITS"
+      ]
+    },
+    {
+      "reg": "SW_FW_SYNC",
+      "name": "Reserved",
+      "lo": 10,
+      "hi": 30,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "SW_FW_SYNC",
+      "name": "Reserved",
+      "lo": 31,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TDBAH",
+      "name": "TDBAH",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TDBAH"
+      ]
+    },
+    {
+      "reg": "TDBAL",
+      "name": "0",
+      "lo": 0,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "0"
+      ]
+    },
+    {
+      "reg": "TDBAL",
+      "name": "TDBAL",
+      "lo": 7,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TDBAL"
+      ]
+    },
+    {
+      "reg": "TDH",
+      "name": "TDH",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TDH"
+      ]
+    },
+    {
+      "reg": "TDH",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TDLEN",
+      "name": "LEN",
+      "lo": 0,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "LEN"
+      ]
+    },
+    {
+      "reg": "TDLEN",
+      "name": "Reserved",
+      "lo": 20,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TDT",
+      "name": "TDT",
+      "lo": 0,
+      "hi": 15,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "TDT"
+      ]
+    },
+    {
+      "reg": "TDT",
+      "name": "Reserved",
+      "lo": 16,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TDWBAH",
+      "name": "HeadWB_High",
+      "lo": 0,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "HeadWB_High"
+      ]
+    },
+    {
+      "reg": "TDWBAL",
+      "name": "Head_WB_En",
+      "lo": 0,
+      "hi": 0,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "Head_WB_En"
+      ]
+    },
+    {
+      "reg": "TDWBAL",
+      "name": "Reserved",
+      "lo": 1,
+      "hi": 1,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TDWBAL",
+      "name": "HeadWB_Low",
+      "lo": 2,
+      "hi": 31,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "HeadWB_Low"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "PTHRESH",
+      "lo": 0,
+      "hi": 6,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "PTHRESH"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "Rsv",
+      "lo": 7,
+      "hi": 7,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rsv"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "HTHRESH",
+      "lo": 8,
+      "hi": 14,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "HTHRESH"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "Rsv",
+      "lo": 15,
+      "hi": 15,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Rsv"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "WTHRESH",
+      "lo": 16,
+      "hi": 22,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "WTHRESH"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "Reserved",
+      "lo": 23,
+      "hi": 24,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "ENABLE",
+      "lo": 25,
+      "hi": 25,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "ENABLE"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "SWFLSH",
+      "lo": 26,
+      "hi": 26,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SWFLSH"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "Reserved",
+      "lo": 27,
+      "hi": 27,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "Reserved",
+      "lo": 28,
+      "hi": 28,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "Reserved",
+      "lo": 29,
+      "hi": 29,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TXDCTL",
+      "name": "Reserved",
+      "lo": 30,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TXPBSIZE",
+      "name": "Reserved",
+      "lo": 0,
+      "hi": 9,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    },
+    {
+      "reg": "TXPBSIZE",
+      "name": "SIZE",
+      "lo": 10,
+      "hi": 19,
+      "reserved": false,
+      "grade": "AGREE",
+      "ds_names": [
+        "SIZE"
+      ]
+    },
+    {
+      "reg": "TXPBSIZE",
+      "name": "Reserved",
+      "lo": 20,
+      "hi": 31,
+      "reserved": true,
+      "grade": "AGREE",
+      "ds_names": [
+        "Reserved"
+      ]
+    }
+  ],
+  "adjudication": {
+    "extracted_subfields": 406,
+    "agree_exact": 402,
+    "verified_correct": 404,
+    "genuine_errors": 2,
+    "error_detail": [
+      {
+        "reg": "RDRXCTL",
+        "field": "Drop_En",
+        "bits": "28:28",
+        "type": "spurious field",
+        "note": "datasheet RDRXCTL bits 27-31 are Reserved; Drop_En is an SRRCTL field at bit 28. Mis-split of the Reserved 31:27 span (accounts for 3 of the 4 POS_FLAGs: Reserved 27:27, Drop_En 28:28, Reserved 31:29)."
+      },
+      {
+        "reg": "SRRCTL",
+        "field": "VME",
+        "bits": "30:30",
+        "type": "spurious field",
+        "note": "datasheet SRRCTL ends Drop_En 28 + Rsv 31:29; no VME. VME is an RXDCTL field bled in."
+      }
+    ],
+    "false_flags": {
+      "EIAM_x4": "parser bleed from EICS/EIMS/EIMC (section bound); EIAM extracted correctly (Auto Mask 30:0)",
+      "GOTCH_x2": "parser bleed from neighbouring stats counters; GOTCH extracted correctly (CNT_H 3:0)"
+    },
+    "recall_caveat": {
+      "LINKS": "datasheet documents LINKS with two overlapping field tables (config-write view: ANPDT/RF/PB/KX_support @25-31; status-read view: full 0-31). Extraction captured the status view; 3 config-view fields (ANPDT, RF, KX_support) unrepresented."
+    },
+    "pattern": "both genuine errors are spurious named fields bled into Reserved regions from adjacent Rx-DMA registers (RDRXCTL<->SRRCTL<->RXDCTL), consistent with full-page completion-pass context mixing neighbouring register tables; 0 real named fields mispositioned."
+  }
+}
