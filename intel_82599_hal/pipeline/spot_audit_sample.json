@@ -1,0 +1,170 @@
+{
+  "run": "r006",
+  "seed": 82599,
+  "frame_size": 146,
+  "sample": [
+    {
+      "register": "AUTOC",
+      "field": "ANACK2",
+      "extracted_bits": "1:1"
+    },
+    {
+      "register": "CTRL_EXT",
+      "field": "Extended VLAN",
+      "extracted_bits": "26:26"
+    },
+    {
+      "register": "DCA_ID",
+      "field": "Bus Number",
+      "extracted_bits": "15:8"
+    },
+    {
+      "register": "DCA_RXCTRL",
+      "field": "RXdataWriteROEn",
+      "extracted_bits": "13:13"
+    },
+    {
+      "register": "DCA_RXCTRL",
+      "field": "RXdescWBROen",
+      "extracted_bits": "11:11"
+    },
+    {
+      "register": "DCA_TXCTRL",
+      "field": "TXdescRDROEn",
+      "extracted_bits": "9:9"
+    },
+    {
+      "register": "DTXTCPFLGH",
+      "field": "TCP_Flg_lst_seg",
+      "extracted_bits": "11:0"
+    },
+    {
+      "register": "EEC",
+      "field": "EE_DO",
+      "extracted_bits": "3:3"
+    },
+    {
+      "register": "EERD",
+      "field": "DATA",
+      "extracted_bits": "31:16"
+    },
+    {
+      "register": "EERD",
+      "field": "DONE",
+      "extracted_bits": "1:1"
+    },
+    {
+      "register": "EERD",
+      "field": "START",
+      "extracted_bits": "0:0"
+    },
+    {
+      "register": "EIAC",
+      "field": "TCP Timer Auto Clear",
+      "extracted_bits": "30:30"
+    },
+    {
+      "register": "FCTTVN",
+      "field": "TTV(2n+1)",
+      "extracted_bits": "31:16"
+    },
+    {
+      "register": "GOTCL",
+      "field": "CNT_L",
+      "extracted_bits": "31:0"
+    },
+    {
+      "register": "IVAR",
+      "field": "INT_Alloc[2]",
+      "extracted_bits": "21:16"
+    },
+    {
+      "register": "LINKS",
+      "field": "10G link Enabled (XGXS)",
+      "extracted_bits": "22:22"
+    },
+    {
+      "register": "LINKS",
+      "field": "10G_SER_EN",
+      "extracted_bits": "24:24"
+    },
+    {
+      "register": "LINKS",
+      "field": "FEC_BLOCK_LOCK",
+      "extracted_bits": "2:2"
+    },
+    {
+      "register": "LINKS",
+      "field": "Link Up",
+      "extracted_bits": "30:30"
+    },
+    {
+      "register": "LINKS2",
+      "field": "MAC Tx Link Mode",
+      "extracted_bits": "4:3"
+    },
+    {
+      "register": "RAH",
+      "field": "AV",
+      "extracted_bits": "31:31"
+    },
+    {
+      "register": "RDRXCTL",
+      "field": "Drop_En",
+      "extracted_bits": "28:28"
+    },
+    {
+      "register": "RETA",
+      "field": "Entry1",
+      "extracted_bits": "11:8"
+    },
+    {
+      "register": "RTTDCS",
+      "field": "BPBFSM",
+      "extracted_bits": "23:23"
+    },
+    {
+      "register": "RTTDCS",
+      "field": "LTTDESC",
+      "extracted_bits": "19:17"
+    },
+    {
+      "register": "RTTDCS",
+      "field": "TDPAC",
+      "extracted_bits": "0:0"
+    },
+    {
+      "register": "RTTDCS",
+      "field": "TDRM",
+      "extracted_bits": "4:4"
+    },
+    {
+      "register": "SRRCTL",
+      "field": "BSIZEPACKET",
+      "extracted_bits": "4:0"
+    },
+    {
+      "register": "STATUS",
+      "field": "LinkUp",
+      "extracted_bits": "7:7"
+    },
+    {
+      "register": "TDWBAL",
+      "field": "HeadWB_Low",
+      "extracted_bits": "31:2"
+    }
+  ],
+  "n": 30,
+  "errors": 1,
+  "error_detail": [
+    {
+      "register": "RDRXCTL",
+      "field": "Drop_En",
+      "extracted_bits": "28:28",
+      "datasheet": "RDRXCTL bits 27-31 are Reserved; Drop_En is an SRRCTL field at bit 28",
+      "class": "spurious field (cross-register bleed from SRRCTL); structurally inert in this whole-register HAL"
+    }
+  ],
+  "point_estimate": 0.03333333333333333,
+  "ci95_upper": 0.1485960686591131
+}
