@@ -154,3 +154,10 @@ reg coverage **95%** · address **91%** · reset **33%** · size **93%** · **18
 
 ### mimxrt633s — Group D (identical datasheet PDF to mimxrt685s)
 reg coverage **99%** · address **46%** · reset **34%** · size **48%** · **74 confirmed constraints**. Mirrors mimxrt685s (82 confirmed, 46/35/47) exactly as expected — same datasheet, different SVD variant. Confirms the Group D ~47% offset / ~35% size ceiling is real, not device-specific.
+
+### ke04_old — Group B (old ke04 datasheet; PDF was misnamed, fixed)
+reg coverage **97%** · address **94%** · reset **46%** · size **95%** · **61 confirmed constraints**. The folder shipped `ke04.pdf` not `ke04_old.pdf`, so the first batch failed the readiness gate (no chunks); fixed by adding `ke04_old.pdf`. Extracts slightly better than current ke04 (94% vs 90% address, 61 vs 43 constraints) — a minor datasheet-version difference, same Group B story.
+
+## Campaign complete — all 11 NXP devices run
+
+Confirmed access-constraints total across all 11: **1,272**. Register coverage 94–100% everywhere. Authoritative corrected numbers + prioritized recommendations: `docs/nxp_campaign_report.html`.
