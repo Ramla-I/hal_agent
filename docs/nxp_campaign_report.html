@@ -38,7 +38,7 @@
 <p class="sub">All NXP devices run end-to-end, discovered, fixes shipped. Includes a mid-campaign correction to the measurement that overturned the original priority list.</p>
 
 <div class="lead">
-<strong>Bottom line.</strong> Running every NXP format family end-to-end, with a corrected measurement, shows the extraction is in much better shape than first thought: <strong>the generator already finds 94–100% of registers and extracts offsets itself across all four families</strong> — no per-family adapter or parser needed. A set of pipeline fixes unblocked <strong>949 confirmed access-constraints</strong> across the 8 devices (NXP emitted almost none before), and throughput fixes made the giant parts finish at all. The one real structural weakness is <strong>reset-value extraction (23–55% everywhere)</strong>; array reconciliation (built this round) closed most of the small register-coverage gap.
+<strong>Bottom line.</strong> Running every NXP format family end-to-end, with a corrected measurement, shows the extraction is in much better shape than first thought: <strong>the generator already finds 94–100% of registers and extracts offsets itself across all four families</strong> — no per-family adapter or parser needed. A set of pipeline fixes unblocked <strong>1,272 confirmed access-constraints</strong> across the 11 devices (NXP emitted almost none before), and throughput fixes made the giant parts finish at all. The one real structural weakness is <strong>reset-value extraction (23–55% everywhere)</strong>; array reconciliation (built this round) closed most of the small register-coverage gap.
 </div>
 
 <div class="correction">
@@ -46,8 +46,8 @@
 </div>
 
 <div class="kpi">
-  <div><b>8 / 8</b><span>primary devices run end-to-end</span></div>
-  <div><b>949</b><span>confirmed constraints (was ~0 on NXP)</span></div>
+  <div><b>11 / 11</b><span>devices run end-to-end</span></div>
+  <div><b>1,272</b><span>confirmed constraints (was ~0 on NXP)</span></div>
   <div><b>94–100%</b><span>register coverage (corrected)</span></div>
   <div><b>&gt;3h → ~1h</b><span>giant-device runtime (concurrency)</span></div>
 </div>
@@ -63,8 +63,11 @@
 <tr><td>lpc55s69</td><td>D modern NXP</td><td class="n">3251</td><td class="n">94%</td><td class="n">48</td><td class="n">41</td><td class="n">24</td><td class="n">17</td></tr>
 <tr><td>mimxrt685s</td><td>D modern NXP (i.MX RT)</td><td class="n">3589</td><td class="n">98%</td><td class="n">45</td><td class="n">34</td><td class="n">47</td><td class="n">82</td></tr>
 <tr><td>mk20d7</td><td>B classic Kinetis</td><td class="n">1594</td><td class="n">98%</td><td class="n">79</td><td class="n">28</td><td class="n">80</td><td class="n">211</td></tr>
+<tr><td>mk20d5 <span class="muted">(sibling)</span></td><td>B classic Kinetis</td><td class="n">819</td><td class="n">95%</td><td class="n">91</td><td class="n">33</td><td class="n">93</td><td class="n">188</td></tr>
+<tr><td>ke04_old <span class="muted">(sibling)</span></td><td>B classic Kinetis</td><td class="n">223</td><td class="n">97%</td><td class="n">94</td><td class="n">46</td><td class="n">95</td><td class="n">61</td></tr>
+<tr><td>mimxrt633s <span class="muted">(sibling)</span></td><td>D modern NXP (i.MX RT)</td><td class="n">3589</td><td class="n">99%</td><td class="n">46</td><td class="n">34</td><td class="n">48</td><td class="n">74</td></tr>
 </table>
-<p class="muted" style="font-size:13px">Coverage = produced ∩ generator-enumerated, over the enumerated set. addr/reset/size = fraction of matched registers with that field non-null. Three sibling datasheets (<code>mk20d5</code>, <code>ke04_old</code>, <code>mimxrt633s</code>) are running separately for completeness; <code>mimxrt633s</code> shares the identical datasheet PDF with mimxrt685s so its extraction mirrors it.</p>
+<p class="muted" style="font-size:13px">Coverage = produced ∩ generator-enumerated, over the enumerated set. addr/reset/size = fraction of matched registers with that field non-null. The three "(sibling)" rows are duplicate datasheets run for completeness: <code>mk20d5</code> (K20 sibling of mk20d7), <code>ke04_old</code> (old ke04 datasheet), <code>mimxrt633s</code> (byte-identical PDF to mimxrt685s — its numbers mirror it, confirming the Group D ~47% offset ceiling is real, not device-specific).</p>
 
 <h2>What we fixed (shipped this campaign)</h2>
 <table>
