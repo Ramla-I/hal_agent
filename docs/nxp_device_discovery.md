@@ -109,3 +109,16 @@ Generator handles offsets (73–90%) and size (74–89%) **without any fill or a
 
 **Constraints:** collected 56 → survived lint 31 → anchored 29 → **confirmed 17**. Lower raw extraction this run (30) — lpc55s69 is less constraint-dense (or stochastic). 19 `unresolvable_in_svd` below the gate (array/name).
 
+### mimxrt685s — COMPLETE (Group D, i.MX RT — confirms lpc55s69)
+
+**Run:** s0 end-to-end incl. chunking, `--generator-concurrency 6`, rc=0 (~100 min, 1333 regs).
+
+**Structure coverage (vs SVD 1333; 1106 matched, 227 absent):** address **60%** · reset **47%** · size **63%**.
+- Confirms Group D: generator reads caption offsets (60%) — **no caption parser needed**.
+- 227 absent + 278 array-indexed missing offset — pin-mux / array blocks (`IOPCTL_PIO0_*`, `SYSCTL0_*%s`, `CLKCTL0_PFCDIV%s`). Array reconciliation again.
+
+**Constraints:** collected 192 → survived lint 118 → anchored 112 → **confirmed 82** (enforceable 74). Rich. 38 `unresolvable_in_svd`, 38 `invalid_v2_constraint` below the gate.
+
+### Group D verdict (lpc55s69 + mimxrt685s)
+Generator reads the caption-style offsets directly (60–72% address) — **caption parser unnecessary**, exactly like Group B's adapter. Same cross-group gaps: array reconciliation + reset/size.
+
