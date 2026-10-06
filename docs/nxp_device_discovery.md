@@ -122,3 +122,12 @@ Generator handles offsets (73–90%) and size (74–89%) **without any fill or a
 ### Group D verdict (lpc55s69 + mimxrt685s)
 Generator reads the caption-style offsets directly (60–72% address) — **caption parser unnecessary**, exactly like Group B's adapter. Same cross-group gaps: array reconciliation + reset/size.
 
+### mk20d7 — COMPLETE (Group B, K20 — third Group B confirmation)
+
+**Run:** s0 end-to-end incl. chunking, `--generator-concurrency 6`, rc=0 (~63 min, 706 regs).
+
+**Structure coverage (vs SVD 706; 606 matched, 100 absent):** address **57%** · reset **26%** · size **57%**.
+- Confirms Group B a third time: generator handles offsets (57%, no adapter). 100 absent + 195 array-indexed (`FTFL_FlashConfig_BACKKEY0..7`, same shape as k64's FTFE). reset **26%** — low, like k64.
+
+**Constraints:** collected 316 → survived lint 288 → anchored 275 → **confirmed 211** (enforceable 209). Very rich.
+
