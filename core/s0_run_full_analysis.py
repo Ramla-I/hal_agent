@@ -575,7 +575,7 @@ def run_pipeline_for_device(
         generator_fn = run_generator_batched if args.generator_batched else run_generator
         gen_mode = "batched" if args.generator_batched else "per-register"
         print(f"\n--- Step 2: Generator [{gen_mode}] (run {paths.run_number}) ---")
-        truncated = generator_fn(
+        gen_kwargs = dict(
             client=generator_client,
             model_name=generator_model,
             device_name=ctx.device_name,
@@ -587,6 +587,9 @@ def run_pipeline_for_device(
             peripherals_registers_dict=None,
             models=generator_models,
         )
+        if args.generator_batched:   # concurrency is a batched-only knob
+            gen_kwargs["concurrency"] = args.generator_concurrency
+        truncated = generator_fn(**gen_kwargs)
         result.generator_done = True
         result.truncated = truncated
 
@@ -907,6 +910,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no-generator-batched", action="store_false", dest="generator_batched",
         help="Use the per-register generator instead of batched",
+    )
+    parser.add_argument(
+        "--generator-concurrency", type=int, default=config.GENERATOR_CONCURRENCY,
+        help="Max concurrent batched-generator LLM calls (default from config; 1 = "
+             "serial). Parallelizes both the main pass and the empty-field retry.",
     )
     parser.add_argument(
         "--validator-batched", action="store_true", dest="validator_batched",

@@ -12,6 +12,7 @@ This module provides a ResultSaver class that handles:
 import os
 import json
 import csv
+import threading
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
 from dataclasses import dataclass, asdict
@@ -88,6 +89,10 @@ class ResultSaver:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._csv_headers_written = {}  # Track which CSV files have headers
+        # Writes may come from concurrent generator batches (concurrency > 1):
+        # serialize file opens + the _csv_headers_written mutation. Re-entrant so
+        # methods that delegate (save_usage_stats -> save_csv_row) don't deadlock.
+        self._lock = threading.RLock()
     
     def save_json(
         self, 
@@ -116,9 +121,10 @@ class ResultSaver:
         else:
             json_str = json.dumps(data, indent=indent, ensure_ascii=False)
         
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(json_str)
-        
+        with self._lock:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(json_str)
+
         return filepath
     
     def save_text(
@@ -139,10 +145,11 @@ class ResultSaver:
             Path to the saved file
         """
         filepath = self.output_dir / filename
-        
-        with open(filepath, mode, encoding='utf-8') as f:
-            f.write(content)
-        
+
+        with self._lock:
+            with open(filepath, mode, encoding='utf-8') as f:
+                f.write(content)
+
         return filepath
     
     def append_text(
@@ -196,15 +203,16 @@ class ResultSaver:
         # pass, or any re-run into an existing output dir) must APPEND, not truncate
         # — otherwise an append-style log like usage.csv loses every earlier row.
         # Callers wanting a fresh file delete it first (see s6_validate_candidates).
-        file_has_content = filepath.exists() and filepath.stat().st_size > 0
-        mode = 'a' if file_has_content else 'w'
+        with self._lock:
+            file_has_content = filepath.exists() and filepath.stat().st_size > 0
+            mode = 'a' if file_has_content else 'w'
 
-        with open(filepath, mode, newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            if not file_has_content:
-                writer.writeheader()
-            writer.writerow(row)
-        self._csv_headers_written[filepath_str] = True
+            with open(filepath, mode, newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                if not file_has_content:
+                    writer.writeheader()
+                writer.writerow(row)
+            self._csv_headers_written[filepath_str] = True
 
         return filepath
     
@@ -239,15 +247,16 @@ class ResultSaver:
 
         # Disk-based header/append (see save_csv_row): a fresh ResultSaver appends to
         # an existing CSV rather than truncating it.
-        file_has_content = filepath.exists() and filepath.stat().st_size > 0
-        mode = 'a' if file_has_content else 'w'
+        with self._lock:
+            file_has_content = filepath.exists() and filepath.stat().st_size > 0
+            mode = 'a' if file_has_content else 'w'
 
-        with open(filepath, mode, newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            if not file_has_content:
-                writer.writeheader()
-            writer.writerows(rows)
-        self._csv_headers_written[filepath_str] = True
+            with open(filepath, mode, newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                if not file_has_content:
+                    writer.writeheader()
+                writer.writerows(rows)
+            self._csv_headers_written[filepath_str] = True
 
         return filepath
     

@@ -123,21 +123,23 @@ def path_manifest(rm: str, run: int, mfr: str) -> str:
     ])
 
 
-def _s0_cmd(rm: str, chunks: str) -> list:
+def _s0_cmd(rm: str, chunks: str, concurrency: int = 1) -> list:
     """Launch s0 in the container. s0 does preprocessing + generator + constraints
     (+ constraints_review) + bug-finding + in-process s6. Step 4 (before-diff full
     validator) stays skipped; s6 in-process writes the verdicts."""
     return [_DOCKER_RUN, "run", "core/s0_run_full_analysis.py", "--devices", rm,
             "--retrieval", "openevolve", "--skip-validator", "--constraint-validation",
-            "--constraint-chunks-root", chunks, "--constraint-batch-size", "8"]
+            "--constraint-chunks-root", chunks, "--constraint-batch-size", "8",
+            "--generator-concurrency", str(concurrency)]
 
 
-def _run_rm(rm: str, run: int, chunks: str, force: bool, timeout: int | None) -> dict:
+def _run_rm(rm: str, run: int, chunks: str, force: bool, timeout: int | None,
+            concurrency: int = 1) -> dict:
     if not force and os.path.exists(_marker(rm, run)):
         return {"rm": rm, "status": "skipped_done"}
     os.makedirs(_LOG_DIR, exist_ok=True)
     log = os.path.join(_LOG_DIR, f"{rm}.log")
-    cmd = _s0_cmd(rm, chunks)
+    cmd = _s0_cmd(rm, chunks, concurrency)
     with open(log, "w") as lf:
         lf.write(path_manifest(rm, run, "stm") + "\n\n")
         lf.write(f"==== s0 :: {' '.join(cmd)}\n")
@@ -170,6 +172,8 @@ def main() -> None:
     ap.add_argument("--auto-register", action="store_true",
                     help="register any unregistered device in config_devices.json (host-side)")
     ap.add_argument("--timeout", type=int, default=None, help="per-RM s0 timeout in seconds")
+    ap.add_argument("--generator-concurrency", type=int, default=1,
+                    help="max concurrent batched-generator LLM calls per device (1 = serial)")
     args = ap.parse_args()
 
     # Print the manifests up front (also written to each RM's log).
@@ -200,7 +204,8 @@ def main() -> None:
     save()
     print(f"batch start: {n} RMs, parallel={args.parallel}", flush=True)
     with ThreadPoolExecutor(max_workers=args.parallel) as ex:
-        futs = {ex.submit(_run_rm, rm, args.run, args.chunks, args.force, args.timeout): rm
+        futs = {ex.submit(_run_rm, rm, args.run, args.chunks, args.force, args.timeout,
+                          args.generator_concurrency): rm
                 for rm in args.devices}
         for fut in as_completed(futs):
             r = fut.result()
