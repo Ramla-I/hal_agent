@@ -61,3 +61,14 @@ siblings and not run separately unless a difference is suspected.
 
 **Shipped & confirmed here:** generator concurrency (3.6× on the 65-reg test; k32l3a completes vs timeout), DB-build lock, smart retry, envelope-gate salvage (307→245).
 
+### s32k1xx — COMPLETE (Group A, biggest device)
+
+**Run:** s0 end-to-end, `--generator-concurrency 6`, rc=0 (~2.6 h). 8 SVDs → ~3,093 unique regs (not 13,815).
+
+**Structure coverage (vs SVD 2068; 1431 matched, 637 absent):** address **70%** · reset **34%** · size **72%**.
+- **637 absent (31% of SVD!)** — almost entirely array-expanded names the generator doesn't produce: `DMA_TCD0..15_*`, `MPU_RGDn_WORDm`, `EIM_*_WORD*`. Plus 285 array-indexed missing offsets. **Array/dim reconciliation is by far the dominant gap for Group A.**
+
+**Constraints:** collected **388** → survived lint **313** → anchored 296 → **confirmed 200** (enforceable 197). Very rich — `state_gate` 216, `sequence` 50, `write_once` 29. Below-gate rejects: 71 `unresolvable_in_svd` (array names again), 45 `invalid_v2_constraint`.
+
+**Takeaway (Group A, from k32l3a + s32k1xx):** constraint-rich and the summary-fill is unnecessary (generator handles offsets); the one big lever is **array/dim name reconciliation** — it would recover hundreds of absent registers AND dozens of `unresolvable_in_svd` constraints at once.
+
