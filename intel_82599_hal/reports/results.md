@@ -51,6 +51,9 @@ limit, same context) before any expansion; both are already in the 10 above.
 | After 1 name_map entry + 2 adjudicated overrides | **green** (`cargo check` and full `cargo build -p ixgbe`, Theseus target, unmodified driver) |
 | Region size asserts (7 structs + whole-space 0x20000) | **all pass** — byte-exact 128 KiB layout, so every padding run derived from extracted offsets is correct |
 | Extracted offsets vs deterministic Table 8-2 parse | **75/75 agree**, 0 fallbacks, 0 collisions |
+| Register access codes vs datasheet section headings | **75/75 match** (RW/RO/WO/RC); field-level RO/WO/RW typing derives from them |
+| Reset values (from the per-field Init Val column) | **55/75 defined**; the other 20 are correctly null (datasheet Init Val `X`/undefined) |
+| Subfield bit positions (start + width), full datasheet-table census | **404/406 (99.5%)** correct; 2 spurious fields in reserved bits (see subfield census) |
 | Driver constants (71 referenced) | **54 field-derived from extraction** (53 agree with the reference, 1 disagreement = finding 1), 17 policy values kept verbatim |
 | Register access types vs reference | 65/75 identical; 8 divergences are *stricter-than-reference* datasheet typing (RC/RO statistics and link registers the driver only reads → `ReadOnly`), 2 are C1/C2 |
 
