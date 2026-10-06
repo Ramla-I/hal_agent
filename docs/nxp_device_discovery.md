@@ -98,3 +98,14 @@ siblings and not run separately unless a difference is suspected.
 ### Group B verdict (ke04 + k64)
 Generator handles offsets (73–90%) and size (74–89%) **without any fill or adapter**; constraint-rich (43, 210). The absolute→offset **offset** adapter is unnecessary. The gaps are the same cross-group ones — **array/dim reconciliation** and **reset values** (Group B reset is the worst, 21–58%).
 
+### lpc55s69 — COMPLETE (Group D — caption parser not needed either)
+
+**Run:** s0 end-to-end incl. chunking, `--generator-concurrency 6`, rc=0 (~88 min, 1280 regs).
+
+**Structure coverage (vs SVD 1280; 841 matched, 439 absent):** address **72%** · reset **60%** · size **41%**.
+- 🔑 **Group D caption parser NOT needed.** Group D has no summary table — offsets live in each register's table caption `(NAME: offset=0x..)`. The generator reads them directly anyway: **72% address**. So, like Group B's adapter, the caption parser is unnecessary.
+- **439 absent (34%!)** — a big `FLASH_CFPA_SCRATCH_*` config-page block + others the generator doesn't emit; 89 array-indexed missing offsets. Array/large-block reconciliation again.
+- size **41%** — the low axis here (Group D size extraction weak).
+
+**Constraints:** collected 56 → survived lint 31 → anchored 29 → **confirmed 17**. Lower raw extraction this run (30) — lpc55s69 is less constraint-dense (or stochastic). 19 `unresolvable_in_svd` below the gate (array/name).
+
