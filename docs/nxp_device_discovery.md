@@ -8,6 +8,19 @@ Recommended changes are recorded per device; shipped fixes are tracked in
 
 Generated with `scripts/device_discovery.py <device>`.
 
+> **⚠ CORRECTION (read first).** The per-device coverage numbers in the entries
+> below were produced by an earlier version of `device_discovery.py` with a
+> **join bug**: it keyed SVD cluster/array registers differently than the
+> generator names its files (`FTFE_FlashConfig_BACKKEY0` vs
+> `ftfe_flashconfig_backkey0`), counting ~1,130 *produced* registers as "absent."
+> The "absent 60–92% coverage / 1,721 absent / array reconciliation = top lever"
+> framing in these entries is therefore **wrong**. Corrected (generator's own
+> enumeration): **register coverage 94–100%, true absent 591 (348 after array
+> reconciliation)**; the real gap is **reset values (23–55%)** and **Group D
+> offsets/size (~47% / ~35%)**. See `docs/nxp_campaign_report.html` for the
+> corrected, authoritative numbers. Array reconciliation (Step 2c) recovered 243
+> registers with 0 wrong offsets.
+
 **Scope note:** `ke04_old` (old duplicate of ke04), `mk20d5` (same K20 template as
 mk20d7), and `mimxrt633s` (identical PDF to mimxrt685s) are covered by their
 siblings and not run separately unless a difference is suspected.
