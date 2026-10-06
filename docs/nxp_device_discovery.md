@@ -144,3 +144,13 @@ Generator reads the caption-style offsets directly (60–72% address) — **capt
 
 **Constraints:** collected 316 → survived lint 288 → anchored 275 → **confirmed 211** (enforceable 209). Very rich.
 
+
+## Sibling / duplicate devices (run for completeness)
+
+Numbers here use the corrected (join-fixed) discovery and include array reconciliation.
+
+### mk20d5 — Group B (K20, sibling of mk20d7)
+reg coverage **95%** · address **91%** · reset **33%** · size **93%** · **188 confirmed constraints**. Confirms Group B a fourth time (no adapter; offsets+size strong, reset weak). 33 absent (only 3 array-indexed).
+
+### mimxrt633s — Group D (identical datasheet PDF to mimxrt685s)
+reg coverage **99%** · address **46%** · reset **34%** · size **48%** · **74 confirmed constraints**. Mirrors mimxrt685s (82 confirmed, 46/35/47) exactly as expected — same datasheet, different SVD variant. Confirms the Group D ~47% offset / ~35% size ceiling is real, not device-specific.
