@@ -72,3 +72,15 @@ siblings and not run separately unless a difference is suspected.
 
 **Takeaway (Group A, from k32l3a + s32k1xx):** constraint-rich and the summary-fill is unnecessary (generator handles offsets); the one big lever is **array/dim name reconciliation** — it would recover hundreds of absent registers AND dozens of `unresolvable_in_svd` constraints at once.
 
+### ke04 — COMPLETE (Group B — overturns the "adapter needed" assumption)
+
+**Run:** s0 end-to-end, `--generator-concurrency 6`, rc=0 (~10 min, 150 regs).
+
+**Structure coverage (vs SVD 150; 139 matched, 11 absent):** address **90%** · reset **58%** · size **89%**.
+- 🔑 **The Group B absolute→offset adapter is NOT needed.** I'd flagged it as the top-ROI lever (summary-fill no-ops on Group B's absolute addresses + `Label (NAME)` cells). But the GENERATOR already gets **90% address / 89% size** on its own — it reads/converts offsets directly from each register's section. Step 2b correctly filled 0 (fill is a no-op here), yet coverage is high anyway. **Retract the Group B adapter from the roadmap (pending k64 confirmation).**
+- 11 absent = `%s` array placeholders (`PIT_LDVAL%s`, `FTM2_C%sSC`) → array/dim reconciliation (the same cross-group gap).
+
+**Constraints:** collected 63 → survived lint 59 → anchored 59 → **confirmed 43** (enforceable 41). Healthy for a small part. Only 4 below-gate rejects.
+
+**reset 58%** is the weak axis (as everywhere) — reset values, not offsets, are the structural bottleneck.
+
