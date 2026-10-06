@@ -50,15 +50,25 @@ for p in sorted(glob.glob(os.path.join(HERE, "register_info", RUN, "*.json"))):
     regs[name] = fields
 by_len = sorted(regs, key=len, reverse=True)
 
+OTHER_GEN = ("X540", "X550", "82598", "E610", "X557")
+ref_text = open(REF, errors="replace").read()
+if REF.endswith(".h"):
+    # C header: parameterless #define IXGBE_<NAME> <expr>  (macros with args skipped)
+    raw_iter = [(m.group(1), m.group(2).split("/*")[0].strip())
+                for m in re.finditer(r"^#define IXGBE_([A-Z0-9_]+)[ \t]+([^\n]+)",
+                                     ref_text, re.M)]
+else:
+    raw_iter = [(m.group(1), m.group(2))
+                for m in re.finditer(r"pub const IXGBE_([A-Z0-9_]+): u32\s*=\s*([^;]+);",
+                                     ref_text)]
 entries = []
-for m in re.finditer(r"pub const IXGBE_([A-Z0-9_]+): u32\s*=\s*([^;]+);", open(REF).read()):
-    rest, expr = m.groups()
-    if "X540" in rest or "82598" in rest:
+for rest, expr in raw_iter:
+    if any(g in rest for g in OTHER_GEN):
         continue  # different chip generation's layout
-    if not re.fullmatch(r"[0-9a-fA-FxX_\s<|()]+", expr):
+    if not re.fullmatch(r"[0-9a-fA-FxXuU_\s<|()]+", expr):
         continue
     try:
-        val = eval(expr.replace("_", ""))
+        val = eval(re.sub(r"[uU]\b|_", "", expr))
     except Exception:
         continue
     reg = next((r for r in by_len if rest == r or rest.startswith(r + "_")), None)
