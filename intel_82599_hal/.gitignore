@@ -5,6 +5,6 @@ pipeline/metrics.json
 pipeline/hal_out/
 analysis/
 chunks/
-theseus_clone/
+theseus_retrofit/theseus_clone/
 retrofit/clones/
 pipeline/constraint_recall_scan.json

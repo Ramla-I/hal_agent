@@ -44,7 +44,7 @@ recorded reason in `config/constants_map.json`.
 
 ## E. Driver diff required by the constraint layer (by design)
 
-`pipeline/driver_diff_gated.patch`: **2 files, +27/−15 lines** for 9 encoded
+`theseus_retrofit/driver_diff_gated.patch`: **2 files, +27/−15 lines** for 9 encoded
 constraints — the measured cost of adopting the field-level gates:
 - `enable_rx_function`: mint `RxctrlRxenCleared`, pass its token to the `fctrl`
   write, `release` re-enables (replaces two manual RXEN writes).

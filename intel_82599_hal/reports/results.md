@@ -165,7 +165,7 @@ python3 s4_emit_hal.py rFINAL --gated           # constraint  -> hal_out/rFINAL-
 # eval: clone theseus-os/Theseus @ 1fbfe567, init submodules, swap regs.rs,
 #   cargo check -p ixgbe -Z unstable-options -Z build-std=core,alloc \
 #     -Z build-std-features=compiler-builtins-mem --target x86_64-unknown-theseus
-# gated config: also apply pipeline/driver_diff_gated.patch
+# gated config: also apply theseus_retrofit/driver_diff_gated.patch
 ```
 
 Identifiers: runs r003–r006 (per-run `run_manifest.jsonl` with content hashes);
