@@ -62,13 +62,24 @@ Reproduction inputs are vendored; generated outputs are `.gitignore`d.
 
 ## Status: done — see the reports
 
-- **`reports/results.md`** — the numbers: 3 first-compile errors on the full
-  drop-in (1 rename + 2 adjudicated RO-vs-init-write divergences), then green;
-  75/75 offsets correct; 54 driver constants field-derived (1 disagreement =
-  a real Theseus bug, RDRXCTL_CRC_STRIP sets a reserved bit); 8 extracted
-  constraints become compile-time gates (field-level default: witnesses,
-  never-set clamps, a coupled CRC-strip setter that makes the bug in finding 1
-  unwritable) at a driver-diff cost of +27/−15 lines.
+- **`reports/results.md`** — the numbers. Structural recall is near-perfect:
+  3 first-compile errors on the full drop-in (1 rename + 2 adjudicated
+  RO-vs-init-write divergences), then green; **75/75 offsets** correct;
+  **75/75 register access codes** match the datasheet; reset values extracted
+  for the 55 registers the datasheet defines (20 correctly null); and a full
+  **census of all 406 extracted bit fields vs the datasheet's own field tables
+  = 404/406 (99.5%)** correct (the 2 errors are spurious fields the full-page
+  completion pass bled in from adjacent registers, inert in this whole-register
+  HAL). **9 real bugs** found across the four drivers (none by testing) — e.g.
+  Theseus `RDRXCTL_CRC_STRIP` sets a reserved bit, and (via the recovered RXCSUM
+  constraint) Theseus writes RXCSUM/RSS config while the receiver is enabled.
+- **`reports/constraints_found.md` / `.json`** — the durable final constraints
+  list: **34 total** = 29 grammar-valid from the canonical run + **5 recovered**
+  by the constraint-recall improvement (RXCSUM, RDLEN, TDLEN, DAQF, SDPQF);
+  **8 become compile-time gates** (field-level default: witnesses, never-set
+  clamps, a coupled CRC-strip setter that makes the RDRXCTL bug unwritable), at
+  a driver-diff cost of +27/−15 lines. (Schema-valid + computed enforceability;
+  not run through the LLM constraint validator — noted in the report.)
 - **`reports/friction.md`** — the friction ledger: every manual/contract-level
   adaptation, categorized (naming / packaging / adjudicated access divergence /
   policy constants / gate-required driver diff / source-document artifacts),
@@ -81,7 +92,10 @@ Reproduction inputs are vendored; generated outputs are `.gitignore`d.
   (ixy+Redox, auto-repaired by the hold encoding), RedLeaf's RDLEN stride
   typo (0x60 for 0x40) and 64-bit reads of 32-bit registers, and the legacy
   0x5400 RAL/RAH alias reliance.
-- `pipeline/` — enumerate_targets.py, generate.py (+completion passes),
-  collect_constraints_intel.py, emit_hal.py (structural + --gated), the
+- `pipeline/` — enumerate_targets.py, generate.py (batched generation +
+  bounded completion passes, the self-escalating `--auto-complete` loop, and
+  the optional `--constraint-recall` trigger), collect_constraints_intel.py,
+  emit_hal.py (structural + `--gated`), the audit/scan tools (audit_full.py,
+  score_subfields.py, scan_constraints.py, build_constraints_list.py), the
   committed contracts (packaging.json, name_map.json, access_overrides.json,
   constants_map.json), and driver_diff_gated.patch.
