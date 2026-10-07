@@ -219,9 +219,53 @@ def _driver_field_alts(reg, field):
     return []
 
 
-def prepare_completion(base_tag, regs):
+def constraint_recall_targets(base_dir, regs):
+    """Registers in scope that show a datasheet CONSTRAINT CUE but carry no
+    extracted constraint (and are not referenced by another register's
+    constraint) — the optional constraint-recall trigger (scan_constraints).
+
+    Unlike the structural trigger (bit coverage / driver field), constraints
+    have no closed completeness oracle, so this is a deterministic but
+    HEURISTIC cue-lexicon scan: it over-flags benign notes (the re-gen model,
+    and downstream the validator, drop those) and cannot guarantee recall.
+    Intended for ONE bounded completion pass, not an unbounded loop (a benign
+    cue never clears)."""
+    import scan_constraints as sc
+    covered = set()
+    for fn in os.listdir(base_dir):
+        if not fn.endswith(".json") or fn.startswith("run_manifest"):
+            continue
+        try:
+            d = json.load(open(os.path.join(base_dir, fn)))
+        except Exception:
+            continue
+        cons = d.get("access_constraints_v2") or []
+        if cons:
+            covered.add(fn[:-5].upper())
+        for c in cons:
+            tr = str(c.get("target_register", "")).upper()
+            if tr:
+                covered.add(tr)
+            for key in ("preconditions", "postconditions", "fields", "involved", "steps"):
+                for o in (c.get(key) or []):
+                    if isinstance(o, dict) and o.get("register"):
+                        covered.add(o["register"].upper())
+    covered.discard("")
+    secs = sc.reg_sections([r["abbrev_base"].upper() for r in regs])
+    flagged = set()
+    for reg in [r["abbrev_base"].upper() for r in regs]:
+        if reg in covered:
+            continue
+        txt = secs.get(reg)
+        if txt and sc.cue_sentences(txt):
+            flagged.add(reg)
+    return flagged
+
+
+def prepare_completion(base_tag, regs, constraint_recall=False):
     """Create a fresh run that is a copy of base_tag, and return
-    (run_tag, out_dir, info_dir, regs_to_regenerate)."""
+    (run_tag, out_dir, info_dir, regs_to_regenerate). With constraint_recall,
+    also re-generate registers the cue scanner flags (optional trigger)."""
     import shutil
     base_dir = os.path.join(OUT_BASE, base_tag)
     run_tag = next_run_tag()
@@ -233,6 +277,11 @@ def prepare_completion(base_tag, regs):
         if f.endswith(".json") and os.path.isfile(srcp):
             shutil.copy(srcp, os.path.join(out_dir, f))
     retry = incomplete_registers(base_dir, regs)
+    if constraint_recall:
+        extra = constraint_recall_targets(base_dir, regs)
+        if extra - retry:
+            print(f"  constraint-recall adds {len(extra - retry)}: {sorted(extra - retry)}")
+        retry |= extra
     regs_to_gen = [r for r in regs if r["abbrev_base"].upper() in retry]
     return run_tag, out_dir, info_dir, regs_to_gen
 
@@ -363,7 +412,7 @@ def run_generation(regs, run_tag, out_dir, info_dir, *, model, max_output_per_re
 # ---------------------------------------------------------------------------
 def auto_complete(base_tag, regs, *, base_model, escalate_model, page_schedule,
                   max_output_per_reg, batch_size, ev, col, proc, system_prompt,
-                  full_page_ctx):
+                  full_page_ctx, constraint_recall=False):
     """Escalate context while it pays off; switch to a stronger model once more
     pages stop helping AND the missing rows are already in the saved context
     (a generation failure, not retrieval). Deterministic, cost-bounded by the
@@ -379,8 +428,9 @@ def auto_complete(base_tag, regs, *, base_model, escalate_model, page_schedule,
     last_pages = page_schedule[0] if page_schedule else 2
 
     # Phase 1 — escalate pages while they reduce the miss count.
-    for p in page_schedule:
-        run_tag, out_dir, info_dir, retry = prepare_completion(base, regs)
+    for pass_i, p in enumerate(page_schedule):
+        run_tag, out_dir, info_dir, retry = prepare_completion(
+            base, regs, constraint_recall=(constraint_recall and pass_i == 0))
         if not retry:
             print(f"[auto] {base}: nothing incomplete — done")
             return base
@@ -466,6 +516,10 @@ def main():
                     help="stronger model used once more pages stop helping (--auto-complete)")
     ap.add_argument("--extra-pages", type=int, default=2,
                     help="single completion pass: pages appended past the last context page")
+    ap.add_argument("--constraint-recall", action="store_true",
+                    help="OPTIONAL extra completion trigger: also re-generate "
+                    "registers whose datasheet section has a constraint cue but no "
+                    "extracted constraint (scan_constraints). Off by default.")
     ap.add_argument("--dry-run", action="store_true", help="retrieval only, no LLM")
     args = ap.parse_args()
 
@@ -494,14 +548,16 @@ def main():
                               page_schedule=page_schedule,
                               max_output_per_reg=args.max_output_per_reg,
                               batch_size=args.batch_size, ev=ev, col=col, proc=proc,
-                              system_prompt=system_prompt, full_page_ctx=full_page_ctx)
+                              system_prompt=system_prompt, full_page_ctx=full_page_ctx,
+                              constraint_recall=args.constraint_recall)
         print(f"auto-complete finished at {final}")
         return
 
     # ---- single pass: base / --complete-from / --resume (unchanged behaviour) ----
     full_page_ctx = None
     if args.complete_from:
-        run_tag, out_dir, info_dir, regs = prepare_completion(args.complete_from, regs)
+        run_tag, out_dir, info_dir, regs = prepare_completion(
+            args.complete_from, regs, constraint_recall=args.constraint_recall)
         print(f"completion pass from {args.complete_from}: re-generating "
               f"{len(regs)}: {sorted(r['abbrev_base'] for r in regs)}")
         full_page_ctx = build_page_index()
