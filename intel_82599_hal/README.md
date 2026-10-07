@@ -57,8 +57,34 @@ Intel ships no SVD/verified datasheet for the 82599. Therefore:
 3. **Enforcement result:** the access constraints we encoded that the hand-written HAL
    lacks, and the driver-side diff required to satisfy them.
 
-See `startup.md` for the step-by-step execution plan and environment.
 Reproduction inputs are vendored; generated outputs are `.gitignore`d.
+
+## Reproduction
+
+```bash
+# This worktree has no .venv of its own — use the sibling retrieval worktree's
+# (openai, fastembed, chromadb, tiktoken, pandas):
+VENV=/home/ramla/hal_agent-retrieval/.venv/bin/python
+export GROQ_API_KEY=...     # generator = gpt-oss-120b via Groq
+export OPENAI_API_KEY=...   # the gpt-5.2 escalation / fallback
+
+cd pipeline
+$VENV enumerate_targets.py                       # targets/ (committed)
+$VENV generate.py --registers ctrl               # one register (smoke test; --dry-run = no LLM)
+$VENV generate.py                                # all 75; then --auto-complete rNNN for the retry loop
+$VENV collect_constraints_intel.py rNNN          # grammar-valid constraints + enforceability
+$VENV emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs
+```
+
+- **Datasheet chunks** (pre-chunked, external): `INTEL_CHUNKS_DIR`, default
+  `/home/ramla/hal_agent-retrieval/chunked_datasheets/intel/82599/chunks/md`.
+- **Retriever**: `pipeline/retriever/best_program.py`, vendored from
+  `hal_agent-retrieval` `v6_82599_seed42`,
+  `sha256 = 76079e0386750719331094601404ece71a9bc48baf6886fe576e8f20c83ad655`.
+- Eval: clone `theseus-os/Theseus` @ `1fbfe567` (see `reference/COMMIT.txt`),
+  swap the generated `regs.rs` into `kernel/ixgbe/src/`, `cargo check -p ixgbe`.
+- The canonical generation runs are r003–r006 (gitignored); `reports/` holds
+  the committed results.
 
 ## Status: done — see the reports
 
