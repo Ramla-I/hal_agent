@@ -118,10 +118,10 @@ $VENV s4_emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs
   (ixy+Redox, auto-repaired by the hold encoding), RedLeaf's RDLEN stride
   typo (0x60 for 0x40) and 64-bit reads of 32-bit registers, and the legacy
   0x5400 RAL/RAH alias reliance.
-- `pipeline/` — s1_enumerate_targets.py, s2_generate.py (batched generation +
+- `pipeline/` — s1_enumerate_targets.py, s2_generate.py (batched generation + s2a_prompts_intel + s2b_scan_constraints helpers,
   bounded completion passes, the self-escalating `--auto-complete` loop, and
   the optional `--constraint-recall` trigger), s3_collect_constraints.py,
   s4_emit_hal.py (structural + `--gated`), the audit/scan tools (audit_full.py,
-  score_subfields.py, scan_constraints.py, build_constraints_list.py), the
+  score_subfields.py, s2b_scan_constraints.py, build_constraints_list.py), the
   committed contracts (config/packaging.json, config/name_map.json, config/access_overrides.json,
   config/constants_map.json), and driver_diff_gated.patch.

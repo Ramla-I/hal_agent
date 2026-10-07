@@ -222,7 +222,7 @@ def _driver_field_alts(reg, field):
 def constraint_recall_targets(base_dir, regs):
     """Registers in scope that show a datasheet CONSTRAINT CUE but carry no
     extracted constraint (and are not referenced by another register's
-    constraint) — the optional constraint-recall trigger (scan_constraints).
+    constraint) — the optional constraint-recall trigger (s2b_scan_constraints).
 
     Unlike the structural trigger (bit coverage / driver field), constraints
     have no closed completeness oracle, so this is a deterministic but
@@ -230,7 +230,7 @@ def constraint_recall_targets(base_dir, regs):
     and downstream the validator, drop those) and cannot guarantee recall.
     Intended for ONE bounded completion pass, not an unbounded loop (a benign
     cue never clears)."""
-    import scan_constraints as sc
+    import s2b_scan_constraints as sc
     covered = set()
     for fn in os.listdir(base_dir):
         if not fn.endswith(".json") or fn.startswith("run_manifest"):
@@ -292,7 +292,7 @@ def prepare_completion(base_tag, regs, constraint_recall=False):
 def run_generation(regs, run_tag, out_dir, info_dir, *, model, max_output_per_reg,
                    extra_pages, batch_size, dry_run, append_manifest, full_page_ctx,
                    ev, col, proc, system_prompt, args_record):
-    from prompts_intel import create_register_info_intel_user_prompt
+    from s2a_prompts_intel import create_register_info_intel_user_prompt
     from utils.parse_output import (
         get_reasoning_from_response, get_json_array_from_response,
     )
@@ -394,7 +394,7 @@ def run_generation(regs, run_tag, out_dir, info_dir, *, model, max_output_per_re
         "model": model,
         "extra_pages": extra_pages if full_page_ctx is not None else None,
         "retriever_sha256": sha256_file(os.path.join(RETRIEVER_DIR, "best_program.py")),
-        "prompt_sha256": sha256_file(os.path.join(HERE, "prompts_intel.py")),
+        "prompt_sha256": sha256_file(os.path.join(HERE, "s2a_prompts_intel.py")),
         "chunks_dir": CHUNKS_DIR,
         "chunks_index_sha256": sha256_file(CHUNKS_INDEX),
         "git_sha": os.popen(f"git -C {REPO_ROOT} rev-parse HEAD").read().strip(),
@@ -519,7 +519,7 @@ def main():
     ap.add_argument("--constraint-recall", action="store_true",
                     help="OPTIONAL extra completion trigger: also re-generate "
                     "registers whose datasheet section has a constraint cue but no "
-                    "extracted constraint (scan_constraints). Off by default.")
+                    "extracted constraint (s2b_scan_constraints). Off by default.")
     ap.add_argument("--dry-run", action="store_true", help="retrieval only, no LLM")
     args = ap.parse_args()
 
@@ -536,7 +536,7 @@ def main():
         f"chunks not found at {CHUNKS_DIR} — set INTEL_CHUNKS_DIR or re-chunk "
         "devices/intel/82599/82599.md with the preprocessing pipeline")
     col, proc = ev.setup_database(CHUNKS_DIR, CHUNKS_INDEX)
-    from prompts_intel import create_register_info_intel_system_prompt
+    from s2a_prompts_intel import create_register_info_intel_system_prompt
     system_prompt = create_register_info_intel_system_prompt()
 
     # ---- auto-complete: the self-escalating loop ----
