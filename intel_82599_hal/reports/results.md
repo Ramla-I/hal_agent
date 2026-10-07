@@ -5,7 +5,7 @@ a 10 GbE NIC from its datasheet; dropped into the real Theseus `ixgbe` driver
 it compiled after exactly 3 adaptations (1 rename, 2 adjudicated RO-vs-init-write
 divergences), it found one real bit-position bug in the hand-written HAL, and
 its extracted access constraints became compile-time witness gates the original
-HAL never had — at a driver-diff cost of 2 files, +12/−5 lines.
+HAL never had — at a driver-diff cost of 2 files, +40/−18 lines.
 
 ## Setup (reproduction identifiers at the bottom)
 

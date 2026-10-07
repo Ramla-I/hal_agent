@@ -44,10 +44,12 @@ recorded reason in `config/constants_map.json`.
 
 ## E. Driver diff required by the constraint layer (by design)
 
-`theseus_retrofit/driver_diff_gated.patch`: **2 files, +27/−15 lines** for 9 encoded
+`theseus_retrofit/driver_diff_gated.patch`: **2 files, +40/−18 lines** for 9 encoded
 constraints — the measured cost of adopting the field-level gates:
 - `enable_rx_function`: mint `RxctrlRxenCleared`, pass its token to the `fctrl`
   write, `release` re-enables (replaces two manual RXEN writes).
+- `enable_rss`: mint `RxctrlRxenCleared`, gate the `rxcsum` write, `release` after
+  the RSS block (the recovered constraint = finding 2; fixes the RXCSUM bug).
 - `set_tdh`: mint `TxdctlEnableCleared` before the head write.
 - CRC strip: the two independent OR-writes (one of them the RDRXCTL bug)
   collapse into one coupled `set_rxcrcstrp_crcstrip(..., true)` call.
