@@ -84,7 +84,7 @@ def incomplete_registers(base_dir, regs):
     absent from the spec — the interface contract names the field, the bits
     still come from extraction."""
     sys.path.insert(0, HERE)
-    from emit_hal import find_field
+    from s4_emit_hal import find_field
     retry = set()
     specs = {}
     regs_keys = {r["abbrev_base"].upper() for r in regs}
@@ -102,7 +102,7 @@ def incomplete_registers(base_dir, regs):
         lo = min((b.get("start_bit", 99) for b in bits), default=99)
         if not sf or hi < 31 or lo > 1:
             retry.add(key)
-    cmap_p = os.path.join(HERE, "constants_map.json")
+    cmap_p = os.path.join(HERE, "config", "constants_map.json")
     if os.path.exists(cmap_p):
         with open(cmap_p) as f:
             cmap = json.load(f)
@@ -175,10 +175,10 @@ def completion_targets(base_dir, regs):
     when that is the trigger (used for the in-context presence check), else
     None for a bit-coverage-only trigger (no single field to probe)."""
     sys.path.insert(0, HERE)
-    from emit_hal import find_field
+    from s4_emit_hal import find_field
     flagged = incomplete_registers(base_dir, regs)
     out = {r: None for r in flagged}
-    cmap_p = os.path.join(HERE, "constants_map.json")
+    cmap_p = os.path.join(HERE, "config", "constants_map.json")
     if os.path.exists(cmap_p):
         cmap = json.load(open(cmap_p))["constants"]
         for c in cmap:
@@ -210,7 +210,7 @@ def context_has_field(info_dir, reg, field, alts=()):
 
 
 def _driver_field_alts(reg, field):
-    cmap_p = os.path.join(HERE, "constants_map.json")
+    cmap_p = os.path.join(HERE, "config", "constants_map.json")
     if not (field and os.path.exists(cmap_p)):
         return []
     for c in json.load(open(cmap_p))["constants"]:

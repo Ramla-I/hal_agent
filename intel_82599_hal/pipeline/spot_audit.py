@@ -18,7 +18,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from emit_hal import find_field  # noqa: E402
+from s4_emit_hal import find_field  # noqa: E402
 
 
 def norm(s):
@@ -45,11 +45,11 @@ def main():
             named.append((r, sf["name"], bn["start_bit"], bn["end_bit"]))
 
     scored = set()
-    sc = json.load(open(os.path.join(HERE, "subfield_scores.json")))
+    sc = json.load(open(os.path.join(HERE, "..", "reports", "subfield_scores.json")))
     for x in sc["scored_fields"]:
         r, f = x.split(".", 1)
         scored.add((r, norm(f)))
-    cm = json.load(open(os.path.join(HERE, "constants_map.json")))["constants"]
+    cm = json.load(open(os.path.join(HERE, "config", "constants_map.json")))["constants"]
     consumed = [(c["register"], [c.get("field")] + c.get("alt", []))
                 for c in cm if c["kind"] != "policy"]
     consumed += [(r, [f]) for r, f in (
@@ -70,7 +70,7 @@ def main():
     out = [{"register": r, "field": f, "extracted_bits": f"{hi}:{lo}"}
            for r, f, lo, hi in sample]
     json.dump({"run": args.run, "seed": args.seed, "frame_size": len(frame),
-               "sample": out}, open(os.path.join(HERE, "spot_audit_sample.json"), "w"),
+               "sample": out}, open(os.path.join(HERE, "..", "reports", "spot_audit_sample.json"), "w"),
               indent=2)
     for row in out:
         print(f"  {row['register']:10s} {row['field']:34s} {row['extracted_bits']}")

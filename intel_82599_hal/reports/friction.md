@@ -20,7 +20,7 @@ base-name match) — zero further register-name friction.
 | # | Item | Artifact |
 |---|------|----------|
 | B1 | 7-struct split of the 128 KiB BAR0 space, region boundaries, queue container fields (`rx_regs1/tx_regs/rx_regs2`), struct/doc names | `pipeline/packaging.json` |
-| B2 | Queue element structs (`RegistersRx`/`RegistersTx`, 64 B) derived by rule: a 0x40-stride register bank starting inside a queue region becomes an element-struct field at `offset − region_start` | emitter rule (emit_hal.py) |
+| B2 | Queue element structs (`RegistersRx`/`RegistersTx`, 64 B) derived by rule: a 0x40-stride register bank starting inside a queue region becomes an element-struct field at `offset − region_start` | emitter rule (s4_emit_hal.py) |
 | B3 | `queue_registers.rs` untouched: it is driver glue (trait impls, MappedPages plumbing), not register data | — |
 | B4 | Array representation rules: R1 contiguous stride-4 → `[Volatile<u32>; N]`; R2 non-contiguous stride (RAL/RAH interleaved 8-byte pairs) → element-0 scalar, as the driver models it; R3 second banks outside queue regions (EITR's 0x12300 bank) → skipped, as the driver does | emitter rules, logged per-register in `emit_report.json` |
 
@@ -28,7 +28,7 @@ base-name match) — zero further register-name friction.
 
 | # | Item | Resolution |
 |---|------|------------|
-| C1 | `RDH[n]` datasheet-typed RO ("controlled by hardware") but the driver must zero the head at queue init (as ixgbe/DPDK do) | `access_overrides.json` → `Volatile`, adjudication recorded |
+| C1 | `RDH[n]` datasheet-typed RO ("controlled by hardware") but the driver must zero the head at queue init (as ixgbe/DPDK do) | `config/access_overrides.json` → `Volatile`, adjudication recorded |
 | C2 | `TDH[n]` heading says RO, but its own description authorizes exactly one software write ("after a reset and before enabling the transmit function") | Structural config: override to `Volatile`. Constraint config: **witness-gated write** — the datasheet's authorization rule becomes the type (`GatedTdh::write(v, &TxdctlEnableCleared)`), superseding the override. |
 
 These two were 2 of the 3 first-compile errors — the compile metric surfaced
@@ -40,7 +40,7 @@ extraction misses.
 17 of 71 constants are driver-chosen values (`TXDCTL_PTHRESH = 36` "taken from
 DPDK", `DISABLE_INTERRUPTS`, RETA byte-lane offsets, composite semaphore
 masks, one silicon-workaround reserved bit). Kept verbatim, each with a
-recorded reason in `constants_map.json`.
+recorded reason in `config/constants_map.json`.
 
 ## E. Driver diff required by the constraint layer (by design)
 

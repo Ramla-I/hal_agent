@@ -21,7 +21,7 @@ from collections import defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 PIPE = os.path.join(HERE, "..", "pipeline")
 sys.path.insert(0, PIPE)
-from enumerate_targets import _RANGE_RE  # noqa: E402
+from s1_enumerate_targets import _RANGE_RE  # noqa: E402
 
 CLONES = os.path.join(HERE, "clones")
 GATED = {"FCTRL", "TDH", "HLREG0", "RDRXCTL", "DMATXCTL", "EIAC", "EEC", "EIAM"}

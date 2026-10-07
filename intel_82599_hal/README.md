@@ -69,11 +69,11 @@ export GROQ_API_KEY=...     # generator = gpt-oss-120b via Groq
 export OPENAI_API_KEY=...   # the gpt-5.2 escalation / fallback
 
 cd pipeline
-$VENV enumerate_targets.py                       # targets/ (committed)
-$VENV generate.py --registers ctrl               # one register (smoke test; --dry-run = no LLM)
-$VENV generate.py                                # all 75; then --auto-complete rNNN for the retry loop
-$VENV collect_constraints_intel.py rNNN          # grammar-valid constraints + enforceability
-$VENV emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs
+$VENV s1_enumerate_targets.py                       # targets/ (committed)
+$VENV s2_generate.py --registers ctrl               # one register (smoke test; --dry-run = no LLM)
+$VENV s2_generate.py                                # all 75; then --auto-complete rNNN for the retry loop
+$VENV s3_collect_constraints.py rNNN          # grammar-valid constraints + enforceability
+$VENV s4_emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs
 ```
 
 - **Datasheet chunks** (pre-chunked, external): `INTEL_CHUNKS_DIR`, default
@@ -118,10 +118,10 @@ $VENV emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs
   (ixy+Redox, auto-repaired by the hold encoding), RedLeaf's RDLEN stride
   typo (0x60 for 0x40) and 64-bit reads of 32-bit registers, and the legacy
   0x5400 RAL/RAH alias reliance.
-- `pipeline/` — enumerate_targets.py, generate.py (batched generation +
+- `pipeline/` — s1_enumerate_targets.py, s2_generate.py (batched generation +
   bounded completion passes, the self-escalating `--auto-complete` loop, and
-  the optional `--constraint-recall` trigger), collect_constraints_intel.py,
-  emit_hal.py (structural + `--gated`), the audit/scan tools (audit_full.py,
+  the optional `--constraint-recall` trigger), s3_collect_constraints.py,
+  s4_emit_hal.py (structural + `--gated`), the audit/scan tools (audit_full.py,
   score_subfields.py, scan_constraints.py, build_constraints_list.py), the
-  committed contracts (packaging.json, name_map.json, access_overrides.json,
-  constants_map.json), and driver_diff_gated.patch.
+  committed contracts (config/packaging.json, config/name_map.json, config/access_overrides.json,
+  config/constants_map.json), and driver_diff_gated.patch.

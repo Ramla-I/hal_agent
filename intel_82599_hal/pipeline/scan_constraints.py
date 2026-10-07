@@ -9,7 +9,7 @@ classes (w1c, read-to-clear, access width, privilege, plain reset).
 """
 import json, os, re, sys
 sys.path.insert(0, ".")
-from enumerate_targets import parse_detail_headings, DATASHEET_MD
+from s1_enumerate_targets import parse_detail_headings, DATASHEET_MD
 
 CUES = [
     r"must be set", r"must be cleared", r"must be (?:written|programmed)",

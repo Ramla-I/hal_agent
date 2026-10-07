@@ -97,11 +97,11 @@ def main():
 
     join = {r["abbrev_base"].upper(): r
             for r in load_json(os.path.join(HERE, "targets", "registers_join.json"))["registers"]}
-    pack = load_json(os.path.join(HERE, "packaging.json"))
+    pack = load_json(os.path.join(HERE, "config", "packaging.json"))
     name_map = {k.upper(): v for k, v in
-                load_json(os.path.join(HERE, "name_map.json"), default={}).items()
+                load_json(os.path.join(HERE, "config", "name_map.json"), default={}).items()
                 if not k.startswith("_")}
-    overrides = load_json(os.path.join(HERE, "access_overrides.json"),
+    overrides = load_json(os.path.join(HERE, "config", "access_overrides.json"),
                           default={"overrides": {}})["overrides"]
 
     gates = {}
@@ -609,7 +609,7 @@ def main():
     w("")
 
     # ---- field-derived + policy constants (constants_map.json) ----
-    cmap_path = os.path.join(HERE, "constants_map.json")
+    cmap_path = os.path.join(HERE, "config", "constants_map.json")
     if os.path.exists(cmap_path):
         cmap = load_json(cmap_path)
         specs = {}

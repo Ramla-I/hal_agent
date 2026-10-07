@@ -13,7 +13,7 @@ are now emitted + grammar-valid. --model to escalate.
 """
 import json, os, sys, time, argparse
 sys.path.insert(0, ".")
-import generate as g
+import s2_generate as g
 from pydantic import TypeAdapter
 sys.path.insert(0, g.REPO_ROOT)
 import defs

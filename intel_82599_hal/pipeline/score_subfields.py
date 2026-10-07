@@ -137,5 +137,5 @@ out = {"run": RUN, "total_subfields": total, "reserved": reserved,
        "referee_joined": len(score), "agree": agree,
        "disagree": {f"{r}.{f}": v["evidence"] for (r, f), v in dis.items()},
        "scored_fields": sorted(f"{r}.{f}" for r, f in score)}
-json.dump(out, open(os.path.join(HERE, "subfield_scores.json"), "w"), indent=2)
+json.dump(out, open(os.path.join(HERE, "..", "reports", "subfield_scores.json"), "w"), indent=2)
 print("wrote subfield_scores.json")

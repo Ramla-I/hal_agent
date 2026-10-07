@@ -116,7 +116,7 @@ available if call-site gate visibility is wanted for RedLeaf too.
 ## Caveats
 
 - The 7-struct packaging is Theseus-shaped (split for virtualization); it is
-  `packaging.json` config, not architecture — a flat packaging would serve
+  `config/packaging.json` config, not architecture — a flat packaging would serve
   the others equally.
 - The model covers the first register banks (as the Theseus driver does):
   queue ids ≥ 64 and EITR indices ≥ 24 would need the second banks added

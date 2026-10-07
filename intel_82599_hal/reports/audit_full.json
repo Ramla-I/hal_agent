@@ -4551,35 +4551,5 @@
         "Reserved"
       ]
     }
-  ],
-  "adjudication": {
-    "extracted_subfields": 406,
-    "agree_exact": 402,
-    "verified_correct": 404,
-    "genuine_errors": 2,
-    "error_detail": [
-      {
-        "reg": "RDRXCTL",
-        "field": "Drop_En",
-        "bits": "28:28",
-        "type": "spurious field",
-        "note": "datasheet RDRXCTL bits 27-31 are Reserved; Drop_En is an SRRCTL field at bit 28. Mis-split of the Reserved 31:27 span (accounts for 3 of the 4 POS_FLAGs: Reserved 27:27, Drop_En 28:28, Reserved 31:29)."
-      },
-      {
-        "reg": "SRRCTL",
-        "field": "VME",
-        "bits": "30:30",
-        "type": "spurious field",
-        "note": "datasheet SRRCTL ends Drop_En 28 + Rsv 31:29; no VME. VME is an RXDCTL field bled in."
-      }
-    ],
-    "false_flags": {
-      "EIAM_x4": "parser bleed from EICS/EIMS/EIMC (section bound); EIAM extracted correctly (Auto Mask 30:0)",
-      "GOTCH_x2": "parser bleed from neighbouring stats counters; GOTCH extracted correctly (CNT_H 3:0)"
-    },
-    "recall_caveat": {
-      "LINKS": "datasheet documents LINKS with two overlapping field tables (config-write view: ANPDT/RF/PB/KX_support @25-31; status-read view: full 0-31). Extraction captured the status view; 3 config-view fields (ANPDT, RF, KX_support) unrepresented."
-    },
-    "pattern": "both genuine errors are spurious named fields bled into Reserved regions from adjacent Rx-DMA registers (RDRXCTL<->SRRCTL<->RXDCTL), consistent with full-page completion-pass context mixing neighbouring register tables; 0 real named fields mispositioned."
-  }
+  ]
 }

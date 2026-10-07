@@ -154,14 +154,14 @@ because §10.5.4 is outside the register chapter in our source md.
 
 ```bash
 cd intel_82599_hal/pipeline
-python3 enumerate_targets.py                 # targets/ (committed)
-python3 generate.py                          # run rNNN (gpt-oss-120b, batch 1)
-python3 generate.py --complete-from rNNN --max-output-per-reg 12000
-python3 generate.py --complete-from rNNN+1 --extra-pages 4 --max-output-per-reg 12000
-python3 generate.py --complete-from rNNN+2 --model gpt-5.2 --extra-pages 4 --max-output-per-reg 12000
-python3 collect_constraints_intel.py rFINAL
-python3 emit_hal.py rFINAL                   # structural  -> hal_out/rFINAL/regs.rs
-python3 emit_hal.py rFINAL --gated           # constraint  -> hal_out/rFINAL-gated/regs.rs
+python3 s1_enumerate_targets.py                 # targets/ (committed)
+python3 s2_generate.py                          # run rNNN (gpt-oss-120b, batch 1)
+python3 s2_generate.py --complete-from rNNN --max-output-per-reg 12000
+python3 s2_generate.py --complete-from rNNN+1 --extra-pages 4 --max-output-per-reg 12000
+python3 s2_generate.py --complete-from rNNN+2 --model gpt-5.2 --extra-pages 4 --max-output-per-reg 12000
+python3 s3_collect_constraints.py rFINAL
+python3 s4_emit_hal.py rFINAL                   # structural  -> hal_out/rFINAL/regs.rs
+python3 s4_emit_hal.py rFINAL --gated           # constraint  -> hal_out/rFINAL-gated/regs.rs
 # eval: clone theseus-os/Theseus @ 1fbfe567, init submodules, swap regs.rs,
 #   cargo check -p ixgbe -Z unstable-options -Z build-std=core,alloc \
 #     -Z build-std-features=compiler-builtins-mem --target x86_64-unknown-theseus

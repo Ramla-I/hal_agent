@@ -153,18 +153,5 @@
       "field": "HeadWB_Low",
       "extracted_bits": "31:2"
     }
-  ],
-  "n": 30,
-  "errors": 1,
-  "error_detail": [
-    {
-      "register": "RDRXCTL",
-      "field": "Drop_En",
-      "extracted_bits": "28:28",
-      "datasheet": "RDRXCTL bits 27-31 are Reserved; Drop_En is an SRRCTL field at bit 28",
-      "class": "spurious field (cross-register bleed from SRRCTL); structurally inert in this whole-register HAL"
-    }
-  ],
-  "point_estimate": 0.03333333333333333,
-  "ci95_upper": 0.1485960686591131
+  ]
 }

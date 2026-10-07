@@ -32,7 +32,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from enumerate_targets import parse_detail_headings, DATASHEET_MD  # noqa: E402
+from s1_enumerate_targets import parse_detail_headings, DATASHEET_MD  # noqa: E402
 
 RUN = sys.argv[1] if len(sys.argv) > 1 else "r006"
 
@@ -149,7 +149,7 @@ def main():
         print(f"\n--- UNPARSED registers ({len(unparsed)}) ---")
         print("  " + ", ".join(f"{r}({n})" for r, n in unparsed))
     json.dump({"run": RUN, "grades": dict(g), "unparsed": unparsed, "rows": rows},
-              open(os.path.join(HERE, "audit_full.json"), "w"), indent=2)
+              open(os.path.join(HERE, "..", "reports", "audit_full.json"), "w"), indent=2)
     print("\nwrote audit_full.json")
 
 
