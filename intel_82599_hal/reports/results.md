@@ -114,20 +114,23 @@ registers — the last 3 needed model escalation, not more context).
 
 
 Of the **39 constraints found** (34 in run r006 + 5 recovered later), **5 were
-dropped** for grammar-v2 schema inconsistency, leaving **34 kept**; the gated
-emitter encodes over run r006's **29 grammar-valid** constraints across 26
-registers. Encoding is **field-level by default** (a case-study extension of the settled 4-class
+dropped** for grammar-v2 schema inconsistency, leaving **34 kept** — the 29
+grammar-valid from run r006 plus the 5 recovered, folded together (the recovered
+set is committed as `config/recovered_constraints.json` and folded in with
+`s4_emit_hal.py --gated --extra-constraints`). The gated emitter encodes over
+this combined **34**. Encoding is **field-level by default** (a case-study extension of the settled 4-class
 enforceability taxonomy, which stays untouched in `defs.py`): a gated register
 loses its raw `write()` — it exposes `write_preserving()` (structurally cannot
 change protected bits; never-set bits forced to 0) plus, where a witness
 exists, `write_full(value, &Witness)`; whole-register gates (`target_fields=[]`)
 expose only `write(value, &Witness)`.
 
-**8 of those 29 encoded, on 8 registers:**
+**9 of those 34 encoded, on 9 registers:**
 
 | Register | Constraint | Encoding |
 |---|---|---|
 | FCTRL | write only while RXCTRL.RXEN=0 | whole-register witness (`RxctrlRxenCleared`: establish clears RXEN, release re-enables) |
+| RXCSUM | write only while RXCTRL.RXEN=0 (recovered constraint; = bug #9) | whole-register witness (same `RxctrlRxenCleared`); the constraint that *found* bug #9 is now an *enforced* gate |
 | TDH | write only after reset, before TXDCTL.ENABLE | whole-register witness (`TxdctlEnableCleared`; minting clears ENABLE — the type forces the precondition) |
 | EEC | EE_SK/EE_CS/EE_DI/EE_REQ usable only when EE_GNT=1 (hardware-established) | field gate + **check-minted state witness**: `check_ee_gnt() -> Option<EecEeGntSet>` |
 | EIAM | Auto Mask bits require GPIE.EIAME set | field gate + set-mode action witness (`GpieEiameSet::establish`, no release — condition must persist) |
@@ -135,22 +138,26 @@ expose only `write(value, &Witness)`.
 | HLREG0 + RDRXCTL | RXCRCSTRP "must be set the same as" CRCStrip (2 constraints, stated on both sides) | **coupled setter** `set_rxcrcstrp_crcstrip(a, b, enable)`; independent writes preserve both bits — the inconsistent state (finding 1!) is unwritable |
 | DMATXCTL | "software must not change" the VT field | **hold mask**: no API can change it |
 
-**The 21 not encoded, with computed/deterministic reasons** (all recorded in
-`emit_report.json`): 7 `read_effect` + 6 `other` + CTRL's bare delay are
-doc/runtime-tier by the computed taxonomy; 5 `value_relation`s whose semantics
-live in the value (RDBAL/TDBAL 128-byte alignment, SRRCTL and EITR
-conditionals, FCRTH inequality) are invisible at `u32` granularity and are
-**not encoded — no runtime check is emitted** (enforcing them would need typed
-value builders, i.e. runtime-checked constructors); 1 `state_gate` shape
-(TXDCTL's WTHRESH note arrived as `other`) fits no rule.
+**The 25 not encoded, with computed/deterministic reasons** (all recorded in
+`emit_report.json`): 7 `read_effect` + 10 `other` + CTRL's bare delay are
+doc-only/dynamic-check by the computed taxonomy (18 total, including TXDCTL's
+WTHRESH note that arrived as `other` and DAQF/SDPQF's "init by software"); 7
+`value_relation`s whose semantics live in the value (RDBAL/TDBAL/RDLEN/TDLEN
+128-byte alignment, SRRCTL and EITR conditionals, FCRTH inequality) are
+invisible at `u32` granularity and are **not encoded — no runtime check is
+emitted** (enforcing them would need typed value builders, i.e. runtime-checked
+constructors).
 
 **Enforcement demonstrated:** the *unmodified* driver against the gated HAL
-fails with **9 errors at 9 sites — every one a datasheet-relevant write**
-(fctrl, set_tdh, the two CRC-strip lines, the second hlreg0 site, both
-dmatxctl TE toggles, eiac). The adoption diff is **2 files, +27/−15** — and it
-*deletes the CRC-strip bug*: the two independent ORs (one with the wrong bit)
-become one `set_rxcrcstrp_crcstrip(..., true)` call, so finding 1 cannot be
-re-introduced. After the diff, `cargo check` and `cargo build` are green.
+fails with **10 errors at 10 sites — every one a datasheet-relevant write**
+(fctrl, set_tdh, the two CRC-strip lines + the RDRXCTL RSCFRSTSIZE line, the
+second hlreg0 site, both dmatxctl TE toggles, eiac, and **rxcsum** — the gate
+from the recovered constraint, = finding 2/bug #9). The adoption diff is
+**2 files, +40/−18** — and it *deletes the CRC-strip bug*: the two independent
+ORs (one with the wrong bit) become one `set_rxcrcstrp_crcstrip(..., true)`
+call, so finding 1 cannot be re-introduced; it also *fixes bug #9* by moving the
+RSS/RXCSUM config into a witness window where RXCTRL.RXEN is cleared. After the
+diff, `cargo check` and `cargo build` are green.
 
 Honest limits (all reported by the emitter, never silently assumed — see the
 `KNOWN LIMITATIONS` block in `s4_emit_hal.py`):

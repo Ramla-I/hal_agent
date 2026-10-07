@@ -5,17 +5,17 @@ Theseus `ixgbe` driver and build it.
 
 - **`driver_diff_gated.patch`** (committed) — the driver-side edits that make
   Theseus compile against the **constraint-gated** HAL (`pipeline/s4_emit_hal.py
-  --gated`): 2 files, +27/−15 lines. Each hunk adopts one extracted access
-  constraint (FCTRL/TDH witness gates, the CRC-strip coupled setter, the
+  --gated`): 2 files, +40/−18 lines. Each hunk adopts one extracted access
+  constraint (FCTRL/TDH/RXCSUM witness gates, the CRC-strip coupled setter, the
   DMATXCTL/EIAC `write_preserving` guards). This is the measured cost of the
   enforcement arm. With the plain structural HAL the driver builds unchanged.
 - **`driver_diff_gated_minted.patch`** (committed) — the same adoption for the
   **provenance-hardened** HAL (`pipeline/s4b_emit_hal_minted.py`, output
   `hal_out/<run>-gated-minted/`). Identical to `driver_diff_gated.patch` except
-  the 3 witness-minting lines route through the prerequisite register's newtype
-  (`RxctrlRxenCleared::establish(&mut regs.rxctrl)` → `regs.rxctrl.clear_rxen()`;
-  the TXDCTL mint; the release). Same +27/−15; verified green with the pinned
-  toolchain.
+  the witness-minting lines route through the prerequisite register's newtype
+  (`RxctrlRxenCleared::establish(&mut regs.rxctrl)` → `regs.rxctrl.clear_rxen()`,
+  the two RXEN windows + the TXDCTL mint + the releases). Same +40/−18; verified
+  green with the pinned toolchain.
 - **`theseus_clone/`** (gitignored, ~900 MB) — a checkout of
   `theseus-os/Theseus` @ `1fbfe567` (see `../reference/COMMIT.txt`), not
   committed; recreate it with the recipe below.

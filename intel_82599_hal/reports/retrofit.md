@@ -83,7 +83,9 @@ sites ported, witnesses threaded (RXEN window over rx-init and both
 promiscuous toggles — Redox also rewrote FCTRL with the receiver live; TDH
 witness; CRC-strip coupling; EIAC clamp; **DMATXCTL hold — Redox has ixy's
 exact absolute `DMATXCTL = TE` write, so the VT-clobber bug exists in a second
-driver and is auto-repaired the same way**). `cargo check -p ixgbed` green;
+driver and is auto-repaired the same way**; RedLeaf's domain driver carries the
+identical write at `device.rs:294`, making it a **third** codebase with the
+bug). `cargo check -p ixgbed` green;
 violation demo: removing the establish line → E0425 at both dependent sites.
 Semantic note: Redox's `write_reg` did a volatile read-back after every write
 (posted-write flush); the typed writes do not — matching the Theseus
@@ -112,6 +114,19 @@ scalar FCTRL writes establish/release the RXEN window. Registers outside the
 75-register model (19 stats scalars, TxpbThresh, Qptc, Rxmpc, RAL/RAH beyond
 entry 0) keep a documented raw path. Tier B (call-site port, ~65 sites) stays
 available if call-site gate visibility is wanted for RedLeaf too.
+
+**Two RedLeaf crates — library vs. domain.** The retarget above covers
+`lib/devices/ixgbe` (crate `ixgbe_device`): the register map + raw
+`read_reg`/`write_reg` + per-queue init primitives + datapath — where the three
+structure findings above live. RedLeaf's *actual* driver is a separate crate,
+`domains/sys/driver/ixgbe` (crate `ixgbe`), a fault-isolated RedLeaf **domain**
+that `path`-depends on `ixgbe_device` and adds the init *sequence* plus the
+RPC/`RRef` network interface. That domain carries one constraint bug the library
+layer does not: **`device.rs:294`, after `init_tx()`, does
+`write_reg(IxgbeRegs::DMATXCTL, IXGBE_DMATXCTL_TE)`** — an absolute write of `0x1`
+that zeroes DMATXCTL.VT, the same VT-clobber as ixy/Redox (the library layer
+never writes DMATXCTL). Found by static inspection; the domain crate was not in
+the compiled retarget.
 
 ## Caveats
 

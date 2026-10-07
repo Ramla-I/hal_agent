@@ -1,5 +1,5 @@
 diff --git a/kernel/ixgbe/src/lib.rs b/kernel/ixgbe/src/lib.rs
-index 79c1d86..7267b2c 100644
+index 79c1d86..df63d76 100644
 --- a/kernel/ixgbe/src/lib.rs
 +++ b/kernel/ixgbe/src/lib.rs
 @@ -770,11 +770,12 @@ impl IxgbeNic {
@@ -73,7 +73,43 @@ index 79c1d86..7267b2c 100644
      }
  
      /// Enable multiple receive queues with RSS.
-@@ -1117,8 +1124,9 @@ impl IxgbeNic {
+@@ -908,15 +915,23 @@ impl IxgbeNic {
+         regs2: &mut IntelIxgbeRegisters2, 
+         regs3: &mut IntelIxgbeRegisters3
+     ) -> Result<(), &'static str> {
++        // Gate (datasheet): RXCSUM may only be written while RXCTRL.RXEN = 0b.
++        // Fetch the RSS hash seed FIRST so the gated window below has no early
++        // return, then establish the witness (clears RXEN) and keep the receiver
++        // disabled across the whole RSS/RXCSUM configuration, releasing at the end.
++        // Fixes the configure-after-enable bug: rx_init had already enabled the
++        // receiver before enable_rss ran.
++        let seed = get_hpet().as_ref().ok_or("couldn't get HPET timer")?.get_counter();
++        let rx_disabled = RxctrlRxenCleared::establish(&mut regs2.rxctrl);
++
+         // enable RSS writeback in the header field of the receive descriptor
+-        regs2.rxcsum.write(RXCSUM_PCSD);
+-        
++        regs2.rxcsum.write(RXCSUM_PCSD, &rx_disabled);
++
+         // enable RSS and set fields that will be used by hash function
+         // right now we're using the udp port and ipv4 address.
+         regs3.mrqc.write(MRQC_MRQE_RSS | MRQC_UDPIPV4 ); 
+ 
+         //set the random keys for the hash function
+-        let seed = get_hpet().as_ref().ok_or("couldn't get HPET timer")?.get_counter();
+         let mut rng = SmallRng::seed_from_u64(seed);
+         for rssrk in regs3.rssrk.iter_mut() {
+             rssrk.write(rng.next_u32());
+@@ -935,6 +950,8 @@ impl IxgbeNic {
+             qid = (qid + 1) % IXGBE_NUM_RX_QUEUES_ENABLED as u32;
+         }
+ 
++        // re-enable the receiver now that RSS/RXCSUM configuration is complete
++        rx_disabled.release(&mut regs2.rxctrl);
+         Ok(())
+     }
+ 
+@@ -1117,8 +1134,9 @@ impl IxgbeNic {
          regs.eims.write(val); 
          // debug!("EIMS: {:#X}", regs.eims.read());
  

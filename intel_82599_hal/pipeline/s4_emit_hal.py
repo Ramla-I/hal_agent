@@ -108,6 +108,12 @@ def build_parser():
                     "registers whose extracted state_gates match the "
                     "whole-register action-witness rule; output goes to "
                     "hal_out/<run>-gated/")
+    ap.add_argument("--extra-constraints", metavar="PATH",
+                    help="JSON file of additional grammar-v2 constraints "
+                    "({constraints:[{register, enforceability, constraint}]}) to "
+                    "fold into the gated set alongside the run's collection — e.g. "
+                    "config/recovered_constraints.json (the recovered constraints), "
+                    "so the gated HAL encodes the combined set. Needs --gated.")
     return ap
 
 
@@ -142,6 +148,19 @@ def run(args):
     if args.gated:
         cpath = os.path.join(HERE, "constraints", f"{args.run}_constraints.json")
         cons = load_json(cpath)
+        # fold in any extra (e.g. recall-recovered) constraints so the gated HAL
+        # encodes the COMBINED set, not just one run's collection. The file is a
+        # committed, already-validated grammar-v2 snapshot (same shape as the
+        # collection's accepted[]), so no re-validation is needed here.
+        extra_added = 0
+        if args.extra_constraints:
+            extra = load_json(os.path.join(HERE, args.extra_constraints)
+                              if not os.path.isabs(args.extra_constraints)
+                              else args.extra_constraints)
+            for e in extra.get("constraints", []):
+                cons["accepted"].append(e)
+                extra_added += 1
+        gate_report["extra_folded_in"] = extra_added
 
         def spec_of(reg):
             p = os.path.join(run_dir, reg.upper() + ".json")
@@ -828,6 +847,9 @@ def run(args):
             for pr, wit in prereqs.items():
                 where = gates[pr]["gtype"] if pr in gates else minter_type(pr)
                 print(f"    MINTS {wit['name']:22s} via {where} ({pr})")
+        if gate_report.get("extra_folded_in"):
+            print(f"  folded in {gate_report['extra_folded_in']} extra constraint(s) "
+                  f"from {args.extra_constraints}")
         print(f"  gating: {len(gate_report['encoded'])} constraints encoded on "
               f"{len(gates)} registers (+{len(couplings)} coupled setters); "
               f"{len(gate_report['not_encoded'])} not encoded")

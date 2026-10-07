@@ -46,29 +46,35 @@ recovered = [
   "datasheet_text": "This register must be initialized by software.",
   "model": "gpt-5.2"},
 ]
-# compute enforceability for the recovered ones from a minimal valid object
-def enf(reg, kind, text):
+# Build the full grammar-v2 object for each recovered constraint — ONE source of
+# truth, used both to compute enforceability for constraints_found AND to emit
+# config/recovered_constraints.json (the gating input that s4_emit_hal.py --gated
+# --extra-constraints folds in, so the gated HAL encodes the combined set).
+def recovered_obj(reg, kind, text):
     if kind == "state_gate":
-        obj = {"kind": "state_gate", "severity": "error", "consequence": "",
-               "datasheet_text": text, "target_register": reg, "target_fields": [],
-               "target_operation": "write",
-               "preconditions": [{"register": "RXCTRL", "field": "RXEN",
-                                  "state": "cleared", "established_by": "software",
-                                  "action_operation": "modify"}], "postconditions": []}
-    elif kind == "value_relation":
-        obj = {"kind": "value_relation", "severity": "warning", "consequence": "",
-               "datasheet_text": text,
-               "fields": [{"register": reg, "field": "LEN"}]}
-    else:
-        obj = {"kind": "other", "severity": "warning", "consequence": "",
-               "datasheet_text": text, "description": text,
-               "involved": [{"register": reg, "field": "0"}]}
-    return defs.derive_enforceability(adapter.validate_python(obj))
+        return {"kind": "state_gate", "severity": "error", "consequence": "",
+                "datasheet_text": text, "target_register": reg, "target_fields": [],
+                "target_operation": "write",
+                "preconditions": [{"register": "RXCTRL", "field": "RXEN",
+                                   "state": "cleared", "established_by": "software",
+                                   "action_operation": "modify"}], "postconditions": []}
+    if kind == "value_relation":
+        return {"kind": "value_relation", "severity": "warning", "consequence": "",
+                "datasheet_text": text,
+                "fields": [{"register": reg, "field": "LEN"}]}
+    return {"kind": "other", "severity": "warning", "consequence": "",
+            "datasheet_text": text, "description": text,
+            "involved": [{"register": reg, "field": "0"}]}
 
+recovered_full = []    # s3-format accepted entries for the gating input
 for r in recovered:
-    r["enforceability"] = enf(r["register"], r["kind"], r["datasheet_text"])
+    c = adapter.validate_python(recovered_obj(r["register"], r["kind"], r["datasheet_text"]))
+    r["enforceability"] = defs.derive_enforceability(c)
     r["source"] = f"recovered via --constraint-recall pass ({r.pop('model')}), schema-valid"
     found.append(r)
+    recovered_full.append({"register": r["register"],
+                           "enforceability": r["enforceability"],
+                           "constraint": c.model_dump()})
 
 # --- accounting: everything the extraction FOUND vs. what was kept ---
 #   found   = r006 raw (accepted + schema-rejected) + recovered in the later run
@@ -95,6 +101,19 @@ out = {"_generated_by": GENERATED_BY,
        "n_recovered": len(recovered), "constraints": found}
 os.makedirs(REPORTS, exist_ok=True)
 json.dump(out, open(os.path.join(REPORTS, "constraints_found.json"), "w"), indent=2)
+
+# --- the gating input: the recovered constraints as grammar-v2 objects, so the
+#     combined-set gated HAL is reproducible (committed) without re-running the
+#     recall pass. s4_emit_hal.py --gated --extra-constraints folds these in. ---
+CONFIG = os.path.join(HERE, "config")
+rec_out = {"_generated_by": GENERATED_BY,
+           "note": "The recovered constraints as grammar-v2 objects, folded into "
+                   "the gated codegen via s4_emit_hal.py --gated --extra-constraints "
+                   "config/recovered_constraints.json. Committed so the combined-set "
+                   "(9-constraint) gated HAL is reproducible. Regenerate with: "
+                   "python3 " + GENERATED_BY,
+           "constraints": recovered_full}
+json.dump(rec_out, open(os.path.join(CONFIG, "recovered_constraints.json"), "w"), indent=2)
 
 # --- also render the committed .md (same generator, so both stay in sync) ---
 md = []
