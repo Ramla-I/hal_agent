@@ -81,9 +81,11 @@ registers — the last 3 needed model escalation, not more context).
    receiver is not enabled … RXCTRL.RXEN = 0b" (enforceability
    *action_witnessed*). `rx_init` ends by enabling the receiver, then
    `enable_rss` (lib.rs:912) writes `rxcsum` — and MRQC/RSSRK/RETA — with no
-   re-disable. Same configure-after-enable root cause as the FCTRL promiscuous
-   bug; Theseus-only (ixy/Redox/RedLeaf don't configure RXCSUM). The 9th bug,
-   and a direct demonstration that improving constraint recall yields new bugs.
+   re-disable: a genuine configure-after-enable bug. (Contrast ixy/Redox, whose
+   FCTRL filter writes sit *inside* `init_rx`'s RXEN-disabled window and are
+   therefore compliant — see the false-positive note below.) Theseus-only
+   (ixy/Redox/RedLeaf don't configure RXCSUM); a new bug surfaced by the recall
+   improvement, and a direct demonstration that improving recall yields new bugs.
 3. **RDH/TDH: datasheet RO vs. required init write.** The compile surfaced the
    contradiction; TDH's own description contains the authorization ("only
    after a reset and before enabling"), which the constraint layer turns into
@@ -98,6 +100,16 @@ registers — the last 3 needed model escalation, not more context).
 5. **Datasheet-internal inconsistencies** (from the two-source cross-check):
    GPRC/GPTC access codes swapped between summary and detail; EITR second
    range printed as `n=24...128`.
+6. **FCTRL gate false positive (not a bug), and the method limitation it
+   exposes.** The FCTRL write-while-`RXEN=0` gate fires at ixy's and Redox's
+   `set_promisc` FCTRL writes, but neither is a bug: both `init_rx`s clear
+   RXCTRL.RXEN just before the write and re-enable it just after, and
+   `set_promisc` is private and only called there. The whole-register witness is
+   **local to the write site** and can't see a precondition established in the
+   enclosing function, so it flags a compliant write. This is exactly why
+   Theseus's RXCSUM (finding 2) *is* a bug — there the enclosing scope leaves
+   RXEN set. Bug count excludes these two; the ports still thread the witness
+   (redundant but valid).
 
 ## Constraint encoding (the safety the hand-written HAL lacks)
 
@@ -106,11 +118,11 @@ registers — the last 3 needed model escalation, not more context).
 > constraint-recall improvement (RXCSUM, RDLEN, TDLEN, DAQF, SDPQF) in a later run. The
 > **5 dropped** (EICR, EITR, RETA, RTTDCS, SW_FW_SYNC) failed grammar-v2 schema parsing;
 > the **34 kept** (29 canonical + 5 recovered) are recorded in
-> **`reports/constraints_found.{md,json}`**. Improving constraint recall also surfaced a **9th driver bug**: the
+> **`reports/constraints_found.{md,json}`**. Improving constraint recall also surfaced a **new driver bug**: the
 > recovered RXCSUM `state_gate` ("write only when RXCTRL.RXEN=0b", enforceability
 > *action_witnessed*) is violated by **Theseus** — `rx_init` enables the receiver, then
-> `enable_rss` writes RXCSUM (and the RSS block) with no re-disable; same configure-after-
-> enable root cause as the FCTRL promiscuous bug. ixy/Redox/RedLeaf don't configure RXCSUM.
+> `enable_rss` writes RXCSUM (and the RSS block) with no re-disable (a genuine
+> configure-after-enable bug). ixy/Redox/RedLeaf don't configure RXCSUM.
 
 
 Of the **39 constraints found** (34 in run r006 + 5 recovered later), **5 were
@@ -130,7 +142,7 @@ expose only `write(value, &Witness)`.
 | Register | Constraint | Encoding |
 |---|---|---|
 | FCTRL | write only while RXCTRL.RXEN=0 | whole-register witness (`RxctrlRxenCleared`: establish clears RXEN, release re-enables) |
-| RXCSUM | write only while RXCTRL.RXEN=0 (recovered constraint; = bug #9) | whole-register witness (same `RxctrlRxenCleared`); the constraint that *found* bug #9 is now an *enforced* gate |
+| RXCSUM | write only while RXCTRL.RXEN=0 (recovered constraint; = finding 2) | whole-register witness (same `RxctrlRxenCleared`); the constraint that *found* the RXCSUM bug is now an *enforced* gate |
 | TDH | write only after reset, before TXDCTL.ENABLE | whole-register witness (`TxdctlEnableCleared`; minting clears ENABLE — the type forces the precondition) |
 | EEC | EE_SK/EE_CS/EE_DI/EE_REQ usable only when EE_GNT=1 (hardware-established) | field gate + **check-minted state witness**: `check_ee_gnt() -> Option<EecEeGntSet>` |
 | EIAM | Auto Mask bits require GPIE.EIAME set | field gate + set-mode action witness (`GpieEiameSet::establish`, no release — condition must persist) |
@@ -152,10 +164,10 @@ constructors).
 fails with **10 errors at 10 sites — every one a datasheet-relevant write**
 (fctrl, set_tdh, the two CRC-strip lines + the RDRXCTL RSCFRSTSIZE line, the
 second hlreg0 site, both dmatxctl TE toggles, eiac, and **rxcsum** — the gate
-from the recovered constraint, = finding 2/bug #9). The adoption diff is
+from the recovered constraint, = finding 2, the RXCSUM bug). The adoption diff is
 **2 files, +40/−18** — and it *deletes the CRC-strip bug*: the two independent
 ORs (one with the wrong bit) become one `set_rxcrcstrp_crcstrip(..., true)`
-call, so finding 1 cannot be re-introduced; it also *fixes bug #9* by moving the
+call, so finding 1 cannot be re-introduced; it also *fixes the RXCSUM bug (finding 2)* by moving the
 RSS/RXCSUM config into a witness window where RXCTRL.RXEN is cleared. After the
 diff, `cargo check` and `cargo build` are green.
 

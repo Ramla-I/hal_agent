@@ -58,9 +58,13 @@ polls had matched their embedded `write_reg` and been misread as writes.)
 
 ## What the retrofit exposed in the foreign drivers (leads)
 
-1. **ixy toggles promiscuous mode by rewriting FCTRL while the receiver is
-   live** — the datasheet requires RXEN=0 around filter updates. The gate
-   would not compile it; the port adds the disable/re-enable window.
+1. **FCTRL gate false positive (not a bug).** The FCTRL write-while-`RXEN=0`
+   gate fires at ixy's `set_promisc` FCTRL write, but it is **not** a bug:
+   `init_rx` clears RXCTRL.RXEN just before the write and re-enables it just
+   after (`set_promisc` is private and only called there). The whole-register
+   witness is local to the write site and can't see the precondition established
+   in the enclosing function, so it flags a compliant write; the port threads
+   the witness anyway (redundant but valid). Same story in Redox.
 2. **ixy's `set_reg32(IXGBE_DMATXCTL, TE)` is an absolute write that zeroes
    DMATXCTL.VT** (the 802.3ac tag, default 0x8100, documented "must not
    change"; Linux does a read-modify-write here). The hold-encoding
@@ -79,8 +83,9 @@ polls had matched their embedded `write_reg` and been misread as writes.)
 ## Demonstrated: the Redox ixgbed port (`port_redox.py`, 67 asserted replacements)
 
 Same shape as ixy: the four offset helpers deleted, seven typed casts, all 52+
-sites ported, witnesses threaded (RXEN window over rx-init and both
-promiscuous toggles — Redox also rewrote FCTRL with the receiver live; TDH
+sites ported, witnesses threaded (RXEN window over rx-init — Redox's FCTRL
+writes sit inside that disabled window too, so the gate firing there is the
+same false positive as ixy, not a bug; TDH
 witness; CRC-strip coupling; EIAC clamp; **DMATXCTL hold — Redox has ixy's
 exact absolute `DMATXCTL = TE` write, so the VT-clobber bug exists in a second
 driver and is auto-repaired the same way**; RedLeaf's domain driver carries the
