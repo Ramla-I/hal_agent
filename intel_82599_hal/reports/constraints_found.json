@@ -1,5 +1,6 @@
 {
-  "note": "Final 82599 constraints list (committed snapshot). Canonical run r006 grammar-valid constraints + the 5 recovered by the constraint-recall improvement. Schema-valid + computed enforceability; NOT run through the LLM constraint validator.",
+  "_generated_by": "pipeline/build_constraints_list.py",
+  "note": "Final 82599 constraints list (committed snapshot). Canonical run r006 grammar-valid constraints + the 5 recovered by the constraint-recall improvement. Schema-valid + computed enforceability; NOT run through the LLM constraint validator. Regenerate with: python3 pipeline/build_constraints_list.py",
   "n_total": 34,
   "n_canonical": 29,
   "n_recovered": 5,

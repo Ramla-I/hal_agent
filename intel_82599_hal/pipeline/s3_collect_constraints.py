@@ -1,13 +1,33 @@
 #!/usr/bin/env python3
-"""Step 3 — collect + lint the extracted 82599 access constraints.
+"""Step 3 (s3) — collect + grammar-validate the extracted 82599 access
+constraints from a generation run.
 
-Per register JSON of a run: pydantic-parse each access_constraints_v2 entry
-against the grammar (defs.ConstraintV2) with PER-CONSTRAINT recovery (a bad
-constraint is rejected with its error, never aborting the register), then
-compute enforceability (defs.derive_enforceability — computed, never
-LLM-emitted). Output: constraints/<run>_constraints.json + a printed table.
+For every register JSON in register_info/<run>/, take each access_constraints_v2
+entry and:
+  1. pydantic-parse it against the grammar-v2 discriminated union
+     (defs.ConstraintV2), with PER-CONSTRAINT recovery — a malformed entry is
+     REJECTED with its validation error and recorded, never aborting the
+     register or the run (so one bad constraint can't lose the register's good
+     ones);
+  2. compute its enforceability class (defs.derive_enforceability —
+     action_witnessed / state_witnessed / dynamic_check / doc_only; COMPUTED
+     from kind + structure, never emitted by the model);
+  3. tag it with in_driver_set (whether the register is one the Theseus driver
+     actually touches), joined from targets/registers_join.json.
 
-Usage: python3 collect_constraints_intel.py r006
+This is SCHEMA validation only. It does NOT run the LLM Constraint Validator
+(quote anchoring + target-location gate + closed-book judge in
+core/constraint_validator.py) — that semantic pass was not wired for the Intel
+case study (see reports/results.md).
+
+Output: constraints/<run>_constraints.json ({n_accepted, n_rejected, accepted[],
+rejected[]}) + a printed table. That file is gitignored scratch and consumed
+downstream by:
+  - s4_emit_hal.py --gated  (selects which state_gates become witness gates);
+  - build_constraints_list.py (promotes the durable committed record
+    reports/constraints_found.{json,md}).
+
+Usage: python3 s3_collect_constraints.py r006
 """
 import json
 import os
