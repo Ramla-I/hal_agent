@@ -70,7 +70,8 @@ export OPENAI_API_KEY=...   # the gpt-5.2 escalation / fallback
 
 cd pipeline
 $VENV s1_enumerate_targets.py                       # targets/ (committed)
-$VENV s2_generate.py --registers ctrl               # one register (smoke test; --dry-run = no LLM)
+$VENV s2_generate.py --registers ctrl               # one-register smoke test — CALLS the LLM (gpt-oss-120b)
+$VENV s2_generate.py --registers ctrl --dry-run     # retrieval only, NO LLM (just saves the context)
 $VENV s2_generate.py                                # all 75; then --auto-complete rNNN for the retry loop
 $VENV s3_collect_constraints.py rNNN          # grammar-valid constraints + enforceability
 $VENV s4_emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs
