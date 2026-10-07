@@ -10,7 +10,10 @@ register_name is the Table 8-2 abbreviation base. Config for RECALL, not
 precision: low-confidence specs are kept; nothing is dropped here.
 
 RETRY MACHINERY (the base pass batches for cost, which can truncate/omit a
-register; completion passes repair those, in escalating tiers):
+register; completion passes repair those, in escalating tiers). NOT automatic:
+a bare run does ONLY the single base pass. Completion is an explicit follow-up
+step on a prior run — unlike the MCU generator (core/s1a_generator.py), which
+folds its empty-subfield retry into the main run. Invoke one of:
 
   --complete-from <run>   ONE completion pass: copy <run> into a fresh run and
       re-generate the registers a trigger flags, with full-page context
