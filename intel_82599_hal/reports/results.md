@@ -72,17 +72,27 @@ registers — the last 3 needed model escalation, not more context).
    derived-vs-reference constant disagreement; our extraction also captured
    the consistency rule itself as a `value_relation` constraint on both
    registers. The generated HAL's field-derived constant silently repairs it.
-2. **RDH/TDH: datasheet RO vs. required init write.** The compile surfaced the
+2. **Theseus bug — RXCSUM (and the RSS block) written while the receiver is
+   enabled.** Found by re-scanning the drivers against a constraint the first
+   extraction missed and the recall improvement recovered: RXCSUM's
+   `state_gate` "This register should only be initialized (written) when the
+   receiver is not enabled … RXCTRL.RXEN = 0b" (enforceability
+   *action_witnessed*). `rx_init` ends by enabling the receiver, then
+   `enable_rss` (lib.rs:912) writes `rxcsum` — and MRQC/RSSRK/RETA — with no
+   re-disable. Same configure-after-enable root cause as the FCTRL promiscuous
+   bug; Theseus-only (ixy/Redox/RedLeaf don't configure RXCSUM). The 9th bug,
+   and a direct demonstration that improving constraint recall yields new bugs.
+3. **RDH/TDH: datasheet RO vs. required init write.** The compile surfaced the
    contradiction; TDH's own description contains the authorization ("only
    after a reset and before enabling"), which the constraint layer turns into
    the witness-gated write — a more faithful type than either the reference's
    plain `Volatile` or naive RO typing.
-3. **Grammar-as-validator:** 5 of 34 raw constraints were rejected by strict
+4. **Grammar-as-validator:** 5 of 34 raw constraints were rejected by strict
    schema parsing; one rejection caught a real misattribution — FWSM's "only
    firmware may write this register" note attached to SW_FW_SYNC (the register
    the driver's semaphore protocol must write). A lenient collector would have
    produced a false driver-breaking gate.
-4. **Datasheet-internal inconsistencies** (from the two-source cross-check):
+5. **Datasheet-internal inconsistencies** (from the two-source cross-check):
    GPRC/GPTC access codes swapped between summary and detail; EITR second
    range printed as `n=24...128`.
 
