@@ -3,7 +3,7 @@
   "grades": {
     "AGREE": 402,
     "MISSED": 9,
-    "POS_FLAG": 4
+    "SPURIOUS": 4
   },
   "unparsed": [],
   "rows": [
@@ -3421,7 +3421,7 @@
       "lo": 27,
       "hi": 27,
       "reserved": true,
-      "grade": "POS_FLAG",
+      "grade": "SPURIOUS",
       "ds_names": []
     },
     {
@@ -3430,7 +3430,7 @@
       "lo": 28,
       "hi": 28,
       "reserved": false,
-      "grade": "POS_FLAG",
+      "grade": "SPURIOUS",
       "ds_names": []
     },
     {
@@ -3439,7 +3439,7 @@
       "lo": 29,
       "hi": 31,
       "reserved": true,
-      "grade": "POS_FLAG",
+      "grade": "SPURIOUS",
       "ds_names": []
     },
     {
@@ -4064,7 +4064,7 @@
       "lo": 30,
       "hi": 30,
       "reserved": false,
-      "grade": "POS_FLAG",
+      "grade": "SPURIOUS",
       "ds_names": []
     },
     {
