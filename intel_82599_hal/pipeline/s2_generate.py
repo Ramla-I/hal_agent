@@ -71,6 +71,22 @@ TARGETS = os.path.join(HERE, "targets")
 OUT_BASE = os.path.join(HERE, "register_info")
 
 
+def _tok_detail(u, outer, inner):
+    """Read a nested usage detail (e.g. input_tokens_details.cached_tokens or
+    output_tokens_details.reasoning_tokens) robustly — attribute or dict, and
+    None when the provider doesn't report it (Groq may omit these; OpenAI
+    Responses gives them)."""
+    o = getattr(u, outer, None)
+    if o is None and isinstance(u, dict):
+        o = u.get(outer)
+    if o is None:
+        return None
+    v = getattr(o, inner, None)
+    if v is None and isinstance(o, dict):
+        v = o.get(inner)
+    return v
+
+
 def sha256_file(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -335,8 +351,9 @@ def run_generation(regs, run_tag, out_dir, info_dir, *, model, max_output_per_re
     usage_f = open(usage_path, "a", newline="")
     usage_w = csv.writer(usage_f)
     if new_usage:
-        usage_w.writerow(["registers", "model", "input_tokens", "output_tokens",
-                          "total_tokens", "seconds"])
+        usage_w.writerow(["registers", "model", "input_tokens",
+                          "input_cached_tokens", "output_tokens",
+                          "reasoning_tokens", "total_tokens", "seconds"])
 
     n_ok = n_empty = n_fail = 0
     for bi, batch in enumerate(batches):
@@ -378,7 +395,9 @@ def run_generation(regs, run_tag, out_dir, info_dir, *, model, max_output_per_re
         u = getattr(response, "usage", None)
         usage_w.writerow([";".join(labels), used_model,
                           getattr(u, "input_tokens", None),
+                          _tok_detail(u, "input_tokens_details", "cached_tokens"),
                           getattr(u, "output_tokens", None),
+                          _tok_detail(u, "output_tokens_details", "reasoning_tokens"),
                           getattr(u, "total_tokens", None), f"{dt:.1f}"])
         usage_f.flush()
 
