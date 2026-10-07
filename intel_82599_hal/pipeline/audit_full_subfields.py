@@ -17,9 +17,9 @@ single bit, merging continuation tables across page-break headers.
 Join (by bit position, the unambiguous key):
   - AGREE      extracted (lo,hi) equals a datasheet row's (lo,hi) [+ name check]
   - NAME_DIFF  same (lo,hi) present, but names disagree -> adjudicate
-  - SPURIOUS   extracted (lo,hi) matches no datasheet row -> a field the
-               datasheet does not define at those bits (precision-side
-               counterpart to MISSED), e.g. RDRXCTL.Drop_En; adjudicate
+  - ONLY_EXTRACTION  extracted (lo,hi) matches no datasheet row -> a field
+               present ONLY in the extraction, not the datasheet (the
+               precision-side counterpart to MISSED), e.g. RDRXCTL.Drop_En
   - MISSED     datasheet field row with no extracted field at those bits (recall)
 
 Registers whose field table the parser cannot locate are listed as
@@ -120,7 +120,7 @@ def main():
                           and (norm(n) in norm(dn) or norm(dn) in norm(n))) for dn in names)
                 grade = "AGREE" if (hit or reserved) else "NAME_DIFF"
             else:
-                grade = "SPURIOUS"
+                grade = "ONLY_EXTRACTION"
             rows.append({"reg": reg, "name": n, "lo": lo, "hi": hi,
                          "reserved": reserved, "grade": grade,
                          "ds_names": ds_by_bits.get((lo, hi), [])})
@@ -139,7 +139,7 @@ def main():
     print(f"run {RUN}: parsed field tables for {scored_regs} registers; "
           f"{len(unparsed)} unparsed")
     print(f"grades: {dict(g)}")
-    for grade in ("SPURIOUS", "NAME_DIFF", "MISSED"):
+    for grade in ("ONLY_EXTRACTION", "NAME_DIFF", "MISSED"):
         flagged = [r for r in rows if r["grade"] == grade]
         if flagged:
             print(f"\n--- {grade} ({len(flagged)}) ---")
