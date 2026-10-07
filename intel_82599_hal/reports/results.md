@@ -89,8 +89,9 @@ registers — the last 3 needed model escalation, not more context).
    after a reset and before enabling"), which the constraint layer turns into
    the witness-gated write — a more faithful type than either the reference's
    plain `Volatile` or naive RO typing.
-4. **Grammar-as-validator:** 5 of 34 raw constraints were rejected by strict
-   schema parsing; one rejection caught a real misattribution — FWSM's "only
+4. **Grammar-as-validator:** 5 of the 34 constraints found in run r006 were
+   rejected by strict schema parsing (EICR, EITR, RETA, RTTDCS, SW_FW_SYNC);
+   one rejection caught a real misattribution — FWSM's "only
    firmware may write this register" note attached to SW_FW_SYNC (the register
    the driver's semaphore protocol must write). A lenient collector would have
    produced a false driver-breaking gate.
@@ -100,25 +101,29 @@ registers — the last 3 needed model escalation, not more context).
 
 ## Constraint encoding (the safety the hand-written HAL lacks)
 
-> **Durable list + update (2026-10-07).** All constraints found are now recorded in
-> **`reports/constraints_found.{md,json}`** — the 29 grammar-valid from run r006 **plus
-> 5 recovered** by the constraint-recall improvement (RXCSUM, RDLEN, TDLEN, DAQF, SDPQF),
-> **34 total**. Improving constraint recall also surfaced a **9th driver bug**: the
+> **Durable list + update (2026-10-07).** **39 access constraints were found** in total —
+> 29 grammar-valid + 5 schema-dropped in run r006, plus **5 recovered** by the
+> constraint-recall improvement (RXCSUM, RDLEN, TDLEN, DAQF, SDPQF) in a later run. The
+> **5 dropped** (EICR, EITR, RETA, RTTDCS, SW_FW_SYNC) failed grammar-v2 schema parsing;
+> the **34 kept** (29 canonical + 5 recovered) are recorded in
+> **`reports/constraints_found.{md,json}`**. Improving constraint recall also surfaced a **9th driver bug**: the
 > recovered RXCSUM `state_gate` ("write only when RXCTRL.RXEN=0b", enforceability
 > *action_witnessed*) is violated by **Theseus** — `rx_init` enables the receiver, then
 > `enable_rss` writes RXCSUM (and the RSS block) with no re-disable; same configure-after-
 > enable root cause as the FCTRL promiscuous bug. ixy/Redox/RedLeaf don't configure RXCSUM.
 
 
-34 raw constraints → 29 grammar-valid across 26 registers. Encoding is
-**field-level by default** (a case-study extension of the settled 4-class
+Of the **39 constraints found** (34 in run r006 + 5 recovered later), **5 were
+dropped** for grammar-v2 schema inconsistency, leaving **34 kept**; the gated
+emitter encodes over run r006's **29 grammar-valid** constraints across 26
+registers. Encoding is **field-level by default** (a case-study extension of the settled 4-class
 enforceability taxonomy, which stays untouched in `defs.py`): a gated register
 loses its raw `write()` — it exposes `write_preserving()` (structurally cannot
 change protected bits; never-set bits forced to 0) plus, where a witness
 exists, `write_full(value, &Witness)`; whole-register gates (`target_fields=[]`)
 expose only `write(value, &Witness)`.
 
-**8 of 29 constraints encoded, on 8 registers:**
+**8 of those 29 encoded, on 8 registers:**
 
 | Register | Constraint | Encoding |
 |---|---|---|

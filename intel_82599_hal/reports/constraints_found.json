@@ -1,7 +1,17 @@
 {
   "_generated_by": "pipeline/build_constraints_list.py",
-  "note": "Final 82599 constraints list (committed snapshot). Canonical run r006 grammar-valid constraints + the 5 recovered by the constraint-recall improvement. Schema-valid + computed enforceability; NOT run through the LLM constraint validator. Regenerate with: python3 pipeline/build_constraints_list.py",
+  "note": "Final 82599 constraints list (committed snapshot). 39 constraints were FOUND across both runs (29 grammar-valid + 5 schema-rejected in canonical run r006, plus 5 recovered in the later constraint-recall run). 5 were DROPPED for grammar-v2 schema inconsistency (EICR, EITR, RETA, RTTDCS, SW_FW_SYNC). The 34 KEPT (listed here) are schema-valid with computed enforceability; they were NOT run through the LLM constraint validator. Regenerate with: python3 pipeline/build_constraints_list.py",
+  "n_found": 39,
+  "n_dropped": 5,
+  "dropped_registers": [
+    "EICR",
+    "EITR",
+    "RETA",
+    "RTTDCS",
+    "SW_FW_SYNC"
+  ],
   "n_total": 34,
+  "n_kept": 34,
   "n_canonical": 29,
   "n_recovered": 5,
   "constraints": [
