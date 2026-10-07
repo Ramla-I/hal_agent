@@ -134,9 +134,10 @@ expose only `write(value, &Witness)`.
 `emit_report.json`): 7 `read_effect` + 6 `other` + CTRL's bare delay are
 doc/runtime-tier by the computed taxonomy; 5 `value_relation`s whose semantics
 live in the value (RDBAL/TDBAL 128-byte alignment, SRRCTL and EITR
-conditionals, FCRTH inequality) are invisible at `u32` granularity — they need
-typed value builders (runtime-checked constructors) and stay runtime-tier; 1
-`state_gate` shape (TXDCTL's WTHRESH note arrived as `other`) fits no rule.
+conditionals, FCRTH inequality) are invisible at `u32` granularity and are
+**not encoded — no runtime check is emitted** (enforcing them would need typed
+value builders, i.e. runtime-checked constructors); 1 `state_gate` shape
+(TXDCTL's WTHRESH note arrived as `other`) fits no rule.
 
 **Enforcement demonstrated:** the *unmodified* driver against the gated HAL
 fails with **9 errors at 9 sites — every one a datasheet-relevant write**
@@ -146,11 +147,35 @@ dmatxctl TE toggles, eiac). The adoption diff is **2 files, +27/−15** — and 
 become one `set_rxcrcstrp_crcstrip(..., true)` call, so finding 1 cannot be
 re-introduced. After the diff, `cargo check` and `cargo build` are green.
 
-Honest limits: witnesses are type-level, not instance-bound (a witness token minted
-for queue 3 type-checks a write to queue 5); minting/checking still reads
-hardware at runtime (TOCTOU parity with a correct handwritten driver, as
-settled for the MCU arm); the AUTOC SW/FW-semaphore protocol remains doc-only
-because §10.5.4 is outside the register chapter in our source md.
+Honest limits (all reported by the emitter, never silently assumed — see the
+`KNOWN LIMITATIONS` block in `s4_emit_hal.py`):
+- **Register provenance (#1).** In the default emitter an establish-minted
+  witness mints from any `&mut Volatile<u32>` the caller *claims* is the
+  prerequisite register — the type does not prove it is the right register. A
+  variant emitter, `s4b_emit_hal_minted.py`, closes the register-**type** hole:
+  it mints each witness through the prerequisite register's own newtype (a
+  non-gated prerequisite becomes a `<Reg>Minter`; a gated one folds the minter
+  into its `Gated*` impl), so only that register can produce the token. This
+  variant **compiles green** against Theseus (the generated HAL itself builds —
+  layout asserts pass — and the driver adoption is the gated diff plus exactly 3
+  one-for-one lines: `RxctrlRxenCleared::establish(&mut regs.rxctrl)` becomes
+  `regs.rxctrl.clear_rxen()`, same for TDH/TXDCTL, and the release;
+  `driver_diff_gated_minted.patch`). Register-**instance**/device binding
+  (branded lifetimes) and TOCTOU (a retained borrow) remain future work; minting
+  and checking still read hardware at runtime (TOCTOU parity with a correct
+  handwritten driver, as settled for the MCU arm). Witnesses are still
+  type-level, not queue-instance-bound (a token minted for queue 3 type-checks a
+  write to queue 5).
+- **Single witness slot (#2)** and **uninstantiable check witness (#3).** Each
+  gated register carries one witness token type; a second, different witness and
+  a check witness whose prerequisite register is not itself gated are both
+  detected and recorded (`witness_conflicts`, `uninstantiable_witnesses` in
+  `emit_report.json`) rather than silently mis-encoded — neither fires on r006.
+- **Coupled setter atomicity (#4).** A coupled relation setter is two separate
+  volatile writes; the two registers are momentarily unequal between them. The
+  invariant holds at rest, not continuously.
+- The AUTOC SW/FW-semaphore protocol remains doc-only because §10.5.4 is outside
+  the register chapter in our source md.
 
 ## Reproduction
 
@@ -164,10 +189,12 @@ python3 s2_generate.py --complete-from rNNN+2 --model gpt-5.2 --extra-pages 4 --
 python3 s3_collect_constraints.py rFINAL
 python3 s4_emit_hal.py rFINAL                   # structural  -> hal_out/rFINAL/regs.rs
 python3 s4_emit_hal.py rFINAL --gated           # constraint  -> hal_out/rFINAL-gated/regs.rs
+python3 s4b_emit_hal_minted.py rFINAL           # provenance  -> hal_out/rFINAL-gated-minted/regs.rs
 # eval: clone theseus-os/Theseus @ 1fbfe567, init submodules, swap regs.rs,
 #   cargo check -p ixgbe -Z unstable-options -Z build-std=core,alloc \
 #     -Z build-std-features=compiler-builtins-mem --target x86_64-unknown-theseus
 # gated config: also apply theseus_retrofit/driver_diff_gated.patch
+# provenance config: swap the -gated-minted regs.rs + apply driver_diff_gated_minted.patch
 ```
 
 Identifiers: runs r003–r006 (per-run `run_manifest.jsonl` with content hashes);
