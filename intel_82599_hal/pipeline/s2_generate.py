@@ -1,23 +1,48 @@
 #!/usr/bin/env python3
-"""Step 2 — generate 82599 register specs from the datasheet.
+"""Step 2 (s2) — generate 82599 register specs from the datasheet.
 
-Per register: vendored evolved retriever (best_program.py, the v6_82599_seed42
-program) -> gpt-oss-120b (Groq) with the Intel prompt variant -> one JSON spec
-per register (structure + access_constraints_v2) under register_info/<run>/.
+Per register: vendored evolved retriever (retriever/best_program.py, the
+v6_82599_seed42 program) -> gpt-oss-120b (Groq) with the Intel prompt variant
+(s2a_prompts_intel.py) -> one JSON spec per register (structure +
+access_constraints_v2) under register_info/<run>/. Calling convention matches
+the retriever's evolution labels: peripheral_name is the literal "82599",
+register_name is the Table 8-2 abbreviation base. Config for RECALL, not
+precision: low-confidence specs are kept; nothing is dropped here.
 
-Calling convention matches the retriever's evolution labels: peripheral_name is
-the literal "82599", register_name is the Table 8-2 abbreviation base.
+RETRY MACHINERY (the base pass batches for cost, which can truncate/omit a
+register; completion passes repair those, in escalating tiers):
 
-Config for RECALL, not precision: low-confidence specs are kept; nothing is
-dropped here. Tunable knobs (recorded in the run manifest): --model,
---batch-size (registers per LLM call; contexts are deduped within a batch),
---max-output-per-reg.
+  --complete-from <run>   ONE completion pass: copy <run> into a fresh run and
+      re-generate the registers a trigger flags, with full-page context
+      expansion (--extra-pages past the retrieved pages). Triggers:
+        structural (always) — a register whose extracted subfields don't span
+          bits 0..31, or whose driver-needed field (config/constants_map.json)
+          is absent;
+        --constraint-recall (optional, off by default) — ALSO a register whose
+          datasheet section shows an access-constraint cue but has no extracted
+          constraint (via s2b_scan_constraints). Over-inclusive by design; the
+          re-gen model + the constraint validator drop benign cues.
+
+  --auto-complete <run>   the self-escalating LOOP that runs those passes
+      automatically: escalate the context budget (--auto-pages, default 2,4)
+      while each bump shrinks the incomplete set; on a plateau, escalate to a
+      stronger model (--escalate-model, default gpt-5.2) for exactly the stuck
+      registers whose missing row is ALREADY in the saved context (a generation
+      failure, not retrieval). Bounded: --constraint-recall is applied only on
+      the first page pass, so a benign cue (which never 'clears') can't loop.
+
+Tunable knobs (recorded in each run's hash manifest): --model, --batch-size
+(registers per LLM call; contexts deduped within a batch), --max-output-per-reg,
+--auto-pages, --escalate-model, --extra-pages.
 
 Usage:
-  python3 generate.py --registers rdlen,ctrl,swsm            # smoke test
-  python3 generate.py                                        # all 75 regs.rs targets
-  python3 generate.py --scope driver                         # only the 63 driver-needed
-  python3 generate.py --resume r001                          # fill gaps in a run
+  python3 s2_generate.py --registers rdlen,ctrl,swsm         # smoke test (calls the LLM)
+  python3 s2_generate.py --registers ctrl --dry-run          # retrieval only, no LLM
+  python3 s2_generate.py                                     # all 75 regs.rs targets
+  python3 s2_generate.py --scope driver                      # only the 63 driver-needed
+  python3 s2_generate.py --resume r001                       # fill gaps in a run
+  python3 s2_generate.py --complete-from r003                # one structural completion pass
+  python3 s2_generate.py --auto-complete r003 --constraint-recall   # full self-escalating loop
 """
 import argparse
 import csv
