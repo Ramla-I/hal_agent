@@ -60,8 +60,8 @@
 <tr><td>s32k1xx</td><td>A modern Kinetis</td><td class="n">3619</td><td class="n">97%</td><td class="n">51</td><td class="n">30</td><td class="n">52</td><td class="n">200</td></tr>
 <tr><td>ke04</td><td>B classic Kinetis</td><td class="n">223</td><td class="n">97%</td><td class="n">91</td><td class="n">54</td><td class="n">91</td><td class="n">43</td></tr>
 <tr><td>k64</td><td>B classic Kinetis</td><td class="n">1966</td><td class="n">98%</td><td class="n">76</td><td class="n">23</td><td class="n">79</td><td class="n">210</td></tr>
-<tr><td>lpc55s69</td><td>D modern NXP</td><td class="n">3251</td><td class="n">94%</td><td class="n">48</td><td class="n">41</td><td class="n">24</td><td class="n">17</td></tr>
-<tr><td>mimxrt685s</td><td>D modern NXP (i.MX RT)</td><td class="n">3589</td><td class="n">98%</td><td class="n">45</td><td class="n">34</td><td class="n">47</td><td class="n">82</td></tr>
+<tr><td>lpc55s69</td><td>D modern NXP</td><td class="n">3251</td><td class="n">94%</td><td class="n">50</td><td class="n">41</td><td class="n">24</td><td class="n">17</td></tr>
+<tr><td>mimxrt685s</td><td>D modern NXP (i.MX RT)</td><td class="n">3589</td><td class="n">98%</td><td class="n">48</td><td class="n">34</td><td class="n">47</td><td class="n">82</td></tr>
 <tr><td>mk20d7</td><td>B classic Kinetis</td><td class="n">1594</td><td class="n">98%</td><td class="n">79</td><td class="n">28</td><td class="n">80</td><td class="n">211</td></tr>
 <tr><td>mk20d5 <span class="muted">(sibling)</span></td><td>B classic Kinetis</td><td class="n">819</td><td class="n">95%</td><td class="n">91</td><td class="n">33</td><td class="n">93</td><td class="n">188</td></tr>
 <tr><td>ke04_old <span class="muted">(sibling)</span></td><td>B classic Kinetis</td><td class="n">223</td><td class="n">97%</td><td class="n">94</td><td class="n">46</td><td class="n">95</td><td class="n">61</td></tr>
@@ -77,12 +77,13 @@
 <tr><td>Generator concurrency + OE store-build lock + smart retry</td><td><code>--generator-concurrency</code> thread-pools batches (3.6× on test); k32l3a &gt;3h timeout → ~93 min; every giant now completes. Default 1 = unchanged.</td></tr>
 <tr><td>Cross-chunk summary-fill (Step 2b)</td><td>lpc845 (Group C) address 85→93%. Group-C-only (no-op on A/B — generator already has the values).</td></tr>
 <tr><td>Array reconciliation (Step 2c)</td><td>Clone absent array instances from a produced sibling + stride-shift the offset. Recovered <strong>243 registers</strong>, 0 wrong offsets; register coverage → 94–100%.</td></tr>
+<tr><td>Group D caption-offset fill (Step 2b2)</td><td>Parse <code>(NAME[,:] offset=0x..)</code> table captions (Group D has no summary table), peripheral-scoped. lpc55s69 48→50%, mimxrt685s 46→48% address, 0 wrong. Modest — most null-offset Group D registers have no caption in the retrieved chunks.</td></tr>
 <tr><td>Discovery-tool join fix</td><td>The measurement correction above — coverage now computed against the generator's own enumeration.</td></tr>
 </table>
 
 <h2>The real finding: offsets are already solved; the plan changed</h2>
 <p>
-We began with a per-family plan (a Group B absolute→offset adapter "covering 5 devices," a Group D caption parser) and, after the first measurement, thought array reconciliation was the top lever. <strong>All three were wrong once measured correctly.</strong> The generator extracts offsets itself in every family (Group C 92%, B 76–91%, A 51–63%, D 45–48%), finds 94–100% of registers, and the adapters/parser are unnecessary. Array reconciliation is real but small (recovers ~243 of 18k registers). Per-device discovery — and fixing the discovery's own join bug — is what kept us from building the wrong things.
+We began with a per-family plan (a Group B absolute→offset adapter "covering 5 devices," a Group D caption parser) and, after the first measurement, thought array reconciliation was the top lever. <strong>All three were wrong once measured correctly.</strong> The generator extracts offsets itself in every family (Group C 91%, B 76–94%, A 51–60%, D 46–48%), finds 94–100% of registers, and the Group B adapter is unnecessary. Array reconciliation (shipped) is real but small (243 of 18k registers); the Group D caption fill (shipped) adds +2pp — a safe supplement, not the required parser we'd imagined. Per-device discovery — and fixing the discovery's own join bug — is what kept us from building the wrong things.
 </p>
 
 <h2>Recommended next work (prioritized, corrected)</h2>
@@ -91,8 +92,8 @@ We began with a per-family plan (a Group B absolute→offset adapter "covering 5
 Reset is <strong>23–55% on every device</strong> (worst on classic Kinetis: k64 23%, mk20d7 28%). It's the lowest-coverage field everywhere and affects all registers. Needs a principled per-bit reset assembler (assemble the register reset from the per-bit "Reset value" column; the blind zero-default was rejected earlier, +82 wrong). Biggest remaining lever.
 </div>
 <div class="pri">
-<h3>2. Group D offsets + size</h3>
-lpc55s69 / mimxrt685s caption-style offsets are only <strong>~47%</strong> and size <strong>24–47%</strong> — the one place the generator clearly underperforms on structure. Worth investigating the retrieval/prompt for caption-style register sections (a caption-aware pass, now that the data shows it's warranted).
+<h3>2. Group D offsets + size — partially addressed</h3>
+lpc55s69 / mimxrt685s offsets were ~47% and size 24–47%. The caption-offset fill (Step 2b2) deterministically parses the table captions and lifted offsets to 50% / 48% (0 wrong). That's only +2pp: most null-offset Group D registers have <em>no</em> caption or summary in the retrieved chunks — so the remaining gap is <strong>retrieval coverage</strong> (the chunk carrying a register's offset isn't fetched for it), a separate, larger effort than a parse. Size is untouched and remains the lowest Group-D axis.
 </div>
 <div class="pri">
 <h3>3. Scatter recovery (batch-failure resume)</h3>
@@ -108,7 +109,7 @@ Generator emits <code>read_effect</code> without the required <code>consequence<
 <li><strong>Group A (k32l3a, s32k1xx):</strong> constraint-rich (176, 200); address moderate (51–63%); array reconciliation + reset the gaps.</li>
 <li><strong>Group B (ke04, k64, mk20d7):</strong> best offset/size (76–91%), very constraint-rich (43, 210, 211); <strong>worst reset</strong> (23–28% on the big ones). No adapter needed.</li>
 <li><strong>Group C (lpc845):</strong> the one device the summary-fill helps (85→93% address); strong offsets.</li>
-<li><strong>Group D (lpc55s69, mimxrt685s):</strong> generator reads caption offsets but only to ~47%, size ~35% — the weakest structural group; caption-aware retrieval worth trying. No parser retraction needed after all; it under-reads, it doesn't fail.</li>
+<li><strong>Group D (lpc55s69, mimxrt685s):</strong> weakest structural group — offsets 48–50% (after the Step 2b2 caption fill, +2pp), size 24–47%. The caption parse is deterministic and safe but small; the real gap is retrieval coverage (most null-offset registers have no caption/table in their retrieved chunks).</li>
 </ul>
 
 <div class="foot">
