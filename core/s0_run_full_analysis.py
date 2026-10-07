@@ -698,6 +698,14 @@ def run_pipeline_for_device(
             print(f"\n--- Step 2b: NXP summary fill --- filled address_offset="
                   f"{_fs.get('filled_offset', 0)} reset_value={_fs.get('filled_reset', 0)} "
                   f"(of {_fs.get('registers_with_gaps', 0)} registers with gaps)")
+            # Group D (LPC55xx / i.MX RT) has no summary table — offsets live in each
+            # register's table caption "(NAME[,:] offset = 0x..)". Scoped, unambiguous
+            # caption fill; no-op on groups A/B/C (no such captions). Empties only.
+            from nxp_caption_fill import fill_run as caption_fill_run
+            _cf = caption_fill_run(paths.agent_output_dir, _chunks_md)
+            print(f"--- Step 2b2: NXP caption fill --- filled address_offset="
+                  f"{_cf.get('filled_offset', 0)} (of {_cf.get('offset_gaps', 0)} offset gaps, "
+                  f"{_cf.get('caption_names', 0)} captions)")
 
         # -- Step 2c: NXP array reconciliation (deterministic, NXP only) --
         # Recover absent register-array instances (e.g. DMA_TCDn_*, CANn_RAMn) by
