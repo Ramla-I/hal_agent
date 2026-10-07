@@ -1,0 +1,246 @@
+{
+  "note": "Final 82599 constraints list (committed snapshot). Canonical run r006 grammar-valid constraints + the 5 recovered by the constraint-recall improvement. Schema-valid + computed enforceability; NOT run through the LLM constraint validator.",
+  "n_total": 34,
+  "n_canonical": 29,
+  "n_recovered": 5,
+  "constraints": [
+    {
+      "register": "AUTOC",
+      "kind": "other",
+      "enforceability": "doc_only",
+      "datasheet_text": "Note: The 82599 Device Firmware may access AUTOC register in parallel to software driver and a synchronization between them is needed. For more information see Section 10.5.4.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "CTRL",
+      "kind": "delay",
+      "enforceability": "dynamic_check",
+      "datasheet_text": "To ensure that a global device reset has fully completed and that the 82599 responds to subsequent accesses, programmers must wait approximately 1 ms after setting before attempting to check if the bit has cleared or to access (read or write) any other device register.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "CTRL_EXT",
+      "kind": "other",
+      "enforceability": "doc_only",
+      "datasheet_text": "This bit should only be reset by a PCIe reset and should only be changed while Tx and Rx processes are stopped. The exception to this rule are MAC control packets such as flow control, 802.1x, LACP, etc. that never carry a VLAN tag of any type.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "DMATXCTL",
+      "kind": "value_relation",
+      "enforceability": "doc_only",
+      "datasheet_text": "For proper operation, software must not change the default setting of this field (802.3ac standard defines it as 0x8100). This field must be set to the same value as the VET field in the VLNCTRL register.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "EEC",
+      "kind": "state_gate",
+      "enforceability": "state_witnessed",
+      "datasheet_text": "When EE_GNT is set to 1b, the EE_SK output signal is mapped to this bit and provides the serial clock input to the EEPROM. Software must write a 1b to this bit to get direct EEPROM access. It has access when EE_GNT is set to 1b.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "EIAC",
+      "kind": "state_gate",
+      "enforceability": "action_witnessed",
+      "datasheet_text": "Bits 29:20 should never set auto clear since they share the same MSI-X vector.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "EIAM",
+      "kind": "state_gate",
+      "enforceability": "action_witnessed",
+      "datasheet_text": "In MSI-X mode, if any of the Auto Mask enable bits is set, the GPIE.EIAME bit must be set as well.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "EITR",
+      "kind": "value_relation",
+      "enforceability": "doc_only",
+      "datasheet_text": "When CNT_WDIS is not set on a write cycle, this field must be set to 0x0.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "FCRTH",
+      "kind": "value_relation",
+      "enforceability": "doc_only",
+      "datasheet_text": "This value must be at least eight bytes less than the maximum number of bytes allocated to the receive packet buffer and the lower four bits must be programmed to 0x0 (16-byte granularity).",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "FCRTL",
+      "kind": "other",
+      "enforceability": "doc_only",
+      "datasheet_text": "The lower four bits must be programmed to 0x0 (16-byte granularity).",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "FCTRL",
+      "kind": "state_gate",
+      "enforceability": "action_witnessed",
+      "datasheet_text": "Note: Before receive filters are updated/modified the RXCTRL.RXEN bit should be set to 0b. After the proper filters have been set the RXCTRL.RXEN bit can be set to 1b to re-enable the receiver.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "GORCH",
+      "kind": "read_effect",
+      "enforceability": "doc_only",
+      "datasheet_text": "Good Octets Received Count High \u2014 GORCH (0x0408C; RC)",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "GOTCH",
+      "kind": "read_effect",
+      "enforceability": "doc_only",
+      "datasheet_text": "# 8.2.3.23.46 Good Octets Transmitted Count High \u2014 GOTCH (0x04094; RC)",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "GOTCL",
+      "kind": "read_effect",
+      "enforceability": "doc_only",
+      "datasheet_text": "Good Octets Transmitted Count Low \u2014 GOTCL (0x04090; RC)",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "HLREG0",
+      "kind": "value_relation",
+      "enforceability": "doc_only",
+      "datasheet_text": "The RDRXCTL.CRCStrip must be set the same as this bit.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "L34TIMIR",
+      "kind": "other",
+      "enforceability": "doc_only",
+      "datasheet_text": "This register must be initialized by software.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "LINKS",
+      "kind": "read_effect",
+      "enforceability": "doc_only",
+      "datasheet_text": "A new link partner next page was received during the backplane auto-negotiation process. Latch high, clear on read.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "LINKS",
+      "kind": "read_effect",
+      "enforceability": "doc_only",
+      "datasheet_text": "KX/KX4/KR Backplane Auto Negotiation Page Received. A new link partner page was received during the auto-negotiation process. Latch high, clear on read.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "LINKS",
+      "kind": "read_effect",
+      "enforceability": "doc_only",
+      "datasheet_text": "0b = Link is currently down or link was down since last time read. 1b = Link is Up and there was no link down from last time read. Self cleared upon read if the link is low and set if the link is up.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "RDBAL",
+      "kind": "value_relation",
+      "enforceability": "doc_only",
+      "datasheet_text": "The lower 7 bits are always ignored. The receive descriptor base address must point to a 128 byte-aligned block of data.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "RDRXCTL",
+      "kind": "value_relation",
+      "enforceability": "doc_only",
+      "datasheet_text": "This bit must be set the same as HLREG0.RXCRCSTRP.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "RXPBSIZE",
+      "kind": "other",
+      "enforceability": "doc_only",
+      "datasheet_text": "Note: In any setting the RXPBSIZE[0] must always be enabled (greater than zero).",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "SAQF",
+      "kind": "other",
+      "enforceability": "doc_only",
+      "datasheet_text": "This register must be initialized by software.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "SRRCTL",
+      "kind": "value_relation",
+      "enforceability": "doc_only",
+      "datasheet_text": "Note: BSIZEHEADER must be bigger than zero if DESCTYPE is equal to 010b, 011b, 100b or 101b.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "SWSM",
+      "kind": "read_effect",
+      "enforceability": "doc_only",
+      "datasheet_text": "This bit is set by hardware, when this register is read by the device driver (one of two PCI functions) and cleared when the host driver writes 0b to it. The first time this register is read, the value is 0b. In the next read the value is 1b (hardware mechanism).",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "TDBAL",
+      "kind": "value_relation",
+      "enforceability": "doc_only",
+      "datasheet_text": "The lower seven bits are ignored. The Transmit Descriptor Base Address must point to a 128 byte-aligned block of data.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "TDH",
+      "kind": "state_gate",
+      "enforceability": "action_witnessed",
+      "datasheet_text": "The only time that software should write to this register is after a reset (hardware reset or CTRL.RST) and before enabling the transmit function (TXDCTL.ENABLE). If software were to write to this register while the transmit function was enabled, the on-chip descriptor buffers might be invalidated and the hardware could become confused.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "TXDCTL",
+      "kind": "other",
+      "enforceability": "doc_only",
+      "datasheet_text": "Note: When WTHRESH is set to a non-zero value, the software driver should not set the RS bit in the Tx descriptors. When WTHRESH is set to zero the software device driver should set the RS bit in the Tx descriptors with the EOP bit set and at least once in the 40 descriptors.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "TXDCTL",
+      "kind": "other",
+      "enforceability": "doc_only",
+      "datasheet_text": "Note: When Head write-back is enabled (TDWBAL[n].Head_WB_En = 1b), the WTHRESH must be set to zero.",
+      "source": "run r006 (gpt-oss-120b / gpt-5.2), grammar-valid"
+    },
+    {
+      "register": "RXCSUM",
+      "kind": "state_gate",
+      "datasheet_text": "This register should only be initialized (written) when the receiver is not enabled (for example, only write this register when RXCTRL.RXEN = 0b).",
+      "enforceability": "action_witnessed",
+      "source": "recovered via --constraint-recall pass (gpt-oss-120b), schema-valid"
+    },
+    {
+      "register": "RDLEN",
+      "kind": "value_relation",
+      "datasheet_text": "It must be 128-byte aligned (7 LS bit must be set to zero).",
+      "enforceability": "doc_only",
+      "source": "recovered via --constraint-recall pass (gpt-oss-120b), schema-valid"
+    },
+    {
+      "register": "TDLEN",
+      "kind": "value_relation",
+      "datasheet_text": "It must be 128-byte-aligned (7 LS bit must be set to zero).",
+      "enforceability": "doc_only",
+      "source": "recovered via --constraint-recall pass (gpt-oss-120b), schema-valid"
+    },
+    {
+      "register": "DAQF",
+      "kind": "other",
+      "datasheet_text": "This register must be initialized by software.",
+      "enforceability": "doc_only",
+      "source": "recovered via --constraint-recall pass (gpt-5.2), schema-valid"
+    },
+    {
+      "register": "SDPQF",
+      "kind": "other",
+      "datasheet_text": "This register must be initialized by software.",
+      "enforceability": "doc_only",
+      "source": "recovered via --constraint-recall pass (gpt-5.2), schema-valid"
+    }
+  ]
+}

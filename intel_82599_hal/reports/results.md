@@ -88,6 +88,16 @@ registers — the last 3 needed model escalation, not more context).
 
 ## Constraint encoding (the safety the hand-written HAL lacks)
 
+> **Durable list + update (2026-10-07).** All constraints found are now recorded in
+> **`reports/constraints_found.{md,json}`** — the 29 grammar-valid from run r006 **plus
+> 5 recovered** by the constraint-recall improvement (RXCSUM, RDLEN, TDLEN, DAQF, SDPQF),
+> **34 total**. Improving constraint recall also surfaced a **9th driver bug**: the
+> recovered RXCSUM `state_gate` ("write only when RXCTRL.RXEN=0b", enforceability
+> *action_witnessed*) is violated by **Theseus** — `rx_init` enables the receiver, then
+> `enable_rss` writes RXCSUM (and the RSS block) with no re-disable; same configure-after-
+> enable root cause as the FCTRL promiscuous bug. ixy/Redox/RedLeaf don't configure RXCSUM.
+
+
 34 raw constraints → 29 grammar-valid across 26 registers. Encoding is
 **field-level by default** (a case-study extension of the settled 4-class
 enforceability taxonomy, which stays untouched in `defs.py`): a gated register
