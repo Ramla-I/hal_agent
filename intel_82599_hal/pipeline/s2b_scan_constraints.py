@@ -93,7 +93,11 @@ def main():
         for h in hits[:6]:
             print("   -", re.sub(r"\s+", " ", h))
         print()
-    json.dump({"covered": sorted(covered), "candidate_misses": flagged},
+    note = ("Output of pipeline/s2b_scan_constraints.py — the constraint-recall "
+            "detector. 'candidate_misses' = registers whose datasheet section has a "
+            "constraint cue but no extracted constraint (over-inclusive; needs hand "
+            "adjudication). Gitignored scratch; re-run the script to regenerate.")
+    json.dump({"_note": note, "covered": sorted(covered), "candidate_misses": flagged},
               open("constraint_recall_scan.json", "w"), indent=2)
 
 
