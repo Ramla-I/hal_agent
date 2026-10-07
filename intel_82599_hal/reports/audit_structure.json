@@ -1,0 +1,1369 @@
+{
+  "run": "r006",
+  "registers": 75,
+  "summary": {
+    "offset": {
+      "agree": 75
+    },
+    "access": {
+      "agree": 75
+    },
+    "reset": {
+      "agree": 71,
+      "extra": 1,
+      "missing": 3
+    }
+  },
+  "rows": [
+    {
+      "register": "AUTOC",
+      "offset": {
+        "extracted": "0x42a0",
+        "datasheet": "0x42a0",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "AUTOC2",
+      "offset": {
+        "extracted": "0x42a8",
+        "datasheet": "0x42a8",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "undefined",
+        "verdict": "extra"
+      }
+    },
+    {
+      "register": "CTRL",
+      "offset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "CTRL_EXT",
+      "offset": {
+        "extracted": "0x18",
+        "datasheet": "0x18",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "DAQF",
+      "offset": {
+        "extracted": "0xe200",
+        "datasheet": "0xe200",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "DCA_CTRL",
+      "offset": {
+        "extracted": "0x11074",
+        "datasheet": "0x11074",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x1",
+        "datasheet": "0x1",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "DCA_ID",
+      "offset": {
+        "extracted": "0x11070",
+        "datasheet": "0x11070",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RO",
+        "datasheet": "RO",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "DCA_RXCTRL",
+      "offset": {
+        "extracted": "0x100c",
+        "datasheet": "0x100c",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "DCA_TXCTRL",
+      "offset": {
+        "extracted": "0x600c",
+        "datasheet": "0x600c",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x2a00",
+        "datasheet": "0x2a00",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "DMATXCTL",
+      "offset": {
+        "extracted": "0x4a80",
+        "datasheet": "0x4a80",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x81000004",
+        "datasheet": "0x81000004",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "DTXMXSZRQ",
+      "offset": {
+        "extracted": "0x8100",
+        "datasheet": "0x8100",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x10",
+        "datasheet": "0x10",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "DTXTCPFLGH",
+      "offset": {
+        "extracted": "0x4a8c",
+        "datasheet": "0x4a8c",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0xf7f",
+        "datasheet": "0xf7f",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "DTXTCPFLGL",
+      "offset": {
+        "extracted": "0x4a88",
+        "datasheet": "0x4a88",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0xff60ff6",
+        "datasheet": "0xff60ff6",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "EEC",
+      "offset": {
+        "extracted": "0x10010",
+        "datasheet": "0x10010",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "EERD",
+      "offset": {
+        "extracted": "0x10014",
+        "datasheet": "0x10014",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "EIAC",
+      "offset": {
+        "extracted": "0x810",
+        "datasheet": "0x810",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "EIAM",
+      "offset": {
+        "extracted": "0x890",
+        "datasheet": "0x890",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "EICR",
+      "offset": {
+        "extracted": "0x800",
+        "datasheet": "0x800",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW1C",
+        "datasheet": "RW1C",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "EICS",
+      "offset": {
+        "extracted": "0x808",
+        "datasheet": "0x808",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "WO",
+        "datasheet": "WO",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "EIMC",
+      "offset": {
+        "extracted": "0x888",
+        "datasheet": "0x888",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "WO",
+        "datasheet": "WO",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "EIMS",
+      "offset": {
+        "extracted": "0x880",
+        "datasheet": "0x880",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RWS",
+        "datasheet": "RWS",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "EITR",
+      "offset": {
+        "extracted": "0x820",
+        "datasheet": "0x820",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "ETQF",
+      "offset": {
+        "extracted": "0x5128",
+        "datasheet": "0x5128",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "ETQS",
+      "offset": {
+        "extracted": "0xec00",
+        "datasheet": "0xec00",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "FCCFG",
+      "offset": {
+        "extracted": "0x3d00",
+        "datasheet": "0x3d00",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "FCRTH",
+      "offset": {
+        "extracted": "0x3260",
+        "datasheet": "0x3260",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "FCRTL",
+      "offset": {
+        "extracted": "0x3220",
+        "datasheet": "0x3220",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "0x0",
+        "verdict": "missing"
+      }
+    },
+    {
+      "register": "FCRTV",
+      "offset": {
+        "extracted": "0x32a0",
+        "datasheet": "0x32a0",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "FCTRL",
+      "offset": {
+        "extracted": "0x5080",
+        "datasheet": "0x5080",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "FCTTVN",
+      "offset": {
+        "extracted": "0x3200",
+        "datasheet": "0x3200",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "FTQF",
+      "offset": {
+        "extracted": "0xe600",
+        "datasheet": "0xe600",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "GORCH",
+      "offset": {
+        "extracted": "0x408c",
+        "datasheet": "0x408c",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RC",
+        "datasheet": "RC",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "GORCL",
+      "offset": {
+        "extracted": "0x4088",
+        "datasheet": "0x4088",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RC",
+        "datasheet": "RC",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "GOTCH",
+      "offset": {
+        "extracted": "0x4094",
+        "datasheet": "0x4094",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RC",
+        "datasheet": "RC",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "GOTCL",
+      "offset": {
+        "extracted": "0x4090",
+        "datasheet": "0x4090",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RC",
+        "datasheet": "RC",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "GPIE",
+      "offset": {
+        "extracted": "0x898",
+        "datasheet": "0x898",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "GPRC",
+      "offset": {
+        "extracted": "0x4074",
+        "datasheet": "0x4074",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RO",
+        "datasheet": "RO",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "GPTC",
+      "offset": {
+        "extracted": "0x4080",
+        "datasheet": "0x4080",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RC",
+        "datasheet": "RC",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "HLREG0",
+      "offset": {
+        "extracted": "0x4240",
+        "datasheet": "0x4240",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "0x12c0b",
+        "verdict": "missing"
+      }
+    },
+    {
+      "register": "I2CCTL",
+      "offset": {
+        "extracted": "0x28",
+        "datasheet": "0x28",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0xa",
+        "datasheet": "0xa",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "IVAR",
+      "offset": {
+        "extracted": "0x900",
+        "datasheet": "0x900",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "L34TIMIR",
+      "offset": {
+        "extracted": "0xe800",
+        "datasheet": "0xe800",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "LINKS",
+      "offset": {
+        "extracted": "0x42a4",
+        "datasheet": "0x42a4",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RO",
+        "datasheet": "RO",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "LINKS2",
+      "offset": {
+        "extracted": "0x4324",
+        "datasheet": "0x4324",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RO",
+        "datasheet": "RO",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "MRQC",
+      "offset": {
+        "extracted": "0xec80",
+        "datasheet": "0xec80",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RAH",
+      "offset": {
+        "extracted": "0xa204",
+        "datasheet": "0xa204",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RAL",
+      "offset": {
+        "extracted": "0xa200",
+        "datasheet": "0xa200",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RDBAH",
+      "offset": {
+        "extracted": "0x1004",
+        "datasheet": "0x1004",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RDBAL",
+      "offset": {
+        "extracted": "0x1000",
+        "datasheet": "0x1000",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RDH",
+      "offset": {
+        "extracted": "0x1010",
+        "datasheet": "0x1010",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RO",
+        "datasheet": "RO",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RDLEN",
+      "offset": {
+        "extracted": "0x1008",
+        "datasheet": "0x1008",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RDRXCTL",
+      "offset": {
+        "extracted": "0x2f00",
+        "datasheet": "0x2f00",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "0x108800",
+        "verdict": "missing"
+      }
+    },
+    {
+      "register": "RDT",
+      "offset": {
+        "extracted": "0x1018",
+        "datasheet": "0x1018",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RETA",
+      "offset": {
+        "extracted": "0xeb00",
+        "datasheet": "0xeb00",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RSSRK",
+      "offset": {
+        "extracted": "0xeb80",
+        "datasheet": "0xeb80",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RTTDCS",
+      "offset": {
+        "extracted": "0x4900",
+        "datasheet": "0x4900",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0xc00000",
+        "datasheet": "0xc00000",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RXCSUM",
+      "offset": {
+        "extracted": "0x5000",
+        "datasheet": "0x5000",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RXCTRL",
+      "offset": {
+        "extracted": "0x3000",
+        "datasheet": "0x3000",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RXDCTL",
+      "offset": {
+        "extracted": "0x1028",
+        "datasheet": "0x1028",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "RXPBSIZE",
+      "offset": {
+        "extracted": "0x3c00",
+        "datasheet": "0x3c00",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x80000",
+        "datasheet": "0x80000",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "SAQF",
+      "offset": {
+        "extracted": "0xe000",
+        "datasheet": "0xe000",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "SDPQF",
+      "offset": {
+        "extracted": "0xe400",
+        "datasheet": "0xe400",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "SRRCTL",
+      "offset": {
+        "extracted": "0x1014",
+        "datasheet": "0x1014",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x402",
+        "datasheet": "0x402",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "STATUS",
+      "offset": {
+        "extracted": "0x8",
+        "datasheet": "0x8",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RO",
+        "datasheet": "RO",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x80000",
+        "datasheet": "0x80000",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "SWSM",
+      "offset": {
+        "extracted": "0x10140",
+        "datasheet": "0x10140",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "SW_FW_SYNC",
+      "offset": {
+        "extracted": "0x10160",
+        "datasheet": "0x10160",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "TDBAH",
+      "offset": {
+        "extracted": "0x6004",
+        "datasheet": "0x6004",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "TDBAL",
+      "offset": {
+        "extracted": "0x6000",
+        "datasheet": "0x6000",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": null,
+        "datasheet": "undefined",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "TDH",
+      "offset": {
+        "extracted": "0x6010",
+        "datasheet": "0x6010",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RO",
+        "datasheet": "RO",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "TDLEN",
+      "offset": {
+        "extracted": "0x6008",
+        "datasheet": "0x6008",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "TDT",
+      "offset": {
+        "extracted": "0x6018",
+        "datasheet": "0x6018",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "TDWBAH",
+      "offset": {
+        "extracted": "0x603c",
+        "datasheet": "0x603c",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "TDWBAL",
+      "offset": {
+        "extracted": "0x6038",
+        "datasheet": "0x6038",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "TXDCTL",
+      "offset": {
+        "extracted": "0x6028",
+        "datasheet": "0x6028",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x0",
+        "datasheet": "0x0",
+        "verdict": "agree"
+      }
+    },
+    {
+      "register": "TXPBSIZE",
+      "offset": {
+        "extracted": "0xcc00",
+        "datasheet": "0xcc00",
+        "verdict": "agree"
+      },
+      "access": {
+        "extracted": "RW",
+        "datasheet": "RW",
+        "verdict": "agree"
+      },
+      "reset": {
+        "extracted": "0x28000",
+        "datasheet": "0x28000",
+        "verdict": "agree"
+      }
+    }
+  ]
+}

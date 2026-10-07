@@ -6,15 +6,15 @@ fixed-seed random sample of a run's named (non-reserved) extracted bit fields,
 hand-adjudicate each against the datasheet, and bound the overall error rate.
 
 Deliberately depends on NOTHING but the run's own output + a seed. It does not
-read the other audits (score_subfields / audit_full / constants_map) — those
+read the other audits (audit_score_subfields / audit_full_subfields / constants_map) — those
 are what it cross-checks, not what it trusts, and relying on their coverage
 claims would couple this estimate to their correctness. Sampling the WHOLE
 named population (not an "unreferenced" subset) keeps the estimate unbiased and
 valid even if every other audit were wrong.
 
 Usage:
-  python3 spot_audit.py r006                 # draw the sample to hand-check
-  python3 spot_audit.py r006 --errors 1      # after adjudication: 95%% bound
+  python3 audit_selection_subfields.py r006                 # draw the sample to hand-check
+  python3 audit_selection_subfields.py r006 --errors 1      # after adjudication: 95%% bound
 """
 import argparse
 import glob
@@ -80,7 +80,7 @@ def main():
         rec["point_estimate"] = args.errors / len(sample)
         rec["ci95_upper"] = clopper_pearson_upper(args.errors, len(sample))
 
-    json.dump(rec, open(os.path.join(HERE, "..", "reports", "spot_audit_sample.json"), "w"),
+    json.dump(rec, open(os.path.join(HERE, "..", "reports", "audit_selection_subfields.json"), "w"),
               indent=2)
 
     print(f"population: {len(named)} named subfields; sample n={len(sample)} "

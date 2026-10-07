@@ -17,7 +17,7 @@ Method (conservative by construction — under-join rather than mis-join):
     (shift == our start_bit); DISAGREE: any entry falls outside -> adjudicate
     by hand against the datasheet; no join -> UNSCORED (never counted as ok)
 
-Usage: python3 score_subfields.py r006 [path/to/constants.rs]
+Usage: python3 audit_score_subfields.py r006 [path/to/constants.rs]
 """
 import json
 import glob
@@ -137,5 +137,5 @@ out = {"run": RUN, "total_subfields": total, "reserved": reserved,
        "referee_joined": len(score), "agree": agree,
        "disagree": {f"{r}.{f}": v["evidence"] for (r, f), v in dis.items()},
        "scored_fields": sorted(f"{r}.{f}" for r, f in score)}
-json.dump(out, open(os.path.join(HERE, "..", "reports", "subfield_scores.json"), "w"), indent=2)
-print("wrote subfield_scores.json")
+json.dump(out, open(os.path.join(HERE, "..", "reports", "audit_score_subfields.json"), "w"), indent=2)
+print("wrote audit_score_subfields.json")

@@ -62,6 +62,8 @@ per-register contexts show every initial miss came from bit tables running past
 chunk/page boundaries (fixed by the completion pass for 10, then 5, then 3
 registers — the last 3 needed model escalation, not more context).
 
+> **Structure audit (`pipeline/audit_structure.py` → `reports/audit_structure.json`, added 2026-10-07).** A standalone datasheet referee for the non-subfield dimensions (parallel to the subfield audits): **offsets 75/75** and **access codes 75/75** agree with the datasheet headings; **reset values 71/75 exact, 0 wrong** — the 4 non-matches are benign (3 `missing`: extraction nulled a defined reset FCRTL/HLREG0/RDRXCTL; 1 `extra`: AUTOC2 gave 0x0 vs a `*`-soft default), and reset values aren't consumed by this HAL. Closes the one structure dimension that previously had only a coverage count.
+
 ## Findings (real divergences, adjudicated against the datasheet)
 
 1. **Theseus bug — `RDRXCTL_CRC_STRIP = 1` sets a reserved bit.** The datasheet

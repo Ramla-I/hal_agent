@@ -22,7 +22,7 @@ Join (by bit position, the unambiguous key):
   - MISSED     datasheet field row with no extracted field at those bits (recall)
 
 Registers whose field table the parser cannot locate are listed as
-UNPARSED (never scored as agree). Usage: python3 audit_full.py r006
+UNPARSED (never scored as agree). Usage: python3 audit_full_subfields.py r006
 """
 import glob
 import json
@@ -149,8 +149,8 @@ def main():
         print(f"\n--- UNPARSED registers ({len(unparsed)}) ---")
         print("  " + ", ".join(f"{r}({n})" for r, n in unparsed))
     json.dump({"run": RUN, "grades": dict(g), "unparsed": unparsed, "rows": rows},
-              open(os.path.join(HERE, "..", "reports", "audit_full.json"), "w"), indent=2)
-    print("\nwrote audit_full.json")
+              open(os.path.join(HERE, "..", "reports", "audit_full_subfields.json"), "w"), indent=2)
+    print("\nwrote audit_full_subfields.json")
 
 
 if __name__ == "__main__":
