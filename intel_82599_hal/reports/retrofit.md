@@ -130,8 +130,21 @@ RPC/`RRef` network interface. That domain carries one constraint bug the library
 layer does not: **`device.rs:294`, after `init_tx()`, does
 `write_reg(IxgbeRegs::DMATXCTL, IXGBE_DMATXCTL_TE)`** — an absolute write of `0x1`
 that zeroes DMATXCTL.VT, the same VT-clobber as ixy/Redox (the library layer
-never writes DMATXCTL). Found by static inspection; the domain crate was not in
-the compiled retarget.
+never writes DMATXCTL).
+
+**Compile-verified (the domain crate too).** We built the domain crate against
+the gated HAL — `cargo rcheck -p ixgbe` from `domains/` on the pinned
+nightly-2021-12-15 (custom `x86_64-unknown-redleaf` target, build-std; needs the
+`smoltcp`/`hashes` submodules initialized) — and both `ixgbe_device` (library)
+and `ixgbe` (domain) check **green**. The DMATXCTL VT-clobber is then a
+compile-time guarantee: the gated `GatedDmatxctl` type exposes only `read()` and
+`write_preserving()` — **no raw `write()`** — so the enum-keyed access layer
+*must* preserve VT. Pointing the `DMATXCTL` arm of `write_reg` at a raw
+`.write(v)` (i.e. re-introducing the clobber) fails to compile with
+`error[E0599]: no method named 'write' found for struct GatedDmatxctl`. Unlike
+ixy/Redox the error surfaces inside the access layer rather than at the
+`device.rs:294` call site, because RedLeaf routes every scalar write through the
+uniform `write_reg` (which the retarget fixes once, for all callers).
 
 ## Caveats
 
