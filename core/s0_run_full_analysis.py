@@ -575,7 +575,7 @@ def run_pipeline_for_device(
         generator_fn = run_generator_batched if args.generator_batched else run_generator
         gen_mode = "batched" if args.generator_batched else "per-register"
         print(f"\n--- Step 2: Generator [{gen_mode}] (run {paths.run_number}) ---")
-        truncated = generator_fn(
+        gen_kwargs = dict(
             client=generator_client,
             model_name=generator_model,
             device_name=ctx.device_name,
@@ -587,6 +587,9 @@ def run_pipeline_for_device(
             peripherals_registers_dict=None,
             models=generator_models,
         )
+        if args.generator_batched:   # concurrency is a batched-only knob
+            gen_kwargs["concurrency"] = args.generator_concurrency
+        truncated = generator_fn(**gen_kwargs)
         result.generator_done = True
         result.truncated = truncated
 
@@ -680,6 +683,41 @@ def run_pipeline_for_device(
             result.true_count = true_count
             result.false_count = false_count
             print(f"  Validator: {true_count} true, {false_count} false")
+
+        # -- Step 2b: NXP summary-table fill (deterministic, NXP only) --
+        # The openevolve retriever surfaces each register's bit-field section but
+        # downranks the register-overview tables where NXP states address offset +
+        # reset value, so the generator often leaves those null. Fill them straight
+        # from the summary rows (fills empties only, never overwrites; header-aware,
+        # peripheral-scoped, unambiguous-only). lpc845: +174 offset, +125 reset.
+        if str(paths.manufacturer).lower() == "nxp":
+            from nxp_summary_fill import fill_run
+            _chunks_md = os.path.join(_REPO_ROOT, "chunked_datasheets", paths.manufacturer,
+                                      paths.device_name, "chunks", "md")
+            _fs = fill_run(paths.agent_output_dir, _chunks_md)
+            print(f"\n--- Step 2b: NXP summary fill --- filled address_offset="
+                  f"{_fs.get('filled_offset', 0)} reset_value={_fs.get('filled_reset', 0)} "
+                  f"(of {_fs.get('registers_with_gaps', 0)} registers with gaps)")
+            # Group D (LPC55xx / i.MX RT) has no summary table — offsets live in each
+            # register's table caption "(NAME[,:] offset = 0x..)". Scoped, unambiguous
+            # caption fill; no-op on groups A/B/C (no such captions). Empties only.
+            from nxp_caption_fill import fill_run as caption_fill_run
+            _cf = caption_fill_run(paths.agent_output_dir, _chunks_md)
+            print(f"--- Step 2b2: NXP caption fill --- filled address_offset="
+                  f"{_cf.get('filled_offset', 0)} (of {_cf.get('offset_gaps', 0)} offset gaps, "
+                  f"{_cf.get('caption_names', 0)} captions)")
+
+        # -- Step 2c: NXP array reconciliation (deterministic, NXP only) --
+        # Recover absent register-array instances (e.g. DMA_TCDn_*, CANn_RAMn) by
+        # cloning a datasheet-extracted sibling's fields/size/reset and computing the
+        # per-instance offset from the produced siblings' own stride (SVD used only to
+        # enumerate which instances exist). Never overwrites a produced register.
+        if str(paths.manufacturer).lower() == "nxp":
+            from nxp_array_fill import fill_run as array_fill_run
+            _af = array_fill_run(paths.agent_output_dir, paths.device_dir)
+            print(f"\n--- Step 2c: NXP array reconciliation --- recovered "
+                  f"{_af.get('filled', 0)} absent array instance(s) "
+                  f"({_af.get('filled_with_offset', 0)} with a stride-derived offset)")
 
         # -- Step 6: Constraint validation (v2 grammar, optional) --
         # The generator emits grammar v2 natively; this stage runs the
@@ -892,6 +930,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--no-generator-batched", action="store_false", dest="generator_batched",
         help="Use the per-register generator instead of batched",
+    )
+    parser.add_argument(
+        "--generator-concurrency", type=int, default=config.GENERATOR_CONCURRENCY,
+        help="Max concurrent batched-generator LLM calls (default from config; 1 = "
+             "serial). Parallelizes both the main pass and the empty-field retry.",
     )
     parser.add_argument(
         "--validator-batched", action="store_true", dest="validator_batched",

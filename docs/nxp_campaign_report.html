@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NXP Full-Sweep Campaign — Results &amp; Recommendations</title>
+<style>
+  :root{--ink:#1a1a1a;--muted:#5b6673;--line:#e2e6ea;--bg:#fcfcfd;--a:#0b7285;--good:#1b7a43;--warn:#b5651d;--bad:#b02a37;--chip:#f1f3f5;}
+  *{box-sizing:border-box}
+  body{font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);margin:0;padding:0 20px}
+  .wrap{max-width:940px;margin:0 auto;padding:48px 0 80px}
+  h1{font-size:30px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:17px;margin:0 0 26px}
+  h2{font-size:22px;margin:38px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+  h3{font-size:17px;margin:22px 0 6px}
+  p{margin:10px 0} code{background:var(--chip);padding:1px 6px;border-radius:4px;font-size:13.5px;font-family:"SF Mono",Menlo,Consolas,monospace}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  th{background:#f6f8fa;font-weight:600}
+  td.n{text-align:right;font-variant-numeric:tabular-nums}
+  .lead{background:#eef6f9;border:1px solid #cfe6ee;border-radius:10px;padding:16px 18px;margin:18px 0}
+  .lead strong{color:var(--a)}
+  .correction{background:#fff3cd;border:1px solid #e0c200;border-radius:10px;padding:14px 18px;margin:18px 0}
+  .correction strong{color:#7a5c00}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}
+  .kpi div{flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
+  .kpi b{display:block;font-size:24px;line-height:1.1}.kpi span{color:var(--muted);font-size:12.5px}
+  .good{color:var(--good);font-weight:600}.warn{color:var(--warn);font-weight:600}.bad{color:var(--bad);font-weight:600}
+  ul{margin:8px 0;padding-left:22px}li{margin:5px 0}
+  .pri{border-left:4px solid var(--a);padding:8px 14px;margin:12px 0;background:#fff;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0 8px 8px 0}
+  .foot{margin-top:38px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>NXP Full-Sweep Campaign</h1>
+<p class="sub">All NXP devices run end-to-end, discovered, fixes shipped. Includes a mid-campaign correction to the measurement that overturned the original priority list.</p>
+
+<div class="lead">
+<strong>Bottom line.</strong> Running every NXP format family end-to-end, with a corrected measurement, shows the extraction is in much better shape than first thought: <strong>the generator already finds 94–100% of registers and extracts offsets itself across all four families</strong> — no per-family adapter or parser needed. A set of pipeline fixes unblocked <strong>1,272 confirmed access-constraints</strong> across the 11 devices (NXP emitted almost none before), and throughput fixes made the giant parts finish at all. The one real structural weakness is <strong>reset-value extraction (23–55% everywhere)</strong>; array reconciliation (built this round) closed most of the small register-coverage gap.
+</div>
+
+<div class="correction">
+<strong>⚠ Measurement correction (important).</strong> The first version of this report said register coverage was 60–92% and ~1,721 registers were "absent," making array reconciliation look like the top lever. That was a <em>join bug in the discovery tool</em>: it keyed SVD cluster/array registers differently than the generator names its files (<code>FTFE_FlashConfig_BACKKEY0</code> vs <code>ftfe_flashconfig_backkey0</code>), so it counted ~1,130 <em>produced</em> registers as missing. Fixed to measure against the generator's own enumeration (commit <code>device_discovery fix</code>). Corrected: <strong>register coverage 94–100%, true absent 591 (3%)</strong>. The numbers below are the corrected ones.
+</div>
+
+<div class="kpi">
+  <div><b>11 / 11</b><span>devices run end-to-end</span></div>
+  <div><b>1,272</b><span>confirmed constraints (was ~0 on NXP)</span></div>
+  <div><b>94–100%</b><span>register coverage (corrected)</span></div>
+  <div><b>&gt;3h → ~1h</b><span>giant-device runtime (concurrency)</span></div>
+</div>
+
+<h2>Per-device results (corrected, after array reconciliation)</h2>
+<table>
+<tr><th>Device</th><th>Group</th><th class="n">expected regs</th><th class="n">reg cov</th><th class="n">addr%</th><th class="n">reset%</th><th class="n">size%</th><th class="n">confirmed constraints</th></tr>
+<tr><td>lpc845</td><td>C classic LPC</td><td class="n">784</td><td class="n">100%</td><td class="n">92</td><td class="n">49</td><td class="n">50</td><td class="n">10</td></tr>
+<tr><td>k32l3a</td><td>A modern Kinetis</td><td class="n">3036</td><td class="n">99%</td><td class="n">63</td><td class="n">43</td><td class="n">64</td><td class="n">176</td></tr>
+<tr><td>s32k1xx</td><td>A modern Kinetis</td><td class="n">3619</td><td class="n">97%</td><td class="n">51</td><td class="n">30</td><td class="n">52</td><td class="n">200</td></tr>
+<tr><td>ke04</td><td>B classic Kinetis</td><td class="n">223</td><td class="n">97%</td><td class="n">91</td><td class="n">54</td><td class="n">91</td><td class="n">43</td></tr>
+<tr><td>k64</td><td>B classic Kinetis</td><td class="n">1966</td><td class="n">98%</td><td class="n">76</td><td class="n">23</td><td class="n">79</td><td class="n">210</td></tr>
+<tr><td>lpc55s69</td><td>D modern NXP</td><td class="n">3251</td><td class="n">94%</td><td class="n">50</td><td class="n">41</td><td class="n">24</td><td class="n">17</td></tr>
+<tr><td>mimxrt685s</td><td>D modern NXP (i.MX RT)</td><td class="n">3589</td><td class="n">98%</td><td class="n">48</td><td class="n">34</td><td class="n">47</td><td class="n">82</td></tr>
+<tr><td>mk20d7</td><td>B classic Kinetis</td><td class="n">1594</td><td class="n">98%</td><td class="n">79</td><td class="n">28</td><td class="n">80</td><td class="n">211</td></tr>
+<tr><td>mk20d5 <span class="muted">(sibling)</span></td><td>B classic Kinetis</td><td class="n">819</td><td class="n">95%</td><td class="n">91</td><td class="n">33</td><td class="n">93</td><td class="n">188</td></tr>
+<tr><td>ke04_old <span class="muted">(sibling)</span></td><td>B classic Kinetis</td><td class="n">223</td><td class="n">97%</td><td class="n">94</td><td class="n">46</td><td class="n">95</td><td class="n">61</td></tr>
+<tr><td>mimxrt633s <span class="muted">(sibling)</span></td><td>D modern NXP (i.MX RT)</td><td class="n">3589</td><td class="n">99%</td><td class="n">46</td><td class="n">34</td><td class="n">48</td><td class="n">74</td></tr>
+</table>
+<p class="muted" style="font-size:13px">Coverage = produced ∩ generator-enumerated, over the enumerated set. addr/reset/size = fraction of matched registers with that field non-null. The three "(sibling)" rows are duplicate datasheets run for completeness: <code>mk20d5</code> (K20 sibling of mk20d7), <code>ke04_old</code> (old ke04 datasheet), <code>mimxrt633s</code> (byte-identical PDF to mimxrt685s — its numbers mirror it, confirming the Group D ~47% offset ceiling is real, not device-specific).</p>
+
+<h2>What we fixed (shipped this campaign)</h2>
+<table>
+<tr><th>Fix</th><th>Effect</th></tr>
+<tr><td>Quote-anchor device-prefix</td><td>NXP constraints were 100% dropped as "unanchored" (anchor assumed STM <code>rm</code> filenames). Unblocked all NXP constraints.</td></tr>
+<tr><td>Envelope-gate salvage</td><td>A null structural field no longer discards a register's constraints. lpc845 3→10; also recovered STM (rm0481 +100).</td></tr>
+<tr><td>Generator concurrency + OE store-build lock + smart retry</td><td><code>--generator-concurrency</code> thread-pools batches (3.6× on test); k32l3a &gt;3h timeout → ~93 min; every giant now completes. Default 1 = unchanged.</td></tr>
+<tr><td>Cross-chunk summary-fill (Step 2b)</td><td>lpc845 (Group C) address 85→93%. Group-C-only (no-op on A/B — generator already has the values).</td></tr>
+<tr><td>Array reconciliation (Step 2c)</td><td>Clone absent array instances from a produced sibling + stride-shift the offset. Recovered <strong>243 registers</strong>, 0 wrong offsets; register coverage → 94–100%.</td></tr>
+<tr><td>Group D caption-offset fill (Step 2b2)</td><td>Parse <code>(NAME[,:] offset=0x..)</code> table captions (Group D has no summary table), peripheral-scoped. lpc55s69 48→50%, mimxrt685s 46→48% address, 0 wrong. Modest — most null-offset Group D registers have no caption in the retrieved chunks.</td></tr>
+<tr><td>Discovery-tool join fix</td><td>The measurement correction above — coverage now computed against the generator's own enumeration.</td></tr>
+</table>
+
+<h2>The real finding: offsets are already solved; the plan changed</h2>
+<p>
+We began with a per-family plan (a Group B absolute→offset adapter "covering 5 devices," a Group D caption parser) and, after the first measurement, thought array reconciliation was the top lever. <strong>All three were wrong once measured correctly.</strong> The generator extracts offsets itself in every family (Group C 91%, B 76–94%, A 51–60%, D 46–48%), finds 94–100% of registers, and the Group B adapter is unnecessary. Array reconciliation (shipped) is real but small (243 of 18k registers); the Group D caption fill (shipped) adds +2pp — a safe supplement, not the required parser we'd imagined. Per-device discovery — and fixing the discovery's own join bug — is what kept us from building the wrong things.
+</p>
+
+<h2>Recommended next work (prioritized, corrected)</h2>
+<div class="pri">
+<h3>1. Reset-value extraction — the one real universal gap</h3>
+Reset is <strong>23–55% on every device</strong> (worst on classic Kinetis: k64 23%, mk20d7 28%). It's the lowest-coverage field everywhere and affects all registers. Needs a principled per-bit reset assembler (assemble the register reset from the per-bit "Reset value" column; the blind zero-default was rejected earlier, +82 wrong). Biggest remaining lever.
+</div>
+<div class="pri">
+<h3>2. Group D offsets + size — partially addressed</h3>
+lpc55s69 / mimxrt685s offsets were ~47% and size 24–47%. The caption-offset fill (Step 2b2) deterministically parses the table captions and lifted offsets to 50% / 48% (0 wrong). That's only +2pp: most null-offset Group D registers have <em>no</em> caption or summary in the retrieved chunks — so the remaining gap is <strong>retrieval coverage</strong> (the chunk carrying a register's offset isn't fetched for it), a separate, larger effort than a parse. Size is untouched and remains the lowest Group-D axis.
+</div>
+<div class="pri">
+<h3>3. Scatter recovery (batch-failure resume)</h3>
+Of the 348 still-absent, ~311 are sibling-less: one-off batch failures (<code>quadspi_mcr</code>, <code>usb0_*</code>, <code>systick_*</code>) and whole-missed arrays (<code>flash_key_store_activation_code*</code>). A targeted resume/retry of the failed batches (not array cloning) would recover the one-offs.
+</div>
+<div class="pri">
+<h3>4. <code>read_effect</code> <code>consequence</code> + below-gate rejects</h3>
+Generator emits <code>read_effect</code> without the required <code>consequence</code> → <code>invalid_v2_constraint</code> rejects. Small prompt/schema fix, recovers constraints on every device.
+</div>
+
+<h2>Per-group verdicts (corrected)</h2>
+<ul>
+<li><strong>Group A (k32l3a, s32k1xx):</strong> constraint-rich (176, 200); address moderate (51–63%); array reconciliation + reset the gaps.</li>
+<li><strong>Group B (ke04, k64, mk20d7):</strong> best offset/size (76–91%), very constraint-rich (43, 210, 211); <strong>worst reset</strong> (23–28% on the big ones). No adapter needed.</li>
+<li><strong>Group C (lpc845):</strong> the one device the summary-fill helps (85→93% address); strong offsets.</li>
+<li><strong>Group D (lpc55s69, mimxrt685s):</strong> weakest structural group — offsets 48–50% (after the Step 2b2 caption fill, +2pp), size 24–47%. The caption parse is deterministic and safe but small; the real gap is retrieval coverage (most null-offset registers have no caption/table in their retrieved chunks).</li>
+</ul>
+
+<div class="foot">
+<b>Provenance.</b> Per-device detail in <code>docs/nxp_device_discovery.md</code> (numbers there predate the join fix — see the correction banner there); fix × group matrix in <code>docs/nxp_fix_tracking.md</code>; format families in <code>docs/datasheet_format_families.html</code>. Coverage via the corrected <code>scripts/device_discovery.py</code> (expected = <code>get_register_names_for_peripheral</code>, the generator's own enumeration). Runs: <code>scripts/run_stm_batch.py --manufacturer nxp --generator-concurrency 6</code>. Branch <code>nxp_devices</code>, nothing pushed.
+</div>
+
+</div>
+</body>
+</html>

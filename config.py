@@ -104,6 +104,7 @@ STAGE_MODELS = {
 # MODEL_NAME = "gpt-4o"
 GENERATOR_MODEL_NAME = "gpt-oss-120b"
 GENERATOR_BATCHED = True  # per-peripheral batched generator by default (fewer LLM calls); --no-generator-batched to disable
+GENERATOR_CONCURRENCY = 1  # max concurrent batched-generator LLM calls (1 = serial); raise to parallelize large devices (--generator-concurrency)
 GENERATOR_ITER = 1 # Number of iterations for the generator agent
 
 COVERAGE_IMPROVER_MODEL_NAME = "gpt-5.2"

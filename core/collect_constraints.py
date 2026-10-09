@@ -220,10 +220,31 @@ def _load_register_info(path: Path) -> Optional[tuple[RegisterInfo, list]]:
                   "convert_v1_to_v2.py", file=sys.stderr)
         return None
 
+    envelope = {k: v for k, v in data.items() if k != "access_constraints_v2"}
     try:
-        envelope = {k: v for k, v in data.items() if k != "access_constraints_v2"}
         return RegisterInfo(**envelope), raw_v2
     except Exception as e:  # pydantic ValidationError or similar
+        # A null/malformed STRUCTURAL field (reset_value, size, address_offset,
+        # abbreviation) must NOT drop the register's access constraints: structural
+        # completeness is orthogonal to whether the access rules are valid, and the
+        # lint below already validates each constraint INDEPENDENTLY. This is common
+        # on vendors with incomplete structure coverage (NXP), where a single null
+        # reset_value would otherwise silently discard every constraint on the
+        # register. Salvage the constraints via an unvalidated construct; a file
+        # with NO constraints keeps the old skip (no behavior change there).
+        if raw_v2:
+            if not envelope.get("datasheet_register_abbreviation"):
+                # target_register normalization needs a sane authoritative name;
+                # the filename ({peripheral}_{register}) matches the abbreviation
+                # format (e.g. acomp_ctrl -> ACOMP_CTRL).
+                envelope["datasheet_register_abbreviation"] = path.name.upper()
+            try:
+                salvaged = RegisterInfo.model_construct(**envelope)
+                print(f"  [salvage] {path.name}: envelope invalid but keeping "
+                      f"{len(raw_v2)} constraint(s) ({e})", file=sys.stderr)
+                return salvaged, raw_v2
+            except Exception:
+                pass
         print(f"  [skip] {path.name}: does not match RegisterInfo ({e})",
               file=sys.stderr)
         return None
@@ -352,9 +373,9 @@ def _load_svd_index(svd_dir: str) -> dict:
     if svd_arg.is_file():
         svd_files = [svd_arg]
     else:
-        svd_files = sorted(svd_arg.glob("*.svd"))
+        svd_files = sorted(list(svd_arg.glob("*.svd")) + list(svd_arg.glob("*.xml")))   # NXP SVDs use .xml
     if not svd_files:
-        raise FileNotFoundError(f"No .svd files found in {svd_dir}")
+        raise FileNotFoundError(f"No .svd/.xml files found in {svd_dir}")
 
     for svd_path in svd_files:
         try:

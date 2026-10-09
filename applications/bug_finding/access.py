@@ -44,8 +44,9 @@ def access_diff_rows(rm: str, manufacturer: str, run: int, repo_root: str) -> li
     gen = load_generator_registers(ao_dir)
 
     hits: dict[tuple, dict] = {}
-    for svd in sorted(glob.glob(os.path.join(dev_dir, "svd", "*.svd"))):
-        stem = os.path.basename(svd).replace(".svd", "")
+    for svd in sorted(glob.glob(os.path.join(dev_dir, "svd", "*.svd"))
+                      + glob.glob(os.path.join(dev_dir, "svd", "*.xml"))):   # NXP SVDs use .xml
+        stem = os.path.splitext(os.path.basename(svd))[0]
         for per, regs in parse_svd_registers(svd).items():
             for reg, rinfo in regs.items():
                 gfields = ((gen.get(per) or {}).get(reg) or {}).get("fields") or []
