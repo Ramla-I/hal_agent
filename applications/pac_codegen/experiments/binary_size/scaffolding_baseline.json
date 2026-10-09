@@ -1,0 +1,234 @@
+{
+ "rows": [
+  {
+   "pac": "stm32c0",
+   "device": "stm32c031",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 4042,
+   "Bfull_sloc": 2274,
+   "scaffold_raw": 4302,
+   "scaffold_sloc": 2468
+  },
+  {
+   "pac": "stm32f0",
+   "device": "stm32f0x1",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 5368,
+   "Bfull_sloc": 3092,
+   "scaffold_raw": 5628,
+   "scaffold_sloc": 3286
+  },
+  {
+   "pac": "stm32f1",
+   "device": "stm32f103",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 7454,
+   "Bfull_sloc": 4242,
+   "scaffold_raw": 7714,
+   "scaffold_sloc": 4436
+  },
+  {
+   "pac": "stm32f2",
+   "device": "stm32f215",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 4622,
+   "Bfull_sloc": 2634,
+   "scaffold_raw": 4882,
+   "scaffold_sloc": 2828
+  },
+  {
+   "pac": "stm32f3",
+   "device": "stm32f303",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 7614,
+   "Bfull_sloc": 4390,
+   "scaffold_raw": 7874,
+   "scaffold_sloc": 4584
+  },
+  {
+   "pac": "stm32f4",
+   "device": "stm32f401",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 22323,
+   "Bfull_sloc": 12745,
+   "scaffold_raw": 22583,
+   "scaffold_sloc": 12939
+  },
+  {
+   "pac": "stm32f7",
+   "device": "stm32f746",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 42708,
+   "Bfull_sloc": 24216,
+   "scaffold_raw": 42968,
+   "scaffold_sloc": 24410
+  },
+  {
+   "pac": "stm32g0",
+   "device": "stm32g070",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 20823,
+   "Bfull_sloc": 11589,
+   "scaffold_raw": 21083,
+   "scaffold_sloc": 11783
+  },
+  {
+   "pac": "stm32g4",
+   "device": "stm32g474",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 22921,
+   "Bfull_sloc": 13111,
+   "scaffold_raw": 23181,
+   "scaffold_sloc": 13305
+  },
+  {
+   "pac": "stm32h5",
+   "device": "stm32h573",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 27480,
+   "Bfull_sloc": 15336,
+   "scaffold_raw": 27740,
+   "scaffold_sloc": 15530
+  },
+  {
+   "pac": "stm32h7",
+   "device": "stm32h753",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 30639,
+   "Bfull_sloc": 17433,
+   "scaffold_raw": 30899,
+   "scaffold_sloc": 17627
+  },
+  {
+   "pac": "stm32l0",
+   "device": "stm32l0x3",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 4424,
+   "Bfull_sloc": 2512,
+   "scaffold_raw": 4684,
+   "scaffold_sloc": 2706
+  },
+  {
+   "pac": "stm32l1",
+   "device": "stm32l151",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 5074,
+   "Bfull_sloc": 2934,
+   "scaffold_raw": 5334,
+   "scaffold_sloc": 3128
+  },
+  {
+   "pac": "stm32l4",
+   "device": "stm32l4x6",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 24199,
+   "Bfull_sloc": 13865,
+   "scaffold_raw": 24459,
+   "scaffold_sloc": 14059
+  },
+  {
+   "pac": "stm32l5",
+   "device": "stm32l562",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 7451,
+   "Bfull_sloc": 4245,
+   "scaffold_raw": 7711,
+   "scaffold_sloc": 4439
+  },
+  {
+   "pac": "stm32mp1",
+   "device": "stm32mp157",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 31704,
+   "Bfull_sloc": 17340,
+   "scaffold_raw": 31964,
+   "scaffold_sloc": 17534
+  },
+  {
+   "pac": "stm32n6",
+   "device": "stm32n657",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 89932,
+   "Bfull_sloc": 50500,
+   "scaffold_raw": 90192,
+   "scaffold_sloc": 50694
+  },
+  {
+   "pac": "stm32u0",
+   "device": "stm32u083",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 6331,
+   "Bfull_sloc": 3521,
+   "scaffold_raw": 6591,
+   "scaffold_sloc": 3715
+  },
+  {
+   "pac": "stm32u5",
+   "device": "stm32u5a9",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 44865,
+   "Bfull_sloc": 25299,
+   "scaffold_raw": 45125,
+   "scaffold_sloc": 25493
+  },
+  {
+   "pac": "stm32wb",
+   "device": "stm32wb55",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 2394,
+   "Bfull_sloc": 1358,
+   "scaffold_raw": 2654,
+   "scaffold_sloc": 1552
+  },
+  {
+   "pac": "stm32wba",
+   "device": "stm32wba55",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 10754,
+   "Bfull_sloc": 5954,
+   "scaffold_raw": 11014,
+   "scaffold_sloc": 6148
+  },
+  {
+   "pac": "stm32wb0",
+   "device": "stm32wb09",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 6209,
+   "Bfull_sloc": 3527,
+   "scaffold_raw": 6469,
+   "scaffold_sloc": 3721
+  },
+  {
+   "pac": "stm32wl",
+   "device": "stm32wl5x_cm4",
+   "A_raw": 260,
+   "A_sloc": 194,
+   "Bfull_raw": 5869,
+   "Bfull_sloc": 3323,
+   "scaffold_raw": 6129,
+   "scaffold_sloc": 3517
+  }
+ ]
+}

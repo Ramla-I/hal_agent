@@ -1,0 +1,117 @@
+{
+ "stm32f1": {
+  "device": "stm32f103",
+  "raw": 8264,
+  "sloc": 4726
+ },
+ "stm32f2": {
+  "device": "stm32f215",
+  "raw": 5662,
+  "sloc": 3229
+ },
+ "stm32l1": {
+  "device": "stm32l151",
+  "raw": 6515,
+  "sloc": 3773
+ },
+ "stm32f0": {
+  "device": "stm32f0x1",
+  "raw": 7680,
+  "sloc": 4352
+ },
+ "stm32f3": {
+  "device": "stm32f303",
+  "raw": 9699,
+  "sloc": 5578
+ },
+ "stm32l0": {
+  "device": "stm32l0x3",
+  "raw": 7960,
+  "sloc": 4468
+ },
+ "stm32f4": {
+  "device": "stm32f413",
+  "raw": 26714,
+  "sloc": 15206
+ },
+ "stm32f7": {
+  "device": "stm32f767",
+  "raw": 45399,
+  "sloc": 25673
+ },
+ "stm32l4": {
+  "device": "stm32l4r9",
+  "raw": 30360,
+  "sloc": 17304
+ },
+ "stm32wb": {
+  "device": "stm32wb55",
+  "raw": 7931,
+  "sloc": 4553
+ },
+ "stm32g0": {
+  "device": "stm32g070",
+  "raw": 22832,
+  "sloc": 12730
+ },
+ "stm32c0": {
+  "device": "stm32c031",
+  "raw": 5263,
+  "sloc": 2955
+ },
+ "stm32h7": {
+  "device": "stm32h735",
+  "raw": 41528,
+  "sloc": 23559
+ },
+ "stm32mp1": {
+  "device": "stm32mp157",
+  "raw": 61200,
+  "sloc": 33707
+ },
+ "stm32l5": {
+  "device": "stm32l562",
+  "raw": 18506,
+  "sloc": 10357
+ },
+ "stm32g4": {
+  "device": "stm32g4a1",
+  "raw": 27655,
+  "sloc": 15725
+ },
+ "stm32wl": {
+  "device": "stm32wl5x_cm4",
+  "raw": 10416,
+  "sloc": 5855
+ },
+ "stm32u5": {
+  "device": "stm32u5a9",
+  "raw": 60547,
+  "sloc": 34053
+ },
+ "stm32h5": {
+  "device": "stm32h573",
+  "raw": 39415,
+  "sloc": 21878
+ },
+ "stm32n6": {
+  "device": "stm32n657",
+  "raw": 123056,
+  "sloc": 69102
+ },
+ "stm32u0": {
+  "device": "stm32u083",
+  "raw": 10582,
+  "sloc": 5951
+ },
+ "stm32wba": {
+  "device": "stm32wba55",
+  "raw": 16612,
+  "sloc": 9107
+ },
+ "stm32wb0": {
+  "device": "stm32wb06",
+  "raw": 7242,
+  "sloc": 4114
+ }
+}
