@@ -1942,7 +1942,18 @@ def patch_generic_rs(generic_path: Path, gated_ops=None, dialect=None) -> None:
                 1,
             )
 
-    content += "\n" + _GENERIC_ADDITIONS_BY_DIALECT[dialect]
+    additions = _GENERIC_ADDITIONS_BY_DIALECT[dialect]
+    if dialect == "modern":
+        # The write-with-zero base differs across the modern line: svd2rust 0.35
+        # (mimxrt) writes `REG::Ux::default()` because its `Ux: RawReg` has no
+        # ZERO associated const, while 0.37+ (mk20) and stm32-rs use
+        # `REG::Ux::ZERO`. Mirror whichever the stock `write_with_zero` uses so
+        # `write_with_zero_witnessed` compiles against either.
+        m = re.search(r"fn write_with_zero\b.*?bits:\s*"
+                      r"(REG::Ux::ZERO|REG::Ux::default\(\))", content, re.S)
+        if m and m.group(1) != "REG::Ux::ZERO":
+            additions = additions.replace("REG::Ux::ZERO", m.group(1))
+    content += "\n" + additions
     generic_path.write_text(content)
 
 
@@ -2236,6 +2247,14 @@ _READER_DECL_RE = re.compile(
 # BitReader type in that line).
 _READER_DECL_STRUCT_RE = re.compile(
     r"^pub struct (\w+)_R\(crate::(BitReader|FieldReader)(?:<\s*(\w+))?", re.M)
+# svd2rust 0.35/0.37 (mimxrt, mk20) names the reader by the PascalCase field
+# plus a bare `R` (no underscore): `pub type SeqidleR = crate::BitReader;`, and
+# links it to the field via the accessor `pub fn seqidle(&self) -> SeqidleR`.
+# Here a 1-bit field IS a `BitReader` (unlike the early tuple-struct line).
+_READER_TYPE_ANY_RE = re.compile(
+    r"^pub type (\w+) = crate::(BitReader|FieldReader)\b", re.M)
+_FIELD_READER_ACCESSOR_RE = re.compile(
+    r"pub fn (\w+)\(&self\)\s*->\s*(\w+)\b")
 # svd2rust de-duplicates identical readers by re-export, in three shapes:
 #   pub use HSION_R as PLLON_R;                        (same file)
 #   pub use super::exticr1::EXTI0_R as EXTI4_R;        (sibling register)
@@ -2284,7 +2303,16 @@ class ReaderShapes:
                     else:
                         continue                # unknown path shape: unresolved
                     aliases[m.group(3).lower()] = (target, m.group(2).lower())
-                self._files[key] = (decls, aliases)
+                # 0.35/0.37 accessor-based resolution: reader-type-name -> shape
+                # and field -> reader-type-name, so a field whose reader is
+                # named `SeqidleR` (not `SEQIDLE_R`) still resolves.
+                reader_decls = {
+                    m.group(1).lower():
+                        ("bit" if m.group(2) == "BitReader" else "field")
+                    for m in _READER_TYPE_ANY_RE.finditer(text)}
+                accessors = {m.group(1).lower(): m.group(2).lower()
+                             for m in _FIELD_READER_ACCESSOR_RE.finditer(text)}
+                self._files[key] = (decls, aliases, reader_decls, accessors)
         return self._files[key]
 
     def has_register(self, periph: str, reg: str) -> bool:
@@ -2296,13 +2324,18 @@ class ReaderShapes:
         parsed = self._parse(periph, reg)
         if parsed is None or _depth > 8:
             return None
-        decls, aliases = parsed
+        decls, aliases, reader_decls, accessors = parsed
         f = field.lower()
         if f in decls:
             return decls[f]
         if f in aliases:
             (p2, r2), f2 = aliases[f]
             return self.shape(p2, r2, f2, _depth + 1)
+        # 0.35/0.37: the field's accessor names its reader type; look up that
+        # type's shape.
+        rt = accessors.get(f)
+        if rt and rt in reader_decls:
+            return reader_decls[rt]
         return None
 
 
