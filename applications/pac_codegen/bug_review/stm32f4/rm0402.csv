@@ -42,7 +42,7 @@ status,tp_fp,note,claude_review,rm,device,crate,version,file,line,peripheral,reg
 ,,,fp,rm0402,stm32f412,stm32f4xx-hal,0.23.0,src/qspi.rs,653,quadspi,cr,modify,,corroborated,1,,busy,exact,,76be1e89f337,Note: This bitfield can be modified only when BUSY = 0.
 ,,,fp,rm0402,stm32f412,stm32f4xx-hal,0.23.0,src/qspi.rs,675,quadspi,abr,write,,corroborated,1,,busy,only,,6605dc7cf519,Note: This bitfield can be written only when BUSY = 0.
 ,,,fp,rm0402,stm32f412,stm32f4xx-hal,0.23.0,src/qspi.rs,684,quadspi,ccr,modify,,corroborated,1,,busy,exact,,64ee1483fba2,Note: This bitfield can be written only when BUSY = 0.
-,,,tp,rm0402,stm32f412,stm32f4xx-hal,0.23.0,src/rcc/f4/mod.rs,641,rcc,dckcfgr,modify,,unchecked,1,,plli2son pllon,only,,b7b015ab21af,These bits should be written when the PLL and PLLI2S are disabled.
+,tp,they are actually enabled,tp,rm0402,stm32f412,stm32f4xx-hal,0.23.0,src/rcc/f4/mod.rs,641,rcc,dckcfgr,modify,,unchecked,1,,plli2son pllon,only,,b7b015ab21af,These bits should be written when the PLL and PLLI2S are disabled.
 ,,,fp,rm0402,stm32f412,stm32f4xx-hal,0.23.0,src/rcc/f4/pll.rs,206,rcc,pllcfgr,write,pllsrc,unchecked,1,,pllon,field,,1f78208f64e0,These bits should be written only if PLL is disabled.
 ,,,fp,rm0402,stm32f412,stm32f4xx-hal,0.23.0,src/rcc/f4/pll.rs,260,rcc,pllcfgr,write,pllm,unchecked,1,,pllon,field,,1f78208f64e0,These bits should be written only if PLL is disabled.
 ,,,fp,rm0402,stm32f412,stm32f4xx-hal,0.23.0,src/rcc/f4/pll.rs,261,rcc,pllcfgr,write,plln,unchecked,1,,pllon,field,,1f78208f64e0,These bits should be written only if PLL is disabled.
