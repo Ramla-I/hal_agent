@@ -17,6 +17,7 @@ Usage:
     python applications/pac_codegen/bug_review/review.py --pac stm32h7
     python applications/pac_codegen/bug_review/review.py --rm rm0433
     python applications/pac_codegen/bug_review/review.py --unchecked   # candidates only
+    python applications/pac_codegen/bug_review/review.py --claude-tp    # automated-triage tp or unsure
     python applications/pac_codegen/bug_review/review.py --all         # revisit marked rows too
 """
 
@@ -177,6 +178,8 @@ def main():
     ap.add_argument("--rm", help="only this manual, e.g. rm0433")
     ap.add_argument("--unchecked", action="store_true",
                     help="only rows whose static verdict is 'unchecked'")
+    ap.add_argument("--claude-tp", action="store_true",
+                    help="only rows the automated triage (claude_review) marked tp or unsure")
     ap.add_argument("--all", action="store_true",
                     help="revisit already-marked rows too")
     args = ap.parse_args()
@@ -189,6 +192,8 @@ def main():
         path, i = pr
         row = files[path][1][i]
         if args.unchecked and row.get("static_verdict") != "unchecked":
+            return False
+        if args.claude_tp and (row.get("claude_review") or "").strip().lower() not in ("tp", "unsure"):
             return False
         if row.get("status") == "stale":
             return False
