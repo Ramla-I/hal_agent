@@ -122,20 +122,31 @@ class SourceRegister:
     (``super::sr::SRrs``); otherwise it is cross-peripheral and resolves via
     the device module (``super::super::pwr::cr::CRrs``). Instance binding is
     the documented limit either way (shared module types).
+
+    A precondition that names its source register WITHOUT a peripheral prefix
+    (e.g. PUF's "write CODEINPUT only when STAT.CODEINREQ = 1") refers to the
+    target's own peripheral — qualify it there (``PUF_STAT``) rather than
+    dropping the gate. If that guess is wrong the emitted ``super::stat`` path
+    fails to compile, so the error surfaces loudly instead of silently.
     """
 
     def __init__(self, register_name: str, peripheral: str):
-        if "_" not in register_name:
-            raise ValueError(
-                f"cross-register source {register_name!r} lacks a "
-                "PERIPHERAL_REGISTER prefix; cannot resolve its module"
-            )
-        prefix, reg = register_name.split("_", 1)
+        if "_" in register_name:
+            prefix, reg = register_name.split("_", 1)
+        else:
+            prefix, reg = peripheral, register_name
         self.reg = reg.lower()
         if not re.fullmatch(r"[a-z][a-z0-9_]*", self.reg):
             raise ValueError(f"unresolvable source register {register_name!r}")
+        # Same-peripheral when the prefix names this peripheral. The prefix may
+        # carry the SOURCE instance while ``peripheral`` is the base MODULE it
+        # was remapped to (I2C1_STAT sourced from module i2c0, after the
+        # derivedFrom instance map), so compare on the digit-stripped FAMILY
+        # base too, not only the exact instance.
         base = peripheral.lower().rstrip("0123456789")
-        self.same_peripheral = prefix.lower() in (base, peripheral.lower())
+        prefix_base = prefix.lower().rstrip("0123456789")
+        self.same_peripheral = (prefix.lower() in (base, peripheral.lower())
+                                or prefix_base == base)
         self.periph_module = None if self.same_peripheral else prefix.lower()
         self.display = register_name
 
@@ -145,8 +156,11 @@ class SourceRegister:
     def var(self) -> str:
         return self.reg if self.same_peripheral else f"{self.periph_module}_{self.reg}"
 
-    def spec_path(self) -> str:
-        spec = f"{self.reg.upper()}rs"
+    def spec_path(self, spec: str = None) -> str:
+        # svd2rust names the RegisterSpec differently per version; ``spec`` is
+        # the name discovered from the PAC (see SpecResolver). Falls back to the
+        # stm32-rs `{REG}rs` form for standalone emission with no PAC to read.
+        spec = spec or f"{self.reg.upper()}rs"
         if self.same_peripheral:
             return f"super::{self.reg}::{spec}"
         return f"super::super::{self.periph_module}::{self.reg}::{spec}"
@@ -387,15 +401,26 @@ class RegisterPlan:
         self.peripheral = peripheral.lower()
         # Corpus abbreviations are often peripheral-prefixed (SPI_TXCRCR);
         # the PAC module is named by the bare register (txcrcr). Strip the
-        # prefix when it names this peripheral.
+        # prefix when it names this peripheral. The prefix may carry the SOURCE
+        # instance while `self.peripheral` is the base MODULE it was remapped to
+        # (I2C1_MSTCTL on module i2c0, after the derivedFrom instance map), so
+        # compare on the digit-stripped FAMILY base, not the exact instance.
         name = register_info.datasheet_register_abbreviation
         if "_" in name:
             prefix, rest = name.split("_", 1)
             base = self.peripheral.rstrip("0123456789")
-            if prefix.lower() in (base, self.peripheral):
+            prefix_base = prefix.lower().rstrip("0123456789")
+            if prefix.lower() in (base, self.peripheral) or prefix_base == base:
                 name = rest
         self.reg_name = name  # e.g. CR1, TXCRCR
         self.reg_lower = self.reg_name.lower()
+        # The RegisterSpec type svd2rust emitted for this register. svd2rust
+        # names it differently per version — `CR1rs` (stm32-rs), `CTRL_SPEC`
+        # (0.19–0.21), `CtrlSpec` (0.35/0.37) — so the derived `{REG}rs` here is
+        # only the stm32-rs default used by standalone emission; prune_plans_
+        # for_device overrides it with the name DISCOVERED from the PAC register
+        # file, which is authoritative for injection.
+        self.spec_type = f"{self.reg_name.upper()}rs"
         # svd2rust-operation -> ordered unique preconditions; op in
         # {"write", "read", "modify"}. "modify" is the DERIVED union bucket: a
         # write target feeds {write, modify}, a read target feeds {read, modify}.
@@ -653,8 +678,7 @@ class RegisterPlan:
     # (peripheral module, register-spec type, gated op), for the marker walk
     def gated_ops(self) -> set[tuple[str, str, str]]:
         """Every operation whose marker must be withheld: those with a gate."""
-        spec = f"{self.reg_name.upper()}rs"
-        return {(self.peripheral, spec, op)
+        return {(self.peripheral, self.spec_type, op)
                 for op in set(self.preconditions)}
 
     def witness_name(self, op: str) -> str:
@@ -692,11 +716,40 @@ def doc_lines(text: str, indent: str = "    ") -> list:
     return out or [f"{indent}///"]
 
 
-def generate_constraint_module(plan: RegisterPlan) -> str:
+def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
+                               resolver: "SpecResolver" = None) -> str:
     reg = plan.reg_name
-    spec = f"super::{plan.reg_lower}::{reg.upper()}rs"
+    spec = f"super::{plan.reg_lower}::{plan.spec_type}"
     ux = f"<{spec} as crate::RegisterSpec>::Ux"
     err = plan.error_name()
+
+    def source_spec_path(s: "SourceRegister") -> str:
+        """The cross-register source's Rust path, with its RegisterSpec name
+        discovered from the PAC (falls back to `{REG}rs` when no resolver)."""
+        if resolver is None:
+            return s.spec_path()
+        module = plan.peripheral if s.same_peripheral else s.periph_module
+        return s.spec_path(resolver.spec(module, s.reg))
+
+    # The welded `*_when_ready` closures must mirror the stock write/modify/read
+    # of the target svd2rust dialect (see detect_dialect). MODERN: closures take
+    # `crate::W`/`crate::R`, write/modify return `REG::Ux`, read returns
+    # `crate::R`. EARLY (0.19–0.21): closures take the per-register
+    # `REG::Writer`/`REG::Reader` newtype, write/modify return `()`, read
+    # returns `REG::Reader`. Whatever compiles with the stock method compiles
+    # with the welded one.
+    if dialect == "early":
+        writer_ty = f"<{spec} as crate::Writable>::Writer"
+        reader_ty = f"<{spec} as crate::Readable>::Reader"
+        w_ret = f"crate::W<{spec}>"       # stock early closure returns &mut W<REG>
+        write_ok = "()"                   # write_witnessed/modify_witnessed -> ()
+        read_ok = reader_ty               # read_witnessed -> REG::Reader
+    else:
+        writer_ty = f"crate::W<{spec}>"
+        reader_ty = f"crate::R<{spec}>"
+        w_ret = f"crate::W<{spec}>"
+        write_ok = ux
+        read_ok = f"crate::R<{spec}>"
 
     lines: list[str] = []
     a = lines.append
@@ -748,7 +801,7 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
 
     def _src_params(srcs) -> str:
         return "".join(
-            f", {s.var()}: &crate::Reg<{s.spec_path()}>" for s in srcs)
+            f", {s.var()}: &crate::Reg<{source_spec_path(s)}>" for s in srcs)
 
     def src_params(op: str) -> str:
         return _src_params(plan.sources(op))
@@ -803,9 +856,9 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("    /// that itself mutates a precondition, or an interrupt, can")
         a("    /// change it before the store.")
         a("    #[inline(always)]")
-        a(f"    pub fn write_when_ready<F>(&self, f: F{src_params('write')}) -> Result<{ux}, {err}>")
+        a(f"    pub fn write_when_ready<F>(&self, f: F{src_params('write')}) -> Result<{write_ok}, {err}>")
         a("    where")
-        a(f"        F: FnOnce(&mut crate::W<{spec}>) -> &mut crate::W<{spec}>,")
+        a(f"        F: FnOnce(&mut {writer_ty}) -> &mut {w_ret},")
         a("    {")
         a(f"        let witness = self.check_write_ready({src_args('write').lstrip(', ')})?;"
           if plan.sources("write") else
@@ -820,9 +873,9 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("    /// not an atomic check-and-write: the read and your closure run")
         a("    /// before the store.")
         a("    #[inline(always)]")
-        a(f"    pub fn modify_when_ready<F>(&self, f: F{src_params('modify')}) -> Result<{ux}, {err}>")
+        a(f"    pub fn modify_when_ready<F>(&self, f: F{src_params('modify')}) -> Result<{write_ok}, {err}>")
         a("    where")
-        a(f"        for<'w> F: FnOnce(&crate::R<{spec}>, &'w mut crate::W<{spec}>) -> &'w mut crate::W<{spec}>,")
+        a(f"        for<'w> F: FnOnce(&{reader_ty}, &'w mut {writer_ty}) -> &'w mut {w_ret},")
         a("    {")
         a(f"        let witness = self.check_modify_ready({src_args('modify').lstrip(', ')})?;"
           if plan.sources("modify") else
@@ -833,7 +886,7 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
     if "read" in plan.preconditions:
         a("    /// Check and read in one call — the witness never escapes.")
         a("    #[inline(always)]")
-        a(f"    pub fn read_when_ready(&self{src_params('read')}) -> Result<crate::R<{spec}>, {err}> {{")
+        a(f"    pub fn read_when_ready(&self{src_params('read')}) -> Result<{read_ok}, {err}> {{")
         a(f"        let witness = self.check_read_ready({src_args('read').lstrip(', ')})?;")
         a("        Ok(self.read_witnessed(witness))")
         a("    }")
@@ -870,15 +923,30 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
 # generic.rs patch: gate stock methods, add witnessed/unwitnessed surface
 # --------------------------------------------------------------------------- #
 
-# (method signature to find — must contain a where clause, where-bound to add).
-# `read` and `reset` have no stock where clause and are handled separately.
-_GATED_METHODS = [
-    ("    pub fn write<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
-    ("    pub fn from_write<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite"),
-    ("    pub unsafe fn write_with_zero<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
-    ("    pub unsafe fn from_write_with_zero<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite"),
-    ("    pub fn modify<F>(&self, f: F) -> REG::Ux\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> &'w mut W<REG>,", "UnconstrainedModify"),
-    ("    pub fn from_modify<F, T>(&self, f: F) -> T\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> T,", "UnconstrainedModify"),
+# (method signature to find — must contain a where clause, where-bound to add,
+# whether the method MUST be present once this dialect is selected). `read` and
+# `reset` have no stock where clause and are handled separately.
+#
+# svd2rust's generated `generic.rs` comes in two dialects across the PACs we
+# inject. MODERN (svd2rust >=~0.30, including the headerless stm32-rs output):
+# write/modify return `-> REG::Ux`, the closure takes `&mut W<REG>`/`&R<REG>`,
+# and the `from_*` + atomic surface exists. EARLY (svd2rust 0.19–0.21, the older
+# NXP PACs — lpc55, ke04, s32k1xx): write/modify have no return, the closure
+# takes `&mut REG::Writer`/`&REG::Reader`, there is no `from_*`/atomic surface,
+# and there is no generic `Reg<REG>` Debug impl. `read` differs too (`-> R<REG>`
+# vs `-> REG::Reader`). The emitter detects the dialect from the stock `write`
+# signature and uses the matching table + witnessed-surface template.
+#
+# `required=False` marks a method that may be absent WITHIN a dialect (atomics
+# are behind svd2rust's `atomics` feature; some 0.3x lines omit them): patched
+# only when present, never a drift error when absent.
+_GATED_METHODS_MODERN = [
+    ("    pub fn write<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", True),
+    ("    pub fn from_write<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite", True),
+    ("    pub unsafe fn write_with_zero<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", True),
+    ("    pub unsafe fn from_write_with_zero<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite", True),
+    ("    pub fn modify<F>(&self, f: F) -> REG::Ux\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> &'w mut W<REG>,", "UnconstrainedModify", True),
+    ("    pub fn from_modify<F, T>(&self, f: F) -> T\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> T,", "UnconstrainedModify", True),
     # THE ATOMIC WRITE SURFACE. svd2rust emits set_bits/clear_bits/toggle_bits
     # behind the `atomics` feature: a single atomic_or/and/xor instead of a
     # read-modify-write, which is what a driver reaches for when two contexts
@@ -892,13 +960,45 @@ _GATED_METHODS = [
     # (stm32g4xx-hal rng.rs:135, on RNG_SR, which no manual constrains) and no
     # measured driver enables the feature. A hole in the encoding, not a lost
     # finding -- and exactly the hole that matters for a driver staying inside
-    # the typed API, because this IS the typed API.
+    # the typed API, because this IS the typed API. OPTIONAL: the 0.35/0.37 NXP
+    # lines (mimxrt, mk20) omit the atomic surface entirely.
     #
     # Eight-space indent: these live in `mod atomic`, one level deeper.
-    ("        pub unsafe fn set_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
-    ("        pub unsafe fn clear_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
-    ("        pub unsafe fn toggle_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
+    ("        pub unsafe fn set_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", False),
+    ("        pub unsafe fn clear_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", False),
+    ("        pub unsafe fn toggle_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", False),
 ]
+
+# EARLY dialect (svd2rust 0.19–0.21): closures take the per-register newtype
+# `REG::Writer`/`REG::Reader`, write/modify return `()`, no `from_*`/atomics.
+_GATED_METHODS_EARLY = [
+    ("    pub fn write<F>(&self, f: F)\n    where\n        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,", "UnconstrainedWrite", True),
+    ("    pub unsafe fn write_with_zero<F>(&self, f: F)\n    where\n        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,", "UnconstrainedWrite", True),
+    ("    pub fn modify<F>(&self, f: F)\n    where\n        for<'w> F: FnOnce(&REG::Reader, &'w mut REG::Writer) -> &'w mut W<REG>,", "UnconstrainedModify", True),
+]
+
+# dialect name -> (gated-method table, stock `read` signature, has generic
+# `Reg<REG>` Debug impl). The `read` sig and Debug presence are the other two
+# places generic.rs diverges between dialects.
+_DIALECTS = {
+    "modern": (_GATED_METHODS_MODERN, "    pub fn read(&self) -> R<REG> {", True),
+    "early": (_GATED_METHODS_EARLY, "    pub fn read(&self) -> REG::Reader {", False),
+}
+
+
+def detect_dialect(generic_src: str) -> str:
+    """Which svd2rust generic.rs dialect this crate was generated in, decided
+    by the stock `write` signature (the clearest discriminator). Raises if
+    neither known dialect's `write` is present — a silent mismatch would gate
+    nothing, so it must fail loudly."""
+    for name, (table, _read, _dbg) in _DIALECTS.items():
+        if table[0][0] in generic_src:
+            return name
+    raise RuntimeError(
+        "generic.rs: unrecognized svd2rust dialect — no known stock `write` "
+        "signature (modern `-> REG::Ux` / early `REG::Writer`) was found. A new "
+        "svd2rust template needs a dialect entry in _DIALECTS before injection."
+    )
 
 _GENERIC_ADDITIONS = GENERIC_SENTINEL + """
 
@@ -1144,6 +1244,227 @@ impl<REG: Readable> Reg<REG> {
 """
 
 
+# The EARLY-dialect (svd2rust 0.19–0.21) witnessed/unwitnessed surface. The
+# marker + gate traits are identical to the modern template (they constrain
+# `Writable`/`Readable`, which both dialects define); only the method BODIES
+# differ — early svd2rust passes the per-register `REG::Writer`/`REG::Reader`
+# newtype to the closure, returns `()` from write/modify, builds the writer
+# with `REG::reset_value()` / `REG::Ux::default()`, and has no safe-write
+# field bitmaps. Each witnessed method mirrors its early stock method verbatim,
+# plus the witness parameter and gate bound, so a closure that compiles against
+# the stock method compiles here too.
+_GENERIC_ADDITIONS_EARLY = GENERIC_SENTINEL + """
+
+/// Marker: this register's WRITE surface needs no witness. Emitted for every
+/// unconstrained register; ABSENT on write-constrained ones, so the stock
+/// methods do not exist for them and E0277 points at the offending call.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is write-constrained by its datasheet",
+    label = "this register requires a witness: call `write_witnessed(f, witness)` or `write_when_ready(f)`; obtain the witness via `check_write_ready()`; bypass only with `unsafe write_unwitnessed`",
+)]
+pub trait UnconstrainedWrite: Writable {}
+
+/// Marker: this register's MODIFY surface needs no witness.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is modify-constrained by its datasheet",
+    label = "call `modify_witnessed(f, witness)` or `modify_when_ready(f)`; obtain the witness via `check_modify_ready()`; bypass only with `unsafe modify_unwitnessed`",
+)]
+pub trait UnconstrainedModify: Readable + Writable {}
+
+/// Marker: this register's READ surface needs no witness.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is read-constrained by its datasheet",
+    label = "call `read_witnessed(witness)`; bypass only with `unsafe read_unwitnessed`",
+)]
+pub trait UnconstrainedRead: Readable {}
+
+/// Implemented ONLY by write-constrained registers; carries the witness type
+/// their gated write surface consumes.
+pub trait WriteGate: Writable {
+    /// The witness consumed by `write_witnessed`/`reset_witnessed`/....
+    type Witness;
+}
+
+/// Implemented ONLY by modify-constrained registers.
+pub trait ModifyGate: Readable + Writable {
+    /// The witness consumed by `modify_witnessed`.
+    type Witness;
+}
+
+/// Implemented ONLY by read-constrained registers.
+pub trait ReadGate: Readable {
+    /// The witness consumed by `read_witnessed`.
+    type Witness;
+}
+
+impl<REG: Resettable + Writable> Reg<REG> {
+    /// Witnessed `write`: consumes the witness minted by the register's
+    /// `check_write_ready()`. Prefer `write_when_ready`, which welds check and
+    /// write into one call so the witness never escapes.
+    #[inline(always)]
+    pub fn write_witnessed<F>(&self, f: F, _witness: <REG as WriteGate>::Witness)
+    where
+        REG: WriteGate,
+        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,
+    {
+        self.register.set(
+            f(&mut REG::Writer::from(W {
+                bits: REG::reset_value(),
+                _reg: marker::PhantomData,
+            }))
+            .bits,
+        );
+    }
+
+    /// Witnessed `reset`.
+    #[inline(always)]
+    pub fn reset_witnessed(&self, _witness: <REG as WriteGate>::Witness)
+    where
+        REG: WriteGate,
+    {
+        self.register.set(REG::reset_value())
+    }
+
+    /// The sanctioned escape hatch: write WITHOUT the datasheet-required
+    /// witness. Greppable; the caller accepts responsibility for violating
+    /// the documented hardware procedure (errata, bring-up, etc.).
+    ///
+    /// # Safety
+    ///
+    /// The datasheet forbids this write unless its preconditions hold; the
+    /// caller must establish them by other means.
+    #[inline(always)]
+    pub unsafe fn write_unwitnessed<F>(&self, f: F)
+    where
+        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,
+    {
+        self.register.set(
+            f(&mut REG::Writer::from(W {
+                bits: REG::reset_value(),
+                _reg: marker::PhantomData,
+            }))
+            .bits,
+        );
+    }
+}
+
+impl<REG: Writable> Reg<REG>
+where
+    REG::Ux: Default,
+{
+    /// Witnessed `write_with_zero`. Still `unsafe`: the zero-base bit pattern
+    /// may be invalid for the register (svd2rust's own contract).
+    ///
+    /// # Safety
+    ///
+    /// Unsafe to use with registers which don't allow to write 0.
+    #[inline(always)]
+    pub unsafe fn write_with_zero_witnessed<F>(&self, f: F, _witness: <REG as WriteGate>::Witness)
+    where
+        REG: WriteGate,
+        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,
+    {
+        self.register.set(
+            (*f(&mut REG::Writer::from(W {
+                bits: REG::Ux::default(),
+                _reg: marker::PhantomData,
+            })))
+            .bits,
+        );
+    }
+}
+
+impl<REG: Readable + Writable> Reg<REG> {
+    /// Witnessed `modify`: consumes the witness minted by the register's
+    /// `check_modify_ready()`. Prefer `modify_when_ready`.
+    #[inline(always)]
+    pub fn modify_witnessed<F>(&self, f: F, _witness: <REG as ModifyGate>::Witness)
+    where
+        REG: ModifyGate,
+        for<'w> F: FnOnce(&REG::Reader, &'w mut REG::Writer) -> &'w mut W<REG>,
+    {
+        let bits = self.register.get();
+        self.register.set(
+            f(
+                &REG::Reader::from(R {
+                    bits,
+                    _reg: marker::PhantomData,
+                }),
+                &mut REG::Writer::from(W {
+                    bits,
+                    _reg: marker::PhantomData,
+                }),
+            )
+            .bits,
+        );
+    }
+
+    /// Escape hatch for the modify surface.
+    ///
+    /// # Safety
+    ///
+    /// The datasheet forbids this read-modify-write unless its preconditions
+    /// hold; the caller must establish them by other means.
+    #[inline(always)]
+    pub unsafe fn modify_unwitnessed<F>(&self, f: F)
+    where
+        for<'w> F: FnOnce(&REG::Reader, &'w mut REG::Writer) -> &'w mut W<REG>,
+    {
+        let bits = self.register.get();
+        self.register.set(
+            f(
+                &REG::Reader::from(R {
+                    bits,
+                    _reg: marker::PhantomData,
+                }),
+                &mut REG::Writer::from(W {
+                    bits,
+                    _reg: marker::PhantomData,
+                }),
+            )
+            .bits,
+        );
+    }
+}
+
+impl<REG: Readable> Reg<REG> {
+    /// Witnessed `read` (only exists for read-constrained registers, whose
+    /// witnesses come from cross-register checks).
+    #[inline(always)]
+    pub fn read_witnessed(&self, _witness: <REG as ReadGate>::Witness) -> REG::Reader
+    where
+        REG: ReadGate,
+    {
+        REG::Reader::from(R {
+            bits: self.register.get(),
+            _reg: marker::PhantomData,
+        })
+    }
+
+    /// Escape hatch for the read surface.
+    ///
+    /// # Safety
+    ///
+    /// The datasheet constrains reads of this register; the caller must
+    /// establish the preconditions by other means.
+    #[inline(always)]
+    pub unsafe fn read_unwitnessed(&self) -> REG::Reader {
+        REG::Reader::from(R {
+            bits: self.register.get(),
+            _reg: marker::PhantomData,
+        })
+    }
+}
+"""
+
+# svd2rust dialect -> the witnessed/unwitnessed surface appended to its
+# generic.rs (see detect_dialect / _DIALECTS).
+_GENERIC_ADDITIONS_BY_DIALECT = {
+    "modern": _GENERIC_ADDITIONS,
+    "early": _GENERIC_ADDITIONS_EARLY,
+}
+
+
 # marker trait -> the operation it gates, so a bound can be skipped when this
 # crate gates nothing of that operation.
 _BOUND_OP = {"UnconstrainedRead": "read", "UnconstrainedWrite": "write",
@@ -1151,11 +1472,14 @@ _BOUND_OP = {"UnconstrainedRead": "read", "UnconstrainedWrite": "write",
 ALL_OPS = frozenset(_BOUND_OP.values())
 
 
-def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
+def patch_generic_rs(generic_path: Path, gated_ops=None, dialect=None) -> None:
     """Gate the stock methods and append the witnessed/unwitnessed surface.
 
     ``gated_ops`` (default: all three) is the set of operations this crate
     ACTUALLY gates. A bound is emitted only for those.
+
+    ``dialect`` selects the svd2rust generic.rs template (``modern`` / ``early``,
+    see ``_DIALECTS``); ``None`` auto-detects from the stock `write` signature.
 
     Why it matters: a bound on an operation that no register gates enforces
     nothing — every register carries the marker — yet every *generic*
@@ -1166,8 +1490,10 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
     flat cost of installing the encoding, and cannot weaken enforcement: an
     operation with no gate has nothing to enforce.
 
-    The drift checks still run for every signature, gated or not — a template
-    that moved must fail loudly regardless of what this crate happens to gate.
+    The drift checks still run for every REQUIRED signature of the selected
+    dialect, gated or not — a template that moved must fail loudly regardless
+    of what this crate happens to gate. Optional methods (atomics, some
+    `from_*`) are patched only when present; absent ones are not drift.
     """
     ops = ALL_OPS if gated_ops is None else frozenset(gated_ops)
     content = generic_path.read_text()
@@ -1177,21 +1503,24 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
             "one-shot from a pristine PAC (restore it, e.g. get_pac.py --force)"
         )
 
-    # `read` has no where clause in stock svd2rust; give it one.
-    read_sig = "    pub fn read(&self) -> R<REG> {"
+    if dialect is None:
+        dialect = detect_dialect(content)
+    table, read_sig, has_dbg = _DIALECTS[dialect]
+
+    # `read` has no where clause in stock svd2rust; give it one. The return
+    # type differs by dialect (`-> R<REG>` modern, `-> REG::Reader` early), so
+    # the replacement is built from the matched signature (minus its ` {`).
     if read_sig not in content:
         raise RuntimeError("generic.rs drift: stock `read` signature not found")
     if "read" in ops:
+        read_head = read_sig[:-len(" {")]
         content = content.replace(
             read_sig,
-            "    pub fn read(&self) -> R<REG>\n"
-            "    where\n"
-            "        REG: UnconstrainedRead,\n"
-            "    {",
+            read_head + "\n    where\n        REG: UnconstrainedRead,\n    {",
             1,
         )
 
-    # `reset` likewise.
+    # `reset` likewise (identical in both dialects).
     reset_sig = "    pub fn reset(&self) {"
     if reset_sig not in content:
         raise RuntimeError("generic.rs drift: stock `reset` signature not found")
@@ -1206,7 +1535,7 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
         )
 
     # The rest already have a where clause: require the marker first.
-    for sig, bound in _GATED_METHODS:
+    for sig, bound, required in table:
         # The indent is derived, not assumed to be four spaces: the atomic
         # methods sit inside `mod atomic`, one level deeper, and a hardcoded
         # "\n    where\n" simply fails to split them.
@@ -1217,7 +1546,10 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
                                f"at its own indent:\n{sig}")
         head, tail = sig.split(marker, 1)
         if sig not in content:
-            raise RuntimeError(f"generic.rs drift: signature not found:\n{sig}")
+            if required:
+                raise RuntimeError(
+                    f"generic.rs drift: required signature not found:\n{sig}")
+            continue  # optional method (atomics / some from_*) absent here
         if _BOUND_OP[bound] not in ops:
             continue
         content = content.replace(
@@ -1227,22 +1559,24 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
         )
 
     # The generic Debug impl performs a read; it now needs the read marker.
-    dbg = ("impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
-           "where\n"
-           "    R<REG>: core::fmt::Debug,")
-    if dbg not in content:
-        raise RuntimeError("generic.rs drift: Debug impl not found")
-    if "read" in ops:
-        content = content.replace(
-            dbg,
-            "impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
-            "where\n"
-            "    R<REG>: core::fmt::Debug,\n"
-            "    REG: UnconstrainedRead,",
-            1,
-        )
+    # The early dialect emits no generic `Reg<REG>` Debug impl, so skip it there.
+    if has_dbg:
+        dbg = ("impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
+               "where\n"
+               "    R<REG>: core::fmt::Debug,")
+        if dbg not in content:
+            raise RuntimeError("generic.rs drift: Debug impl not found")
+        if "read" in ops:
+            content = content.replace(
+                dbg,
+                "impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
+                "where\n"
+                "    R<REG>: core::fmt::Debug,\n"
+                "    REG: UnconstrainedRead,",
+                1,
+            )
 
-    content += "\n" + _GENERIC_ADDITIONS
+    content += "\n" + _GENERIC_ADDITIONS_BY_DIALECT[dialect]
     generic_path.write_text(content)
 
 
@@ -1377,6 +1711,35 @@ class DeviceLayout:
             yield rel.parts[0].removesuffix(".rs"), f
 
 
+_REGISTER_SPEC_RE = re.compile(r"impl crate::RegisterSpec for (\w+)")
+
+
+class SpecResolver:
+    """(peripheral module, register-lower) -> the RegisterSpec type svd2rust
+    actually generated, discovered from the register file's
+    ``impl crate::RegisterSpec for <NAME>``.
+
+    svd2rust names that type differently across versions — ``CR1rs`` (stm32-rs),
+    ``CTRL_SPEC`` (0.19–0.21), ``CtrlSpec`` (0.35/0.37). Discovering it is
+    robust where replicating each version's identifier mangling is not. Falls
+    back to the stm32-rs ``{REG}rs`` form when the file is unreadable."""
+
+    def __init__(self, device_dir: Path):
+        self.layout = DeviceLayout(device_dir)
+        self._cache: dict = {}
+
+    def spec(self, periph_module: str, reg_lower: str) -> str:
+        key = (periph_module.lower(), reg_lower.lower())
+        if key not in self._cache:
+            f = self.layout.register_file(periph_module, reg_lower)
+            name = None
+            if f.is_file():
+                m = _REGISTER_SPEC_RE.search(f.read_text())
+                name = m.group(1) if m else None
+            self._cache[key] = name or f"{reg_lower.upper()}rs"
+        return self._cache[key]
+
+
 def add_marker_impls(device_dir: Path, gated: set[tuple[str, str, str]],
                      skip_marked: bool = False) -> int:
     """Append Unconstrained* marker impls to every register file. Returns the
@@ -1418,7 +1781,9 @@ def add_marker_impls(device_dir: Path, gated: set[tuple[str, str, str]],
 
 
 def inject_constraints_module(peripheral_file: Path,
-                              plans: list[RegisterPlan]) -> None:
+                              plans: list[RegisterPlan],
+                              dialect: str = "modern",
+                              resolver: "SpecResolver" = None) -> None:
     """Append ONE `pub mod constraints { ... }` holding every constrained
     register of this peripheral (a peripheral may have several — e.g. F1's
     AFIO gates both EVCR and MAPR; type names are register-scoped so the
@@ -1469,7 +1834,7 @@ def inject_constraints_module(peripheral_file: Path,
         text = text.replace(type_line, caveat + type_line, 1)
     parts = []
     for i, p in enumerate(plans):
-        code = generate_constraint_module(p)
+        code = generate_constraint_module(p, dialect=dialect, resolver=resolver)
         if i > 0:
             # `//!` inner docs are only legal at the top of the module; demote
             # subsequent registers' headers to plain comments.
@@ -1499,6 +1864,12 @@ def inject_constraints_module(peripheral_file: Path,
 # ground truth, exactly as it is for the access mode above.
 _READER_DECL_RE = re.compile(
     r"^pub type (\w+)_R = crate::(BitReader|FieldReader)\b", re.M)
+# EARLY dialect (svd2rust 0.19–0.21) spells the reader as a tuple STRUCT and
+# encodes bit-ness in the first type argument: `FieldReader<bool, ..>` is a
+# 1-bit field, `FieldReader<u8/u16/u32, ..>` is multi-bit (there is no separate
+# BitReader type in that line).
+_READER_DECL_STRUCT_RE = re.compile(
+    r"^pub struct (\w+)_R\(crate::(BitReader|FieldReader)(?:<\s*(\w+))?", re.M)
 # svd2rust de-duplicates identical readers by re-export, in three shapes:
 #   pub use HSION_R as PLLON_R;                        (same file)
 #   pub use super::exticr1::EXTI0_R as EXTI4_R;        (sibling register)
@@ -1528,6 +1899,13 @@ class ReaderShapes:
                 decls = {m.group(1).lower():
                          ("bit" if m.group(2) == "BitReader" else "field")
                          for m in _READER_DECL_RE.finditer(text)}
+                # EARLY struct form: bit when it is a BitReader or a
+                # FieldReader<bool, ..>, otherwise multi-bit.
+                for m in _READER_DECL_STRUCT_RE.finditer(text):
+                    decls.setdefault(
+                        m.group(1).lower(),
+                        "bit" if (m.group(2) == "BitReader"
+                                  or m.group(3) == "bool") else "field")
                 aliases = {}
                 for m in _READER_ALIAS_RE.finditer(text):
                     segs = [s for s in m.group(1).split("::") if s]
@@ -1610,6 +1988,17 @@ def _prune_plan_for_readers(shapes: ReaderShapes, plan: RegisterPlan) -> list[st
 
 _PERIPH_ALIAS_RE = re.compile(
     r"^pub type (\w+) = crate::Periph<(\w+)::RegisterBlock", re.M)
+# Flat single-device crates (lpc55, ke04, s32k1xx — svd2rust 0.19–0.21) express
+# the instance->module relation in lib.rs, not a device mod.rs, and as an
+# explicit struct + Deref rather than a Periph alias:
+#
+#     pub struct I2C1 { ... }
+#     impl Deref for I2C1 { type Target = i2c0::RegisterBlock; }
+#
+# The base instance (I2C0 -> i2c0) uses the same form, so this one regex yields
+# a complete instance->module map including identities.
+_PERIPH_DEREF_RE = re.compile(
+    r"impl Deref for (\w+)\s*\{\s*type Target = (?:crate::)?(\w+)::RegisterBlock")
 
 
 def peripheral_instance_map(device_dir: Path) -> dict:
@@ -1627,14 +2016,32 @@ def peripheral_instance_map(device_dir: Path) -> dict:
     180 of 200 such drops in the STM sweep.
 
     Identity entries are included (``i2c1 -> i2c1``), so this is a complete
-    instance->module map, not just the aliases. Empty when ``mod.rs`` is
-    absent (other PAC layouts); callers then fall back to the file check.
+    instance->module map, not just the aliases.
+
+    Two layouts are supported. MULTI-DEVICE (stm32-rs): a device ``mod.rs``
+    carries ``pub type``/``Periph`` aliases. FLAT single-device (the older NXP
+    PACs — lpc55, ke04, s32k1xx): no ``mod.rs``; the relation is in ``lib.rs``
+    as ``impl Deref for I2C1 { type Target = i2c0::RegisterBlock }`` (and/or the
+    ``Periph`` alias). Empty only when neither is found (unknown layout);
+    callers then fall back to the file check.
     """
     mod_rs = device_dir / "mod.rs"
-    if not mod_rs.is_file():
+    if mod_rs.is_file():
+        return {m.group(1).lower(): m.group(2).lower()
+                for m in _PERIPH_ALIAS_RE.finditer(mod_rs.read_text())}
+    # Flat single-device crate: read lib.rs (device_dir IS src/ for `--device .`;
+    # fall back to the parent for safety).
+    lib_rs = device_dir / "lib.rs"
+    if not lib_rs.is_file():
+        lib_rs = device_dir.parent / "lib.rs"
+    if not lib_rs.is_file():
         return {}
-    return {m.group(1).lower(): m.group(2).lower()
-            for m in _PERIPH_ALIAS_RE.finditer(mod_rs.read_text())}
+    text = lib_rs.read_text()
+    out = {m.group(1).lower(): m.group(2).lower()
+           for m in _PERIPH_ALIAS_RE.finditer(text)}
+    for m in _PERIPH_DEREF_RE.finditer(text):
+        out.setdefault(m.group(1).lower(), m.group(2).lower())
+    return out
 
 
 def _instance_key(name: str):
@@ -2117,8 +2524,14 @@ def prune_plans_for_device(device_dir: Path, plans: list[RegisterPlan],
     layout = shapes.layout
     for plan in plans:
         reg_file = layout.register_file(plan.peripheral, plan.reg_lower)
-        spec = f"{plan.reg_name.upper()}rs"
         reg_text = reg_file.read_text() if reg_file.is_file() else ""
+        # Discover the svd2rust RegisterSpec name from the PAC itself (it varies
+        # by version: CR1rs / CTRL_SPEC / CtrlSpec) and record it on the plan —
+        # authoritative for the marker walk and the emitted constraints module.
+        m = _REGISTER_SPEC_RE.search(reg_text)
+        if m:
+            plan.spec_type = m.group(1)
+        spec = plan.spec_type
         # A field gate rides the field's WRITER accessor, so a field with no
         # writer cannot carry one. Read-only fields inside a writable register
         # are ordinary -- FDCAN_RWD.WDV is the watchdog's current value, next
@@ -2182,18 +2595,24 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
         by_periph.setdefault(plan.peripheral, []).append(plan)
         gated |= plan.gated_ops()
 
+    # Detect the svd2rust generic.rs dialect once; the generic-surface patch
+    # and the per-register witnessed surface must agree on it.
+    dialect = detect_dialect(generic.read_text())
+
     # Bound only the operations this crate actually gates (see
     # patch_generic_rs): an ungated operation has nothing to enforce, and
     # bounding it anyway is pure friction for generic downstream code.
     ops = {op for _, _, op in gated}
-    patch_generic_rs(generic, ops)
+    patch_generic_rs(generic, ops, dialect=dialect)
     n = add_marker_impls(device_dir, gated)
     # generic.rs is crate-wide; so must the markers be. A flat single-device
     # crate (device ".") has no siblings — device_dir IS src.
     siblings = 0 if device == "." else add_sibling_markers(src, device)
     n += siblings
+    resolver = SpecResolver(device_dir)
     for periph, periph_plans in by_periph.items():
-        inject_constraints_module(layout.module_file(periph), periph_plans)
+        inject_constraints_module(layout.module_file(periph), periph_plans,
+                                  dialect=dialect, resolver=resolver)
     # Field-level gating: patch the per-field writer accessors (no-op when no
     # plan carries field gates, so whole-register-only injection is unchanged).
     fields_patched = patch_field_accessors(device_dir, plans)
