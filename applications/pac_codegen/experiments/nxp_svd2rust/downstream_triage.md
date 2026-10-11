@@ -123,3 +123,30 @@ a bug-hunt.
 Across both modes, every injected compiler error was triaged: **81 whole-register
 (`E0277`) + 205 field (`E0061`) = 286 firings → 1 real bug** (lpc8xx-hal
 `I2cMaster::read_all`), the rest friction on disciplined drivers.
+
+## Low-value-project scan
+
+A pass over the "standalone / stale / dead" crates in the NXP ecosystem doc. Most
+are **not scannable**: the device has no constraints in our corpus (lpc82x,
+lpc546xx, mkw41z, mcxa, mcxn947 — different families we never extracted), or there
+is no consumer to build (ke04, mk66f18, k64, k32l3a60 have no HAL and no
+downstream). The one low-value project that pairs a device we have constraints for
+with a real consumer is **canadensis** (s32k1xx RM → injected into `s32k146-pac`
+0.1.0, 21 whole-register gates; the `s32k146_node` UAVCAN example drives FlexCAN
+and the clock tree RAW, no HAL).
+
+| consumer | device / PAC | firings | bugs | result |
+|---|---|--:|--:|---|
+| canadensis `s32k146_node` | s32k146 / s32k146-pac 0.1.0 | 2 | 0 | all FP |
+
+Both firings are the configure-before-enable pattern, done correctly:
+- `SCG.SOSCDIV` write (`src/main.rs:79`) — precondition `SOSCCSR.SOSCEN` cleared.
+  The example writes the divider while SOSC is still disabled (enabled later at
+  :84). FP.
+- `SCG.SPLLCFG` write (`src/main.rs:92`) — precondition `SPLLCSR.SPLLEN` cleared
+  ("SPLLCFG cannot be changed when the PLL is enabled; writes are ignored"). The
+  example configures the PLL before enabling it at :94. FP.
+
+Well-written clock init (it follows the RM §28.1.4 sequence). **No bug in the
+low-value projects.** The gate again fired on exactly the right registers (SCG
+clock-source config) and confirmed the ordering was correct.

@@ -65,6 +65,15 @@ DOWNSTREAM = [
     # solo2 (lpc55-hal 0.6 -> lpc55-pac ^0.4, + `-Dwarnings`) and hubris
     # (lpc55-pac ^0.4 + xtask build) are version/build-incompatible with the
     # 0.5.0 injection and are documented as out of scope rather than run here.
+    #
+    # Low-value scan: canadensis's s32k146 UAVCAN example — the only remaining
+    # project that pairs a device we have constraints for (s32k1xx RM, injected
+    # into s32k146-pac) with a real consumer. It drives FlexCAN registers RAW
+    # (no HAL), so it is a good bug-hunt target. Build just the example package.
+    {"name": "canadensis-s32k146", "kind": "firmware",
+     "repo": "https://github.com/samcrow/canadensis",
+     "patch": {"s32k146-pac": "s32k146-pac"}, "target": "thumbv7em-none-eabihf",
+     "build": ["-p", "s32k146_node"]},
 ]
 
 
