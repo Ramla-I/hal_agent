@@ -14,6 +14,7 @@ and a downstream_summary.json.
     python run_downstream.py lpc55-hal        # one
 """
 import json
+import os
 import re
 import subprocess
 import sys
@@ -22,6 +23,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 APP = HERE.parents[1]
 VENDORED = APP / "vendored" / "pac"
+# When the vendored PACs were injected with the field-level advisory
+# (GATE_MODE=field), route outputs to *_field.json so the whole-register
+# downstream results are not clobbered.
+SUF = "_field" if os.environ.get("GATE_MODE") == "field" else ""
 SCRATCH = Path("/tmp/claude-1006/-home-ramla-hal-agent-pac-injection/"
                "777dc301-e753-406b-a6c8-f0cf2b5598fe/scratchpad/downstream")
 
@@ -82,10 +87,14 @@ def firings(stderr):
                         if re.search(r'--> \S+:\d+', lines[j])), "?")
             out.append(("E0277", f"{m.group(1)} {m.group(2)}", loc))
         elif re.match(r'error\[E0061\]:', lines[i]):
+            window = "\n".join(lines[i:i+14])
             loc = next((re.search(r'--> (\S+:\d+)', lines[j]).group(1)
                         for j in range(i+1, min(i+8, len(lines)))
                         if re.search(r'--> \S+:\d+', lines[j])), "?")
-            out.append(("E0061-field", "", loc))
+            # The field identity is in the witness type the accessor now wants:
+            # `...constraints::<Reg><Field>FieldWitness`.
+            w = re.search(r'constraints::(\w+FieldWitness)', window)
+            out.append(("E0061-field", w.group(1) if w else "", loc))
         i += 1
     return out
 
@@ -132,7 +141,7 @@ def do(cfg):
              if "constrained by its datasheet" not in e
              and "E0277" not in e and "E0061" not in e]
     res["other_new_errors"] = other[:6]
-    (HERE / f"{name}.firings.json").write_text(json.dumps(res, indent=1))
+    (HERE / f"{name}.firings{SUF}.json").write_text(json.dumps(res, indent=1))
     return res
 
 
@@ -146,7 +155,7 @@ def main():
         results.append(r)
         print(f"    {r.get('status')}  E0277={r.get('n_e0277','-')} "
               f"E0061={r.get('n_e0061_field','-')}", flush=True)
-    (HERE / "downstream_summary.json").write_text(json.dumps(results, indent=1))
+    (HERE / f"downstream_summary{SUF}.json").write_text(json.dumps(results, indent=1))
     print("\n" + "=" * 70)
     print(f"{'downstream':22} {'kind':9} {'status':22} {'E0277':>5} {'E0061':>5}")
     for r in results:

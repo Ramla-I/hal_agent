@@ -1,0 +1,557 @@
+{
+ "run_dir": "/home/ramla/hal_agent-phase-1d/agent_output/nxp/lpc55s69/1",
+ "pac": "/home/ramla/hal_agent-pac-injection/applications/pac_codegen/vendored/pac/lpc55-pac",
+ "device": ".",
+ "registers_planned": 8,
+ "fates": {
+  "planned": 12,
+  "rejected_at_collection": 12,
+  "gated_out_by_validator": 6,
+  "kind_not_emitted": 8,
+  "same_register_software_gate": 2,
+  "same_instance_rules_unioned": 1
+ },
+ "rows": [
+  {
+   "file": "adc0_swtrig",
+   "peripheral": "adc0",
+   "register": "swtrig",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "6313ecfcd418"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "ctimer4_ccr",
+   "peripheral": "ctimer4",
+   "register": "ccr",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "flexcomm1_pselid",
+   "peripheral": "flexcomm1",
+   "register": "pselid",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "9c9ba4bafd67"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "flexcomm5_pselid",
+   "peripheral": "flexcomm5",
+   "register": "pselid",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['persel']; via instance alias flexcomm5 -> flexcomm0 (gates every instance of this block)",
+   "constraints": [],
+   "constraint_ids": [
+    "21ab42ce2e2e"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": true
+  },
+  {
+   "file": "hashcrypt_alias1",
+   "peripheral": "hashcrypt",
+   "register": "alias1",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "83b2da322c9b"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "hashcrypt_alias2",
+   "peripheral": "hashcrypt",
+   "register": "alias2",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "e294520ab86a"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "hashcrypt_alias4",
+   "peripheral": "hashcrypt",
+   "register": "alias4",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "88cb905e9e5c"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "hashcrypt_indata",
+   "peripheral": "hashcrypt",
+   "register": "indata",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "584ab6ef7211"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "i2c1_mstctl",
+   "peripheral": "i2c1",
+   "register": "mstctl",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']; via instance alias i2c1 -> i2c0 (gates every instance of this block)",
+   "constraints": [],
+   "constraint_ids": [
+    "6a29dd558bbd"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": true
+  },
+  {
+   "file": "i2c3_mstctl",
+   "peripheral": "i2c3",
+   "register": "mstctl",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "57ecf5dcd033"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "i2c5_mstctl",
+   "peripheral": "i2c5",
+   "register": "mstctl",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']; via instance alias i2c5 -> i2c0 (gates every instance of this block)",
+   "constraints": [],
+   "constraint_ids": [
+    "ca3e1c415efe"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": true
+  },
+  {
+   "file": "i2c6_mstctl",
+   "peripheral": "i2c6",
+   "register": "mstctl",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']; via instance alias i2c6 -> i2c0 (gates every instance of this block)",
+   "constraints": [],
+   "constraint_ids": [
+    "2896bb2b39c3"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": true
+  },
+  {
+   "file": "i2c7_mstctl",
+   "peripheral": "i2c7",
+   "register": "mstctl",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']; via instance alias i2c7 -> i2c0 (gates every instance of this block)",
+   "constraints": [],
+   "constraint_ids": [
+    "9258ff0f8f17"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": true
+  },
+  {
+   "file": "puf_codeinput",
+   "peripheral": "puf",
+   "register": "codeinput",
+   "fate": "planned",
+   "reason": "kept ops ['write'] fields []; dropped ops ['modify'] at the device: ['modify'] unsupported by the register's access mode",
+   "constraints": [],
+   "constraint_ids": [
+    "98bd82a10c02"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "puf_codeoutput",
+   "peripheral": "puf",
+   "register": "codeoutput",
+   "fate": "rejected_at_collection",
+   "reason": "write_constraint_on_read_only",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "puf_keyinput",
+   "peripheral": "puf",
+   "register": "keyinput",
+   "fate": "planned",
+   "reason": "kept ops ['write'] fields []; dropped ops ['modify'] at the device: ['modify'] unsupported by the register's access mode",
+   "constraints": [],
+   "constraint_ids": [
+    "10a0322831a4"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "puf_keyoutput",
+   "peripheral": "puf",
+   "register": "keyoutput",
+   "fate": "planned",
+   "reason": "kept ops ['read'] fields []; dropped ops ['modify'] at the device: ['modify'] unsupported by the register's access mode",
+   "constraints": [],
+   "constraint_ids": [
+    "69489da3f291"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "rng_online_test_cfg",
+   "peripheral": "rng",
+   "register": "online_test_cfg",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['data_sel']",
+   "constraints": [],
+   "constraint_ids": [
+    "c82b452389b5"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "rtc_ctrl",
+   "peripheral": "rtc",
+   "register": "ctrl",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "sct0_match11",
+   "peripheral": "sct0",
+   "register": "match11",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "sct0_match2",
+   "peripheral": "sct0",
+   "register": "match2",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "spi3_cfg",
+   "peripheral": "spi3",
+   "register": "cfg",
+   "fate": "kind_not_emitted",
+   "reason": "other: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "ad26e6cd09cc"
+   ],
+   "kind": "other"
+  },
+  {
+   "file": "syscon_cpu0nstckcal",
+   "peripheral": "syscon",
+   "register": "cpu0nstckcal",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "syscon_ctimerclksel0",
+   "peripheral": "syscon",
+   "register": "ctimerclksel0",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "usart0_ctl",
+   "peripheral": "usart0",
+   "register": "ctl",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "usart1_cfg",
+   "peripheral": "usart1",
+   "register": "cfg",
+   "fate": "same_register_software_gate",
+   "reason": "CFG: whole-register write gate on ['ENABLE'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "950218a7e3e5"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "usart2_cfg",
+   "peripheral": "usart2",
+   "register": "cfg",
+   "fate": "kind_not_emitted",
+   "reason": "sequence: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "f5340a7c40f3"
+   ],
+   "kind": "sequence"
+  },
+  {
+   "file": "usart2_ctl",
+   "peripheral": "usart2",
+   "register": "ctl",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "usart4_cfg",
+   "peripheral": "usart4",
+   "register": "cfg",
+   "fate": "kind_not_emitted",
+   "reason": "sequence: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "a2ac4220536e",
+    "fd0f7caeb4ec"
+   ],
+   "kind": "sequence"
+  },
+  {
+   "file": "usart4_cfg",
+   "peripheral": "usart4",
+   "register": "cfg",
+   "fate": "same_register_software_gate",
+   "reason": "CFG: whole-register write gate on ['ENABLE'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "a2ac4220536e",
+    "fd0f7caeb4ec"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "usart5_cfg",
+   "peripheral": "usart5",
+   "register": "cfg",
+   "fate": "kind_not_emitted",
+   "reason": "sequence: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "c23a58e0b5ae"
+   ],
+   "kind": "sequence"
+  },
+  {
+   "file": "usart5_ctl",
+   "peripheral": "usart5",
+   "register": "ctl",
+   "fate": "kind_not_emitted",
+   "reason": "sequence: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "5223f9099566"
+   ],
+   "kind": "sequence"
+  },
+  {
+   "file": "usart5_fifostat",
+   "peripheral": "usart5",
+   "register": "fifostat",
+   "fate": "rejected_at_collection",
+   "reason": "invalid_v2_constraint",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "usart6_cfg",
+   "peripheral": "usart6",
+   "register": "cfg",
+   "fate": "kind_not_emitted",
+   "reason": "sequence: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "2e1834d65074"
+   ],
+   "kind": "sequence"
+  },
+  {
+   "file": "usart6_ctl",
+   "peripheral": "usart6",
+   "register": "ctl",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "usart7_cfg",
+   "peripheral": "usart7",
+   "register": "cfg",
+   "fate": "kind_not_emitted",
+   "reason": "sequence: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "c33f645dd53e"
+   ],
+   "kind": "sequence"
+  },
+  {
+   "file": "usart7_ctl",
+   "peripheral": "usart7",
+   "register": "ctl",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "usbfsh_hccontrolcurrented",
+   "peripheral": "usbfsh",
+   "register": "hccontrolcurrented",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['hcfs']",
+   "constraints": [],
+   "constraint_ids": [
+    "2ac5ff1806e5"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "usbfsh_hccontrolheaded",
+   "peripheral": "usbfsh",
+   "register": "hccontrolheaded",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['hcfs']",
+   "constraints": [],
+   "constraint_ids": [
+    "348dfc26b252"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "usbphy_pll_sic_set",
+   "peripheral": "usbphy",
+   "register": "pll_sic_set",
+   "fate": "kind_not_emitted",
+   "reason": "delay: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "41f7a25f322d"
+   ],
+   "kind": "delay"
+  },
+  {
+   "file": "",
+   "peripheral": "usbfsh",
+   "register": "hccontrol",
+   "fate": "same_instance_rules_unioned",
+   "constraint_ids": [
+    "2ac5ff1806e5",
+    "348dfc26b252"
+   ],
+   "reason": "one rule at two precisions: narrowed to the named fields [hcfs]: 0 of 2 plans named no fields and were discarded as the coarser reading of the same sentence (gate sets ['hcfs', 'hcfs'])",
+   "constraints": []
+  }
+ ],
+ "injected": true
+}

@@ -1,0 +1,59 @@
+{
+ "name": "lpc8xx-hal",
+ "kind": "hal",
+ "repo": "https://github.com/lpc-rs/lpc8xx-hal",
+ "status": "fired",
+ "compiles_injected": false,
+ "n_e0277": 9,
+ "n_e0061_field": 0,
+ "firings": [
+  {
+   "kind": "E0277",
+   "what": "MSTCTL_SPEC modify",
+   "loc": "src/i2c/master.rs:79:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "MSTCTL_SPEC modify",
+   "loc": "src/i2c/master.rs:98:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "MSTCTL_SPEC write",
+   "loc": "src/i2c/master.rs:136:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "MSTCTL_SPEC write",
+   "loc": "src/i2c/master.rs:145:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "MSTCTL_SPEC write",
+   "loc": "src/i2c/master.rs:154:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "MSTCTL_SPEC write",
+   "loc": "src/i2c/master.rs:181:25"
+  },
+  {
+   "kind": "E0277",
+   "what": "MSTCTL_SPEC write",
+   "loc": "src/i2c/master.rs:211:29"
+  },
+  {
+   "kind": "E0277",
+   "what": "MSTCTL_SPEC modify",
+   "loc": "src/i2c/master.rs:260:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "MSTCTL_SPEC modify",
+   "loc": "src/i2c/master.rs:295:21"
+  }
+ ],
+ "other_new_errors": [
+  "error: could not compile `lpc8xx-hal` (lib) due to 9 previous errors"
+ ]
+}

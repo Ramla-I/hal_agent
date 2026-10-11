@@ -1,0 +1,1513 @@
+[
+ {
+  "name": "lpc55-hal",
+  "kind": "hal",
+  "repo": "https://github.com/lpc55/lpc55-hal",
+  "status": "fired",
+  "compiles_injected": false,
+  "n_e0277": 10,
+  "n_e0061_field": 26,
+  "firings": [
+   {
+    "kind": "E0277",
+    "what": "SWTRIG_SPEC write",
+    "loc": "src/peripherals/adc.rs:136:25"
+   },
+   {
+    "kind": "E0277",
+    "what": "SWTRIG_SPEC write",
+    "loc": "src/peripherals/adc.rs:299:14"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:198:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:233:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:268:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:198:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:233:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:268:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:198:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:233:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:268:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:198:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:233:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:268:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:198:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:233:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:268:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:198:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:233:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:268:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:198:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:233:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:268:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:198:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:233:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/peripherals/flexcomm.rs:268:26"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PselidPerselFieldWitness",
+    "loc": "src/peripherals/flexcomm.rs:383:18"
+   },
+   {
+    "kind": "E0277",
+    "what": "CODEINPUT_SPEC write",
+    "loc": "src/peripherals/puf.rs:191:36"
+   },
+   {
+    "kind": "E0277",
+    "what": "CODEINPUT_SPEC write",
+    "loc": "src/peripherals/puf.rs:258:36"
+   },
+   {
+    "kind": "E0277",
+    "what": "KEYOUTPUT_SPEC read",
+    "loc": "src/peripherals/puf.rs:263:47"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "Online_test_cfgData_selFieldWitness",
+    "loc": "src/peripherals/rng.rs:68:43"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/drivers/i2c.rs:164:25"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/drivers/i2c.rs:184:29"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/drivers/i2c.rs:204:25"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/drivers/i2c.rs:250:29"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/drivers/i2c.rs:264:33"
+   }
+  ],
+  "other_new_errors": [
+   "error: could not compile `lpc55-hal` (lib) due to 36 previous errors"
+  ]
+ },
+ {
+  "name": "mk20dx-hal-mk20d7",
+  "kind": "hal",
+  "repo": "https://github.com/cosmikwolf/mk20dx-hal",
+  "status": "fired",
+  "compiles_injected": false,
+  "n_e0277": 11,
+  "n_e0061_field": 109,
+  "firings": [
+   {
+    "kind": "E0061-field",
+    "what": "Cr0Filter_cntFieldWitness",
+    "loc": "src/cmp.rs:168:55"
+   },
+   {
+    "kind": "E0277",
+    "what": "PsrSpec write",
+    "loc": "src/lptmr.rs:128:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "CmrSpec write",
+    "loc": "src/lptmr.rs:150:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "PsrSpec write",
+    "loc": "src/lptmr.rs:170:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "CmrSpec write",
+    "loc": "src/lptmr.rs:206:21"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScLdokFieldWitness",
+    "loc": "src/pdb.rs:301:37"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh0ocFieldWitness",
+    "loc": "src/pwm.rs:181:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh0ocvFieldWitness",
+    "loc": "src/pwm.rs:181:48"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh0ocFieldWitness",
+    "loc": "src/pwm.rs:182:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh0ocvFieldWitness",
+    "loc": "src/pwm.rs:182:49"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh0ocFieldWitness",
+    "loc": "src/pwm.rs:183:28"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh1ocFieldWitness",
+    "loc": "src/pwm.rs:184:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh1ocvFieldWitness",
+    "loc": "src/pwm.rs:184:48"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh1ocFieldWitness",
+    "loc": "src/pwm.rs:185:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh1ocvFieldWitness",
+    "loc": "src/pwm.rs:185:49"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh1ocFieldWitness",
+    "loc": "src/pwm.rs:186:28"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh2ocFieldWitness",
+    "loc": "src/pwm.rs:187:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh2ocvFieldWitness",
+    "loc": "src/pwm.rs:187:48"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh2ocFieldWitness",
+    "loc": "src/pwm.rs:188:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh2ocvFieldWitness",
+    "loc": "src/pwm.rs:188:49"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh2ocFieldWitness",
+    "loc": "src/pwm.rs:189:28"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh3ocFieldWitness",
+    "loc": "src/pwm.rs:190:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh3ocvFieldWitness",
+    "loc": "src/pwm.rs:190:48"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh3ocFieldWitness",
+    "loc": "src/pwm.rs:191:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh3ocvFieldWitness",
+    "loc": "src/pwm.rs:191:49"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh3ocFieldWitness",
+    "loc": "src/pwm.rs:192:28"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh4ocFieldWitness",
+    "loc": "src/pwm.rs:193:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh4ocvFieldWitness",
+    "loc": "src/pwm.rs:193:48"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh4ocFieldWitness",
+    "loc": "src/pwm.rs:194:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh4ocvFieldWitness",
+    "loc": "src/pwm.rs:194:49"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh4ocFieldWitness",
+    "loc": "src/pwm.rs:195:28"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh5ocFieldWitness",
+    "loc": "src/pwm.rs:196:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh5ocvFieldWitness",
+    "loc": "src/pwm.rs:196:48"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh5ocFieldWitness",
+    "loc": "src/pwm.rs:197:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh5ocvFieldWitness",
+    "loc": "src/pwm.rs:197:49"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh5ocFieldWitness",
+    "loc": "src/pwm.rs:198:28"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh6ocFieldWitness",
+    "loc": "src/pwm.rs:199:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh6ocvFieldWitness",
+    "loc": "src/pwm.rs:199:48"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh6ocFieldWitness",
+    "loc": "src/pwm.rs:200:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh6ocvFieldWitness",
+    "loc": "src/pwm.rs:200:49"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh6ocFieldWitness",
+    "loc": "src/pwm.rs:201:28"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh7ocFieldWitness",
+    "loc": "src/pwm.rs:202:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh7ocvFieldWitness",
+    "loc": "src/pwm.rs:202:48"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh7ocFieldWitness",
+    "loc": "src/pwm.rs:203:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh7ocvFieldWitness",
+    "loc": "src/pwm.rs:203:49"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "SwoctrlCh7ocFieldWitness",
+    "loc": "src/pwm.rs:204:28"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:339:34"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:345:34"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:399:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:400:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:401:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:402:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:403:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:404:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:405:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:406:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:430:34"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:445:23"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:446:34"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:446:58"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:448:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:449:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:450:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:451:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:452:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:453:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:454:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:455:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:472:44"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:473:46"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "DeadtimeDtvalFieldWitness",
+    "loc": "src/pwm.rs:578:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "DeadtimeDtpsFieldWitness",
+    "loc": "src/pwm.rs:580:46"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "DeadtimeDtpsFieldWitness",
+    "loc": "src/pwm.rs:581:46"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "DeadtimeDtpsFieldWitness",
+    "loc": "src/pwm.rs:582:47"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ModeFtmenFieldWitness",
+    "loc": "src/pwm.rs:1146:36"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1536:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1568:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1590:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1590:47"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1592:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1593:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1594:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1595:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1596:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1597:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1598:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1599:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1536:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1568:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1590:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1590:47"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1592:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1593:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1594:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1595:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1596:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1597:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1598:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1599:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1536:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1568:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1590:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1590:47"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1592:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1593:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1594:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1595:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1596:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1597:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1598:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "",
+    "loc": "src/pwm.rs:1599:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:1771:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ModeFtmenFieldWitness",
+    "loc": "src/pwm.rs:1774:32"
+   },
+   {
+    "kind": "E0277",
+    "what": "IerSpec write",
+    "loc": "src/rtc.rs:72:19"
+   },
+   {
+    "kind": "E0277",
+    "what": "TarSpec write",
+    "loc": "src/rtc.rs:150:19"
+   },
+   {
+    "kind": "E0277",
+    "what": "TarSpec write",
+    "loc": "src/rtc.rs:161:19"
+   },
+   {
+    "kind": "E0277",
+    "what": "IerSpec modify",
+    "loc": "src/rtc.rs:166:28"
+   },
+   {
+    "kind": "E0277",
+    "what": "IerSpec modify",
+    "loc": "src/rtc.rs:171:28"
+   },
+   {
+    "kind": "E0277",
+    "what": "IerSpec modify",
+    "loc": "src/rtc.rs:178:28"
+   },
+   {
+    "kind": "E0277",
+    "what": "IerSpec modify",
+    "loc": "src/rtc.rs:183:28"
+   }
+  ],
+  "other_new_errors": [
+   "error: could not compile `mk20dx-hal` (lib) due to 130 previous errors"
+  ]
+ },
+ {
+  "name": "mk20dx-hal-mk20d5",
+  "kind": "hal",
+  "repo": "https://github.com/cosmikwolf/mk20dx-hal",
+  "status": "fired",
+  "compiles_injected": false,
+  "n_e0277": 2,
+  "n_e0061_field": 70,
+  "firings": [
+   {
+    "kind": "E0277",
+    "what": "PsrSpec write",
+    "loc": "src/lptmr.rs:128:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "PsrSpec write",
+    "loc": "src/lptmr.rs:170:21"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol0FieldWitness",
+    "loc": "src/pwm.rs:50:25"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol0FieldWitness",
+    "loc": "src/pwm.rs:51:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol1FieldWitness",
+    "loc": "src/pwm.rs:52:25"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol1FieldWitness",
+    "loc": "src/pwm.rs:53:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol2FieldWitness",
+    "loc": "src/pwm.rs:54:25"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol2FieldWitness",
+    "loc": "src/pwm.rs:55:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol3FieldWitness",
+    "loc": "src/pwm.rs:56:25"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol3FieldWitness",
+    "loc": "src/pwm.rs:57:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol4FieldWitness",
+    "loc": "src/pwm.rs:58:25"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol4FieldWitness",
+    "loc": "src/pwm.rs:59:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol5FieldWitness",
+    "loc": "src/pwm.rs:60:25"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol5FieldWitness",
+    "loc": "src/pwm.rs:61:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol6FieldWitness",
+    "loc": "src/pwm.rs:62:25"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol6FieldWitness",
+    "loc": "src/pwm.rs:63:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol7FieldWitness",
+    "loc": "src/pwm.rs:64:25"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "PolPol7FieldWitness",
+    "loc": "src/pwm.rs:65:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:339:34"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:345:34"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:399:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:400:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:401:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:402:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:403:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:404:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:405:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:406:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:430:34"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:445:23"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:446:34"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:446:58"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:448:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:449:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:450:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:451:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:452:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:453:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:454:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:455:24"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:472:44"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:473:46"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ModeInitFieldWitness",
+    "loc": "src/pwm.rs:500:36"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ModeInitFieldWitness",
+    "loc": "src/pwm.rs:517:36"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ModeFtmenFieldWitness",
+    "loc": "src/pwm.rs:1146:36"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:1536:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:1568:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:1590:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:1590:47"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1592:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1593:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1594:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1595:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1596:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1597:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1598:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1599:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:1536:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:1568:38"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:1590:31"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScCpwmsFieldWitness",
+    "loc": "src/pwm.rs:1590:47"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1592:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1593:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1594:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1595:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1596:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1597:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1598:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScPsFieldWitness",
+    "loc": "src/pwm.rs:1599:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ScClksFieldWitness",
+    "loc": "src/pwm.rs:1771:30"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "ModeFtmenFieldWitness",
+    "loc": "src/pwm.rs:1774:32"
+   },
+   {
+    "kind": "E0061-field",
+    "what": "QdctrlQuadenFieldWitness",
+    "loc": "src/pwm.rs:1783:23"
+   }
+  ],
+  "other_new_errors": [
+   "error: could not compile `mk20dx-hal` (lib) due to 84 previous errors"
+  ]
+ },
+ {
+  "name": "lpc8xx-hal",
+  "kind": "hal",
+  "repo": "https://github.com/lpc-rs/lpc8xx-hal",
+  "status": "fired",
+  "compiles_injected": false,
+  "n_e0277": 9,
+  "n_e0061_field": 0,
+  "firings": [
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC modify",
+    "loc": "src/i2c/master.rs:79:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC modify",
+    "loc": "src/i2c/master.rs:98:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/i2c/master.rs:136:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/i2c/master.rs:145:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/i2c/master.rs:154:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/i2c/master.rs:181:25"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC write",
+    "loc": "src/i2c/master.rs:211:29"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC modify",
+    "loc": "src/i2c/master.rs:260:21"
+   },
+   {
+    "kind": "E0277",
+    "what": "MSTCTL_SPEC modify",
+    "loc": "src/i2c/master.rs:295:21"
+   }
+  ],
+  "other_new_errors": [
+   "error: could not compile `lpc8xx-hal` (lib) due to 9 previous errors"
+  ]
+ },
+ {
+  "name": "embassy-imxrt",
+  "kind": "hal",
+  "repo": "https://github.com/OpenDevicePartnership/embassy-imxrt",
+  "status": "fired",
+  "compiles_injected": false,
+  "n_e0277": 49,
+  "n_e0061_field": 0,
+  "firings": [
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:576:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:650:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:659:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:668:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:703:34"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec modify",
+    "loc": "src/i2c/master.rs:708:38"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:815:38"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:844:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec modify",
+    "loc": "src/i2c/master.rs:849:34"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:925:34"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:972:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:730:22"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:739:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:752:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:756:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:767:38"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:771:38"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:886:22"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec modify",
+    "loc": "src/i2c/slave.rs:898:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:1034:22"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec modify",
+    "loc": "src/i2c/slave.rs:1042:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:1125:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec modify",
+    "loc": "src/i2c/slave.rs:1157:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:1162:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:339:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:382:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:392:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:401:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:442:34"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:458:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:471:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/master.rs:1217:41"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:460:22"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:508:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:512:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:523:38"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:527:38"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:591:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:649:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec modify",
+    "loc": "src/i2c/slave.rs:693:26"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:701:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/slave.rs:1245:41"
+   },
+   {
+    "kind": "E0277",
+    "what": "MstctlSpec write",
+    "loc": "src/i2c/mod.rs:176:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "SlvctlSpec write",
+    "loc": "src/i2c/mod.rs:195:30"
+   },
+   {
+    "kind": "E0277",
+    "what": "FrqmaxSpec write",
+    "loc": "src/rng.rs:300:14"
+   },
+   {
+    "kind": "E0277",
+    "what": "PkrrngSpec write",
+    "loc": "src/rng.rs:308:14"
+   },
+   {
+    "kind": "E0277",
+    "what": "Scr1lSpec write",
+    "loc": "src/rng.rs:316:14"
+   },
+   {
+    "kind": "E0277",
+    "what": "Scr5lSpec write",
+    "loc": "src/rng.rs:332:14"
+   },
+   {
+    "kind": "E0277",
+    "what": "ScmiscSpec write",
+    "loc": "src/rng.rs:337:33"
+   }
+  ],
+  "other_new_errors": [
+   "error: could not compile `embassy-imxrt` (lib) due to 50 previous errors"
+  ]
+ },
+ {
+  "name": "bootleby",
+  "kind": "firmware",
+  "repo": "https://github.com/oxidecomputer/bootleby",
+  "status": "ok",
+  "compiles_injected": true,
+  "n_e0277": 0,
+  "n_e0061_field": 0,
+  "firings": [],
+  "other_new_errors": []
+ }
+]

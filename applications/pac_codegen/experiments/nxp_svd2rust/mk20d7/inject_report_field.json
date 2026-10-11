@@ -1,0 +1,1151 @@
+{
+ "run_dir": "/home/ramla/hal_agent-phase-1d/agent_output/nxp/mk20d7/1",
+ "pac": "/home/ramla/hal_agent-pac-injection/applications/pac_codegen/vendored/pac/mk20d7-pac",
+ "device": ".",
+ "registers_planned": 31,
+ "fates": {
+  "pruned_for_device": 10,
+  "planned": 31,
+  "same_register_software_gate": 18,
+  "kind_not_emitted": 4,
+  "rejected_at_collection": 7,
+  "gated_out_by_validator": 10
+ },
+ "rows": [
+  {
+   "file": "axbs_crs0",
+   "peripheral": "axbs",
+   "register": "crs0",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: ['write', 'modify'] unsupported by the register's access mode",
+   "constraints": [],
+   "constraint_ids": [
+    "201bb5e75186"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "axbs_crs1",
+   "peripheral": "axbs",
+   "register": "crs1",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: ['write', 'modify'] unsupported by the register's access mode",
+   "constraints": [],
+   "constraint_ids": [
+    "71ddc3572753"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "axbs_crs2",
+   "peripheral": "axbs",
+   "register": "crs2",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: ['write', 'modify'] unsupported by the register's access mode",
+   "constraints": [],
+   "constraint_ids": [
+    "c39ae6db34fc"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "axbs_crs3",
+   "peripheral": "axbs",
+   "register": "crs3",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: ['write', 'modify'] unsupported by the register's access mode",
+   "constraints": [],
+   "constraint_ids": [
+    "cb072ea30354"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "can0_rxfgmask",
+   "peripheral": "can0",
+   "register": "rxfgmask",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "b5a1daf0848d"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "can0_rxmgmask",
+   "peripheral": "can0",
+   "register": "rxmgmask",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "ddb428e2c686"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "cmp0_cr0",
+   "peripheral": "cmp0",
+   "register": "cr0",
+   "fate": "same_register_software_gate",
+   "reason": "CR0: whole-register write gate on ['FILTER_CNT'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "bc41a293b01e"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "cmp0_cr1",
+   "peripheral": "cmp0",
+   "register": "cr1",
+   "fate": "kind_not_emitted",
+   "reason": "value_relation: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "867bfb957baa"
+   ],
+   "kind": "value_relation"
+  },
+  {
+   "file": "cmp0_fpr",
+   "peripheral": "cmp0",
+   "register": "fpr",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "c7361d37995e"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "cmp1_cr0",
+   "peripheral": "cmp1",
+   "register": "cr0",
+   "fate": "same_register_software_gate",
+   "reason": "CR0: whole-register write gate on ['FILTER_CNT'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "5023ad164a06"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "cmp1_cr1",
+   "peripheral": "cmp1",
+   "register": "cr1",
+   "fate": "rejected_at_collection",
+   "reason": "invalid_v2_constraint",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [
+    "6ce79cecca10"
+   ],
+   "kind": ""
+  },
+  {
+   "file": "cmp1_cr1",
+   "peripheral": "cmp1",
+   "register": "cr1",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "6ce79cecca10"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "cmp1_fpr",
+   "peripheral": "cmp1",
+   "register": "fpr",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "627781898935"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "cmp2_cr0",
+   "peripheral": "cmp2",
+   "register": "cr0",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['filter_cnt']",
+   "constraints": [],
+   "constraint_ids": [
+    "9c352095954e"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "cmp2_cr1",
+   "peripheral": "cmp2",
+   "register": "cr1",
+   "fate": "rejected_at_collection",
+   "reason": "invalid_v2_constraint",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "cmp2_fpr",
+   "peripheral": "cmp2",
+   "register": "fpr",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['filt_per']",
+   "constraints": [],
+   "constraint_ids": [
+    "8d110244b417"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "dma_tcd0_csr",
+   "peripheral": "dma",
+   "register": "tcd0_csr",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: field:MAJORELINK has no writer in the generated PAC (read-only field), so no accessor to gate; field:ESG has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "constraints": [],
+   "constraint_ids": [
+    "42dcae6c704c"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "dmamux_chcfg0",
+   "peripheral": "dmamux",
+   "register": "chcfg0",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG0: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "21bc522675e0"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg1",
+   "peripheral": "dmamux",
+   "register": "chcfg1",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG1: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "98a9a2b663c6"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg10",
+   "peripheral": "dmamux",
+   "register": "chcfg10",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG10: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "39fb5e82134f"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg11",
+   "peripheral": "dmamux",
+   "register": "chcfg11",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG11: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "c3ed6f33aec0"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg12",
+   "peripheral": "dmamux",
+   "register": "chcfg12",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG12: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "d97e33fc6445"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg13",
+   "peripheral": "dmamux",
+   "register": "chcfg13",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG13: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "0d83512b65c4"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg14",
+   "peripheral": "dmamux",
+   "register": "chcfg14",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG14: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "ed068ff8493a"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg15",
+   "peripheral": "dmamux",
+   "register": "chcfg15",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG15: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "0bf26a0f0858"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg2",
+   "peripheral": "dmamux",
+   "register": "chcfg2",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG2: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "e9b5a7da5b88"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg3",
+   "peripheral": "dmamux",
+   "register": "chcfg3",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG3: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "bd3d67956d35"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg4",
+   "peripheral": "dmamux",
+   "register": "chcfg4",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG4: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "5bb062c3b7bd"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg5",
+   "peripheral": "dmamux",
+   "register": "chcfg5",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG5: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "0f88df43bb4c"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg6",
+   "peripheral": "dmamux",
+   "register": "chcfg6",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG6: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "12790bc4791d"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg7",
+   "peripheral": "dmamux",
+   "register": "chcfg7",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG7: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "d37f282404b2"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg8",
+   "peripheral": "dmamux",
+   "register": "chcfg8",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG8: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "9d3734728d80"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "dmamux_chcfg9",
+   "peripheral": "dmamux",
+   "register": "chcfg9",
+   "fate": "same_register_software_gate",
+   "reason": "CHCFG9: whole-register write gate on ['ENBL'], a field of this same register that software must restore \u2014 the gate would forbid the write that satisfies it, locking the register until reset. Scope it to fields, or classify it as write_once if it is a lock.",
+   "constraints": [],
+   "constraint_ids": [
+    "69a3ecc2dc9b"
+   ],
+   "kinds": {
+    "state_gate": 1
+   }
+  },
+  {
+   "file": "ewm_cmph",
+   "peripheral": "ewm",
+   "register": "cmph",
+   "fate": "rejected_at_collection",
+   "reason": "invalid_v2_constraint",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "ewm_cmpl",
+   "peripheral": "ewm",
+   "register": "cmpl",
+   "fate": "rejected_at_collection",
+   "reason": "invalid_v2_constraint",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "ewm_ctrl",
+   "peripheral": "ewm",
+   "register": "ctrl",
+   "fate": "rejected_at_collection",
+   "reason": "invalid_v2_constraint",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "ewm_serv",
+   "peripheral": "ewm",
+   "register": "serv",
+   "fate": "rejected_at_collection",
+   "reason": "invalid_v2_constraint",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "ftm0_c1sc",
+   "peripheral": "ftm0",
+   "register": "c1sc",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "d1c40fd99d29"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "ftm0_c5sc",
+   "peripheral": "ftm0",
+   "register": "c5sc",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "f495eac7ddb0"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "ftm0_deadtime",
+   "peripheral": "ftm0",
+   "register": "deadtime",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['dtps', 'dtval']",
+   "constraints": [],
+   "constraint_ids": [
+    "bf287b23b1e0"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "ftm0_fltpol",
+   "peripheral": "ftm0",
+   "register": "fltpol",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['flt0pol', 'flt1pol', 'flt2pol', 'flt3pol']",
+   "constraints": [],
+   "constraint_ids": [
+    "8f7493938f2a"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "ftm0_mode",
+   "peripheral": "ftm0",
+   "register": "mode",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['captest', 'faultm', 'ftmen']",
+   "constraints": [],
+   "constraint_ids": [
+    "881b338997ee"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "ftm0_sc",
+   "peripheral": "ftm0",
+   "register": "sc",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['clks', 'cpwms', 'ps']",
+   "constraints": [],
+   "constraint_ids": [
+    "b3f308677279"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "ftm0_swoctrl",
+   "peripheral": "ftm0",
+   "register": "swoctrl",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['ch0oc', 'ch0ocv', 'ch1oc', 'ch1ocv', 'ch2oc', 'ch2ocv', 'ch3oc', 'ch3ocv', 'ch4oc', 'ch4ocv', 'ch5oc', 'ch5ocv', 'ch6oc', 'ch6ocv', 'ch7oc', 'ch7ocv']",
+   "constraints": [],
+   "constraint_ids": [
+    "136255000fd8"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "ftm2_combine",
+   "peripheral": "ftm2",
+   "register": "combine",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['combine0', 'combine1', 'combine2', 'combine3', 'comp0', 'comp1', 'comp2', 'comp3', 'decap0', 'decap1', 'decap2', 'decap3', 'decapen0', 'decapen1', 'decapen2', 'decapen3', 'dten0', 'dten1', 'dten2', 'dten3', 'faulten0', 'faulten1', 'faulten2', 'faulten3', 'syncen0', 'syncen1', 'syncen2', 'syncen3']",
+   "constraints": [],
+   "constraint_ids": [
+    "9ca0d78d24ac"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "ftm2_qdctrl",
+   "peripheral": "ftm2",
+   "register": "qdctrl",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['quaden']",
+   "constraints": [],
+   "constraint_ids": [
+    "6006e3589866"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "lptmr0_cmr",
+   "peripheral": "lptmr0",
+   "register": "cmr",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "61ca2209748e",
+    "a9cd4f2ad907"
+   ],
+   "kinds": {
+    "state_gate": 2
+   },
+   "via_alias": false
+  },
+  {
+   "file": "lptmr0_psr",
+   "peripheral": "lptmr0",
+   "register": "psr",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "59deba8e7e70"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "mcg_c5",
+   "peripheral": "mcg",
+   "register": "c5",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "e5e50adcc11a"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "mcg_c6",
+   "peripheral": "mcg",
+   "register": "c6",
+   "fate": "rejected_at_collection",
+   "reason": "unresolvable_in_svd",
+   "constraints": [
+    0
+   ],
+   "constraint_ids": [],
+   "kind": ""
+  },
+  {
+   "file": "pdb0_sc",
+   "peripheral": "pdb0",
+   "register": "sc",
+   "fate": "planned",
+   "reason": "gates: []; field_gates: ['ldok']",
+   "constraints": [],
+   "constraint_ids": [
+    "ef88edde2a8e"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "pit_tctrl0",
+   "peripheral": "pit",
+   "register": "tctrl0",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: field:TIE has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "constraints": [],
+   "constraint_ids": [
+    "d8a3c656c5a7"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "pit_tctrl1",
+   "peripheral": "pit",
+   "register": "tctrl1",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: field:TIE has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "constraints": [],
+   "constraint_ids": [
+    "fda4f6c65081"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "pit_tctrl2",
+   "peripheral": "pit",
+   "register": "tctrl2",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: field:TIE has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "constraints": [],
+   "constraint_ids": [
+    "9db4ebff2461"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "pit_tctrl3",
+   "peripheral": "pit",
+   "register": "tctrl3",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: field:TIE has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "constraints": [],
+   "constraint_ids": [
+    "fe766e4f3c2c"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "pmc_lvdsc1",
+   "peripheral": "pmc",
+   "register": "lvdsc1",
+   "fate": "kind_not_emitted",
+   "reason": "write_once: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "d5b6b91426ca"
+   ],
+   "kind": "write_once"
+  },
+  {
+   "file": "rtc_cr",
+   "peripheral": "rtc",
+   "register": "cr",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "48b7972835bc"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "rtc_ier",
+   "peripheral": "rtc",
+   "register": "ier",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "7c33eab46e80"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "rtc_lr",
+   "peripheral": "rtc",
+   "register": "lr",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "e3884dbb16b3"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "rtc_sr",
+   "peripheral": "rtc",
+   "register": "sr",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "0cecd184a8b9"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "rtc_tar",
+   "peripheral": "rtc",
+   "register": "tar",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "3e813cf81a4f"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "rtc_tpr",
+   "peripheral": "rtc",
+   "register": "tpr",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "c5b5d1545313"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "rtc_tsr",
+   "peripheral": "rtc",
+   "register": "tsr",
+   "fate": "kind_not_emitted",
+   "reason": "sequence: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "1e3c1a5928c4",
+    "b189f7586d96"
+   ],
+   "kind": "sequence"
+  },
+  {
+   "file": "rtc_tsr",
+   "peripheral": "rtc",
+   "register": "tsr",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "1e3c1a5928c4",
+    "b189f7586d96"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "smc_pmprot",
+   "peripheral": "smc",
+   "register": "pmprot",
+   "fate": "kind_not_emitted",
+   "reason": "write_once: no codegen emitter yet",
+   "constraints": [],
+   "constraint_ids": [
+    "aa1e0b6d5d78"
+   ],
+   "kind": "write_once"
+  },
+  {
+   "file": "tsi0_gencs",
+   "peripheral": "tsi0",
+   "register": "gencs",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "7310cafe36f9"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "uart0_c7816",
+   "peripheral": "uart0",
+   "register": "c7816",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "9ca8bd80f9ef"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "uart0_cfifo",
+   "peripheral": "uart0",
+   "register": "cfifo",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "474324c71439"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "uart0_et7816",
+   "peripheral": "uart0",
+   "register": "et7816",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "e99342b54c87"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "uart0_pfifo",
+   "peripheral": "uart0",
+   "register": "pfifo",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "6064272c5e43"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "uart0_rwfifo",
+   "peripheral": "uart0",
+   "register": "rwfifo",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "82b3da7971da"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "uart0_tl7816",
+   "peripheral": "uart0",
+   "register": "tl7816",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "ffc78e531b05"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "uart0_twfifo",
+   "peripheral": "uart0",
+   "register": "twfifo",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "53713dc8a116"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "uart0_wf7816",
+   "peripheral": "uart0",
+   "register": "wf7816",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "e411ec97ff63"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "uart0_wn7816",
+   "peripheral": "uart0",
+   "register": "wn7816",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: doc_only",
+   "constraints": [],
+   "constraint_ids": [
+    "7203498d3da1"
+   ],
+   "kind": "state_gate",
+   "decision": "doc_only"
+  },
+  {
+   "file": "uart0_wp7816t0",
+   "peripheral": "uart0",
+   "register": "wp7816t0",
+   "fate": "pruned_for_device",
+   "reason": "all gates dropped, not expressible against the generated PAC: ['write', 'modify'] unsupported by the register's access mode",
+   "constraints": [],
+   "constraint_ids": [
+    "9e5c1d9441c3"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "wdog_tovalh",
+   "peripheral": "wdog",
+   "register": "tovalh",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "edf461d91d0a"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "wdog_tovall",
+   "peripheral": "wdog",
+   "register": "tovall",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "4a8d63eb9be0"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  },
+  {
+   "file": "wdog_winh",
+   "peripheral": "wdog",
+   "register": "winh",
+   "fate": "gated_out_by_validator",
+   "reason": "state_gate: drop",
+   "constraints": [],
+   "constraint_ids": [
+    "270d841d5ba3"
+   ],
+   "kind": "state_gate",
+   "decision": "drop"
+  },
+  {
+   "file": "wdog_winl",
+   "peripheral": "wdog",
+   "register": "winl",
+   "fate": "planned",
+   "reason": "gates: ['modify', 'write']",
+   "constraints": [],
+   "constraint_ids": [
+    "ab5f1bfc18ab"
+   ],
+   "kinds": {
+    "state_gate": 1
+   },
+   "via_alias": false
+  }
+ ],
+ "injected": true
+}

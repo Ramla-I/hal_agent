@@ -14,9 +14,17 @@ The constraint ledgers and generator runs live in the sibling phase-1d worktree
     python run_all.py lpc55s69   # one device
 """
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+# GATE_MODE=register-only (default, whole-register hard gates) | field
+# (adds the field-level advisory: constrained field writer accessors take a
+# witness arg). Field mode writes *_field.json so it does not clobber the
+# register-only results.
+FIELD = os.environ.get("GATE_MODE") == "field"
+SUF = "_field" if FIELD else ""
 
 HERE = Path(__file__).resolve().parent
 APP = HERE.parents[1]                      # applications/pac_codegen
@@ -72,16 +80,18 @@ def run_device(dev):
     # 3. inject
     run_dir = P1D / "agent_output" / "nxp" / dev / "1"
     review = P1D / "evaluation" / "nxp" / dev / "1" / f"{dev}_constraints_review.jsonl"
-    report = devdir / "inject_report.json"
-    inj = sh([sys.executable, str(INJECT), str(run_dir),
-              "--pac", str(pac), "--device", ".",
-              "--svd-dir", str(svd_dir),
-              "--constraints", str(review),
-              # Whole-register HARD gates only (the compile-time guarantee); the
-              # field-level mode is an advisory that over-fires on every field
-              # write and is the wrong signal for a downstream bug-hunt.
-              "--register-only",
-              "--report", str(report)])
+    report = devdir / f"inject_report{SUF}.json"
+    cmd = [sys.executable, str(INJECT), str(run_dir),
+           "--pac", str(pac), "--device", ".",
+           "--svd-dir", str(svd_dir),
+           "--constraints", str(review),
+           "--report", str(report)]
+    if not FIELD:
+        # Whole-register HARD gates only (the compile-time guarantee); the
+        # field-level mode (GATE_MODE=field) adds the advisory that gates each
+        # constrained field's writer accessor too.
+        cmd.append("--register-only")
+    inj = sh(cmd)
     if report.is_file():
         r = json.loads(report.read_text())
         out["registers_planned"] = r.get("registers_planned", 0)
@@ -119,7 +129,7 @@ def main():
         results.append(res)
         print(f"    status={res.get('status')} planned={res.get('registers_planned')} "
               f"compiles={res.get('compiles')}", flush=True)
-    (HERE / "summary.json").write_text(json.dumps(results, indent=1))
+    (HERE / f"summary{SUF}.json").write_text(json.dumps(results, indent=1))
 
     # table
     print("\n" + "=" * 78)
