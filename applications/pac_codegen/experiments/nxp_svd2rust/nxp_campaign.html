@@ -106,7 +106,7 @@
 <div class="tiles">
   <div class="tile ok"><div class="v">8<small>/9</small></div><div class="k">devices injected &amp; compiling</div></div>
   <div class="tile"><div class="v">106</div><div class="k">registers hard-gated</div></div>
-  <div class="tile"><div class="v">81</div><div class="k">downstream gate firings</div></div>
+  <div class="tile"><div class="v">286</div><div class="k">downstream errors triaged (both modes)</div></div>
   <div class="tile bug"><div class="v">1</div><div class="k">real driver bug found</div></div>
 </div>
 
@@ -168,7 +168,8 @@ sub-variant even splits the "modern" line: 0.35 lacks <code>REG::Ux::ZERO</code>
 <h2><span class="n">03</span>Downstream — do the gates fire in real drivers?</h2>
 <p class="sub">Each gated PAC was patched into its real HALs/firmware (<code>[patch.crates-io]</code>), built pristine
 first to isolate pre-existing breakage, then rebuilt. Every firing was adjudicated against the datasheet
-and the driver source.</p>
+and the driver source. Below: the <strong>whole-register</strong> hard gate (81 firings). The field-level
+advisory adds 205 more — section&nbsp;06.</p>
 
 <div class="chart">
   <div class="row"><span class="lbl">embassy-imxrt</span><div class="bar"><span class="seg fp" style="width:100%"></span></div><span class="val">49</span></div>
@@ -229,6 +230,35 @@ precondition imperatively. The witness API would simply <em>formalize</em> what 
   <li><strong>mk20dx-hal</strong> — LPTMR <code>PSR</code>/<code>CMR</code> always written after disabling the timer; RTC <code>IER</code>/<code>TAR</code> rely on the reset-state write-access bits the HAL never clears.</li>
   <li><strong>bootleby</strong> — compiles clean against the gated PAC; it touches none of lpc55's gated registers witness-free.</li>
 </ul>
+
+<h2><span class="n">06</span>Field-gating pass — every compiler error</h2>
+<p class="sub">Re-run with the field-level advisory on: each constrained <em>field</em>'s writer accessor takes a
+witness, so a witness-free <code>w.&lt;field&gt;(…)</code> is an <code>E0061</code> — a more precise, higher-volume
+signal that names the exact field. Every one adjudicated.</p>
+<div class="tiles" style="margin-top:.5rem">
+  <div class="tile"><div class="v">205</div><div class="k">field firings (E0061)</div></div>
+  <div class="tile"><div class="v">13</div><div class="k">distinct field-gates</div></div>
+  <div class="tile ok"><div class="v">0</div><div class="k">new bugs beyond §04</div></div>
+  <div class="tile"><div class="v">286</div><div class="k">total errors triaged (81 + 205)</div></div>
+</div>
+<p>The field pass confirms the whole-register conclusion with field precision. All 13 distinct field-gates
+are friction — the drivers establish each field's precondition imperatively:</p>
+<ul>
+  <li><strong>mk20dx-hal</strong> (9 FTM gates: <code>SC.PS/CLKS/CPWMS</code>, <code>POL</code>, <code>SWOCTRL</code>,
+  <code>MODE.FTMEN/INIT</code>, <code>DEADTIME</code>, <code>QDCTRL</code>) — the HAL sets <code>MODE.WPDIS=1</code>
+  at every FTM entry (<code>split</code>/<code>pwm</code>/<code>quad</code>) and never re-enables write-protection;
+  the config methods are reachable only through typestate handles minted after that. Plus <code>CMP CR0.FILTER_CNT</code>
+  (CR1.SE never set) and <code>PDB SC.LDOK</code> (documented enable-first, misuse a benign no-op, test-pinned).</li>
+  <li><strong>lpc55-hal</strong> (2 gates) — <code>FLEXCOMM.PSELID.PERSEL</code> (×25 sites) written right after
+  <code>syscon.reset()</code> so <code>LOCK=0</code>, configure-then-lock; <code>RNG.DATA_SEL</code> sits in dead
+  <code>unimplemented!()</code> code with no caller.</li>
+  <li><strong>embassy-imxrt</strong> and <strong>lpc8xx-hal</strong> produce 0 field firings — mimxrt685s's
+  field-gated security/lock registers (PUF KEYLOCK, AHB SECLOCK, DBG_LOCKEN, I3C) are never written by the HAL,
+  and lpc845 has no field-scoped constraints at all.</li>
+</ul>
+<p class="note">Field mode's value is diagnostic precision, not additional bugs — its 205-vs-81 volume is exactly
+why the whole-register hard gate is the better default for a bug-hunt. Across both modes, all 286 injected
+compiler errors were triaged to <strong>one</strong> real bug.</p>
 
 <footer>
   hal_agent · NXP svd2rust witness-gating arm (branch nxp-svd2rust)<br>

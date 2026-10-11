@@ -74,3 +74,52 @@ timers — but the drivers are disciplined and uphold each precondition in code:
 
 The witness API would formalize exactly these imperative waits/checks; the one
 place the pattern is broken (lpc8xx-hal `read_all`) is the bug.
+
+## Field-gating pass (every compiler error)
+
+Re-ran with the field-level advisory ON (`GATE_MODE=field`): each constrained
+*field*'s writer accessor takes a witness, so a witness-free `w.<field>(…)` fires
+`E0061`. This is the more precise (and higher-volume) signal — it pinpoints the
+exact field, not the whole register. Every error was adjudicated.
+
+**205 field firings → 13 distinct field-gates → 0 new bugs.** (lpc8xx-hal and
+embassy-imxrt produce 0 field firings — lpc845 has no field-scoped constraints,
+and embassy-imxrt never writes mimxrt685s's field-gated security/lock registers.)
+
+| consumer | whole-reg (E0277) | field (E0061) | distinct field-gates | field bugs |
+|---|--:|--:|--:|--:|
+| lpc55-hal | 10 | 26 | 2 | 0 |
+| mk20dx-hal (mk20d7) | 11 | 109 | ~11 | 0 |
+| mk20dx-hal (mk20d5) | 2 | 70 | (subset) | 0 |
+| embassy-imxrt | 49 | 0 | 0 | 0 |
+| lpc8xx-hal | 9 | 0 | 0 | 0 |
+| bootleby | 0 | 0 | 0 | 0 |
+
+Distinct field-gates, all **FP/friction**:
+
+- **lpc55-hal (2):** `flexcomm/PSELID.PERSEL` (×25 sites — i2c/spi/usart/hs-spi
+  `enabled_as_*`) is written right after `syscon.reset()` (so `PSELID.LOCK`=0),
+  in a configure-then-lock RMW; `rng/ONLINE_TEST_CFG.DATA_SEL` (×1) is in dead
+  `initialize_entropy` (`unimplemented!()`, private, no caller).
+- **mk20dx-hal (11):** nine are FTM config fields (`SC.PS/CLKS/CPWMS`,
+  `POL.POLn`, `SWOCTRL.*`, `MODE.FTMEN/INIT`, `DEADTIME.*`, `QDCTRL.QUADEN`)
+  gated on `MODE.WPDIS` set — **the HAL sets `WPDIS=1` at every FTM entry
+  (`split`/`pwm`/`quad`) and never re-enables write-protection**, and the config
+  methods are reachable only through typestate handles minted after that; the few
+  SC writes that precede their own WPDIS run on a from-reset peripheral (WP off).
+  `CMP CR0.FILTER_CNT` (CR1.SE never set); `PDB SC.LDOK` (documented enable-first
+  ordering, misuse is a benign hardware no-op, pinned by a test).
+
+**Conclusion:** the field pass confirms the whole-register conclusion with
+field-precision — the drivers establish each field's precondition imperatively
+(reset-after-reset for the lock bits, WPDIS-before-config for FTM). It surfaces
+**no bug beyond** the one whole-register finding (lpc8xx-hal `read_all`). The
+value of field mode is diagnostic precision, not additional bugs — and its
+volume (205 vs 81) is why the whole-register hard gate is the better default for
+a bug-hunt.
+
+### All-errors tally
+
+Across both modes, every injected compiler error was triaged: **81 whole-register
+(`E0277`) + 205 field (`E0061`) = 286 firings → 1 real bug** (lpc8xx-hal
+`I2cMaster::read_all`), the rest friction on disciplined drivers.
