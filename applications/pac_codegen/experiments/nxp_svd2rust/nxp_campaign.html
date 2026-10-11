@@ -193,8 +193,16 @@ advisory adds 205 more — section&nbsp;06.</p>
     <tr><td>lpc8xx-hal 0.10.0</td><td>lpc845</td><td class="num">9</td><td class="num">1</td><td><span class="pill bug">1 real bug</span></td></tr>
     <tr><td>embassy-imxrt</td><td>mimxrt685s</td><td class="num">49</td><td class="num">0</td><td><span class="pill ok">all friction</span></td></tr>
     <tr><td>bootleby (Oxide RoT loader)</td><td>lpc55</td><td class="num">0</td><td class="num">0</td><td><span class="pill ok">clean</span></td></tr>
+    <tr><td>canadensis s32k146_node</td><td>s32k146</td><td class="num">2</td><td class="num">0</td><td><span class="pill ok">all friction</span></td></tr>
   </tbody>
 </table></div>
+<p class="note"><strong>Low-value sweep.</strong> Of the standalone/stale/dead NXP crates, most are unscannable
+(no constraints for the device — lpc82x, lpc546xx, mkw41z, mcxa/mcxn — or no consumer to build — ke04,
+mk66f18, k64, k32l3a60). The one that pairs a constrained device with a real consumer is
+<strong>canadensis</strong>: its <code>s32k146_node</code> UAVCAN example drives FlexCAN and the clock tree
+raw (no HAL). Injected s32k1xx into <code>s32k146-pac</code> (21 gates) — 2 firings, both friction
+(<code>SCG.SOSCDIV</code>/<code>SPLLCFG</code> written before the oscillator/PLL are enabled, per RM §28.1.4).
+No bug.</p>
 <p class="note">Firmware not evaluable here (pristine build fails for reasons unrelated to the gate):
 <strong>nitrokey-3</strong> needs an external ARM C toolchain (<code>arm-none-eabi-gcc</code> for
 <code>p256-cortex-m4-sys</code>); <strong>solo2</strong> pins <code>lpc55-hal 0.6 → pac ^0.4</code> and sets
