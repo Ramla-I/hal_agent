@@ -77,6 +77,10 @@ def run_device(dev):
               "--pac", str(pac), "--device", ".",
               "--svd-dir", str(svd_dir),
               "--constraints", str(review),
+              # Whole-register HARD gates only (the compile-time guarantee); the
+              # field-level mode is an advisory that over-fires on every field
+              # write and is the wrong signal for a downstream bug-hunt.
+              "--register-only",
               "--report", str(report)])
     if report.is_file():
         r = json.loads(report.read_text())

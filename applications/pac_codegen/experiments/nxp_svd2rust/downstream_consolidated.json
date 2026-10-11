@@ -1,0 +1,62 @@
+[
+ {
+  "name": "bootleby",
+  "kind": "firmware",
+  "status": "ok",
+  "n_e0277": 0,
+  "compiles_injected": true
+ },
+ {
+  "name": "embassy-imxrt",
+  "kind": "hal",
+  "status": "fired",
+  "n_e0277": 49,
+  "compiles_injected": false
+ },
+ {
+  "name": "lpc55-hal",
+  "kind": "hal",
+  "status": "fired",
+  "n_e0277": 10,
+  "compiles_injected": false
+ },
+ {
+  "name": "lpc8xx-hal",
+  "kind": "hal",
+  "status": "fired",
+  "n_e0277": 9,
+  "compiles_injected": false
+ },
+ {
+  "name": "mk20dx-hal-mk20d5",
+  "kind": "hal",
+  "status": "fired",
+  "n_e0277": 2,
+  "compiles_injected": false
+ },
+ {
+  "name": "mk20dx-hal-mk20d7",
+  "kind": "hal",
+  "status": "fired",
+  "n_e0277": 11,
+  "compiles_injected": false
+ },
+ {
+  "name": "nitrokey-3-firmware",
+  "kind": "firmware",
+  "status": "unevaluable",
+  "reason": "pristine build needs arm-none-eabi-gcc (p256-cortex-m4-sys)"
+ },
+ {
+  "name": "solo2",
+  "kind": "firmware",
+  "status": "out_of_scope",
+  "reason": "lpc55-hal 0.6 -> lpc55-pac ^0.4 (version), + -Dwarnings"
+ },
+ {
+  "name": "hubris",
+  "kind": "firmware",
+  "status": "out_of_scope",
+  "reason": "lpc55-pac ^0.4 + xtask build system"
+ }
+]

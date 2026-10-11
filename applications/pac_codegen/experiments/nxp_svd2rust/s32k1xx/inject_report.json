@@ -2,15 +2,15 @@
  "run_dir": "/home/ramla/hal_agent-phase-1d/agent_output/nxp/s32k1xx/1",
  "pac": "/home/ramla/hal_agent-pac-injection/applications/pac_codegen/vendored/pac/s32k144-pac",
  "device": ".",
- "registers_planned": 28,
+ "registers_planned": 20,
  "fates": {
   "rejected_at_collection": 46,
   "gated_out_by_validator": 35,
-  "planned": 28,
+  "planned": 20,
   "kind_not_emitted": 15,
+  "field_gating_disabled": 22,
   "peripheral_not_in_device": 9,
-  "same_register_software_gate": 11,
-  "pruned_for_device": 14
+  "same_register_software_gate": 11
  },
  "rows": [
   {
@@ -468,8 +468,8 @@
    "file": "ftm0_sc",
    "peripheral": "ftm0",
    "register": "sc",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['clks', 'cpwms', 'ps']",
+   "fate": "field_gating_disabled",
+   "reason": "SC: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "dd23056dd1c9",
@@ -477,23 +477,21 @@
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm1_c7sc",
    "peripheral": "ftm1",
    "register": "c7sc",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['elsa', 'elsb', 'icrst', 'msa', 'msb', 'trigmode']",
+   "fate": "field_gating_disabled",
+   "reason": "C7SC: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "c4e1d3fb4ebe"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm1_sc",
@@ -527,8 +525,8 @@
    "file": "ftm1_sc",
    "peripheral": "ftm1",
    "register": "sc",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['clks', 'cpwms', 'ps']",
+   "fate": "field_gating_disabled",
+   "reason": "SC: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "3eae6f3e33fd",
@@ -537,23 +535,21 @@
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm2_c7sc",
    "peripheral": "ftm2",
    "register": "c7sc",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['elsa', 'elsb', 'icrst', 'msa', 'msb', 'trigmode']",
+   "fate": "field_gating_disabled",
+   "reason": "C7SC: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "2cf7cb0535a1"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm2_pair1deadtime",
@@ -587,16 +583,15 @@
    "file": "ftm3_c7sc",
    "peripheral": "ftm3",
    "register": "c7sc",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['elsa', 'elsb', 'icrst', 'msa', 'msb', 'trigmode']",
+   "fate": "field_gating_disabled",
+   "reason": "C7SC: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "77bb30897ccb"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm3_sc",
@@ -630,8 +625,8 @@
    "file": "ftm3_sc",
    "peripheral": "ftm3",
    "register": "sc",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['clks', 'cpwms', 'ps']",
+   "fate": "field_gating_disabled",
+   "reason": "SC: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "44b5d6624581",
@@ -640,8 +635,7 @@
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm4_c5sc",
@@ -876,8 +870,8 @@
    "file": "lpspi0_cr",
    "peripheral": "lpspi0",
    "register": "cr",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['dbgen', 'dozen']",
+   "fate": "field_gating_disabled",
+   "reason": "CR: 2 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "77056403c03a",
@@ -885,8 +879,7 @@
    ],
    "kinds": {
     "state_gate": 2
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "lpspi1_ccr",
@@ -918,8 +911,8 @@
    "file": "lpspi1_cr",
    "peripheral": "lpspi1",
    "register": "cr",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['dbgen', 'dozen']",
+   "fate": "field_gating_disabled",
+   "reason": "CR: 2 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "260050db78cf",
@@ -927,8 +920,7 @@
    ],
    "kinds": {
     "state_gate": 2
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "lpspi2_cfgr0",
@@ -1071,31 +1063,29 @@
    "file": "pcc_adc0",
    "peripheral": "pcc",
    "register": "adc0",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "ADC0: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "c3b2c2f74ad8"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_adc1",
    "peripheral": "pcc",
    "register": "adc1",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "ADC1: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "e4884cde337d"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_enet",
@@ -1149,46 +1139,43 @@
    "file": "pcc_flexio",
    "peripheral": "pcc",
    "register": "flexio",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "FlexIO: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "15b5ff714b9e"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_ftm2",
    "peripheral": "pcc",
    "register": "ftm2",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "FTM2: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "ea7b12de8544"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_ftm3",
    "peripheral": "pcc",
    "register": "ftm3",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "FTM3: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "8ee540d48dad"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_ftm4",
@@ -1230,16 +1217,15 @@
    "file": "pcc_lpi2c0",
    "peripheral": "pcc",
    "register": "lpi2c0",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "LPI2C0: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "d3be65ecc3bb"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_lpi2c1",
@@ -1257,121 +1243,113 @@
    "file": "pcc_lpit",
    "peripheral": "pcc",
    "register": "lpit",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "LPIT: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "7790bf1ac940"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_lpspi0",
    "peripheral": "pcc",
    "register": "lpspi0",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "LPSPI0: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "950de4608596"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_lpspi1",
    "peripheral": "pcc",
    "register": "lpspi1",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "LPSPI1: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "0a7a75ee81e5"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_lpspi2",
    "peripheral": "pcc",
    "register": "lpspi2",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "LPSPI2: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "1045cc1dc823"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_lptmr0",
    "peripheral": "pcc",
    "register": "lptmr0",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "LPTMR0: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "b4ac49271ea1"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_lpuart0",
    "peripheral": "pcc",
    "register": "lpuart0",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "LPUART0: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "aa635dd1590e"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_lpuart1",
    "peripheral": "pcc",
    "register": "lpuart1",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "LPUART1: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "bd5cfe334988"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_lpuart2",
    "peripheral": "pcc",
    "register": "lpuart2",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:PCS has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "LPUART2: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "007fb70d1fee"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pcc_pdb0",

@@ -2,12 +2,13 @@
  "run_dir": "/home/ramla/hal_agent-phase-1d/agent_output/nxp/ke04/1",
  "pac": "/home/ramla/hal_agent-pac-injection/applications/pac_codegen/vendored/pac/ke04z4-pac",
  "device": ".",
- "registers_planned": 8,
+ "registers_planned": 1,
  "fates": {
-  "planned": 8,
+  "field_gating_disabled": 8,
+  "planned": 1,
   "kind_not_emitted": 13,
   "rejected_at_collection": 3,
-  "pruned_for_device": 3,
+  "pruned_for_device": 2,
   "gated_out_by_validator": 4
  },
  "rows": [
@@ -15,16 +16,15 @@
    "file": "acmp0_c0",
    "peripheral": "acmp0",
    "register": "c0",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['acnsel', 'acpsel']",
+   "fate": "field_gating_disabled",
+   "reason": "C0: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "21965af73fef"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "acmp1_c0",
@@ -69,91 +69,85 @@
    "file": "ftm0_c6sc",
    "peripheral": "ftm0",
    "register": "c6sc",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:MSB has no writer in the generated PAC (read-only field), so no accessor to gate; field:MSA has no writer in the generated PAC (read-only field), so no accessor to gate; field:ELSB has no writer in the generated PAC (read-only field), so no accessor to gate; field:ELSA has no writer in the generated PAC (read-only field), so no accessor to gate",
+   "fate": "field_gating_disabled",
+   "reason": "C6SC: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "83e8ec3f337c"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm0_fltpol",
    "peripheral": "ftm0",
    "register": "fltpol",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['flt0pol', 'flt1pol', 'flt2pol', 'flt3pol']",
+   "fate": "field_gating_disabled",
+   "reason": "FLTPOL: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "5e3be7cb01a9"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm0_invctrl",
    "peripheral": "ftm0",
    "register": "invctrl",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['inv0en', 'inv1en', 'inv2en', 'inv3en']",
+   "fate": "field_gating_disabled",
+   "reason": "INVCTRL: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "bd537901048d"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm0_sc",
    "peripheral": "ftm0",
    "register": "sc",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['clks', 'cpwms', 'ps']",
+   "fate": "field_gating_disabled",
+   "reason": "SC: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "0f9cdabed81d"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm2_invctrl",
    "peripheral": "ftm2",
    "register": "invctrl",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['inv0en', 'inv1en', 'inv2en', 'inv3en']",
+   "fate": "field_gating_disabled",
+   "reason": "INVCTRL: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "826a5cb48824"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm2_sc",
    "peripheral": "ftm2",
    "register": "sc",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['clks', 'cpwms', 'ps']",
+   "fate": "field_gating_disabled",
+   "reason": "SC: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "d06f6238c5d8"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "ftm2_status",
@@ -303,16 +297,15 @@
    "file": "pmc_spmsc1",
    "peripheral": "pmc",
    "register": "spmsc1",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['lvwie']",
+   "fate": "field_gating_disabled",
+   "reason": "SPMSC1: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "40d156d3e42f"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "pmc_spmsc2",

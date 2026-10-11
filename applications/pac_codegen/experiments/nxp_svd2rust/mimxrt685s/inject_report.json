@@ -2,15 +2,15 @@
  "run_dir": "/home/ramla/hal_agent-phase-1d/agent_output/nxp/mimxrt685s/1",
  "pac": "/home/ramla/hal_agent-pac-injection/applications/pac_codegen/vendored/pac/mimxrt685s-pac",
  "device": ".",
- "registers_planned": 17,
+ "registers_planned": 14,
  "fates": {
   "gated_out_by_validator": 17,
   "peripheral_not_in_device": 1,
   "kind_not_emitted": 20,
   "rejected_at_collection": 33,
-  "unsupported_by_emitter": 1,
-  "planned": 31,
-  "pruned_for_device": 15,
+  "field_gating_disabled": 6,
+  "planned": 28,
+  "pruned_for_device": 13,
   "same_register_software_gate": 7
  },
  "rows": [
@@ -180,8 +180,8 @@
    "file": "flexspi_mcr2",
    "peripheral": "flexspi",
    "register": "mcr2",
-   "fate": "unsupported_by_emitter",
-   "reason": "MCR2: field-scoped postconditions are not supported (roadmap step I)",
+   "fate": "field_gating_disabled",
+   "reason": "MCR2: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "5c8ef0cec0ca"
@@ -435,31 +435,29 @@
    "file": "i3c_mdatactrl",
    "peripheral": "i3c",
    "register": "mdatactrl",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:TXTRIG [UNLOCK set: field has no reader in the generated PAC]; field:RXTRIG [UNLOCK set: field has no reader in the generated PAC]",
+   "fate": "field_gating_disabled",
+   "reason": "MDATACTRL: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "967c24a789f4"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "i3c_mdynaddr",
    "peripheral": "i3c",
    "register": "mdynaddr",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['daddr']",
+   "fate": "field_gating_disabled",
+   "reason": "MDYNADDR: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "c8ab732dff64"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "i3c_mwdatabe",
@@ -478,31 +476,29 @@
    "file": "i3c_sconfig",
    "peripheral": "i3c",
    "register": "sconfig",
-   "fate": "pruned_for_device",
-   "reason": "all gates dropped, not expressible against the generated PAC: field:SLVENA [i3c_scapabilities.IBI_MR_HJ set: set check needs a bit reader, field is field]",
+   "fate": "field_gating_disabled",
+   "reason": "sconfig: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "f34f82adb10c"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "i3c_swdatabe",
    "peripheral": "i3c",
    "register": "swdatabe",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['data']",
+   "fate": "field_gating_disabled",
+   "reason": "SWDATABE: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "0aaf2b68d8e2"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "mua_rr0",
@@ -1614,16 +1610,15 @@
    "file": "usbhsh_fladj_frindex",
    "peripheral": "usbhsh",
    "register": "fladj_frindex",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['frindex']",
+   "fate": "field_gating_disabled",
+   "reason": "FLADJ_FRINDEX: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "455d8e819ec6"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "usdhc0_cmd_xfr_typ",

@@ -2,14 +2,14 @@
  "run_dir": "/home/ramla/hal_agent-phase-1d/agent_output/nxp/mimxrt633s/1",
  "pac": "/home/ramla/hal_agent-pac-injection/applications/pac_codegen/vendored/pac/mimxrt633s-pac",
  "device": ".",
- "registers_planned": 21,
+ "registers_planned": 19,
  "fates": {
   "rejected_at_collection": 44,
-  "planned": 33,
+  "planned": 31,
   "kind_not_emitted": 28,
   "gated_out_by_validator": 20,
+  "field_gating_disabled": 3,
   "pruned_for_device": 10,
-  "unsupported_by_emitter": 1,
   "same_register_software_gate": 2
  },
  "rows": [
@@ -252,16 +252,15 @@
    "file": "flexspi_mcr0",
    "peripheral": "flexspi",
    "register": "mcr0",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['hsen']",
+   "fate": "field_gating_disabled",
+   "reason": "MCR0: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "c7a4ddb9444c"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "i2c0_mstctl",
@@ -1045,8 +1044,8 @@
    "file": "sysctl0_m33nmisrcsel",
    "peripheral": "sysctl0",
    "register": "m33nmisrcsel",
-   "fate": "unsupported_by_emitter",
-   "reason": "M33NMISRCSEL: field-scoped postconditions are not supported (roadmap step I)",
+   "fate": "field_gating_disabled",
+   "reason": "M33NMISRCSEL: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "c9148c995440"
@@ -1729,16 +1728,15 @@
    "file": "usbhsh_fladj_frindex",
    "peripheral": "usbhsh",
    "register": "fladj_frindex",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['frindex']",
+   "fate": "field_gating_disabled",
+   "reason": "FLADJ_FRINDEX: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "cddb7101e022"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "usdhc0_cmd_xfr_typ",

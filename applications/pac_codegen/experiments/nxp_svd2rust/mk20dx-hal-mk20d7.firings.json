@@ -1,0 +1,69 @@
+{
+ "name": "mk20dx-hal-mk20d7",
+ "kind": "hal",
+ "repo": "https://github.com/cosmikwolf/mk20dx-hal",
+ "status": "fired",
+ "compiles_injected": false,
+ "n_e0277": 11,
+ "n_e0061_field": 0,
+ "firings": [
+  {
+   "kind": "E0277",
+   "what": "PsrSpec write",
+   "loc": "src/lptmr.rs:128:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "CmrSpec write",
+   "loc": "src/lptmr.rs:150:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "PsrSpec write",
+   "loc": "src/lptmr.rs:170:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "CmrSpec write",
+   "loc": "src/lptmr.rs:206:21"
+  },
+  {
+   "kind": "E0277",
+   "what": "IerSpec write",
+   "loc": "src/rtc.rs:72:19"
+  },
+  {
+   "kind": "E0277",
+   "what": "TarSpec write",
+   "loc": "src/rtc.rs:150:19"
+  },
+  {
+   "kind": "E0277",
+   "what": "TarSpec write",
+   "loc": "src/rtc.rs:161:19"
+  },
+  {
+   "kind": "E0277",
+   "what": "IerSpec modify",
+   "loc": "src/rtc.rs:166:28"
+  },
+  {
+   "kind": "E0277",
+   "what": "IerSpec modify",
+   "loc": "src/rtc.rs:171:28"
+  },
+  {
+   "kind": "E0277",
+   "what": "IerSpec modify",
+   "loc": "src/rtc.rs:178:28"
+  },
+  {
+   "kind": "E0277",
+   "what": "IerSpec modify",
+   "loc": "src/rtc.rs:183:28"
+  }
+ ],
+ "other_new_errors": [
+  "error: could not compile `mk20dx-hal` (lib) due to 21 previous errors"
+ ]
+}

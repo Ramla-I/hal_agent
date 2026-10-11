@@ -41,19 +41,23 @@ python run_all.py lpc55s69   # one
 ## Results
 
 **8 of 9 devices inject and compile** — covering both generic.rs dialects and
-all three naming conventions — gating **149 registers** in total from the
-confirmed constraint ledgers. (`summary.json` / `run_all.log` are authoritative.)
+all three naming conventions — gating **106 registers** with the whole-register
+HARD gate (`--register-only`, the compile-time guarantee). (`summary.json` /
+`run_all.log` are authoritative.) With field-level advisory ALSO on (the earlier
+default) the register count is 149, but the advisory over-fires on every field
+write and is the wrong signal for the downstream bug-hunt, so the arm runs
+whole-register-only.
 
-| device | PAC (crates.io) | svd2rust | registers gated | compiles |
+| device | PAC (crates.io) | svd2rust | regs hard-gated | compiles |
 |---|---|---|--:|:--:|
-| lpc55s69 | lpc55-pac 0.5.0 | 0.20 (early) | 8 | ✅ |
-| ke04 | ke04z4-pac 0.1.0 | 0.19 (early) | 8 | ✅ |
-| s32k1xx | s32k144-pac 0.1.0 | 0.21 (early) | 28 | ✅ |
+| lpc55s69 | lpc55-pac 0.5.0 | 0.20 (early) | 5 | ✅ |
+| ke04 | ke04z4-pac 0.1.0 | 0.19 (early) | 1 | ✅ |
+| s32k1xx | s32k144-pac 0.1.0 | 0.21 (early) | 20 | ✅ |
 | lpc845 | lpc845-pac 0.4.1 | 0.19 (early) | 3 | ✅ |
-| mk20d7 | mk20d7-pac 0.1.1 | 0.37 (modern) | 31 | ✅ |
-| mk20d5 | mk20d5-pac 0.1.1 | 0.37 (modern) | 33 | ✅ |
-| mimxrt685s | mimxrt685s-pac 0.5.0 | 0.35 (modern) | 17 | ✅ |
-| mimxrt633s | mimxrt633s-pac 0.5.0 | 0.35 (modern) | 21 | ✅ |
+| mk20d7 | mk20d7-pac 0.1.1 | 0.37 (modern) | 21 | ✅ |
+| mk20d5 | mk20d5-pac 0.1.1 | 0.37 (modern) | 23 | ✅ |
+| mimxrt685s | mimxrt685s-pac 0.5.0 | 0.35 (modern) | 14 | ✅ |
+| mimxrt633s | mimxrt633s-pac 0.5.0 | 0.35 (modern) | 19 | ✅ |
 | k64 | k64 0.1.0 | **0.14** | — | — (out of scope) |
 
 **k64** is out of scope: its published PAC is svd2rust **0.14.0**, which predates
@@ -77,3 +81,7 @@ A within-dialect sub-variant surfaced: svd2rust **0.35** (mimxrt) writes
 - The gate is proven to bite on lpc55 (a witness-free `I2C MSTCTL` write fails
   with `E0277: MSTCTL_SPEC is write-constrained by its datasheet`); compilation
   of the whole injected crate is the per-device check here.
+
+## Downstream
+
+Each injected PAC was patched into its real downstream HALs/firmware and built; the gate firings were triaged (bug vs friction) in **`downstream_triage.md`** (`run_downstream.py` is the baseline-then-patch driver). Headline: across 81 firings in the evaluable consumers, **1 real bug** (lpc8xx-hal `I2cMaster::read_all` enables I2C DMA on MSTCTL without waiting for MSTPENDING), the rest friction.

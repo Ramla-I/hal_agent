@@ -2,14 +2,14 @@
  "run_dir": "/home/ramla/hal_agent-phase-1d/agent_output/nxp/lpc55s69/1",
  "pac": "/home/ramla/hal_agent-pac-injection/applications/pac_codegen/vendored/pac/lpc55-pac",
  "device": ".",
- "registers_planned": 8,
+ "registers_planned": 5,
  "fates": {
-  "planned": 12,
+  "planned": 8,
   "rejected_at_collection": 12,
   "gated_out_by_validator": 6,
+  "field_gating_disabled": 4,
   "kind_not_emitted": 8,
-  "same_register_software_gate": 2,
-  "same_instance_rules_unioned": 1
+  "same_register_software_gate": 2
  },
  "rows": [
   {
@@ -56,16 +56,15 @@
    "file": "flexcomm5_pselid",
    "peripheral": "flexcomm5",
    "register": "pselid",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['persel']; via instance alias flexcomm5 -> flexcomm0 (gates every instance of this block)",
+   "fate": "field_gating_disabled",
+   "reason": "PSELID: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "21ab42ce2e2e"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": true
+   }
   },
   {
    "file": "hashcrypt_alias1",
@@ -253,16 +252,15 @@
    "file": "rng_online_test_cfg",
    "peripheral": "rng",
    "register": "online_test_cfg",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['data_sel']",
+   "fate": "field_gating_disabled",
+   "reason": "ONLINE_TEST_CFG: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "c82b452389b5"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "rtc_ctrl",
@@ -502,31 +500,29 @@
    "file": "usbfsh_hccontrolcurrented",
    "peripheral": "usbfsh",
    "register": "hccontrolcurrented",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['hcfs']",
+   "fate": "field_gating_disabled",
+   "reason": "HCCONTROL: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "2ac5ff1806e5"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "usbfsh_hccontrolheaded",
    "peripheral": "usbfsh",
    "register": "hccontrolheaded",
-   "fate": "planned",
-   "reason": "gates: []; field_gates: ['hcfs']",
+   "fate": "field_gating_disabled",
+   "reason": "HCCONTROL: 1 field-scoped constraint(s) skipped because field-level gating is disabled; nothing left to gate (enable with --field-level-gating)",
    "constraints": [],
    "constraint_ids": [
     "348dfc26b252"
    ],
    "kinds": {
     "state_gate": 1
-   },
-   "via_alias": false
+   }
   },
   {
    "file": "usbphy_pll_sic_set",
@@ -539,18 +535,6 @@
     "41f7a25f322d"
    ],
    "kind": "delay"
-  },
-  {
-   "file": "",
-   "peripheral": "usbfsh",
-   "register": "hccontrol",
-   "fate": "same_instance_rules_unioned",
-   "constraint_ids": [
-    "2ac5ff1806e5",
-    "348dfc26b252"
-   ],
-   "reason": "one rule at two precisions: narrowed to the named fields [hcfs]: 0 of 2 plans named no fields and were discarded as the coarser reading of the same sentence (gate sets ['hcfs', 'hcfs'])",
-   "constraints": []
   }
  ],
  "injected": true
