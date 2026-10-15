@@ -74,7 +74,11 @@ $VENV s2_generate.py --registers ctrl               # one-register smoke test �
 $VENV s2_generate.py --registers ctrl --dry-run     # retrieval only, NO LLM (just saves the context)
 $VENV s2_generate.py                                # all 75; then --auto-complete rNNN for the retry loop
 $VENV s3_collect_constraints.py rNNN          # grammar-valid constraints + enforceability
-$VENV s4_emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs
+$VENV s4_emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs (structural / constraint-gated)
+# gated over the COMBINED 34 (folds in the recovered constraints) and the provenance variant:
+$VENV s4_emit_hal.py rNNN --gated --extra-constraints config/recovered_constraints.json
+$VENV s4b_emit_hal_minted.py rNNN --extra-constraints config/recovered_constraints.json
+$VENV build_constraints_list.py               # regenerate reports/constraints_found.{json,md} (needs constraints/r006_*.json)
 ```
 
 - **Datasheet chunks** (pre-chunked, external): `INTEL_CHUNKS_DIR`, default
@@ -97,16 +101,22 @@ $VENV s4_emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs
   **census of all 406 extracted bit fields vs the datasheet's own field tables
   = 404/406 (99.5%)** correct (the 2 errors are spurious fields the full-page
   completion pass bled in from adjacent registers, inert in this whole-register
-  HAL). **9 real bugs** found across the four drivers (none by testing) — e.g.
+  HAL). **8 real bugs** found across the four drivers (none by testing) — e.g.
   Theseus `RDRXCTL_CRC_STRIP` sets a reserved bit, and (via the recovered RXCSUM
   constraint) Theseus writes RXCSUM/RSS config while the receiver is enabled.
+  (An earlier count of 9 included an ixy/Redox FCTRL "live write" that turned
+  out to be a false positive — both write FCTRL inside `init_rx`'s
+  RXEN-disabled window; see `reports/results.md` finding 6.)
 - **`reports/constraints_found.md` / `.json`** — the durable final constraints
-  list: **34 total** = 29 grammar-valid from the canonical run + **5 recovered**
-  by the constraint-recall improvement (RXCSUM, RDLEN, TDLEN, DAQF, SDPQF);
-  **8 become compile-time gates** (field-level default: witnesses, never-set
-  clamps, a coupled CRC-strip setter that makes the RDRXCTL bug unwritable), at
-  a driver-diff cost of +27/−15 lines. (Schema-valid + computed enforceability;
-  not run through the LLM constraint validator — noted in the report.)
+  list: **39 found → 5 dropped (grammar schema) → 34 kept** = 29 grammar-valid
+  from the canonical run + **5 recovered** by the constraint-recall improvement
+  (RXCSUM, RDLEN, TDLEN, DAQF, SDPQF, committed as
+  `config/recovered_constraints.json`). Over the combined 34, **9 become
+  compile-time gates** (field-level default: witnesses, never-set clamps, a
+  coupled CRC-strip setter that makes the RDRXCTL bug unwritable, and the
+  recovered RXCSUM witness gate), at a driver-diff cost of +40/−18 lines.
+  (Schema-valid + computed enforceability; not run through the LLM constraint
+  validator — noted in the report.)
 - **`reports/friction.md`** — the friction ledger: every manual/contract-level
   adaptation, categorized (naming / packaging / adjudicated access divergence /
   policy constants / gate-required driver diff / source-document artifacts),
@@ -114,15 +124,21 @@ $VENV s4_emit_hal.py rNNN       [--gated] [--plain] # generated regs.rs
 - **`reports/retrofit.md`** — extension: ixy.rs / Redox ixgbed / RedLeaf vs
   the generated HAL — **all three compile against it**: full ports of ixy
   (85 replacements) and Redox (67), RedLeaf via a zero-call-site layer
-  retarget; coverage complete (41/37/17 registers); leads exposed include the
-  live-FCTRL promiscuous toggles (ixy+Redox), the DMATXCTL.VT clobber
-  (ixy+Redox, auto-repaired by the hold encoding), RedLeaf's RDLEN stride
-  typo (0x60 for 0x40) and 64-bit reads of 32-bit registers, and the legacy
-  0x5400 RAL/RAH alias reliance.
+  retarget (its domain crate also compile-verified against the gated HAL);
+  coverage complete (41/37/17 registers); leads exposed include the DMATXCTL.VT
+  clobber in **three** codebases (ixy, Redox, and RedLeaf's domain driver —
+  all ixy descendants, see the lineage note), RedLeaf's RDLEN stride typo
+  (0x60 for 0x40), 64-bit reads of 32-bit registers, and the legacy 0x5400
+  RAL/RAH alias reliance. The ixy/Redox FCTRL promiscuous writes are **not**
+  bugs — they sit inside `init_rx`'s RXEN-disabled window; the whole-register
+  gate fires there as a false positive (write-site-local), documented as such.
 - `pipeline/` — s1_enumerate_targets.py, s2_generate.py (batched generation + s2a_prompts_intel + s2b_scan_constraints helpers,
   bounded completion passes, the self-escalating `--auto-complete` loop, and
   the optional `--constraint-recall` trigger), s3_collect_constraints.py,
-  s4_emit_hal.py (structural + `--gated`), the audit/scan tools (audit_full_subfields.py, audit_structure.py,
-  audit_score_subfields.py, s2b_scan_constraints.py, build_constraints_list.py), the
+  s4_emit_hal.py (structural + `--gated` + `--extra-constraints` to fold in the
+  recovered set), s4b_emit_hal_minted.py (the provenance-hardened variant), the
+  audit/scan tools (audit_full_subfields.py, audit_structure.py,
+  audit_score_subfields.py, audit_selection_subfields.py, s2b_scan_constraints.py,
+  build_constraints_list.py), the
   committed contracts (config/packaging.json, config/name_map.json, config/access_overrides.json,
   config/constants_map.json). Theseus integration (clone recipe + the gated driver diff) is in `theseus_retrofit/`.
