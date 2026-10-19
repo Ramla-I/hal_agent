@@ -10,7 +10,6 @@ SVD File,Crate,RM,Bug Description,PR,Status
 "stm32f427, stm32f429, stm32f437, stm32f439",stm32-rs,rm0090,"RCC_PLLI2SCFGR: reset value: svd = 0x20003000, agent = 0x24003000",https://github.com/stm32-rs/stm32-rs/pull/1295,
 "stm32f415, stm32f417",stm32-rs,rm0090,"SYSCFG_MEMRM_MEM_MODE: bit width: svd = 3, agent = 2",https://github.com/stm32-rs/stm32-rs/pull/1295,
 stm32f437,stm32-rs,rm0090,"SYSCFG_MEMRM_MEM_MODE: bit width: svd = 2, RM = 3",https://github.com/stm32-rs/stm32-rs/pull/1295,
-
 "stm32f417, stm32f437, stm32f439",stm32-rs,rm0090,"TIM1\8_ARR: reset value: svd = 0x0, agent = 0xFFFF",,
 "stm32f417, stm32f437, stm32f439",stm32-rs,rm0090,"TIM2\5_ARR: reset value: svd = 0x0, agent = 0xFFFFFFFF",,
 "stm32f417, stm32f437, stm32f439",stm32-rs,rm0090,"TIM3\4_ARR: reset value: svd = 0x0, agent = 0xFFFF",,
