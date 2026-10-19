@@ -429,7 +429,10 @@ coverage:
   **`state_gate`** as compile-time witness gates (whole-register and
   cross-register). `read_effect`, `value_relation`, and `other` are
   documentation-only by construction and never gate an operation; `sequence`,
-  `clock_gate`, `write_once`, and `delay` are carried but not yet compile-gated.
+  `write_once` and `delay` are carried but not yet compile-gated. `clock_gate`
+  is carried for extraction/validation only and is **intentionally never
+  compile-gated** — peripheral clock enablement is the HAL's responsibility
+  (see the 2026-10-20 divergence entry in `register_constraints_plan.md`).
 - The **constraint validator** (`core/constraint_validator.py`, plan §7) judges
   **all** kinds against the datasheet — it processes every kind the generator
   emits, independent of what codegen enforces.

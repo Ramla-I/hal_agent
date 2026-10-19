@@ -1,0 +1,354 @@
+<title>Register-access constraint grammar — kinds & encodings</title>
+<style>
+  :root{
+    --bg:#f6f7f4; --surface:#ffffff; --surface2:#eef0ea; --ink:#1b1f17;
+    --ink2:#4a5040; --muted:#767c69; --line:#dfe2d7;
+    --accent:#6b7d2e; --accent2:#3f6b5f;
+    --good:#4f7a2f; --goodbg:#e7efdb; --warn:#9a6a1e; --warnbg:#f3e7d0;
+    --gap:#b23a2e; --gapbg:#f6e0dc;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#14160f; --surface:#1d2016; --surface2:#262a1d; --ink:#edefe4;
+    --ink2:#c3c8b4; --muted:#8e947e; --line:#333829; --accent:#aebf6a; --accent2:#7fb3a3;
+    --good:#9ec46b; --goodbg:#283620; --warn:#d6a85a; --warnbg:#382e1b; --gap:#e58574; --gapbg:#3a241f;
+  }}
+  :root[data-theme="light"]{
+    --bg:#f6f7f4; --surface:#ffffff; --surface2:#eef0ea; --ink:#1b1f17; --ink2:#4a5040;
+    --muted:#767c69; --line:#dfe2d7; --accent:#6b7d2e; --accent2:#3f6b5f;
+    --good:#4f7a2f; --goodbg:#e7efdb; --warn:#9a6a1e; --warnbg:#f3e7d0; --gap:#b23a2e; --gapbg:#f6e0dc;}
+  :root[data-theme="dark"]{
+    --bg:#14160f; --surface:#1d2016; --surface2:#262a1d; --ink:#edefe4; --ink2:#c3c8b4;
+    --muted:#8e947e; --line:#333829; --accent:#aebf6a; --accent2:#7fb3a3;
+    --good:#9ec46b; --goodbg:#283620; --warn:#d6a85a; --warnbg:#382e1b; --gap:#e58574; --gapbg:#3a241f;}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.56;margin:0;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:70rem;margin:0 auto;padding:3rem 1.5rem 5rem}
+  header.hero{border-bottom:1px solid var(--line);padding-bottom:1.6rem;margin-bottom:1.5rem}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 .5rem}
+  h1{font-size:clamp(1.7rem,3.3vw,2.4rem);line-height:1.1;margin:.1rem 0 .6rem;letter-spacing:-.015em;text-wrap:balance}
+  .lede{color:var(--ink2);font-size:1.04rem;max-width:52rem;margin:0}
+  h2{font-size:1.28rem;letter-spacing:-.01em;margin:2.6rem 0 .3rem;padding-top:.3rem}
+  h2 .n{font-family:var(--mono);color:var(--muted);font-size:.88rem;font-weight:500;margin-right:.5rem}
+  h3{font-size:1.0rem;margin:1.5rem 0 .2rem}
+  p{margin:.5rem 0}
+  .sub{color:var(--muted);font-size:.9rem;margin:.1rem 0 1rem;max-width:52rem}
+  code{font-family:var(--mono);font-size:.85em;background:var(--surface2);padding:.08em .35em;border-radius:4px}
+  a{color:var(--accent2)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.9rem;margin:1.4rem 0 .5rem}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem}
+  .tile .v{font-family:var(--mono);font-size:1.8rem;font-weight:600;letter-spacing:-.02em;line-height:1}
+  .tile .k{color:var(--muted);font-size:.8rem;margin-top:.4rem}
+  .scroll{overflow-x:auto;margin:1rem 0;border:1px solid var(--line);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:.86rem}
+  th,td{text-align:left;padding:.55rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-family:var(--mono);font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface2);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:var(--surface2)}
+  td code{white-space:nowrap}
+  .k-name{font-family:var(--mono);font-weight:600;color:var(--accent);white-space:nowrap}
+  .pill{font-family:var(--mono);font-size:.68rem;padding:.12em .5em;border-radius:999px;font-weight:600;display:inline-block;white-space:nowrap}
+  .pill.enf{background:var(--goodbg);color:var(--good)}
+  .pill.carry{background:var(--warnbg);color:var(--warn)}
+  .pill.doc{background:var(--surface2);color:var(--muted)}
+  .enc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;margin:.9rem 0}
+  .enc h3{margin-top:0;display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap}
+  .enc .meta{font-family:var(--mono);font-size:.72rem;color:var(--muted);font-weight:400}
+  .opt{display:grid;grid-template-columns:1.4rem 1fr;gap:.2rem .7rem;margin:.55rem 0;align-items:start}
+  .opt .tag{font-family:var(--mono);font-weight:700;color:var(--accent2);font-size:.9rem}
+  .opt .body{font-size:.9rem}
+  .opt .body .lead{font-weight:600}
+  .chosen{color:var(--good);font-family:var(--mono);font-size:.68rem;font-weight:700;border:1px solid var(--good);border-radius:999px;padding:.05em .45em;margin-left:.4rem;vertical-align:middle}
+  pre{font-family:var(--mono);font-size:.78rem;background:var(--surface2);border-radius:8px;padding:.5rem .7rem;overflow-x:auto;margin:.35rem 0;line-height:1.45}
+  pre .cm{color:var(--muted)}
+  .box{border-radius:12px;padding:1rem 1.2rem;margin:1rem 0;border:1px solid var(--line)}
+  .box.gap{border-color:var(--gap);background:var(--gapbg)}
+  .box .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+  .box.gap .tag{color:var(--gap)}
+  ul{margin:.4rem 0;padding-left:1.2rem} li{margin:.3rem 0}
+  .legend{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.78rem;color:var(--ink2);margin:.6rem 0 0;font-family:var(--mono)}
+  footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:.75rem;line-height:1.7}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <p class="eyebrow">Design review · register-access constraint grammar (v2)</p>
+  <h1>What the grammar expresses, and how each kind compiles</h1>
+  <p class="lede">A datasheet's rules about <em>when</em> and <em>how</em> a register may be touched are
+  captured as a discriminated union of eight constraint <strong>kinds</strong>. From each, an
+  <strong>enforceability class</strong> is computed, and that picks how the rule becomes Rust. This is a
+  quick audit of the eight kinds, the ways each could be encoded, and where coverage has gaps.</p>
+</header>
+
+<div class="tiles">
+  <div class="tile"><div class="v">8</div><div class="k">constraint kinds</div></div>
+  <div class="tile"><div class="v">4</div><div class="k">enforceability classes</div></div>
+  <div class="tile"><div class="v">4</div><div class="k">witness-token roles</div></div>
+  <div class="tile"><div class="v">1</div><div class="k">kind compile-enforced today (<code>state_gate</code>)</div></div>
+</div>
+
+<h2><span class="n">01</span>The eight kinds</h2>
+<p class="sub">The tag set is closed (a ninth value fails parsing). Counts are from our NXP constraint
+corpus — <code>state_gate</code> is ~85% of everything; it is also the only kind the emitter compiles today.</p>
+<div class="scroll"><table>
+  <thead><tr><th>kind</th><th>expresses</th><th>example</th><th>enforceability</th><th>status · corpus</th></tr></thead>
+  <tbody>
+    <tr><td class="k-name">state_gate</td><td>an operation is allowed only while named field conditions hold</td><td>write <code>CFG</code> only when <code>ENABLE=0</code>; write <code>MSTCTL</code> only when <code>MSTPENDING=1</code></td><td>state- or action-witnessed</td><td><span class="pill enf">enforced</span> 1492</td></tr>
+    <tr><td class="k-name">sequence</td><td>an ordered multi-step protocol</td><td><code>RTC_WPR</code> 0xCA→0x53 unlock; GPIO <code>LCKR</code> lock dance</td><td>action-witnessed</td><td><span class="pill carry">carried</span> 152</td></tr>
+    <tr><td class="k-name">write_once</td><td>a bit writable once until reset (lock bits)</td><td><code>TIM_BDTR.LOCK</code>, <code>EXTI_LOCKR</code></td><td>action-witnessed (capability)</td><td><span class="pill carry">carried</span> 80</td></tr>
+    <tr><td class="k-name">delay</td><td>a time/cycle wait after an operation before a dependent access</td><td>"wait 2 APB cycles after clearing before re-reading"</td><td>state-witnessed / dynamic</td><td><span class="pill carry">carried</span> 9</td></tr>
+    <tr><td class="k-name">clock_gate</td><td>the peripheral clock must be enabled before any register access</td><td><code>RCC_APB1ENR.I2C1EN=1</code> before I2C1</td><td>action-witnessed, but <strong>HAL-owned</strong></td><td><span class="pill na">not PAC-gated (HAL)</span> 0*</td></tr>
+    <tr><td class="k-name">read_effect</td><td>reading a register changes state (clear-on-read)</td><td><code>USART_DR</code> read clears <code>RXNE</code></td><td>doc-only (metadata)</td><td><span class="pill doc">doc</span> 18</td></tr>
+    <tr><td class="k-name">value_relation</td><td>an inter-field value relationship</td><td><code>CR2.FREQ</code> must equal the APB1 MHz</td><td>doc-only (HAL: combined setters — §03)</td><td><span class="pill doc">doc</span> 43</td></tr>
+    <tr><td class="k-name">other</td><td>escape valve &amp; discovery queue for genuine rules fitting no kind</td><td>—</td><td>doc-only (by construction)</td><td><span class="pill doc">doc</span> 40</td></tr>
+  </tbody>
+</table></div>
+<div class="legend">
+  <span>enforceability is <strong>computed</strong>, never model-emitted — deterministic from (kind, who establishes the state, target refs)</span>
+</div>
+<p style="font-size:.82rem;color:var(--muted)">* <code>clock_gate</code> doesn't appear in the NXP corpus (it's hoisted to the peripheral in the STM runs); it is a first-class kind regardless.</p>
+
+<h2><span class="n">02</span>The encoding primitives — four witness-token roles</h2>
+<p class="sub">A <em>witness token</em> attests a past observation or action — never a present guarantee. Everything
+below is built from exactly four roles. The compiler enforces a rule by making the operation's type demand the
+right token; the token can only come into existence by doing the required thing.</p>
+<div class="scroll"><table>
+  <thead><tr><th>role</th><th>minted by</th><th>consumed / shape</th><th>example</th></tr></thead>
+  <tbody>
+    <tr><td class="k-name">state witness</td><td>a <em>fallible runtime check</em> of hardware-controlled state</td><td>ZST, passed to the gated op</td><td><code>check_write_ready() -&gt; Result&lt;Cr1WriteWitness, _&gt;</code></td></tr>
+    <tr><td class="k-name">action witness</td><td>performing a required <em>software action</em> (infallible)</td><td>ZST, passed to the gated op</td><td><code>set_cnf() -&gt; CnfSetWitness</code></td></tr>
+    <tr><td class="k-name">capability</td><td>authority to do something <em>at most once</em></td><td>non-<code>Copy</code>, consumed by value (2nd use = <code>E0382</code>)</td><td><code>LckrWriteCap</code> (write_once)</td></tr>
+    <tr><td class="k-name">obligation</td><td>a duty to discharge later (cleanup)</td><td><code>#[must_use]</code> — dropping unused warns/errors</td><td><code>CnfMustClearObligation</code></td></tr>
+  </tbody>
+</table></div>
+
+<h2><span class="n">03</span>How each kind compiles — every way we could encode it</h2>
+<p class="sub">For each enforceable kind: the encoding we chose (or plan), then the alternatives. The common thread
+is "the operation does not type-check without evidence"; the encodings differ in <em>what carries the evidence</em>
+— a token, the register's own type, a scope, or (giving up compile-time) a runtime check.</p>
+
+<div class="enc">
+  <h3><span class="k-name">state_gate</span> <span class="meta">→ state witness / action witness · the one kind compiled today</span></h3>
+  <div class="opt"><span class="tag">A</span><div class="body"><span class="lead">Witness token</span> <span class="chosen">CHOSEN</span><br>
+    A hardware-established precondition becomes a <code>check_*_ready()</code> that does one fresh volatile read of the
+    source field(s) and returns a <em>state witness</em>; a software-established one becomes a setup method returning an
+    <em>action witness</em>. The gated <code>write_witnessed(f, w)</code> consumes it; the stock <code>write</code> gains a
+    <code>where&nbsp;REG:&nbsp;UnconstrainedWrite</code> bound and the constrained register simply never implements that marker, so
+    the witness-free path <em>does not exist</em> (E0277 with the datasheet message). A welded <code>write_when_ready(f)</code>
+    checks and writes in one call so the token never escapes.
+    <pre><span class="cm">// witness-free write of a gated register → compile error</span>
+i2c.mstctl.write(|w| …);              <span class="cm">// E0277: MSTCTL is write-constrained</span>
+i2c.mstctl.write_when_ready(|w| …, &amp;stat)?;  <span class="cm">// checks MSTPENDING, then writes</span></pre></div></div>
+  <div class="opt"><span class="tag">B</span><div class="body"><span class="lead">Typestate</span> — the register/peripheral carries a type parameter for the state
+    (<code>Usart&lt;Disabled&gt;</code> vs <code>Usart&lt;Enabled&gt;</code>); the gated op exists only on the valid state, and transitions
+    consume <code>self</code>. Strongest and zero-token at call sites, but invasive and per-peripheral — it rewrites the PAC's
+    shape rather than riding the generic register proxy.</div></div>
+  <div class="opt"><span class="tag">C</span><div class="body"><span class="lead">Newtype / sealed builder</span> — a <code>DisabledUsart</code> wrapper exposes the config writes and
+    <code>.enable()</code> consumes it into an <code>EnabledUsart</code> that lacks them. A lighter typestate; good when one
+    disable→configure→enable arc dominates.</div></div>
+  <div class="opt"><span class="tag">D</span><div class="body"><span class="lead">Scoped closure (RAII region)</span> — <code>with_disabled(|regs| { … })</code> establishes the
+    precondition, runs the body, restores it. The window is the closure, so the check-to-use gap is fixed by construction;
+    natural for "configure several registers while disabled".</div></div>
+  <div class="opt"><span class="tag">E</span><div class="body"><span class="lead">Runtime check only</span> — a <code>debug_assert!</code> or a <code>Result</code>-returning setter with no
+    compile obligation. No static guarantee; this is what the gate <em>degrades to</em> and what a vacuous or doc-only gate is
+    worth.</div></div>
+</div>
+
+<div class="enc">
+  <h3><span class="k-name">sequence</span> <span class="meta">→ action witness · designed, not yet emitted</span></h3>
+  <div class="opt"><span class="tag">A</span><div class="body"><span class="lead">Linear token chain</span> <span class="chosen">PLANNED</span> — each <code>step_n()</code> consumes step
+    <code>n−1</code>'s token and mints step <code>n</code>'s; the final step mints the <code>enables</code> capability. Ordering becomes a
+    pure type-level property — the cleanest linear-types fit in the whole grammar.</div></div>
+  <div class="opt"><span class="tag">B</span><div class="body"><span class="lead">Single transaction method</span> — <code>fn unlock_wpr()</code> performs all steps internally; the
+    individual steps are never exposed, so they can't be done out of order. Simplest, but hides the steps (no partial use).</div></div>
+  <div class="opt"><span class="tag">C</span><div class="body"><span class="lead">Typestate progression</span> — <code>S0→S1→S2</code> types, each step a method on the previous state type.</div></div>
+  <div class="opt"><span class="tag">D</span><div class="body"><span class="lead">Consuming builder</span> — <code>.step_a().step_b().commit()</code>; same chain expressed as a fluent API.</div></div>
+</div>
+
+<div class="enc">
+  <h3><span class="k-name">write_once</span> <span class="meta">→ capability · designed, not yet emitted</span></h3>
+  <div class="opt"><span class="tag">A</span><div class="body"><span class="lead">Capability consumed by value</span> <span class="chosen">PLANNED</span> — a non-<code>Copy</code> ZST minted once in
+    the peripheral singleton; the write takes it by value, so a second write is a move-after-move error (<code>E0382</code>).</div></div>
+  <div class="opt"><span class="tag">B</span><div class="body"><span class="lead">Typestate</span> — <code>Reg&lt;Unwritten&gt; → Reg&lt;Written&gt;</code>; the write lives only on <code>Unwritten</code>
+    and consumes <code>self</code>.</div></div>
+  <div class="opt"><span class="tag">C</span><div class="body"><span class="lead"><code>take()</code> singleton</span> — <code>LOCKR.take() -&gt; Option&lt;WriteOnceCap&gt;</code> yields <code>Some</code> exactly once.</div></div>
+  <div class="opt"><span class="tag">D</span><div class="body"><span class="lead">Runtime flag</span> — a boolean guard; no compile guarantee (fallback).</div></div>
+</div>
+
+<div class="enc">
+  <h3><span class="k-name">clock_gate</span> <span class="meta">→ capability (peripheral-granularity) · intentionally NOT PAC-gated — the HAL owns it</span></h3>
+  <p style="margin:.1rem 0 .5rem;font-size:.9rem"><strong>Decision (2026-10-20):</strong> we do <em>not</em> compile this kind. Peripheral
+  clock enablement is already the HAL's job — options A–C below are precisely what every HAL we inject into <em>already does</em>
+  (an RCC/SYSCON typestate, a <code>Clocks</code> token, or an <code>enable()</code> that hands back the peripheral), so a PAC-level
+  clock gate would be redundant with, and weaker than, the HAL's own enforcement. <code>clock_gate</code> stays grammar + validation
+  only (extracted, SVD-validated, judged, counted) and is kept out of <code>SUPPORTED_KINDS</code>. The encodings are listed for
+  completeness — as the HAL-level patterns that discharge it:</p>
+  <div class="opt"><span class="tag">A</span><div class="body"><span class="lead">Handle from enable</span> <span class="chosen">PLANNED</span> — <code>enable_clock()</code> returns the register-block
+    handle; every register access needs the handle. Enforced once at the block accessor, not per register.</div></div>
+  <div class="opt"><span class="tag">B</span><div class="body"><span class="lead">Peripheral typestate</span> — <code>I2C&lt;ClockOff&gt; → I2C&lt;ClockOn&gt;</code>; the register accessors exist only on
+    <code>ClockOn</code>. (This is essentially how embassy / stm32-hal already model RCC.)</div></div>
+  <div class="opt"><span class="tag">C</span><div class="body"><span class="lead">Constructor-gated ownership</span> — the peripheral struct is only constructible given a clock token, so holding
+    the peripheral <em>is</em> the proof.</div></div>
+</div>
+
+<div class="enc">
+  <h3><span class="k-name">delay</span> <span class="meta">→ state witness (ordering) + runtime duration · designed, not yet emitted</span></h3>
+  <div class="opt"><span class="tag">A</span><div class="body"><span class="lead">Token + runtime wait</span> <span class="chosen">PLANNED</span> — the triggering op mints a token; reaching the dependent
+    access requires calling <code>wait(duration)</code>, which consumes the token and returns the access capability. The
+    <em>ordering</em> is compile-gated; the <em>duration</em> is a runtime wall-clock/cycle count and can never be compile-checked.</div></div>
+  <div class="opt"><span class="tag">B</span><div class="body"><span class="lead">Typed delayed wrapper</span> — a <code>Delayed&lt;T&gt;</code> that only hands out the dependent access after <code>.wait()</code>.</div></div>
+  <div class="opt"><span class="tag">C</span><div class="body"><span class="lead">Pure runtime</span> — when the datasheet names no dependent access, only the duration remains, so it degrades to a bare
+    <code>delay(d)</code> call (<em>dynamic_check</em>) with no compile gate.</div></div>
+</div>
+
+<div class="enc">
+  <h3><span class="k-name">value_relation</span> <span class="meta">→ doc-only for the injector · but upholdable by combined setters at the HAL level</span></h3>
+  <p style="margin:.1rem 0 .4rem;font-size:.9rem">A relation like "<code>CR2.FREQ</code> must equal the APB1 MHz" or
+  "VCO = f/(PREDIV+1)·(MULT+16), in range" is made unviolable by collapsing the related fields into <em>one</em> setter, so they
+  cannot be set inconsistently.</p>
+  <div class="opt"><span class="tag">A</span><div class="body"><span class="lead">Derived (combined) setter — by construction</span> — expose one method that
+    takes the independent input and <em>computes</em> the dependent field(s), hiding the individual writers
+    (<code>set_pll(target_mhz, src_mhz)</code> computes valid <code>PREDIV</code>/<code>MULT</code>). The illegal combination is
+    unrepresentable; zero runtime cost. Works when the dependent field is a pure function of inputs the API controls.</div></div>
+  <div class="opt"><span class="tag">B</span><div class="body"><span class="lead">Typed-units / const-generic — compile-time</span> — carry both sides as types;
+    the relation becomes a type/const constraint. Embassy's <code>Hertz</code> clock tree <em>is</em> this: <code>FREQ</code> is
+    derived from an APB1 frequency threaded through as a typed value, so the relation holds at compile time.</div></div>
+  <div class="opt"><span class="tag">C</span><div class="body"><span class="lead">Checked combined setter — runtime</span> — one setter takes all the related
+    values, returns <code>Err</code>/asserts on violation, writes them atomically. The fallback for inequalities or relations with no
+    computable inverse — still better than two independent writers.</div></div>
+  <div class="opt"><span class="tag">D</span><div class="body"><span class="lead">Doc-only</span> — when one side is an external fact the register API can't see,
+    or the relation is too free-form to compute or check.</div></div>
+  <p class="note" style="margin-top:.7rem">Why it's still doc-only <em>for our injector</em>: all of these are API-shape changes — a
+  new combined method plus <strong>sealing the individual field writers</strong> (where <code>#[private_fields]</code>/<code>#[nomutates]</code>
+  from §05 earn their keep). That is HAL/wrapper-level design, not the PAC-level gating our emitter rides on existing methods, and
+  synthesizing the setter needs the semantic relation (and often its inverse) — which the grammar deliberately keeps as prose in
+  <code>datasheet_text</code>. So a HAL author can encode it; the mechanical injector leaves it documented.</p>
+</div>
+
+<div class="enc">
+  <h3><span class="k-name">read_effect · other</span> <span class="meta">→ documentation-only</span></h3>
+  <p style="margin:.3rem 0 0;font-size:.9rem"><code>read_effect</code> is load-bearing <em>metadata</em>: it tells codegen when a
+  checking read would itself perturb state (the self-defeating same-register read-gate) and feeds the validator — it is a
+  <em>consequence</em>, not an access restriction, so there is nothing to gate. <code>other</code> has no structure to compile and
+  exists to measure coverage (see §04).</p>
+</div>
+
+<h2><span class="n">04</span>Coverage — what's excluded, and the gaps</h2>
+
+<h3>Deliberately not constraints (routed out at the prompt, emit nothing)</h3>
+<p class="sub">These are register <em>facts</em>, not access rules, and svd2rust/the SVD already carry them:</p>
+<ul>
+  <li><strong>w1c / rc_w flag semantics</strong> (SVD <code>modifiedWriteValues</code>), read-to-clear standing alone (→ <code>read_effect</code> if worth recording)</li>
+  <li><strong>access-width</strong> requirements (byte/half-word/word)</li>
+  <li><strong>secure / privileged-access</strong> notes · <strong>"value is don't-care"</strong> validity notes · <strong>reset behaviour</strong></li>
+</ul>
+
+<h3>Implementation gap (grammar expresses it, emitter doesn't <em>yet</em>)</h3>
+<p class="sub">Four of the eight kinds have designed encodings (§03) but are <em>carried</em>, not compiled —
+<code>SUPPORTED_KINDS = {state_gate}</code>. In the NXP corpus that is ~240 real constraints
+(<code>sequence</code>&nbsp;152, <code>write_once</code>&nbsp;80, <code>delay</code>&nbsp;9) sitting enforceable-in-principle but
+documentation-in-practice. This is wiring, not grammar.</p>
+
+<div class="box gap">
+  <span class="tag">Candidate missing classes — grounded in the 40 <code>other</code> constraints we actually got</span>
+  <p style="margin:.4rem 0">The <code>other</code>-rate per run <em>is</em> the designed coverage metric. Reading the 40 (26 confirmed)
+  <code>other</code> constraints in the NXP corpus, they cluster into recognizable shapes — several deserving first-class structure
+  rather than flattening into <code>state_gate</code>/<code>value_relation</code> or landing in <code>other</code>:</p>
+  <ul>
+    <li><strong>Mode-gated access</strong> <span style="color:var(--muted)">(biggest cluster)</span>. "Writable only in RUN mode"
+      (<code>SPM_LPCTRL</code>), "not while in VLPR" (<code>SIM_CLKDIV1</code>), "only in Freeze mode" (CAN <code>RXIMR</code>), "only in
+      STOP/HALT" (<code>CAU3</code>). These <em>are</em> <code>state_gate</code>s, but the precondition is a system/power mode — often not a
+      single local field (it lives in <code>SMC_PMSTAT</code> etc.), so the extractor couldn't phrase it and fell to <code>other</code>. A
+      cross-register <code>state_gate</code> with a "mode" precondition vocabulary would absorb these.</li>
+    <li><strong>Write-value validity</strong>. "Only <code>0x00</code> or <code>processor+1</code> are legal; other values ignored"
+      (<code>SEMA42</code> gate), "do not write 0" (<code>WDOG_TOVAL</code>), "reserved bits must be written 0". A restriction on the
+      <em>value</em> of one field, distinct from <code>value_relation</code> (which relates two fields). Encodable as a typed enum of legal
+      values or a checked setter.</li>
+    <li><strong>RMW / co-write hazard.</strong> "Do not read-modify-write" (the write-only <code>FIFOWR</code> registers, ×5), "while
+      writing 1 to TEN, <code>CSR[5:1]</code> must not be altered" (<code>LPTMR</code>). The hazard is the whole-word write clobbering bits
+      you must preserve — exactly the class behind the embassy I2C <code>OAxEN</code> bug. Related to <code>read_effect</code> but framed as a
+      write constraint; a "preserve-these-bits / modify-only" marker would capture it.</li>
+    <li><strong>Buffered / shadow-register (deferred write).</strong> "The written value takes effect only on an update/load event"
+      — timer <code>ARR</code>/<code>CCR</code> preload, PDB <code>LDOK</code>, FTM double-buffering. The hazard isn't <em>when</em> you may
+      write but that the write is <em>latched on event E</em>; writing without the subsequent load silently has no effect. Encodable as an
+      <em>obligation</em> or a two-phase <code>stage()</code>→<code>commit()</code> token pair.</li>
+    <li><strong>Standalone obligation / postcondition.</strong> "<code>ESFC</code> must be set just before a flash op and cleared when it
+      completes" (<code>MCM_PLACR</code>). "After X you <em>must</em> do Y" with no governing precondition. The <em>obligation</em> witness
+      role exists but no kind mints one on its own.</li>
+  </ul>
+  <p style="margin:.4rem 0 0;font-size:.85rem;color:var(--muted)">(The other ~third of the <code>other</code> bucket is extraction noise —
+  access-width facts like "32-bit writes only" that the prompt should have routed out to nothing. A real coverage spike would be
+  dominated by the shapes above, not by noise.)</p>
+</div>
+
+<p style="margin-top:1.3rem">Net: the kind set covers the datasheet access-rule space well, and the enforceability split
+(two compile-gated classes by <em>what mints the witness</em>, plus runtime and doc-only) is principled. The real opportunities are
+(1) <strong>compiling the four carried kinds</strong> with the encodings in §03, and (2) giving the <strong>deferred-write</strong> and
+<strong>standalone-obligation</strong> hazards their own structure instead of letting them flatten into <code>state_gate</code> or
+<code>other</code>.</p>
+
+<h2><span class="n">05</span>Hardening the encodings — compiler-checked specifications</h2>
+<p class="sub">Every encoding in §03 rests on invariants that are <em>valid Rust to break</em>, so the compiler stays
+silent when a codegen regression or a hand-edit weakens a gate. The gate <strong>is an absence</strong> (the constrained
+register just doesn't implement the marker); the witness is unforgeable only because its field is <strong>private</strong> and it
+is <strong>not <code>Clone</code></strong>; freshness holds only because the witnessed writer <strong>consumes</strong> the token.
+Compiler-checked specs — <code>static_assertions</code> macros (<code>assert_not_impl_any!</code>, <code>assert_fields_type!</code>)
+and custom attributes (<code>#[private_fields]</code>, <code>#[consumes]</code>, <code>#[nomutates]</code>) that abort compilation
+when a type-level property fails — turn each "held by convention" invariant into an enforced one. Compile-time only, zero runtime
+cost. <em>Proposed: the emitter would drop these beside each gate it generates.</em></p>
+
+<div class="scroll"><table>
+  <thead><tr><th>spec</th><th>invariant it defends</th><th>emitted next to</th><th>silently breaks today if…</th></tr></thead>
+  <tbody>
+    <tr><td><code>assert_not_impl_any!(SPEC: UnconstrainedWrite)</code></td><td><strong>the gate still exists</strong> — a constrained spec must never implement the marker (absence <em>is</em> the gate)</td><td>each constrained register's spec, in the injected <code>constraints</code> module</td><td>anyone re-adds <code>impl UnconstrainedWrite for SPEC</code> — the gate vanishes with no error</td></tr>
+    <tr><td><code>assert_not_impl_any!(Witness: Clone, Copy)</code></td><td>the witness can't be <strong>duplicated</strong> (single-use / freshness)</td><td>each generated witness type</td><td>a stray <code>#[derive(Clone)]</code> lets one check authorize many writes</td></tr>
+    <tr><td><code>#[private_fields]</code></td><td>the witness is <strong>unforgeable</strong> (no struct-literal construction)</td><td>each witness struct (<code>{ _priv: () }</code>)</td><td>the <code>_priv</code> field turns <code>pub</code> → <code>Witness{ _priv: () }</code> buildable anywhere</td></tr>
+    <tr><td><code>#[consumes(witness)]</code></td><td>the token is <strong>spent, not borrowed</strong> (affine, single-use)</td><td><code>write_witnessed</code> / <code>modify_witnessed</code> in <code>generic.rs</code></td><td>the param becomes <code>&amp;witness</code> → the "stale proof" hole returns</td></tr>
+    <tr><td><code>#[nomutates]</code></td><td>a write_once "consumed" flag / typestate marker isn't <strong>resurrected by same-module code</strong></td><td>the capability / typestate fields</td><td>the injected module shares the peripheral module, where <code>pub(crate)</code> gives no protection</td></tr>
+    <tr><td><code>assert_fields_type!(Reg: Gated&lt;Spec&gt;)</code></td><td>the RAL <strong>newtype wrapper wasn't bypassed</strong></td><td>each gated RAL register</td><td>a plain field replaces <code>Gated&lt;…&gt;</code> and the register is silently un-gated</td></tr>
+    <tr><td><code>assert_impl_all!(SPEC: WriteGate)</code></td><td>the gated register <strong>does carry the witnessed path</strong> (the positive half of "gated, not unconstrained")</td><td>each constrained register's spec</td><td>the <code>WriteGate</code> impl is dropped → <code>check_*_ready</code>/<code>write_witnessed</code> quietly cease to exist for it</td></tr>
+    <tr><td><code>assert_eq_size!(Witness, ())</code></td><td>the witness is a <strong>zero-sized type</strong> (the "enforcement is free" claim)</td><td>each generated witness type</td><td>a field slips into the witness → it occupies memory and rides in every signature</td></tr>
+    <tr><td><code>assert_not_impl_any!(Witness: Default, Send, Sync)</code></td><td>closes the <strong>other forge / escape vectors</strong> — <code>Default</code> forges a witness; <code>Send</code>/<code>Sync</code> let a state witness cross into an ISR or a <code>static</code> where the checked state may have since changed</td><td>each generated witness type</td><td>a witness stashed in a <code>static</code> and reused from an interrupt (stale) compiles fine</td></tr>
+    <tr><td><code>assert_eq_size!(RegisterBlock, [u8; N])</code> + <code>assert_eq_align!</code></td><td>the injection is <strong>layout-neutral</strong> — the gated PAC is ABI-identical to pristine (register offsets intact)</td><td>each peripheral's <code>RegisterBlock</code></td><td>an accidental field or <code>#[repr]</code> change shifts MMIO offsets — a catastrophic <em>correctness</em> bug, not just a weak gate</td></tr>
+  </tbody>
+</table></div>
+
+<p>Concretely, where they attach in the code the emitter already generates:</p>
+<pre><span class="cm">// in the injected `constraints` module, beside each gate (defends the mechanism itself):</span>
+assert_not_impl_any!(super::mstctl::MSTCTL_SPEC: crate::UnconstrainedWrite); <span class="cm">// the gate is still a gate</span>
+assert_not_impl_any!(MstctlWriteWitness: Clone, Copy);                       <span class="cm">// witness can't be duplicated</span>
+
+<span class="cm">// on the witness struct (defends unforgeability):</span>
+#[private_fields]
+pub struct MstctlWriteWitness { _priv: () }
+
+<span class="cm">// on the witnessed writer in generic.rs (defends freshness — the affine discipline):</span>
+#[consumes(_witness)]
+pub fn write_witnessed&lt;F&gt;(&amp;self, f: F, _witness: &lt;REG as WriteGate&gt;::Witness) { … }</pre>
+
+<div class="box">
+  <span class="tag" style="color:var(--accent)">The two that matter most</span>
+  <p style="margin:.4rem 0 0"><code>assert_not_impl_any!(SPEC: UnconstrainedWrite)</code> defends the thing our scheme <em>is</em> —
+  a gate expressed as an <em>absence</em>, which is invisible to re-introduce — and <code>#[consumes(witness)]</code> is the exact
+  compile-check for the borrowed-witness freshness caveat (§ the witness lifetime discussion): it pins "the token is spent" so a
+  later switch to <code>&amp;witness</code> can't silently reopen the stale-proof hole.</p>
+</div>
+
+<p>The assertions fall into two intents: most <strong>defend each gate against weakening</strong> (unforgeability,
+gate-presence, affine use, ZST-ness); the last — <code>assert_eq_size!</code>/<code>assert_eq_align!</code> on the
+<code>RegisterBlock</code> — <strong>defends the injection itself</strong>, guaranteeing the gated PAC is byte-for-byte ABI-identical
+to the pristine one so no register offset ever moves. Both are generated right beside the code they protect, so a weakened gate or a
+shifted layout fails to compile instead of shipping.</p>
+<p class="note"><strong>What it does not reach:</strong> these harden the <em>plumbing</em> (unforgeability, gate-presence, affine
+use, layout), not the <em>semantics</em>. No spec can verify that <code>check_write_ready()</code> performs a real fresh read — a stub
+that returns <code>Ok(witness)</code> passes every assertion. CCS defends the encoding against regression; it does not extend what the
+grammar can express.</p>
+
+<footer>
+  Sources: defs.py (ConstraintV2 union, FieldCondition, derive_enforceability) ·
+  docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md · docs/register_constraints_plan.md §3 + Appendix A ·
+  rust_codegen.py (SUPPORTED_KINDS = {state_gate}; witness surface) ·
+  corpus counts from the NXP constraint ledgers (state_gate 1492 / sequence 152 / write_once 80 / value_relation 43 / other 40 / read_effect 18 / delay 9)
+</footer>
+</div>
