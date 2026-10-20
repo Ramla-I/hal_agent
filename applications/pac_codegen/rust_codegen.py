@@ -2781,7 +2781,9 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
                 "conditions": sorted(_rule_conditions(pl)),
                 "quotes": sorted(_rule_quotes(pl)),
             })
-        same_quote = len({r["quotes"] and tuple(r["quotes"]) for r in readings}) == 1
+        # `quotes` is a (possibly empty) list; () for the empty case keeps the
+        # set hashable (the write_once/sequence/delay kinds can carry no quote).
+        same_quote = len({tuple(r["quotes"]) for r in readings}) == 1
         conflicts.append({
             "module": module, "register": reg, "instances": instances,
             "readings": readings,
