@@ -1,0 +1,828 @@
+{
+  "note": "Registers defined in reference regs.rs; in_driver_set = touched by the current Theseus ixgbe driver (lib.rs etc.). The generated HAL must reproduce ALL fields for a drop-in layout; in_driver_set is the end-to-end compile target.",
+  "counts": {
+    "defined_in_regs_rs": 75,
+    "driver_needed": 63
+  },
+  "registers": [
+    {
+      "field": "autoc",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x42A0",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "autoc2",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x42A8",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "ctrl",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x0",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "ctrl_ext",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x18",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "daqf",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": 128,
+      "offset_comment": "0xE200 - 0xE3FF",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "dca_ctrl",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x11074",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "dca_id",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "ReadOnly",
+      "array_len": null,
+      "offset_comment": "0x11070",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "dca_rxctrl",
+      "struct": "RegistersRx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x100C",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "dca_txctrl",
+      "struct": "RegistersTx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x600C",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "dmatxctl",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4A80",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "dtxmxszrq",
+      "struct": "IntelIxgbeMacRegisters",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0X8100",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "dtxtcpflgh",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4A8C",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "dtxtcpflgl",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4A88",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "eec",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x10010",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "eerd",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x10014",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "eiac",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x810",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "eiam",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x890",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "eicr",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x800",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "eics",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "WriteOnly",
+      "array_len": null,
+      "offset_comment": "0x808",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "eimc",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "WriteOnly",
+      "array_len": null,
+      "offset_comment": "0x888",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "eims",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x880",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "eitr",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": 24,
+      "offset_comment": "0x820 - 0x87F",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "etqf",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": 8,
+      "offset_comment": "0x5128 - 0x5147",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "etqs",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": 8,
+      "offset_comment": "0xEC00 - 0xEC1F",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "fccfg",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x3D00",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "fcrth",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": 8,
+      "offset_comment": "0x3260 - 0x327F",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "fcrtl",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": 8,
+      "offset_comment": "0x3220 - 0x323F",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "fcrtv",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x32A0",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "fctrl",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x5080",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "fcttv",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": 4,
+      "offset_comment": "0x3200 - 0x320F",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "ftqf",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": 128,
+      "offset_comment": "0xE600 - 0xE7FF",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "gorch",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x408C",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "gorcl",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4088",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "gotch",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4094",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "gotcl",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4090",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "gpie",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x898",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "gprc",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4074",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "gptc",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4080",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "hlreg0",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4240",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "i2cctl",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x28",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "ivar",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "Volatile",
+      "array_len": 64,
+      "offset_comment": "0x900 - 0x9FF",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "l34timir",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": 128,
+      "offset_comment": "0xE800 - 0xE9FF",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "links",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x42A4",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "links2",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4324",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "mrqc",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0xEC80",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rah",
+      "struct": "IntelIxgbeMacRegisters",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0xA204",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "ral",
+      "struct": "IntelIxgbeMacRegisters",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0xA200",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rdbah",
+      "struct": "RegistersRx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x1004",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rdbal",
+      "struct": "RegistersRx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x1000",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rdh",
+      "struct": "RegistersRx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x1010",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rdlen",
+      "struct": "RegistersRx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x1008",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rdrxctl",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x2F00",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rdt",
+      "struct": "RegistersRx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x1018",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "reta",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": 32,
+      "offset_comment": "0xEB00 - 0xEB7F",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rssrk",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": 10,
+      "offset_comment": "0xEB80 - 0xEBA7",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rttdcs",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x4900",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rxcsum",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x5000",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rxctrl",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x3000",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rxdctl",
+      "struct": "RegistersRx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x1028",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "rxpbsize",
+      "struct": "IntelIxgbeRegisters2",
+      "access_type": "Volatile",
+      "array_len": 8,
+      "offset_comment": "0x3C00",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "saqf",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": 128,
+      "offset_comment": "0xE000 - 0xE1FF",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "sdpqf",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": 128,
+      "offset_comment": "0xE400 - 0xE5FF",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "srrctl",
+      "struct": "RegistersRx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x1014 //specify descriptor type",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "status",
+      "struct": "IntelIxgbeRegisters1",
+      "access_type": "ReadOnly",
+      "array_len": null,
+      "offset_comment": "0x8",
+      "driver_uses": [
+        "read"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "sw_fw_sync",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x10160",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "swsm",
+      "struct": "IntelIxgbeRegisters3",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x10140",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "tdbah",
+      "struct": "RegistersTx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x6004",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "tdbal",
+      "struct": "RegistersTx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x6000",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "tdh",
+      "struct": "RegistersTx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x6010",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "tdlen",
+      "struct": "RegistersTx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x6008",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "tdt",
+      "struct": "RegistersTx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x6018",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "tdwbah",
+      "struct": "RegistersTx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x603C",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "tdwbal",
+      "struct": "RegistersTx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x6038",
+      "driver_uses": [],
+      "in_driver_set": false
+    },
+    {
+      "field": "txdctl",
+      "struct": "RegistersTx",
+      "access_type": "Volatile",
+      "array_len": null,
+      "offset_comment": "0x6028",
+      "driver_uses": [
+        "read",
+        "write"
+      ],
+      "in_driver_set": true
+    },
+    {
+      "field": "txpbsize",
+      "struct": "IntelIxgbeMacRegisters",
+      "access_type": "Volatile",
+      "array_len": 8,
+      "offset_comment": "0xCC00",
+      "driver_uses": [
+        "write"
+      ],
+      "in_driver_set": true
+    }
+  ]
+}

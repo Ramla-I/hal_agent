@@ -1,0 +1,10 @@
+# Generated experiment outputs + local scratch — reproducible, not committed.
+pipeline/register_info/
+pipeline/constraints/
+pipeline/metrics.json
+pipeline/hal_out/
+analysis/
+chunks/
+theseus_retrofit/theseus_clone/
+retrofit/clones/
+pipeline/constraint_recall_scan.json

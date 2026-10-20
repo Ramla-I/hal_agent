@@ -1,0 +1,23 @@
+{
+  "_note": "The driver-API packaging contract for the generated HAL: how the current Theseus ixgbe driver expects the 128 KiB BAR0 space split into structs, and the field-naming rule. Everything in this file is INTERFACE SHAPE taken from the driver (friction category: packaging), never datasheet fact — offsets, widths, access types, array geometry all come from extraction + Table 8-2 parsing.",
+  "field_naming_rule": "lowercase(datasheet abbreviation base); exceptions in name_map.json",
+  "total_size": 131072,
+  "regions": [
+    {"struct": "IntelIxgbeRegisters1",   "start": 0,     "end": 4096,   "doc": "The layout in memory of the first set of general registers of the 82599 device."},
+    {"struct": "IntelIxgbeRxRegisters1", "start": 4096,  "end": 8192,   "doc": "The layout in memory of the first set of receive queue registers of the 82599 device.",
+     "queue_container": {"field": "rx_regs1", "elem_struct": "RegistersRx", "count": 64,
+                         "elem_doc": "Set of registers associated with one receive descriptor queue.",
+                         "field_doc": "First set of Rx Registers for 64 Rx Queues"}},
+    {"struct": "IntelIxgbeRegisters2",   "start": 8192,  "end": 24576,  "doc": "The layout in memory of the second set of general registers of the 82599 device."},
+    {"struct": "IntelIxgbeTxRegisters",  "start": 24576, "end": 32768,  "doc": "The layout in memory of the transmit queue registers of the 82599 device.",
+     "queue_container": {"field": "tx_regs", "elem_struct": "RegistersTx", "count": 128,
+                         "elem_doc": "Set of registers associated with one transmit descriptor queue.",
+                         "field_doc": "Set of registers for 128 transmit descriptor queues"}},
+    {"struct": "IntelIxgbeMacRegisters", "start": 32768, "end": 53248,  "doc": "The layout in memory of the set of registers containing the MAC address of the 82599 device."},
+    {"struct": "IntelIxgbeRxRegisters2", "start": 53248, "end": 57344,  "doc": "The layout in memory of the second set of receive queue registers of the 82599 device.",
+     "queue_container": {"field": "rx_regs2", "elem_struct": "RegistersRx", "count": 64,
+                         "elem_doc": "Set of registers associated with one receive descriptor queue.",
+                         "field_doc": "Second set of Rx Registers for 64 Rx Queues"}},
+    {"struct": "IntelIxgbeRegisters3",   "start": 57344, "end": 131072, "doc": "The layout in memory of the third set of general registers of the 82599 device."}
+  ]
+}

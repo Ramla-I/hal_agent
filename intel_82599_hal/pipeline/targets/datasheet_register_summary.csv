@@ -1,0 +1,407 @@
+offset_raw,abbrev,name,block,rw,reset,page,section
+0x00000 / 0x00004,CTRL,Device Control Register,Target,RW,,543,
+0x00008,STATUS,Device Status Register,Target,RO,,544,
+0x00018,CTRL_EXT,Extended Device Control Register,Target,RW,,544,
+0x00020,ESDP,Extended SDP Control,Target,RW,,545,
+0x00028,I2CCTL,I2C Control,Target,RW,PERST,549,
+0x00200,LEDCTL,LED Control,Target,RW,,549,
+0x05078,EXVET,Extended VLAN Ether Type,Target,RW,,551,
+0x10010,EEC,EEPROM/Flash Control Register,FLEEP,RW,,552,
+0x10014,EERD,EEPROM Read Register,FLEEP,RW,,554,
+0x1001C,FLA,Flash Access Register,FLEEP,RW,,555,
+0x10114,EEMNGDATA,Manageability EEPROM Read/Write Data,FLEEP,RW,,556,
+0x10118,FLMNGCTL,Manageability Flash Control Register,FLEEP,RW,,557,
+0x1011C,FLMNGDATA,Manageability Flash Read Data,FLEEP,RW,,557,
+0x01013C,FLOP,Flash Opcode Register,FLEEP,RW,,558,
+0x10200,GRC,General Receive Control,FLEEP,RW,,558,
+0x0431C / 0x03008,PFCTOP,Priority Flow Control Type Opcode,MAC,RW,,559,
+"0x03200+4*n, n=0...3",FCTTVn,Flow Control Transmit Timer Value n,DBU-Rx,RW,,559,
+"0x03220+4*n, n=0...7",FCRTL[n],Flow Control Receive Threshold Low,DBU-Rx,RW,,560,
+"0x03260+4*n, n=0...7",FCRTH[n],Flow Control Receive Threshold High,DBU-Rx,RW,,560,
+0x032A0,FCRTV,Flow Control Refresh Threshold Value,DBU-Rx,RW,,561,
+0x0CE00,TFCS,Transmit Flow Control Status,DBU-Tx,RO,,561,
+0x03D00,FCCFG,Flow Control Configuration,DBU-Rx,RW,,561,
+0x11000,GCR,PCIe Control Register,PCIe,RW,,562,
+0x11010,GSCL_1,PCIe Statistic Control Register #1,PCIe,RW,,562,
+0x11014,GSCL_2,PCIe Statistic Control Registers #2,PCIe,RW,,563,
+"0x011030+4*n, n=0...3",GSCL_5_8,PCIe Statistic Control Register #5...#8,PCIe,RW,,565,
+"0x11020+4*n, n=0...3",GSCN_0_3,PCIe Statistic Counter Registers,PCIe,RO,,565,
+0x10150,FACTPS,Function Active and Power State,FLEEP,RO,,565,
+0x11040,PCIEPHYADR,PCIe PHY Address Register,PCIe,RW,,566,
+0x11044,PCIEPHYDAT,PCIe PHY Data Register,PCIe,RW,,567,
+0x10140,SWSM,Software Semaphore Register,FLEEP,RW,,567,
+0x10148,FWSM,Firmware Semaphore Register,FLEEP,RW,,567,
+0x10160,SW_FW_SYNC,Software–Firmware Synchronization,FLEEP,RW,,569,
+0x11050,GCR_EXT,PCIe Control Extended Register,PCIe,RW,,569,
+0x11064,MREVID,Mirrored Revision ID,PCIe,RO,,570,
+0x110B0,PICAUSE,PCIe Interrupt Cause,PCIe,RO,,570,
+0x110B8,PIENA,PCIe Interrupts Enable,PCIe,RW,,571,
+0x00800,EICR,Extended Interrupt Cause Register,Interrupt,RW1C,,572,
+0x00808,EICS,Extended Interrupt Cause Set Register,Interrupt,WO,,573,
+0x00880,EIMS,Extended Interrupt Mask Set/Read Register,Interrupt,RWS,,573,
+0x00888,EIMC,Extended Interrupt Mask Clear Register,Interrupt,WO,,574,
+0x00810,EIAC,Extended Interrupt Auto Clear Register,Interrupt,RW,,574,
+0x00890,EIAM,Extended Interrupt Auto Mask Enable Register,Interrupt,RW,,574,
+"0x00A90+4*(n-1), n=1...2",EICS[n],Extended Interrupt Cause Set Registers,Interrupt,WO,,575,
+"0x00AA0+4*(n-1), n=1...2",EIMS[n],Extended Interrupt Mask Set/Read Registers,Interrupt,RWS,,575,
+"0x00AB0+4*(n-1), n=1...2",EIMC[n],Extended Interrupt Mask Clear Registers,Interrupt,WO,,575,
+"0x00AD0+4*(n-1), n=1...2",EIAM[n],Extended Interrupt Auto Mask Enable registers,Interrupt,RW,,575,
+0x00894,EITRSEL,MSI to EITR Select,Interrupt,RW,,575,
+"0x00820+4*n, n=0...23 and 0x012300+4*(n-24), n=24...128",EITR[n],Extended Interrupt Throttle Registers,Interrupt,RW,,576,
+"0x0E800+4*n, n=0...127",L34TIMIR[n],L3 L4 Tuples Immediate Interrupt Rx,DBU-Rx,RW,,576,
+0x0EC90,LLITHRESH,LLI Size Threshold,DBU-Rx,RW,,577,
+0x0EC60 / 0x05AC0,IMIRVP,Immediate Interrupt Rx VLAN Priority Register,DBU-Rx,RW,,577,
+"0x00900+4*n, n=0...63",IVAR[n],Interrupt Vector Allocation,Interrupt,RW,,578,
+0x00A00,IVAR_MISC,Miscellaneous Interrupt Vector Allocation,Interrupt,RW,,579,
+0x00898,GPIE,General Purpose Interrupt Enable,Interrupt,RW,,579,
+"0x110C0+4*n, n=0...7 / 0x11068 [n=0]",PBACL[n],MSI-X PBA Clear,PCIe,RW,,581,
+0x05080,FCTRL,Filter Control Register,Rx-Filter,RW,,582,Receive Registers
+0x05088,VLNCTRL,VLAN Control Register,Rx-Filter,RW,,583,Receive Registers
+0x05090,MCSTCTRL,Multicast Control Register,Rx-Filter,RW,,583,Receive Registers
+"0x0EA00+4*n, n=0...63",PSRTYPE[n],Packet Split Receive Type,DBU-Rx,RW,,584,Receive Registers
+"0x05480+4*n, n=0…15",,Register,,,,,Receive Registers
+0x05000,RXCSUM,Receive Checksum Control,Rx-Filter,RW,,585,Receive Registers
+0x05008,RFCTL,Receive Filter Control Register,Rx-Filter,RW,,586,Receive Registers
+"0x05200+4*n, n=0...127",MTA[n],Multicast Table Array,Rx-Filter,RW,,587,Receive Registers
+"0x0A200+8*n, n=0...127",RAL[n],Receive Address Low,Rx-Filter,RW,,587,Receive Registers
+"0x0A204+8*n, n=0...127",RAH[n],Receive Address High,Rx-Filter,RW,,587,Receive Registers
+"0x0A600+4*n, n=0...255",MPSAR[n],MAC Pool Select Array,Rx-Filter,RW,,588,Receive Registers
+"0x0A000+4*n, n=0...127",VFTA[n],VLAN Filter Table Array,Rx-Filter,RW,,588,Receive Registers
+0x0EC80 / 0x05818,MRQC,Multiple Receive Queues,DBU-Rx,RW,,589,Receive Registers
+0x0EC70,RQTC,RSS Queues Per Traffic Class,DBU-Rx,RW,,590,Receive Registers
+"0x0EB80+4*n, n=0...9",RSSRK[n],RSS Random Key Register,DBU-Rx,RW,,591,Receive Registers
+"0x0EB00+4*n, n=0...31",RETA[n],Redirection Table,DBU-Rx,RW,,591,Receive Registers
+"0x0E000+4*n, n=0...127",SAQF[n],Source Address Queue Filter,DBU-Rx,RW,,592,Receive Registers
+"0x0E200+4*n, n=0...127",DAQF[n],Destination Address Queue Filter,DBU-Rx,RW,,592,Receive Registers
+"0x0E400+4*n, n=0...127",SDPQF[n],Source Destination Port Queue Filter,DBU-Rx,RW,,592,Receive Registers
+"0x0E600+4*n, n=0...127",FTQF[n],Five Tuple Queue Filter,DBU-Rx,RW,,593,Receive Registers
+0x0EC30,SYNQF,SYN Packet Queue Filter,DBU-Rx,RW,,594,Receive Registers
+"0x05128+4*n, n=0...7",ETQF[n],EType Queue Filter,Rx-Filter,RW,,594,Receive Registers
+"0x0EC00+4*n, n=0...7",ETQS[n],EType Queue Select,DBU-Rx,RW,,595,Receive Registers
+"0x01000+0x40*n, n=0...63",RDBAL[n],Receive Descriptor Base Address,DMA-Rx,RW,,596,Receive DMA Registers
+"0x01004+0x40*n, n=0...63",RDBAH[n],Receive Descriptor Base Address,DMA-Rx,RW,,596,Receive DMA Registers
+"0x01008+0x40*n, n=0...63",RDLEN[n],Receive Descriptor Length,DMA-Rx,RW,,596,Receive DMA Registers
+"0x01010+0x40*n, n=0...63",RDH[n],Receive Descriptor Head,DMA-Rx,RO,,597,Receive DMA Registers
+"0x01018+0x40*n, n=0...63",RDT[n],Receive Descriptor Tail,DMA-Rx,RW,,597,Receive DMA Registers
+"0x01028+0x40*n, n=0...63",RXDCTL[n],Receive Descriptor Control,DMA-Rx,RW,,597,Receive DMA Registers
+"0x01014+0x40*n, n=0...63",SRRCTL[n],Split Receive Control Registers,DMA-Rx,RW,,598,Receive DMA Registers
+0x02F00,RDRXCTL,Receive DMA Control Register,DMA-Rx,RW,,599,Receive DMA Registers
+"0x03C00+4*n, n=0...7",RXPBSIZE[n],Receive Packet Buffer Size,DBU-Rx,RW,,600,Receive DMA Registers
+0x03000,RXCTRL,Receive Control Register,DBU-Rx,RW,,600,Receive DMA Registers
+0x03190,RXMEMWRAP,Rx Packet Buffer Flush Detect,DBU-Rx,RO,,600,Receive DMA Registers
+0x03028,RSCDBU,RSC Data Buffer Control Register,DBU-Rx,RW,,602,Receive DMA Registers
+"0x0102C+0x40*n, n=0...63",RSCCTL[n],RSC Control,DMA-Rx,RW,,602,Receive DMA Registers
+0x08100,DTXMXSZRQ,DMA Tx TCP Max Allow Size,DMA-Tx,RW,,603,Transmit Registers
+0x04A80,DMATXCTL,DMA Tx Control,DMA-Tx,RW,,603,Transmit Registers
+0x04A88,DTXTCPFLGL,DMA Tx TCP Flags Control Low,DMA-Tx,RW,,604,Transmit Registers
+0x04A8C,DTXTCPFLGH,DMA Tx TCP Flags Control High,DMA-Tx,RW,,604,Transmit Registers
+"0x06000+0x40*n, n=0...127",TDBAL[n],Transmit Descriptor Base Address Low,DMA-Tx,RW,,604,Transmit Registers
+"0x06004+0x40*n, n=0...127",TDBAH[n],Transmit Descriptor Base Address High,DMA-Tx,RW,,605,Transmit Registers
+"0x06008+0x40*n, n=0...127",TDLEN[n],Transmit Descriptor Length,DMA-Tx,RW,,605,Transmit Registers
+"0x06010+0x40*n, n=0...127",TDH[n],Transmit Descriptor Head,DMA-Tx,RO,,605,Transmit Registers
+"0x06018+0x40*n, n=0...127",TDT[n],Transmit Descriptor Tail,DMA-Tx,RW,,606,Transmit Registers
+"0x06028+0x40*n, n=0...127",TXDCTL[n],Transmit Descriptor Control,DMA-Tx,RW,,606,Transmit Registers
+"0x06038+0x40*n, n=0...127",TDWBAL[n],Tx Descriptor Completion Write Back Address Low,DMA-Tx,RW,,607,Transmit Registers
+"0x0603C+0x40*n, n=0...127",TDWBAH[n],Tx Descriptor Completion Write Back Address High,DMA-Tx,RW,,608,Transmit Registers
+"0x0CC00+0x4*n, n=0...7",TXPBSIZE[n],Transmit Packet Buffer Size,DBU-Tx,RW,,608,Transmit Registers
+0x0CD10,MNGTXMAP,Manageability Transmit TC Mapping,DBU-Tx,RW,,608,Transmit Registers
+0x08120,MTQC,Multiple Transmit Queues Command Register,DMA-Tx,RW,,609,Transmit Registers
+"0x04950 +0x4*n, n=0...7",TXPBTHRESH,Tx Packet Buffer Threshold,DMA-Tx,RW,,610,Transmit Registers
+0x02430,RTRPCS,DCB Receive Packet plane Control and Status,DMA-Rx,RW,,611,Transmit Registers
+0x04900,RTTDCS,DCB Transmit Descriptor Plane Control and Status,DMA-Tx,RW,,611,Transmit Registers
+0x0CD00,RTTPCS,DCB Transmit Packet Plane Control and Status,DBU-Tx,RW,,617,Transmit Registers
+0x03020,RTRUP2TC,DCB Receive User Priority to Traffic Class,DBU-Rx,RW,,613,Transmit Registers
+0x0C800,RTTUP2TC,DCB Transmit User Priority to Traffic Class,DBU-Tx,RW,,614,Transmit Registers
+"0x02140+4*n, n=0...7",RTRPT4C[n],DCB Receive Packet Plane T4 Config,DMA-Rx,RW,,615,Transmit Registers
+"0x082E0+4*n, n=0...3",TXLLQ[n],Strict Low Latency Tx Queues,DMA-Tx,RW,,616,Transmit Registers
+"0x02160+4*n, n=0...7",RTRPT4S[n],DCB Receive Packet plane T4 Status,DMA-Rx,RO,,616,Transmit Registers
+"0x04910+4*n, n=0...7",RTTDT2C[n],DCB Transmit Descriptor plane T2 Config,DMA-Tx,RW,,616,Transmit Registers
+"0x0CD20+4*n, n=0...7",RTTPT2C[n],DCB Transmit Packet Plane T2 Config,DBU-Tx,RW,,617,Transmit Registers
+"0x0CD40+4*n, n=0...7",RTTPT2S[n],DCB Transmit Packet Plane T2 Status,DBU-Tx,RO,,617,Transmit Registers
+0x04980,RTTBCNRM,DCB Transmit Rate–Scheduler MMW,DMA-Tx,RW,,617,Transmit Registers
+0x04904,RTTDQSEL,DCB Transmit Descriptor Plane Queue Select,DMA-Tx,RW,,618,Transmit Registers
+0x04908,RTTDT1C,DCB Transmit Descriptor Plane T1 Config,DMA-Tx,RW,,618,Transmit Registers
+0x0490C,RTTDT1S,DCB Transmit Descriptor Plane T1 Status,DMA-Tx,RO,,618,Transmit Registers
+0x04984,RTTBCNRC,DCB Transmit Rate-Scheduler Config,DMA-Tx,RW,,619,Transmit Registers
+0x04988,RTTBCNRS,DCB Transmit Rate-Scheduler Status,DMA-Tx,RW,,619,Transmit Registers
+0x0498C,RTTBCNRD,DCB Transmit Rate Scheduler Rate Drift,DMA-Tx,RW,,620,Transmit Registers
+"0x0100C+0x40*n, n=0...63 and 0x0D00C+0x40*(n-64), n=64...127 / 0x02200+4*n, [n=0...15]",DCA_RXCTRL[n],Rx DCA Control Register,DMA-Rx,RW,,621,Transmit Registers
+"0x0600C+0x40*n, n=0...127",DCA_TXCTRL[n],Tx DCA Control Register,DMA-Tx,RW,,622,Transmit Registers
+0x11070,DCA_ID,DCA Requester ID Information Register,PCIe,RO,,623,Transmit Registers
+0x11074,DCA_CTRL,DCA Control Register,PCIe,RW,,622,Transmit Registers
+0x08800,SECTXCTRL,Security Tx Control,SEC-Tx,RW,,624,Transmit Registers
+0x08804,SECTXSTAT,Security Tx Status,SEC-Tx,RO,,625,Transmit Registers
+0x08808,SECTXBUFFAF,Security Tx Buffer Almost Full,SEC-Tx,RW,,625,Transmit Registers
+0x08810,SECTXMINIFG,Security Tx Buffer Minimum IFG,SEC-Tx,RW,,625,Transmit Registers
+0x08D00,SECRXCTRL,Security Rx Control,SEC-Rx,RW,,626,Transmit Registers
+0x08D04,SECRXSTAT,Security Rx Status,SEC-Rx,RO,,626,Transmit Registers
+0x08A00,LSECTXCAP,LinkSec Tx Capabilities Register,SEC-Tx,RW,,627,Transmit Registers
+0x08F00,LSECRXCAP,LinkSec Rx Capabilities Register,SEC-Rx,RW,,627,Transmit Registers
+0x08A04,LSECTXCTRL,LinkSec Tx Control Register,SEC-Tx,RW,,628,Transmit Registers
+0x08F04,LSECRXCTRL,LinkSec Rx Control Register,SEC-Rx,RW,,628,Transmit Registers
+0x08A08,LSECTXSCL,LinkSec Tx SCI Low,SEC-Tx,RW,,629,Transmit Registers
+0x08A0C,LSECTXSCH,LinkSec Tx SCI High,SEC-Tx,RO,,629,Transmit Registers
+0x08A10,LSECTXSA,LinkSec Tx SA,SEC-Tx,RW,,630,Transmit Registers
+0x08A14,LSECTXPN0,LinkSec Tx SA PN 0,SEC-Tx,RW,,630,Transmit Registers
+0x08A18,LSECTXPN1,LinkSec Tx SA PN 1,SEC-Tx,RW,,630,Transmit Registers
+"0x08A1C+4*n, n=0...3",LSECTXKEY0[n],LinkSec Tx Key 0,SEC-Tx,WO,,631,Transmit Registers
+"0x08A2C+4*n, n=0...3",LSECTXKEY1[n],LinkSec Tx Key 1,SEC-Tx,WO,,631,Transmit Registers
+0x08F08,LSECRXSCL,LinkSec Rx SCI Low,SEC-Rx,RW,,631,Transmit Registers
+0x08F0C,LSECRXSCH,LinkSec Rx SCI High,SEC-Rx,RW,,632,Transmit Registers
+"0x08F10+4*n, n=0...1",LSECRXSA[n],LinkSec Rx SA,SEC-Rx,RW,,632,Transmit Registers
+"0x08F18+4*n, n=0...1",LSECRXPN[n],LinkSec Rx SA PN,SEC-Rx,RW,,633,Transmit Registers
+"0x08F20+0x10*n+4*m, n=0...1, m=0...3","LSECRXKEY[n,m]",LinkSec Rx Key,SEC-Rx,WO,,633,Transmit Registers
+0x08A3C,LSECTXUT,Tx Untagged Packet Counter,SEC-Tx,RO,,634,Transmit Registers
+0x08A40,LSECTXPKTE,Encrypted Tx Packets,SEC-Tx,RO,,634,Transmit Registers
+0x08A44,LSECTXPKTP,Protected Tx Packets,SEC-Tx,RO,,634,Transmit Registers
+0x08A48,LSECTXOCTE,Encrypted Tx Octets,SEC-Tx,RO,,634,Transmit Registers
+0x08A4C,LSECTXOCTP,Protected Tx Octets,SEC-Tx,RO,,635,Transmit Registers
+0x08F40,LSECRXUT,LinkSec Untagged Rx Packet,SEC-Rx,RO,,636,Transmit Registers
+0x08F44,LSECRXOCTE,LinkSec Rx Octets Decrypted,SEC-Rx,RO,,636,Transmit Registers
+0x08F48,LSECRXOCTP,LinkSec Rx Octets Validated,SEC-Rx,RO,,636,Transmit Registers
+0x08F4C,LSECRXBAD,LinkSec Rx Packet with Bad Tag,SEC-Rx,RO,,636,Transmit Registers
+0x08F50,LSECRXNOSCI,LinkSec No SCI,SEC-Rx,RO,,637,Transmit Registers
+0x08F54,LSECRXUNSCI,LinkSec Unknown SCI,SEC-Rx,RO,,637,Transmit Registers
+0x08F58,LSECRXUC,LinkSec Rx Unchecked Packets,SEC-Rx,RO,,638,Transmit Registers
+0x08F5C,LSECRXDELAY,LinkSec Rx Delayed Packets,SEC-Rx,RO,,638,Transmit Registers
+0x08F60,LSECRXLATE,LinkSec Rx Late Packets,SEC-Rx,RO,,638,Transmit Registers
+"0x08F64+4*n, n=0...1",LSECRXOK[n],LinkSec Rx Packet OK,SEC-Rx,RO,,639,Transmit Registers
+"0x08F6C+4*n, n=0...1",LSECRXINV[n],LinkSec Rx Invalid,SEC-Rx,RO,,639,Transmit Registers
+"0x08F74+4*n, n=0...1",LSECRXNV[n],LinkSec Rx Not Valid,SEC-Rx,RC,,639,Transmit Registers
+0x08F7C,LSECRXUNSA,LinkSec Rx Unused SA,SEC-Rx,RC,,639,Transmit Registers
+0x08F80,LSECRXNUSA,LinkSec Rx Not Using SA,SEC-Rx,RC,,640,Transmit Registers
+0x08900,IPSTXIDX,IPsec Tx Index,SEC-Tx,RW,,641,Transmit Registers
+"0x08908+4*n, n=0...3",IPSTXKEY[n],IPsec Tx Key Registers,SEC-Tx,RW,,641,Transmit Registers
+0x08904,IPSTXSALT,IPsec Tx Salt Register,SEC-Tx,RW,,642,Transmit Registers
+0x08E00,IPSRXIDX,IPsec Rx Index,SEC-Rx,RW,,642,Transmit Registers
+"0x08E04+4*n, n=[0...3]",IPSRXIPADDR,IPsec Rx IP address Register,SEC-Rx,RW,,643,Transmit Registers
+0x08E14,IPSRXSPI,IPsec Rx SPI Register,SEC-Rx,RW,,643,Transmit Registers
+0x08E18,IPSRXIPIDX,IPsec Rx SPI Register,SEC-Rx,RW,,643,Transmit Registers
+"0x08E1C+4*n, n=0...3",IPSRXKEY[n],IPsec Rx Key Register,SEC-Rx,RW,,643,Transmit Registers
+0x08E2C,IPSRXSALT,IPsec Rx Salt Register,SEC-Rx,RW,,644,Transmit Registers
+0x08E30,IPSRXMOD,IPsec Rx Mode Register,SEC-Rx,RW,,644,Transmit Registers
+0x0004C,TCPTIMER,TCP Timer,Target,RW,,645,Transmit Registers
+0x05100,FCRXCTRL,FC Receive Control,Rx-Filter,RW,,647,Transmit Registers
+0x0ED00,FCRECTL,FCoE Redirection Control,DBU-Rx,RW,,648,Transmit Registers
+"0x0ED10+4*n, n=0...7",FCRETA[n],FCoE Redirection Table,DBU-Rx,RW,,648,Transmit Registers
+0x02410,FCPTRL,FC User Descriptor PTR Low,DMA-Rx,RW,,648,Transmit Registers
+0x02414,FCPTRH,FC User Descriptor PTR High,DMA-Rx,RW,,649,Transmit Registers
+0x02418,FCBUFF,FC Buffer Control,DMA-Rx,RW,,649,Transmit Registers
+0x02420,FCDMARW,FC Receive DMA RW,DMA-Rx,RW,,650,Transmit Registers
+0x05108,FCFLT,FC FLT Context,Rx-Filter,RW,,650,Transmit Registers
+0x051D8,FCPARAM,FC Offset Parameter,Rx-Filter,RW,,650,Transmit Registers
+0x05110,FCFLTRW,FC Filter RW Control,Rx-Filter,WO,,651,Transmit Registers
+0x0EE00,FDIRCTRL,Flow Director Filters Control Register,DBU-Rx,RW,,652,Transmit Registers
+0x0EE68,FDIRHKEY,Flow Director Filters Lookup Table Hash Key,DBU-Rx,RW,,653,Transmit Registers
+0x0EE6C,FDIRSKEY,Flow Director Filters Signature Hash Key,DBU-Rx,RW,,653,Transmit Registers
+0x0EE3C,FDIRDIP4M,Flow Director Filters IPv4 Mask,DBU-Rx,RW,,653,Transmit Registers
+0x0EE40,FDIRSIP4M,Flow Director Filters Source IPv4 Mask,DBU-Rx,RW,,654,Transmit Registers
+0x0EE44,FDIRTCPM,Flow Director Filters TCP Mask,DBU-Rx,RW,,654,Transmit Registers
+0x0EE48,FDIRUDPM,Flow Director Filters UDP Mask,DBU-Rx,RW,,654,Transmit Registers
+0x0EE74,FDIRIP6M,Flow Director Filters IPv6 Mask,DBU-Rx,RW,,655,Transmit Registers
+0x0EE70,FDIRM,Flow Director Filters Other Mask,DBU-Rx,RW,,655,Transmit Registers
+0x0EE38,FDIRFREE,Flow Director Filters Free,DBU-Rx,RW,,656,Transmit Registers
+0x0EE4C,FDIRLEN,Flow Director Filters Length,DBU-Rx,RC,,656,Transmit Registers
+0x0EE50,FDIRUSTAT,Flow Director Filters Usage Statistics,DBU-Rx,RW / RC,,656,Transmit Registers
+0x0EE54,FDIRFSTAT,Flow Director Filters Failed Usage Statistics,DBU-Rx,RW / RC,,657,Transmit Registers
+0x0EE58,FDIRMATCH,Flow Director Filters Match Statistics,DBU-Rx,RC,,657,Transmit Registers
+0x0EE5C,FDIRMISS,Flow Director Filters Miss Match Statistics,DBU-Rx,RC,,657,Transmit Registers
+"0x0EE0C+4*n, n=0…2",FDIRSIPv6[n],Flow Director Filters Source IPv6,DBU-Rx,RW,,657,Transmit Registers
+0x0EE18,FDIRIPSA,Flow Director Filters IP SA,DBU-Rx,RW,,658,Transmit Registers
+0x0EE1C,FDIRIPDA,Flow Director Filters IP DA,DBU-Rx,RW,,658,Transmit Registers
+0x0EE20,FDIRPORT,Flow Director Filters Port,DBU-Rx,RW,,658,Transmit Registers
+0x0EE24,FDIRVLAN,Flow Director Filters VLAN and FLEX bytes,DBU-Rx,RW,,658,Transmit Registers
+0x0EE28,FDIRHASH,Flow Director Filters Hash Signature,DBU-Rx,RW,,658,Transmit Registers
+0x0EE2C,FDIRCMD,Flow Director Filters Command Register,DBU-Rx,RW,,659,Transmit Registers
+0x04200,PCS1GCFIG,PCS_1G Global Config Register 1,MAC,RW,,661,Transmit Registers
+0x04208,PCS1GLCTL,PCG_1G link Control Register,MAC,RW,,661,Transmit Registers
+0x0420C,PCS1GLSTA,PCS_1G Link Status Register,MAC,RO,,662,Transmit Registers
+0x04218,PCS1GANA,PCS_1 Gb/s Auto-Negotiation Advanced Register,MAC,RW,,663,Transmit Registers
+0x0421C,PCS1GANLP,PCS_1GAN LP Ability Register,MAC,RO,,663,Transmit Registers
+0x04220,PCS1GANNP,PCS_1G Auto-Negotiation Next Page Transmit Register,MAC,RW,,664,Transmit Registers
+0x04224,PCS1GANLPNP,PCS_1G Auto-Negotiation LP's Next Page Register,MAC,RO,,665,Transmit Registers
+0x04240,HLREG0,MAC Core Control 0 Register,MAC,RW,,666,Transmit Registers
+0x04244,HLREG1,MAC Core Status 1 Register,MAC,RO,,667,Transmit Registers
+0x04248,PAP,Pause and Pace Register,MAC,RW,,668,Transmit Registers
+0x0425C,MSCA,MDI Single Command and Address,MAC,RW,,668,Transmit Registers
+0x04260,MSRWD,MDI Single Read and Write Data,MAC,RW,,669,Transmit Registers
+0x04268,MAXFRS,Max Frame Size,MAC,RW,,669,Transmit Registers
+0x4288,PCSS1,XGXS Status 1,MAC,RO,,669,Transmit Registers
+0x0428C,PCSS2,XGXS Status 2,MAC,RO,,670,Transmit Registers
+0x04290,XPCSS,10GBASE-X PCS Status,MAC,RO,,670,Transmit Registers
+0x04298,SERDESC,SerDes Interface Control Register,MAC,RW,,672,Transmit Registers
+0x0429C,MACS,FIFO Status/CNTL report Register,MAC,RW,,673,Transmit Registers
+0x042A0,AUTOC,Auto-Negotiation Control Register,MAC,RW,,674,Transmit Registers
+0x042A4,LINKS,Link Status Register,MAC,RO,,676,Transmit Registers
+0x04324,LINKS2,Link Status Register 2,MAC,RO,,678,Transmit Registers
+0x042A8,AUTOC2,Auto-Negotiation Control 2 Register,MAC,RW,,679,Transmit Registers
+0x042B0,ANLP1,Auto-Negotiation Link Partner Link Control Word 1 Register,MAC,RO,,679,Transmit Registers
+0x042B4,ANLP2,Auto-Negotiation Link Partner Link Control Word 2 Register,MAC,RO,,680,Transmit Registers
+0x042D0,MMNGC,MAC Manageability Control Register,MAC,RO,,680,Transmit Registers
+0x042D4,ANLPNP1,Auto-Negotiation Link Partner Next Page 1 register,MAC,RO,,680,Transmit Registers
+0x042D8,ANLPNP2,Auto-Negotiation Link Partner Next Page 2 register,MAC,RO,,681,Transmit Registers
+0x042E0,KRPCSFC,KR PCS and FEC Control Register,MAC,RW,,681,Transmit Registers
+0x042E4,KRPCSS,KR PCS Status Register,MAC,RO,,682,Transmit Registers
+0x042E8,FECS1,FEC Status 1 Register,MAC,RC,,684,Transmit Registers
+0x042EC,FECS2,FEC Status 2 Register,MAC,RC,,684,Transmit Registers
+0x014F00,CoreCTL,Core Analog Configuration Register,MAC,RW,,684,Transmit Registers
+0x014F10,SMADARCTL,Core Common Configuration Register,MAC,RW,,685,Transmit Registers
+0x04294,MFLCN,MAC Flow Control Register,MAC,RW,,685,Transmit Registers
+0x04314,SGMIIC,SGMII Control Register,MAC,RW,,686,Transmit Registers
+0x04000,CRCERRS,CRC Error Count,STAT,RC,,687,Transmit Registers
+0x04004,ILLERRC,Illegal Byte Error Count,STAT,RC,,687,Transmit Registers
+0x04008,ERRBC,Error Byte Count,STAT,RC,,688,Transmit Registers
+0x04034,MLFC,MAC Local Fault Count,STAT,RC,,688,Transmit Registers
+0x04038,MRFC,MAC Remote Fault Count,STAT,RC,,688,Transmit Registers
+0x04040,RLEC,Receive Length Error Count,STAT,RC,,688,Transmit Registers
+0x08780,SSVPC,Switch Security Violation Packet Count,DMA-Tx,RC,,688,Transmit Registers
+0x041A4,LXONRXCNT,Link XON Received Count,STAT,RC,,689,Transmit Registers
+0x041A8,LXOFFRXCNT,Link XOFF Received Count,STAT,RC,,689,Transmit Registers
+"0x04140+4*n, n=0...7",PXONRXCNT[n],Priority XON Received Count,STAT,RC,,690,Transmit Registers
+"0x04160+4*n, n=0...7",PXOFFRXCNT[n],Priority XOFF Received Count,STAT,RC,,690,Transmit Registers
+0x0405C,PRC64,Packets Received [64 Bytes] Count,STAT,RW,,690,Transmit Registers
+0x04060,PRC127,Packets Received [65–127 Bytes] Count,STAT,RW,,691,Transmit Registers
+0x04064,PRC255,Packets Received [128–255 Bytes] Count,STAT,RW,,691,Transmit Registers
+0x04068,PRC511,Packets Received [256–511 Bytes] Count,STAT,RW,,691,Transmit Registers
+0x0406C,PRC1023,Packets Received [512–1023 Bytes] Count,STAT,RW,,691,Transmit Registers
+0x04070,PRC1522,Packets Received [1024 to Max Bytes] Count,STAT,RW,,692,Transmit Registers
+0x04078,BPRC,Broadcast Packets Received Count,STAT,RC,,692,Transmit Registers
+0x0407C,MPRC,Multicast Packets Received Count,STAT,RC,,692,Transmit Registers
+0x04074,GPRC,Good Packets Received Count,STAT,RC,,692,Transmit Registers
+0x04088,GORCL,Good Octets Received Count Low,STAT,RC,,693,Transmit Registers
+0x0408C,GORCH,Good Octets Received Count High,STAT,RC,,693,Transmit Registers
+0x041B0,RXNFGPC,Good Rx Non-Filtered Packet Counter,STAT,RC,,693,Transmit Registers
+0x041B4,RXNFGBCL,Good Rx Non-Filter Byte Counter Low,STAT,RC,,693,Transmit Registers
+0x041B8,RXNFGBCH,Good Rx Non-Filter Byte Counter High,STAT,RC,,693,Transmit Registers
+0x02F50,RXDGPC,DMA Good Rx Packet Counter,DMA-Rx,RC,,694,Transmit Registers
+0x02F54,RXDGBCL,DMA Good Rx Byte Counter Low,DMA-Rx,RC,,694,Transmit Registers
+0x02F58,RXDGBCH,DMA Good Rx Byte Counter High,DMA-Rx,RC,,694,Transmit Registers
+0x02F5C,RXDDPC,DMA Duplicated Good Rx Packet Counter,DMA-Rx,RC,,694,Transmit Registers
+0x02F60,RXDDBCL,DMA Duplicated Good Rx Byte Counter Low,DMA-Rx,RC,,694,Transmit Registers
+0x02F64,RXDDBCH,DMA Duplicated Good Rx Byte Counter High,DMA-Rx,RC,,695,Transmit Registers
+0x02F68,RXLPBKPC,DMA Good Rx LPBK Packet Counter,DMA-Rx,RC,,695,Transmit Registers
+0x02F6C,RXLPBKBCL,DMA Good Rx LPBK Byte Counter Low,DMA-Rx,RC,,695,Transmit Registers
+0x02F70,RXLPBKBCH,DMA Good Rx LPBK Byte Counter High,DMA-Rx,RC,,695,Transmit Registers
+0x02F74,RXDLPBKPC,DMA Duplicated Good Rx LPBK Packet Counter,DMA-Rx,RC,,696,Transmit Registers
+0x02F78,RXDLPBKBCL,DMA Duplicated Good Rx LPBK Byte Counter Low,DMA-Rx,RC,,696,Transmit Registers
+0x02F7C,RXDLPBKBCH,DMA Duplicated Good Rx LPBK Byte Counter High,DMA-Rx,RC,,696,Transmit Registers
+0x04080,GPTC,Good Packets Transmitted Count,STAT,RO,,696,Transmit Registers
+0x04090,GOTCL,Good Octets Transmitted Count Low,STAT,RC,,696,Transmit Registers
+0x04094,GOTCH,Good Octets Transmitted Count High,STAT,RC,,697,Transmit Registers
+0x087A0,TXDGPC,DMA Good Tx Packet Counter,DMA-Tx,RC,,697,Transmit Registers
+0x087A4,TXDGBCL,DMA Good Tx Byte Counter Low,DMA-Tx,RC,,697,Transmit Registers
+0x087A8,TXDGBCH,DMA Good Tx Byte Counter High,DMA-Tx,RC,,697,Transmit Registers
+0x040A4,RUC,Receive Undersize Count,STAT,RC,,697,Transmit Registers
+0x040A8,RFC,Receive Fragment Count,STAT,RC,,698,Transmit Registers
+0x040AC,ROC,Receive Oversize Count,STAT,RC,,698,Transmit Registers
+0x040B0,RJC,Receive Jabber Count,STAT,RC,,698,Transmit Registers
+0x040B4,MNGPRC,Management Packets Received Count,STAT,RO,,698,Transmit Registers
+0x040B8,MNGPDC,Management Packets Dropped Count,STAT,RO,,698,Transmit Registers
+0x040C0,TORL,Total Octets Received,STAT,RC,,699,Transmit Registers
+0x040C4,TORH,Total Octets Received,STAT,RC,,699,Transmit Registers
+0x040D0,TPR,Total Packets Received,STAT,RC,,699,Transmit Registers
+0x040D4,TPT,Total Packets Transmitted,STAT,RC,,699,Transmit Registers
+0x040D8,PTC64,Packets Transmitted (64 Bytes) Count,STAT,RC,,700,Transmit Registers
+0x040DC,PTC127,Packets Transmitted [65–127 Bytes] Count,STAT,RC,,700,Transmit Registers
+0x040E0,PTC255,Packets Transmitted [128–255 Bytes] Count,STAT,RC,,700,Transmit Registers
+0x040E4,PTC511,Packets Transmitted [256–511 Bytes] Count,STAT,RC,,700,Transmit Registers
+0x040E8,PTC1023,Packets Transmitted [512–1023 Bytes] Count,STAT,RC,,701,Transmit Registers
+0x040EC,PTC1522,Packets Transmitted [Greater than 1024 Bytes] Count,STAT,RC,,701,Transmit Registers
+0x040F0,MPTC,Multicast Packets Transmitted Count,STAT,RC,,701,Transmit Registers
+0x040F4,BPTC,Broadcast Packets Transmitted Count,STAT,RC,,701,Transmit Registers
+0x04010,MSPDC,MAC short Packet Discard Count,STAT,RC,,702,Transmit Registers
+0x04120,XEC,XSUM Error Count,STAT,RC,,702,Transmit Registers
+"0x02300+4*n, n=0...31",RQSMR[n],Receive Queue Statistic Mapping Registers,DMA-Rx,RW,,702,Transmit Registers
+0x02F40,RXDSTATCTRL,Rx DMA Statistic Counter Control,DMA-Tx,RW,,703,Transmit Registers
+"0x08600+4*n, n=0...31 / 0x07300+4*n, n=0…7",TQSM[n],Transmit Queue Statistic Mapping Registers,DMA-Tx,RW,,703,Transmit Registers
+"0x01030+0x40*n, n=0...15",QPRC[n],Queue Packets Received Count,DMA-Rx,RC,,704,Transmit Registers
+"0x01430+0x40*n, n=0...15",QPRDC[n],Queue Packets Received Drop Count,DMA-Rx,RC,,704,Transmit Registers
+"0x1034+0x40*n, n=0...15",QBRC_L[n],Queue Bytes Received Count Low,DMA-Rx,RC,,704,Transmit Registers
+"0x1038+0x40*n, n=0...15",QBRC_H[n],Queue Bytes Received Count High,DMA-Rx,RC,,704,Transmit Registers
+"0x08680+0x4*n, n=0...15 / 0x06030+0x40*n, n=0...15",QPTC,Queue Packets Transmitted Count,DMA-Tx,RC,,704,Transmit Registers
+"0x08700+0x8*n, n=0...15",QBTC_L[n],Queue Bytes Transmitted Count Low,DMA-Tx,RC,,705,Transmit Registers
+"0x08704+0x8*n, n=0...15",QBTC_H[n],Queue Bytes Transmitted Count High,DMA-Tx,RC,,705,Transmit Registers
+0x05118,FCCRC,FC CRC Error Count,Rx-Filter,RC,,705,Transmit Registers
+0x0241C,FCOERPDC,FCoE Rx Packets Dropped Count,DMA-Rx,RC,,706,Transmit Registers
+0x02424,FCLAST,FC Last Error Count,DMA-Rx,RC,,706,Transmit Registers
+0x02428,FCOEPRC,FCoE Packets Received Count,DMA-Rx,RC,,706,Transmit Registers
+0x0242C,FCOEDWRC,FCOE DWord Received Count,DMA-Rx,RC,,706,Transmit Registers
+0x08784,FCOEPTC,FCoE Packets Transmitted Count,DMA-Tx,RC,,706,Transmit Registers
+0x08788,FCOEDWTC,FCoE DWord Transmitted Count,DMA-Tx,RC,,707,Transmit Registers
+0x05800,WUC,Wake Up Control Register,Rx-Filter,RW,,708,Transmit Registers
+0x05808,WUFC,Wake Up Filter Control Register,Rx-Filter,RW,,708,Transmit Registers
+0x5838,IPAV,IP Address Valid,Rx-Filter,RW,,709,Transmit Registers
+"0x05840+8*n, n = 0...3",IP4AT[n],IPv4 Address Table,Rx-Filter,RW,,710,Transmit Registers
+"0x05880+4*n, n = 0...3",IP6AT[n],IPv6 Address Table,Rx-Filter,RW,,710,Transmit Registers
+0x05900,WUPL,Wake Up Packet Length,Rx-Filter,RO,,710,Transmit Registers
+"0x05A00+4*n, n=0...31",WUPM[n],Wake Up Packet Memory (128 Bytes),Rx-Filter,RO,,710,Transmit Registers
+"0x09000 — 0x093FC, 0x09800 — 0x099FC",FHFT,Flexible Host Filter Table,Rx-Filter,RW,,710,Transmit Registers
+"0x5910+8*n, n=0...3",MMAL[n],Manageability Ethernet MAC Address Low,Rx-Filter,RW,,717,539
+"0x5914+8*n, n=0...3",MMAH[n],Manageability Ethernet MAC Address High,Rx-Filter,RW,,717,539
+0x09400-0x097FC,FTFT,Flexible TCO Filter Table registers,Rx-Filter,RW,,717,539
+0x015F14,LSWFW,LinkSec SW/FW Interface,MNG,RO,,718,539
+0x05188,TSYNCRXCTL,Rx Time Sync Control Register,Rx-Filter,RW,,720,Time Sync (IEEE 1588) Registers
+0x051E8,RXSTMPL,Rx Timestamp Low,Rx-Filter,RO,,720,Time Sync (IEEE 1588) Registers
+0x051A4,RXSTMPH,Rx Timestamp High,Rx-Filter,RO,,720,Time Sync (IEEE 1588) Registers
+0x051A0,RXSATRL,Rx Timestamp Attributes Low,Rx-Filter,RO,,721,Time Sync (IEEE 1588) Registers
+0x051A8,RXSATRH,Rx Timestamp Attributes High,Rx-Filter,RO,,721,Time Sync (IEEE 1588) Registers
+0x05120,RXMTRL,Rx Message Type Register Low,Rx-Filter,RW,,721,Time Sync (IEEE 1588) Registers
+0x08C00,TSYNCTXCTL,Tx Time Sync Control Register,SEC-Tx,RW,,721,Time Sync (IEEE 1588) Registers
+0x08C04,TXSTMPL,Tx Timestamp Value Low,SEC-Tx,RO,,722,Time Sync (IEEE 1588) Registers
+0x08C08,TXSTMPH,Tx Timestamp Value High,SEC-Tx,RO,,722,Time Sync (IEEE 1588) Registers
+0x08C0C,SYSTIML,System Time Register Low,SEC-Tx,RW,,722,Time Sync (IEEE 1588) Registers
+0x08C10,SYSTIMH,System Time Register High,SEC-Tx,RW,,722,Time Sync (IEEE 1588) Registers
+0x08C14,TIMINCA,Increment Attributes Register,SEC-Tx,RW,,722,Time Sync (IEEE 1588) Registers
+0x08C18,TIMADJL,Time Adjustment Offset Register low,SEC-Tx,RW,,723,Time Sync (IEEE 1588) Registers
+0x08C1C,TIMADJH,Time Adjustment Offset Register High,SEC-Tx,RW,,723,Time Sync (IEEE 1588) Registers
+0x08C20,TSAUXC,TimeSync Auxiliary Control Register,SEC-Tx,RW,,723,Time Sync (IEEE 1588) Registers
+0x08C24,TRGTTIML0,Target Time Register 0 Low,SEC-Tx,RW,,724,Time Sync (IEEE 1588) Registers
+0x08C28,TRGTTIMH0,Target Time Register 0 High,SEC-Tx,RW,,724,Time Sync (IEEE 1588) Registers
+0x08C2C,TRGTTIML1,Target Time Register 1 Low,SEC-Tx,RW,,724,Time Sync (IEEE 1588) Registers
+0x08C30,TRGTTIMH1,Target Time Register 1 High,SEC-Tx,RW,,724,Time Sync (IEEE 1588) Registers
+0x08C3C,AUXSTMPL0,Auxiliary Time Stamp 0 Register low,SEC-Tx,RO,,725,Time Sync (IEEE 1588) Registers
+0x08C40,AUXSTMPH0,Auxiliary Time Stamp 0 Register high,SEC-Tx,RO,,725,Time Sync (IEEE 1588) Registers
+0x08C44,AUXSTMPL1,Auxiliary Time Stamp 1 Register low,SEC-Tx,RO,,725,Time Sync (IEEE 1588) Registers
+0x08C48,AUXSTMPH1,Auxiliary Time Stamp 1 Register high,SEC-Tx,RO,,725,Time Sync (IEEE 1588) Registers
+0x051B0,PFVTCTL,PF Virtual Control Register,Rx-Filter,RW,,726,Time Sync (IEEE 1588) Registers
+"0x04B00+4*n, n=0...63",PFMailbox[n],PF Mailbox,Target,RW,,726,Time Sync (IEEE 1588) Registers
+"0x00710+4*n, n=0...3",PFMBICR[n],PF Mailbox Interrupt Causes Register,Target,RW1C,,727,Time Sync (IEEE 1588) Registers
+"0x00720+4*n, n=0...1",PFMBIMR[n],PF Mailbox Interrupt Mask Register,Target,RW,,727,Time Sync (IEEE 1588) Registers
+"0x00600, 0x001C0",PFVFLRE[n],PF VFLR Events Indication,Target,RO,,727,Time Sync (IEEE 1588) Registers
+"0x00700+4*n, n=0...1",PFVFLREC[n],PF VFLR Events Clear,Target,W1C,,728,Time Sync (IEEE 1588) Registers
+"0x051E0+4*n, n=0...1",PFVFRE[n],PF VF Receive Enable,,RW,,728,Time Sync (IEEE 1588) Registers
+"0x08110+4*n, n=0...1",PFVFTE[n],PF VF Transmit Enable,DMA-Tx,RW,,728,Time Sync (IEEE 1588) Registers
+0x02F04,PFQDE,PF Queue Drop Enable Register,DMA-Rx,RW,,728,Time Sync (IEEE 1588) Registers
+"0x05180+4*n, n=0...1",PFVMTXSW[n],PF VM Tx Switch Loopback Enable,Rx-Filter,RW,,729,Time Sync (IEEE 1588) Registers
+"0x08200+4*n, n=0...7",PFVFSPOOF[n],PF VF Anti Spoof Control,DMA-Tx,RW,,729,Time Sync (IEEE 1588) Registers
+0x08220,PFDTXGSWC,PF DMA Tx General Switch Control,DMA-Tx,RW,,729,Time Sync (IEEE 1588) Registers
+"0x08000+4*n, n=0...63",PFVMVIR[n],PF VM VLAN Insert Register,DMA-Tx,RW,,730,Time Sync (IEEE 1588) Registers
+"0x0F000+4*n, n=0...63",PFVML2FLT[n],PF VM L2 Control Register,Rx-Filter,RW,,730,Time Sync (IEEE 1588) Registers
+"0x0F100+4*n, n=0...63",PFVLVF[n],PF VM VLAN Pool Filter,Rx-Filter,RW,,730,Time Sync (IEEE 1588) Registers
+"0x0F200+4*n, n=0...127",PFVLVFB[n],PF VM VLAN Pool Filter Bitmap,Rx-Filter,RW,,731,Time Sync (IEEE 1588) Registers
+"0x0F400+4*n, n=0...127",PFUTA[n],PF Unicast Table Array,Rx-Filter,RW,,731,Time Sync (IEEE 1588) Registers
+"0x0F600+4*n, n=0...3",PFMRCTL[n],PF Mirror Rule Control,Rx-Filter,RW,,732,Time Sync (IEEE 1588) Registers
+0x08C3C,AUXSTMPL0,Auxiliary Time Stamp 0 Register low,SEC-Tx,RO,,725,Time Sync (IEEE 1588) Registers
+0x08C40,AUXSTMPH0,Auxiliary Time Stamp 0 Register high,SEC-Tx,RO,,725,Time Sync (IEEE 1588) Registers
+0x08C44,AUXSTMPL1,Auxiliary Time Stamp 1 Register low,SEC-Tx,RO,,725,Time Sync (IEEE 1588) Registers
+0x08C48,AUXSTMPH1,Auxiliary Time Stamp 1 Register high,SEC-Tx,RO,,725,Time Sync (IEEE 1588) Registers
+0x051B0,PFVTCTL,PF Virtual Control Register,Rx-Filter,RW,,726,Time Sync (IEEE 1588) Registers
+"0x04B00+4*n, n=0...63",PFMailbox[n],PF Mailbox,Target,RW,,726,Time Sync (IEEE 1588) Registers
+"0x00710+4*n, n=0...3",PFMBICR[n],PF Mailbox Interrupt Causes Register,Target,RW1C,,727,Time Sync (IEEE 1588) Registers
+"0x00720+4*n, n=0...1",PFMBIMR[n],PF Mailbox Interrupt Mask Register,Target,RW,,727,Time Sync (IEEE 1588) Registers
+"0x00600, 0x001C0",PFVFLRE[n],PF VFLR Events Indication,Target,RO,,727,Time Sync (IEEE 1588) Registers
+"0x00700+4*n, n=0...1",PFVFLREC[n],PF VFLR Events Clear,Target,W1C,,728,Time Sync (IEEE 1588) Registers
+"0x051E0+4*n, n=0...1",PFVFRE[n],PF VF Receive Enable,,RW,,728,Time Sync (IEEE 1588) Registers
+"0x08110+4*n, n=0...1",PFVFTE[n],PF VF Transmit Enable,DMA-Tx,RW,,728,Time Sync (IEEE 1588) Registers
+0x02F04,PFQDE,PF Queue Drop Enable Register,DMA-Rx,RW,,728,Time Sync (IEEE 1588) Registers
+"0x05180+4*n, n=0...1",PFVMTXSW[n],PF VM Tx Switch Loopback Enable,Rx-Filter,RW,,729,Time Sync (IEEE 1588) Registers
+"0x08200+4*n, n=0...7",PFVFSPOOF[n],PF VF Anti Spoof Control,DMA-Tx,RW,,729,Time Sync (IEEE 1588) Registers
+0x08220,PFDTXGSWC,PF DMA Tx General Switch Control,DMA-Tx,RW,,729,Time Sync (IEEE 1588) Registers
+"0x08000+4*n, n=0...63",PFVMVIR[n],PF VM VLAN Insert Register,DMA-Tx,RW,,730,Time Sync (IEEE 1588) Registers
+"0x0F000+4*n, n=0...63",PFVML2FLT[n],PF VM L2 Control Register,Rx-Filter,RW,,730,Time Sync (IEEE 1588) Registers
+"0x0F100+4*n, n=0...63",PFVLVF[n],PF VM VLAN Pool Filter,Rx-Filter,RW,,730,Time Sync (IEEE 1588) Registers
+"0x0F200+4*n, n=0...127",PFVLVFB[n],PF VM VLAN Pool Filter Bitmap,Rx-Filter,RW,,731,Time Sync (IEEE 1588) Registers
+"0x0F400+4*n, n=0...127",PFUTA[n],PF Unicast Table Array,Rx-Filter,RW,,731,Time Sync (IEEE 1588) Registers
+"0x0F600+4*n, n=0...3",PFMRCTL[n],PF Mirror Rule Control,Rx-Filter,RW,,732,Time Sync (IEEE 1588) Registers
+"0x0F610+4*n, n=0...7",PFMRVLAN[n],PF Mirror Rule VLAN,Rx-Filter,RW,,732,Time Sync (IEEE 1588) Registers
+"0x0F630+4*n, n=0...7",PFMRVM[n],PF Mirror Rule Pool,Rx-Filter,RW,,732,Time Sync (IEEE 1588) Registers

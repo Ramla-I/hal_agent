@@ -1,0 +1,4 @@
+{
+  "_note": "Datasheet abbreviation -> driver field name exceptions (friction category: naming). Default rule is lowercase(abbrev base).",
+  "FCTTVN": "fcttv"
+}

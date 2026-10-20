@@ -1,0 +1,101 @@
+{
+  "_generated_by": "pipeline/build_constraints_list.py",
+  "note": "The recovered constraints as grammar-v2 objects, folded into the gated codegen via s4_emit_hal.py --gated --extra-constraints config/recovered_constraints.json. Committed so the combined-set (9-constraint) gated HAL is reproducible. Regenerate with: python3 pipeline/build_constraints_list.py",
+  "constraints": [
+    {
+      "register": "RXCSUM",
+      "enforceability": "action_witnessed",
+      "constraint": {
+        "kind": "state_gate",
+        "severity": "error",
+        "consequence": "",
+        "datasheet_text": "This register should only be initialized (written) when the receiver is not enabled (for example, only write this register when RXCTRL.RXEN = 0b).",
+        "target_register": "RXCSUM",
+        "target_fields": [],
+        "target_operation": "write",
+        "preconditions": [
+          {
+            "register": "RXCTRL",
+            "field": "RXEN",
+            "whole_register": false,
+            "state": "cleared",
+            "values": [],
+            "established_by": "software",
+            "action_operation": "modify"
+          }
+        ],
+        "postconditions": []
+      }
+    },
+    {
+      "register": "RDLEN",
+      "enforceability": "doc_only",
+      "constraint": {
+        "kind": "value_relation",
+        "severity": "warning",
+        "consequence": "",
+        "datasheet_text": "It must be 128-byte aligned (7 LS bit must be set to zero).",
+        "fields": [
+          {
+            "register": "RDLEN",
+            "field": "LEN",
+            "whole_register": false
+          }
+        ]
+      }
+    },
+    {
+      "register": "TDLEN",
+      "enforceability": "doc_only",
+      "constraint": {
+        "kind": "value_relation",
+        "severity": "warning",
+        "consequence": "",
+        "datasheet_text": "It must be 128-byte-aligned (7 LS bit must be set to zero).",
+        "fields": [
+          {
+            "register": "TDLEN",
+            "field": "LEN",
+            "whole_register": false
+          }
+        ]
+      }
+    },
+    {
+      "register": "DAQF",
+      "enforceability": "doc_only",
+      "constraint": {
+        "kind": "other",
+        "severity": "warning",
+        "consequence": "",
+        "datasheet_text": "This register must be initialized by software.",
+        "description": "This register must be initialized by software.",
+        "involved": [
+          {
+            "register": "DAQF",
+            "field": "0",
+            "whole_register": false
+          }
+        ]
+      }
+    },
+    {
+      "register": "SDPQF",
+      "enforceability": "doc_only",
+      "constraint": {
+        "kind": "other",
+        "severity": "warning",
+        "consequence": "",
+        "datasheet_text": "This register must be initialized by software.",
+        "description": "This register must be initialized by software.",
+        "involved": [
+          {
+            "register": "SDPQF",
+            "field": "0",
+            "whole_register": false
+          }
+        ]
+      }
+    }
+  ]
+}

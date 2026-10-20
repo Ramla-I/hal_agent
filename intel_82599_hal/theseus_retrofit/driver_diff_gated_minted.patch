@@ -1,0 +1,140 @@
+diff --git a/kernel/ixgbe/src/lib.rs b/kernel/ixgbe/src/lib.rs
+index 79c1d86..3a145cb 100644
+--- a/kernel/ixgbe/src/lib.rs
++++ b/kernel/ixgbe/src/lib.rs
+@@ -770,11 +770,12 @@ impl IxgbeNic {
+         for i in 1..8 {
+             regs.rxpbsize[i].write(0);
+         }
+-        //CRC offloading
+-        regs.hlreg0.write(regs.hlreg0.read() | HLREG0_CRC_STRIP);
+-        regs.rdrxctl.write(regs.rdrxctl.read() | RDRXCTL_CRC_STRIP);
++        //CRC offloading — the datasheet requires HLREG0.RXCRCSTRP and
++        // RDRXCTL.CRCStrip to be set the same; the coupled setter changes both
++        // together (independent writes preserve those bits).
++        set_rxcrcstrp_crcstrip(&mut regs.hlreg0, &mut regs.rdrxctl, true);
+         // Clear bits
+-        regs.rdrxctl.write(regs.rdrxctl.read() & !RDRXCTL_RSCFRSTSIZE);
++        regs.rdrxctl.write_preserving(regs.rdrxctl.read() & !RDRXCTL_RSCFRSTSIZE);
+ 
+         for qid in 0..IXGBE_NUM_RX_QUEUES_ENABLED {
+             let rxq = &mut rx_regs[qid as usize];        
+@@ -822,16 +823,19 @@ impl IxgbeNic {
+ 
+     /// enable receive functionality
+     fn enable_rx_function(regs1: &mut IntelIxgbeRegisters1,regs: &mut IntelIxgbeRegisters2) {
++        // Gate (datasheet): receive filters may only be updated while
++        // RXCTRL.RXEN = 0b. Establishing the witness clears RXEN.
++        let rx_disabled = regs.rxctrl.clear_rxen();
++
+         // set rx parameters of which type of packets are accepted by the nic
+         // right now we allow the nic to receive all types of packets, even incorrectly formed ones
+-        regs.fctrl.write(STORE_BAD_PACKETS | MULTICAST_PROMISCUOUS_ENABLE | UNICAST_PROMISCUOUS_ENABLE | BROADCAST_ACCEPT_MODE); 
++        regs.fctrl.write(STORE_BAD_PACKETS | MULTICAST_PROMISCUOUS_ENABLE | UNICAST_PROMISCUOUS_ENABLE | BROADCAST_ACCEPT_MODE, &rx_disabled); 
+         
+         // some magic numbers
+         regs1.ctrl_ext.write(regs1.ctrl_ext.read() | CTRL_EXT_NO_SNOOP_DIS);
+ 
+-        // enable receive functionality
+-        let val = regs.rxctrl.read();
+-        regs.rxctrl.write(val | RECEIVE_ENABLE); 
++        // enable receive functionality: re-set RXCTRL.RXEN, consuming the witness
++        regs.rxctrl.release_rxen(rx_disabled);
+     }
+ 
+     /// Initialize the array of transmit descriptors for all queues and returns them.
+@@ -845,8 +849,9 @@ impl IxgbeNic {
+         // disable transmission
+         Self::disable_transmission(regs);
+ 
+-        // CRC offload and small packet padding enable
+-        regs.hlreg0.write(regs.hlreg0.read() | HLREG0_TXCRCEN | HLREG0_TXPADEN);
++        // CRC offload and small packet padding enable (write_preserving: the
++        // coupled RXCRCSTRP bit can only change via set_rxcrcstrp_crcstrip)
++        regs.hlreg0.write_preserving(regs.hlreg0.read() | HLREG0_TXCRCEN | HLREG0_TXPADEN);
+ 
+         // Set RTTFCS.ARBDIS to 1
+         regs.rttdcs.write(regs.rttdcs.read() | RTTDCS_ARBDIS);
+@@ -893,13 +898,15 @@ impl IxgbeNic {
+     /// disable transmit functionality
+     fn disable_transmission(regs: &mut IntelIxgbeRegisters2) {
+         let val = regs.dmatxctl.read();
+-        regs.dmatxctl.write(val & !TE); 
++        // write_preserving: DMATXCTL.VT must not change (802.3ac tag value)
++        regs.dmatxctl.write_preserving(val & !TE); 
+     }
+ 
+     /// enable transmit functionality
+     fn enable_transmission(regs: &mut IntelIxgbeRegisters2) {
+         let val = regs.dmatxctl.read();
+-        regs.dmatxctl.write(val | TE); 
++        // write_preserving: DMATXCTL.VT must not change (802.3ac tag value)
++        regs.dmatxctl.write_preserving(val | TE); 
+     }
+ 
+     /// Enable multiple receive queues with RSS.
+@@ -908,15 +915,23 @@ impl IxgbeNic {
+         regs2: &mut IntelIxgbeRegisters2, 
+         regs3: &mut IntelIxgbeRegisters3
+     ) -> Result<(), &'static str> {
++        // Gate (datasheet): RXCSUM may only be written while RXCTRL.RXEN = 0b.
++        // Fetch the RSS hash seed FIRST so the gated window below has no early
++        // return, then establish the witness (clears RXEN) and keep the receiver
++        // disabled across the whole RSS/RXCSUM configuration, releasing at the end.
++        // Fixes the configure-after-enable bug: rx_init had already enabled the
++        // receiver before enable_rss ran.
++        let seed = get_hpet().as_ref().ok_or("couldn't get HPET timer")?.get_counter();
++        let rx_disabled = regs2.rxctrl.clear_rxen();
++
+         // enable RSS writeback in the header field of the receive descriptor
+-        regs2.rxcsum.write(RXCSUM_PCSD);
+-        
++        regs2.rxcsum.write(RXCSUM_PCSD, &rx_disabled);
++
+         // enable RSS and set fields that will be used by hash function
+         // right now we're using the udp port and ipv4 address.
+         regs3.mrqc.write(MRQC_MRQE_RSS | MRQC_UDPIPV4 ); 
+ 
+         //set the random keys for the hash function
+-        let seed = get_hpet().as_ref().ok_or("couldn't get HPET timer")?.get_counter();
+         let mut rng = SmallRng::seed_from_u64(seed);
+         for rssrk in regs3.rssrk.iter_mut() {
+             rssrk.write(rng.next_u32());
+@@ -935,6 +950,8 @@ impl IxgbeNic {
+             qid = (qid + 1) % IXGBE_NUM_RX_QUEUES_ENABLED as u32;
+         }
+ 
++        // re-enable the receiver now that RSS/RXCSUM configuration is complete
++        regs2.rxctrl.release_rxen(rx_disabled);
+         Ok(())
+     }
+ 
+@@ -1117,8 +1134,9 @@ impl IxgbeNic {
+         regs.eims.write(val); 
+         // debug!("EIMS: {:#X}", regs.eims.read());
+ 
+-        //enable auto-clear of receive interrupts 
+-        regs.eiac.write(EIAC_RTXQ_AUTO_CLEAR);
++        //enable auto-clear of receive interrupts (write_preserving: the shared
++        // MSI-X vector bits 29:20 must never set auto-clear — forced to 0)
++        regs.eiac.write_preserving(EIAC_RTXQ_AUTO_CLEAR);
+ 
+         //clear eicr 
+         let _val = regs.eicr.read();
+diff --git a/kernel/ixgbe/src/queue_registers.rs b/kernel/ixgbe/src/queue_registers.rs
+index 43e645f..65f76b6 100644
+--- a/kernel/ixgbe/src/queue_registers.rs
++++ b/kernel/ixgbe/src/queue_registers.rs
+@@ -71,7 +71,11 @@ impl TxQueueRegisters for IxgbeTxQueueRegisters {
+         self.regs.tdlen.write(value)
+     }
+     fn set_tdh(&mut self, value: u32) {
+-        self.regs.tdh.write(value)
++        // Gate (datasheet): TDH may only be written after reset and before the
++        // transmit queue is enabled. Establishing the witness clears
++        // TXDCTL.ENABLE, so moving the head forces the queue disabled.
++        let witness = self.regs.txdctl.clear_enable();
++        self.regs.tdh.write(value, &witness)
+     }
+     fn set_tdt(&mut self, value: u32) {
+         self.regs.tdt.write(value)

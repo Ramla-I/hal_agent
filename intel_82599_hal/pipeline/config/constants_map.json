@@ -1,0 +1,583 @@
+{
+  "_note": "Map from each driver-referenced regs.rs constant to the datasheet field it encodes. kinds: field_bit (1<<start_bit), field_bit_at (1<<(start_bit+bit_offset)), field_shift (start_bit), field_mask (field-width mask at position), field_value (policy value << start_bit), policy (driver-chosen value, no datasheet derivation). 'field' uses the DATASHEET field spelling; 'alt' lists alternate spellings for fuzzy match. 'ref' is the reference driver value (evaluation + compile fallback; every fallback use is a logged recall miss). Name mapping entries here are friction category 'naming (constants)'.",
+  "constants": [
+    {
+      "name": "BROADCAST_ACCEPT_MODE",
+      "kind": "field_bit",
+      "register": "FCTRL",
+      "field": "BAM",
+      "ref": "1 << 10"
+    },
+    {
+      "name": "BSIZEHEADER_0B",
+      "kind": "policy",
+      "value": "0",
+      "comment": "SRRCTL.BSIZEHEADER chosen value: no header split",
+      "ref": "0"
+    },
+    {
+      "name": "CTRL_EXT_NO_SNOOP_DIS",
+      "kind": "field_bit",
+      "register": "CTRL_EXT",
+      "field": "NS_DIS",
+      "ref": "1 << 16"
+    },
+    {
+      "name": "CTRL_LRST",
+      "kind": "field_bit",
+      "register": "CTRL",
+      "field": "LRST",
+      "ref": "1 << 3"
+    },
+    {
+      "name": "CTRL_RST",
+      "kind": "field_bit",
+      "register": "CTRL",
+      "field": "RST",
+      "ref": "1 << 26"
+    },
+    {
+      "name": "DCA_CPUID_SHIFT",
+      "kind": "field_shift",
+      "register": "DCA_RXCTRL",
+      "field": "CPUID",
+      "ref": "24"
+    },
+    {
+      "name": "DCA_CTRL_ENABLE",
+      "kind": "policy",
+      "value": "0",
+      "comment": "DCA_CTRL.DCA_DIS written 0 = enable",
+      "ref": "0"
+    },
+    {
+      "name": "DCA_MODE_2",
+      "kind": "field_value",
+      "register": "DCA_CTRL",
+      "field": "DCA_MODE",
+      "alt": [
+        "DCA Mode"
+      ],
+      "value": "1",
+      "ref": "1 << 1"
+    },
+    {
+      "name": "DCA_RXCTRL_CLEAR_BIT_12",
+      "kind": "policy",
+      "value": "1 << 12",
+      "comment": "reserved bit software must clear (silicon workaround); reserved bits not field-derived",
+      "ref": "1 << 12"
+    },
+    {
+      "name": "DESCTYPE_ADV_1BUFFER",
+      "kind": "policy",
+      "value": "1",
+      "comment": "SRRCTL.DESCTYPE enum: advanced descriptor, one buffer",
+      "ref": "1"
+    },
+    {
+      "name": "DISABLE_INTERRUPTS",
+      "kind": "policy",
+      "value": "0x7FFFFFFF",
+      "comment": "EIMC write-all-ones mask (31 usable bits)",
+      "ref": "0x7FFFFFFF"
+    },
+    {
+      "name": "DROP_ENABLE",
+      "kind": "field_bit",
+      "register": "SRRCTL",
+      "field": "Drop_En",
+      "ref": "1 << 28"
+    },
+    {
+      "name": "DTXMXSZRQ_MAX_BYTES",
+      "kind": "policy",
+      "value": "0xFFF",
+      "comment": "Max_bytes_num_req chosen maximum",
+      "ref": "0xFFF"
+    },
+    {
+      "name": "EEC_AUTO_RD",
+      "kind": "field_shift",
+      "register": "EEC",
+      "field": "Auto_RD",
+      "ref": "9"
+    },
+    {
+      "name": "EIAC_RTXQ_AUTO_CLEAR",
+      "kind": "field_mask",
+      "register": "EIAC",
+      "field": "RTxQ",
+      "alt": [
+        "RTXQ",
+        "RTxQ Auto Clear"
+      ],
+      "ref": "0xFFFF"
+    },
+    {
+      "name": "EIMS_INTERRUPT_ENABLE",
+      "kind": "policy",
+      "value": "1",
+      "comment": "single-queue interrupt enable bit value, shifted by caller",
+      "ref": "1"
+    },
+    {
+      "name": "EITR_ITR_INTERVAL_SHIFT",
+      "kind": "field_shift",
+      "register": "EITR",
+      "field": "ITR_Interval",
+      "alt": [
+        "ITR Interval"
+      ],
+      "ref": "3"
+    },
+    {
+      "name": "FTQF_DEST_ADDRESS_MASK",
+      "kind": "field_bit_at",
+      "register": "FTQF",
+      "field": "Mask",
+      "bit_offset": 1,
+      "ref": "1 << 26"
+    },
+    {
+      "name": "FTQF_DEST_PORT_MASK",
+      "kind": "field_bit_at",
+      "register": "FTQF",
+      "field": "Mask",
+      "bit_offset": 3,
+      "ref": "1 << 28"
+    },
+    {
+      "name": "FTQF_PRIORITY",
+      "kind": "policy",
+      "value": "7",
+      "comment": "3-bit priority field all-ones value",
+      "ref": "7"
+    },
+    {
+      "name": "FTQF_PRIORITY_SHIFT",
+      "kind": "field_shift",
+      "register": "FTQF",
+      "field": "Priority",
+      "ref": "2"
+    },
+    {
+      "name": "FTQF_PROTOCOL_MASK",
+      "kind": "field_bit_at",
+      "register": "FTQF",
+      "field": "Mask",
+      "bit_offset": 4,
+      "ref": "1 << 29"
+    },
+    {
+      "name": "FTQF_Q_ENABLE",
+      "kind": "field_bit",
+      "register": "FTQF",
+      "field": "Queue Enable",
+      "alt": [
+        "QUEUE_EN",
+        "Queue_Enable"
+      ],
+      "ref": "1 << 31"
+    },
+    {
+      "name": "FTQF_SOURCE_ADDRESS_MASK",
+      "kind": "field_bit_at",
+      "register": "FTQF",
+      "field": "Mask",
+      "bit_offset": 0,
+      "ref": "1 << 25"
+    },
+    {
+      "name": "FTQF_SOURCE_PORT_MASK",
+      "kind": "field_bit_at",
+      "register": "FTQF",
+      "field": "Mask",
+      "bit_offset": 2,
+      "ref": "1 << 27"
+    },
+    {
+      "name": "GPIE_EIMEN",
+      "kind": "field_bit",
+      "register": "GPIE",
+      "field": "EIMEN",
+      "ref": "1 << 6"
+    },
+    {
+      "name": "GPIE_MULTIPLE_MSIX",
+      "kind": "field_bit",
+      "register": "GPIE",
+      "field": "Multiple_MSIX",
+      "alt": [
+        "Multiple MSIX"
+      ],
+      "ref": "1 << 4"
+    },
+    {
+      "name": "GPIE_PBA_SUPPORT",
+      "kind": "field_bit",
+      "register": "GPIE",
+      "field": "PBA_support",
+      "alt": [
+        "PBA support"
+      ],
+      "ref": "1 << 31"
+    },
+    {
+      "name": "HLREG0_CRC_STRIP",
+      "kind": "field_bit",
+      "register": "HLREG0",
+      "field": "RXCRCSTRP",
+      "ref": "1 << 1"
+    },
+    {
+      "name": "HLREG0_TXCRCEN",
+      "kind": "field_bit",
+      "register": "HLREG0",
+      "field": "TXCRCEN",
+      "ref": "1"
+    },
+    {
+      "name": "HLREG0_TXPADEN",
+      "kind": "field_bit",
+      "register": "HLREG0",
+      "field": "TXPADEN",
+      "ref": "1 << 10"
+    },
+    {
+      "name": "IXGBE_MAX_MSIX_VECTORS",
+      "kind": "policy",
+      "value": "64",
+      "type": "usize",
+      "comment": "MSI-X table size taken from the datasheet, kept as driver constant",
+      "ref": "64"
+    },
+    {
+      "name": "L34TIMIR_BYPASS_SIZE_CHECK",
+      "kind": "field_bit",
+      "register": "L34TIMIR",
+      "field": "SIZE_BP",
+      "alt": [
+        "Size bypass",
+        "SIZE BP"
+      ],
+      "ref": "1 << 12"
+    },
+    {
+      "name": "L34TIMIR_RESERVED",
+      "kind": "policy",
+      "value": "0x40 << 13",
+      "comment": "reserved bits documented as must-write value; reserved bits not field-derived",
+      "ref": "0x40 << 13"
+    },
+    {
+      "name": "L34TIMIR_RX_Q_SHIFT",
+      "kind": "field_shift",
+      "register": "L34TIMIR",
+      "field": "Rx Queue",
+      "alt": [
+        "RX_QUEUE",
+        "Rx_Queue",
+        "QUEUE"
+      ],
+      "ref": "21"
+    },
+    {
+      "name": "LINKS_SPEED_MASK",
+      "kind": "field_mask",
+      "register": "LINKS",
+      "field": "LINK_SPEED",
+      "alt": [
+        "Link Speed"
+      ],
+      "ref": "0x3 << 28"
+    },
+    {
+      "name": "MRQC_MRQE_RSS",
+      "kind": "policy",
+      "value": "1",
+      "comment": "MRQC.MRQE enum: RSS only",
+      "ref": "1"
+    },
+    {
+      "name": "MRQC_UDPIPV4",
+      "kind": "field_bit_at",
+      "register": "MRQC",
+      "field": "RSS Field Enable",
+      "alt": [
+        "RSS_FIELD_EN",
+        "RSS Enable"
+      ],
+      "bit_offset": 6,
+      "ref": "1 << 22"
+    },
+    {
+      "name": "MULTICAST_PROMISCUOUS_ENABLE",
+      "kind": "field_bit",
+      "register": "FCTRL",
+      "field": "MPE",
+      "ref": "1 << 8"
+    },
+    {
+      "name": "RDRXCTL_CRC_STRIP",
+      "kind": "field_bit",
+      "register": "RDRXCTL",
+      "field": "CRCStrip",
+      "alt": [
+        "CRC_Strip",
+        "CRC Strip"
+      ],
+      "ref": "1"
+    },
+    {
+      "name": "RDRXCTL_RSCFRSTSIZE",
+      "kind": "field_mask",
+      "register": "RDRXCTL",
+      "field": "RSCFRSTSIZE",
+      "ref": "0x1F << 17",
+      "comment": "5 bits software must clear"
+    },
+    {
+      "name": "RECEIVE_ENABLE",
+      "kind": "field_bit",
+      "register": "RXCTRL",
+      "field": "RXEN",
+      "ref": "1"
+    },
+    {
+      "name": "RETA_ENTRY_0_OFFSET",
+      "kind": "policy",
+      "value": "0",
+      "comment": "byte lane 0 of the 4 RETA entries per register",
+      "ref": "0"
+    },
+    {
+      "name": "RETA_ENTRY_1_OFFSET",
+      "kind": "policy",
+      "value": "8",
+      "comment": "byte lane 1",
+      "ref": "8"
+    },
+    {
+      "name": "RETA_ENTRY_2_OFFSET",
+      "kind": "policy",
+      "value": "16",
+      "comment": "byte lane 2",
+      "ref": "16"
+    },
+    {
+      "name": "RETA_ENTRY_3_OFFSET",
+      "kind": "policy",
+      "value": "24",
+      "comment": "byte lane 3",
+      "ref": "24"
+    },
+    {
+      "name": "RTTDCS_ARBDIS",
+      "kind": "field_bit",
+      "register": "RTTDCS",
+      "field": "ARBDIS",
+      "ref": "1 << 6"
+    },
+    {
+      "name": "RXCSUM_PCSD",
+      "kind": "field_bit",
+      "register": "RXCSUM",
+      "field": "PCSD",
+      "ref": "1 << 13"
+    },
+    {
+      "name": "RXPBSIZE_512KB",
+      "kind": "field_value",
+      "register": "RXPBSIZE",
+      "field": "SIZE",
+      "value": "0x200",
+      "ref": "0x200 << 10"
+    },
+    {
+      "name": "RX_DESC_DCA_ENABLE",
+      "kind": "field_bit",
+      "register": "DCA_RXCTRL",
+      "field": "RX Descriptor DCA EN",
+      "alt": [
+        "DESC_DCA_EN",
+        "Rx Descriptor DCA EN"
+      ],
+      "ref": "1 << 5"
+    },
+    {
+      "name": "RX_DESC_R_RELAX_ORDER_EN",
+      "kind": "field_bit",
+      "register": "DCA_RXCTRL",
+      "field": "Descriptor Read Relax Order Enable",
+      "alt": [
+        "RO_DESC_READ",
+        "Desc read RO EN"
+      ],
+      "ref": "1 << 9"
+    },
+    {
+      "name": "RX_HEADER_DCA_ENABLE",
+      "kind": "field_bit",
+      "register": "DCA_RXCTRL",
+      "field": "RX Header DCA EN",
+      "alt": [
+        "HEADER_DCA_EN",
+        "Rx Header DCA EN"
+      ],
+      "ref": "1 << 6"
+    },
+    {
+      "name": "RX_PAYLOAD_DCA_ENABLE",
+      "kind": "field_bit",
+      "register": "DCA_RXCTRL",
+      "field": "Rx Payload DCA EN",
+      "alt": [
+        "PAYLOAD_DCA_EN"
+      ],
+      "ref": "1 << 7"
+    },
+    {
+      "name": "RX_Q_ENABLE",
+      "kind": "field_bit",
+      "register": "RXDCTL",
+      "field": "ENABLE",
+      "ref": "1 << 25"
+    },
+    {
+      "name": "SPDQF_DEST_SHIFT",
+      "kind": "field_shift",
+      "register": "SDPQF",
+      "field": "Destination Port",
+      "alt": [
+        "DSTPORT",
+        "Dest Port"
+      ],
+      "ref": "16"
+    },
+    {
+      "name": "SPDQF_SOURCE_SHIFT",
+      "kind": "field_shift",
+      "register": "SDPQF",
+      "field": "Source Port",
+      "alt": [
+        "SRCPORT"
+      ],
+      "ref": "0"
+    },
+    {
+      "name": "STORE_BAD_PACKETS",
+      "kind": "field_bit",
+      "register": "FCTRL",
+      "field": "SBP",
+      "ref": "1 << 1"
+    },
+    {
+      "name": "SWSM_SMBI",
+      "kind": "field_bit",
+      "register": "SWSM",
+      "field": "SMBI",
+      "ref": "1 << 0"
+    },
+    {
+      "name": "SWSM_SWESMBI",
+      "kind": "field_bit",
+      "register": "SWSM",
+      "field": "SWESMBI",
+      "ref": "1 << 1"
+    },
+    {
+      "name": "SW_FW_SYNC_FW_MAC",
+      "kind": "field_bit_at",
+      "register": "SW_FW_SYNC",
+      "field": "SMBITS",
+      "ref": "1 << 8",
+      "bit_offset": 8,
+      "comment": "bit 8 of SMBITS = FW_MAC_CSR_SM (named in the field description)"
+    },
+    {
+      "name": "SW_FW_SYNC_SMBITS_FW",
+      "kind": "policy",
+      "value": "0x3E0",
+      "comment": "composite of the 5 FW semaphore bits (9:5)",
+      "ref": "0x3E0"
+    },
+    {
+      "name": "SW_FW_SYNC_SMBITS_MASK",
+      "kind": "field_mask",
+      "comment": "full SMBITS field mask",
+      "ref": "0x3FF",
+      "register": "SW_FW_SYNC",
+      "field": "SMBITS"
+    },
+    {
+      "name": "SW_FW_SYNC_SMBITS_SW",
+      "kind": "policy",
+      "value": "0x1F",
+      "comment": "composite of the 5 SW semaphore bits (4:0)",
+      "ref": "0x1F"
+    },
+    {
+      "name": "SW_FW_SYNC_SW_MAC",
+      "kind": "field_bit_at",
+      "register": "SW_FW_SYNC",
+      "field": "SMBITS",
+      "ref": "1 << 3",
+      "bit_offset": 3,
+      "comment": "bit 3 of SMBITS = SW_MAC_CSR_SM (named in the field description)"
+    },
+    {
+      "name": "TE",
+      "kind": "field_bit",
+      "register": "DMATXCTL",
+      "field": "TE",
+      "ref": "1"
+    },
+    {
+      "name": "TXDCTL_HTHRESH",
+      "kind": "field_value",
+      "register": "TXDCTL",
+      "field": "HTHRESH",
+      "value": "8",
+      "ref": "8 << 8"
+    },
+    {
+      "name": "TXDCTL_PTHRESH",
+      "kind": "field_value",
+      "register": "TXDCTL",
+      "field": "PTHRESH",
+      "value": "36",
+      "ref": "36"
+    },
+    {
+      "name": "TXDCTL_WTHRESH",
+      "kind": "field_value",
+      "register": "TXDCTL",
+      "field": "WTHRESH",
+      "value": "4",
+      "ref": "4 << 16"
+    },
+    {
+      "name": "TXPBSIZE_160KB",
+      "kind": "field_value",
+      "register": "TXPBSIZE",
+      "field": "SIZE",
+      "value": "0xA0",
+      "ref": "0xA0 << 10"
+    },
+    {
+      "name": "TX_Q_ENABLE",
+      "kind": "field_bit",
+      "register": "TXDCTL",
+      "field": "ENABLE",
+      "ref": "1 << 25"
+    },
+    {
+      "name": "UNICAST_PROMISCUOUS_ENABLE",
+      "kind": "field_bit",
+      "register": "FCTRL",
+      "field": "UPE",
+      "ref": "1 << 9"
+    }
+  ]
+}
