@@ -324,7 +324,7 @@ def _build_preconditions(constraint, peripheral: str) -> list["Precondition"]:
 # kind — or of a kind with no emitter yet — is SKIPPED with a warning, never
 # emitted. This is the single source of truth shared by the emitter
 # (``RegisterPlan``) and the driver (``inject_from_run.select_and_plan``).
-SUPPORTED_KINDS = frozenset({"state_gate"})
+SUPPORTED_KINDS = frozenset({"state_gate", "write_once"})
 
 
 def enabled_kinds(disabled=None) -> frozenset:
@@ -431,6 +431,11 @@ class RegisterPlan:
         self.field_gates: dict[str, FieldGate] = {}
         self._unsatisfiable: list[str] = []
         self._redundant_fields: list[str] = []
+        # write_once: ops gated by a reset-scoped CAPABILITY (minted at most once
+        # per reset by take(), consumed by write_witnessed) rather than a runtime
+        # check. The cap type is reused as the WriteGate::Witness.
+        self.write_once_ops: set[str] = set()
+        self.write_once_reset_scope: "str | None" = None
         # Kinds this plan will emit (all supported kinds minus any disabled).
         self._enabled_kinds = enabled_kinds(disabled_kinds)
         # Constraints skipped ONLY because field-level gating is off; they
@@ -509,7 +514,8 @@ class RegisterPlan:
                         "surface")
                     del self.field_gates[fname]
 
-        if not self.preconditions and not self.field_gates:
+        if not self.preconditions and not self.field_gates \
+                and not self.write_once_ops:
             if self._unsatisfiable:
                 raise UnsatisfiableGate(
                     f"{self.reg_name}: every gate dropped as unsatisfiable — "
@@ -637,6 +643,30 @@ class RegisterPlan:
             if doc and _norm_quote(doc) not in {_norm_quote(d) for d in fg.docs}:
                 fg.docs.append(doc)
 
+    def _emit_write_once(self, c, peripheral: str,
+                         field_level_gating: bool) -> None:
+        """Emit a whole-register write_once lock: gate the WRITE surface behind a
+        reset-scoped capability (minted once by `take_write_cap()`, consumed by
+        `write_witnessed`) and forbid `modify` (a lock register is written, not
+        read-modify-written). Field-scoped write_once (a lock BIT inside a shared
+        register) is out of scope — a whole-register write would clobber siblings."""
+        if c.target_fields:
+            print(
+                f"WARNING: {self.reg_name}: field-scoped write_once on "
+                f"{list(c.target_fields)} — whole-register write_once only; "
+                f"this constraint is NOT enforced.",
+                file=sys.stderr,
+            )
+            self._skipped_field_scoped += 1
+            return
+        self.write_once_ops.add("write")
+        self.write_once_reset_scope = c.reset_scope
+        self.forbidden_ops.add("modify")          # a lock register is not RMW'd
+        doc = c.datasheet_text.strip()
+        d = self.docs.setdefault("write", [])
+        if doc and _norm_quote(doc) not in {_norm_quote(x) for x in d}:
+            d.append(doc)
+
     def sources(self, op: str) -> list["SourceRegister"]:
         """Ordered unique cross-register sources for one operation."""
         return _unique_sources(self.preconditions[op])
@@ -663,6 +693,11 @@ class RegisterPlan:
                 del self.preconditions[op]
                 self.docs.pop(op, None)
                 removed.append(op)
+        # write_once gates the write surface; a non-writable target can't carry it.
+        if self.write_once_ops and not writable:
+            removed += sorted(self.write_once_ops)
+            self.write_once_ops.clear()
+            self.forbidden_ops.discard("modify")
         # Field gates set a field via the register's writer, and their same-
         # register preconditions read it: they need a writable (and, for such
         # preconditions, readable) register or the patched accessor / check
@@ -679,7 +714,7 @@ class RegisterPlan:
     def gated_ops(self) -> set[tuple[str, str, str]]:
         """Every operation whose marker must be withheld: those with a gate."""
         return {(self.peripheral, self.spec_type, op)
-                for op in set(self.preconditions)}
+                for op in (set(self.preconditions) | self.write_once_ops)}
 
     def witness_name(self, op: str) -> str:
         return f"{self.reg_name.capitalize()}{op.capitalize()}Witness"
@@ -772,6 +807,10 @@ def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
         fg = plan.field_gates[fname]
         a(f"/// State witness authorizing writes to the {fg.field} field of {reg}.")
         a(f"pub struct {fg.witness_name(reg)} {{ _priv: () }}")
+    for op in sorted(plan.write_once_ops):
+        a(f"/// Write-once capability for {reg}: minted at most once per reset by "
+          f"`take_{op}_cap()`, consumed by `{op}_witnessed`.")
+        a(f"pub struct {plan.witness_name(op)} {{ _priv: () }}")
     a("")
 
     # --- Error enum (register-scoped name: peripheral module may gain more) ---
@@ -780,20 +819,30 @@ def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
         _extend_unique(all_pres, plan.preconditions[op])
     for fname in sorted(plan.field_gates):
         _extend_unique(all_pres, plan.field_gates[fname].preconditions)
-    a("// === Error Type ===")
-    a("/// A precondition that was not satisfied at check time.")
-    a("#[derive(Debug, Clone, Copy, PartialEq, Eq)]")
-    a(f"pub enum {err} {{")
-    for p in all_pres:
-        a(f"    /// {p.describe()} was required")
-        a(f"    {p.error_variant()},")
-    a("}")
-    a("")
+    # Only emitted when something mints it via a check (preconditions / field
+    # gates). A write_once-only register has no check and no error path (its cap
+    # comes from a `take`), so an empty enum here would be unused — a hard error
+    # under svd2rust's `#![deny(dead_code)]`.
+    if all_pres:
+        a("// === Error Type ===")
+        a("/// A precondition that was not satisfied at check time.")
+        a("#[derive(Debug, Clone, Copy, PartialEq, Eq)]")
+        a(f"pub enum {err} {{")
+        for p in all_pres:
+            a(f"    /// {p.describe()} was required")
+            a(f"    {p.error_variant()},")
+        a("}")
+        a("")
 
     # --- Gate impls: the witness types ride on Write/Modify/ReadGate ---
     a("// === Gates ===")
     for op in sorted(plan.preconditions):
         gate = {"write": "WriteGate", "modify": "ModifyGate", "read": "ReadGate"}[op]
+        a(f"impl crate::{gate} for {spec} {{")
+        a(f"    type Witness = {plan.witness_name(op)};")
+        a("}")
+    for op in sorted(plan.write_once_ops):
+        gate = {"write": "WriteGate", "modify": "ModifyGate"}[op]
         a(f"impl crate::{gate} for {spec} {{")
         a(f"    type Witness = {plan.witness_name(op)};")
         a("}")
@@ -843,6 +892,34 @@ def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
         a("    #[inline(always)]")
         a(f"    pub fn check_{op}_ready(&self{src_params(op)}) -> Result<{w}, {err}> {{")
         emit_check_body(w, pres, srcs)
+        a("    }")
+        a("")
+
+    # write_once: mint the capability at most once per reset (a reset-zeroed
+    # AtomicBool — same scope as the hardware lock), consumed by `<op>_witnessed`.
+    for op in sorted(plan.write_once_ops):
+        w = plan.witness_name(op)
+        a(f"    /// Take the one-shot {reg} {op} capability (at most once per reset);")
+        a(f"    /// pass it to `{op}_witnessed`. Returns `None` if already taken.")
+        a("    ///")
+        a("    /// # Constraint")
+        for doc in plan.docs.get(op, []):
+            for line in doc_lines(doc):
+                a(line)
+        if plan.write_once_reset_scope == "power_cycle":
+            a("    ///")
+            a("    /// NOTE: reset_scope is `power_cycle` — after a warm/system reset this")
+            a("    /// cap becomes takeable again while the hardware lock may still hold;")
+            a("    /// the resulting write is ignored by hardware (benign).")
+        a("    #[inline(always)]")
+        a(f"    pub fn take_{op}_cap(&self) -> Option<{w}> {{")
+        a("        static TAKEN: core::sync::atomic::AtomicBool =")
+        a("            core::sync::atomic::AtomicBool::new(false);")
+        a("        if TAKEN.swap(true, core::sync::atomic::Ordering::Relaxed) {")
+        a("            None")
+        a("        } else {")
+        a(f"            Some({w} {{ _priv: () }})")
+        a("        }")
         a("    }")
         a("")
 
@@ -2570,7 +2647,7 @@ def prune_plans_for_device(device_dir: Path, plans: list[RegisterPlan],
             print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
                   f"{why} — precondition not expressible against the "
                   "generated field reader")
-        if plan.preconditions or plan.field_gates:
+        if plan.gated_ops() or plan.field_gates:
             kept.append(plan)
         else:
             print(f"  note: {plan.peripheral}/{plan.reg_name}: nothing left "

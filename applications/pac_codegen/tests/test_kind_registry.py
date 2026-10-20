@@ -44,9 +44,13 @@ def _reg(constraints):
 
 
 def test_enabled_kinds_default_and_disable():
-    assert rc.enabled_kinds() == rc.SUPPORTED_KINDS       # all supported ON
+    assert rc.enabled_kinds() == rc.SUPPORTED_KINDS            # all supported ON
     assert "state_gate" in rc.SUPPORTED_KINDS
-    assert rc.enabled_kinds({"state_gate"}) == frozenset()  # disable removes it
+    assert "write_once" in rc.SUPPORTED_KINDS
+    # disabling one supported kind removes exactly that one
+    assert rc.enabled_kinds({"state_gate"}) == rc.SUPPORTED_KINDS - {"state_gate"}
+    # disabling the whole supported set leaves nothing enabled
+    assert rc.enabled_kinds(rc.SUPPORTED_KINDS) == frozenset()
 
 
 def test_unsupported_kind_warns_and_keeps_supported(capsys):

@@ -59,6 +59,16 @@ pub extern "C" fn main() -> ! {
     // === Reading CR1 is unconstrained and needs no witness ===
     let _ = i2c1.cr1().read().pe().bit_is_set();
 
+    // === Write-once register: one-shot capability spent on a witnessed write ===
+    // `take_write_cap` returns the cap at most once per reset (None thereafter);
+    // the cap IS the WriteGate::Witness, so it is spent by `write_witnessed`.
+    let crc = &dp.CRC;
+    if let Some(cap) = crc.idr().take_write_cap() {
+        crc.idr().write_witnessed(|w| unsafe { w.bits(0) }, cap);
+    }
+    // Reading a write-once register is unconstrained.
+    let _ = crc.idr().read().bits();
+
     // === The sanctioned escape hatch is unsafe and greppable ===
     // SAFETY: compilation test; a real caller accepts responsibility for
     // violating the documented procedure (errata, bring-up, ...).

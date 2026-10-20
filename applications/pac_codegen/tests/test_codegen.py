@@ -66,6 +66,8 @@ FIXTURES = [
      CRATE_DIR / "spi1_txcrcr_expected_constraints.rs"),
     (CRATE_DIR / "stm32f405_rcc_sscgr.json", "rcc",
      CRATE_DIR / "rcc_sscgr_expected_constraints.rs"),
+    (CRATE_DIR / "stm32f405_crc_idr.json", "crc",
+     CRATE_DIR / "crc_idr_expected_constraints.rs"),
 ]
 
 # The generated stm32f4 PAC, provisioned from crates.io by get_pac.py.
@@ -367,6 +369,16 @@ ILLEGAL_PROGRAMS = [
         "witnessless_cross_register_write",
         "    dp.RCC.sscgr().write(|w| unsafe { w.bits(0) });",
         "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "write_once_raw_write",
+        "    dp.CRC.idr().write(|w| unsafe { w.bits(0) });",
+        "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "write_once_modify_forbidden",
+        "    dp.CRC.idr().modify(|_, w| unsafe { w.bits(0) });",
+        "E0277", "modify-constrained by its datasheet",
     ),
 ]
 

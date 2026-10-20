@@ -1,0 +1,25 @@
+{
+  "datasheet_register_abbreviation": "IDR",
+  "address_offset": "0x08",
+  "reset_value": "0x00",
+  "size": 8,
+  "subfields": [
+    {
+      "name": "IDR",
+      "description": "General-purpose 8-bit data register",
+      "access": "rw",
+      "bit_number": { "start_bit": 0, "end_bit": 7 }
+    }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "write_once",
+      "target_register": "IDR",
+      "target_fields": [],
+      "reset_scope": "system_reset",
+      "severity": "error",
+      "consequence": "After the first post-reset write the register latches; further writes are ignored until the next system reset.",
+      "datasheet_text": "IDR may be programmed only once after a system reset."
+    }
+  ]
+}
