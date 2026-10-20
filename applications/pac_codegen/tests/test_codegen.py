@@ -72,6 +72,8 @@ FIXTURES = [
      CRATE_DIR / "rtc_wpr_expected_constraints.rs"),
     (CRATE_DIR / "stm32f405_gpioa_lckr.json", "gpioa",
      CRATE_DIR / "gpioa_lckr_expected_constraints.rs"),
+    (CRATE_DIR / "stm32f405_crc_cr.json", "crc",
+     CRATE_DIR / "crc_cr_expected_constraints.rs"),
 ]
 
 # The generated stm32f4 PAC, provisioned from crates.io by get_pac.py.
@@ -394,6 +396,11 @@ ILLEGAL_PROGRAMS = [
         "    let _t = stm32f405::rtc::constraints::WprSeq0 { _priv: () };",
         "E0451", "",
     ),
+    (
+        "delay_raw_write_withheld",
+        "    dp.CRC.cr().write(|w| w.reset().set_bit());",
+        "E0277", "write-constrained by its datasheet",
+    ),
 ]
 
 
@@ -541,6 +548,13 @@ HAL_GENERIC_FILES = {"src/serial.rs", "src/serial/uart_impls.rs"}
 # produces against real HALs (it is exactly what step-2 reinjection triages).
 HAL_SEQ_ERRORS = 3
 HAL_SEQ_FILES = {"src/rtc.rs"}
+# GATED DELAY (fork C): the CRC_CR fixture gates the dependent write behind a
+# #[must_use] obligation (await_delay), so the raw write is withheld. The HAL's
+# CRC driver writes CRC_CR directly (its legitimate back-to-back reset path), so
+# this 1 firing is again a FALSE-POSITIVE CLASS — the PAC gates the ordering, it
+# cannot know the HAL already spaces the writes. Pinned as the delay-kind noise.
+HAL_DELAY_ERRORS = 1
+HAL_DELAY_FILES = {"src/crc32.rs"}
 
 
 def _hal_check_json(eval_dir: Path = None) -> list[dict]:
@@ -626,7 +640,7 @@ def test_hal_demo():
 
     assert errors, "injected PAC produced no errors in the HAL — gate inert?"
     unexpected = []
-    i2c = generic = seq = 0
+    i2c = generic = seq = delay = 0
     for e in errors:
         if e["code"] != "E0277" or "constrained by its datasheet" not in e["message"]:
             unexpected.append(f"non-witness error: {e['code']} {e['message'][:120]}")
@@ -638,6 +652,10 @@ def test_hal_demo():
             seq += 1
             if not e["hal_files"] <= HAL_SEQ_FILES:
                 unexpected.append(f"WPR sequence gate hit outside RTC: {e['hal_files']}")
+        elif "crc::cr::CRrs" in e["message"] or "CRrs" in e["message"]:
+            delay += 1
+            if not (e["hal_files"] and e["hal_files"] <= HAL_DELAY_FILES):
+                unexpected.append(f"CRC_CR delay gate hit outside CRC: {e['hal_files']}")
         elif e["hal_files"] and e["hal_files"] <= HAL_GENERIC_FILES:
             generic += 1
         else:
@@ -647,6 +665,8 @@ def test_hal_demo():
     assert i2c == HAL_I2C_ERRORS, f"expected {HAL_I2C_ERRORS} I2C hits, got {i2c}"
     assert seq == HAL_SEQ_ERRORS, (
         f"expected {HAL_SEQ_ERRORS} RTC_WPR sequence-gate hits, got {seq}")
+    assert delay == HAL_DELAY_ERRORS, (
+        f"expected {HAL_DELAY_ERRORS} CRC_CR delay-gate hits, got {delay}")
     assert generic == HAL_GENERIC_ERRORS, (
         f"expected {HAL_GENERIC_ERRORS} generic-serial errors, got {generic} — "
         "if the HAL or encoding changed, re-derive and update the inventory"

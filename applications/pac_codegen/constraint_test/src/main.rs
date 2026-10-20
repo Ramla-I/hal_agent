@@ -83,6 +83,12 @@ pub extern "C" fn main() -> ! {
     // advisory ⇒ the stock write is still available (no gate):
     lckr.write(|w| unsafe { w.bits(0) });
 
+    // === Delay ordering gate (CRC_CR): dependent write withheld, obligation only ===
+    // `await_delay()` mints the #[must_use] obligation; the caller owns the wait.
+    let cr = crc.cr();
+    let dw = cr.await_delay();
+    cr.write_witnessed(|w| w.reset().set_bit(), dw);
+
     // === The sanctioned escape hatch is unsafe and greppable ===
     // SAFETY: compilation test; a real caller accepts responsibility for
     // violating the documented procedure (errata, bring-up, ...).

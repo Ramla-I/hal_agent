@@ -324,7 +324,7 @@ def _build_preconditions(constraint, peripheral: str) -> list["Precondition"]:
 # kind — or of a kind with no emitter yet — is SKIPPED with a warning, never
 # emitted. This is the single source of truth shared by the emitter
 # (``RegisterPlan``) and the driver (``inject_from_run.select_and_plan``).
-SUPPORTED_KINDS = frozenset({"state_gate", "write_once", "sequence"})
+SUPPORTED_KINDS = frozenset({"state_gate", "write_once", "sequence", "delay"})
 
 
 def enabled_kinds(disabled=None) -> frozenset:
@@ -385,6 +385,26 @@ class FieldGatingDisabled(ValueError):
     "emitter_rejected" made a policy default read as a codegen gap -- and it
     is the single largest such bucket in the corpus.
     """
+
+
+_DELAY_UNIT = {"cycles_ahb": "AHB clock cycles", "cycles_apb": "APB clock cycles",
+               "us": "\u00b5s", "ms": "ms"}
+
+
+class DelayGate:
+    """A `before`-naming delay reduced to an ORDERING gate: the dependent write
+    is withheld and reachable only with a `#[must_use]` obligation witness
+    minted by `await_delay()`. The PAC gates the ordering (an acknowledged wait
+    sits between the trigger and the dependent write); it canNOT enforce the
+    DURATION — a wall-clock quantity with no clock knowledge, owned by the HAL,
+    exactly as for clock_gate. The witness is an obligation, not a proof."""
+
+    __slots__ = ("duration_txt", "after_desc", "docs")
+
+    def __init__(self, duration_txt, after_desc, docs):
+        self.duration_txt = duration_txt
+        self.after_desc = after_desc
+        self.docs = docs
 
 
 class SeqChain:
@@ -458,6 +478,10 @@ class RegisterPlan:
         # all-None chain is a data port and stays advisory (raw write open).
         self.sequence_chains: list = []
         self._skipped_cross_register_seq = 0
+        # delay: at most one `before`-naming delay reduced to an ordering gate
+        # (dependent write withheld, obligation witness minted by await_delay).
+        self.delay_gate = None
+        self._skipped_delay = 0
         # Kinds this plan will emit (all supported kinds minus any disabled).
         self._enabled_kinds = enabled_kinds(disabled_kinds)
         # Constraints skipped ONLY because field-level gating is off; they
@@ -538,7 +562,7 @@ class RegisterPlan:
 
         if not self.preconditions and not self.field_gates \
                 and not self.write_once_ops \
-                and not self.sequence_chains:
+                and not self.sequence_chains and not self.delay_gate:
             if self._unsatisfiable:
                 raise UnsatisfiableGate(
                     f"{self.reg_name}: every gate dropped as unsatisfiable — "
@@ -733,6 +757,58 @@ class RegisterPlan:
             # path. Step methods write via `write_unwitnessed` internally.
             self.forbidden_ops.add("write")
 
+    def _same_as_target(self, regname: str) -> bool:
+        if not regname:
+            return False
+        r, t = regname.upper(), self.reg_name.upper()
+        return r == t or r.endswith("_" + t) or r.split("_")[-1] == t
+
+    def _emit_delay(self, c, peripheral: str,
+                    field_level_gating: bool) -> None:
+        """Emit a `before`-naming delay as an ORDERING gate: withhold the
+        dependent WRITE of this register and mint a `#[must_use]` obligation
+        witness via `await_delay()`, consumed by `write_witnessed`. The PAC
+        gates only the ordering — the DURATION is a wall-clock quantity it
+        cannot perform or verify (HAL-owned, same split as clock_gate), so the
+        witness is an OBLIGATION, not proof the wait elapsed. Delays with no
+        named `before`, or whose dependent access is in another register, are
+        advisory only (the PAC cannot site the gate) — skipped with a warning.
+        `before`'s operation is not in the grammar (FieldRef carries no op), so
+        the WRITE surface is gated; the datasheet text records the real op."""
+        before = c.before
+        reason = None
+        if before is None:
+            reason = ("no `before` dependent access is named — the duration is "
+                      "a wall-clock quantity the PAC cannot verify")
+        elif not self._same_as_target(before.register):
+            reason = (f"dependent access is in another register "
+                      f"({before.register}) — cross-register delay ordering is "
+                      f"deferred")
+        if reason is None and ("write" in self.preconditions
+                               or self.write_once_ops or self.delay_gate):
+            reason = ("this register's write is already gated by another "
+                      "constraint — the delay is not additionally gated")
+        if reason is not None:
+            print(
+                f"WARNING: {self.reg_name}: delay not gated — {reason}; this "
+                f"constraint is NOT enforced (advisory).",
+                file=sys.stderr,
+            )
+            self._skipped_delay += 1
+            return
+        dur = c.duration
+        dur_txt = f"{dur.value} {_DELAY_UNIT.get(dur.unit, dur.unit)}"
+        aft = c.after
+        afd = (aft.register or "").strip()
+        aff = getattr(aft, "field", None)
+        if aff:
+            afd = f"{afd}.{aff}"
+        afop = (getattr(aft, "operation", None) or "write")
+        after_desc = f"{afop} of {afd}"
+        doc = (c.datasheet_text or "").strip()
+        self.delay_gate = DelayGate(dur_txt, after_desc, [doc] if doc else [])
+        self.forbidden_ops.add("write")
+
     def sources(self, op: str) -> list["SourceRegister"]:
         """Ordered unique cross-register sources for one operation."""
         return _unique_sources(self.preconditions[op])
@@ -768,6 +844,12 @@ class RegisterPlan:
         if self.sequence_chains and not writable:
             removed.append("sequence")
             self.sequence_chains.clear()
+            self.forbidden_ops.discard("write")
+        # a delay gate withholds the dependent write; a non-writable target
+        # can't carry it.
+        if self.delay_gate and not writable:
+            removed.append("delay")
+            self.delay_gate = None
             self.forbidden_ops.discard("write")
         # Field gates set a field via the register's writer, and their same-
         # register preconditions read it: they need a writable (and, for such
@@ -890,6 +972,19 @@ def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
             a(f"/// Sequence token: step {k + 1} of {n_s} of the {reg} write "
               f"sequence ({role}).")
             a(f"pub struct {reg.capitalize()}Seq{k} {{ _priv: () }}")
+    if plan.delay_gate:
+        dg = plan.delay_gate
+        a(f"/// Delay OBLIGATION for writing {reg} — minted by `await_delay()`, "
+          f"consumed by `write_witnessed`.")
+        a(f"///")
+        a(f"/// Holding it is NOT proof the delay elapsed: after the {dg.after_desc} "
+          f"the caller")
+        a(f"/// MUST wait at least {dg.duration_txt} before this write; the HAL "
+          f"performs that wait.")
+        a(f'#[must_use = "a delay obligation: you must wait at least '
+          f'{dg.duration_txt} after the {dg.after_desc} before writing {reg} — '
+          f'the HAL owns the wait"]')
+        a(f"pub struct {reg.capitalize()}DelayWitness {{ _priv: () }}")
     a("")
 
     # --- Error enum (register-scoped name: peripheral module may gain more) ---
@@ -924,6 +1019,10 @@ def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
         gate = {"write": "WriteGate", "modify": "ModifyGate"}[op]
         a(f"impl crate::{gate} for {spec} {{")
         a(f"    type Witness = {plan.witness_name(op)};")
+        a("}")
+    if plan.delay_gate:
+        a(f"impl crate::WriteGate for {spec} {{")
+        a(f"    type Witness = {reg.capitalize()}DelayWitness;")
         a("}")
     a("")
 
@@ -1118,6 +1217,34 @@ def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
             a(f"        {tok} {{ _priv: () }}")
             a("    }")
             a("")
+
+    # --- Delay: mint the obligation witness that the (withheld) dependent
+    # write requires. The PAC gates ordering only; the WAIT is the HAL's.
+    if plan.delay_gate:
+        dg = plan.delay_gate
+        w = f"{reg.capitalize()}DelayWitness"
+        a(f"    /// Acknowledge the post-`{dg.after_desc}` delay and obtain the "
+          f"obligation")
+        a(f"    /// witness required to write {reg} (its raw `write` is withheld).")
+        a("    ///")
+        a("    /// # OBLIGATION (not proof)")
+        a(f"    /// This does NOT verify the wait. After the {dg.after_desc} you "
+          f"MUST wait at")
+        a(f"    /// least {dg.duration_txt} before calling `write_witnessed`; "
+          f"performing that")
+        a("    /// wait is the HAL's responsibility. The PAC gates only the "
+          "ORDERING.")
+        for d in dg.docs:
+            a("    ///")
+            a("    /// # Constraint")
+            for line in doc_lines(d):
+                a(line)
+        a("    #[inline(always)]")
+        a("    #[must_use]")
+        a(f"    pub fn await_delay(&self) -> {w} {{")
+        a(f"        {w} {{ _priv: () }}")
+        a("    }")
+        a("")
     a("}")
     return "\n".join(lines) + "\n"
 
