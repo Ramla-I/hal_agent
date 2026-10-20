@@ -88,8 +88,11 @@ $VENV build_constraints_list.py               # regenerate reports/constraints_f
   `sha256 = 76079e0386750719331094601404ece71a9bc48baf6886fe576e8f20c83ad655`.
 - Eval: clone `theseus-os/Theseus` @ `1fbfe567` (see `reference/COMMIT.txt`),
   swap the generated `regs.rs` into `kernel/ixgbe/src/`, `cargo check -p ixgbe`.
-- The canonical generation runs are r003–r006 (gitignored); `reports/` holds
-  the committed results.
+- The canonical generation runs are r003–r006 (live copies gitignored); the
+  final run is frozen in **`pipeline/archive/r006.zip`** (the raw results behind
+  the paper). Unpack it to regenerate the committed artifacts offline without an
+  API run — see `pipeline/archive/README.md`. `reports/` holds the committed
+  results.
 
 ## Status: done — see the reports
 
