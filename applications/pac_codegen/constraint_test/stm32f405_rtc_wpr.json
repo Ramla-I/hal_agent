@@ -1,0 +1,25 @@
+{
+  "datasheet_register_abbreviation": "WPR",
+  "address_offset": "0x24",
+  "reset_value": "0x00",
+  "size": 32,
+  "subfields": [
+    { "name": "KEY", "description": "Write protection key", "access": "w",
+      "bit_number": { "start_bit": 0, "end_bit": 7 } }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "target_register": "WPR",
+      "target_fields": [],
+      "target_operation": "write",
+      "steps": [
+        { "register": "WPR", "operation": "write", "value": 202 },
+        { "register": "WPR", "operation": "write", "value": 83 }
+      ],
+      "severity": "error",
+      "consequence": "Writing any value other than the 0xCA, 0x53 key pair, or out of order, leaves the RTC registers write-protected.",
+      "datasheet_text": "The RTC registers are write-protected. Writing 0xCA then 0x53 to the WPR key register unlocks them; any other value re-enables the protection."
+    }
+  ]
+}

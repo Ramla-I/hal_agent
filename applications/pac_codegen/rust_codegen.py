@@ -324,7 +324,7 @@ def _build_preconditions(constraint, peripheral: str) -> list["Precondition"]:
 # kind — or of a kind with no emitter yet — is SKIPPED with a warning, never
 # emitted. This is the single source of truth shared by the emitter
 # (``RegisterPlan``) and the driver (``inject_from_run.select_and_plan``).
-SUPPORTED_KINDS = frozenset({"state_gate", "write_once"})
+SUPPORTED_KINDS = frozenset({"state_gate", "write_once", "sequence"})
 
 
 def enabled_kinds(disabled=None) -> frozenset:
@@ -387,6 +387,22 @@ class FieldGatingDisabled(ValueError):
     """
 
 
+class SeqChain:
+    """One linear write sequence on a SINGLE register. ``steps[k]`` is the
+    baked value for step k (``None`` → the caller supplies it). ``gated`` is
+    True when at least one step writes a fixed constant — the magic-value
+    heuristic's marker of a handshake register, whose raw ``write`` is withheld
+    so the ordered chain is the only path. An all-``None`` chain is a data port
+    and stays advisory (raw write open; the chain emitted only as a helper)."""
+
+    __slots__ = ("steps", "gated", "docs")
+
+    def __init__(self, steps, gated, docs):
+        self.steps = steps
+        self.gated = gated
+        self.docs = docs
+
+
 class RegisterPlan:
     """Everything the emitter needs for one constrained register."""
 
@@ -436,6 +452,12 @@ class RegisterPlan:
         # check. The cap type is reused as the WriteGate::Witness.
         self.write_once_ops: set[str] = set()
         self.write_once_reset_scope: "str | None" = None
+        # sequence: ordered single-register write chains (step k requires the
+        # step-(k-1) token). A chain with any fixed-constant step value is a
+        # handshake register (raw write withheld via forbidden_ops); an
+        # all-None chain is a data port and stays advisory (raw write open).
+        self.sequence_chains: list = []
+        self._skipped_cross_register_seq = 0
         # Kinds this plan will emit (all supported kinds minus any disabled).
         self._enabled_kinds = enabled_kinds(disabled_kinds)
         # Constraints skipped ONLY because field-level gating is off; they
@@ -515,7 +537,8 @@ class RegisterPlan:
                     del self.field_gates[fname]
 
         if not self.preconditions and not self.field_gates \
-                and not self.write_once_ops:
+                and not self.write_once_ops \
+                and not self.sequence_chains:
             if self._unsatisfiable:
                 raise UnsatisfiableGate(
                     f"{self.reg_name}: every gate dropped as unsatisfiable — "
@@ -667,6 +690,49 @@ class RegisterPlan:
         if doc and _norm_quote(doc) not in {_norm_quote(x) for x in d}:
             d.append(doc)
 
+    def _emit_sequence(self, c, peripheral: str,
+                       field_level_gating: bool) -> None:
+        """Emit a linear write-sequence chain on a single register: step k is a
+        `seq_step_{k}(prev_token) -> token_k` that performs its write and hands
+        the next token forward, so the ordered chain is the only producer of the
+        final token. The magic-value heuristic scopes enforcement: if ANY step
+        writes a fixed CONSTANT (a handshake register — RTC_WPR 0xCA/0x53, key
+        registers), the raw `write` is WITHHELD (forbidden) so the chain is the
+        only path; an all-`None` chain writes a data port and stays ADVISORY
+        (raw write open, the chain emitted only as a correct-ordering helper).
+        Cross-register and extra same-register sequences are deferred
+        (skipped with a warning)."""
+        steps = list(c.steps or [])
+        if len(steps) < 2:
+            return
+        step_regs = {s.register for s in steps if s.register}
+        if len(step_regs) > 1:
+            print(
+                f"WARNING: {self.reg_name}: sequence spans {sorted(step_regs)} "
+                f"— cross-register sequence chains are deferred; this "
+                f"constraint is NOT enforced.",
+                file=sys.stderr,
+            )
+            self._skipped_cross_register_seq += 1
+            return
+        if self.sequence_chains:
+            print(
+                f"WARNING: {self.reg_name}: more than one sequence on this "
+                f"register — only the first is emitted; this one is NOT "
+                f"enforced.",
+                file=sys.stderr,
+            )
+            return
+        values = [s.value for s in steps]
+        gated = any(v is not None for v in values)
+        doc = (c.datasheet_text or "").strip()
+        self.sequence_chains.append(
+            SeqChain(steps=values, gated=gated, docs=[doc] if doc else []))
+        if gated:
+            # Handshake register: withhold raw write so the chain is the only
+            # path. Step methods write via `write_unwitnessed` internally.
+            self.forbidden_ops.add("write")
+
     def sources(self, op: str) -> list["SourceRegister"]:
         """Ordered unique cross-register sources for one operation."""
         return _unique_sources(self.preconditions[op])
@@ -698,6 +764,11 @@ class RegisterPlan:
             removed += sorted(self.write_once_ops)
             self.write_once_ops.clear()
             self.forbidden_ops.discard("modify")
+        # a sequence is a chain of writes; a non-writable target can't carry it.
+        if self.sequence_chains and not writable:
+            removed.append("sequence")
+            self.sequence_chains.clear()
+            self.forbidden_ops.discard("write")
         # Field gates set a field via the register's writer, and their same-
         # register preconditions read it: they need a writable (and, for such
         # preconditions, readable) register or the patched accessor / check
@@ -811,6 +882,14 @@ def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
         a(f"/// Write-once capability for {reg}: minted at most once per reset by "
           f"`take_{op}_cap()`, consumed by `{op}_witnessed`.")
         a(f"pub struct {plan.witness_name(op)} {{ _priv: () }}")
+    for chain in plan.sequence_chains:
+        n_s = len(chain.steps)
+        role = ("handshake — raw write withheld" if chain.gated
+                else "advisory ordering helper")
+        for k in range(n_s):
+            a(f"/// Sequence token: step {k + 1} of {n_s} of the {reg} write "
+              f"sequence ({role}).")
+            a(f"pub struct {reg.capitalize()}Seq{k} {{ _priv: () }}")
     a("")
 
     # --- Error enum (register-scoped name: peripheral module may gain more) ---
@@ -992,6 +1071,53 @@ def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
         emit_check_body(w, pres, srcs)
         a("    }")
         a("")
+
+    # --- Sequence chains: step k performs its write and yields the step-k
+    # token, which step k+1 consumes. For a gated (handshake) chain the raw
+    # write is withheld, so each step writes via `write_unwitnessed`; for an
+    # advisory chain the raw write stays open and the step uses stock `write`.
+    for chain in plan.sequence_chains:
+        n_s = len(chain.steps)
+        for k, val in enumerate(chain.steps):
+            tok = f"{reg.capitalize()}Seq{k}"
+            params = ""
+            if k > 0:
+                params += f", _prev: {reg.capitalize()}Seq{k - 1}"
+            if val is None:
+                params += f", value: {ux}"
+            valexpr = f"0x{val:x}" if val is not None else "value"
+            a(f"    /// Sequence step {k + 1} of {n_s} for {reg}"
+              + (f" (writes {hex(val)})." if val is not None
+                 else " (caller supplies the value)."))
+            if k == 0:
+                a("    ///")
+                if chain.gated:
+                    a("    /// The raw `write` of this register is withheld; this "
+                      "ordered chain is")
+                    a("    /// the only safe path. Each step consumes the previous "
+                      "step's token.")
+                else:
+                    a("    /// Advisory: the raw `write` stays available — this "
+                      "helper only")
+                    a("    /// documents and eases the required order (each step "
+                      "consumes the previous token).")
+                for d in chain.docs:
+                    a("    ///")
+                    a("    /// # Constraint")
+                    for line in doc_lines(d):
+                        a(line)
+            a("    #[inline(always)]")
+            a(f"    pub fn seq_step_{k}(&self{params}) -> {tok} {{")
+            if chain.gated:
+                a("        // SAFETY: sanctioned sequence step; the token chain "
+                  "enforces order.")
+                a(f"        unsafe {{ self.write_unwitnessed(|w| unsafe {{ "
+                  f"w.bits({valexpr}) }}); }}")
+            else:
+                a(f"        self.write(|w| unsafe {{ w.bits({valexpr}) }});")
+            a(f"        {tok} {{ _priv: () }}")
+            a("    }")
+            a("")
     a("}")
     return "\n".join(lines) + "\n"
 
@@ -2647,7 +2773,7 @@ def prune_plans_for_device(device_dir: Path, plans: list[RegisterPlan],
             print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
                   f"{why} — precondition not expressible against the "
                   "generated field reader")
-        if plan.gated_ops() or plan.field_gates:
+        if plan.gated_ops() or plan.field_gates or plan.sequence_chains:
             kept.append(plan)
         else:
             print(f"  note: {plan.peripheral}/{plan.reg_name}: nothing left "

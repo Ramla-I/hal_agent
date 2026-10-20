@@ -1,0 +1,26 @@
+{
+  "datasheet_register_abbreviation": "LCKR",
+  "address_offset": "0x1C",
+  "reset_value": "0x00",
+  "size": 32,
+  "subfields": [
+    { "name": "LCKK", "description": "Lock key", "access": "rw",
+      "bit_number": { "start_bit": 16, "end_bit": 16 } }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "sequence",
+      "target_register": "LCKR",
+      "target_fields": [],
+      "target_operation": "write",
+      "steps": [
+        { "register": "LCKR", "operation": "write", "value": null },
+        { "register": "LCKR", "operation": "write", "value": null },
+        { "register": "LCKR", "operation": "write", "value": null }
+      ],
+      "severity": "error",
+      "consequence": "An incorrect lock sequence leaves the GPIO configuration unlocked.",
+      "datasheet_text": "LOCK key write sequence: write LCKK=1 with the port bits, then LCKK=0 with the same bits, then LCKK=1 again; the value of LCKR[15:0] must not change during the sequence."
+    }
+  ]
+}

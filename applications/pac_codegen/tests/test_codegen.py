@@ -68,6 +68,10 @@ FIXTURES = [
      CRATE_DIR / "rcc_sscgr_expected_constraints.rs"),
     (CRATE_DIR / "stm32f405_crc_idr.json", "crc",
      CRATE_DIR / "crc_idr_expected_constraints.rs"),
+    (CRATE_DIR / "stm32f405_rtc_wpr.json", "rtc",
+     CRATE_DIR / "rtc_wpr_expected_constraints.rs"),
+    (CRATE_DIR / "stm32f405_gpioa_lckr.json", "gpioa",
+     CRATE_DIR / "gpioa_lckr_expected_constraints.rs"),
 ]
 
 # The generated stm32f4 PAC, provisioned from crates.io by get_pac.py.
@@ -380,6 +384,16 @@ ILLEGAL_PROGRAMS = [
         "    dp.CRC.idr().modify(|_, w| unsafe { w.bits(0) });",
         "E0277", "modify-constrained by its datasheet",
     ),
+    (
+        "sequence_raw_write_withheld",
+        "    dp.RTC.wpr().write(|w| unsafe { w.bits(0xca) });",
+        "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "sequence_token_unforgeable",
+        "    let _t = stm32f405::rtc::constraints::WprSeq0 { _priv: () };",
+        "E0451", "",
+    ),
 ]
 
 
@@ -517,6 +531,16 @@ HAL_I2C_FILES = {"src/i2c.rs", "src/i2c/dma.rs"}
 # trait-generic driver code — mechanical one-line bounds in one module.
 HAL_GENERIC_ERRORS = 14
 HAL_GENERIC_FILES = {"src/serial.rs", "src/serial/uart_impls.rs"}
+# GATED SEQUENCE (fork B, magic-value heuristic): the RTC_WPR fixture is a
+# handshake register (keys 0xCA/0x53), so its raw `write` is withheld and the
+# only path is the generated `seq_step_*` chain. stm32f4xx-hal unlocks the RTC
+# by writing WPR raw (the CORRECT keys, in order) — so these 3 firings are a
+# FALSE-POSITIVE CLASS, not bugs: the gate cannot tell a correct raw key
+# sequence from a wrong one, it only forbids raw writes to the handshake
+# register. Pinned here precisely because this is the noise the sequence kind
+# produces against real HALs (it is exactly what step-2 reinjection triages).
+HAL_SEQ_ERRORS = 3
+HAL_SEQ_FILES = {"src/rtc.rs"}
 
 
 def _hal_check_json(eval_dir: Path = None) -> list[dict]:
@@ -602,7 +626,7 @@ def test_hal_demo():
 
     assert errors, "injected PAC produced no errors in the HAL — gate inert?"
     unexpected = []
-    i2c = generic = 0
+    i2c = generic = seq = 0
     for e in errors:
         if e["code"] != "E0277" or "constrained by its datasheet" not in e["message"]:
             unexpected.append(f"non-witness error: {e['code']} {e['message'][:120]}")
@@ -610,6 +634,10 @@ def test_hal_demo():
             i2c += 1
             if not e["hal_files"] <= HAL_I2C_FILES:
                 unexpected.append(f"CR1 constraint hit outside I2C: {e['hal_files']}")
+        elif "WPRrs" in e["message"]:
+            seq += 1
+            if not e["hal_files"] <= HAL_SEQ_FILES:
+                unexpected.append(f"WPR sequence gate hit outside RTC: {e['hal_files']}")
         elif e["hal_files"] and e["hal_files"] <= HAL_GENERIC_FILES:
             generic += 1
         else:
@@ -617,6 +645,8 @@ def test_hal_demo():
                               f"{e['message'][:120]}")
     assert not unexpected, "\n".join(unexpected)
     assert i2c == HAL_I2C_ERRORS, f"expected {HAL_I2C_ERRORS} I2C hits, got {i2c}"
+    assert seq == HAL_SEQ_ERRORS, (
+        f"expected {HAL_SEQ_ERRORS} RTC_WPR sequence-gate hits, got {seq}")
     assert generic == HAL_GENERIC_ERRORS, (
         f"expected {HAL_GENERIC_ERRORS} generic-serial errors, got {generic} — "
         "if the HAL or encoding changed, re-derive and update the inventory"

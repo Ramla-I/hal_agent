@@ -69,6 +69,20 @@ pub extern "C" fn main() -> ! {
     // Reading a write-once register is unconstrained.
     let _ = crc.idr().read().bits();
 
+    // === Gated sequence (RTC_WPR handshake): raw write withheld, chain only ===
+    // Each step hands the next its token; the ordered chain is the sole path.
+    let wpr = dp.RTC.wpr();
+    let t0 = wpr.seq_step_0();
+    let _t1 = wpr.seq_step_1(t0);
+
+    // === Advisory sequence (GPIO LCKR): chain is a helper; raw write stays open ===
+    let lckr = dp.GPIOA.lckr();
+    let a0 = lckr.seq_step_0(0x1_0000);
+    let a1 = lckr.seq_step_1(a0, 0x0);
+    let _a2 = lckr.seq_step_2(a1, 0x1_0000);
+    // advisory ⇒ the stock write is still available (no gate):
+    lckr.write(|w| unsafe { w.bits(0) });
+
     // === The sanctioned escape hatch is unsafe and greppable ===
     // SAFETY: compilation test; a real caller accepts responsibility for
     // violating the documented procedure (errata, bring-up, ...).
