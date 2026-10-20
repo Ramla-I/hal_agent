@@ -324,6 +324,55 @@ PR 15 itself: **closed unmerged — nothing lands from the branch** (settled 202
 
 ---
 
+## 13. Future (proposal): advisory warnings for the documentation-only kinds
+
+`value_relation` and `read_effect` are `doc_only` today — they emit **nothing**.
+Neither can be *soundly* compile-gated: a value relation is a runtime/external
+fact (the other side is often a clock frequency the register can't see), and a
+read side-effect is a *consequence*, not an access restriction — a hard `E0277`
+on them would be false positives everywhere and block legitimate use. The right
+strength is a **warning that carries the datasheet note to the point of use**,
+not a gate. This is the same `severity: "warning" → #[deprecated]` advisory
+channel §3.1 already defines, extended to these two kinds. No new enforceability
+class (they stay `doc_only` in the metric); this is a *documentation surface*,
+not enforcement.
+
+Two emission channels, picked by what the item is — constrained by the E0592
+lesson in §12 (a per-register `#[deprecated]` on the **generic** `read`/`write`
+is impossible; only concrete per-register accessors and the register's own doc
+are annotatable):
+
+- **`value_relation` → active `#[deprecated(note=…)]` on the involved fields'
+  writer accessors.** The related `fields` are named and their setters
+  (`w.freq()`, `w.bidimode()`) are concrete per-register methods — exactly the
+  surface field-level gating already annotates — so each write site of a
+  participating field raises a `deprecated` warning carrying the relation prose
+  (*"CR2.FREQ must equal the APB1 frequency in MHz"*). A genuine compile warning,
+  reusing `patch_field_accessors`' advisory path. Caveat (already documented for
+  the field advisory): downstream needs `RUSTFLAGS="--force-warn deprecated"`
+  because cargo builds registry deps with `--cap-lints allow`.
+
+- **`read_effect` → passive caveat on the register's type-alias doc** (the same
+  `///`-on-the-type channel §12 uses for the write bypass). The side effect fires
+  at the whole-register `read()`, which is the *generic* method — not per-register
+  annotatable (E0592) — so the honest channel is a rustdoc/IDE-hover note on the
+  register (*"reading this register clears RXNE"*), surfaced right where a
+  developer looks up how to read it. Where the datasheet ties the effect to one
+  readable field, optionally also `#[deprecated]` that field's reader
+  (`r.field()`), accepting field granularity.
+
+`other` can ride the same type-alias-doc channel (its `description` as a `///`
+note) if we want its prose visible in-crate, but it stays prose-only.
+
+**Unification:** all of this is one "advisory" emitter — `#[deprecated]` on a
+concrete accessor where one exists, else a `///` caveat on the register
+type-alias doc — shared by `severity="warning"` state gates, the field-level
+advisory, the chiptool/metapac advisory, and (per this proposal) `value_relation`
++ `read_effect`. **Not scheduled** — recorded so the doc-only kinds have a planned
+documentation surface; gated behind a flag like field-level gating when built.
+
+---
+
 
 
 ## Appendix A — Shadowing vs trait-bound gating: mechanics and patch shapes

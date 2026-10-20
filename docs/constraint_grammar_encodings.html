@@ -223,7 +223,9 @@ i2c.mstctl.write_when_ready(|w| …, &amp;stat)?;  <span class="cm">// checks MS
   new combined method plus <strong>sealing the individual field writers</strong> (where <code>#[private_fields]</code>/<code>#[nomutates]</code>
   from §05 earn their keep). That is HAL/wrapper-level design, not the PAC-level gating our emitter rides on existing methods, and
   synthesizing the setter needs the semantic relation (and often its inverse) — which the grammar deliberately keeps as prose in
-  <code>datasheet_text</code>. So a HAL author can encode it; the mechanical injector leaves it documented.</p>
+  <code>datasheet_text</code>. So a HAL author can encode it; the mechanical injector leaves it documented. <strong>Middle ground the
+  injector CAN emit:</strong> an advisory <code>#[deprecated(note=…)]</code> warning on the involved field writers — document-at-use-site
+  without owning a setter (proposed, plan §13).</p>
 </div>
 
 <div class="enc">
@@ -231,7 +233,9 @@ i2c.mstctl.write_when_ready(|w| …, &amp;stat)?;  <span class="cm">// checks MS
   <p style="margin:.3rem 0 0;font-size:.9rem"><code>read_effect</code> is load-bearing <em>metadata</em>: it tells codegen when a
   checking read would itself perturb state (the self-defeating same-register read-gate) and feeds the validator — it is a
   <em>consequence</em>, not an access restriction, so there is nothing to gate. <code>other</code> has no structure to compile and
-  exists to measure coverage (see §04).</p>
+  exists to measure coverage (see §04). <strong>Proposed advisory surface (plan §13):</strong> <code>read_effect</code> can carry a
+  <code>///</code> caveat on the register's type-alias doc (the whole-register <code>read</code> is generic, so it can't be
+  per-register <code>#[deprecated]</code>'d — the E0592 limit) so "reading this clears RXNE" shows in rustdoc/IDE hover.</p>
 </div>
 
 <h2><span class="n">04</span>Coverage — what's excluded, and the gaps</h2>

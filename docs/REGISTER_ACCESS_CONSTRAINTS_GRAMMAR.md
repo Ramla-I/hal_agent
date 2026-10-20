@@ -244,7 +244,9 @@ class ReadEffect(ConstraintBase):
 Examples: `rm0386/1/dsi_isr1` (*"always cleared after a read"* — misextracted
 in v1 as 14 postconditions); USART_DR read clears RXNE.
 
-**Enforcement:** `doc_only` — reads cannot usefully be forbidden, but this
+**Enforcement:** `doc_only` (a future advisory-warning surface — a `///` caveat
+on the register's type-alias doc — is proposed in `register_constraints_plan.md`
+§13) — reads cannot usefully be forbidden, but this
 metadata (a) feeds the Constraint Validator, (b) tells codegen when a checking
 read would itself perturb state (the self-defeating same-register read-gate
 case, rejected at codegen), and (c) where a real ordering obligation exists,
@@ -281,7 +283,9 @@ class ValueRelation(ConstraintBase):
 ```
 
 Examples: *"CR2.FREQ must equal the APB1 frequency in MHz"*; *"keep RXONLY
-clear while BIDIMODE is set"* (`rm0454/1/spi1_cr1`). Always `doc_only`.
+clear while BIDIMODE is set"* (`rm0454/1/spi1_cr1`). Always `doc_only` for the
+metric; a future advisory-warning surface (`#[deprecated]` on the involved field
+writers) is proposed in `register_constraints_plan.md` §13.
 
 ### `other` — escape valve and discovery queue
 
