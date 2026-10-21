@@ -54,6 +54,20 @@ def test_enabled_kinds_default_and_disable():
     assert rc.enabled_kinds(rc.SUPPORTED_KINDS) == frozenset()
 
 
+def test_enabled_kinds_only_allowlist():
+    # `only` restricts to the named supported kinds
+    assert rc.enabled_kinds(only={"sequence"}) == frozenset({"sequence"})
+    assert rc.enabled_kinds(only={"sequence", "delay"}) == frozenset({"sequence", "delay"})
+    # only + disabled compose: disabled subtracts from the allowlist
+    assert rc.enabled_kinds(only={"sequence", "delay"}, disabled={"delay"}) \
+        == frozenset({"sequence"})
+    # an unsupported / doc-only kind in `only` contributes nothing (no emitter)
+    assert rc.enabled_kinds(only={"clock_gate"}) == frozenset()
+    assert rc.enabled_kinds(only={"sequence", "clock_gate"}) == frozenset({"sequence"})
+    # empty allowlist => nothing (explicit "none")
+    assert rc.enabled_kinds(only=set()) == frozenset()
+
+
 def test_unsupported_kind_warns_and_keeps_supported(capsys):
     # a register carrying a state_gate AND a not-yet-emitted `other`
     plan = rc.RegisterPlan(_reg([_state_gate(), _other()]), "i2c1")

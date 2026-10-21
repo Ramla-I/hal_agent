@@ -390,7 +390,28 @@ def main() -> None:
                     help="disable codegen for a grammar-v2 kind (repeatable); "
                          "its constraints are skipped and reported, not "
                          "emitted. Default: all supported kinds enabled.")
+    ap.add_argument("--only-kind", action="append", default=[], metavar="KIND",
+                    help="enable ONLY these grammar-v2 kinds (repeatable "
+                         "allowlist); every other kind is skipped. Composes "
+                         "with --disable-kind (which further subtracts). "
+                         "e.g. `--only-kind sequence` injects just sequences.")
     args = ap.parse_args()
+
+    # Fold the allowlist into the denylist so rust_codegen.enabled_kinds stays
+    # the single source of truth. Names that can't emit are reported.
+    disabled = set(args.disable_kind)
+    if args.only_kind:
+        only = set(args.only_kind)
+        unknown = only - rust_codegen.SUPPORTED_KINDS
+        if unknown:
+            print(f"WARNING: --only-kind names {sorted(unknown)} with no "
+                  f"emitter (not in SUPPORTED_KINDS); nothing is injected for "
+                  f"them.", file=sys.stderr)
+        both = set(args.disable_kind) & only
+        if both:
+            print(f"WARNING: {sorted(both)} given to both --only-kind and "
+                  f"--disable-kind; it stays OFF.", file=sys.stderr)
+        disabled |= (rust_codegen.SUPPORTED_KINDS - only)
 
     pac_root = Path(args.pac)
     device_dir = pac_root / "src" / args.device
@@ -409,7 +430,7 @@ def main() -> None:
         plans, rows = select_and_plan(
             collect_dir, device_dir,
             field_level_gating=(not args.register_only),
-            disabled_kinds=set(args.disable_kind),
+            disabled_kinds=disabled,
             gate_map=gate_map, rm=rm)
 
         # Match the artifact and injection exactly: apply the device-level

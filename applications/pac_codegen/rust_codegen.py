@@ -320,16 +320,22 @@ def _build_preconditions(constraint, peripheral: str) -> list["Precondition"]:
 
 # Grammar-v2 kinds the emitter can translate to Rust. Every kind listed here is
 # ENABLED by default; to stop emitting one that misbehaves, disable it (CLI
-# ``--disable-kind KIND`` or ``disabled_kinds=``). A constraint of a disabled
+# ``--disable-kind KIND``/``disabled_kinds=``), or restrict to an allowlist
+# (``--only-kind KIND``/``only=``). A constraint of a disabled
 # kind — or of a kind with no emitter yet — is SKIPPED with a warning, never
 # emitted. This is the single source of truth shared by the emitter
 # (``RegisterPlan``) and the driver (``inject_from_run.select_and_plan``).
 SUPPORTED_KINDS = frozenset({"state_gate", "write_once", "sequence", "delay"})
 
 
-def enabled_kinds(disabled=None) -> frozenset:
-    """Kinds the emitter will translate, given an optional set to disable."""
-    return SUPPORTED_KINDS - frozenset(disabled or ())
+def enabled_kinds(disabled=None, only=None) -> frozenset:
+    """Kinds the emitter will translate. ``only`` (allowlist) restricts to that
+    set first; ``disabled`` (denylist) then subtracts. Both are intersected with
+    SUPPORTED_KINDS, so naming an unsupported/doc-only kind in ``only`` simply
+    contributes nothing (it has no emitter). With neither, every supported kind
+    is enabled."""
+    base = SUPPORTED_KINDS if only is None else (SUPPORTED_KINDS & frozenset(only))
+    return base - frozenset(disabled or ())
 
 
 class UnsatisfiableGate(ValueError):
