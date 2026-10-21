@@ -267,3 +267,19 @@ bootleby, canadensis `s32k146`. Their 80+ firings are the configure-before-enabl
 status bit, disables the peripheral, or relies on a reset-state invariant),
 adjudicated in `downstream_triage.md` and backfilled into the per-device CSVs as
 `fp`.
+
+---
+
+## chiptool / embassy triage (prior experiment) — 1 confirmed bug
+
+The chiptool arm witness-gates embassy's stm32-metapac. The full G4 triage surfaced
+one real bug (the DBP-sample pass missed it). Recorded here so the chiptool arm's
+result is in the review files too.
+
+| # | HAL | Site | Bug | kind | tool | Present in |
+|---|-----|------|-----|------|------|-----------|
+| C1 | embassy-stm32 0.6.0 | `i2c/v2.rs:1576` `configure_oa1` (`reconfigure_addresses`) | changes `OA1`/`OA1MODE` in one `oar1().write()` that toggles `OA1EN` false→true in the same store, so `OA1EN` is never committed as 0 before the address changes (datasheet: OA1 modifiable only when OA1EN=0). `configure_oa2` (`:1591`) is the same shape | state_gate (OAxEN) | chiptool | [stm32g4/rm0440.csv](stm32g4/rm0440.csv) |
+
+**Status:** fixed in current embassy HEAD — it now splits the reconfigure into two
+writes (OA1EN=0 committed first, then address + OA1EN=1). The row is tagged
+`version 0.6.0` (the triaged release) so it reads as version-specific.
