@@ -247,3 +247,23 @@ the grammar/emitter work in `docs/emitter_improvements_plan.md` (B1 dynamic_chec
 and issue #41 (re-kind mode/precondition rules as `state_gate`; value `SelfValueCheck`).
 Coverage caveat: the write_once-heavy families (U5/H5) have no svd2rust HAL, and
 G0/F0 HALs pin a 0.14 PAC the injector doesn't yet parse.
+
+---
+
+## NXP svd2rust campaign (prior experiment) — 1 confirmed bug
+
+Full downstream triage in `experiments/nxp_svd2rust/downstream_triage.md`: across
+**81 whole-register firings (+205 field)** in the evaluable NXP consumers,
+**1 real bug**, the rest friction/FP. It is already in the ledger
+(`lpc845-pac/lpc845.csv`, `tp`); recorded here so both review files carry it.
+
+| # | HAL | Site | Bug | kind | tool | Present in |
+|---|-----|------|-----|------|------|-----------|
+| X1 | lpc8xx-hal 0.10.0 | `i2c/master.rs:98` `read_all` | enables I2C master DMA on `MSTCTL` without first waiting for `STAT.MSTPENDING` — the other I2C ops poll it (`wait_for_state`), `read_all` skips it, so MSTCTL is written with MSTPENDING=0 | state_gate | svd2rust | [lpc845-pac/lpc845.csv](lpc845-pac/lpc845.csv) |
+
+**Clean (0 bugs):** lpc55-hal, mk20dx-hal (mk20d7 & mk20d5), embassy-imxrt,
+bootleby, canadensis `s32k146`. Their 80+ firings are the configure-before-enable
+/ handshake FP class (driver establishes the precondition — polls the pending/
+status bit, disables the peripheral, or relies on a reset-state invariant),
+adjudicated in `downstream_triage.md` and backfilled into the per-device CSVs as
+`fp`.
