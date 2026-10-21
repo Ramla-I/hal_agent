@@ -331,6 +331,63 @@ def device_constraints_file(device, run_dir, svd_dir, chunks,
     }
 
 
+def _merge_hand_authored(collect_dir, src, rm):
+    """B4: merge hand-authored corrected constraints into the collected set
+    BEFORE planning. `src` is `hand_authored_constraints/<rm>.jsonl` (or the
+    folder — then <rm>.jsonl inside it), the review-jsonl v2 shape
+    ({peripheral, register, constraint:{...}, ...}, one record per line). For
+    each (peripheral, register, kind) the file carries, the collected
+    constraints of that kind are dropped and the hand-authored ones used (added
+    if the register had none). This is the injection-side override input; the
+    folder is the home for corrected constraints (docs/emitter_improvements_plan.md).
+    """
+    src = Path(src)
+    if src.is_dir():
+        src = src / f"{rm}.jsonl"
+    if not src.is_file():
+        print(f"WARNING: --hand-authored: no file at {src}", file=sys.stderr)
+        return
+    records = [json.loads(ln) for ln in src.read_text().splitlines() if ln.strip()]
+    if not records:
+        return
+    manifest_path = collect_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    by_name = {(r["peripheral"], r["register"]): r for r in manifest["registers"]}
+    groups = {}
+    for rec in records:
+        groups.setdefault((rec["peripheral"], rec["register"]), []).append(
+            rec["constraint"])
+    added = replaced = 0
+    for (periph, reg), cons in groups.items():
+        kinds = {c.get("kind") for c in cons}
+        entry = by_name.get((periph, reg))
+        if entry:
+            out = collect_dir / Path(entry["output_path"]).name
+            data = json.loads(out.read_text())
+            kept = [g for g in (data.get("access_constraints_v2") or [])
+                    if g.get("kind") not in kinds]
+            data["access_constraints_v2"] = kept + cons
+            out.write_text(json.dumps(data, indent=1))
+            replaced += 1
+        else:
+            fname = f"{periph}_{reg}".lower()
+            out = collect_dir / f"{fname}.json"
+            out.write_text(json.dumps({
+                "datasheet_register_abbreviation": reg.upper(),
+                "address_offset": "0x0", "reset_value": "0x0", "size": 32,
+                "subfields": [], "access_constraints_v2": cons}, indent=1))
+            manifest["registers"].append({
+                "file": fname, "peripheral": periph, "register": reg,
+                "constraint_source": "hand_authored",
+                "num_source_constraints": len(cons), "num_constraints_v2": len(cons),
+                "duplicates_dropped": 0, "lint_flags": ["hand_authored"],
+                "constraints": [], "rejects": [], "output_path": str(out)})
+            added += 1
+    manifest_path.write_text(json.dumps(manifest, indent=1))
+    print(f"hand-authored ({src.name}): {added} register(s) added, "
+          f"{replaced} merged (same-kind replaced)", file=sys.stderr)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("run_dir", help="generator run directory (one file per register)")
@@ -395,6 +452,12 @@ def main() -> None:
                          "allowlist); every other kind is skipped. Composes "
                          "with --disable-kind (which further subtracts). "
                          "e.g. `--only-kind sequence` injects just sequences.")
+    ap.add_argument("--hand-authored", default=None, metavar="PATH",
+                    help="folder or <rm>.jsonl of hand-authored corrected "
+                         "constraints (applications/pac_codegen/"
+                         "hand_authored_constraints/). Merged BEFORE planning: "
+                         "for each (register, kind) they carry, the hand-authored "
+                         "constraint replaces the generated one (added if absent).")
     args = ap.parse_args()
 
     # Fold the allowlist into the denylist so rust_codegen.enabled_kinds stays
@@ -426,6 +489,8 @@ def main() -> None:
         collect_constraints.main(argv)
 
         rm = Path(args.run_dir.rstrip("/")).parent.name
+        if args.hand_authored:
+            _merge_hand_authored(collect_dir, args.hand_authored, rm)
         gate_map = _load_gate_map(Path(args.constraints), rm) if args.constraints else None
         plans, rows = select_and_plan(
             collect_dir, device_dir,

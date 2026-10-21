@@ -198,7 +198,7 @@ WWDT feed is 0xAA→0x55 in order).
 | N1 | stm32-hal2 | `gpio.rs:909` `cfg_lock` | GPIO config lock never engages — sets `LCKx` but never writes `LCKK`/the key sequence, so locking is a silent no-op | sequence | svd2rust | **YES** (B2+B3) | [stm32g4/rm0440.csv](stm32g4/rm0440.csv) |
 | N2 | stm32-hal2 | `usart.rs:299` `set_baud` | `OverSampling::O8` writes the OVER16 divisor raw (no `>>1`, `BRR[3]` not cleared; in-source `todo`) → corrupted baud | value_relation | svd2rust | not yet (B1 dynamic_check) | [stm32g4/rm0440.csv](stm32g4/rm0440.csv) |
 | N3 | stm32-hal2 | `lpuart.rs:145` `set_baud` | no `>= 0x300` BRR lower-bound guard → forbidden write + wrong baud on an LSE-clocked LPUART | value_relation | svd2rust | not yet (B1, conditional) | [stm32g4/rm0440.csv](stm32g4/rm0440.csv) |
-| N4 | mk20dx-hal | `pwm.rs:1859` `set_filter` | FTM `FILTER` written while the quad decoder has CH0/CH1 live as inputs → datasheet "missing valid signal" hazard | other | svd2rust | not yet (re-kind → state_gate, #41) | [mk20d7-pac/mk20d7.csv](mk20d7-pac/mk20d7.csv) |
+| N4 | mk20dx-hal | `pwm.rs:1859` `set_filter` | FTM `FILTER` written while the quad decoder has CH0/CH1 live as inputs → datasheet "missing valid signal" hazard | other | svd2rust | **YES** via hand-authored `state_gate` (B4) | [mk20d7-pac/mk20d7.csv](mk20d7-pac/mk20d7.csv) |
 | B1 | embassy-stm32 | `lptim/timer/mod.rs:65` | PWM `init()` writes `CFGR.PRESC` after `ENABLE=1` → prescaler write ignored → wrong PWM frequency | state_gate-class | chiptool | — (metapac arm) | [stm32g4/rm0440.csv](stm32g4/rm0440.csv) |
 | B2 | lpc8xx-hal | `usart/tx.rs:273` | `enable_cts_throttling` reconfigures `CFG.CTSEN` while the USART is enabled (datasheet: disable first) | state_gate-class | svd2rust | — | [lpc845-pac/lpc845.csv](lpc845-pac/lpc845.csv) |
 
@@ -224,7 +224,7 @@ Per-HAL: **stm32-hal2 = 3**, mk20dx-hal = 1; bonus embassy-stm32 = 1, lpc8xx-hal
 **N4 — mk20dx-hal `pwm.rs:1859` `set_filter` — FILTER written with quad inputs live**
 - **Rule (K20):** writing FILTER must be done only when channels 0–3 are not in input modes, else a valid signal can be missed.
 - **Code:** `QuadratureDecoder::new` sets `QUADEN=1` (CH0/CH1 live phase inputs); the only filter API, `set_filter`, does `filter().modify(..)` while the decoder is active and never disables it first.
-- **Impact:** structurally always in the hazard window — a dropped quadrature edge. Really a `state_gate` (precondition QUADEN cleared) filed as `other`; re-kind via #41 to enforce.
+- **Impact:** structurally always in the hazard window — a dropped quadrature edge. Really a `state_gate` (precondition QUADEN cleared) filed as `other`. **Caught now** via a hand-authored `state_gate` in `hand_authored_constraints/mk20d7.jsonl` fed through `--hand-authored` (B4): compiling mk20dx-hal against the injected PAC fires `E0277` at `filter().modify(..)` in `set_filter`.
 
 **B1 — embassy-stm32 `lptim/timer/mod.rs:65` — LPTIM prescaler after enable**
 - **Rule:** LPTIM `CFGR` is writable only when the timer is disabled (`ENABLE=0`).
