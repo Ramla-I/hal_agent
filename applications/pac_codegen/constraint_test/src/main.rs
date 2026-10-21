@@ -75,13 +75,13 @@ pub extern "C" fn main() -> ! {
     let t0 = wpr.seq_step_0();
     let _t1 = wpr.seq_step_1(t0);
 
-    // === Advisory sequence (GPIO LCKR): chain is a helper; raw write stays open ===
+    // === Gated sequence (GPIO LCKR handshake): raw write+modify withheld, chain only ===
+    // LCKR is not a data port, so the lock-key sequence gates it (B3); each step
+    // writes via write_unwitnessed internally. Raw write/modify no longer compile.
     let lckr = dp.GPIOA.lckr();
     let a0 = lckr.seq_step_0(0x1_0000);
     let a1 = lckr.seq_step_1(a0, 0x0);
     let _a2 = lckr.seq_step_2(a1, 0x1_0000);
-    // advisory ⇒ the stock write is still available (no gate):
-    lckr.write(|w| unsafe { w.bits(0) });
 
     // === Delay ordering gate (CRC_CR): dependent write withheld, obligation only ===
     // `await_delay()` mints the #[must_use] obligation; the caller owns the wait.

@@ -401,6 +401,16 @@ ILLEGAL_PROGRAMS = [
         "    dp.CRC.cr().write(|w| w.reset().set_bit());",
         "E0277", "write-constrained by its datasheet",
     ),
+    (
+        "sequence_data_port_aware_lckr_write",
+        "    dp.GPIOA.lckr().write(|w| unsafe { w.bits(0) });",
+        "E0277", "write-constrained by its datasheet",
+    ),
+    (
+        "sequence_handshake_modify_withheld",
+        "    dp.GPIOA.lckr().modify(|_, w| unsafe { w.bits(0) });",
+        "E0277", "modify-constrained by its datasheet",
+    ),
 ]
 
 

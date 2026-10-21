@@ -413,6 +413,24 @@ class DelayGate:
         self.docs = docs
 
 
+# A data port (CRC_DR, SPI_TXDR, USART_TDR, a FIFO) takes arbitrary caller data,
+# so a multi-step "sequence" extracted on it is NOT a handshake and must stay
+# advisory. Everything else carrying an ordered multi-step sequence is a
+# handshake and is gated -- regardless of whether the extractor filled the step
+# VALUES. The old magic-value heuristic keyed gating on "a step has a constant",
+# which lost real handshakes whose values came out null (GPIO_LCKR -> the
+# cfg_lock miss). Key on the register's IDENTITY instead: reliable, and exactly
+# the "is this a data register?" signal.
+_DATA_PORT_TAILS = frozenset({
+    "DR", "IDR", "ODR", "TDR", "RDR", "TXDR", "RXDR", "DOR", "DATA", "FIFO"})
+
+
+def _is_data_port(reg_name: str) -> bool:
+    tail = (reg_name or "").upper().rsplit("_", 1)[-1]
+    return (tail in _DATA_PORT_TAILS
+            or tail.startswith(("DINR", "DOUTR", "RXFIFO", "TXFIFO", "DHR")))
+
+
 class SeqChain:
     """One linear write sequence on a SINGLE register. ``steps[k]`` is the
     baked value for step k (``None`` → the caller supplies it). ``gated`` is
@@ -725,13 +743,12 @@ class RegisterPlan:
         """Emit a linear write-sequence chain on a single register: step k is a
         `seq_step_{k}(prev_token) -> token_k` that performs its write and hands
         the next token forward, so the ordered chain is the only producer of the
-        final token. The magic-value heuristic scopes enforcement: if ANY step
-        writes a fixed CONSTANT (a handshake register — RTC_WPR 0xCA/0x53, key
-        registers), the raw `write` is WITHHELD (forbidden) so the chain is the
-        only path; an all-`None` chain writes a data port and stays ADVISORY
-        (raw write open, the chain emitted only as a correct-ordering helper).
-        Cross-register and extra same-register sequences are deferred
-        (skipped with a warning)."""
+        final token. Enforcement is scoped by register IDENTITY: a DATA PORT
+        (DR/TDR/RDR/FIFO…) stays ADVISORY (arbitrary caller data, raw write
+        open); every other same-register sequence is a handshake and is GATED —
+        raw `write` AND `modify` withheld so the chain is the only path —
+        whether or not the extractor filled the step values. Cross-register and
+        extra same-register sequences are deferred (skipped with a warning)."""
         steps = list(c.steps or [])
         if len(steps) < 2:
             return
@@ -754,14 +771,19 @@ class RegisterPlan:
             )
             return
         values = [s.value for s in steps]
-        gated = any(v is not None for v in values)
+        # B3: gate every same-register sequence EXCEPT a data port (keyed on
+        # register identity, not on whether the extractor filled values).
+        gated = not _is_data_port(self.reg_name)
         doc = (c.datasheet_text or "").strip()
         self.sequence_chains.append(
             SeqChain(steps=values, gated=gated, docs=[doc] if doc else []))
         if gated:
-            # Handshake register: withhold raw write so the chain is the only
-            # path. Step methods write via `write_unwitnessed` internally.
+            # Handshake register: the ordered chain is the only path. Withhold
+            # BOTH write and modify -- a handshake must not be RMW'd outside the
+            # chain either (the cfg_lock / lpc8xx-CTS `modify` sites). Step
+            # methods write via `write_unwitnessed` internally.
             self.forbidden_ops.add("write")
+            self.forbidden_ops.add("modify")
 
     def _same_as_target(self, regname: str) -> bool:
         if not regname:
@@ -851,6 +873,7 @@ class RegisterPlan:
             removed.append("sequence")
             self.sequence_chains.clear()
             self.forbidden_ops.discard("write")
+            self.forbidden_ops.discard("modify")
         # a delay gate withholds the dependent write; a non-writable target
         # can't carry it.
         if self.delay_gate and not writable:
