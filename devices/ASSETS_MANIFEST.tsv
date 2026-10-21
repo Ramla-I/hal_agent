@@ -9,12 +9,42 @@ asset	devices/nxp/k64/svd/MK64F12.xml	nxp.tar.gz	7037247	933ec735ae055d7c2fd429d
 asset	devices/nxp/ke04/ke04.pdf	nxp.tar.gz	7847758	db8a818117486be71d9f8b009cb156aa4a3ac452afae136bd93af6998af8275d
 asset	devices/nxp/ke04/svd/MKE04Z4.xml	nxp.tar.gz	843607	e2fae8f51478da51f274d2ba9b4554086de33a8132b32718554c9ef16e3da2fb
 asset	devices/nxp/ke04_old/ke04.pdf	nxp.tar.gz	5215417	dfb243593d77981d2cf93ebbbcacb201158b8dd96e773d5307472d859c3ebc4e
+asset	devices/nxp/ke04_old/ke04_old.pdf	nxp.tar.gz	5215417	dfb243593d77981d2cf93ebbbcacb201158b8dd96e773d5307472d859c3ebc4e
 asset	devices/nxp/ke04_old/svd/mke04z4.svd	nxp.tar.gz	864341	875d7698204422b7578379b24e79c4b120a6317279d03164215578376ef233a9
+asset	devices/nxp/lpc55s16/lpc55s16.pdf	nxp.tar.gz	17827666	66c83df9789d83c191ef917b3c12f8873e582b487b217ffa6b4f6fad321c1ade
+asset	devices/nxp/lpc55s16/svd/LPC55S16.xml	nxp.tar.gz	3964622	67ec14f188436279454046218c39a96c38bbbf9fac9fffa1f8832ecc8058f343
 asset	devices/nxp/lpc55s69/lpc55s69.pdf	nxp.tar.gz	18860329	60f33e5d2f360d6a1a826a7f1e10df5bf32f28b8c22ec838b49ae8f19b335355
 asset	devices/nxp/lpc55s69/svd/LPC55S69_cm33_core0.xml	nxp.tar.gz	3933043	ed4f75e775319314050337c4d5e952c68239db4f91d7ea850e105d97566cde73
 asset	devices/nxp/lpc55s69/svd/LPC55S69_cm33_core1.xml	nxp.tar.gz	3933045	023b16427f8e285081f766987af59ed2cae927801eda3df77261b679069cfb87
 asset	devices/nxp/lpc845/lpc845.pdf	nxp.tar.gz	7300497	f3cd596cf4b9bb7f59e5beb5434258275025bf5d165d0fee627ed0ba6706a3fd
 asset	devices/nxp/lpc845/svd/LPC845.xml	nxp.tar.gz	2583558	9091d35fa9238814437d5695aaf7c2662587581690134568379ab669c58d75cb
+asset	devices/nxp/mcxa156/mcxa156.pdf	nxp.tar.gz	19398941	962531bac7b68f4526ca844cb9497a566540c796feb833246485d0c8aa1fe20c
+asset	devices/nxp/mcxa156/svd/MCXA156.xml	nxp.tar.gz	6510887	6f0da8b623578892908b8f08cba4f3e8417ad0fee247ca4f19f6ed4888066866
+asset	devices/nxp/mcxa256/mcxa256.pdf	nxp.tar.gz	21318966	41014b90b7aeda8015b703c4ec3c860b8c3cf47982af0cb3f6c33bc50b33888f
+asset	devices/nxp/mcxa256/svd/MCXA256.xml	nxp.tar.gz	7591339	755f894638f4b546c0cc6bcbe503577e074ade99a0488431aca8cf6de86dced8
+asset	devices/nxp/mcxn947/mcxn947.pdf	nxp.tar.gz	78912580	aab839a572a6ac74843459693f904d466a5276b139865684370920b22d55d952
+asset	devices/nxp/mcxn947/svd/MCXN947_cm33_core0.xml	nxp.tar.gz	18317287	629ac7cdc82684e467b0cf36a8aef697bc1eb65c2047d6610b7b5df65692e590
+asset	devices/nxp/mcxn947/svd/MCXN947_cm33_core1.xml	nxp.tar.gz	18317289	0d77f3d23cad1d5eab631fd7f5ade4044d8aaca2d9d13cd11f3836d27fe089fb
+asset	devices/nxp/mimxrt1011/mimxrt1011.pdf	nxp.tar.gz	15958468	3b8f73db68980111b9dbf88f117bc193e4eebfe3ed76b917e4d93798d0002567
+asset	devices/nxp/mimxrt1011/svd/MIMXRT1011.xml	nxp.tar.gz	4344978	9921b34c91efe0386a8d1a2ed5c54780bb92dd285e44cfe2b833562efd7fa786
+asset	devices/nxp/mimxrt1015/mimxrt1015.pdf	nxp.tar.gz	13073626	4ddf6c2b897757b5b9b810bc58e9caaf4ef615f5eaea8e1fb8a20383963788b5
+asset	devices/nxp/mimxrt1015/svd/MIMXRT1015.xml	nxp.tar.gz	4870612	0d820c6862e59627bbec3a27c3cb463ff34014c231dd027b763faac529a40c86
+asset	devices/nxp/mimxrt1021/mimxrt1021.pdf	nxp.tar.gz	24478428	c0f5789f99f9a456f99b74f75833e6a053d55d71f061c20e6f0c2e9199beff5d
+asset	devices/nxp/mimxrt1021/svd/MIMXRT1021.xml	nxp.tar.gz	6786011	6305929ab98918ce1c6512e54bd1f96e0f929c505a6c50f36304dce8091ad6e5
+asset	devices/nxp/mimxrt1051/mimxrt1051.pdf	nxp.tar.gz	23924713	ff4f70d86710a37c3b174a4cb43ec0a1dad03f7e01243d44e04f86bf54a94550
+asset	devices/nxp/mimxrt1051/svd/MIMXRT1051.xml	nxp.tar.gz	7575559	770976b62fe1ec97539a929beae1aaf6ad7965433eefcf99c883a4a18ff1b1a5
+asset	devices/nxp/mimxrt1051/svd/MIMXRT1052.xml	nxp.tar.gz	8064155	1b480ca99ce24f393d0b1a848000f5cc0579e1347baec8828fe3673e1c639993
+asset	devices/nxp/mimxrt1061/mimxrt1061.pdf	nxp.tar.gz	36942951	6adb2cdd36344f226cb7eb36bce9942d8da60aba47855c579b98397a59269656
+asset	devices/nxp/mimxrt1061/svd/MIMXRT1061.xml	nxp.tar.gz	9922510	2197be1979399d42e43e33ff1db53e9f5d2d87341e540c1b00daeecc7876e183
+asset	devices/nxp/mimxrt1061/svd/MIMXRT1062.xml	nxp.tar.gz	10441711	94491bee4627712fccb94c3c01a919cfb86b27f42927223a0322841403c572c3
+asset	devices/nxp/mimxrt1064/mimxrt1064.pdf	nxp.tar.gz	30420983	cb33540d4c2431fcb9f26b5e0cba93ac35548e77f0adae5a9b0faa5612590d93
+asset	devices/nxp/mimxrt1064/svd/MIMXRT1064.xml	nxp.tar.gz	10362509	85b4fc7b7d278595ff08f6f57298779e2dd6b6c152b696d547918996ebeb9b98
+asset	devices/nxp/mimxrt1176/mimxrt1176.pdf	nxp.tar.gz	35511785	a6827535ad97effe73f5eca7bddc30a2e68c1bb74e122c7511feda4d0479fab0
+asset	devices/nxp/mimxrt1176/svd/MIMXRT1176_cm4.xml	nxp.tar.gz	23931647	9430acf17be00f90237d77f235ece230f51231d07444d24ce4f0d159e8cb6dad
+asset	devices/nxp/mimxrt1176/svd/MIMXRT1176_cm7.xml	nxp.tar.gz	23974568	1a07f224ffc5eff2d4eb0d4227f1349c53368dcc710ea86c7ec002aed650c7bc
+asset	devices/nxp/mimxrt1189/mimxrt1189.pdf	nxp.tar.gz	73159590	a807c4de864a5f072dc86144279d0c3001e3d0c9e2598b3fcc51d8b7d066a080
+asset	devices/nxp/mimxrt1189/svd/MIMXRT1189_cm33.xml	nxp.tar.gz	70037330	3bb1c3e6d3c5f9df79a3f9a7b5334e386bed6ae9dfd8bcb2f6329614d4a20e86
+asset	devices/nxp/mimxrt1189/svd/MIMXRT1189_cm7.xml	nxp.tar.gz	70036000	d8bc68f29a8a164b358d4b2a69dc07bbf6cd9b5a5721e8a356a9b25890590a1b
 asset	devices/nxp/mimxrt633s/mimxrt633s.pdf	nxp.tar.gz	15854766	32e81acc2a81fb09be77dce29239662ba295196c5578d965e2c1584de0ca2e8f
 asset	devices/nxp/mimxrt633s/svd/MIMXRT633S.xml	nxp.tar.gz	7008591	81c1be78bbaf0dd8e4d12ede567b19ca65088d6a9686f3fd782ef0d26c7ab8b9
 asset	devices/nxp/mimxrt685s/mimxrt685s.pdf	nxp.tar.gz	15854766	32e81acc2a81fb09be77dce29239662ba295196c5578d965e2c1584de0ca2e8f
@@ -23,7 +53,7 @@ asset	devices/nxp/mk20d5/mk20d5.pdf	nxp.tar.gz	14517881	e3f7faabe803304b82b08e50
 asset	devices/nxp/mk20d5/svd/MK20D5.svd	nxp.tar.gz	1549486	473011f111eee6e41a633aef253c455c55e9fe1f3f4ae237c0773cfbb27fb3b1
 asset	devices/nxp/mk20d7/mk20d7.pdf	nxp.tar.gz	15435633	17d501ebd998142fbd65c981285dcf71b379c3ba16e5cd8daf5ade9fd0e24fbc
 asset	devices/nxp/mk20d7/svd/MK20D7.svd	nxp.tar.gz	3148179	1b5d0277da008154ec346773a3fd2bef4c951077cf7108f72f2924068b47fce5
-asset	devices/nxp/rm_device_mapping.xml	nxp.tar.gz	8626	b23a4755e5d71e4729c93f7a23eac11e4586d710aa2269f70daa8c4338c144ea
+asset	devices/nxp/rm_device_mapping.xml	nxp.tar.gz	16641	f3c5d4778f8d45aa4f5ebc709706b73c569a811607403cb3742c640ce6f49371
 asset	devices/nxp/s32k1xx/s32k1xx.pdf	nxp.tar.gz	15353911	a5887dd7cce88c8d965524bf951760e02e13cd19153d0e598fb56c8474e25e77
 asset	devices/nxp/s32k1xx/svd/S32K116.svd	nxp.tar.gz	4307320	3e1865846ea598ad68fa86564f9ef3135e0ab1187a26ca242119c400b2986aa9
 asset	devices/nxp/s32k1xx/svd/S32K118.svd	nxp.tar.gz	4368394	3839c8f7f078a37b1db90e5ce62f12ded1b6bcbd19fb33b738fdbb036ed68681
@@ -415,4 +445,4 @@ asset	devices/stm/rm0530/svd/stm32wb06.svd	stm.tar.gz	948713	874a1aaf7ad0c1fc926
 asset	devices/stm/rm0530/svd/stm32wb07.svd	stm.tar.gz	948571	9929c9123486478a7edde3cb6c2606695aba2f9733a1afb5eefe195d95769238
 asset	devices/ti/msp430g2/msp430g2.pdf	ti.tar.gz	9952227	841493836042c4dc2979ebe9a7b42f4e6f373a01edc34ee6d26445ae38a2f7b2
 asset	devices/ti/msp430g2/svd/msp430g2553.svd	ti.tar.gz	228585	1b9aa90a999a6c5c9756166cbbe7e57e6781dd50bdba5c1966df8dfd37bff4e9
-archive	nxp.tar.gz		103657885	50eab7e39459f6451aa40d7ad724838f67e74a7fe06d3112e4ef97ac677840a3
+archive	nxp.tar.gz		433282884	a24e3873e67d29b4ca70824ac48bb4aa3419d6eb1a41b72f849a2062e8fc255f
