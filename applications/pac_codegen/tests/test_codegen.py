@@ -710,3 +710,31 @@ if __name__ == "__main__":
     print(f"{'=' * 60}")
     if failed:
         sys.exit(1)
+
+
+def test_reinjection_into_dirty_tree_is_refused():
+    """B6: injecting a PAC that already carries the LIDAR patch must fail with a
+    clear, actionable error -- not crash cryptically inside detect_dialect (where
+    the already-patched `write` signature no longer matches a known dialect).
+    Guards against re-injecting the shared vendored tree an earlier in-place run
+    left dirty (the NXP campaign did exactly this)."""
+    if not _pac_provisioned():
+        _skip("test_reinjection_into_dirty_tree_is_refused",
+              "stm32f4 PAC not provisioned")
+        return
+    sys.path.insert(0, str(APP_DIR))
+    import rust_codegen
+    with tempfile.TemporaryDirectory(prefix="codegen_dirty_") as td:
+        pac = Path(td) / "f4"
+        shutil.copytree(PAC_ROOT, pac, ignore=shutil.ignore_patterns("target"))
+        generic = pac / "src" / "generic.rs"
+        # Simulate a tree an earlier in-place injection already patched.
+        generic.write_text(
+            generic.read_text() + "\n" + rust_codegen.GENERIC_SENTINEL + "\n")
+        raised = None
+        try:
+            rust_codegen.inject_into_pac(pac, DEVICE, [])
+        except RuntimeError as exc:
+            raised = str(exc)
+        assert raised is not None, "re-injection into a dirty tree was not refused"
+        assert "already carries the LIDAR patch" in raised, raised

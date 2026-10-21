@@ -2956,9 +2956,24 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
         by_periph.setdefault(plan.peripheral, []).append(plan)
         gated |= plan.gated_ops()
 
+    # B6: refuse an already-injected PAC up front. Injection is one-shot and
+    # mutates the tree IN PLACE, so a second pass -- or the shared vendored tree
+    # left dirty by an earlier run (the NXP campaign injected in place) --
+    # otherwise crashes cryptically inside detect_dialect, because the stock
+    # `write` signature is already patched and no longer matches a known
+    # dialect. Fail clearly and point the caller at a pristine copy.
+    generic_text = generic.read_text()
+    if GENERIC_SENTINEL in generic_text:
+        raise RuntimeError(
+            f"{generic} already carries the LIDAR patch -- this PAC was already "
+            f"injected (injection is one-shot and mutates the tree in place). "
+            f"Inject a PRISTINE COPY, not the shared tree: re-provision with "
+            f"`get_pac.py --crate <crate> --version <ver> --force` and inject a "
+            f"copy of that (the test harness and the demo scripts copy first)."
+        )
     # Detect the svd2rust generic.rs dialect once; the generic-surface patch
     # and the per-register witnessed surface must agree on it.
-    dialect = detect_dialect(generic.read_text())
+    dialect = detect_dialect(generic_text)
 
     # Bound only the operations this crate actually gates (see
     # patch_generic_rs): an ungated operation has nothing to enforce, and
