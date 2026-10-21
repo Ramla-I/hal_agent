@@ -743,28 +743,45 @@ def main() -> None:
 
     md += ["", "## What each PAC enforces, and what could be compiled against it",
            "",
-           "EVERY injected chip crate is listed. The gates and the "
-           "`PAC compiles` check are independent of any driver — injection "
-           "needs nothing from a HAL. Where no driver crate depends on PAC "
-           "0.16, the HAL columns are empty and the note says why; the "
-           "enforcement is still there.",
+           "EVERY injected chip crate is listed. The **injected** columns are "
+           "independent of any driver — injection needs nothing from a HAL. "
+           "Where no driver crate depends on PAC 0.16, the adoption columns are "
+           "empty and the note says why; the enforcement is still there.",
            "",
-           "Two gating modes are shown. The default gates a whole register; "
-           "`--field-level-gating` (opt-in) gates individual bitfields "
-           "instead, reaching constraints the datasheet states about single "
-           "bits at the cost of asking less of the driver elsewhere.",
+           "**Column groups (read left to right):**",
            "",
-           "| RM | device | PAC crate | gates | registers | PAC compiles | "
-           "HAL crate | baseline | true enforcement | guarded | possible bug | "
-           "generic friction | other | "
-           "field: gates | field: registers | field: gate fired | "
-           "field: possible bug | field: generic friction | "
-           "enforcement sites | note |",
-           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+           "- **Injected into this PAC** — `gates` = compile-time gates added; "
+           "`gates by kind` = of those, how many of each constraint kind "
+           "(`state_gate` / `sequence` / `write_once` / `delay`); `regs` = "
+           "distinct registers gated; `PAC compiles` = the gated PAC still "
+           "builds.",
+           "- **Adoption** — `HAL crate` = the unmodified driver swapped onto "
+           "the injected PAC; `baseline` = that driver builds against the "
+           "*pristine* PAC (the prerequisite for the firing columns to mean "
+           "anything).",
+           "- **Whole-register firings** = compile errors when the HAL is built "
+           "on the gated PAC. `fired` = accesses to a gated register that now "
+           "need a witness; of those, `guarded(FP)` = the driver already "
+           "establishes the condition (NOT a bug) and `possible bug` = a "
+           "candidate to triage. `friction` = trait-generic driver code needing "
+           "a one-line bound (an adoption cost, not a specific site); `other` = "
+           "anything else.",
+           "- **Field-gating mode** = the same counts under opt-in "
+           "`--field-level-gating` (gates single bitfields instead of whole "
+           "registers).",
+           "",
+           "| RM | device | PAC crate | gates | gates by kind | regs | "
+           "PAC compiles | HAL crate | baseline | "
+           "fired | guarded(FP) | possible bug | friction | other | "
+           "field: gates | field: regs | field: fired | "
+           "field: possible bug | field: friction | "
+           "sites | note |",
+           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         md.append(
             f"| {r['RM']} | {r['device']} | {r['pac_crate']} | "
-            f"**{r['enforced']}** | {r['registers_gated']} | "
+            f"**{r['enforced']}** | {r['enforced_by_kind'] or '—'} | "
+            f"{r['registers_gated']} | "
             f"{r['pac_compiles']} | {r['hal_crate']} | "
             f"{r['hal_baseline']} | {r['true_enforcement']} | "
             f"{r['guarded']} | {r['candidate']} | "
@@ -1315,21 +1332,25 @@ def write_html(rows: list, path: Path, control_rows: list = ()) -> None:
           '<code>[patch.crates-io]</code> line, and its baseline must pass '
           'against the pristine PAC first.</p>',
           '<div class="scroll"><table><thead>',
-          '<tr><th class="pin grp" colspan="8"></th>',
-          '<th class="grp mode" colspan="5">whole-register gating (default)</th>',
-          '<th class="grp mode alt" colspan="5">field-level gating '
+          '<tr><th class="pin grp" colspan="3"></th>',
+          '<th class="grp inj" colspan="4">injected into this PAC '
+          '(driver-independent)</th>',
+          '<th class="grp" colspan="2">adoption</th>',
+          '<th class="grp mode" colspan="5">whole-register firings in the HAL</th>',
+          '<th class="grp mode alt" colspan="5">field-level gating mode '
           '(<code>--field-level-gating</code>)</th>',
           '<th class="grp" colspan="2"></th></tr>',
           '<tr>',
           '<th class="pin">RM</th><th>device</th><th>PAC crate</th>',
-          '<th>gates</th><th>regs</th><th>PAC compiles</th>',
+          '<th class="inj">gates</th><th class="inj">by kind</th>'
+          '<th class="inj">regs</th><th class="inj">PAC compiles</th>',
           '<th>HAL crate</th><th>baseline</th>',
-          '<th>gate fired</th><th>guarded</th><th>possible bug</th>',
-          '<th>generic friction</th><th>other</th>',
+          '<th>fired</th><th>guarded (FP)</th><th>possible bug</th>',
+          '<th>friction</th><th>other</th>',
           '<th class="alt">gates</th><th class="alt">regs</th>',
-          '<th class="alt">gate fired</th>',
-          '<th class="alt">possible bug</th><th class="alt">generic friction</th>',
-          '<th>enforcement sites</th><th>note</th>',
+          '<th class="alt">fired</th>',
+          '<th class="alt">possible bug</th><th class="alt">friction</th>',
+          '<th>sites</th><th>note</th>',
           "</tr></thead><tbody>"]
     for r in rows:
         note = r["note"] or ("" if r["hal_crate"] != "—" else "—")
@@ -1337,9 +1358,10 @@ def write_html(rows: list, path: Path, control_rows: list = ()) -> None:
             f'<tr><td class="pin">{_esc(r["RM"])}</td>'
             f'<td class="mono">{_esc(r["device"])}</td>'
             f'<td class="mono dim">{_esc(r["pac_crate"])}</td>'
-            f'<td class="num lead">{_esc(r["enforced"])}</td>'
-            f'<td class="num">{_esc(r["registers_gated"])}</td>'
-            f'<td>{_pill(r["pac_compiles"])}</td>'
+            f'<td class="num lead inj">{_esc(r["enforced"])}</td>'
+            f'<td class="mono dim inj">{_kinds_html(r["enforced_by_kind"]) or "—"}</td>'
+            f'<td class="num inj">{_esc(r["registers_gated"])}</td>'
+            f'<td class="inj">{_pill(r["pac_compiles"])}</td>'
             f'<td class="mono">{_esc(r["hal_crate"])}</td>'
             f'<td>{_pill(r["hal_baseline"])}</td>'
             f'<td class="num">{_esc(r["true_enforcement"])}</td>'
