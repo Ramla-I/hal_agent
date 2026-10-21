@@ -193,6 +193,39 @@ def test_native_v2_basic(run_dir, tmp_path):
     assert summary["kind_counts"] == {"state_gate": 1}
 
 
+def test_null_structural_field_does_not_drop_constraints(run_dir, tmp_path):
+    """A register whose STRUCTURAL fields are null (common on vendors with
+    incomplete structure coverage, e.g. NXP) must NOT lose its access
+    constraints: structural completeness is orthogonal to constraint validity.
+    The register envelope fails RegisterInfo validation, but the constraint is
+    salvaged via an unvalidated construct and linted normally."""
+    reg = _register_json_v2(
+        "I2C0_MSTCTL",
+        [_state_gate("I2C0_MSTCTL", pre=[SW_UE_CLEARED],
+                     text="Write MSTCTL only while the master is idle.")],
+    )
+    reg["reset_value"] = None   # <- the failure the old gate punished
+    reg["size"] = None
+    (run_dir / "i2c0_mstctl").write_text(json.dumps(reg))
+    out_dir = tmp_path / "out"
+    (r,) = collect_constraints(str(run_dir), output_dir=str(out_dir))
+    assert r["num_constraints_v2"] == 1                       # constraint survived the gate
+    (v2,) = json.loads((out_dir / "i2c0_mstctl.json").read_text())["access_constraints_v2"]
+    assert v2["kind"] == "state_gate"
+    assert v2["target_register"] == "I2C0_MSTCTL"             # authoritative name intact
+
+
+def test_bad_envelope_without_constraints_still_skipped(run_dir, tmp_path):
+    """The salvage path is constraint-only: a file with a null structural field
+    and NO constraints keeps the old skip behavior (no behavior change there)."""
+    reg = _register_json_v2("ACOMP_CTRL", [])
+    reg["reset_value"] = None
+    reg["datasheet_register_abbreviation"] = None
+    (run_dir / "acomp_ctrl").write_text(json.dumps(reg))
+    results = collect_constraints(str(run_dir), output_dir=str(tmp_path / "out"))
+    assert results == []                                      # skipped, not salvaged
+
+
 # ---------------------------------------------------------------------------
 # per-constraint recovery, dedup, repairs
 # ---------------------------------------------------------------------------
