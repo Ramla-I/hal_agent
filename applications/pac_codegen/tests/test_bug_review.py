@@ -65,14 +65,27 @@ class Review(unittest.TestCase):
         return {self.br.key(r): r for r in self.br.read_review()}
 
     def test_init_builds_rows_with_empty_marks(self):
+        # A possible-bug (unchecked) site AND a corroborated site both enter the
+        # ledger now: the static scan's value-blind "corroborated" auto-clear has
+        # been wrong before (it cleared the confirmed hubris UE/BRR bug), so
+        # corroborated rows are kept, tagged by static_verdict, for a human to
+        # re-judge rather than dropped (commit fb10474).
         self.write_sites([make_row(), make_row(line=200, verdict="corroborated")])
         self.br.init()
         rows = self.read()
-        self.assertEqual(len(rows), 1, "only possible bugs enter the ledger")
-        r = next(iter(rows.values()))
-        self.assertEqual(r["tp_fp"], "")
-        self.assertEqual(r["constraint_ids"], "abc123")
-        self.assertIn("ADEN", r["quote"])
+        self.assertEqual(len(rows), 2,
+                         "possible-bug AND corroborated sites enter the ledger")
+        # every freshly-built row starts with empty human marks
+        for r in rows.values():
+            self.assertEqual(r["tp_fp"], "")
+        # each row carries its static verdict so the reviewer sees which was
+        # auto-cleared vs still open
+        self.assertEqual(sorted(r["static_verdict"] for r in rows.values()),
+                         ["corroborated", "unchecked"])
+        # the possible-bug row still resolves its constraint identity + quote
+        bug = next(r for r in rows.values() if r["static_verdict"] == "unchecked")
+        self.assertEqual(bug["constraint_ids"], "abc123")
+        self.assertIn("ADEN", bug["quote"])
 
     def test_marks_survive_a_rerun(self):
         """THE PROPERTY. Everything else is decoration."""
