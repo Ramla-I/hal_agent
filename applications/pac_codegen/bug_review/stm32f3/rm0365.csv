@@ -1,10 +1,10 @@
-status,tp_fp,note,claude_review,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,compiled_in,precondition_fields,field_source,machine_note,constraint_ids,quote
-,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,src/i2c.rs,53,i2c1,txdr,write,txdata,unchecked,5,,txe,field,,4b4800757048,_Note: These bits can be written only when TXE=1._
-,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,src/i2c.rs,461,i2c1,txdr,write,txdata,unchecked,1,,txe,field,,4b4800757048,_Note: These bits can be written only when TXE=1._
-,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,src/i2c.rs,491,i2c1,txdr,write,txdata,unchecked,1,,txe,field,,4b4800757048,_Note: These bits can be written only when TXE=1._
-,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,src/rtc.rs,382,rtc,wutr,modify,,unchecked,1,,wutwf,only,,c33a836b3024,This register can be written only when WUTWF is set to 1 in RTC_ISR.
-,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,src/timer.rs,1145,tim1,cr1,write,cms,unchecked,1,,cen,field,,f41f134412cf,Note: Switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1) is not allowed
-,,,unsure,rm0365,stm32f302,stm32-hal2,2.1.10,src/timer.rs,1372,tim1,cr1,write,cms,unchecked,1,,cen,field,,f41f134412cf,Note: Switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1) is not allowed
-,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,src/usart.rs,316,usart1,brr,write,,corroborated,1,,ue,exact,,887b4ff42a97,This register can only be written when the USART is disabled (UE=0).
-,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,src/usart.rs,407,usart1,tdr,modify,,corroborated,1,,txe,only,,c2180f9828d6,Note: This register must be written only when TXE=1.
-,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,src/usart.rs,424,usart1,tdr,modify,,unchecked,1,,txe,only,,c2180f9828d6,Note: This register must be written only when TXE=1.
+status,tp_fp,note,claude_review,rm,device,crate,version,tool,file,line,peripheral,register,operation,gated_field,static_verdict,count,compiled_in,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,svd2rust,src/i2c.rs,53,i2c1,txdr,write,txdata,unchecked,5,,txe,field,,4b4800757048,_Note: These bits can be written only when TXE=1._
+,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,svd2rust,src/i2c.rs,461,i2c1,txdr,write,txdata,unchecked,1,,txe,field,,4b4800757048,_Note: These bits can be written only when TXE=1._
+,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,svd2rust,src/i2c.rs,491,i2c1,txdr,write,txdata,unchecked,1,,txe,field,,4b4800757048,_Note: These bits can be written only when TXE=1._
+,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,svd2rust,src/rtc.rs,382,rtc,wutr,modify,,unchecked,1,,wutwf,only,,c33a836b3024,This register can be written only when WUTWF is set to 1 in RTC_ISR.
+,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,svd2rust,src/timer.rs,1145,tim1,cr1,write,cms,unchecked,1,,cen,field,,f41f134412cf,Note: Switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1) is not allowed
+,,,unsure,rm0365,stm32f302,stm32-hal2,2.1.10,svd2rust,src/timer.rs,1372,tim1,cr1,write,cms,unchecked,1,,cen,field,,f41f134412cf,Note: Switch from edge-aligned mode to center-aligned mode as long as the counter is enabled (CEN=1) is not allowed
+,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,svd2rust,src/usart.rs,316,usart1,brr,write,,corroborated,1,,ue,exact,,887b4ff42a97,This register can only be written when the USART is disabled (UE=0).
+,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,svd2rust,src/usart.rs,407,usart1,tdr,modify,,corroborated,1,,txe,only,,c2180f9828d6,Note: This register must be written only when TXE=1.
+,,,fp,rm0365,stm32f302,stm32-hal2,2.1.10,svd2rust,src/usart.rs,424,usart1,tdr,modify,,unchecked,1,,txe,only,,c2180f9828d6,Note: This register must be written only when TXE=1.
