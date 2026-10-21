@@ -713,15 +713,18 @@ def main() -> None:
           "  that map instead of being discarded. Because instances share the",
           "  type, such a gate necessarily covers EVERY instance of the block.",
           "- `enforced` = what actually became **compile-time gates**,",
-          "  after the emitter (only `state_gate` has an emitter today) and the",
+          "  after the emitter (four kinds emit today — `state_gate`,",
+          "  `write_once`, `sequence`, `delay`) and the",
           "  device-level prune. Every other kind is accounted for under",
           "  `where the rest went`, with the stage that dropped it.",
           "",
           "## The kinds of constraint",
           "",
-          "What the grammar can express. Only `state_gate` has a code",
-          "generator today; the rest are extracted and recorded, and appear",
-          "under *where the rest went* as `kind_not_emitted`.",
+          "What the grammar can express. Four kinds have code generators",
+          "(`state_gate`, `write_once`, `sequence`, `delay`); `clock_gate` is",
+          "intentionally not emitted (the HAL owns clock enablement) and",
+          "`read_effect`/`value_relation`/`other` stay documentation-only —",
+          "all appear under *where the rest went* as `kind_not_emitted`.",
           ""]
     md += [f"- **`{k}`** — {d}" for k, d in _KIND_DEFS]
     md += ["",
@@ -1013,13 +1016,13 @@ def _kinds_html(s: str) -> str:
 
 
 # What each grammar-v2 kind means, in plain terms, in the order they appear in
-# the breakdowns. Only `state_gate` has a code emitter today; the rest are
+# the breakdowns. Four kinds emit (state_gate, write_once, sequence, delay);
 # listed so a kind breakdown reads without opening the grammar spec.
 _KIND_DEFS = [
     ("state_gate",
      "You may only touch this register while some other bit is in the right "
      "state \u2014 \u201conly write CR1 while the STOP bit is clear\u201d. "
-     "The workhorse kind, and the only one with a code generator today."),
+     "The workhorse kind, and the first with a code generator."),
     ("sequence",
      "Several steps that must happen in a fixed order \u2014 write 0xCA to "
      "the key register, then 0x53. Doing them out of order does not work."),
@@ -1057,9 +1060,9 @@ _STAGES = [
      "Names a register or field that cannot be resolved in the SVD, fails "
      "grammar-v2 validation outright, or carries a placeholder name."),
     ("kind_not_emitted", "emitter coverage",
-     "The grammar kind has no code generator yet \u2014 sequence, delay, "
-     "write_once, read_effect, value_relation, other. The single largest "
-     "enforcement gap."),
+     "The grammar kind has no code generator \u2014 `clock_gate` (HAL-owned "
+     "by design), read_effect, value_relation, other. (state_gate, write_once, "
+     "sequence and delay now emit.)"),
     ("gated_out_by_validator", "closed-book judge",
      "The validator read the quote without the datasheet in front of it and "
      "called the constraint doc_only (genuine but not witness-enforceable) or "
@@ -1247,10 +1250,12 @@ def write_html(rows: list, path: Path, control_rows: list = ()) -> None:
 
     # --- table 1 -----------------------------------------------------------
     h += ['<section><h2>The kinds of constraint</h2>',
-          '<p class="note">What the grammar can express. Only '
-          '<code>state_gate</code> has a code generator today \u2014 the rest '
-          'are extracted and recorded, and show up under '
-          '<em>where the rest went</em> as <code>kind_not_emitted</code>.</p>',
+          '<p class="note">What the grammar can express. Four kinds now have '
+          'code generators \u2014 <code>state_gate</code>, <code>write_once</code>, '
+          '<code>sequence</code>, <code>delay</code>; <code>clock_gate</code> is '
+          'intentionally HAL-owned and <code>read_effect</code>/'
+          '<code>value_relation</code>/<code>other</code> stay documentation-only, '
+          'all under <em>where the rest went</em> as <code>kind_not_emitted</code>.</p>',
           '<div class="scroll"><table><thead><tr><th class="pin">kind</th>'
           '<th>what it means</th></tr></thead><tbody>']
     for kind, desc in _KIND_DEFS:
