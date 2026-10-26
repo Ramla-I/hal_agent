@@ -8,6 +8,14 @@ This program defines the full retrieval pipeline that OpenEvolve will evolve:
 
 The code inside the EVOLVE-BLOCK is what the LLM mutates each iteration.
 Everything outside (imports, DB setup, entry point) stays fixed.
+
+NOTE: this winner was evolved in a separate OpenEvolve worktree and checked in
+as a frozen artifact. It can eventually be replaced by a better-scoring program.
+When you do replace it, RETAIN the batched `collection.add()` (see `_MAX_ADD`
+below): a single add above ~5461 records is rejected by ChromaDB, and several
+shipped reference manuals are already at that scale, so an un-batched program
+dies on its first evaluation against a large datasheet. The evolution does not
+rediscover this on its own — it was hand-patched in after the fact.
 """
 
 import os
