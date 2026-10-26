@@ -553,6 +553,7 @@ def main() -> None:
             from core import quote_anchor as qa
             matcher = qa.RMMatcher(
                 rm, str(Path(args.attribution_check) / rm / "chunks" / "md"))
+            before_qa = {(p.peripheral, p.reg_lower): sig(p) for p in plans}
             kept_plans = []
             for plan in plans:
                 tiers = {}
@@ -641,6 +642,33 @@ def main() -> None:
                 if plan.preconditions or plan.field_gates:
                     kept_plans.append(plan)
             plans = kept_plans
+            # Revise the `planned` rows the attribution check emptied or
+            # narrowed -- the same correction the device prune does above -- so
+            # the report (and the tracking table that reads its `planned` rows)
+            # stops counting a quote-rejected register as still enforced.
+            after_qa = {(p.peripheral, p.reg_lower): sig(p) for p in plans}
+            for r in rows:
+                if r["fate"] != "planned":
+                    continue
+                key = (r["peripheral"], r["register"].lower())
+                if key not in before_qa:
+                    continue
+                kept = after_qa.get(key)
+                had = before_qa[key][0] or before_qa[key][1]
+                has = bool(kept and (kept[0] or kept[1]))
+                if had and not has:
+                    r["fate"] = "quote_rejected"
+                    r["reason"] = ("all gates dropped by the attribution check "
+                                   "(quote unanchored, or self-referential and "
+                                   "anchored outside the target's section)")
+                elif kept and kept != before_qa[key]:
+                    lost_ops = sorted(set(before_qa[key][0]) - set(kept[0]))
+                    lost_f = sorted(set(before_qa[key][1]) - set(kept[1]))
+                    bits = ([f"ops {lost_ops}"] if lost_ops else []) + \
+                           ([f"fields {lost_f}"] if lost_f else [])
+                    if bits:
+                        r["reason"] += ("; attribution check then dropped "
+                                        f"{' and '.join(bits)}")
 
         if args.save_constraints:
             device_file = device_constraints_file(
