@@ -1,57 +1,25 @@
 # `constraints/` — what each device's crate actually enforces
 
 One file per **(reference manual, device)** pair, named `<rm>_<device>.json`,
-written by `inject_from_run.py --save-constraints`. Keyed by manual *and*
-device because the mapping is not one-to-one: two manuals can project onto the
-same PAC family, and a manual can be measured on two devices.
+written by `inject_from_run.py --save-constraints`. Keyed by manual *and* device
+because the mapping is not one-to-one: two manuals can project onto the same PAC
+family, and a manual can be measured on two devices.
 
-Each file is the answer to *"show me exactly what you gated, and where it came
-from"* — the register, the operations gated on it, the precondition behind
-each one, the datasheet sentence that states it, and the tier the quote
-anchored at. Plus provenance: the generator run, the SVD, and the chunked
-datasheet the quotes were verified against.
+Each file answers *"show me exactly what you gated, and where it came from"* —
+the register, the operations gated on it, the precondition behind each one, the
+datasheet sentence that states it, and the tier the quote anchored at, plus
+provenance (the generator run, the SVD, and the chunked datasheet the quotes
+were verified against). These are the **end** of the pipeline — after collection
+lint, emitter selection, access-mode pruning, validator gating and quote
+verification. A constraint that appears here survived every stage.
 
-These are the **end** of the pipeline, after collection lint, emitter
-selection, access-mode pruning, validator gating and quote verification. A
-constraint that appears here survived every stage.
+## These files are generated, not committed
 
-## Reading one
-
-```sh
-python applications/pac_codegen/show_injected_constraints.py rm0008 --quotes
-python applications/pac_codegen/show_injected_constraints.py --all
-```
-
-One block per register: the gated operations, each distinct rule once, and with
-`--quotes` the datasheet sentence and the tier it anchored at. The files repeat
-a rule and its sentence once per operation gated, so raw JSON reads as
-duplication; this dedupes.
-
-## What is here, and what is not
-
-53 reference manuals have validated constraints; 53 files would need every one
-of them injected somewhere. The count breaks down as:
-
-| | files | why |
-|---|---|---|
-| `stm_sweep.py` targets | 49 | 48 manuals, plus rm0440 measured on a second device as a control |
-| `stm_master_pacs.py` | 4 | rm0493/0505/0529/0530 — crate exists only on stm32-rs master, so the sweep cannot provision it |
-| rm0475 | 0 | no chip crate covers STM32MP13x; nothing to inject into |
-
-Files are keyed by manual **and** device because injection happens per
-(manual, chip): `rm0440_stm32g431.json` and `rm0440_stm32g4a1.json` are both
-real and differ.
-
-`attribution_checked_against` names the chunked datasheet each file's
-constraints were checked against, and every file has one: the
-`--attribution-check` pass runs for all 53. It does two things — confirms the
-supporting quote exists in the manual, and confirms it actually attributes to
-the register the constraint claims. The second is what earns its keep;
-datasheets say *"this bit"* far more often than they name the register, so a
-quote that names none AND anchors outside the target's section supports the
-claim neither textually nor positionally, and its gate is dropped.
-
-## Regenerating
+The corpus is a derived artifact of the current generator runs and PACs: it
+drifts whenever a run directory is regenerated underneath it (the same manual
+that recorded 19 gated registers on one run yields 6 on another). Committing it
+only bakes in staleness, so this directory holds **only this README** and a
+`.gitignore`; regenerate the JSON on demand:
 
 ```sh
 python applications/pac_codegen/experiments/stm_sweep.py --dry-run --skip-hal
@@ -61,27 +29,37 @@ find applications/pac_codegen/experiments/out/constraints -name '*.json' \
      -exec cp {} applications/pac_codegen/constraints/ \;
 ```
 
-The `-not -name '*_fieldgate.json'` is load-bearing: both runs write both
-modes into `out/`, and only whole-register belongs here.
+`--dry-run` is enough for the sweep (`--save-constraints` writes without touching
+a PAC); `stm_master_pacs.py` has no dry mode — it injects and compiles. Both
+write into the gitignored `experiments/out/` tree; the `cp` collects the
+whole-register set here. The `-not -name '*_fieldgate.json'` is load-bearing:
+both runs emit both gating modes, and only whole-register
+(`field_level_gating: false`) belongs here — the field-level sweep writes
+`<rm>_<device>_fieldgate.json`.
 
-`--dry-run` is enough for the sweep: `--save-constraints` writes without
-touching a PAC. (`stm_master_pacs.py` has no dry mode; it injects and
-compiles.) Both write into the gitignored `experiments/out/` tree; this
-directory is the committed, reviewable set, so it is only ever updated
-deliberately.
+**Expected output: 53 files.** 49 from `stm_sweep.py` (48 manuals, plus rm0440
+measured on a second device as a control), 4 from `stm_master_pacs.py`
+(rm0493/0505/0529/0530 — crate exists only on stm32-rs master, which the sweep
+cannot provision). rm0475 yields none (no chip crate covers STM32MP13x).
 
-## Gating mode
+## Read one
 
-`field_level_gating` in each file records which mode produced it. The two
-modes plan **different** gate sets, so a file from one cannot be read as the
-other. Everything committed here is whole-register (`false`); the field-level
-sweep writes `<rm>_<device>_fieldgate.json` and stays in `out/`.
+```sh
+python applications/pac_codegen/show_injected_constraints.py rm0008 --quotes
+python applications/pac_codegen/show_injected_constraints.py --all
+```
 
-## One caveat on reading these
+One block per register: the gated operations, each distinct rule once, and with
+`--quotes` the datasheet sentence and the tier it anchored at. The raw JSON
+repeats a rule once per operation gated, so it reads as duplication; this
+dedupes.
 
-They describe the *pipeline as it stands*, not a frozen result. The rm0008
-artifact committed on 2026-07-29 recorded 19 gated registers; the same manual
-yields 6 today, because the generator run directory was regenerated underneath
-it. `docs/stm_injection_sweep.md` §5 analyses that divergence and cites the
-old file by git revision. Regenerate this directory whenever the run
-directories change, or it drifts the same way.
+## Attribution
+
+`attribution_checked_against` names the chunked datasheet each file's constraints
+were verified against — the `--attribution-check` pass runs for all 53. It does
+two things: confirms the supporting quote exists in the manual, and confirms it
+actually attributes to the register the constraint claims. The second earns its
+keep — datasheets say *"this bit"* far more often than they name the register,
+so a quote that names none **and** anchors outside the target's section supports
+the claim neither textually nor positionally, and its gate is dropped.
