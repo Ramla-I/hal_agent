@@ -6,15 +6,25 @@ all → what happens when it is → what does a failure mean → does any of it
 generalise.* Read them in that order and the folder tells a story; read them
 alphabetically and it looks like a pile.
 
+A few of the files are **shared libraries, not experiments** — imported by the
+others, not run on their own. They are listed in their own section at the end,
+so the rest of the folder reads as the experiments it is.
+
 **Everything writes to `out/`, which is gitignored.** The reports there are the
 only durable record of a run, so a result nobody copied out of `out/` is a
-result nobody can check. The committed artifacts are elsewhere:
-`../constraints/` (what each device gates) and `docs/artifacts/injection_tracking.*`.
+result nobody can check. The committed artifacts live elsewhere, and are
+**regenerated, not hand-kept**: `../constraints/` (what each device gates — see
+its README) and `docs/artifacts/` (the rendered pages).
 
 **All of them read the pipeline's output from a sibling worktree**,
 `/home/ramla/hal_agent-phase-1d` — the generator runs, the SVDs, the validated
 constraints, the chunked datasheets. That path is a module constant (`DATA` or
-`PHASE1D`), not a flag.
+`PHASE1D`); to reproduce elsewhere, point it at your own run tree.
+
+**The three-stage finding story — compile it, read it, make more of it
+compilable — is written up in
+[`../../../docs/PAC_CODEGEN.md`](../../../docs/PAC_CODEGEN.md#finding-violations-in-real-code),
+with current numbers. This file is the per-script index.**
 
 ---
 
@@ -28,12 +38,7 @@ It re-checks every HAL pairing against the live crates.io index rather than
 trusting `../rm_pac_mappings/stm.toml`, whose data was hand-verified once. A
 pairing that has drifted is how an experiment silently measures the wrong crate.
 
-**The three-stage finding story — compile it, read it, make more of it
-compilable — is written up in
-[`docs/PAC_CODEGEN.md`](../../../docs/PAC_CODEGEN.md#finding-violations-in-real-code),
-with current numbers. This file is the per-script index.**
-
-## The main measurement
+## The main measurement — compile real drivers against injected PACs
 
 | script | question | output |
 |---|---|---|
@@ -60,10 +65,25 @@ measured that way, and the comparison should be runnable rather than asserted.
 Its artifacts go to `out/register_only/`, a separate tree: the two modes plan
 different gate sets, and a shared path once let one overwrite the other.
 
-`gen_injection_tracking_artifact.py` reads results, never recomputes them: every number in the
-published table traces to a file in `out/`.
+`gen_injection_tracking_artifact.py` reads results, never recomputes them: every
+number in the published table traces to a file in `out/`.
 
-## Nothing to compile against — make more of it measurable
+## Whole applications and downstream crates
+
+`stm_sweep` compiles the paired HAL; these go further — real firmware, flight
+software, and the crates that depend on a swept HAL — each a compiler verdict on
+source nobody wrote for this.
+
+| script | question | output |
+|---|---|---|
+| `port_blackpill.py` | the first whole **application** built against an injected PAC — does it still compile, with zero edits? | `out/port_blackpill.json` |
+| `port_elodin.py` | compiler verdicts inside commercial flight software (patched via `patches/elodin`) | `out/port_elodin.json` |
+| `port_anne_key.py` | does the source **scanner** agree with the **compiler** on the same project? | `out/port_anne_key.json` |
+| `port_stm32_eth.py` | confirm a **true negative** against the compiler — a site the gate must NOT flag | `out/port_stm32_eth.json` |
+| `dependent_compile.py` | do the HAL's gated bug-sites actually ship in its dependents' builds? | `out/` |
+| `hopter.py` | a real embedded OS against an injected PAC | `out/hopter.json` |
+
+## Nothing to compile against — make more measurable
 
 Four community HALs could not be measured at all: their newest release still
 depends on an older svd2rust PAC generation than the injector targets.
@@ -90,6 +110,7 @@ it, "we upgraded the HAL" and "we fixed the HAL" are indistinguishable.
 | `corroboration.py` | does the driver already perform the datasheet check at this site? | stdout only |
 | `friction.py` | what causes generic friction, and what would remove it? | `out/friction.json` |
 | `trace_hal.py` | does a constraint ever reach the APPLICATION, or does the driver absorb it? | `out/trace_hal.json` |
+| `bitband_scan.py` | which register writes evade the gate entirely — bit-banding, raw pointers? | `out/bitband_scan.json` |
 
 `corroboration.py` splits *guarded* from *candidate bug*: it scans back to the
 enclosing function, looks for the precondition's field accessor before the
@@ -97,8 +118,10 @@ flagged line, then puts a calibrated closed-book judge on the disagreements and
 shortlists those for a human. `friction.py` measures the cost side — a HAL
 generic over register blocks needs the marker bounds even where nothing is
 constrained. `trace_hal.py` asks who the enforcement actually protects.
+`bitband_scan.py` is the honest-limits probe: it finds the writes the gate can
+*never* see, because they go around the typed API.
 
-## Beyond what can be compiled
+## Beyond what can be compiled — scan the source instead
 
 Every remaining candidate project pins an older HAL or PAC, so building first
 and looking second does not scale.
@@ -106,8 +129,15 @@ and looking second does not scale.
 | script | question | output |
 |---|---|---|
 | `scan_projects.py` | find constrained register accesses in third-party source, WITHOUT compiling | `out/scan_projects.json` |
-| `landscape_page.py` | publish that scan | `docs/project_landscape.html` |
-| `hopter.py` | a real embedded OS against an injected PAC | `out/hopter.json` |
+| `dependent_scan.py` | scan every crates.io **dependent's** own source for constrained accesses | `out/`, `hal_dependents_census.json` |
+| `landscape_page.py` | publish that scan as a page | `docs/artifacts/project_landscape.html` |
+
+## Adjudicate and publish
+
+| script | question | output |
+|---|---|---|
+| `bug_review.py` | step through the sweep's possible-bug sites and record tp/fp — the human ledger | `../bug_review/` CSV tree |
+| `coverage_page.py` | the STM32 PAC → HAL & ecosystem coverage artifact | a page, reproducible from the records |
 
 ## Does any of this generalise?
 
@@ -116,10 +146,33 @@ and looking second does not scale.
 | `cross_pac.py` | the injector was built against stm32f4 — does it work unchanged elsewhere? | stdout only |
 | `check_pac_generation.py` | would a NEWER svd2rust break the injector? | `out/check_pac_generation.json` |
 
-`cross_pac.py` is what `stm_sweep` generalises from: four hand-picked fixtures,
-proving the injector was not stm32f4-shaped. `check_pac_generation.py` guards
-the pin — the corpus is on svd2rust 0.36.1, and it answers the upgrade question
-by running the newer generator, not by reading its changelog.
+`cross_pac.py` is what `stm_sweep` generalises from: four hand-picked fixtures
+(`fixtures/`), proving the injector was not stm32f4-shaped. `check_pac_generation.py`
+guards the pin — the corpus is on svd2rust 0.36.1, and it answers the upgrade
+question by running the newer generator, not by reading its changelog.
+
+---
+
+## Shared libraries (imported by the experiments, not run on their own)
+
+| module | role | imported by |
+|---|---|---|
+| `enforcement.py` | the one place that decides what an enforcement hit *is* — every experiment that classifies a site calls it, so the definition lives in exactly one spot | 12 scripts |
+| `corroboration.py` | the guarded-vs-candidate-bug split and the closed-book judge (also runnable on its own, above) | 8 scripts |
+
+`stm_sweep.py` and `scan_projects.py` are runnable experiments (above) that other
+scripts also import — treat their public functions as an interface.
+
+## Subdirectories
+
+- [`binary_size/`](binary_size/README.md) — the injection's **cost**: source LOC
+  added per crate, and the firmware-binary bytes (large in source, ~free in the
+  binary). Measurement JSON is committed (re-measuring needs a full build); the
+  rendered figure regenerates into `docs/artifacts/`.
+- [`hal_probe/`](hal_probe/README.md) — build **any** driver against **any**
+  injected PAC, one pairing at a time, and explain the errors.
+- `fixtures/` — the four cross-PAC fixtures `cross_pac.py` runs on.
+- `patches/` — source patches an experiment applies before building (`elodin`).
 
 ---
 

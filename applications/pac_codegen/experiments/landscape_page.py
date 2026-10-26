@@ -2,7 +2,7 @@
 """landscape_page.py -- the project-landscape scan as a published page.
 
 Reads out/scan_projects.json (and out/trace_hal.json, when present, for the
-driver-only applications) and writes docs/project_landscape.html: a summary
+driver-only applications) and writes docs/artifacts/project_landscape.html: a summary
 table over every project scanned, then one section per project listing its
 candidate sites with the datasheet sentence each one is measured against.
 
@@ -26,7 +26,7 @@ from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent.parent
 OUT = APP_DIR / "experiments" / "out"
-DOC = APP_DIR.parent.parent / "docs" / "project_landscape.html"
+DOC = APP_DIR.parent.parent / "docs" / "artifacts" / "project_landscape.html"
 
 STYLE_LABEL = {
     "pac_direct": "talks to the chip crate directly",

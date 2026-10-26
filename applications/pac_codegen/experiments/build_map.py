@@ -4,6 +4,9 @@
 Produces the RM -> SVD -> PAC crate/device-module -> HAL-consumer map that the
 injection + HAL-adoption runs consume, and RE-VERIFIES every HAL pairing
 against the crates.io sparse index (stm.toml's data was checked 2026-07-16).
+
+Usage:
+    python applications/pac_codegen/experiments/build_map.py   # -> out/injection_map.json
 """
 import json
 import sys
