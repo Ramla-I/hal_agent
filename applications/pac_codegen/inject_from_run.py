@@ -11,9 +11,9 @@ are compilable by the current emitter (state gates over observed hardware
 state; sequences/action witnesses arrive with later roadmap steps), builds
 one plan per register, and injects them all into the PAC in a single shot.
 
-Everything that is dropped is dropped LOUDLY: the report lists every
-constraint with its fate (injected / rejected-at-collection /
-unsupported-by-emitter / peripheral-not-in-device) and the reason.
+Drops are reported rather than silent: each is a fate row (injected /
+rejected-at-collection / unsupported-by-emitter / peripheral-not-in-device)
+with its reason, joinable to the durable artifact by constraint id.
 
 Usage:
     python applications/pac_codegen/inject_from_run.py \
@@ -23,7 +23,7 @@ Usage:
         [--report out/report.json]
 
 --dry-run performs everything except writing to the PAC (selection and plan
-construction still run, so the report is complete).
+construction still run, so the report is produced either way).
 """
 
 import argparse
@@ -148,7 +148,14 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
         # acceptance is simply "present here". The emitter enforces state gates;
         # `enforceability` is a collection annotation, not a grammar field.
         out_file = collect_dir / Path(reg_entry["output_path"]).name
-        data = json.loads(out_file.read_text())
+        try:
+            data = json.loads(out_file.read_text())
+        except (OSError, ValueError) as e:
+            # One unreadable collected file must not abort the whole run: report
+            # it as its own fate and move on. all_ids is still empty here, so
+            # this row legitimately carries no ids.
+            row("read_error", f"could not read {out_file.name}: {e}")
+            continue
         all_v2 = data.get("access_constraints_v2") or []
         all_ids[:] = sorted({
             new_constraint_id(rm, peripheral, reg_entry["register"], g)
@@ -164,6 +171,7 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
                        if g.get("kind") not in rust_codegen.SUPPORTED_KINDS
                        else "codegen disabled for this kind")
                 row("kind_not_emitted", f"{g.get('kind')}: {why}",
+                    ids=[new_constraint_id(rm, peripheral, reg_entry["register"], g)],
                     kind=g.get("kind", ""))
 
         # Constraint-validator gate (opt-in): keep only constraints the judge
@@ -173,12 +181,14 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
         if gate_map is not None:
             kept = []
             for g in gates:
-                decision = gate_map.get(new_constraint_id(rm, peripheral, reg_entry["register"], g))
+                cid = new_constraint_id(rm, peripheral, reg_entry["register"], g)
+                decision = gate_map.get(cid)
                 if decision == "enforce":
                     kept.append(g)
                 else:
                     row("gated_out_by_validator",
                         f"{g.get('kind')}: {decision or 'not_in_validated'}",
+                        ids=[cid],
                         kind=g.get("kind", ""), decision=decision or "not_in_validated")
             gates = kept
         for g in gates:
