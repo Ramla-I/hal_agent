@@ -92,10 +92,12 @@ GROQ_MODELS = {"gpt-oss-120b", "llama-3.3-70b-versatile"}
 # order and overflows to the next when one is persistently rate-limited (e.g.
 # Groq TPM exhausted → fall back to a second Groq model, then a low-cost OpenAI
 # model). EDIT THESE LISTS to change what each stage runs and its fallbacks.
-# Generator overflow: gpt-oss-120b (best quality) → llama-3.3-70b-versatile
-# (separate Groq TPM budget, slightly weaker on structure) → gpt-5-nano (OpenAI).
+# Generator overflow: gpt-oss-120b (best quality) → gpt-5-nano (OpenAI).
+# (llama-3.3-70b-versatile removed — decommissioned on Groq, returns 404, which
+# silently dropped rate-limited batches instead of overflowing to OpenAI. This
+# surfaces under --generator-concurrency, where Groq TPM limits are easy to hit.)
 STAGE_MODELS = {
-    "generator":         ["gpt-oss-120b", "llama-3.3-70b-versatile", "gpt-5-nano"],
+    "generator":         ["gpt-oss-120b", "gpt-5-nano"],
     "analyzer":          ["gpt-5-nano"],
     "coverage_improver": ["gpt-5.2"],
     "validator":         ["gpt-oss-120b", "gpt-5-nano"],  # Groq primary -> cheap OpenAI fallback
@@ -104,6 +106,7 @@ STAGE_MODELS = {
 # MODEL_NAME = "gpt-4o"
 GENERATOR_MODEL_NAME = "gpt-oss-120b"
 GENERATOR_BATCHED = True  # per-peripheral batched generator by default (fewer LLM calls); --no-generator-batched to disable
+GENERATOR_CONCURRENCY = 1  # max concurrent batched-generator LLM calls (1 = serial); raise to parallelize large devices (--generator-concurrency)
 GENERATOR_ITER = 1 # Number of iterations for the generator agent
 
 COVERAGE_IMPROVER_MODEL_NAME = "gpt-5.2"

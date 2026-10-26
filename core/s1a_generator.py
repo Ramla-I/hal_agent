@@ -1,6 +1,8 @@
 import os
 import re
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Dict, List
 from defs import ContextRetrievalParameters, Manufacturer, ContextRetrievalMethod
 from agent_tools.tools import all_svd_file_paths, calculate_address_offset
@@ -372,6 +374,7 @@ def run_generator_batched(
     models: Optional[List[str]] = None,
     empty_field_retries: int = 2,
     force: bool = False,
+    concurrency: int = 1,
     _retrying: bool = False,
 ) -> bool:
     """Per-peripheral batched generator — one LLM call per batch of registers.
@@ -400,8 +403,11 @@ def run_generator_batched(
     )
 
     gen_models = models or [model_name]
-    truncated_at_any_register = False
-    failed_batches = 0
+    # Mutable holders so the per-batch worker can update shared state under a lock
+    # (batches may run concurrently when concurrency > 1).
+    _stats = {"truncated": False, "failed": 0}
+    _save_lock = threading.Lock()   # ResultSaver has no internal locking
+    _stats_lock = threading.Lock()
 
     saver_info = ResultSaver(os.path.join(agent_output_dir, "info"))
     saver_output = ResultSaver(agent_output_dir)
@@ -430,7 +436,8 @@ def run_generator_batched(
         register_names_to_process = peripherals_registers_dict
         logger.info("Using provided dict with %d peripherals", len(register_names_to_process))
 
-    # ---- Main loop ----
+    # ---- Build the flat work-list of (peripheral, batch) ----
+    work_items: List[tuple] = []
     for peripheral_name, all_registers in register_names_to_process.items():
         # Determine which registers still need processing
         remaining = [
@@ -462,6 +469,17 @@ def run_generator_batched(
             )
 
         for batch in batches:
+            work_items.append((peripheral_name, batch))
+
+    # ---- Per-batch worker. Safe to run concurrently (concurrency > 1): its own
+    #      function handler, the retrieval embedding cache is thread-safe, every
+    #      ResultSaver write is locked, and shared counters go through _stats under
+    #      _stats_lock. The single-iteration ``for batch in [batch]`` leaves the
+    #      batch body (and its ``continue`` short-circuits) byte-for-byte unchanged.
+    def _process_batch(work_item):
+        peripheral_name, batch = work_item
+        function_handler = create_default_handler()
+        for batch in [batch]:
             batch_label = (
                 f"{peripheral_name} ({len(batch)} regs)" if batch
                 else f"{peripheral_name} (discovery)"
@@ -518,7 +536,8 @@ def run_generator_batched(
                 },
             ]
             truncated, input_list = truncate_message_by_tokens(input_list, model_name)
-            truncated_at_any_register = truncated_at_any_register or truncated
+            with _stats_lock:
+                _stats["truncated"] = _stats["truncated"] or truncated
             if truncated:
                 logger.info("Truncated input for batch %s", batch_label)
 
@@ -540,7 +559,8 @@ def run_generator_batched(
                     )
             except Exception as e:
                 logger.error("Generator failed for batch %s: %s", batch_label, e)
-                failed_batches += 1
+                with _stats_lock:
+                    _stats["failed"] += 1
                 continue
 
             if response.output_text:
@@ -569,7 +589,8 @@ def run_generator_batched(
                         })
 
                     truncated, input_list = truncate_message_by_tokens(input_list, model_name)
-                    truncated_at_any_register = truncated_at_any_register or truncated
+                    with _stats_lock:
+                        _stats["truncated"] = _stats["truncated"] or truncated
 
                     try:
                         with timed_operation("generator_llm_call"):
@@ -582,7 +603,8 @@ def run_generator_batched(
                             )
                     except Exception as e:
                         logger.error("Generator follow-up failed for batch %s: %s", batch_label, e)
-                        failed_batches += 1
+                        with _stats_lock:
+                            _stats["failed"] += 1
                         continue
                     reasoning, rest_of_response = get_reasoning_from_response(response.output_text)
                     usage.append(response.usage)
@@ -682,23 +704,46 @@ def run_generator_batched(
                 "reasoning.jsonl",
             )
 
-    if failed_batches:
+    # ---- Dispatch the work-list: serial (concurrency <= 1) or a thread pool ----
+    if concurrency and concurrency > 1 and len(work_items) > 1:
+        logger.info("Processing %d batch(es) with concurrency=%d", len(work_items), concurrency)
+        with ThreadPoolExecutor(max_workers=concurrency) as ex:
+            list(ex.map(_process_batch, work_items))
+    else:
+        for _wi in work_items:
+            _process_batch(_wi)
+
+    if _stats["failed"]:
         logger.error(
             "Generator for %s: %d batch(es) failed and were skipped (resume to retry)",
-            device_name, failed_batches,
+            device_name, _stats["failed"],
         )
 
     # Empty-field retry: a large batch response can truncate/omit a register's
     # subfields, leaving it saved with 0 fields. Re-generate those ONE register per
     # call (no truncation), overwriting in place (force=True, so a failed retry
     # keeps the old file). Bounded rounds; skipped in retrieval-only / retry calls.
+    #
+    # Smart stop: the retry assumes "empty == batch truncation" (true on STM). On
+    # vendors where "empty == extraction genuinely failed" (NXP: the fields aren't
+    # in the retrieved text), re-running returns empty again — so a round that
+    # recovers NO new fields means further rounds are wasted calls. Stop then. The
+    # retry inherits ``concurrency`` so its many single-register calls also run in
+    # parallel (that pass dominates wall-clock on structure-sparse NXP devices).
     if not _retrying and not retrieval_only and empty_field_retries > 0:
+        prev_empty = None
         for round_i in range(empty_field_retries):
             empty = _find_empty_field_registers(agent_output_dir, svd_file_paths)
-            if not empty:
+            n_empty = sum(len(v) for v in empty.values())
+            if n_empty == 0:
                 break
+            if prev_empty is not None and n_empty >= prev_empty:
+                logger.info("Empty-field retry: previous round recovered no new fields "
+                            "(%d still empty) — stopping (futile on this device)", n_empty)
+                break
+            prev_empty = n_empty
             logger.info("Empty-field retry %d/%d: re-generating %d register(s) singly",
-                        round_i + 1, empty_field_retries, sum(len(v) for v in empty.values()))
+                        round_i + 1, empty_field_retries, n_empty)
             run_generator_batched(
                 client, model_name, device_name, run_number, device_dir,
                 agent_output_dir, context_retrieval_parameters, manufacturer,
@@ -706,10 +751,10 @@ def run_generator_batched(
                 max_fields_per_batch=max_fields_per_batch, include_reasoning=include_reasoning,
                 skip_function_followup=skip_function_followup,
                 system_prompt_override=system_prompt_override, models=models,
-                empty_field_retries=0, force=True, _retrying=True,
+                empty_field_retries=0, force=True, concurrency=concurrency, _retrying=True,
             )
 
-    return truncated_at_any_register
+    return _stats["truncated"]
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ The OE program uses:
 import os
 import importlib.util
 import sys
+import threading
 from types import ModuleType
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -37,6 +38,10 @@ _module_cache: Dict[str, ModuleType] = {}
 # program alone made multi-device runs in one process retrieve against the first
 # device's chunks.)
 _db_cache: Dict[Tuple[str, str], Tuple[Any, List[Dict[str, Any]]]] = {}
+# Serializes the (expensive, NOT thread-safe) ChromaDB store build so concurrent
+# generator batches don't race on client/collection creation ("Could not connect
+# to tenant default_tenant"). Reads of the built collection are fine concurrently.
+_db_cache_lock = threading.Lock()
 
 
 def _resolve_program_path(program_path: Optional[str]) -> str:
@@ -83,15 +88,22 @@ def _ensure_database(
     if cached is not None:
         return cached
 
-    mod = _load_oe_module(resolved)
-    logger.info(
-        f"Building OE ephemeral database for {os.path.basename(resolved)} "
-        f"+ {os.path.basename(chunks_index_csv)}..."
-    )
-    collection, processed_chunks = mod.setup_database(chunks_dir, chunks_index_csv)
-    _db_cache[key] = (collection, processed_chunks)
-    logger.info("OE database ready")
-    return collection, processed_chunks
+    # Double-checked locking: only one thread builds the store; the rest wait and
+    # reuse it. setup_database() (ChromaDB client + ephemeral collection) is not
+    # thread-safe, so an unguarded concurrent build races on tenant creation.
+    with _db_cache_lock:
+        cached = _db_cache.get(key)
+        if cached is not None:
+            return cached
+        mod = _load_oe_module(resolved)
+        logger.info(
+            f"Building OE ephemeral database for {os.path.basename(resolved)} "
+            f"+ {os.path.basename(chunks_index_csv)}..."
+        )
+        collection, processed_chunks = mod.setup_database(chunks_dir, chunks_index_csv)
+        _db_cache[key] = (collection, processed_chunks)
+        logger.info("OE database ready")
+        return collection, processed_chunks
 
 
 def _extract_embedding_ids(
