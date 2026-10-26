@@ -1,0 +1,360 @@
+{
+ "device": "stm32f373",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0313/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0313/svd/stm32f373.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --attribution-check) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "attribution_checked_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "can",
+   "register": "BTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_MCR.INRQ set"
+    ],
+    "modify": [
+     "CAN_MCR.INRQ set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Therefore, the CAN_BTR register can be modified by software only while the CAN hardware is in initialization mode."
+    ],
+    "modify": [
+     "Therefore, the CAN_BTR register can be modified by software only while the CAN hardware is in initialization mode."
+    ]
+   },
+   "constraint_ids": [
+    "6ecc0fac2df1"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "can",
+   "register": "FFA1R",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_FMR.FINIT set"
+    ],
+    "modify": [
+     "CAN_FMR.FINIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ],
+    "modify": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ]
+   },
+   "constraint_ids": [
+    "0156302b0d87"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "can",
+   "register": "FM1R",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_FMR.FINIT set"
+    ],
+    "modify": [
+     "CAN_FMR.FINIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ],
+    "modify": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ]
+   },
+   "constraint_ids": [
+    "6b252d32c052"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "can",
+   "register": "FS1R",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_FMR.FINIT set"
+    ],
+    "modify": [
+     "CAN_FMR.FINIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ],
+    "modify": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ]
+   },
+   "constraint_ids": [
+    "ef683ee4ce47"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "flash",
+   "register": "AR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FLASH_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write access to this register is blocked when the BSY bit in the FLASH_SR register is set."
+    ]
+   },
+   "constraint_ids": [
+    "9b0f11e63939"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "flash",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FLASH_SR.BSY cleared"
+    ],
+    "modify": [
+     "FLASH_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The registers are not accessible in write mode when the BSY bit of the FLASH_SR register is set."
+    ],
+    "modify": [
+     "The registers are not accessible in write mode when the BSY bit of the FLASH_SR register is set."
+    ]
+   },
+   "constraint_ids": [
+    "423783f90e8f"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "WUTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ISR.WUTWF set"
+    ],
+    "modify": [
+     "RTC_ISR.WUTWF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ISR."
+    ],
+    "modify": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ISR."
+    ]
+   },
+   "constraint_ids": [
+    "5dd26bda0628"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "sdadc1",
+   "register": "CR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SDADC_ISR.INITRDY set"
+    ],
+    "modify": [
+     "SDADC_ISR.INITRDY set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Many control and configuration registers (see their descriptions) can be modified only when INITRDY=1."
+    ],
+    "modify": [
+     "Many control and configuration registers (see their descriptions) can be modified only when INITRDY=1."
+    ]
+   },
+   "constraint_ids": [
+    "1cad6320fd43"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "tsc",
+   "register": "IOSCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "TSC_CR.START cleared"
+    ],
+    "modify": [
+     "TSC_CR.START cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "_Note: These bits must not be modified when an acquisition is ongoing._"
+    ],
+    "modify": [
+     "_Note: These bits must not be modified when an acquisition is ongoing._"
+    ]
+   },
+   "constraint_ids": [
+    "c6f01eef49cf"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "usart1",
+   "register": "BRR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.UE cleared"
+    ],
+    "modify": [
+     "USART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the USART is disabled (UE=0)."
+    ],
+    "modify": [
+     "This register can only be written when the USART is disabled (UE=0)."
+    ]
+   },
+   "constraint_ids": [
+    "cf2339eea4c3"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  }
+ ]
+}

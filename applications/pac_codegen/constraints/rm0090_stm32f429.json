@@ -1,0 +1,386 @@
+{
+ "device": "stm32f429",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0090/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0090/svd/stm32f439.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --attribution-check) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "attribution_checked_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "can1",
+   "register": "BTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_MCR.INRQ set"
+    ],
+    "modify": [
+     "CAN_MCR.INRQ set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be accessed by the software when the CAN hardware is in initialization mode."
+    ],
+    "modify": [
+     "This register can only be accessed by the software when the CAN hardware is in initialization mode."
+    ]
+   },
+   "constraint_ids": [
+    "c730a1fa5674"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "can1",
+   "register": "FA1R",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_FMR.FINIT set"
+    ],
+    "modify": [
+     "CAN_FMR.FINIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ],
+    "modify": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ]
+   },
+   "constraint_ids": [
+    "6195c21953ce"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "can1",
+   "register": "FFA1R",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CAN_FMR.FINIT set"
+    ],
+    "modify": [
+     "CAN_FMR.FINIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ],
+    "modify": [
+     "This register can be written only when the filter initialization mode is set (FINIT=1) in the CAN_FMR register."
+    ]
+   },
+   "constraint_ids": [
+    "670c575671fe"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "dma2d",
+   "register": "FGMAR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "DMA2D_CR.START cleared"
+    ],
+    "modify": [
+     "DMA2D_CR.START cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can only be written when data transfers are disabled. Once the transfer has started, they are read-only."
+    ],
+    "modify": [
+     "These bits can only be written when data transfers are disabled. Once the transfer has started, they are read-only."
+    ]
+   },
+   "constraint_ids": [
+    "7d7fa816da57"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "dma2d",
+   "register": "OMAR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "DMA2D_CR.START cleared"
+    ],
+    "modify": [
+     "DMA2D_CR.START cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can only be written when data transfers are disabled. Once the transfer has started, they are read-only."
+    ],
+    "modify": [
+     "These bits can only be written when data transfers are disabled. Once the transfer has started, they are read-only."
+    ]
+   },
+   "constraint_ids": [
+    "dc66f3d5b710"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "CCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "I2C_CR1.PE cleared"
+    ],
+    "modify": [
+     "I2C_CR1.PE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The CCR register must be configured only when the I2C is disabled (PE = 0)."
+    ],
+    "modify": [
+     "The CCR register must be configured only when the I2C is disabled (PE = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "c36a7edd0b70"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "FLTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "I2C_CR1.PE cleared"
+    ],
+    "modify": [
+     "I2C_CR1.PE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "ANOFF must be configured only when the I2C is disabled (PE = 0)."
+    ],
+    "modify": [
+     "ANOFF must be configured only when the I2C is disabled (PE = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "24cf812fed6b"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "TRISE",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "I2C_CR1.PE cleared"
+    ],
+    "modify": [
+     "I2C_CR1.PE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "TRISE must be configured only when the I2C is disabled (PE = 0)."
+    ],
+    "modify": [
+     "TRISE must be configured only when the I2C is disabled (PE = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "bc6ef59dbf64"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "SSCGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RCC_CR.PLLON cleared"
+    ],
+    "modify": [
+     "RCC_CR.PLLON cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The RCC_SSCGR register must be written either before the main PLL is enabled or after the main PLL disabled."
+    ],
+    "modify": [
+     "The RCC_SSCGR register must be written either before the main PLL is enabled or after the main PLL disabled."
+    ]
+   },
+   "constraint_ids": [
+    "77ecb041b501"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rng",
+   "register": "DR",
+   "gated_operations": [
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "RNG_SR.DRDY set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "The software must check that the DRDY bit is set before reading the RNDATA value."
+    ]
+   },
+   "constraint_ids": [
+    "a9dd1f29afb3"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "read": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "TXCRCR",
+   "gated_operations": [
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "SPI_SR.BSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "A read to this register when the BSY flag is set could return an incorrect value."
+    ]
+   },
+   "constraint_ids": [
+    "1988cdc56dd2"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "read": [
+     "exact"
+    ]
+   }
+  }
+ ]
+}

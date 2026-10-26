@@ -1,0 +1,4203 @@
+{
+ "device": "stm32h7b3",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0455/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0455/svd/stm32h7b3.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --attribution-check) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "attribution_checked_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "adc1",
+   "register": "CALFACT",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADEN set",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADEN set",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADEN=1, ADSTART=0 and JADSTART=0 (ADC is enabled and no calibration is ongoing and no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADEN=1, ADSTART=0 and JADSTART=0 (ADC is enabled and no calibration is ongoing and no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "1c3bc2a2d100"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "CALFACT2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADEN set",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADEN set",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADEN=1 and ADSTART=0 and JADSTART=0 (ADC is enabled and no calibration is ongoing and no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADEN=1 and ADSTART=0 and JADSTART=0 (ADC is enabled and no calibration is ongoing and no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "dadb0c85f779"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "CFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no regular nor injected conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no regular nor injected conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "0a19d3f0cd6a"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "CFGR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write this bit only when ADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write this bit only when ADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "ee5390fe5525"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADEN cleared",
+     "ADCAL cleared",
+     "JADSTART cleared",
+     "JADSTP cleared",
+     "ADSTART cleared",
+     "ADSTP cleared",
+     "ADDIS cleared"
+    ],
+    "modify": [
+     "ADEN cleared",
+     "ADCAL cleared",
+     "JADSTART cleared",
+     "JADSTP cleared",
+     "ADSTART cleared",
+     "ADSTP cleared",
+     "ADDIS cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write this bit only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
+    ],
+    "modify": [
+     "The software is allowed to write this bit only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
+    ]
+   },
+   "constraint_ids": [
+    "1b125509e15d",
+    "e8d6f88711df"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "DIFSEL",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADEN cleared",
+     "ADC_CR.ADCAL cleared",
+     "ADC_CR.JADSTART cleared",
+     "ADC_CR.JADSTP cleared",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.ADSTP cleared",
+     "ADC_CR.ADDIS cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADEN cleared",
+     "ADC_CR.ADCAL cleared",
+     "ADC_CR.JADSTART cleared",
+     "ADC_CR.JADSTP cleared",
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.ADSTP cleared",
+     "ADC_CR.ADDIS cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when the ADC is disabled (ADCAL=0, JADSTART=0, JADSTP=0, ADSTART=0, ADSTP=0, ADDIS=0 and ADEN=0)."
+    ]
+   },
+   "constraint_ids": [
+    "02f220202a62"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "HTR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "78aae5958525"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "HTR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "98300f96b038"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "HTR3",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "99f32a0a1008"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "LTR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "d773acfa27d2"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "LTR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "de968d16ab9f"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "PCSEL",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "15a01f2395bf"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "SMPR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "73c04f8d5486"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "SMPR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "71ecc388f7a6"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "SQR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "0065e4d0643c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "SQR3",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "d03521ee161d"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "SQR4",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
+    ],
+    "modify": [
+     "Note: The software is allowed to write these bits only when ADSTART=0 (which ensures that no regular conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "e60448893e0d"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "AWD3CR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "4663afc469ef"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "adc1",
+   "register": "LTR3",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ],
+    "modify": [
+     "ADC_CR.ADSTART cleared",
+     "ADC_CR.JADSTART cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ],
+    "modify": [
+     "The software is allowed to write these bits only when ADSTART=0 and JADSTART=0 (which ensures that no conversion is ongoing)."
+    ]
+   },
+   "constraint_ids": [
+    "11efbef02933"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cec",
+   "register": "CFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CEC_CR.CECEN cleared"
+    ],
+    "modify": [
+     "CEC_CR.CECEN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Caution: It is mandatory to write CEC_CFGR only when CECEN = 0."
+    ],
+    "modify": [
+     "Caution: It is mandatory to write CEC_CFGR only when CECEN = 0."
+    ]
+   },
+   "constraint_ids": [
+    "1980f611daf0"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "comp1",
+   "register": "OR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "COMP_CFGR1.LOCK cleared"
+    ],
+    "modify": [
+     "COMP_CFGR1.LOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This bit is set by software and cleared by a hardware system reset. It locks the whole content of the COMP channel 1 configuration register COMP_CFGR1[31:0], and COMP_OR register"
+    ],
+    "modify": [
+     "This bit is set by software and cleared by a hardware system reset. It locks the whole content of the COMP channel 1 configuration register COMP_CFGR1[31:0], and COMP_OR register"
+    ]
+   },
+   "constraint_ids": [
+    "395761cb462f"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "crs",
+   "register": "CFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRS_CR.CEN cleared"
+    ],
+    "modify": [
+     "CRS_CR.CEN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when the frequency error counter is disabled (the CEN bit is cleared in CRS_CR). When the counter is enabled, this register is write-protected."
+    ],
+    "modify": [
+     "This register can be written only when the frequency error counter is disabled (the CEN bit is cleared in CRS_CR). When the counter is enabled, this register is write-protected."
+    ]
+   },
+   "constraint_ids": [
+    "e35fa6633ce0"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "IV0LR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ],
+    "modify": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
+    ],
+    "modify": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "f5c063815cf5"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "IV0RR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ],
+    "modify": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
+    ],
+    "modify": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "ee18ba032ab8"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "IV1LR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ],
+    "modify": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Any write operation to the CRYP_IV0...1(L/R)R registers when the BUSY bit is set to 1 in the CRYP_SR register is disregarded (which means that register content not modified). The software must thus check that the BUSY bit is cleared to 0 in the CRYP_SR register before modifying initialization vectors."
+    ],
+    "modify": [
+     "Any write operation to the CRYP_IV0...1(L/R)R registers when the BUSY bit is set to 1 in the CRYP_SR register is disregarded (which means that register content not modified). The software must thus check that the BUSY bit is cleared to 0 in the CRYP_SR register before modifying initialization vectors."
+    ]
+   },
+   "constraint_ids": [
+    "bbeefdc201bb"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "IV1RR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ],
+    "modify": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Any write operation to the CRYP_IV0...1(L/R)R registers when the BUSY bit is set to 1 in the CRYP_SR register is disregarded (which means that register content not modified). The software must thus check that the BUSY bit is cleared to 0 in the CRYP_SR register before modifying initialization vectors."
+    ],
+    "modify": [
+     "Any write operation to the CRYP_IV0...1(L/R)R registers when the BUSY bit is set to 1 in the CRYP_SR register is disregarded (which means that register content not modified). The software must thus check that the BUSY bit is cleared to 0 in the CRYP_SR register before modifying initialization vectors."
+    ]
+   },
+   "constraint_ids": [
+    "6ac63281c71a"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "K0LR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "312ba85a29d8"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "K0RR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (bit BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "878e130345af"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "K1LR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "387f4d05e82e"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "K1RR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (bit BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "0d7adba9e9ff"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "K2LR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (bit BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "1602702bd715"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "K2RR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "88dbef78d41e"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "K3LR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "10f540c8214a"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "cryp",
+   "register": "K3RR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CRYP_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Write accesses to these registers are disregarded when the cryptographic processor is busy (BUSY = 1 in the CRYP_SR register)."
+    ]
+   },
+   "constraint_ids": [
+    "4de78ce2e731"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "dma2d",
+   "register": "BGMAR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "DMA2D_CR.START cleared"
+    ],
+    "modify": [
+     "DMA2D_CR.START cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
+    ],
+    "modify": [
+     "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
+    ]
+   },
+   "constraint_ids": [
+    "bc0c2f0b2b8f"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "dma2d",
+   "register": "BGOR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "DMA2D_CR.START cleared"
+    ],
+    "modify": [
+     "DMA2D_CR.START cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
+    ],
+    "modify": [
+     "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
+    ]
+   },
+   "constraint_ids": [
+    "7919dd2be3d4"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "dma2d",
+   "register": "FGPFCCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "DMA2D_CR.START cleared"
+    ],
+    "modify": [
+     "DMA2D_CR.START cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
+    ],
+    "modify": [
+     "This register can only be written when data transfers are disabled. Once the data transfer started, this register is read-only."
+    ]
+   },
+   "constraint_ids": [
+    "150fbd66b27b"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan1",
+   "register": "NBTP",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "0a70dc1f7b28"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan1",
+   "register": "RXBC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "e318eb7fa20c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan1",
+   "register": "RXF1C",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "818476f838a7"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan1",
+   "register": "TSCC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "d90342b0d352"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan1",
+   "register": "TTMLM",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "3afcbd335262"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan1",
+   "register": "TTRMC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "42cc46ebc53e"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan1",
+   "register": "TTTMC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "5f1ec52d1a0a"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan1",
+   "register": "TXEFS",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "9ca3e1645048"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan2",
+   "register": "CCCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CCE set",
+     "INIT set"
+    ],
+    "modify": [
+     "CCE set",
+     "INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "c586836fa6ac"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan2",
+   "register": "NBTP",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "5585cdd42e1c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan2",
+   "register": "RXBC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "17c013e4d3ac"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan2",
+   "register": "RXF1C",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "bc39b3d354c6"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan2",
+   "register": "TSCC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "15900b038a0b"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan2",
+   "register": "TTMLM",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "3b0582511ee1"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan2",
+   "register": "TTTMC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "94e83fe0ce0e"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan2",
+   "register": "TXBC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "c36a491e3bf7"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "fdcan2",
+   "register": "XIDFC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ],
+    "modify": [
+     "FDCAN_CCCR.CCE set",
+     "FDCAN_CCCR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ],
+    "modify": [
+     "These are write-protected bits, write access is possible only when bit CCE and bit INIT of FDCAN_CCCR register are set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "c78843e282dc"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "flash",
+   "register": "OPTCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OPTLOCK cleared"
+    ],
+    "modify": [
+     "OPTLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The OPTLOCK bit locks the FLASH_OPTCR register as well as all _PRG registers. The correct write sequence to FLASH_OPTKEYR register unlocks this bit. If a wrong sequence is executed, or the unlock sequence to FLASH_OPTKEYR is performed twice, this bit remains locked until next system reset."
+    ],
+    "modify": [
+     "The OPTLOCK bit locks the FLASH_OPTCR register as well as all _PRG registers. The correct write sequence to FLASH_OPTKEYR register unlocks this bit. If a wrong sequence is executed, or the unlock sequence to FLASH_OPTKEYR is performed twice, this bit remains locked until next system reset."
+    ]
+   },
+   "constraint_ids": [
+    "3b45ebaad5fc"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "TXDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "I2C_ISR.TXE set"
+    ],
+    "modify": [
+     "I2C_ISR.TXE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can be written only when TXE = 1."
+    ],
+    "modify": [
+     "These bits can be written only when TXE = 1."
+    ]
+   },
+   "constraint_ids": [
+    "54a496e3bc53"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "ARR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE set"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Caution: The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
+    ],
+    "modify": [
+     "Caution: The LPTIM_ARR register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
+    ]
+   },
+   "constraint_ids": [
+    "48656788f26b"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "CMP",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE set"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Caution: The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
+    ],
+    "modify": [
+     "Caution: The LPTIM_CMP register must only be modified when the LPTIM is enabled (ENABLE bit set to \u20181\u2019)."
+    ]
+   },
+   "constraint_ids": [
+    "faaf7b42d5f8"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lptim1",
+   "register": "IER",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPTIM_CR.ENABLE cleared"
+    ],
+    "modify": [
+     "LPTIM_CR.ENABLE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Caution: The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)."
+    ],
+    "modify": [
+     "Caution: The LPTIM_IER register must only be modified when the LPTIM is disabled (ENABLE bit reset to \u20180\u2019)."
+    ]
+   },
+   "constraint_ids": [
+    "c4b9978ab542"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "fuzzy"
+    ],
+    "modify": [
+     "fuzzy"
+    ]
+   }
+  },
+  {
+   "peripheral": "lpuart1",
+   "register": "BRR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPUART_CR1.UE cleared"
+    ],
+    "modify": [
+     "LPUART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the LPUART is disabled (UE = 0)."
+    ],
+    "modify": [
+     "This register can only be written when the LPUART is disabled (UE = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "9db039deac20"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lpuart1",
+   "register": "PRESC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPUART_CR1.UE cleared"
+    ],
+    "modify": [
+     "LPUART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the LPUART is disabled (UE = 0)."
+    ],
+    "modify": [
+     "This register can only be written when the LPUART is disabled (UE = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "ac4a812bb49e"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lpuart1",
+   "register": "TDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPUART_ISR.TXE set"
+    ],
+    "modify": [
+     "LPUART_ISR.TXE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: This register must be written only when TXE/TXFNF = 1."
+    ],
+    "modify": [
+     "Note: This register must be written only when TXE/TXFNF = 1."
+    ]
+   },
+   "constraint_ids": [
+    "518efc4d41f5"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "ABR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "0be04a94d7cb"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "DCR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "e6c19e4aab53"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "DCR3",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "fb3a4338a16d"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "DCR4",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "44c58f7274e5"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "DR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "36af2638a22d"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "HLCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "00bc1f4d2551"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "IR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "21c6fe7edb4c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "LPTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "dcf6dabb92d0"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "PSMAR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "701c9e0b8684"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "PSMKR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "ba289cd98ff9"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "TCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "d8670dc79c29"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "WABR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "baea077a24ef"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "WCCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "fd75ec32714c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "WIR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "2077452cd1f4"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "WPABR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "6edcfaa11e65"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "WPCCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "36d95f030115"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "WPIR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "723195002c49"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "WPTCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "bcbda09568f3"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "WTCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "702ded5f2973"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "octospi1",
+   "register": "CCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OCTOSPI_SR.BUSY cleared"
+    ],
+    "modify": [
+     "OCTOSPI_SR.BUSY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be modified only when BUSY = 0."
+    ],
+    "modify": [
+     "This register can be modified only when BUSY = 0."
+    ]
+   },
+   "constraint_ids": [
+    "542326f6951f"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R1ENDADDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R1CFGR.REG_EN cleared",
+     "OTFDEC_R1CFGR.CONFIGLOCK cleared"
+    ],
+    "modify": [
+     "OTFDEC_R1CFGR.REG_EN cleared",
+     "OTFDEC_R1CFGR.CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "4758ce46b3f6"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R1NONCER0",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R1CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R1CFGR.REG_EN cleared"
+    ],
+    "modify": [
+     "OTFDEC_R1CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R1CFGR.REG_EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "4a34529a84e9"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R1STARTADDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R1CFGR.REG_EN cleared",
+     "OTFDEC_R1CFGR.CONFIGLOCK cleared"
+    ],
+    "modify": [
+     "OTFDEC_R1CFGR.REG_EN cleared",
+     "OTFDEC_R1CFGR.CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "cfd369c7471c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R2KEYR0",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R2CFGR.REG_EN cleared",
+     "OTFDEC_R2CFGR.CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "24229bf00c56"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R2KEYR1",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R2CFGR.REG_EN cleared",
+     "OTFDEC_R2CFGR.CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "a74daef2e91c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R2NONCER1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R2CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R2CFGR.REG_EN cleared"
+    ],
+    "modify": [
+     "OTFDEC_R2CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R2CFGR.REG_EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "b5878e0f482c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R2STARTADDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R2CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R2CFGR.REG_EN cleared"
+    ],
+    "modify": [
+     "OTFDEC_R2CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R2CFGR.REG_EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "aecc47498299"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R3ENDADDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R3CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R3CFGR.REG_EN cleared"
+    ],
+    "modify": [
+     "OTFDEC_R3CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R3CFGR.REG_EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set, and RxENDADDR must be strictly greater than RxSTARTADDR to be valid. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set, and RxENDADDR must be strictly greater than RxSTARTADDR to be valid. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "2a0073a196ea"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R3KEYR0",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R3CFGR.REG_EN cleared",
+     "OTFDEC_R3CFGR.CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "0c9cd30909c2"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R3NONCER0",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R3CFGR.REG_EN cleared",
+     "OTFDEC_R3CFGR.CONFIGLOCK cleared"
+    ],
+    "modify": [
+     "OTFDEC_R3CFGR.REG_EN cleared",
+     "OTFDEC_R3CFGR.CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "b020630015da"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R3NONCER1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R3CFGR.REG_EN cleared",
+     "OTFDEC_R3CFGR.CONFIGLOCK cleared"
+    ],
+    "modify": [
+     "OTFDEC_R3CFGR.REG_EN cleared",
+     "OTFDEC_R3CFGR.CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "350da68e6004"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R3STARTADDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R3CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R3CFGR.REG_EN cleared"
+    ],
+    "modify": [
+     "OTFDEC_R3CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R3CFGR.REG_EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "d92c96472f02"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R4KEYR1",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R4CFGR.REG_EN cleared",
+     "OTFDEC_R4CFGR.CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "00243e4633dd"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R4KEYR2",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R4CFGR.REG_EN cleared",
+     "OTFDEC_R4CFGR.CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "b953ac0a0276"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R4NONCER0",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R4CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R4CFGR.REG_EN cleared"
+    ],
+    "modify": [
+     "OTFDEC_R4CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R4CFGR.REG_EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "226d970a1c0c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R4STARTADDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OTFDEC_R4CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R4CFGR.REG_EN cleared"
+    ],
+    "modify": [
+     "OTFDEC_R4CFGR.CONFIGLOCK cleared",
+     "OTFDEC_R4CFGR.REG_EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ],
+    "modify": [
+     "This register must be written before the region corresponding REG_EN bit in the RxCFGR register is set. Writing this register while the region CONFIGLOCK bit in the RxCFGR register is set will be discarded."
+    ]
+   },
+   "constraint_ids": [
+    "a82859bc2d79"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "otfdec1",
+   "register": "R3CFGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "CONFIGLOCK cleared"
+    ],
+    "modify": [
+     "CONFIGLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Writes are ignored if CONFIGLOCK bit is set to 1."
+    ],
+    "modify": [
+     "Writes are ignored if CONFIGLOCK bit is set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "3582968543d5"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "pssi",
+   "register": "DR",
+   "gated_operations": [
+    "modify",
+    "read",
+    "write"
+   ],
+   "preconditions": {
+    "read": [
+     "PSSI_CR.ENABLE set"
+    ],
+    "modify": [
+     "PSSI_CR.ENABLE set"
+    ],
+    "write": [
+     "PSSI_CR.ENABLE set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "Accessing PSSI_DR when ENABLE bit in PSSI_CR is set to 0 results in an error response."
+    ],
+    "modify": [
+     "Accessing PSSI_DR when ENABLE bit in PSSI_CR is set to 0 results in an error response."
+    ],
+    "write": [
+     "Accessing PSSI_DR when ENABLE bit in PSSI_CR is set to 0 results in an error response."
+    ]
+   },
+   "constraint_ids": [
+    "9a377bc2961d",
+    "f0f2b9ed0d49"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "read": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ],
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "pwr",
+   "register": "CR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "PWR_CR1.DBP set"
+    ],
+    "modify": [
+     "PWR_CR1.DBP set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "After reset, PWR_CR2 register is write\u2011protected. Prior to modifying its content, the DBP bit in PWR_CR1 register must be set to disable the write protection."
+    ],
+    "modify": [
+     "After reset, PWR_CR2 register is write\u2011protected. Prior to modifying its content, the DBP bit in PWR_CR1 register must be set to disable the write protection."
+    ]
+   },
+   "constraint_ids": [
+    "153e0f36ae9f"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rcc",
+   "register": "BDCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "PWR_CR1.DBP set"
+    ],
+    "modify": [
+     "PWR_CR1.DBP set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "After a system reset, the RCC_BDCR register is write-protected. To modify this register, the DBP bit in the PWR control register 1 (PWR_CR1) must be set to 1."
+    ],
+    "modify": [
+     "After a system reset, the RCC_BDCR register is write-protected. To modify this register, the DBP bit in the PWR control register 1 (PWR_CR1) must be set to 1."
+    ]
+   },
+   "constraint_ids": [
+    "a048faeb70ce"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rng",
+   "register": "HTCR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RNG_CR.CONFIGLOCK cleared",
+     "RNG_CR.CONDRST set"
+    ],
+    "modify": [
+     "RNG_CR.CONFIGLOCK cleared",
+     "RNG_CR.CONDRST set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Writing in RNG_HTCR is taken into account only if the CONDRST bit is set, and the CONFIGLOCK bit is cleared in the RNG_CR. Writing to this register is ignored if CONFIGLOCK=1."
+    ],
+    "modify": [
+     "Writing in RNG_HTCR is taken into account only if the CONDRST bit is set, and the CONFIGLOCK bit is cleared in the RNG_CR. Writing to this register is ignored if CONFIGLOCK=1."
+    ]
+   },
+   "constraint_ids": [
+    "dcc252f3256f"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "WUTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ICSR.WUTWF set"
+    ],
+    "modify": [
+     "RTC_ICSR.WUTWF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
+    ],
+    "modify": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ICSR."
+    ]
+   },
+   "constraint_ids": [
+    "d70df84a204a"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "sdmmc1",
+   "register": "ARGR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SDMMC_CMDR.CPSMEN cleared"
+    ],
+    "modify": [
+     "SDMMC_CMDR.CPSMEN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "These bits can only be written by firmware when CPSM is disabled (CPSMEN = 0)."
+    ],
+    "modify": [
+     "These bits can only be written by firmware when CPSM is disabled (CPSMEN = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "830914baccf6"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "CRCPOLY",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_CR1.SPE cleared"
+    ],
+    "modify": [
+     "SPI_CR1.SPE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The content of this register is write protected when SPI is enabled."
+    ],
+    "modify": [
+     "The content of this register is write protected when SPI is enabled."
+    ]
+   },
+   "constraint_ids": [
+    "7547bfb26a98"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "RXDR",
+   "gated_operations": [
+    "read"
+   ],
+   "preconditions": {
+    "read": [
+     "SPI_CR1.SPE set"
+    ]
+   },
+   "datasheet_text": {
+    "read": [
+     "When the bit SPE is set to 0, the user is not allowed to read and write into the SPI_RXDR and SPI_TXDR registers, but the access to other registers is allowed."
+    ]
+   },
+   "constraint_ids": [
+    "3257e2745186"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "read": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "TXDR",
+   "gated_operations": [
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_CR1.SPE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "When the bit SPE is set to 0, the user is not allowed to read and write into the SPI_RXDR and SPI_TXDR registers, but the access to other registers is allowed."
+    ]
+   },
+   "constraint_ids": [
+    "bbb892b7de3b"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "CFG1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_CR1.SPE cleared"
+    ],
+    "modify": [
+     "SPI_CR1.SPE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Content of this register is write protected when SPI is enabled, except TXDMAEN and RXDMAEN bits."
+    ],
+    "modify": [
+     "Content of this register is write protected when SPI is enabled, except TXDMAEN and RXDMAEN bits."
+    ]
+   },
+   "constraint_ids": [
+    "5e7161a1b33c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "CFG2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_CR1.SPE cleared",
+     "SPI_CR1.IOLOCK cleared"
+    ],
+    "modify": [
+     "SPI_CR1.SPE cleared",
+     "SPI_CR1.IOLOCK cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The content of this register is write protected when SPI is enabled or IOLOCK bit is set at SPI_CR1 register."
+    ],
+    "modify": [
+     "The content of this register is write protected when SPI is enabled or IOLOCK bit is set at SPI_CR1 register."
+    ]
+   },
+   "constraint_ids": [
+    "c2647d285d06"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "CR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_CR1.SPE cleared"
+    ],
+    "modify": [
+     "SPI_CR1.SPE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "When these bits are changed by software, the SPI must be disabled."
+    ],
+    "modify": [
+     "When these bits are changed by software, the SPI must be disabled."
+    ]
+   },
+   "constraint_ids": [
+    "04d4594803bb"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "spi1",
+   "register": "UDRDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "SPI_CR1.SPE cleared"
+    ],
+    "modify": [
+     "SPI_CR1.SPE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The content of this register is write protected when SPI is enabled."
+    ],
+    "modify": [
+     "The content of this register is write protected when SPI is enabled."
+    ]
+   },
+   "constraint_ids": [
+    "7909c480ed50"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "usart1",
+   "register": "BRR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.UE cleared"
+    ],
+    "modify": [
+     "USART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the USART is disabled (UE = 0)."
+    ],
+    "modify": [
+     "This register can only be written when the USART is disabled (UE = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "ae934da25f91"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "usart1",
+   "register": "PRESC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.UE cleared"
+    ],
+    "modify": [
+     "USART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the USART is disabled (UE = 0)."
+    ],
+    "modify": [
+     "This register can only be written when the USART is disabled (UE = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "89e6fa8ba91d"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "usart1",
+   "register": "RTOR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.UE cleared"
+    ],
+    "modify": [
+     "USART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This bitfield can only be written when the USART is disabled (UE = 0)."
+    ],
+    "modify": [
+     "This bitfield can only be written when the USART is disabled (UE = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "a76d9ca58f47"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "usart1",
+   "register": "CR1",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "UE cleared"
+    ],
+    "modify": [
+     "UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This bitfield can only be written when the USART is disabled (UE = 0)."
+    ],
+    "modify": [
+     "This bitfield can only be written when the USART is disabled (UE = 0)."
+    ]
+   },
+   "constraint_ids": [
+    "1a94e3380dd1"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "usart1",
+   "register": "TDR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "USART_CR1.TE set"
+    ],
+    "modify": [
+     "USART_CR1.TE set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "The TE bit must be set before writing the data to be transmitted to the USART_TDR."
+    ],
+    "modify": [
+     "The TE bit must be set before writing the data to be transmitted to the USART_TDR."
+    ]
+   },
+   "constraint_ids": [
+    "fda883032d4c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  }
+ ]
+}

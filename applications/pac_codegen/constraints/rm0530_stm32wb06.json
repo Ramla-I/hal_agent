@@ -1,0 +1,262 @@
+{
+ "device": "stm32wb06",
+ "source_run": "/home/ramla/hal_agent-phase-1d/agent_output/stm/rm0530/1",
+ "svd_dir": "/home/ramla/hal_agent-phase-1d/devices/stm/rm0530/svd/stm32wb06.svd",
+ "note": "constraints this device's crate enforces, post collection-lint, emitter selection, access-mode pruning, and (with --attribution-check) quote anchoring plus target attribution; regenerate with inject_from_run.py. Whole-register gates are in `gated_operations`/`preconditions`; field-scoped ones are in `gated_fields` and gate a single writer accessor, leaving sibling fields untouched",
+ "attribution_checked_against": "/home/ramla/hal_agent-phase-1d/chunked_datasheets/stm",
+ "field_level_gating": false,
+ "registers": [
+  {
+   "peripheral": "i2c1",
+   "register": "OAR2",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "OA2EN cleared"
+    ],
+    "modify": [
+     "OA2EN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: These bits can be written only when OA2EN=0."
+    ],
+    "modify": [
+     "Note: These bits can be written only when OA2EN=0."
+    ]
+   },
+   "constraint_ids": [
+    "377fd331efd1"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "i2c1",
+   "register": "TIMEOUTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "TEXTEN cleared"
+    ],
+    "modify": [
+     "TEXTEN cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Note: These bits can be written only when TEXTEN=0."
+    ],
+    "modify": [
+     "Note: These bits can be written only when TEXTEN=0."
+    ]
+   },
+   "constraint_ids": [
+    "693171607a67"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lpuart",
+   "register": "BRR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPUART_CR1.UE cleared"
+    ],
+    "modify": [
+     "LPUART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the LPUART is disabled (UE=0)."
+    ],
+    "modify": [
+     "This register can only be written when the LPUART is disabled (UE=0)."
+    ]
+   },
+   "constraint_ids": [
+    "eab4e9d6732d"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "lpuart",
+   "register": "PRESC",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "LPUART_CR1.UE cleared"
+    ],
+    "modify": [
+     "LPUART_CR1.UE cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can only be written when the USART is disabled (UE=0)."
+    ],
+    "modify": [
+     "This register can only be written when the USART is disabled (UE=0)."
+    ]
+   },
+   "constraint_ids": [
+    "e833eda42287"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "pka",
+   "register": "CSR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "READY cleared"
+    ],
+    "modify": [
+     "READY cleared"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "Caution: If READY bit is high, the PKA cannot be accessed through the AHB interface."
+    ],
+    "modify": [
+     "Caution: If READY bit is high, the PKA cannot be accessed through the AHB interface."
+    ]
+   },
+   "constraint_ids": [
+    "daf5a39ee90c"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "DR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ISR.INIT set"
+    ],
+    "modify": [
+     "RTC_ISR.INIT set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register must be written in initialization mode only. Refer to Section 17.3.7: Reading the calendar."
+    ],
+    "modify": [
+     "This register must be written in initialization mode only. Refer to Section 17.3.7: Reading the calendar."
+    ]
+   },
+   "constraint_ids": [
+    "02f41b78e961"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  },
+  {
+   "peripheral": "rtc",
+   "register": "WUTR",
+   "gated_operations": [
+    "modify",
+    "write"
+   ],
+   "preconditions": {
+    "write": [
+     "RTC_ISR.WUTWF set"
+    ],
+    "modify": [
+     "RTC_ISR.WUTWF set"
+    ]
+   },
+   "datasheet_text": {
+    "write": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ISR."
+    ],
+    "modify": [
+     "This register can be written only when WUTWF is set to 1 in RTC_ISR."
+    ]
+   },
+   "constraint_ids": [
+    "947b32459492"
+   ],
+   "gated_fields": {},
+   "quote_verification": {
+    "write": [
+     "exact"
+    ],
+    "modify": [
+     "exact"
+    ]
+   }
+  }
+ ]
+}

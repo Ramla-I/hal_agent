@@ -41,6 +41,7 @@ from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent.parent  # applications/pac_codegen
 sys.path.insert(0, str(APP_DIR))
+import enforcement  # noqa: E402
 import get_pac  # noqa: E402
 from rust_codegen import _GATED_METHODS  # noqa: E402  (template diagnosis)
 
@@ -137,7 +138,10 @@ class PacSnapshot:
     def __init__(self, pac_root: Path, device: str):
         src = pac_root / "src"
         self.base = pac_root
-        self.paths = [src] if device == "." else [src / "generic.rs", src / device]
+        # The WHOLE src/ tree: generic.rs is patched crate-wide and injection
+        # marks every sibling device module too, so a narrower snapshot would
+        # leave the crate modified after "restore".
+        self.paths = [src]
         self._tmp = tempfile.TemporaryDirectory(prefix="cross_pac_snap_")
         self.digest = self._digest()
         for i, p in enumerate(self.paths):
@@ -467,9 +471,9 @@ def run_hal_adoption(f1: Target) -> dict:
         files: dict[str, set] = {"true_enforcement": set(),
                                  "generic_friction": set(), "other": set()}
         for e in errors:
-            witness_msg = (e["code"] == "E0277"
-                           and "constrained by its datasheet" in e["message"])
-            if witness_msg and f1.spec in e["message"]:
+            hit = enforcement.classify_diagnostic(e)
+            witness_msg = hit is not None
+            if witness_msg and (f1.spec in e["message"] or hit.spec == f1.spec):
                 res["true_enforcement"] += 1
                 files["true_enforcement"] |= e["hal_files"]
             elif witness_msg:
