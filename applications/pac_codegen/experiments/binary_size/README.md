@@ -23,9 +23,11 @@ crate); this directory reports the *code-size* cost.
 | `measure_injection_loc.py` | inject every crate, diff vs pristine → `injection_loc.json` (no cargo) |
 | `injection_loc.json` | measured LOC per (rm, device, crate): total / enforcement modules / scaffolding |
 | `gen_injection_cost_artifact.py` | render the single-column figure from the JSON → `docs/artifacts/pac_injection_cost.{svg,html}` |
-| `pac_injection_cost.svg` | the figure (LaTeX drop-in) |
 | `verify_binary_size.py` | build `sizefw/` against pristine vs injected, compare `.text` (needs cargo) |
+| `binary_size.json` | the measured firmware `.text` delta (e.g. +12 bytes for the RCC.BDCR/DBP check) |
 | `sizefw/` | minimal firmware that writes only *ungated* registers, so it builds against either PAC |
+| `measure_scaffolding_baseline.py` | the **zero-constraint floor** — turn the witness mechanism on crate-wide but gate nothing (every register keeps its full marker, `C=0`): the pure scaffolding cost before any datasheet constraint → `scaffolding_baseline.json` (no cargo) |
+| `scaffolding_baseline.json` | the measured floor per crate — distinct from `injection_loc.json`'s `scaffolding`, which is this floor minus the markers a real injection withholds from gated registers |
 
 ## Regenerate
 
@@ -38,6 +40,9 @@ python gen_injection_cost_artifact.py             # writes pac_injection_cost.{s
 
 # 3. the binary-size claim (needs cargo + thumbv7em-none-eabihf)
 python verify_binary_size.py              # builds sizefw twice, compares .text
+
+# optional: the pure-scaffolding floor (zero-constraint injection)
+python measure_scaffolding_baseline.py    # no cargo; writes scaffolding_baseline.json
 ```
 
 `measure_*` and `verify_*` read PAC crates from `../../vendored/pac` (the pinned

@@ -15,6 +15,9 @@ markers back, so B grows.
 
 Writes scaffolding_baseline.json next to this script. NO cargo, no pipeline
 artifacts needed -- only the pristine crates.
+
+Usage:
+    python applications/pac_codegen/experiments/binary_size/measure_scaffolding_baseline.py
 """
 import json, glob, shutil, subprocess, sys, tempfile
 from pathlib import Path
