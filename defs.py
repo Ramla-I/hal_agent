@@ -125,7 +125,7 @@ class RegisterNameList(BaseModel):
 # ---------------------------------------------------------------------------
 # Register-constraint grammar v2
 # ---------------------------------------------------------------------------
-# Normative spec: docs/register_constraints_plan.md Appendix B (summarized in
+# Normative spec: docs/register_constraints_design.md Appendix B (summarized in
 # docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md). A constraint is a discriminated
 # union on `kind`; every vocabulary is a Literal so drift is rejected at
 # collection-time pydantic parsing rather than spliced into generated Rust.

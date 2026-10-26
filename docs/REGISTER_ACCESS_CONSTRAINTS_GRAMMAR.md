@@ -3,7 +3,7 @@
 This document specifies how datasheet access/ordering constraints — which SVDs
 cannot express — are encoded for generating constraint-enforcing Rust PAC
 (Peripheral Access Crate) code. **It is the normative specification of the
-grammar** — the enforcement-arm plan (`docs/register_constraints_plan.md`)
+grammar** — the enforcement-arm plan (`docs/register_constraints_design.md`)
 points here rather than restating it. The Pydantic implementation lives in
 `defs.py` (grammar v2 section), and collection lives in
 `core/collect_constraints.py`. How several rules for ONE register are
@@ -245,8 +245,7 @@ Examples: `rm0386/1/dsi_isr1` (*"always cleared after a read"* — misextracted
 in v1 as 14 postconditions); USART_DR read clears RXNE.
 
 **Enforcement:** `doc_only` (a future advisory-warning surface — a `///` caveat
-on the register's type-alias doc — is proposed in `register_constraints_plan.md`
-§13) — reads cannot usefully be forbidden, but this
+on the register's type-alias doc — is not yet implemented) — reads cannot usefully be forbidden, but this
 metadata (a) feeds the Constraint Validator, (b) tells codegen when a checking
 read would itself perturb state (the self-defeating same-register read-gate
 case, rejected at codegen), and (c) where a real ordering obligation exists,
@@ -285,7 +284,7 @@ class ValueRelation(ConstraintBase):
 Examples: *"CR2.FREQ must equal the APB1 frequency in MHz"*; *"keep RXONLY
 clear while BIDIMODE is set"* (`rm0454/1/spi1_cr1`). Always `doc_only` for the
 metric; a future advisory-warning surface (`#[deprecated]` on the involved field
-writers) is proposed in `register_constraints_plan.md` §13.
+writers) is not yet implemented.
 
 ### `other` — escape valve and discovery queue
 
@@ -338,7 +337,7 @@ manifests, not hand counts.
 
 ## Collection rules (repair vs reject)
 
-Implemented in `applications/pac_codegen/collect_constraints.py`.
+Implemented in `core/collect_constraints.py`.
 
 **Repair deterministically (lossless, logged in `constraint_reports` and the
 manifest):**
@@ -416,13 +415,13 @@ Value parsing applies the regex `^(0x[0-9A-Fa-f]+|0b[01]+|\d+)$` to each
 ## Migrating old v1 runs
 
 Grammar v1 is fully retired: the generator emits v2 natively, and `defs.py`,
-collection (`applications/pac_codegen/collect_constraints.py`), and codegen are
+collection (`core/collect_constraints.py`), and codegen are
 **v2-only** — a register's output JSON carries `access_constraints_v2` (with
 computed `enforceability`), not the old `access_constraints`. The single tool
 that still reads v1 is `applications/pac_codegen/convert_v1_to_v2.py`, which
 converts an old v1 generator run to v2 using the lift above (verified to
 reproduce the v2 fixtures byte-for-byte). See the divergence log in
-[`register_constraints_plan.md`](register_constraints_plan.md) (2026-07-27).
+[`register_constraints_design.md`](register_constraints_design.md) (2026-07-27).
 
 ## Codegen vs. validation coverage
 
@@ -436,7 +435,7 @@ coverage:
   `write_once` and `delay` are carried but not yet compile-gated. `clock_gate`
   is carried for extraction/validation only and is **intentionally never
   compile-gated** — peripheral clock enablement is the HAL's responsibility
-  (see the 2026-10-20 divergence entry in `register_constraints_plan.md`).
+  (see the 2026-10-20 divergence entry in `register_constraints_design.md`).
 - The **constraint validator** (`core/constraint_validator.py`, plan §7) judges
   **all** kinds against the datasheet — it processes every kind the generator
   emits, independent of what codegen enforces.

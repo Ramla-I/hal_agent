@@ -168,7 +168,7 @@ def inject_all(register_only):
                         "generic_raw": a_raw, "generic_sloc": a_sloc,   # A
                         "walk_raw": b_raw, "walk_sloc": b_sloc,         # B
                         "enforce_raw": c_raw, "enforce_sloc": c_sloc,   # C
-                        # legacy keys kept for plot_injection_cost.py
+                        # legacy keys kept for gen_injection_cost_artifact.py
                         "modules": c_raw, "scaffolding": t_raw - c_raw,
                         "regs_gated": whole, "op_surfaces": opsurf,
                         "fields_gated": fld_acc, "regs_with_field_gates": fld_regs,

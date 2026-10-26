@@ -13,7 +13,7 @@ How much does the constraint injection *cost*? Two numbers, measured here:
   precondition check itself; `verify_binary_size.py` measures the exact count
   (**+12 bytes** for the RCC.BDCR/DBP check, recorded in `binary_size.json`).
 
-Companion to `docs/injection_tracking.md` (which reports gates/constraints per
+Companion to `docs/artifacts/injection_tracking.md` (which reports gates/constraints per
 crate); this directory reports the *code-size* cost.
 
 ## Files
@@ -22,7 +22,7 @@ crate); this directory reports the *code-size* cost.
 |---|---|
 | `measure_injection_loc.py` | inject every crate, diff vs pristine → `injection_loc.json` (no cargo) |
 | `injection_loc.json` | measured LOC per (rm, device, crate): total / enforcement modules / scaffolding |
-| `plot_injection_cost.py` | render the single-column figure from the JSON → `.svg` + `.html` |
+| `gen_injection_cost_artifact.py` | render the single-column figure from the JSON → `docs/artifacts/pac_injection_cost.{svg,html}` |
 | `pac_injection_cost.svg` | the figure (LaTeX drop-in) |
 | `verify_binary_size.py` | build `sizefw/` against pristine vs injected, compare `.text` (needs cargo) |
 | `sizefw/` | minimal firmware that writes only *ungated* registers, so it builds against either PAC |
@@ -34,7 +34,7 @@ crate); this directory reports the *code-size* cost.
 python measure_injection_loc.py           # ~10 min, no cargo; writes injection_loc.json
 
 # 2. the figure
-python plot_injection_cost.py             # writes pac_injection_cost.{svg,html}
+python gen_injection_cost_artifact.py             # writes pac_injection_cost.{svg,html} to docs/artifacts/
 
 # 3. the binary-size claim (needs cargo + thumbv7em-none-eabihf)
 python verify_binary_size.py              # builds sizefw twice, compares .text

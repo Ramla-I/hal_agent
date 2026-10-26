@@ -6,7 +6,7 @@ driver-only applications) and writes docs/project_landscape.html: a summary
 table over every project scanned, then one section per project listing its
 candidate sites with the datasheet sentence each one is measured against.
 
-Sibling of docs/injection_tracking.html and deliberately shares its tokens --
+Sibling of docs/artifacts/injection_tracking.html and deliberately shares its tokens --
 same neutrals, same copper accent -- so the two read as one series. The one
 addition is semantic colour for the triage verdict: amber for `unchecked`
 (a candidate) and green for `corroborated` (the project already performs the

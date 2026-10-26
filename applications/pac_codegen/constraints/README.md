@@ -24,18 +24,16 @@ only bakes in staleness, so this directory holds **only this README** and a
 ```sh
 python applications/pac_codegen/experiments/stm_sweep.py --dry-run --skip-hal
 python applications/pac_codegen/experiments/stm_master_pacs.py
-find applications/pac_codegen/experiments/out/constraints -name '*.json' \
-     -not -name '*_fieldgate.json' \
-     -exec cp {} applications/pac_codegen/constraints/ \;
+cp applications/pac_codegen/experiments/out/constraints/*.json \
+   applications/pac_codegen/constraints/
 ```
 
 `--dry-run` is enough for the sweep (`--save-constraints` writes without touching
 a PAC); `stm_master_pacs.py` has no dry mode — it injects and compiles. Both
-write into the gitignored `experiments/out/` tree; the `cp` collects the
-whole-register set here. The `-not -name '*_fieldgate.json'` is load-bearing:
-both runs emit both gating modes, and only whole-register
-(`field_level_gating: false`) belongs here — the field-level sweep writes
-`<rm>_<device>_fieldgate.json`.
+write into the gitignored `experiments/out/` tree. **Field-level gating is the
+default**, so `out/constraints/` is the canonical (field-level) corpus; the
+whole-register baseline (`--register-only`) is written separately to
+`out/register_only/constraints/`, so the two modes never share a file.
 
 **Expected output: 53 files.** 49 from `stm_sweep.py` (48 manuals, plus rm0440
 measured on a second device as a control), 4 from `stm_master_pacs.py`

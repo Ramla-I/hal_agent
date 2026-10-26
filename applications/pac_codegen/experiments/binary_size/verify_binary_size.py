@@ -9,7 +9,7 @@ against either PAC) and compares the executable code across:
       write_unwitnessed (the unsafe bypass = a plain store) vs
       write_when_ready  (the checked path)  -> the runtime cost of ONE check.
 
-Writes ``binary_size.json`` (read by plot_injection_cost.py so the figure's
+Writes ``binary_size.json`` (read by gen_injection_cost_artifact.py so the figure's
 binary-side numbers are measured, not hardcoded):
 
   {"identical": true, "text_bytes": <N>, "check_cost_bytes": <N>, ...}

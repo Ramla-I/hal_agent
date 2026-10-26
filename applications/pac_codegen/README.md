@@ -12,7 +12,7 @@ bug-finding and reporting) is a separate sibling. See [`../README.md`](../README
 
 ## The encoding: trait gating (no wrappers, no shadowing)
 
-Full design: [`../../docs/register_constraints_plan.md`](../../docs/register_constraints_plan.md)
+Full design: [`../../docs/register_constraints_design.md`](../../docs/register_constraints_design.md)
 (§3 + Appendix A). In short:
 
 - The stock `Reg::write` / `modify` / `read` / `reset` / `write_with_zero` /
@@ -39,13 +39,14 @@ constraint gates both the write surface and the modify surface. A same-register
 **read** gate is rejected as self-defeating (the check performs the read).
 Cross-register witnesses = step H; postconditions / action witnesses = step I.
 
-**Field-level gating is opt-in** (`--field-level-gating`, default off). A
-constraint that names fields can be enforced on the field's writer accessor
-alone, leaving sibling fields free — but the default is to SKIP such a
-constraint rather than widen it to the whole register, because gating the
-register would demand the precondition for writes to unrelated fields. That
-default costs 1,148 constraints corpus-wide; the two modes plan different gate
-sets and their artifacts are never mixed. Known bypass, warned about on every
+**Field-level gating is the default.** A constraint that names fields is
+enforced on the field's writer accessor alone, leaving sibling fields free —
+rather than widened to the whole register, which would demand the precondition
+for writes to unrelated fields. `--register-only` reverts to whole-register-only
+gating, the baseline every previously published number was measured against;
+field granularity recovers 602 registers and 1,068 obligations that baseline
+discarded. The two modes plan different gate sets and their artifacts are never
+mixed. Known bypass, warned about on every
 injection: a purely field-gated register's whole-register `write`/`reset` stay
 ungated, since `write()` sets unnamed fields to their reset value without
 touching the accessor. A register that ALSO carries a register-scoped write
@@ -60,12 +61,13 @@ applications/pac_codegen/
 ├── get_pac.py               Provision a PAC from crates.io (pinned + checksum-verified)
 ├── show_injected_constraints.py   Read a device's applied constraints out loud
 ├── convert_v1_to_v2.py      The ONE tool that still parses the retired v1 grammar
-├── constraints/             Committed record: what each device's crate gates (53 files)
+├── constraints/             README + .gitignore; the per-device JSON record is
+│                             generated on demand (see constraints/README.md)
 ├── rm_pac_mappings/stm.toml Manual -> PAC crate -> device -> HAL consumer
 ├── constraint_test/         no_std crate + 4 fixtures + golden emitter output
 ├── eval_hal/                The original single-pairing HAL demo (drives test_hal_demo)
 ├── experiments/             The measurement layer -- see experiments/README.md
-├── tests/                   pytest suite, 11 files, 97 tests
+├── tests/                   pytest suite, 20 files, ~179 tests
 └── vendored/                pac/ (21 released crates), pac_master/ (2 from
                              stm32-rs master), pac_old/ (3 of the 0.14/0.15
                              generation) -- all git-ignored
@@ -166,8 +168,8 @@ python applications/pac_codegen/inject_from_run.py \
 |---|---|---|
 | `--constraints` | the review ledger; only `enforcement: enforce` compiles | `--validated` |
 | `--attribution-check` | the chunked datasheet; drops a gate whose quote does not attribute to its register | `--chunks`, `--verify-evidence` |
-| `--save-constraints` | writes the durable per-device record into `constraints/` | |
-| `--field-level-gating` | opt-in field granularity (see above) | |
+| `--save-constraints` | writes the per-device record into `constraints/` (generated; git-ignored) | |
+| `--register-only` | whole-register baseline; **field gating is the default** (see above) | `--field-level-gating` (now a no-op) |
 
 Both old flag names still work. `--dry-run` does everything except touch the
 PAC, and still writes the report and the constraints file.

@@ -74,7 +74,7 @@ def _kind_counts(gates) -> dict:
 
 
 def select_and_plan(collect_dir: Path, device_dir: Path,
-                    field_level_gating: bool = False,
+                    field_level_gating: bool = True,
                     disabled_kinds=None, gate_map=None, rm: str = "") -> tuple[list, list[dict]]:
     """From a collection output dir, build injectable RegisterPlans.
 
@@ -83,8 +83,9 @@ def select_and_plan(collect_dir: Path, device_dir: Path,
     subset is then offered to the emitter, which may still refuse shapes it
     does not support yet — refusals become report rows, never crashes.
 
-    ``field_level_gating`` (opt-in) enables field-scoped constraints to be
-    enforced at field granularity; off by default (they are skipped).
+    ``field_level_gating`` is the default: field-scoped constraints are enforced
+    at field granularity. Pass False (the CLI ``--register-only`` baseline) to
+    gate whole registers only and skip field-scoped constraints.
 
     ``gate_map`` (opt-in, from ``--constraints``) keys the constraint validator's
     codegen decision by the linted-constraint id: only ``enforce`` constraints

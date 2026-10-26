@@ -13,8 +13,7 @@ may this register be read, written, or modified?"*. The two travel together in
 the same JSON object — a register's constraints hang off the structure object
 in the `access_constraints_v2` field — but the constraint grammar is specified
 separately in
-[`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md)
-and [`register_constraints_plan.md`](register_constraints_plan.md) (Appendix B).
+[`REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md`](REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md).
 This doc covers only the structure fields; it treats the constraint list as an
 opaque payload and points you there.
 

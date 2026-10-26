@@ -9,7 +9,7 @@ alphabetically and it looks like a pile.
 **Everything writes to `out/`, which is gitignored.** The reports there are the
 only durable record of a run, so a result nobody copied out of `out/` is a
 result nobody can check. The committed artifacts are elsewhere:
-`../constraints/` (what each device gates) and `docs/injection_tracking.*`.
+`../constraints/` (what each device gates) and `docs/artifacts/injection_tracking.*`.
 
 **All of them read the pipeline's output from a sibling worktree**,
 `/home/ramla/hal_agent-phase-1d` — the generator runs, the SVDs, the validated
@@ -39,7 +39,7 @@ with current numbers. This file is the per-script index.**
 |---|---|---|
 | `stm_sweep.py` | inject every manual into its PAC and compile real drivers against it — what breaks? | `out/` (field gating, the default) or `out/register_only/` (`--register-only`) |
 | `stm_master_pacs.py` | same, for the 4 manuals whose crate exists only on stm32-rs master | `out/stm_master_pacs.json` |
-| `tracking_table.py` | turn every report into the published per-manual table | `out/tracking.csv`, `docs/injection_tracking.{md,html}` |
+| `gen_injection_tracking_artifact.py` | turn every report into the published per-manual table | `out/tracking.csv`, `docs/artifacts/injection_tracking.{md,html}` |
 
 `stm_sweep` is the one to reach for. Per target it provisions the PAC,
 **snapshots** it, injects, compiles a probe crate and the paired HAL, restores,
@@ -60,7 +60,7 @@ measured that way, and the comparison should be runnable rather than asserted.
 Its artifacts go to `out/register_only/`, a separate tree: the two modes plan
 different gate sets, and a shared path once let one overwrite the other.
 
-`tracking_table.py` reads results, never recomputes them: every number in the
+`gen_injection_tracking_artifact.py` reads results, never recomputes them: every number in the
 published table traces to a file in `out/`.
 
 ## Nothing to compile against — make more of it measurable

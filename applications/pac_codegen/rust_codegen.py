@@ -6,7 +6,7 @@ and turns its ``access_constraints_v2`` state gates into compile-time
 enforcement inside a PAC crate. (Old v1 generator output is converted first
 with ``convert_v1_to_v2.py``.)
 
-ENCODING (see docs/register_constraints_plan.md §3 + Appendix A)
+ENCODING (see docs/register_constraints_design.md §3 + Appendix A)
 ----------------------------------------------------------------
 Gating is by TRAIT BOUND, not wrapper types or method shadowing: the stock
 ``Reg::write``/``modify``/``read``/``reset``/``write_with_zero``/``from_*``
@@ -362,8 +362,9 @@ class FieldGatingDisabled(ValueError):
     gating is off, so nothing was emitted.
 
     NOT an emitter limitation, which is why it is distinguishable: the
-    emitter builds these gates perfectly well with ``field_level_gating=True``
-    (CLI ``--field-level-gating``). It is switched off by DEFAULT because
+    emitter builds these gates perfectly well with ``field_level_gating=True``,
+    which is the product default (the driver/sweep pass it; ``--register-only``
+    opts out). The emitter's own default is off because
     gating a whole register for a rule about one of its fields would demand
     the precondition for writes to unrelated fields. Reporting it as
     "emitter_rejected" made a policy default read as a codegen gap -- and it
@@ -376,7 +377,9 @@ class RegisterPlan:
 
     def __init__(self, register_info: RegisterInfo, peripheral: str,
                  field_level_gating: bool = False, disabled_kinds=None):
-        # Field-level gating is OPT-IN (default off). When off, the emitter's
+        # The emitter defaults field_level_gating=False for safety when called
+        # bare, but the injection driver and sweep pass True -- field-level gating
+        # is the product default (--register-only opts out). When off, the emitter's
         # behavior is exactly as before: field-scoped constraints are skipped
         # with a warning. When on, they are enforced by gating the per-field
         # writer accessor (see FieldGate / patch_field_accessors).

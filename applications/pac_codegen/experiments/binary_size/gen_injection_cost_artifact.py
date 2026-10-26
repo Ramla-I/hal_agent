@@ -11,11 +11,13 @@ One bar per PAC crate (each the device with the MOST injected lines), split into
 zero-cost marker scaffolding vs gate-proportional enforcement modules. The "+0
 bytes" binary figure is the measured result from ``verify_binary_size.py``.
 
-    python plot_injection_cost.py
+    python gen_injection_cost_artifact.py
 """
 import json
 from pathlib import Path
 HERE = Path(__file__).resolve().parent
+ART = HERE.parents[3] / "docs" / "artifacts"   # repo-root/docs/artifacts
+ART.mkdir(parents=True, exist_ok=True)
 data = json.load(open(HERE/"injection_loc.json"))
 allrows = data["rows"]
 
@@ -101,7 +103,7 @@ for i,r in enumerate(rows):
 
 svg_body="\n".join(e)
 svg_open=f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H:.0f}" width="{W}pt" height="{H:.0f}pt" font-family="Helvetica,Arial,sans-serif">'
-(HERE/"pac_injection_cost.svg").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n{svg_open}\n{svg_body}\n</svg>\n')
+(ART/"pac_injection_cost.svg").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n{svg_open}\n{svg_body}\n</svg>\n')
 
 inline=f'<svg viewBox="0 0 {W} {H:.0f}" class="fig" role="img" aria-label="Injection source vs binary cost">\n{svg_body}\n</svg>'
 page=f'''<style>
@@ -137,5 +139,5 @@ code{{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;backgrou
     same size; the sole runtime cost is {check_cap}.</figcaption>
   </figure>
 </main>'''
-(HERE/"pac_injection_cost.html").write_text(page)
+(ART/"pac_injection_cost.html").write_text(page)
 print(f"SVG {W}x{H:.0f}pt, {N} crates; totals {tot_min}-{tot_max}; scaffolding {scaff_lo:.0f}-{scaff_hi:.0f}%")
