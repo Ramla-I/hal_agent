@@ -81,7 +81,7 @@ source nobody wrote for this.
 | `port_anne_key.py` | does the source **scanner** agree with the **compiler** on the same project? | `out/port_anne_key.json` |
 | `port_stm32_eth.py` | confirm a **true negative** against the compiler — a site the gate must NOT flag | `out/port_stm32_eth.json` |
 | `dependent_compile.py` | do the HAL's gated bug-sites actually ship in its dependents' builds? | `out/` |
-| `hopter.py` | a real embedded OS against an injected PAC | `out/hopter.json` |
+| `port_hopter.py` | a real embedded OS against an injected PAC | `out/hopter.json` |
 
 ## Nothing to compile against — make more measurable
 
@@ -130,14 +130,14 @@ and looking second does not scale.
 |---|---|---|
 | `scan_projects.py` | find constrained register accesses in third-party source, WITHOUT compiling | `out/scan_projects.json` |
 | `dependent_scan.py` | scan every crates.io **dependent's** own source for constrained accesses | `out/`, `hal_dependents_census.json` |
-| `landscape_page.py` | publish that scan as a page | `docs/artifacts/project_landscape.html` |
+| `gen_project_landscape_artifact.py` | publish that scan as a page | `docs/artifacts/project_landscape.html` |
 
 ## Adjudicate and publish
 
 | script | question | output |
 |---|---|---|
 | `bug_review.py` | step through the sweep's possible-bug sites and record tp/fp — the human ledger | `../bug_review/` CSV tree |
-| `coverage_page.py` | the STM32 PAC → HAL & ecosystem coverage artifact | a page, reproducible from the records |
+| `gen_coverage_artifact.py` | the STM32 PAC → HAL & ecosystem coverage artifact | a page, reproducible from the records |
 
 ## Does any of this generalise?
 

@@ -334,7 +334,7 @@ MASTER_TARGETS = {
 # Snapshot / restore  (same contract as experiments/cross_pac.py)
 # --------------------------------------------------------------------------- #
 # NO LONGER USED BY THE SWEEP, which injects into a throwaway copy instead
-# (pac_workdir) and so has nothing to restore. Kept because hopter.py imports
+# (pac_workdir) and so has nothing to restore. Kept because port_hopter.py imports
 # it; migrate that the same way and this class can go.
 
 class PacSnapshot:

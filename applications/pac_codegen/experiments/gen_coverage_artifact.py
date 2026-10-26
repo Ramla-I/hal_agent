@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""coverage_page.py -- the STM32 PAC -> HAL & ecosystem coverage artifact.
+"""gen_coverage_artifact.py -- the STM32 PAC -> HAL & ecosystem coverage artifact.
 
 One row per svd2rust PAC crate (family). For each, lists every downstream
 crate -- HAL, app, BSP, driver -- built or scanned against the witness-gated
@@ -14,11 +14,11 @@ crate, split into two columns:
 Everything is computed from the experiment records under experiments/out/
 (sweep.json, stm_master_pacs.json, port_*.json, dependent_*.json,
 dependent_scan.json) -- no hand-entered numbers -- so re-running after a
-fresh sweep/scan updates the page. Writes docs/pac_coverage.html; publish
+fresh sweep/scan updates the page. Writes docs/artifacts/pac_coverage.html; publish
 that with the Artifact tool.
 
 Usage:
-    python applications/pac_codegen/experiments/coverage_page.py
+    python applications/pac_codegen/experiments/gen_coverage_artifact.py
 """
 import json, collections
 from pathlib import Path
@@ -26,7 +26,7 @@ from pathlib import Path
 _APP = Path(__file__).resolve().parent.parent
 _REPO = _APP.parent.parent
 OUT = str(_APP / "experiments" / "out") + "/"
-_HTML_OUT = _REPO / "docs" / "pac_coverage.html"
+_HTML_OUT = _REPO / "docs" / "artifacts" / "pac_coverage.html"
 def L(p):
     try: return json.load(open(OUT+p))
     except: return None
@@ -225,5 +225,6 @@ candidate sites, not compile-confirmed.</p>
 <p class="foot">Generated from out/sweep.json, stm_master_pacs.json, port_*.json, dependent_*.json ·
 crates.io links verified 2026-09-21</p>
 </div>"""
+_HTML_OUT.parent.mkdir(parents=True, exist_ok=True)
 _HTML_OUT.write_text(doc)
 print(f"html: {_HTML_OUT}  ({len(rows)} PACs, {n_clean} clean)")

@@ -102,7 +102,7 @@ class Workdir(unittest.TestCase):
 
 class SweepDoesNotRestore(unittest.TestCase):
     def test_the_sweep_no_longer_calls_restore(self):
-        """PacSnapshot stays importable for hopter.py, but the sweep itself
+        """PacSnapshot stays importable for port_hopter.py, but the sweep itself
         must not have a restore step -- reintroducing one reintroduces every
         failure mode above."""
         src = (EXP / "stm_sweep.py").read_text()

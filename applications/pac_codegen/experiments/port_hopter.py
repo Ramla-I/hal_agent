@@ -31,7 +31,7 @@ injected PAC. It exercises the same driver paths Hopter does, on a paired HAL
 version, without the forked compiler. It is a proxy, and reported as one.
 
 Usage:
-    python applications/pac_codegen/experiments/hopter.py [--hopter DIR]
+    python applications/pac_codegen/experiments/port_hopter.py [--hopter DIR]
 """
 
 import argparse
