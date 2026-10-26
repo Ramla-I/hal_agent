@@ -43,8 +43,8 @@ cannot provision). rm0475 yields none (no chip crate covers STM32MP13x).
 ## Read one
 
 ```sh
-python applications/pac_codegen/show_injected_constraints.py rm0008 --quotes
-python applications/pac_codegen/show_injected_constraints.py --all
+python applications/pac_codegen/injected_constraints.py show rm0008 --quotes
+python applications/pac_codegen/injected_constraints.py show --all
 ```
 
 One block per register: the gated operations, each distinct rule once, and with

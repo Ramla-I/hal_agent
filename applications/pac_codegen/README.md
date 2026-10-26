@@ -59,7 +59,7 @@ applications/pac_codegen/
 ├── rust_codegen.py          The emitter: RegisterInfo JSON -> gated PAC
 ├── inject_from_run.py       End-to-end driver: generator run dir -> gated PAC
 ├── get_pac.py               Provision a PAC from crates.io (pinned + checksum-verified)
-├── show_injected_constraints.py   Read a device's applied constraints out loud
+├── injected_constraints.py       show / review / merge what a crate gates
 ├── convert_v1_to_v2.py      The ONE tool that still parses the retired v1 grammar
 ├── constraints/             README + .gitignore; the per-device JSON record is
 │                             generated on demand (see constraints/README.md)
@@ -180,8 +180,8 @@ use `experiments/stm_sweep.py`; see [`experiments/README.md`](experiments/README
 ## Reading the result
 
 ```sh
-python applications/pac_codegen/show_injected_constraints.py rm0008 --quotes
-python applications/pac_codegen/show_injected_constraints.py --all
+python applications/pac_codegen/injected_constraints.py show rm0008 --quotes
+python applications/pac_codegen/injected_constraints.py show --all
 ```
 
 One block per register: the operations gated, each distinct rule once, and with
