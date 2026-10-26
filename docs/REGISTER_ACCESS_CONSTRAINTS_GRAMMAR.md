@@ -6,7 +6,8 @@ cannot express — are encoded for generating constraint-enforcing Rust PAC
 grammar** — the enforcement-arm plan (`docs/register_constraints_plan.md`)
 points here rather than restating it. The Pydantic implementation lives in
 `defs.py` (grammar v2 section), and collection lives in
-`applications/pac_codegen/collect_constraints.py`.
+`core/collect_constraints.py`. How several rules for ONE register are
+reconciled is specified in [`PAC_CODEGEN.md`](PAC_CODEGEN.md).
 
 All examples below are real, from the 30-reference-manual STM corpus.
 
@@ -243,7 +244,9 @@ class ReadEffect(ConstraintBase):
 Examples: `rm0386/1/dsi_isr1` (*"always cleared after a read"* — misextracted
 in v1 as 14 postconditions); USART_DR read clears RXNE.
 
-**Enforcement:** `doc_only` — reads cannot usefully be forbidden, but this
+**Enforcement:** `doc_only` (a future advisory-warning surface — a `///` caveat
+on the register's type-alias doc — is proposed in `register_constraints_plan.md`
+§13) — reads cannot usefully be forbidden, but this
 metadata (a) feeds the Constraint Validator, (b) tells codegen when a checking
 read would itself perturb state (the self-defeating same-register read-gate
 case, rejected at codegen), and (c) where a real ordering obligation exists,
@@ -280,7 +283,9 @@ class ValueRelation(ConstraintBase):
 ```
 
 Examples: *"CR2.FREQ must equal the APB1 frequency in MHz"*; *"keep RXONLY
-clear while BIDIMODE is set"* (`rm0454/1/spi1_cr1`). Always `doc_only`.
+clear while BIDIMODE is set"* (`rm0454/1/spi1_cr1`). Always `doc_only` for the
+metric; a future advisory-warning surface (`#[deprecated]` on the involved field
+writers) is proposed in `register_constraints_plan.md` §13.
 
 ### `other` — escape valve and discovery queue
 
@@ -428,7 +433,10 @@ coverage:
   **`state_gate`** as compile-time witness gates (whole-register and
   cross-register). `read_effect`, `value_relation`, and `other` are
   documentation-only by construction and never gate an operation; `sequence`,
-  `clock_gate`, `write_once`, and `delay` are carried but not yet compile-gated.
+  `write_once` and `delay` are carried but not yet compile-gated. `clock_gate`
+  is carried for extraction/validation only and is **intentionally never
+  compile-gated** — peripheral clock enablement is the HAL's responsibility
+  (see the 2026-10-20 divergence entry in `register_constraints_plan.md`).
 - The **constraint validator** (`core/constraint_validator.py`, plan §7) judges
   **all** kinds against the datasheet — it processes every kind the generator
   emits, independent of what codegen enforces.
