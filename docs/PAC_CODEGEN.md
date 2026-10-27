@@ -652,13 +652,17 @@ distinction anne-key used to give endpoint 1 different behaviour; and RTFM 0.4
 cannot name any interrupt from a modern PAC (`bare_metal::Nr` vs
 `InterruptNumber`), which is shimmed in a private copy of the crate.
 
-**`port_stm32_eth.py` — does a scanner *zero* survive the compiler?** A zero
+**`port_stm32_eth.py` — does a scanner *zero* survive scrutiny?** A zero
 from a text matcher is the easiest number to be wrong about. stm32-eth
 programs ~100 registers directly and the scan found none constrained; after
 the port (really a HAL bump — the blocker was a missing `resolver = "2"`, not
-the PAC), injection gates two dozen registers and the compiler confirms zero
-hits in stm32-eth's own source with zero collateral. The zero is explained,
-not just observed: RM0386 constrains ADC/CAN/CRYP/I2C/QUADSPI/USART-class
+the PAC), injection gates two dozen registers and the build reports zero gate
+hits attributed to stm32-eth's own source. That zero is **not** a clean
+compiler confirmation on its own: stm32-eth builds on stm32f4xx-hal, which
+itself raises gate errors, so compilation need not reach stm32-eth's crate —
+the zero reads as "no hit attributed here," not "checked downstream and clean."
+What makes it trustworthy is the source-level argument, which stands
+independently: RM0386 constrains ADC/CAN/CRYP/I2C/QUADSPI/USART-class
 peripherals and stm32-eth touches ETH_MAC/ETH_DMA/ETH_PTP — no overlap.
 Reading its source to port it is also what surfaced the **bit-banding
 bypass** (next section).
@@ -681,11 +685,14 @@ the PAC generation we inject, on stable Rust. The entire application compiles
 against the injected crate with **zero mechanical edits**: the whole
 experiment is one `[patch.crates-io]` line. What a hit means changes with
 that: the app's own source has no direct register access, so every gate that
-fires is HAL code that *this application's feature selection actually
-monomorphises* — driver code its binary would contain, not driver code that
-merely exists. The sweep asks "does the driver violate the rule anywhere?";
-this asks "does the part of the driver this app uses violate it?" — the
-question `trace_hal` approximates statically, answered by the compiler.
+fires is HAL code pulled in by *this application's dependency and feature
+selection* — driver code enabled and type-checked for this build, not driver
+code from some unrelated feature. (The probe is `cargo check`, which
+type-checks every enabled body, including functions this binary never calls, so
+it establishes feature-reachability, not that the linked binary executes the
+site.) The sweep asks "does the driver violate the rule anywhere?"; this asks
+"does the part of the driver this app enables violate it?" — the question
+`trace_hal` approximates statically, answered here by the type-checker.
 
 **No project with findings is `ready`.** Everything with findings either pins
 an older PAC, needs its HAL bumped, or has no PAC at all.

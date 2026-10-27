@@ -11,24 +11,42 @@ not whether the driver checks a precondition. Since the precondition check is
 the only thing our gates measure, the upgrade is orthogonal to the result.
 
 That argument only holds if the upgrade is mechanical, so this tool refuses to
-be clever. It applies ONLY rustc's own suggestions for the two diagnostics that
-mark the field-to-accessor change:
+be clever: it applies a BOUNDED set of spelling changes this PAC generation
+forced, never new control flow. Most are driven by rustc's own diagnostics
+against the new PAC, so the span is the compiler's judgement, not a guess of
+ours:
 
-    E0616  field `cr` of struct `...::RegisterBlock` is private
-           -> "a method `cr` also exists, call it with parentheses"
-    E0615  attempted to take value of method
-           -> "use parentheses to call the method"
+    E0616/E0615  field -> method: insert `()`          (`cr` -> `cr()`)
+    E0133        `w.bits(..)` is now unsafe: wrap in `unsafe { .. }`
+    Bit1C        write-1-to-clear lost `set_bit` -> `clear_bit_by_one`
+    E0308 .into() a widened write type: insert `.into()` where rustc marks it
+                 MachineApplicable
+    enum recase  `CYCLES1_5` -> `Cycles1_5`, accepted only when the two names
+                 are identical once uppercased with `_` removed (so `Cycles195`
+                 is never "corrected" to `Cycles1_5`)
+    trailing `;` `write` now returns `REG::Ux`, so a register op in tail
+                 position of a `()` fn needs `;` -- applied only on a register
+                 op, and only once nothing else is left to port
 
-Both suggest inserting `()`. rustc marks them MaybeIncorrect, which is why
-`cargo fix` leaves them alone, but the span comes from name resolution against
-the new PAC, so the location is the compiler's judgement and not a guess of
-ours. Anything else -- register arrays, raw-write widths, unsafe -- is reported
-and left for a human, because those need reading and could move a site between
-"guarded" and "possible bug".
+Two further sources are NOT rustc suggestions, and are called out as such: the
+`_A` enum-suffix drop (`LATENCY_A` -> `LATENCY`), taken from the PAC because
+rustc's nearest-string guess here is actively wrong; and a short per-HAL
+`MANUAL_PATCHES` table of API RENAMES this generation made that rustc cannot
+propose (`w.key().reset()` -> `w.key().feed()`, `w.lpds()` -> `w.lpsdsr()`).
+Those rename the same operation, but they are hand-identified, so they live in
+the source as a reviewed constant and are reported per run rather than folded in
+with the diagnostics-driven edits.
 
-`--verify` re-reads every edit and fails if any of them changed a byte other
-than inserting `()`, which is what keeps "control flow is untouched" a checked
-claim rather than an assurance.
+Anything outside this set -- register arrays, raw-write widths, an unseen
+diagnostic -- is reported and left for a human, because it needs reading and
+could move a site between "guarded" and "possible bug".
+
+`--verify` re-reads every diagnostics-driven edit and fails unless it matches
+one of the allowed shapes above at exactly the span rustc computed (a `()` or
+`.into()` insertion adds at an empty span; a `clear_bit_by_one`/recase replaces
+only the expected token). It checks that each edit is one of the sanctioned
+mechanical forms -- it is NOT a parentheses-only guarantee, and it does not
+re-derive the `MANUAL_PATCHES` table, which is a reviewed constant.
 
 Usage:
     python applications/pac_codegen/experiments/port_hal.py --hal stm32l0xx-hal
