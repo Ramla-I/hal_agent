@@ -258,7 +258,11 @@ def load_port_sites() -> list:
                 "file": h.get("file", ""), "line": h.get("line", 0),
                 "peripheral": per, "register": reg,
                 "operation": h.get("operation", ""),
-                "gated_field": h.get("gated_field", ""),
+                # Producers disagree on the key: the sweep emits `gated_field`,
+                # port_anne_key emits `field`. Fall back so the per-field ledger
+                # identity is not silently blanked (which collapsed distinct
+                # field failures on one line into one row).
+                "gated_field": h.get("gated_field") or h.get("field", ""),
                 "static_verdict": h.get("verdict", ""),
                 "precondition_fields": " ".join(h.get("fields") or []),
                 "field_source": "exact" if len(cands) == 1 else "union",
@@ -313,7 +317,11 @@ def load_measured_hal_sites() -> list:
                 "file": f, "line": h.get("line", 0),
                 "peripheral": per, "register": reg,
                 "operation": h.get("operation", ""),
-                "gated_field": h.get("gated_field", ""),
+                # Producers disagree on the key: the sweep emits `gated_field`,
+                # port_anne_key emits `field`. Fall back so the per-field ledger
+                # identity is not silently blanked (which collapsed distinct
+                # field failures on one line into one row).
+                "gated_field": h.get("gated_field") or h.get("field", ""),
                 "static_verdict": h.get("verdict", "unchecked"),
                 "precondition_fields": " ".join(h.get("fields") or []),
                 "field_source": "exact" if len(cands) == 1 else "union",

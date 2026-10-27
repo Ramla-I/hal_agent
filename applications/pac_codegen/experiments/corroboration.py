@@ -82,15 +82,18 @@ Respond with a single JSON object, keys exactly:
 
 
 def snapshot(pac_dir: Path, device: str, tmp: Path):
-    shutil.copy2(pac_dir / "src" / "generic.rs", tmp / "generic.rs")
-    shutil.copytree(pac_dir / "src" / device, tmp / device)
+    # Injection patches generic.rs AND writes Unconstrained* markers into the
+    # SIBLING device modules across the whole crate, so the entire src/ tree
+    # must be saved, not just generic.rs and the target device. Restoring only
+    # those two left sibling edits behind in the SHARED vendored PAC and broke
+    # later experiments that reuse it. (device kept for call compatibility.)
+    shutil.copytree(pac_dir / "src", tmp / "src")
 
 
 def restore(pac_dir: Path, device: str, tmp: Path):
     import os
-    shutil.copy2(tmp / "generic.rs", pac_dir / "src" / "generic.rs")
-    shutil.rmtree(pac_dir / "src" / device)
-    shutil.copytree(tmp / device, pac_dir / "src" / device)
+    shutil.rmtree(pac_dir / "src")
+    shutil.copytree(tmp / "src", pac_dir / "src")
     # Defeat cargo's diagnostic replay: old mtimes read as "fresh".
     os.utime(pac_dir / "src" / "generic.rs")
     for f in (pac_dir / "src" / device).rglob("*"):

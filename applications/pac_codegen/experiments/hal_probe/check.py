@@ -512,8 +512,15 @@ def main():
             pass
         regs = {}
         for e in hits:
-            regs[e["message"].split("`")[1]] = regs.get(
-                e["message"].split("`")[1], 0) + 1
+            # The register is in the message backticks for a whole-register
+            # (E0277) hit, but a field-gate (E0061) message is just "this method
+            # takes 1 argument…" with the register in a span label — so ask the
+            # classifier for the spec rather than splitting on backticks (which
+            # raised IndexError on field-gate hits).
+            h = enforcement.classify_diagnostic(e)
+            name = (h.spec if h and h.spec else
+                    e["message"].split("`")[1] if "`" in e["message"] else "?")
+            regs[name] = regs.get(name, 0) + 1
         for r, n in sorted(regs.items(), key=lambda x: -x[1]):
             print(f"    {n:>3}x {r}")
         for f, lines in sorted(sites(hits).items()):

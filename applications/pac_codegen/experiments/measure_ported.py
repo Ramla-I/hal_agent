@@ -188,7 +188,10 @@ def triage(diags: list, fields_by_reg: dict) -> list:
             if not path.is_file():
                 continue
             key = reg[:-2].lower() if reg.lower().endswith("rs") else reg.lower()
-            parts = [s for s in str(hit.spec).split("::") if s]
+            # Peripheral comes from the FULL path (two segments up), not the
+            # bare spec (`CCRrs` has no `::`), which otherwise forced periph=""
+            # and fell back to the merged bare-name field set.
+            parts = [s for s in str(getattr(hit, "path", "") or hit.spec).split("::") if s]
             periph = parts[-3].lower() if len(parts) >= 3 else ""
             fields = (fields_by_reg.get((periph, key))
                       or fields_by_reg.get(key))

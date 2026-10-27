@@ -58,6 +58,8 @@ from pathlib import Path
 
 APP_DIR = Path(__file__).resolve().parent.parent
 OUT = APP_DIR / "experiments" / "out"
+sys.path.insert(0, str(APP_DIR))
+from rust_codegen import _GATED_METHODS  # noqa: E402  literal injector anchors
 VENDORED = APP_DIR / "vendored" / "pac"
 PHASE1D = Path("/home/ramla/hal_agent-phase-1d")
 TIMEOUT = 1800
@@ -147,7 +149,7 @@ def compare(candidate: Path) -> dict:
     base_v, cand_v = version_of(BASELINE), version_of(candidate)
     print(f"  baseline  : {base_v}")
     print(f"  candidate : {cand_v}\n")
-    rows, differing = [], False
+    rows, differing, anchor_failures, ran = [], False, [], 0
     tmp = Path(tempfile.mkdtemp(prefix="svd2rust_cmp_"))
     try:
         for rm, device in SAMPLE:
@@ -155,25 +157,44 @@ def compare(candidate: Path) -> dict:
             if not svd.is_file():
                 print(f"  {device:<15} SKIP (no SVD)")
                 continue
+            ran += 1
             a = shapes(generate(BASELINE, svd, tmp / "base" / device))
-            b = shapes(generate(candidate, svd, tmp / "cand" / device))
+            cand_text = generate(candidate, svd, tmp / "cand" / device)
+            b = shapes(cand_text)
             diffs = {k: (sorted(a[k] - b[k])[:5], sorted(b[k] - a[k])[:5])
                      for k in a if a[k] != b[k]}
             if diffs:
                 differing = True
-            print("  %-15s %s" % (device, "identical" if not diffs
-                                  else f"DIFFERS in {list(diffs)}"))
+            # The five shapes are name SETS; the injector ALSO matches literal
+            # method signatures in generic.rs (rust_codegen._GATED_METHODS). A
+            # signature change can leave every set identical yet break the
+            # `sig in content` match, so test the candidate for each anchor.
+            missing = [anchor for anchor, _ in _GATED_METHODS
+                       if anchor not in cand_text]
+            if missing:
+                anchor_failures.append({"device": device, "missing": missing})
+                differing = True
+            tags = list(diffs) + (["patch-anchors"] if missing else [])
+            print("  %-15s %s" % (device, "identical" if not tags
+                                  else f"DIFFERS in {tags}"))
             for k, (only_a, only_b) in diffs.items():
                 print(f"      {k}: only-baseline={only_a} only-candidate={only_b}")
+            if missing:
+                print(f"      patch anchors absent from candidate generic.rs: "
+                      f"{len(missing)} of {len(_GATED_METHODS)}")
             rows.append({"device": device,
                          "counts": {k: len(v) for k, v in a.items()},
-                         "identical": not diffs,
+                         "identical": not diffs and not missing,
                          "diffs": {k: {"only_baseline": x, "only_candidate": y}
-                                   for k, (x, y) in diffs.items()}})
+                                   for k, (x, y) in diffs.items()},
+                         "anchors_missing": missing})
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+    if ran == 0:
+        print("  no SVDs available — nothing compared (not a pass)")
     return {"mode": "compare", "baseline": base_v, "candidate": cand_v,
-            "devices": rows, "ok": not differing}
+            "devices": rows, "compared": ran, "anchor_failures": anchor_failures,
+            "ok": (not differing) and ran > 0}
 
 
 def main():

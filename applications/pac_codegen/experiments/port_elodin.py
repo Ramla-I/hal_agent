@@ -222,9 +222,13 @@ def main() -> None:
             start, snip = corroboration.enclosing_function(path, line)
             verdict = corroboration.deterministic_scan(
                 snip, line - start, fs)["verdict"]
+        # Layer: a relative loc is app source; an absolute one points into a
+        # vendored dependency. Only app-layer hits are "application-owned" —
+        # the old code counted every recognized hit as the app's.
+        layer = "app" if not os.path.isabs(loc) else "dependency"
         hits.append({"file": loc, "line": line, "register": regname,
                      "operation": h.operation, "fields": fs,
-                     "verdict": verdict})
+                     "verdict": verdict, "layer": layer})
     v = collections.Counter(x["verdict"] for x in hits)
 
     result = {
@@ -234,6 +238,11 @@ def main() -> None:
         "mechanical_edits": 21 + 2,     # files touched by the two patches
         "registers_gated": rep2.get("registers_planned"),
         "gate_fired": len(hits), "hits": hits, "collateral": other,
+        "app_owned_hits": sum(1 for h in hits if h["layer"] == "app"),
+        "pac_selection_caveat":
+            "injected PAC selected via Cargo.toml [patch] + `cargo clean -p`; "
+            "this run does not assert with `cargo tree` that the patched copy "
+            "(not the registry crate) was the one linked.",
         "guarded": v.get("corroborated", 0),
         "possible_bug": v.get("unchecked", 0),
         "full_injection": {"registers": rep.get("registers_planned"),

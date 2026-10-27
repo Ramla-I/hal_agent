@@ -76,8 +76,16 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--rm", default="rm0440")
     ap.add_argument("--device", default="stm32g474")
-    ap.add_argument("--crate", default="stm32g4")
+    ap.add_argument("--crate", default="stm32g4",
+                    help="only stm32g4 is supported — the sizefw firmware is "
+                         "G4-specific")
     args = ap.parse_args()
+    if args.crate != "stm32g4":
+        sys.exit("verify_binary_size supports only --crate stm32g4 "
+                 "(stm32g474): the sizefw firmware hardcodes "
+                 "`use stm32g4::stm32g474` and set_pac() rewrites only the "
+                 "stm32g4 dependency line. Another family needs its own "
+                 "firmware + manifest.")
     ungated = BASE.read_text()
     checked = ungated.replace("    loop {}", CHECKED + "\n    loop {}", 1)
     bypass  = ungated.replace("    loop {}", BYPASS  + "\n    loop {}", 1)

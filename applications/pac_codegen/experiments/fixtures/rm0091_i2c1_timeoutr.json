@@ -64,8 +64,12 @@
       "enumerated_values": []
     }
   ],
-  "access_constraints": [
+  "access_constraints_v2": [
     {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "TIMEOUTB must not be written while TEXTEN is set",
+      "datasheet_text": "These bits can be written only when TEXTEN=0.",
       "target_register": "I2C_TIMEOUTR",
       "target_fields": [
         "TIMEOUTB"
@@ -73,15 +77,16 @@
       "target_operation": "write",
       "preconditions": [
         {
-          "register_name": "I2C_TIMEOUTR",
-          "field_name": "TEXTEN",
-          "required_state": "cleared"
+          "register": "I2C_TIMEOUTR",
+          "field": "TEXTEN",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
         }
       ],
-      "postconditions": [],
-      "severity": "error",
-      "consequence": "TIMEOUTB must not be written while TEXTEN is set",
-      "datasheet_text": "These bits can be written only when TEXTEN=0."
+      "postconditions": []
     }
   ]
 }

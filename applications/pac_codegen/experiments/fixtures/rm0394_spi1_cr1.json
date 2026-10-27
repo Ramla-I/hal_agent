@@ -190,8 +190,12 @@
       "enumerated_values": []
     }
   ],
-  "access_constraints": [
+  "access_constraints_v2": [
     {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Writing CRCEN while SPI is enabled may cause incorrect operation",
+      "datasheet_text": "This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation.",
       "target_register": "SPI1_CR1",
       "target_fields": [
         "CRCEN"
@@ -199,17 +203,22 @@
       "target_operation": "write",
       "preconditions": [
         {
-          "register_name": "SPI1_CR1",
-          "field_name": "SPE",
-          "required_state": "cleared"
+          "register": "SPI1_CR1",
+          "field": "SPE",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
         }
       ],
-      "postconditions": [],
-      "severity": "error",
-      "consequence": "Writing CRCEN while SPI is enabled may cause incorrect operation",
-      "datasheet_text": "This bit should be written only when SPI is disabled (SPE = ‘0’) for correct operation."
+      "postconditions": []
     },
     {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Writing CRCL while SPI is enabled may cause incorrect operation",
+      "datasheet_text": "This bit should be written only when SPI is disabled (SPE = \u20180\u2019) for correct operation.",
       "target_register": "SPI1_CR1",
       "target_fields": [
         "CRCL"
@@ -217,15 +226,16 @@
       "target_operation": "write",
       "preconditions": [
         {
-          "register_name": "SPI1_CR1",
-          "field_name": "SPE",
-          "required_state": "cleared"
+          "register": "SPI1_CR1",
+          "field": "SPE",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
         }
       ],
-      "postconditions": [],
-      "severity": "error",
-      "consequence": "Writing CRCL while SPI is enabled may cause incorrect operation",
-      "datasheet_text": "This bit should be written only when SPI is disabled (SPE = ‘0’) for correct operation."
+      "postconditions": []
     }
   ]
 }

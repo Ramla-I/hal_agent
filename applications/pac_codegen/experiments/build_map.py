@@ -48,16 +48,52 @@ def index(crate):
 
 
 def caret_matches_0_16(req: str) -> bool:
-    """Does a cargo version req admit 0.16.0? Handles the shapes that appear
-    in these manifests: '^0.16.0', '0.16', '=0.16.0', '^0.15.1' (no)."""
-    r = req.strip().lstrip("^")
-    if r.startswith("="):
-        return r[1:].strip().startswith("0.16")
-    if r.startswith((">=", "<", ">")):        # ranges: be conservative
-        return "0.16" in r
-    parts = r.split(".")
-    # 0.x semver: compatible iff major AND minor match
-    return len(parts) >= 2 and parts[0] == "0" and parts[1] == "16"
+    """Does a cargo version requirement admit EXACTLY 0.16.0?
+
+    Correct for the operators in these manifests — bare/caret (`0.16`,
+    `^0.16.1`), exact (`=0.16.0`), comparators (`>=`,`>`,`<`,`<=`), joined
+    conjunctively by commas. The old version substring-matched `0.16` and so
+    wrongly accepted `=0.16.1`, `^0.16.1` and `<0.16`, none of which admit
+    0.16.0. 0.x carets are minor-locked: `^0.16.1` means >=0.16.1,<0.17."""
+    T = (0, 16, 0)
+
+    def ver(s):
+        cur, nums = "", []
+        for ch in s:
+            if ch.isdigit():
+                cur += ch
+            elif cur:
+                nums.append(int(cur)); cur = ""
+        if cur:
+            nums.append(int(cur))
+        nums = nums[:3]
+        return tuple(nums + [0] * (3 - len(nums)))
+
+    for part in req.split(","):
+        p = part.strip()
+        if not p:
+            continue
+        if p.startswith("="):
+            if ver(p) != T:
+                return False
+        elif p.startswith(">="):
+            if T < ver(p):
+                return False
+        elif p.startswith(">"):
+            if T <= ver(p):
+                return False
+        elif p.startswith("<="):
+            if T > ver(p):
+                return False
+        elif p.startswith("<"):
+            if T >= ver(p):
+                return False
+        else:                               # bare or caret/tilde
+            c = ver(p.lstrip("^~"))
+            upper = (0, c[1] + 1, 0) if c[0] == 0 else (c[0] + 1, 0, 0)
+            if not (c <= T < upper):
+                return False
+    return True
 
 
 def hal_versions_on_pac(hal: str, pac: str):

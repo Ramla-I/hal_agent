@@ -23,12 +23,32 @@ allrows = data["rows"]
 
 # Binary-side numbers are MEASURED by verify_binary_size.py, not hardcoded.
 _bf = HERE/"binary_size.json"
-if _bf.exists():
+measured = _bf.exists()
+if measured:
     b = json.load(open(_bf))
-    bin_str = "+0 bytes" if b.get("identical") else f"+{b.get('text_delta','?')} bytes"
+    identical = bool(b.get("identical"))
+    bin_str = "+0 bytes" if identical else f"+{b.get('text_delta','?')} bytes"
     check_cost = b.get("check_cost_bytes")
 else:                                   # figure still renders before verify has run
-    bin_str, check_cost = "+0 bytes", None
+    b, identical = {}, False
+    bin_str, check_cost = "not measured", None
+# Binary-side claims must match the measurement, not assert identity by default.
+if identical:
+    bin_sub = "identical .text · same size"
+    cap_bin = ("<b>byte-identical</b> to one built against the un-injected PAC, "
+               "at the\n    same size")
+elif measured:
+    bin_sub = f".text {bin_str}"
+    cap_bin = (f"<b>{bin_str}</b> of <code>.text</code> versus the un-injected "
+               "PAC")
+else:
+    bin_sub = "not yet measured"
+    cap_bin = "<b>not yet measured</b> — run <code>verify_binary_size.py</code>"
+# Field-level vs register-only: read the mode the loc measurement recorded
+# rather than always claiming the field-level default.
+mode_label = ("whole-register gating (--register-only)"
+              if "register-only" in str(data.get("mode", "")) else
+              "field-level gating (the injection default)")
 check_str = (f"+{check_cost} B per opt-in check is the only runtime cost"
              if check_cost is not None else "opt-in checks are the only runtime cost")
 check_cap = (f"<b>+{check_cost}&nbsp;bytes</b> per opt-in checked write"
@@ -50,6 +70,7 @@ mx = tot_max
 W = 240
 INK="#1b1f24"; INK2="#55606c"; MUT="#98a2ad"; GRID="#e9ebee"; LINE="#dfe2e6"
 SCAFF="#9aa7b8"; ENF="#d9772e"; ZERO="#2f8f5b"; CARD="#f5f6f7"
+bin_color = ZERO if identical else (ENF if measured else MUT)
 LW=26; RW=24; BW=W-LW-RW
 ROW=11
 cy=2; cy_h=34
@@ -74,9 +95,9 @@ T(ax+aw/2, cy+cy_h/2+7, "compiles", 3.9, MUT, anchor="middle")
 T(ax+aw/2, cy+cy_h/2+11.5, "to", 3.9, MUT, anchor="middle")
 e.append(f'<rect x="{b2x}" y="{cy}" width="{b2w}" height="{cy_h}" rx="4" fill="{CARD}" stroke="{ZERO}" stroke-opacity="0.5"/>')
 T(b2x+6, cy+9, "FIRMWARE BINARY", 4.6, MUT, weight="bold", ls=0.4)
-T(b2x+6, cy+22, bin_str, 12.5, ZERO, weight="bold")
-T(b2x+6, cy+30, "identical .text · same size", 5.1, INK2)
-T(W/2, note_y, f"field-level gating (the injection default) · {N} PAC crates · {check_str}",
+T(b2x+6, cy+22, bin_str, 12.5, bin_color, weight="bold")
+T(b2x+6, cy+30, bin_sub, 5.1, INK2)
+T(W/2, note_y, f"{mode_label} · {N} PAC crates · {check_str}",
   4.6, MUT, anchor="middle")
 
 # legend
@@ -130,13 +151,12 @@ code{{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;backgrou
   <h1>Injection cost: large in source, free in the binary</h1>
   <figure style="margin:0">
     <div class="col">{inline}<div class="colcap">shown at column width ({W}pt ≈ 3.3in)</div></div>
-    <figcaption><b>Figure.</b> With field-level gating (the injection default), compiling
+    <figcaption><b>Figure.</b> With {mode_label}, compiling
     datasheet access rules into the PAC adds {tot_min/1000:.0f}k&ndash;{tot_max/1000:.0f}k
     generated lines per crate (one bar per PAC crate, {N} total, each the device with the most
     injected lines), of which {scaff_lo:.0f}&ndash;{scaff_hi:.0f}% is zero-cost marker scaffolding
-    and the rest gate-proportional enforcement code. Yet the compiled firmware's executable code
-    (<code>.text</code>) is <b>byte-identical</b> to one built against the un-injected PAC, at the
-    same size; the sole runtime cost is {check_cap}.</figcaption>
+    and the rest gate-proportional enforcement code. The compiled firmware's executable code
+    (<code>.text</code>) is {cap_bin}; the sole runtime cost is {check_cap}.</figcaption>
   </figure>
 </main>'''
 (ART/"pac_injection_cost.html").write_text(page)

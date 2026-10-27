@@ -294,7 +294,7 @@ def run_target(target: Target) -> dict:
     try:
         inject = subprocess.run(
             [sys.executable, str(RUST_CODEGEN), str(target.fixture),
-             "--peripheral", target.peripheral,
+             "--peripheral", target.peripheral, "--field-level-gating",
              "--inject-pac", str(pac_dir), "--device", target.device],
             capture_output=True, text=True, timeout=STEP_TIMEOUT,
         )
@@ -456,7 +456,7 @@ def run_hal_adoption(f1: Target) -> dict:
     try:
         inject = subprocess.run(
             [sys.executable, str(RUST_CODEGEN), str(f1.fixture),
-             "--peripheral", f1.peripheral,
+             "--peripheral", f1.peripheral, "--field-level-gating",
              "--inject-pac", str(pac_dir), "--device", f1.device],
             capture_output=True, text=True, timeout=STEP_TIMEOUT,
         )
