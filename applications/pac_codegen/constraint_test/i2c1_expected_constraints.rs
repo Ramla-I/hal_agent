@@ -77,8 +77,13 @@ impl crate::Reg<super::cr1::CR1rs> {
         Ok(Cr1WriteWitness { _priv: () })
     }
 
-    /// Check and write in one call — the witness never escapes,
-    /// so the check-to-write window is fixed by this body.
+    /// Check and write in one call — the witness never escapes.
+    ///
+    /// The check runs at entry; your closure `f` then runs and the
+    /// write follows. The check reflects state at the start of this
+    /// call, so this is not an atomic check-and-write — a closure
+    /// that itself mutates a precondition, or an interrupt, can
+    /// change it before the store.
     #[inline(always)]
     pub fn write_when_ready<F>(&self, f: F) -> Result<<super::cr1::CR1rs as crate::RegisterSpec>::Ux, Cr1ConstraintError>
     where
@@ -89,6 +94,10 @@ impl crate::Reg<super::cr1::CR1rs> {
     }
 
     /// Check and modify in one call — the witness never escapes.
+    ///
+    /// Like `write_when_ready`, the check reflects state at entry,
+    /// not an atomic check-and-write: the read and your closure run
+    /// before the store.
     #[inline(always)]
     pub fn modify_when_ready<F>(&self, f: F) -> Result<<super::cr1::CR1rs as crate::RegisterSpec>::Ux, Cr1ConstraintError>
     where

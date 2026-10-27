@@ -320,21 +320,22 @@ def enabled_kinds(disabled=None) -> frozenset:
 
 class UnsatisfiableGate(ValueError):
     """Pooled preconditions demand one field in two states at once, so the
-    check can never pass -- the gate is dropped rather than emitted.
+    gate could never pass. It is dropped rather than emitted; this is raised
+    only when dropping leaves the register with NOTHING left to gate.
 
-    Case (A) pools conditions with no consistency test, so this compiled, was
-    callable, and returned Err on every call: enforcement the crate promises
-    and cannot deliver. AES_IVRx is the whole population (8 registers): "write
-    only when AES_CR.EN is cleared" and "read only when it is set" are both
-    correct, and `modify` is DERIVED as the union of a register's read and
-    write obligations, so it inherits both.
+    Case (A) pools conditions with no consistency test, so left alone this
+    compiled, was callable, and returned Err on every call: enforcement the
+    crate promises and cannot deliver. AES_IVRx is the whole population (8
+    registers): "write only when AES_CR.EN is cleared" and "read only when it
+    is set" are both correct, and `modify` is DERIVED as the union of a
+    register's read and write obligations, so it inherits both.
 
-    The conclusion that derivation reaches is RIGHT -- a read-modify-write of
-    AES_IVRx cannot be done safely, since the read needs AES enabled and the
-    write needs it disabled. Only the mechanism was wrong. Dropping the gate
-    withholds the marker for that operation, so the method does not exist for
-    the register and only `unsafe` reaches it: the same fact, stated at compile
-    time instead of on every call.
+    The contradiction is manufactured by that derivation, not a hardware fact,
+    so the self-contradictory gate is dropped and the operation is left UNGATED
+    (a stderr warning records it) rather than forbidden — a register we forbid
+    all safe access to as the product of a contradictory reading makes no
+    sense. When every one of a register's gates drops this way there is nothing
+    left to emit, and the plan raises this instead.
     """
 
 
@@ -404,13 +405,6 @@ class RegisterPlan:
         # field-lowercase -> FieldGate (populated only when field_level_gating)
         self.field_gates: dict[str, FieldGate] = {}
         self._unsatisfiable: list[str] = []
-        # Operations that must NOT exist for this register and carry no gate
-        # either. They stay in gated_ops() so the marker impl is withheld --
-        # absence of the marker IS the gate -- while the constraints module
-        # emits nothing for them, so `<op>_witnessed` has no Gate impl and does
-        # not compile. Only `unsafe <op>_unwitnessed` remains, which is the
-        # honest surface for "this cannot be done safely".
-        self.forbidden_ops: set[str] = set()
         self._redundant_fields: list[str] = []
         # Kinds this plan will emit (all supported kinds minus any disabled).
         self._enabled_kinds = enabled_kinds(disabled_kinds)
@@ -432,9 +426,14 @@ class RegisterPlan:
             getattr(self, f"_emit_{c.kind}")(c, peripheral, field_level_gating)
 
         # Two preconditions differing ONLY in `kind` (set vs cleared) are
-        # mutually exclusive by construction, so the operation can never be
-        # witnessed. Drop it: an operation with no marker and no gate does not
-        # exist for this register, which is the fact, stated at compile time.
+        # mutually exclusive by construction: the gate they describe could
+        # never pass. That is almost always a bad extraction, not a register
+        # that is genuinely untouchable, so drop the self-contradictory gate
+        # explicitly and report it. The operation is left UNGATED -- the same
+        # outcome as any constraint we cannot enforce -- rather than forbidden
+        # outright: a register we forbid all access to makes no sense as the
+        # product of a contradictory reading. If dropping leaves the plan with
+        # nothing to gate, the check below raises UnsatisfiableGate.
         for op in list(self.preconditions):
             seen = {}
             for pre in self.preconditions[op]:
@@ -444,36 +443,48 @@ class RegisterPlan:
                     self._unsatisfiable.append(
                         f"{op}: {pre.describe()} contradicts a sibling "
                         f"precondition on the same field")
+                    print(
+                        f"WARNING: {self.reg_name}: dropping {op} gate — "
+                        f"{pre.describe()} contradicts a sibling precondition "
+                        f"on the same field; {op} is left ungated.",
+                        file=sys.stderr,
+                    )
                     del self.preconditions[op]
                     self.docs.pop(op, None)
-                    # FORBIDDEN, not freed. Deleting the precondition alone
-                    # took the op out of gated_ops, so add_marker_impls handed
-                    # the register an Unconstrained* marker and the operation
-                    # became freely callable -- strictly worse than the
-                    # always-failing check it replaced.
-                    self.forbidden_ops.add(op)
                     break
                 seen[ident] = pre.kind
 
-        # A field gate is redundant when its conditions are a SUBSET of what
-        # the register gate already demands for the same surface: the accessor
-        # cannot be reached without first minting the register witness, which
-        # proved strictly more. Keeping it costs the caller a second witness
-        # for nothing. adc2/IER and adc1/CR are the corpus's two cases.
+        # A field gate is redundant only when EVERY surface that can write the
+        # field already demands at least the field's preconditions: then the
+        # accessor cannot be reached without first minting a register witness
+        # that proved strictly more, and the field witness costs the caller a
+        # second proof for nothing.
+        #
+        # The field writer is reached through BOTH write() and modify(), so
+        # redundancy has to hold on each surface INDEPENDENTLY -- not against
+        # the union of their preconditions. A field whose precondition is
+        # demanded on modify() but not on plain write() is NOT redundant: a
+        # bare write() would otherwise reach the field with the precondition
+        # unchecked. We cannot see the register's access mode here (that prune
+        # runs later), so an un-gated surface counts as "not covered" and the
+        # field gate is kept -- conservative, never unsound. adc2/IER and
+        # adc1/CR are the corpus's two cases.
         if self.field_gates and self.preconditions:
-            reg_keys = set()
-            for op in ("write", "modify"):
-                reg_keys |= {pre.key() for pre in self.preconditions.get(op, [])}
             for fname in list(self.field_gates):
                 fg = self.field_gates[fname]
-                if reg_keys and {pre.key() for pre in fg.preconditions} <= reg_keys:
+                fg_keys = {pre.key() for pre in fg.preconditions}
+                covered = all(
+                    self.preconditions.get(op)
+                    and fg_keys <= {pre.key() for pre in self.preconditions[op]}
+                    for op in ("write", "modify"))
+                if covered:
                     self._redundant_fields.append(
                         f"{fg.field}: {[p.describe() for p in fg.preconditions]} "
-                        "already required by the register gate")
+                        "already required by the register gate on every write "
+                        "surface")
                     del self.field_gates[fname]
 
-        if not self.preconditions and not self.field_gates \
-                and not self.forbidden_ops:
+        if not self.preconditions and not self.field_gates:
             if self._unsatisfiable:
                 raise UnsatisfiableGate(
                     f"{self.reg_name}: every gate dropped as unsatisfiable — "
@@ -641,11 +652,10 @@ class RegisterPlan:
 
     # (peripheral module, register-spec type, gated op), for the marker walk
     def gated_ops(self) -> set[tuple[str, str, str]]:
-        """Every operation whose marker must be withheld: those with a gate,
-        and those forbidden outright."""
+        """Every operation whose marker must be withheld: those with a gate."""
         spec = f"{self.reg_name.upper()}rs"
         return {(self.peripheral, spec, op)
-                for op in set(self.preconditions) | self.forbidden_ops}
+                for op in set(self.preconditions)}
 
     def witness_name(self, op: str) -> str:
         return f"{self.reg_name.capitalize()}{op.capitalize()}Witness"
@@ -785,8 +795,13 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
 
     # *_when_ready: check + use welded into one call
     if "write" in plan.preconditions:
-        a("    /// Check and write in one call — the witness never escapes,")
-        a("    /// so the check-to-write window is fixed by this body.")
+        a("    /// Check and write in one call — the witness never escapes.")
+        a("    ///")
+        a("    /// The check runs at entry; your closure `f` then runs and the")
+        a("    /// write follows. The check reflects state at the start of this")
+        a("    /// call, so this is not an atomic check-and-write — a closure")
+        a("    /// that itself mutates a precondition, or an interrupt, can")
+        a("    /// change it before the store.")
         a("    #[inline(always)]")
         a(f"    pub fn write_when_ready<F>(&self, f: F{src_params('write')}) -> Result<{ux}, {err}>")
         a("    where")
@@ -800,6 +815,10 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("")
     if "modify" in plan.preconditions:
         a("    /// Check and modify in one call — the witness never escapes.")
+        a("    ///")
+        a("    /// Like `write_when_ready`, the check reflects state at entry,")
+        a("    /// not an atomic check-and-write: the read and your closure run")
+        a("    /// before the store.")
         a("    #[inline(always)]")
         a(f"    pub fn modify_when_ready<F>(&self, f: F{src_params('modify')}) -> Result<{ux}, {err}>")
         a("    where")
@@ -1663,11 +1682,18 @@ def _plan_signature(plan: "RegisterPlan"):
 
     Field gates are part of it: with --field-level-gating two instances can
     carry the same precondition but different field lists, and merging those
-    silently would gate fields one instance never claimed."""
+    silently would gate fields one instance never claimed. Their CONDITIONS
+    are part of it too -- two instances can name the same field but gate it on
+    different preconditions, and a name-only fingerprint reads those as one
+    rule and merges them silently, dropping a reading. Fingerprint each field
+    by its (normalized) preconditions, not its name alone."""
     pre = tuple(sorted(
         (op, tuple(sorted(_norm_condition(p.describe()) for p in pres)))
         for op, pres in plan.preconditions.items()))
-    fields = tuple(sorted(getattr(plan, "field_gates", {}) or {}))
+    fields = tuple(sorted(
+        (fname, tuple(sorted(_norm_condition(p.describe())
+                             for p in fg.preconditions)))
+        for fname, fg in (getattr(plan, "field_gates", {}) or {}).items()))
     return (pre, fields)
 
 

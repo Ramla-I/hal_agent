@@ -235,20 +235,22 @@ SEVERAL RULES FOR ONE REGISTER
 │      │     CEN is set, and separately its TRIM field may not be written
 │      │     while AUTOTRIMEN is set.
 │      │
-│      │     One exception. If a field's conditions are already included in
-│      │     the register's conditions, the field's key is dropped. You cannot
-│      │     reach the field without first getting the register key, and
-│      │     getting it proved strictly more, so the second key would add
-│      │     nothing.
+│      │     One exception. If a field's conditions are already required on
+│      │     EVERY way of reaching the field — both write() and modify() — the
+│      │     field's key is dropped: you cannot reach it without first getting
+│      │     a register key that proved strictly more, so the second key adds
+│      │     nothing. Checked per surface: a condition demanded on modify but
+│      │     not on plain write does not count, or a bare write would reach the
+│      │     field with it unchecked.
 │      │
 │      └─ two rules ask for opposite things
 │            If one rule needs a field set and another needs the same field
-│            cleared, no one can ever satisfy both, so that OPERATION is
-│            forbidden outright. It gets no marker and no gate, which means
-│            neither modify() nor modify_witnessed() exists for the register
-│            and only unsafe modify_unwitnessed can reach it. The register's
-│            other operations keep their own rules.
-│            fate: unsatisfiable_gate
+│            cleared, no one can ever satisfy both. The self-contradictory gate
+│            is dropped explicitly and reported — a bad reading, not a register
+│            that is truly untouchable — and that OPERATION is left UNGATED, the
+│            same as any constraint we cannot enforce. The register's other
+│            operations keep their own rules. If dropping leaves nothing to
+│            gate, fate: unsatisfiable_gate.
 │
 └─ (B) they came from SEVERAL FILES for the same register
        In Rust, I2C1 and I2C2 and I2C3 share one piece of code, so we cannot
@@ -360,10 +362,10 @@ are dropped.
 ## When rules in one file contradict each other
 
 Case (A) pools conditions with no consistency test, so two rules that demand
-opposite states of one field produce a gate that **can never be satisfied**.
-`check_*_ready()` compiles, is callable, and always returns `Err` -- the
-register becomes unreachable through the safe API, the same end state as the
-one-way door but arrived at differently.
+opposite states of one field would produce a gate that **can never be
+satisfied** — a `check_*_ready()` that compiles and is callable but always
+returns `Err`, making the register unreachable through the safe API. The
+emitter detects this and drops the gate instead (below).
 
 Eight registers in the corpus are in this state, and every one is the same
 shape. `AES_IVRx` carries two correct datasheet rules:
@@ -382,28 +384,24 @@ and `EN set` together:
 ```
 
 **The contradiction is manufactured by that derivation, not present in the
-manual.** And the conclusion it encodes is *correct*: a read-modify-write of
-`AES_IVRx` genuinely cannot be performed safely, because the read needs AES
-enabled and the write needs it disabled. The register should not be
-modifiable.
+manual.** The honest reading is that the union turned two correct rules into a
+self-contradictory one — not that the hardware forbids a read-modify-write. So
+the contradictory gate is **dropped explicitly and reported**, and `modify` is
+left **ungated**, exactly like any other constraint we cannot enforce. The
+register's read and write keep their own correct conditions.
 
-What was wrong is the mechanism, and it is now fixed. The operation is marked
-**forbidden**: it keeps its place in the gated set so no `Unconstrained*`
-marker is emitted, and the constraints module emits nothing for it, so there is
-no `ModifyGate` impl either. Neither `modify()` nor `modify_witnessed()`
-exists; only `unsafe modify_unwitnessed` remains. The register's read and write
-keep their own correct conditions.
+We do **not** forbid the operation. An earlier version did: it kept `modify` in
+the gated set (so no `Unconstrained*` marker) while emitting no gate, leaving
+only `unsafe modify_unwitnessed`. But forbidding *all* safe access to a register
+as the product of a contradictory reading makes no sense — the contradiction is
+our artifact, not a hardware fact to encode as "never do this." If dropping the
+contradictory gate leaves the register with nothing left to gate, the plan
+raises `UnsatisfiableGate` (`fate: unsatisfiable_gate`); otherwise a warning on
+stderr records the drop and the register keeps its other gates.
 
 Detection is one pass after pooling: preconditions carry
 `(source, field, kind, value)`, so two entries differing only in `kind` are
 mutually exclusive by construction.
-
-**Forbidding is not the same as freeing.** The first attempt dropped the gate
-by deleting the precondition, which took the operation out of the gated set --
-and a marker is added to every operation *not* in that set, so `modify` came
-back as freely callable. That is strictly worse than the always-failing check
-it replaced, which at least made the operation unreachable. Absence of a marker
-is the gate; removing a gate must not also grant one.
 
 ### Could case (A) hold one sentence at two precisions?
 
@@ -418,11 +416,17 @@ the peripheral), which always lands in case (B), where the test does run.
 What (A) does hold, twice, is a field gate whose conditions are a **subset** of
 the register gate's: `adc2/IER` (register needs `ADSTART` and `JADSTART` clear,
 `JQOVFIE` needs only `JADSTART`) and `adc1/CR` (register needs seven busy flags
-clear, `ADCAL` needs only `ADEN`). The field gate is then redundant -- the
-accessor is unreachable without first satisfying the stricter register
-condition -- and costs the caller a second witness for nothing. Suppressing a
-field gate whose preconditions are a subset of its register's is not yet
-implemented.
+clear, `ADCAL` needs only `ADEN`). When that subset holds on **every** surface
+that can write the field, the field gate is redundant — the accessor is
+unreachable without first satisfying the stricter register condition — and it
+is suppressed, saving the caller a second witness.
+
+The subset test runs **per surface**, not against the union of the register's
+`write` and `modify` conditions. The field writer is reached through both
+`write()` and `modify()`, so a field whose condition is demanded on `modify`
+but not on plain `write` is **not** redundant: a bare `write` would otherwise
+reach the field with the condition unchecked. An un-gated surface counts as not
+covered, so the field gate is kept — conservative, never unsound.
 
 ## Deduplication
 
