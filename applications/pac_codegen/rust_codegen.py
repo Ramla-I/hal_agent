@@ -506,6 +506,12 @@ class RegisterPlan:
         # (dependent write withheld, obligation witness minted by await_delay).
         self.delay_gate = None
         self._skipped_delay = 0
+        # Operations the feature kinds WITHHOLD outright (no marker, no gate):
+        # a write_once lock is not RMW'd, and a sequence handshake's raw write
+        # and a delay's dependent write must go through their gated path. (The
+        # contradictory-state_gate case does NOT use this — it drops the gate
+        # and leaves the op ungated; see the unsatisfiable check below.)
+        self.forbidden_ops: set[str] = set()
         # Kinds this plan will emit (all supported kinds minus any disabled).
         self._enabled_kinds = enabled_kinds(disabled_kinds)
         # Constraints skipped ONLY because field-level gating is off; they
@@ -585,7 +591,7 @@ class RegisterPlan:
                     del self.field_gates[fname]
 
         if not self.preconditions and not self.field_gates \
-                and not self.write_once_ops \
+                and not self.write_once_ops and not self.forbidden_ops \
                 and not self.sequence_chains and not self.delay_gate:
             if self._unsatisfiable:
                 raise UnsatisfiableGate(
@@ -896,7 +902,8 @@ class RegisterPlan:
     def gated_ops(self) -> set[tuple[str, str, str]]:
         """Every operation whose marker must be withheld: those with a gate."""
         return {(self.peripheral, self.spec_type, op)
-                for op in (set(self.preconditions) | self.write_once_ops)}
+                for op in (set(self.preconditions) | self.write_once_ops
+                           | self.forbidden_ops)}
 
     def witness_name(self, op: str) -> str:
         return f"{self.reg_name.capitalize()}{op.capitalize()}Witness"

@@ -114,7 +114,9 @@ class ContradictoryGate(unittest.TestCase):
     def test_partial_drop_leaves_register_ungated_not_forbidden(self):
         """write (and its derived modify) are contradictory and drop; the
         surviving read keeps the register. The dropped ops are UNGATED -- their
-        markers are not withheld -- and the forbid mechanism is gone entirely."""
+        markers are not withheld. forbidden_ops exists (write_once / sequence /
+        delay withhold ops through it), but the contradiction path must NOT use
+        it: a contradictory reading leaves the op ungated, it does not forbid."""
         err = io.StringIO()
         with contextlib.redirect_stderr(err):
             plan = _plan("AES_IVR0", [
@@ -127,8 +129,10 @@ class ContradictoryGate(unittest.TestCase):
         self.assertNotIn("modify", plan.preconditions)   # derived bucket, also contradictory
         self.assertIn("read", plan.preconditions)
 
-        # Dropped, not forbidden: the mechanism no longer exists.
-        self.assertFalse(hasattr(plan, "forbidden_ops"))
+        # Dropped, not forbidden: the contradictory ops must not land in
+        # forbidden_ops (which exists for the feature kinds).
+        self.assertNotIn("write", plan.forbidden_ops)
+        self.assertNotIn("modify", plan.forbidden_ops)
         ops = {op for _, _, op in plan.gated_ops()}
         self.assertNotIn("write", ops)   # no marker withheld -> freely callable
         self.assertNotIn("modify", ops)
