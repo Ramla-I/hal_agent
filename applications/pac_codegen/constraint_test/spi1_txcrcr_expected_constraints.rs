@@ -62,6 +62,10 @@ impl crate::Reg<super::txcrcr::TXCRCRrs> {
     }
 
     /// Check and modify in one call — the witness never escapes.
+    ///
+    /// Like `write_when_ready`, the check reflects state at entry,
+    /// not an atomic check-and-write: the read and your closure run
+    /// before the store.
     #[inline(always)]
     pub fn modify_when_ready<F>(&self, f: F, sr: &crate::Reg<super::sr::SRrs>) -> Result<<super::txcrcr::TXCRCRrs as crate::RegisterSpec>::Ux, TxcrcrConstraintError>
     where

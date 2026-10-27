@@ -40,6 +40,7 @@ from pathlib import Path
 APP_DIR = Path(__file__).resolve().parent.parent   # applications/pac_codegen
 REPO = APP_DIR.parent.parent
 sys.path.insert(0, str(REPO))
+import enforcement  # noqa: E402
 sys.path.insert(0, str(APP_DIR))
 
 import get_pac  # noqa: E402
@@ -81,15 +82,18 @@ Respond with a single JSON object, keys exactly:
 
 
 def snapshot(pac_dir: Path, device: str, tmp: Path):
-    shutil.copy2(pac_dir / "src" / "generic.rs", tmp / "generic.rs")
-    shutil.copytree(pac_dir / "src" / device, tmp / device)
+    # Injection patches generic.rs AND writes Unconstrained* markers into the
+    # SIBLING device modules across the whole crate, so the entire src/ tree
+    # must be saved, not just generic.rs and the target device. Restoring only
+    # those two left sibling edits behind in the SHARED vendored PAC and broke
+    # later experiments that reuse it. (device kept for call compatibility.)
+    shutil.copytree(pac_dir / "src", tmp / "src")
 
 
 def restore(pac_dir: Path, device: str, tmp: Path):
     import os
-    shutil.copy2(tmp / "generic.rs", pac_dir / "src" / "generic.rs")
-    shutil.rmtree(pac_dir / "src" / device)
-    shutil.copytree(tmp / device, pac_dir / "src" / device)
+    shutil.rmtree(pac_dir / "src")
+    shutil.copytree(tmp / "src", pac_dir / "src")
     # Defeat cargo's diagnostic replay: old mtimes read as "fresh".
     os.utime(pac_dir / "src" / "generic.rs")
     for f in (pac_dir / "src" / device).rglob("*"):
@@ -128,7 +132,13 @@ def enforcement_hits(ws: Path, hal_name: str, concrete_token: str) -> list[dict]
         if d.get("level") != "error":
             continue
         msg = d.get("message", "")
-        if "constrained by its datasheet" not in msg or concrete_token not in msg:
+        # Field-gate hits carry no datasheet sentence and name their register
+        # only in a span label, so a message-only test never saw them and they
+        # never reached the judge at all.
+        hit = enforcement.classify_diagnostic(d)
+        if hit is None or hit.projection:
+            continue
+        if hit.kind == "register" and concrete_token not in msg:
             continue
         spans = []
 
@@ -178,7 +188,21 @@ def enclosing_function(path: str, line: int, max_lines: int = 140):
         end = j
         if opened and depth <= 0:
             break
-    body = lines[start:end + 1][:max_lines]
+    # The window must CONTAIN the flagged line. Taking the first `max_lines`
+    # of the function silently drops it whenever the function is longer than
+    # that, and the triage then scans an unrelated region: embassy's
+    # `rcc/l.rs` init() starts at 178, the flagged write is at 410, and the
+    # 140-line cap meant lines 178-318 were searched for a guard that sits at
+    # 403. Every long function was mis-triaged this way. When the function
+    # does not fit, keep the tail ending at the flagged line -- a precondition
+    # has to appear BEFORE the access, so that is the half that matters.
+    body_start = start
+    if end + 1 - start > max_lines:
+        if line - start > max_lines:
+            body_start = max(start, line - max_lines)
+        end = min(end, body_start + max_lines - 1)
+    body = lines[body_start:end + 1]
+    start = body_start
     out = []
     for k, text in enumerate(body, start=start + 1):
         marker = "   // <-- FLAGGED (constrained operation)" if k == line else ""
@@ -186,16 +210,48 @@ def enclosing_function(path: str, line: int, max_lines: int = 140):
     return start + 1, "\n".join(out)
 
 
+def _precondition_pattern(fields: list[str], dialect: str):
+    r"""How a precondition field is REFERENCED, which is dialect-specific.
+
+    svd2rust spells a field as an accessor method -- ``r.stop().bit_is_set()``
+    -- so ``\.stop\s*\(`` is right there. tock-registers spells it as a path
+    into the bitfield module -- ``CR1::STOP::SET``, ``sr1.is_set(SR1::BUSY)``
+    -- and never as ``.stop()``.
+
+    Using the svd2rust pattern on Tock is wrong TWICE OVER: it misses every
+    real guard, and it fires on unrelated Rust methods that happen to share the
+    field's name. Tock's I2C driver calls a helper ``self.stop()`` right beside
+    its ``CR1::STOP::SET`` writes, and that method call -- not any datasheet
+    check -- is what marked three sites "corroborated"."""
+    if dialect == "tock":
+        return re.compile("|".join(rf"::{f.upper()}\b" for f in fields))
+    if dialect == "metapac":
+        # embassy's stm32-metapac spells a field WRITE `w.set_acc64(true)`,
+        # not `w.acc64().set_bit()`, so `\.acc64\s*\(` never matches the
+        # very line that establishes the precondition. Reads keep the plain
+        # `r.acc64()` form, so both spellings have to be accepted.
+        return re.compile("|".join(
+            rf"\.(?:set_)?{f}\s*\(" for f in fields))
+    return re.compile("|".join(rf"\.{f}\s*\(" for f in fields))
+
+
 def deterministic_scan(snippet: str, flagged_line_rel: int,
-                       fields: list[str]) -> dict:
+                       fields: list[str], dialect: str = "pac") -> dict:
     """Does the function reference any precondition field accessor before the
-    flagged line?"""
+    flagged line?
+
+    `flagged_line_rel` is the flagged line's 0-based index within `snippet`, so
+    `lines[:flagged_line_rel]` is the lines strictly BEFORE it — the flagged
+    access must never count as its own preceding evidence. Callers pass
+    `flagged_file_line - start`, where `start` is enclosing_function's returned
+    (1-based) first-line number; a `+ 1` would include the flagged line."""
     lines = snippet.splitlines()
-    pat = re.compile("|".join(rf"\.{f}\s*\(" for f in fields))
+    pat = _precondition_pattern(fields, dialect)
     before = [i for i, t in enumerate(lines[:flagged_line_rel]) if pat.search(t)]
     anywhere = [i for i, t in enumerate(lines) if pat.search(t)]
     return {
         "fields": fields,
+        "dialect": dialect,
         "check_before_flag": bool(before),
         "check_anywhere": bool(anywhere),
         "verdict": "corroborated" if before else "unchecked",

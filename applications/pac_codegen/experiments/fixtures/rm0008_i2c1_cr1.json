@@ -163,32 +163,45 @@
       "enumerated_values": []
     }
   ],
-  "access_constraints": [
+  "access_constraints_v2": [
     {
+      "kind": "state_gate",
+      "severity": "error",
+      "consequence": "Risk of setting a second STOP, START or PEC request",
+      "datasheet_text": "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request.",
       "target_register": "I2C_CR1",
       "target_fields": [],
       "target_operation": "write",
       "preconditions": [
         {
-          "register_name": "I2C_CR1",
-          "field_name": "STOP",
-          "required_state": "cleared"
+          "register": "I2C_CR1",
+          "field": "STOP",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
         },
         {
-          "register_name": "I2C_CR1",
-          "field_name": "START",
-          "required_state": "cleared"
+          "register": "I2C_CR1",
+          "field": "START",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
         },
         {
-          "register_name": "I2C_CR1",
-          "field_name": "PEC",
-          "required_state": "cleared"
+          "register": "I2C_CR1",
+          "field": "PEC",
+          "whole_register": false,
+          "state": "cleared",
+          "values": [],
+          "established_by": "hardware",
+          "action_operation": null
         }
       ],
-      "postconditions": [],
-      "severity": "error",
-      "consequence": "Risk of setting a second STOP, START or PEC request",
-      "datasheet_text": "When the STOP, START or PEC bit is set, the software must not perform any write access to I2C_CR1 before this bit is cleared by hardware. Otherwise there is a risk of setting a second STOP, START or PEC request."
+      "postconditions": []
     }
   ]
 }

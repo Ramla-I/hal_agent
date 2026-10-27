@@ -1,7 +1,7 @@
 """
 Grammar v2 tests: models, validators, v1->v2 lift, enforceability, collection.
 
-Covers the normative spec in docs/register_constraints_plan.md Appendix B
+Covers the normative spec in docs/register_constraints_design.md Appendix B
 (mirrored in docs/REGISTER_ACCESS_CONSTRAINTS_GRAMMAR.md):
 
 - FieldCondition validators (established_by/action_operation iff, equals/values iff,

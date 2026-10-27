@@ -1,0 +1,21 @@
+status,tp_fp,note,claude_review,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,compiled_in,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,tp,rm0454,stm32g070,stm32-hal2,2.1.10,src/clocks/baseline.rs,881,flash,acr,write,icrst,unchecked,1,,icen,field,,14c5fc8e4f91,This bit can be written only when the instruction cache is disabled.
+,,,tp,rm0454,stm32g070,stm32-hal2,2.1.10,src/clocks/baseline.rs,1055,rcc,cr,write,hsebyp,corroborated,1,,hseon,field,,de277111a3f3,The HSEBYP bit can be written only if the HSE oscillator is disabled.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/flash/non_trustzone.rs,235,flash,cr,modify,,unchecked,1,,cfgbsy,exact,,d317cf6c7b95,This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/flash/non_trustzone.rs,312,flash,cr,modify,,unchecked,1,,cfgbsy,exact,,d317cf6c7b95,This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/flash/non_trustzone.rs,322,flash,cr,modify,,unchecked,1,,cfgbsy,exact,,d317cf6c7b95,This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/flash/non_trustzone.rs,353,flash,cr,modify,,unchecked,1,,cfgbsy,exact,,d317cf6c7b95,This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/flash/non_trustzone.rs,451,flash,cr,modify,,unchecked,1,,cfgbsy,exact,,d317cf6c7b95,This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/flash/non_trustzone.rs,482,flash,cr,modify,,unchecked,1,,cfgbsy,exact,,d317cf6c7b95,This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/flash/non_trustzone.rs,505,flash,cr,modify,,unchecked,1,,cfgbsy,exact,,d317cf6c7b95,This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/flash/non_trustzone.rs,547,flash,cr,modify,,unchecked,1,,cfgbsy,exact,,d317cf6c7b95,This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/flash/non_trustzone.rs,617,flash,cr,modify,,unchecked,1,,cfgbsy,exact,,d317cf6c7b95,This register cannot be modified when CFGBSY in _FLASH status register (FLASH_SR)_ is set.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/i2c.rs,53,i2c1,txdr,write,txdata,unchecked,5,,txe,field,,81098d0923d7,Note: These bits can be written only when TXE=1.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/i2c.rs,461,i2c1,txdr,write,txdata,unchecked,1,,txe,field,,81098d0923d7,Note: These bits can be written only when TXE=1.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/i2c.rs,491,i2c1,txdr,write,txdata,unchecked,1,,txe,field,,81098d0923d7,Note: These bits can be written only when TXE=1.
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/usart.rs,199,usart1,cr1,write,m1,unchecked,1,,ue,field,,59799d05406b,This bitfield can only be written when the USART is disabled (UE = 0).
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/usart.rs,316,usart1,brr,write,,corroborated,1,,ue,exact,,ee69e9fce3f8,This register can only be written when the USART is disabled (UE = 0).
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/usart.rs,713,usart1,cr1,write,eobie,corroborated,1,,ue,field,,59799d05406b,This bitfield can only be written when the USART is disabled (UE = 0).
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/usart.rs,737,usart1,cr1,write,rtoie,corroborated,1,,ue,field,,59799d05406b,This bitfield can only be written when the USART is disabled (UE = 0).
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/usart.rs,769,usart1,cr1,write,eobie,unchecked,1,,ue,field,,59799d05406b,This bitfield can only be written when the USART is disabled (UE = 0).
+,,,fp,rm0454,stm32g070,stm32-hal2,2.1.10,src/usart.rs,793,usart1,cr1,write,rtoie,unchecked,1,,ue,field,,59799d05406b,This bitfield can only be written when the USART is disabled (UE = 0).

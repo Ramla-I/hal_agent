@@ -1,0 +1,3 @@
+sizefw/target*/
+sizefw/Cargo.lock
+*.bin

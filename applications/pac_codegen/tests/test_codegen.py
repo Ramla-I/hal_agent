@@ -193,59 +193,63 @@ def _tree_digest(*roots: Path) -> str:
 
 
 class _InjectedPac:
-    """Context manager: snapshot the PAC + main.rs, inject, restore on exit,
-    and assert the restore is byte-for-byte."""
+    """Context manager: COPY the PAC, inject the copy, point the fixture
+    crate at it, delete it on exit.
 
-    def __enter__(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        backup = Path(self._tmp.name)
-        shutil.copy2(PAC_GENERIC, backup / "generic.rs")
-        shutil.copytree(DEVICE_DIR, backup / DEVICE)
-        self._main = MAIN_RS.read_bytes()
-        self._digest = _tree_digest(PAC_GENERIC, DEVICE_DIR)
+    This used to snapshot the SHARED vendored crate, inject it in place, and
+    restore byte-for-byte -- the pattern the sweep retired for good reason,
+    and here it was worse: a test run concurrent with anything that
+    provisions the vendored tree became two processes deleting one
+    directory. That exact race killed a sweep at target 9, left the vendored
+    stm32f4 half-deleted (no build.rs), and failed these four tests -- all
+    from one pytest invocation during a background sweep. Injecting a
+    throwaway copy ends the species: the tests never write the shared tree,
+    so they are safe to run at any time.
+
+    main.rs is still snapshotted -- it is repo-tracked and some tests
+    overwrite it."""
+
+    def __enter__(self, field_gating: bool = False):
+        self._tmp = tempfile.TemporaryDirectory(prefix="codegen_test_pac_")
+        root = Path(self._tmp.name)
+        self.pac = root / "stm32f4"
+        shutil.copytree(PAC_ROOT, self.pac,
+                        ignore=shutil.ignore_patterns("target"))
+        # The fixture crate comes along too: its manifest names the PAC by
+        # RELATIVE PATH, which [patch] cannot override, and editing the
+        # repo-tracked manifest or main.rs from a test is the same
+        # shared-state sin at smaller scale.
+        self.crate = root / "constraint_test"
+        shutil.copytree(CRATE_DIR, self.crate,
+                        ignore=shutil.ignore_patterns("target"))
+        man = self.crate / "Cargo.toml"
+        man.write_text(man.read_text().replace(
+            "../vendored/pac/stm32f4", str(self.pac)))
+        # fresh mtimes, or cargo may reuse artifacts recorded for another
+        # tree that happened to carry the same timestamps
+        for f in root.rglob("*"):
+            os.utime(f)
         cmd = [sys.executable, str(RUST_CODEGEN),
                str(FIXTURES[0][0]), "--peripheral", FIXTURES[0][1],
-               "--inject-pac", str(PAC_ROOT), "--device", DEVICE]
+               "--inject-pac", str(self.pac), "--device", DEVICE]
         for fixture, peripheral, _ in FIXTURES[1:]:
             cmd += ["--constraint", f"{peripheral}={fixture}"]
-        inject = subprocess.run(cmd, capture_output=True, text=True)
-        if inject.returncode != 0:
-            self._restore()
+        self.inject = subprocess.run(cmd, capture_output=True, text=True)
+        if self.inject.returncode != 0:
             raise AssertionError(
-                "injection failed:\n" + inject.stdout + inject.stderr)
+                "injection failed:\n" + self.inject.stdout + self.inject.stderr)
         return self
 
     def cargo_check(self, main_source: str | None = None):
         if main_source is not None:
-            MAIN_RS.write_text(main_source)
+            (self.crate / "src" / "main.rs").write_text(main_source)
         return subprocess.run(
-            ["cargo", "check"], cwd=str(CRATE_DIR),
+            ["cargo", "check"], cwd=str(self.crate),
             capture_output=True, text=True,
         )
 
-    def _restore(self):
-        backup = Path(self._tmp.name)
-        shutil.copy2(backup / "generic.rs", PAC_GENERIC)
-        shutil.rmtree(DEVICE_DIR)
-        shutil.copytree(backup / DEVICE, DEVICE_DIR)
-        MAIN_RS.write_bytes(self._main)
-        # copy2 preserves the ORIGINAL (old) mtimes; cargo treats
-        # older-than-recorded files as fresh and would replay the cached
-        # diagnostics of the INJECTED build against the restored pristine
-        # tree. Touch everything so the next check always re-reads sources.
-        os.utime(PAC_GENERIC)
-        for f in DEVICE_DIR.rglob("*"):
-            if f.is_file():
-                os.utime(f)
-
     def __exit__(self, *exc):
-        self._restore()
-        restored = _tree_digest(PAC_GENERIC, DEVICE_DIR) == self._digest
         self._tmp.cleanup()
-        assert restored, (
-            "PAC crate was NOT restored after the test -- it has been left "
-            "modified. Re-provision with get_pac.py --force."
-        )
         return False
 
 
@@ -403,25 +407,6 @@ def test_illegal_programs_rejected():
 FIELD_FIXTURE = CRATE_DIR / "stm32f405_i2c1_start_field.json"
 
 
-def _snapshot_pac():
-    tmp = tempfile.TemporaryDirectory()
-    shutil.copy2(PAC_GENERIC, Path(tmp.name) / "generic.rs")
-    shutil.copytree(DEVICE_DIR, Path(tmp.name) / DEVICE)
-    return tmp, MAIN_RS.read_bytes()
-
-
-def _restore_pac(tmp, main_bytes):
-    shutil.copy2(Path(tmp.name) / "generic.rs", PAC_GENERIC)
-    shutil.rmtree(DEVICE_DIR)
-    shutil.copytree(Path(tmp.name) / DEVICE, DEVICE_DIR)
-    MAIN_RS.write_bytes(main_bytes)
-    os.utime(PAC_GENERIC)
-    for f in DEVICE_DIR.rglob("*"):
-        if f.is_file():
-            os.utime(f)
-    tmp.cleanup()
-
-
 def test_field_level_gating_compiles_and_enforces():
     """With field-level gating ON, a field-scoped constraint gates only the
     named field's writer: the witnessed path and sibling-field writes compile,
@@ -435,12 +420,21 @@ def test_field_level_gating_compiles_and_enforces():
               f"provisioned stm32f4 PAC not found under {PAC_SRC}")
         return
 
-    tmp, main_bytes = _snapshot_pac()
-    digest = _tree_digest(PAC_GENERIC, DEVICE_DIR)
-    try:
+    with tempfile.TemporaryDirectory(prefix="codegen_field_") as td:
+        root = Path(td)
+        pac = root / "stm32f4"
+        shutil.copytree(PAC_ROOT, pac, ignore=shutil.ignore_patterns("target"))
+        crate = root / "constraint_test"
+        shutil.copytree(CRATE_DIR, crate,
+                        ignore=shutil.ignore_patterns("target"))
+        man = crate / "Cargo.toml"
+        man.write_text(man.read_text().replace(
+            "../vendored/pac/stm32f4", str(pac)))
+        for f in root.rglob("*"):
+            os.utime(f)
         inject = subprocess.run(
             [sys.executable, str(RUST_CODEGEN), str(FIELD_FIXTURE),
-             "--peripheral", "i2c1", "--inject-pac", str(PAC_ROOT),
+             "--peripheral", "i2c1", "--inject-pac", str(pac),
              "--device", DEVICE, "--field-level-gating"],
             capture_output=True, text=True)
         assert inject.returncode == 0, "injection failed:\n" + inject.stdout + inject.stderr
@@ -452,12 +446,12 @@ def test_field_level_gating_compiles_and_enforces():
         # generic `write` can't be annotated per-register, so it goes on the
         # register type doc, which a developer sees in rustdoc / IDE hover).
         assert "Field-level datasheet constraints (LIDAR)" in \
-            (DEVICE_DIR / "i2c1.rs").read_text(), \
+            (pac / "src" / DEVICE / "i2c1.rs").read_text(), \
             "field-gated register's type doc is missing the constraint caveat"
 
         def check(body):
-            MAIN_RS.write_text(_program(body))
-            return subprocess.run(["cargo", "check"], cwd=str(CRATE_DIR),
+            (crate / "src" / "main.rs").write_text(_program(body))
+            return subprocess.run(["cargo", "check"], cwd=str(crate),
                                   capture_output=True, text=True)
 
         # legal: mint the witness, set the gated field with it, and set a
@@ -486,10 +480,6 @@ def test_field_level_gating_compiles_and_enforces():
             "whole-register write of a field-gated register no longer compiles "
             "— if intentional, update the plan's Field-level gating section:\n"
             + bypass.stdout + bypass.stderr)
-    finally:
-        _restore_pac(tmp, main_bytes)
-        assert _tree_digest(PAC_GENERIC, DEVICE_DIR) == digest, (
-            "PAC not restored after field-level test — re-provision with get_pac.py")
 
 
 # --------------------------------------------------------------------------- #
@@ -517,13 +507,13 @@ HAL_GENERIC_ERRORS = 14
 HAL_GENERIC_FILES = {"src/serial.rs", "src/serial/uart_impls.rs"}
 
 
-def _hal_check_json() -> list[dict]:
+def _hal_check_json(eval_dir: Path = None) -> list[dict]:
     """cargo-check eval_hal and return E0277 diagnostics with their HAL
     source files attributed (primary spans + macro-expansion spans)."""
     import json as _json
     run = subprocess.run(
         ["cargo", "check", "--message-format=json"],
-        cwd=str(EVAL_HAL_DIR), capture_output=True, text=True,
+        cwd=str(eval_dir or EVAL_HAL_DIR), capture_output=True, text=True,
     )
     out = []
     for line in run.stdout.splitlines():
@@ -585,9 +575,18 @@ def test_hal_demo():
         "baseline is broken, the demo means nothing:\n" + baseline.stderr[-2000:]
     )
 
-    # (b) injected PAC.
-    with _InjectedPac():
-        errors = _hal_check_json()
+    # (b) injected PAC. eval_hal's [patch] names the vendored crate by
+    # relative path, so a sandboxed copy of the workspace is repointed at the
+    # sandboxed injected PAC -- the shared tree is never written.
+    with _InjectedPac() as pac:
+        with tempfile.TemporaryDirectory(prefix="codegen_eval_hal_") as td:
+            ev = Path(td) / "eval_hal"
+            shutil.copytree(EVAL_HAL_DIR, ev,
+                            ignore=shutil.ignore_patterns("target"))
+            man = ev / "Cargo.toml"
+            man.write_text(man.read_text().replace(
+                "../vendored/pac/stm32f4", str(pac.pac)))
+            errors = _hal_check_json(ev)
 
     assert errors, "injected PAC produced no errors in the HAL — gate inert?"
     unexpected = []

@@ -1,0 +1,6 @@
+status,tp_fp,note,claude_review,rm,device,crate,version,file,line,peripheral,register,operation,gated_field,static_verdict,count,compiled_in,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,tp,rm0490,stm32c031,stm32-hal2,2.1.10,src/clocks/baseline.rs,881,flash,acr,write,icrst,unchecked,1,,icen,field,,84fb54cc7cae,This bit can be written only when the instruction cache is disabled.
+,,,fp,rm0490,stm32c031,stm32-hal2,2.1.10,src/i2c.rs,53,i2c1,txdr,write,txdata,unchecked,5,,txe,field,,28b1f5c00828,These bits can be written only when TXE = 1.
+,,,fp,rm0490,stm32c031,stm32-hal2,2.1.10,src/i2c.rs,461,i2c1,txdr,write,txdata,unchecked,1,,txe,field,,28b1f5c00828,These bits can be written only when TXE = 1.
+,,,fp,rm0490,stm32c031,stm32-hal2,2.1.10,src/i2c.rs,491,i2c1,txdr,write,txdata,unchecked,1,,txe,field,,28b1f5c00828,These bits can be written only when TXE = 1.
+,,,fp,rm0490,stm32c031,stm32-hal2,2.1.10,src/usart.rs,316,usart1,brr,write,,corroborated,1,,ue,exact,,903a49340627,This register can only be written when the USART is disabled (UE = 0).

@@ -1,4 +1,4 @@
-# targets/stm.toml — STM device -> PAC crate -> higher-level consumers.
+# rm_pac_mappings/stm.toml — STM device -> PAC crate -> higher-level consumers.
 #
 # One [[manual]] block per STM reference manual with assets in the repo
 # (devices/stm/<rm>/). Constraints are extracted PER MANUAL; each device is
@@ -35,7 +35,7 @@ svd2rust = "0.36.1"
 [[manual]]
 id = "rm0008"
 constraints_corpus = true
-pac = { crate = "stm32f1", version = "0.16.0" }
+pac = { crate = "stm32f1", version = "0.16.0", url = "https://crates.io/crates/stm32f1/0.16.0" }
 devices = [
   { name = "stm32f101", feature = "stm32f101" },
   { name = "stm32f102", feature = "stm32f102" },
@@ -46,14 +46,14 @@ devices = [
 name = "stm32f1xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.11.0" }  # depends on stm32f1 ^0.16.0
+source = { registry = "crates.io", version = "=0.11.0", url = "https://crates.io/crates/stm32f1xx-hal/0.11.0" }  # depends on stm32f1 ^0.16.0
 patch_method = "patch.crates-io"
 status = "ready"
 
 [[manual]]
 id = "rm0033"
 constraints_corpus = true
-pac = { crate = "stm32f2", version = "0.16.0" }
+pac = { crate = "stm32f2", version = "0.16.0", url = "https://crates.io/crates/stm32f2/0.16.0" }
 devices = [
   { name = "stm32f215", feature = "stm32f215" },
   { name = "stm32f217", feature = "stm32f217" },
@@ -63,7 +63,7 @@ devices = [
 [[manual]]
 id = "rm0038"
 constraints_corpus = true
-pac = { crate = "stm32l1", version = "0.16.0" }
+pac = { crate = "stm32l1", version = "0.16.0", url = "https://crates.io/crates/stm32l1/0.16.0" }
 devices = [
   { name = "stm32l100", feature = "stm32l100" },
   { name = "stm32l151", feature = "stm32l151" },
@@ -79,7 +79,7 @@ status = "no-pairing"  # no released version depends on stm32l1 0.16; pin a git 
 [[manual]]
 id = "rm0041"
 constraints_corpus = false
-pac = { crate = "stm32f1", version = "0.16.0" }
+pac = { crate = "stm32f1", version = "0.16.0", url = "https://crates.io/crates/stm32f1/0.16.0" }
 devices = [
   { name = "stm32f100", feature = "stm32f100" },
 ]
@@ -87,14 +87,14 @@ devices = [
 name = "stm32f1xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.11.0" }  # depends on stm32f1 ^0.16.0
+source = { registry = "crates.io", version = "=0.11.0", url = "https://crates.io/crates/stm32f1xx-hal/0.11.0" }  # depends on stm32f1 ^0.16.0
 patch_method = "patch.crates-io"
 status = "ready"
 
 [[manual]]
 id = "rm0090"
 constraints_corpus = false
-pac = { crate = "stm32f4", version = "0.16.0" }
+pac = { crate = "stm32f4", version = "0.16.0", url = "https://crates.io/crates/stm32f4/0.16.0" }
 devices = [
   { name = "stm32f405", feature = "stm32f405" },
   { name = "stm32f407", feature = "stm32f407" },
@@ -109,14 +109,14 @@ devices = [
 name = "stm32f4xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+source = { registry = "crates.io", version = "=0.23.0", url = "https://crates.io/crates/stm32f4xx-hal/0.23.0" }  # depends on stm32f4 ^0.16.0
 patch_method = "patch.crates-io"
 status = "measured"
 
 [[manual]]
 id = "rm0091"
 constraints_corpus = true
-pac = { crate = "stm32f0", version = "0.16.0" }
+pac = { crate = "stm32f0", version = "0.16.0", url = "https://crates.io/crates/stm32f0/0.16.0" }
 devices = [
   { name = "stm32f0x1", feature = "stm32f0x1" },
   { name = "stm32f0x2", feature = "stm32f0x2" },
@@ -131,7 +131,7 @@ status = "no-pairing"  # no released version depends on stm32f0 0.16; pin a git 
 [[manual]]
 id = "rm0313"
 constraints_corpus = true
-pac = { crate = "stm32f3", version = "0.16.0" }
+pac = { crate = "stm32f3", version = "0.16.0", url = "https://crates.io/crates/stm32f3/0.16.0" }
 devices = [
   { name = "stm32f373", feature = "stm32f373" },
 ]
@@ -144,7 +144,7 @@ status = "no-pairing"  # no released version depends on stm32f3 0.16; pin a git 
 [[manual]]
 id = "rm0316"
 constraints_corpus = true
-pac = { crate = "stm32f3", version = "0.16.0" }
+pac = { crate = "stm32f3", version = "0.16.0", url = "https://crates.io/crates/stm32f3/0.16.0" }
 devices = [
   { name = "stm32f303", feature = "stm32f303" },
 ]
@@ -157,7 +157,7 @@ status = "no-pairing"  # no released version depends on stm32f3 0.16; pin a git 
 [[manual]]
 id = "rm0351"
 constraints_corpus = false
-pac = { crate = "stm32l4", version = "0.16.0" }
+pac = { crate = "stm32l4", version = "0.16.0", url = "https://crates.io/crates/stm32l4/0.16.0" }
 devices = [
   { name = "stm32l476", feature = "stm32l4x6" },
   { name = "stm32l496", feature = "stm32l4x6" },
@@ -171,7 +171,7 @@ status = "no-pairing"  # no released version depends on stm32l4 0.16; pin a git 
 [[manual]]
 id = "rm0360"
 constraints_corpus = true
-pac = { crate = "stm32f0", version = "0.16.0" }
+pac = { crate = "stm32f0", version = "0.16.0", url = "https://crates.io/crates/stm32f0/0.16.0" }
 devices = [
   { name = "stm32f0x0", feature = "stm32f0x0" },
 ]
@@ -184,7 +184,7 @@ status = "no-pairing"  # no released version depends on stm32f0 0.16; pin a git 
 [[manual]]
 id = "rm0365"
 constraints_corpus = true
-pac = { crate = "stm32f3", version = "0.16.0" }
+pac = { crate = "stm32f3", version = "0.16.0", url = "https://crates.io/crates/stm32f3/0.16.0" }
 devices = [
   { name = "stm32f302", feature = "stm32f302" },
 ]
@@ -197,7 +197,7 @@ status = "no-pairing"  # no released version depends on stm32f3 0.16; pin a git 
 [[manual]]
 id = "rm0366"
 constraints_corpus = true
-pac = { crate = "stm32f3", version = "0.16.0" }
+pac = { crate = "stm32f3", version = "0.16.0", url = "https://crates.io/crates/stm32f3/0.16.0" }
 devices = [
   { name = "stm32f301", feature = "stm32f301" },
 ]
@@ -210,7 +210,7 @@ status = "no-pairing"  # no released version depends on stm32f3 0.16; pin a git 
 [[manual]]
 id = "rm0367"
 constraints_corpus = true
-pac = { crate = "stm32l0", version = "0.16.0" }
+pac = { crate = "stm32l0", version = "0.16.0", url = "https://crates.io/crates/stm32l0/0.16.0" }
 devices = [
   { name = "stm32l053", feature = "stm32l0x3" },
   { name = "stm32l063", feature = "stm32l0x3" },
@@ -225,7 +225,7 @@ status = "no-pairing"  # no released version depends on stm32l0 0.16; pin a git 
 [[manual]]
 id = "rm0368"
 constraints_corpus = true
-pac = { crate = "stm32f4", version = "0.16.0" }
+pac = { crate = "stm32f4", version = "0.16.0", url = "https://crates.io/crates/stm32f4/0.16.0" }
 devices = [
   { name = "stm32f401", feature = "stm32f401" },
 ]
@@ -233,14 +233,14 @@ devices = [
 name = "stm32f4xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+source = { registry = "crates.io", version = "=0.23.0", url = "https://crates.io/crates/stm32f4xx-hal/0.23.0" }  # depends on stm32f4 ^0.16.0
 patch_method = "patch.crates-io"
 status = "measured"
 
 [[manual]]
 id = "rm0376"
 constraints_corpus = true
-pac = { crate = "stm32l0", version = "0.16.0" }
+pac = { crate = "stm32l0", version = "0.16.0", url = "https://crates.io/crates/stm32l0/0.16.0" }
 devices = [
   { name = "stm32l052", feature = "stm32l0x2" },
   { name = "stm32l062", feature = "stm32l0x2" },
@@ -255,7 +255,7 @@ status = "no-pairing"  # no released version depends on stm32l0 0.16; pin a git 
 [[manual]]
 id = "rm0377"
 constraints_corpus = true
-pac = { crate = "stm32l0", version = "0.16.0" }
+pac = { crate = "stm32l0", version = "0.16.0", url = "https://crates.io/crates/stm32l0/0.16.0" }
 devices = [
   { name = "stm32l0x1", feature = "stm32l0x1" },
 ]
@@ -268,7 +268,7 @@ status = "no-pairing"  # no released version depends on stm32l0 0.16; pin a git 
 [[manual]]
 id = "rm0383"
 constraints_corpus = true
-pac = { crate = "stm32f4", version = "0.16.0" }
+pac = { crate = "stm32f4", version = "0.16.0", url = "https://crates.io/crates/stm32f4/0.16.0" }
 devices = [
   { name = "stm32f411", feature = "stm32f411" },
 ]
@@ -276,14 +276,14 @@ devices = [
 name = "stm32f4xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+source = { registry = "crates.io", version = "=0.23.0", url = "https://crates.io/crates/stm32f4xx-hal/0.23.0" }  # depends on stm32f4 ^0.16.0
 patch_method = "patch.crates-io"
 status = "measured"
 
 [[manual]]
 id = "rm0385"
 constraints_corpus = true
-pac = { crate = "stm32f7", version = "0.16.0" }
+pac = { crate = "stm32f7", version = "0.16.0", url = "https://crates.io/crates/stm32f7/0.16.0" }
 devices = [
   { name = "stm32f745", feature = "stm32f745" },
   { name = "stm32f746", feature = "stm32f746" },
@@ -299,7 +299,7 @@ status = "no-pairing"  # no released version depends on stm32f7 0.16; pin a git 
 [[manual]]
 id = "rm0386"
 constraints_corpus = true
-pac = { crate = "stm32f4", version = "0.16.0" }
+pac = { crate = "stm32f4", version = "0.16.0", url = "https://crates.io/crates/stm32f4/0.16.0" }
 devices = [
   { name = "stm32f469", feature = "stm32f469" },
   { name = "stm32f479", feature = "stm32f469" },  # crypto variant: stm32-rs maps it to the stm32f469 feature
@@ -308,14 +308,14 @@ devices = [
 name = "stm32f4xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+source = { registry = "crates.io", version = "=0.23.0", url = "https://crates.io/crates/stm32f4xx-hal/0.23.0" }  # depends on stm32f4 ^0.16.0
 patch_method = "patch.crates-io"
 status = "measured"
 
 [[manual]]
 id = "rm0390"
 constraints_corpus = true
-pac = { crate = "stm32f4", version = "0.16.0" }
+pac = { crate = "stm32f4", version = "0.16.0", url = "https://crates.io/crates/stm32f4/0.16.0" }
 devices = [
   { name = "stm32f446", feature = "stm32f446" },
 ]
@@ -323,14 +323,14 @@ devices = [
 name = "stm32f4xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+source = { registry = "crates.io", version = "=0.23.0", url = "https://crates.io/crates/stm32f4xx-hal/0.23.0" }  # depends on stm32f4 ^0.16.0
 patch_method = "patch.crates-io"
 status = "measured"
 
 [[manual]]
 id = "rm0394"
 constraints_corpus = true
-pac = { crate = "stm32l4", version = "0.16.0" }
+pac = { crate = "stm32l4", version = "0.16.0", url = "https://crates.io/crates/stm32l4/0.16.0" }
 devices = [
   { name = "stm32l412", feature = "stm32l412" },
 ]
@@ -343,7 +343,7 @@ status = "no-pairing"  # no released version depends on stm32l4 0.16; pin a git 
 [[manual]]
 id = "rm0399"
 constraints_corpus = false
-pac = { crate = "stm32h7", version = "0.16.0" }
+pac = { crate = "stm32h7", version = "0.16.0", url = "https://crates.io/crates/stm32h7/0.16.0" }
 devices = [
   { name = "stm32h745cm4", feature = "stm32h745cm4" },
   { name = "stm32h745cm7", feature = "stm32h745cm7" },
@@ -363,7 +363,7 @@ status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git 
 [[manual]]
 id = "rm0401"
 constraints_corpus = true
-pac = { crate = "stm32f4", version = "0.16.0" }
+pac = { crate = "stm32f4", version = "0.16.0", url = "https://crates.io/crates/stm32f4/0.16.0" }
 devices = [
   { name = "stm32f410", feature = "stm32f410" },
 ]
@@ -371,14 +371,14 @@ devices = [
 name = "stm32f4xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+source = { registry = "crates.io", version = "=0.23.0", url = "https://crates.io/crates/stm32f4xx-hal/0.23.0" }  # depends on stm32f4 ^0.16.0
 patch_method = "patch.crates-io"
 status = "measured"
 
 [[manual]]
 id = "rm0402"
 constraints_corpus = true
-pac = { crate = "stm32f4", version = "0.16.0" }
+pac = { crate = "stm32f4", version = "0.16.0", url = "https://crates.io/crates/stm32f4/0.16.0" }
 devices = [
   { name = "stm32f412", feature = "stm32f412" },
 ]
@@ -386,14 +386,14 @@ devices = [
 name = "stm32f4xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+source = { registry = "crates.io", version = "=0.23.0", url = "https://crates.io/crates/stm32f4xx-hal/0.23.0" }  # depends on stm32f4 ^0.16.0
 patch_method = "patch.crates-io"
 status = "measured"
 
 [[manual]]
 id = "rm0410"
 constraints_corpus = true
-pac = { crate = "stm32f7", version = "0.16.0" }
+pac = { crate = "stm32f7", version = "0.16.0", url = "https://crates.io/crates/stm32f7/0.16.0" }
 devices = [
   { name = "stm32f765", feature = "stm32f765" },
   { name = "stm32f767", feature = "stm32f767" },
@@ -412,7 +412,7 @@ status = "no-pairing"  # no released version depends on stm32f7 0.16; pin a git 
 [[manual]]
 id = "rm0430"
 constraints_corpus = true
-pac = { crate = "stm32f4", version = "0.16.0" }
+pac = { crate = "stm32f4", version = "0.16.0", url = "https://crates.io/crates/stm32f4/0.16.0" }
 devices = [
   { name = "stm32f413", feature = "stm32f413" },
   { name = "stm32f423", feature = "stm32f413" },  # crypto variant: stm32-rs maps it to the stm32f413 feature
@@ -421,14 +421,14 @@ devices = [
 name = "stm32f4xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.23.0" }  # depends on stm32f4 ^0.16.0
+source = { registry = "crates.io", version = "=0.23.0", url = "https://crates.io/crates/stm32f4xx-hal/0.23.0" }  # depends on stm32f4 ^0.16.0
 patch_method = "patch.crates-io"
 status = "measured"
 
 [[manual]]
 id = "rm0431"
 constraints_corpus = true
-pac = { crate = "stm32f7", version = "0.16.0" }
+pac = { crate = "stm32f7", version = "0.16.0", url = "https://crates.io/crates/stm32f7/0.16.0" }
 devices = [
   { name = "stm32f722", feature = "stm32f722" },
   { name = "stm32f723", feature = "stm32f723" },
@@ -445,7 +445,7 @@ status = "no-pairing"  # no released version depends on stm32f7 0.16; pin a git 
 [[manual]]
 id = "rm0432"
 constraints_corpus = false
-pac = { crate = "stm32l4", version = "0.16.0" }
+pac = { crate = "stm32l4", version = "0.16.0", url = "https://crates.io/crates/stm32l4/0.16.0" }
 devices = [
   { name = "stm32l4p5", feature = "stm32l4p5" },
   { name = "stm32l4q5", feature = "" },  # unmapped: no matching feature in stm32l4 0.16.0
@@ -465,7 +465,7 @@ status = "no-pairing"  # no released version depends on stm32l4 0.16; pin a git 
 [[manual]]
 id = "rm0433"
 constraints_corpus = false
-pac = { crate = "stm32h7", version = "0.16.0" }
+pac = { crate = "stm32h7", version = "0.16.0", url = "https://crates.io/crates/stm32h7/0.16.0" }
 devices = [
   { name = "stm32h742", feature = "stm32h742" },
   { name = "stm32h743", feature = "stm32h743" },
@@ -483,7 +483,7 @@ status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git 
 [[manual]]
 id = "rm0434"
 constraints_corpus = true
-pac = { crate = "stm32wb", version = "0.16.0" }
+pac = { crate = "stm32wb", version = "0.16.0", url = "https://crates.io/crates/stm32wb/0.16.0" }
 devices = [
   { name = "stm32wb35_cm4", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
   { name = "stm32wb55", feature = "stm32wb55" },
@@ -498,7 +498,7 @@ status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git 
 [[manual]]
 id = "rm0436"
 constraints_corpus = false
-pac = { crate = "stm32mp1", version = "0.16.0" }
+pac = { crate = "stm32mp1", version = "0.16.0", url = "https://crates.io/crates/stm32mp1/0.16.0" }
 devices = [
   { name = "stm32mp157", feature = "stm32mp157" },
 ]
@@ -507,7 +507,7 @@ devices = [
 [[manual]]
 id = "rm0438"
 constraints_corpus = false
-pac = { crate = "stm32l5", version = "0.16.0" }
+pac = { crate = "stm32l5", version = "0.16.0", url = "https://crates.io/crates/stm32l5/0.16.0" }
 devices = [
   { name = "stm32l552", feature = "stm32l552" },
   { name = "stm32l562", feature = "stm32l562" },
@@ -520,7 +520,7 @@ status = "no-pairing"  # no released version depends on stm32l5 0.16; pin a git 
 [[manual]]
 id = "rm0440"
 constraints_corpus = false
-pac = { crate = "stm32g4", version = "0.16.0" }
+pac = { crate = "stm32g4", version = "0.16.0", url = "https://crates.io/crates/stm32g4/0.16.0" }
 devices = [
   { name = "stm32g431", feature = "stm32g431" },
   { name = "stm32g441", feature = "stm32g441" },
@@ -536,14 +536,14 @@ devices = [
 name = "stm32g4xx-hal"
 kind = "hal"
 dev_tracks_pac = "0.16.0"  # fits the 0.16 PAC — a pinned git rev is runnable
-source = { registry = "crates.io", version = "=0.1.0" }  # depends on stm32g4 ^0.16.0
+source = { registry = "crates.io", version = "=0.1.0", url = "https://crates.io/crates/stm32g4xx-hal/0.1.0" }  # depends on stm32g4 ^0.16.0
 patch_method = "patch.crates-io"
 status = "ready"
 
 [[manual]]
 id = "rm0442"
 constraints_corpus = false
-pac = { crate = "stm32mp1", version = "0.16.0" }
+pac = { crate = "stm32mp1", version = "0.16.0", url = "https://crates.io/crates/stm32mp1/0.16.0" }
 devices = [
   { name = "stm32mp153", feature = "stm32mp153" },
 ]
@@ -552,7 +552,7 @@ devices = [
 [[manual]]
 id = "rm0444"
 constraints_corpus = true
-pac = { crate = "stm32g0", version = "0.16.0" }
+pac = { crate = "stm32g0", version = "0.16.0", url = "https://crates.io/crates/stm32g0/0.16.0" }
 devices = [
   { name = "stm32g031", feature = "stm32g031" },
   { name = "stm32g041", feature = "stm32g041" },
@@ -572,7 +572,7 @@ status = "no-pairing"  # no released version depends on stm32g0 0.16; pin a git 
 [[manual]]
 id = "rm0451"
 constraints_corpus = true
-pac = { crate = "stm32l0", version = "0.16.0" }
+pac = { crate = "stm32l0", version = "0.16.0", url = "https://crates.io/crates/stm32l0/0.16.0" }
 devices = [
   { name = "stm32l0x0", feature = "stm32l0x0" },
 ]
@@ -585,7 +585,7 @@ status = "no-pairing"  # no released version depends on stm32l0 0.16; pin a git 
 [[manual]]
 id = "rm0453"
 constraints_corpus = false
-pac = { crate = "stm32wl", version = "0.16.0" }
+pac = { crate = "stm32wl", version = "0.16.0", url = "https://crates.io/crates/stm32wl/0.16.0" }
 devices = [
   { name = "stm32wl5x_cm0p", feature = "stm32wl5x_cm0p" },
   { name = "stm32wl5x_cm4", feature = "stm32wl5x_cm4" },
@@ -599,7 +599,7 @@ status = "no-pairing"  # no released version depends on stm32wl 0.16; pin a git 
 [[manual]]
 id = "rm0454"
 constraints_corpus = true
-pac = { crate = "stm32g0", version = "0.16.0" }
+pac = { crate = "stm32g0", version = "0.16.0", url = "https://crates.io/crates/stm32g0/0.16.0" }
 devices = [
   { name = "stm32g030", feature = "stm32g030" },
   { name = "stm32g050", feature = "stm32g050" },
@@ -615,7 +615,7 @@ status = "no-pairing"  # no released version depends on stm32g0 0.16; pin a git 
 [[manual]]
 id = "rm0455"
 constraints_corpus = false
-pac = { crate = "stm32h7", version = "0.16.0" }
+pac = { crate = "stm32h7", version = "0.16.0", url = "https://crates.io/crates/stm32h7/0.16.0" }
 devices = [
   { name = "stm32h7a3", feature = "stm32h7a3" },
   { name = "stm32h7b0", feature = "stm32h7b0" },
@@ -630,7 +630,7 @@ status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git 
 [[manual]]
 id = "rm0456"
 constraints_corpus = false
-pac = { crate = "stm32u5", version = "0.16.0" }
+pac = { crate = "stm32u5", version = "0.16.0", url = "https://crates.io/crates/stm32u5/0.16.0" }
 devices = [
   { name = "stm32u535", feature = "stm32u535" },
   { name = "stm32u545", feature = "stm32u545" },
@@ -648,7 +648,7 @@ devices = [
 [[manual]]
 id = "rm0461"
 constraints_corpus = false
-pac = { crate = "stm32wl", version = "0.16.0" }
+pac = { crate = "stm32wl", version = "0.16.0", url = "https://crates.io/crates/stm32wl/0.16.0" }
 devices = [
   { name = "stm32wle5", feature = "stm32wle5" },
 ]
@@ -661,7 +661,7 @@ status = "no-pairing"  # no released version depends on stm32wl 0.16; pin a git 
 [[manual]]
 id = "rm0468"
 constraints_corpus = false
-pac = { crate = "stm32h7", version = "0.16.0" }
+pac = { crate = "stm32h7", version = "0.16.0", url = "https://crates.io/crates/stm32h7/0.16.0" }
 devices = [
   { name = "stm32h723", feature = "stm32h723" },
   { name = "stm32h725", feature = "stm32h725" },
@@ -679,7 +679,7 @@ status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git 
 [[manual]]
 id = "rm0475"
 constraints_corpus = false
-pac = { crate = "stm32mp1", version = "0.16.0" }
+pac = { crate = "stm32mp1", version = "0.16.0", url = "https://crates.io/crates/stm32mp1/0.16.0" }
 devices = [
   { name = "stm32mp13xx", feature = "" },  # unmapped: no matching feature in stm32mp1 0.16.0
 ]
@@ -688,7 +688,7 @@ devices = [
 [[manual]]
 id = "rm0477"
 constraints_corpus = false
-pac = { crate = "stm32h7", version = "0.16.0" }
+pac = { crate = "stm32h7", version = "0.16.0", url = "https://crates.io/crates/stm32h7/0.16.0" }
 devices = [
   { name = "stm32h7r", feature = "stm32h7r" },
   { name = "stm32h7s", feature = "stm32h7s" },
@@ -702,7 +702,7 @@ status = "no-pairing"  # no released version depends on stm32h7 0.16; pin a git 
 [[manual]]
 id = "rm0481"
 constraints_corpus = false
-pac = { crate = "stm32h5", version = "0.16.0" }
+pac = { crate = "stm32h5", version = "0.16.0", url = "https://crates.io/crates/stm32h5/0.16.0" }
 devices = [
   { name = "stm32h523", feature = "stm32h523" },
   { name = "stm32h533", feature = "stm32h533" },
@@ -721,7 +721,7 @@ status = "ready-dev"
 [[manual]]
 id = "rm0486"
 constraints_corpus = false
-pac = { crate = "stm32n6", version = "0.16.0" }
+pac = { crate = "stm32n6", version = "0.16.0", url = "https://crates.io/crates/stm32n6/0.16.0" }
 devices = [
   { name = "stm32n647", feature = "stm32n647" },
   { name = "stm32n657", feature = "stm32n657" },
@@ -731,7 +731,7 @@ devices = [
 [[manual]]
 id = "rm0490"
 constraints_corpus = true
-pac = { crate = "stm32c0", version = "0.16.0" }
+pac = { crate = "stm32c0", version = "0.16.0", url = "https://crates.io/crates/stm32c0/0.16.0" }
 devices = [
   { name = "stm32c011", feature = "stm32c011" },
   { name = "stm32c031", feature = "stm32c031" },
@@ -748,7 +748,7 @@ status = "no-pairing"  # no released version depends on stm32c0 0.16; pin a git 
 [[manual]]
 id = "rm0492"
 constraints_corpus = false
-pac = { crate = "stm32h5", version = "0.16.0" }
+pac = { crate = "stm32h5", version = "0.16.0", url = "https://crates.io/crates/stm32h5/0.16.0" }
 devices = [
   { name = "stm32h503", feature = "stm32h503" },
 ]
@@ -763,23 +763,31 @@ status = "ready-dev"
 [[manual]]
 id = "rm0493"
 constraints_corpus = true
-pac = { crate = "stm32wb", version = "0.16.0" }
+# CORRECTED 2026-09-14: this manual was mapped to stm32wb 0.16.0,
+# which ships exactly ONE device feature (stm32wb55) and does not
+# cover these parts at all -- the empty `feature = ""` entries were
+# recording that. The patch set for stm32wba lives on stm32-rs
+# master and has no crates.io release, so there is no registry URL
+# to give; build it per vendored/pac_master/README.md and measure
+# with experiments/stm_master_pacs.py.
+pac = { crate = "stm32wba", version = "master", released = false, url = "https://github.com/stm32-rs/stm32-rs/tree/master/devices/stm32wba50.yaml" }
 devices = [
-  { name = "stm32wba50", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
-  { name = "stm32wba52", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
-  { name = "stm32wba54", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
-  { name = "stm32wba55", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+  { name = "stm32wba50", feature = "stm32wba50" },
+  { name = "stm32wba52", feature = "stm32wba52" },
+  { name = "stm32wba54", feature = "stm32wba54" },
+  { name = "stm32wba55", feature = "stm32wba55" },
 ]
 [[manual.consumer]]
 name = "stm32wb-hal"
 kind = "hal"
 # dev-branch PAC requirement: could not be determined automatically
-status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git rev when running
+status = "no-pac"  # stm32wba has no crates.io release, so nothing can depend on it;
+                   # enforceability is measurable, adoption is not
 
 [[manual]]
 id = "rm0503"
 constraints_corpus = false
-pac = { crate = "stm32u0", version = "0.16.0" }
+pac = { crate = "stm32u0", version = "0.16.0", url = "https://crates.io/crates/stm32u0/0.16.0" }
 devices = [
   { name = "stm32u031", feature = "stm32u031" },
   { name = "stm32u073", feature = "stm32u073" },
@@ -790,39 +798,63 @@ devices = [
 [[manual]]
 id = "rm0505"
 constraints_corpus = true
-pac = { crate = "stm32wb", version = "0.16.0" }
+# CORRECTED 2026-09-14: this manual was mapped to stm32wb 0.16.0,
+# which ships exactly ONE device feature (stm32wb55) and does not
+# cover these parts at all -- the empty `feature = ""` entries were
+# recording that. The patch set for stm32wb0 lives on stm32-rs
+# master and has no crates.io release, so there is no registry URL
+# to give; build it per vendored/pac_master/README.md and measure
+# with experiments/stm_master_pacs.py.
+pac = { crate = "stm32wb0", version = "master", released = false, url = "https://github.com/stm32-rs/stm32-rs/tree/master/devices/stm32wb09.yaml" }
 devices = [
-  { name = "stm32wb09", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+  { name = "stm32wb09", feature = "stm32wb09" },
 ]
 [[manual.consumer]]
 name = "stm32wb-hal"
 kind = "hal"
 # dev-branch PAC requirement: could not be determined automatically
-status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git rev when running
+status = "no-pac"  # stm32wb0 has no crates.io release, so nothing can depend on it;
+                   # enforceability is measurable, adoption is not
 
 [[manual]]
 id = "rm0529"
 constraints_corpus = false
-pac = { crate = "stm32wb", version = "0.16.0" }
+# CORRECTED 2026-09-14: this manual was mapped to stm32wb 0.16.0,
+# which ships exactly ONE device feature (stm32wb55) and does not
+# cover these parts at all -- the empty `feature = ""` entries were
+# recording that. The patch set for stm32wb0 lives on stm32-rs
+# master and has no crates.io release, so there is no registry URL
+# to give; build it per vendored/pac_master/README.md and measure
+# with experiments/stm_master_pacs.py.
+pac = { crate = "stm32wb0", version = "master", released = false, url = "https://github.com/stm32-rs/stm32-rs/tree/master/devices/stm32wb05.yaml" }
 devices = [
-  { name = "stm32wb05", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+  { name = "stm32wb05", feature = "stm32wb05" },
 ]
 [[manual.consumer]]
 name = "stm32wb-hal"
 kind = "hal"
 # dev-branch PAC requirement: could not be determined automatically
-status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git rev when running
+status = "no-pac"  # stm32wb0 has no crates.io release, so nothing can depend on it;
+                   # enforceability is measurable, adoption is not
 
 [[manual]]
 id = "rm0530"
 constraints_corpus = false
-pac = { crate = "stm32wb", version = "0.16.0" }
+# CORRECTED 2026-09-14: this manual was mapped to stm32wb 0.16.0,
+# which ships exactly ONE device feature (stm32wb55) and does not
+# cover these parts at all -- the empty `feature = ""` entries were
+# recording that. The patch set for stm32wb0 lives on stm32-rs
+# master and has no crates.io release, so there is no registry URL
+# to give; build it per vendored/pac_master/README.md and measure
+# with experiments/stm_master_pacs.py.
+pac = { crate = "stm32wb0", version = "master", released = false, url = "https://github.com/stm32-rs/stm32-rs/tree/master/devices/stm32wb06.yaml" }
 devices = [
-  { name = "stm32wb06", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
-  { name = "stm32wb07", feature = "" },  # unmapped: no matching feature in stm32wb 0.16.0
+  { name = "stm32wb06", feature = "stm32wb06" },
+  { name = "stm32wb07", feature = "stm32wb07" },
 ]
 [[manual.consumer]]
 name = "stm32wb-hal"
 kind = "hal"
 # dev-branch PAC requirement: could not be determined automatically
-status = "no-pairing"  # no released version depends on stm32wb 0.16; pin a git rev when running
+status = "no-pac"  # stm32wb0 has no crates.io release, so nothing can depend on it;
+                   # enforceability is measurable, adoption is not

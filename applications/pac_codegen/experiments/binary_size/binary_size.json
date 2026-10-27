@@ -1,0 +1,10 @@
+{
+ "crate": "stm32g4",
+ "device": "stm32g474",
+ "rm": "rm0440",
+ "text_bytes": 676,
+ "identical": true,
+ "sha_pristine": "6619d8004e2edf4dfc64d7dd86620fa5caa4650c4700aaad6e2e1d3453908455",
+ "sha_injected": "6619d8004e2edf4dfc64d7dd86620fa5caa4650c4700aaad6e2e1d3453908455",
+ "check_cost_bytes": 12
+}

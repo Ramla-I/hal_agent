@@ -7,7 +7,7 @@ from prompts.examples import stm_datasheet_example, stm_access_constraints_v2_ex
 # ACCESS_CONSTRAINTS_V2_SCHEMA and ACCESS_CONSTRAINTS_V2_GUIDANCE are shared
 # VERBATIM by all three generator system-prompt builders below, so the
 # constraint text is defined in exactly one place. The normative schema is
-# defs.py (ConstraintV2) / docs/register_constraints_plan.md Appendix B;
+# defs.py (ConstraintV2) / docs/register_constraints_design.md Appendix B;
 # tests/test_grammar_prompt_consistency.py checks prompt<->schema alignment.
 #
 # Deliberately provider-agnostic: schema enforcement is TIERED (plan section

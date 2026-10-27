@@ -1,0 +1,111 @@
+diff -ruN --strip-trailing-cr '--exclude=target' a/src/gpio.rs b/src/gpio.rs
+--- a/src/gpio.rs	2006-07-24 01:21:28.000000000 +0000
++++ b/src/gpio.rs	2026-09-17 18:56:39.975592377 +0000
+@@ -185,6 +185,13 @@
+     H,
+     #[cfg(any(feature = "h747cm4", feature = "h747cm7", feature = "l4x6",))]
+     I,
++    /// J and K exist on H747 but in NO released stm32-hal2 (2.1.10 is the
++    /// newest); elodin ships a fork for exactly this. Mirrored from the I arm
++    /// for the port experiment.
++    #[cfg(any(feature = "h747cm4", feature = "h747cm7"))]
++    J,
++    #[cfg(any(feature = "h747cm4", feature = "h747cm7"))]
++    K,
+ }
+ 
+ impl Port {
+@@ -255,6 +262,10 @@
+             Self::H => 7,
+             #[cfg(any(feature = "h747cm4", feature = "h747cm7", feature = "l4x6",))]
+             Self::I => 8,
++            #[cfg(any(feature = "h747cm4", feature = "h747cm7"))]
++            Self::J => 9,
++            #[cfg(any(feature = "h747cm4", feature = "h747cm7"))]
++            Self::K => 10,
+         }
+     }
+ }
+@@ -796,6 +807,22 @@
+                     }
+                 }
+             }
++            #[cfg(any(feature = "h747cm4", feature = "h747cm7"))]
++            Port::J => {
++                if rcc.ahb4enr().read().gpiojen().bit_is_clear() {
++                    rcc.ahb4enr().modify(|_, w| w.gpiojen().bit(true));
++                    rcc.ahb4rstr().modify(|_, w| w.gpiojrst().bit(true));
++                    rcc.ahb4rstr().modify(|_, w| w.gpiojrst().clear_bit());
++                }
++            }
++            #[cfg(any(feature = "h747cm4", feature = "h747cm7"))]
++            Port::K => {
++                if rcc.ahb4enr().read().gpioken().bit_is_clear() {
++                    rcc.ahb4enr().modify(|_, w| w.gpioken().bit(true));
++                    rcc.ahb4rstr().modify(|_, w| w.gpiokrst().bit(true));
++                    rcc.ahb4rstr().modify(|_, w| w.gpiokrst().clear_bit());
++                }
++            }
+             #[cfg(any(feature = "l4x6", feature = "h747cm4", feature = "h747cm7"))]
+             Port::I => {
+                 cfg_if! {
+@@ -1433,6 +1460,10 @@
+         Port::H => crate::pac::GPIOH::ptr() as _,
+         #[cfg(any(feature = "h747cm4", feature = "h747cm7", feature = "l4x6"))]
+         Port::I => crate::pac::GPIOI::ptr() as _,
++        #[cfg(any(feature = "h747cm4", feature = "h747cm7"))]
++        Port::J => crate::pac::GPIOJ::ptr() as _,
++        #[cfg(any(feature = "h747cm4", feature = "h747cm7"))]
++        Port::K => crate::pac::GPIOK::ptr() as _,
+     }
+ }
+ 
+diff -ruN --strip-trailing-cr '--exclude=target' a/src/i2c.rs b/src/i2c.rs
+--- a/src/i2c.rs	2006-07-24 01:21:28.000000000 +0000
++++ b/src/i2c.rs	2026-09-17 18:59:41.377407895 +0000
+@@ -781,3 +781,45 @@
+ //         I2c::write_read(self, addr, bytes, buffer)
+ //     }
+ // }
++
++
++/// GRAFT for the elodin port experiment. stm32-hal2 2.1.10 ships this impl
++/// ONLY in the F4 dialect module (i2c_f4.rs); on the v2-I2C parts it exists
++/// as a commented-out embedded-hal-0.2 remnant, so an H7 user has no
++/// embedded-hal I2C at all -- which is why elodin pins a 1.8 fork. This
++/// delegates to the inherent write/read, taking the same
++/// per-operation-stop shortcut the F4 impl documents for itself.
++#[cfg(feature = "embedded_hal")]
++mod embedded_hal_impl {
++    use core::ops::Deref;
++
++    use embedded_hal::i2c::{ErrorType, I2c as I2cEh, Operation, SevenBitAddress};
++
++    use super::*;
++
++    impl<R> ErrorType for I2c<R>
++    where
++        R: Deref<Target = pac::i2c1::RegisterBlock> + RccPeriph,
++    {
++        type Error = crate::error::Error;
++    }
++
++    impl<R> I2cEh<SevenBitAddress> for I2c<R>
++    where
++        R: Deref<Target = pac::i2c1::RegisterBlock> + RccPeriph,
++    {
++        fn transaction(
++            &mut self,
++            address: SevenBitAddress,
++            operations: &mut [Operation<'_>],
++        ) -> core::result::Result<(), Self::Error> {
++            for op in operations {
++                match op {
++                    Operation::Write(buffer) => self.write(address, buffer)?,
++                    Operation::Read(buffer) => self.read(address, buffer)?,
++                }
++            }
++            Ok(())
++        }
++    }
++}

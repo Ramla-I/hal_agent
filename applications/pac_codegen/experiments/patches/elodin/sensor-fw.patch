@@ -1,0 +1,1242 @@
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/Cargo.toml b/Cargo.toml
+--- a/Cargo.toml	2026-09-17 18:30:04.739902405 +0000
++++ b/Cargo.toml	2026-09-17 19:08:47.645718204 +0000
+@@ -33,7 +33,7 @@
+ heapless = { version = "0.8", features = ["defmt-03"] }
+ crc = "3.2"
+ fatfs = { version = "0.4", default-features = false, features = ["log_level_info"] }
+-hal = { package = "stm32-hal2", version = "1.8", features = ["h747cm7", "embedded_hal", "usbotg_hs"] }
++hal = { package = "stm32-hal2", path = "__HAL2_DIR__", features = ["h747cm7", "embedded_hal", "usbotg_hs"] }
+ fugit = { version = "0.3.7", features = ["defmt"] }
+ sdio-host = "0.9"
+ paste = "1.0"
+@@ -44,8 +44,8 @@
+ cobs = { version = "0.2.3", default-features = false }
+ blackbox = { path = "../blackbox" }
+ 
+-usbd-serial = "0.1"
+-usb-device = "0.2.9"
++usbd-serial = "0.2"
++usb-device = "0.3"
+ 
+ [features]
+ default = []
+@@ -55,9 +55,7 @@
+ defmt-test = "0.3"
+ 
+ [patch.crates-io]
+-# Remove after https://github.com/David-OConnor/stm32-hal/pull/111 is merged
+-# and there's a new release on https://crates.io/crates/stm32-hal2 > 1.8.5
+-hal = { package = "stm32-hal2", git = "https://github.com/akhilles/stm32-hal.git", rev = "a06e441" }
++stm32h7 = { path = "__PAC_DIR__" }
+ 
+ # Remove after there's a new release on https://crates.io/crates/fatfs >= 0.4.0
+ fatfs = { git = "https://github.com/rafalh/rust-fatfs.git", rev = "c4bb769" }
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/adc.rs b/src/adc.rs
+--- a/src/adc.rs	2026-09-17 18:30:04.740902425 +0000
++++ b/src/adc.rs	2026-09-17 19:02:34.719019614 +0000
+@@ -38,33 +38,33 @@
+ pub fn calibrate_vdda(rcc: &pac::RCC) -> f32 {
+     let vrefint_cal = unsafe { read_factory_u16(VREFINT_CAL_ADDR) };
+ 
+-    rcc.ahb4enr.modify(|_, w| w.adc3en().set_bit());
+-    rcc.d3ccipr.modify(|_, w| w.adcsel().pll2_p());
++    rcc.ahb4enr().modify(|_, w| w.adc3en().set_bit());
++    rcc.d3ccipr().modify(|_, w| w.adcsel().pll2_p());
+ 
+     let adc3_common = unsafe { &*pac::ADC3_COMMON::ptr() };
+     adc3_common
+-        .ccr
++        .ccr()
+         .modify(|_, w| w.presc().div1().vrefen().set_bit());
+ 
+     let adc3 = unsafe { &*pac::ADC3::ptr() };
+-    adc3.cr.modify(|_, w| w.deeppwd().set_bit());
+-    adc3.cr
++    adc3.cr().modify(|_, w| w.deeppwd().set_bit());
++    adc3.cr()
+         .modify(|_, w| w.deeppwd().clear_bit().advregen().set_bit());
+     cortex_m::asm::delay(1000);
+-    adc3.cr.modify(|_, w| w.adcal().set_bit());
+-    while adc3.cr.read().adcal().bit_is_set() {}
+-    adc3.cfgr.modify(|_, w| w.res().sixteen_bit());
+-    adc3.smpr2.modify(|_, w| w.smp19().cycles64_5());
+-    adc3.isr.modify(|_, w| w.adrdy().set_bit());
+-    adc3.cr.modify(|_, w| w.aden().set_bit());
+-    while !adc3.isr.read().adrdy().bit_is_set() {}
+-
+-    adc3.sqr1
+-        .modify(|_, w| w.sq1().variant(VREFINT_CHANNEL & 0x1f));
+-    adc3.sqr1.modify(|_, w| w.l().bits(0));
+-    adc3.cr.modify(|_, w| w.adstart().set_bit());
+-    while !adc3.isr.read().eoc().bit_is_set() {}
+-    let vrefint_data = adc3.dr.read().rdata().bits() as u16;
++    adc3.cr().modify(|_, w| w.adcal().set_bit());
++    while adc3.cr().read().adcal().bit_is_set() {}
++    adc3.cfgr().modify(|_, w| w.res().sixteen_bit());
++    adc3.smpr2().modify(|_, w| w.smp19().cycles64_5());
++    adc3.isr().modify(|_, w| w.adrdy().clear_bit_by_one());
++    adc3.cr().modify(|_, w| w.aden().set_bit());
++    while !adc3.isr().read().adrdy().bit_is_set() {}
++
++    adc3.sqr1()
++        .modify(|_, w| unsafe { w.sq1().bits(VREFINT_CHANNEL & 0x1f) });
++    adc3.sqr1().modify(|_, w| unsafe { w.l().bits(0) });
++    adc3.cr().modify(|_, w| w.adstart().set_bit());
++    while !adc3.isr().read().eoc().bit_is_set() {}
++    let vrefint_data = adc3.dr().read().rdata().bits() as u16;
+ 
+     let vdda = (3.3 * vrefint_cal as f32) / vrefint_data as f32;
+     defmt::info!(
+@@ -78,22 +78,22 @@
+ 
+ impl Adc<pac::ADC1> {
+     pub fn new_adc1(adc: pac::ADC1, rcc: &pac::RCC, vdda: f32) -> Self {
+-        rcc.ahb1enr.modify(|_, w| w.adc12en().set_bit());
+-        rcc.d3ccipr.modify(|_, w| w.adcsel().pll2_p());
++        rcc.ahb1enr().modify(|_, w| w.adc12en().set_bit());
++        rcc.d3ccipr().modify(|_, w| w.adcsel().pll2_p());
+ 
+         let adc12_common = unsafe { &*pac::ADC12_COMMON::ptr() };
+-        adc12_common.ccr.modify(|_, w| w.presc().div1());
++        adc12_common.ccr().modify(|_, w| w.presc().div1());
+ 
+-        adc.cr.modify(|_, w| w.deeppwd().set_bit());
+-        adc.cr
++        adc.cr().modify(|_, w| w.deeppwd().set_bit());
++        adc.cr()
+             .modify(|_, w| w.deeppwd().clear_bit().advregen().set_bit());
+         cortex_m::asm::delay(1000);
+-        adc.cr.modify(|_, w| w.adcal().set_bit());
+-        while adc.cr.read().adcal().bit_is_set() {}
+-        adc.cfgr.modify(|_, w| w.res().sixteen_bit());
++        adc.cr().modify(|_, w| w.adcal().set_bit());
++        while adc.cr().read().adcal().bit_is_set() {}
++        adc.cfgr().modify(|_, w| w.res().sixteen_bit());
+ 
+         let sample_time = SampleTime::Cycles64_5 as u8;
+-        adc.smpr1.write(|w| {
++        adc.smpr1().write(|w| unsafe { {
+             w.smp0()
+                 .bits(sample_time)
+                 .smp1()
+@@ -114,8 +114,8 @@
+                 .bits(sample_time)
+                 .smp9()
+                 .bits(sample_time)
+-        });
+-        adc.smpr2.write(|w| {
++        } });
++        adc.smpr2().write(|w| unsafe { {
+             w.smp10()
+                 .bits(sample_time)
+                 .smp11()
+@@ -136,11 +136,11 @@
+                 .bits(sample_time)
+                 .smp19()
+                 .bits(sample_time)
+-        });
++        } });
+ 
+-        adc.isr.modify(|_, w| w.adrdy().set_bit());
+-        adc.cr.modify(|_, w| w.aden().set_bit());
+-        while !adc.isr.read().adrdy().bit_is_set() {}
++        adc.isr().modify(|_, w| w.adrdy().clear_bit_by_one());
++        adc.cr().modify(|_, w| w.aden().set_bit());
++        while !adc.isr().read().adrdy().bit_is_set() {}
+ 
+         Self {
+             adc,
+@@ -152,11 +152,11 @@
+ 
+ impl Adc<pac::ADC3> {
+     pub fn new_adc3(adc: pac::ADC3, rcc: &pac::RCC, vdda: f32) -> Self {
+-        rcc.ahb4enr.modify(|_, w| w.adc3en().set_bit());
+-        rcc.d3ccipr.modify(|_, w| w.adcsel().pll2_p());
++        rcc.ahb4enr().modify(|_, w| w.adc3en().set_bit());
++        rcc.d3ccipr().modify(|_, w| w.adcsel().pll2_p());
+ 
+         let adc3_common = unsafe { &*pac::ADC3_COMMON::ptr() };
+-        adc3_common.ccr.modify(|_, w| {
++        adc3_common.ccr().modify(|_, w| {
+             w.presc()
+                 .div1()
+                 .vrefen()
+@@ -167,16 +167,16 @@
+                 .set_bit()
+         });
+ 
+-        adc.cr.modify(|_, w| w.deeppwd().set_bit());
+-        adc.cr
++        adc.cr().modify(|_, w| w.deeppwd().set_bit());
++        adc.cr()
+             .modify(|_, w| w.deeppwd().clear_bit().advregen().set_bit());
+         cortex_m::asm::delay(1000);
+-        adc.cr.modify(|_, w| w.adcal().set_bit());
+-        while adc.cr.read().adcal().bit_is_set() {}
+-        adc.cfgr.modify(|_, w| w.res().sixteen_bit());
++        adc.cr().modify(|_, w| w.adcal().set_bit());
++        while adc.cr().read().adcal().bit_is_set() {}
++        adc.cfgr().modify(|_, w| w.res().sixteen_bit());
+ 
+         let sample_time = SampleTime::Cycles64_5 as u8;
+-        adc.smpr1.write(|w| {
++        adc.smpr1().write(|w| unsafe { {
+             w.smp0()
+                 .bits(sample_time)
+                 .smp1()
+@@ -197,8 +197,8 @@
+                 .bits(sample_time)
+                 .smp9()
+                 .bits(sample_time)
+-        });
+-        adc.smpr2.write(|w| {
++        } });
++        adc.smpr2().write(|w| unsafe { {
+             w.smp10()
+                 .bits(sample_time)
+                 .smp11()
+@@ -219,11 +219,11 @@
+                 .bits(sample_time)
+                 .smp19()
+                 .bits(sample_time)
+-        });
++        } });
+ 
+-        adc.isr.modify(|_, w| w.adrdy().set_bit());
+-        adc.cr.modify(|_, w| w.aden().set_bit());
+-        while !adc.isr.read().adrdy().bit_is_set() {}
++        adc.isr().modify(|_, w| w.adrdy().clear_bit_by_one());
++        adc.cr().modify(|_, w| w.aden().set_bit());
++        while !adc.isr().read().adrdy().bit_is_set() {}
+ 
+         Self {
+             adc,
+@@ -276,27 +276,27 @@
+ pub trait AdcInstance: Deref<Target = pac::adc1::RegisterBlock> {
+     fn set_sequence_channel(&mut self, rank: u8, channel: u8) {
+         if rank == 1 {
+-            self.sqr1.modify(|_, w| w.sq1().variant(channel & 0x1f))
++            self.sqr1().modify(|_, w| unsafe { w.sq1().bits(channel & 0x1f) });
+         } else {
+             panic!("Only rank 1 is supported for now");
+         }
+     }
+ 
+     fn set_sequence_length(&mut self, length: u8) {
+-        self.sqr1
+-            .modify(|_, w| w.l().bits((length.saturating_sub(1)) & 0xf));
++        self.sqr1()
++            .modify(|_, w| unsafe { w.l().bits((length.saturating_sub(1)) & 0xf) });
+     }
+ 
+     fn start_conversion(&mut self) {
+-        self.cr.modify(|_, w| w.adstart().set_bit());
++        self.cr().modify(|_, w| w.adstart().set_bit());
+     }
+ 
+     fn is_conversion_complete(&self) -> bool {
+-        self.isr.read().eoc().bit_is_set()
++        self.isr().read().eoc().bit_is_set()
+     }
+ 
+     fn read_data(&self) -> u32 {
+-        self.dr.read().rdata().bits()
++        self.dr().read().rdata().bits()
+     }
+ }
+ 
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/bmi270.rs b/src/bmi270.rs
+--- a/src/bmi270.rs	2026-09-17 18:30:04.740902425 +0000
++++ b/src/bmi270.rs	2026-09-17 19:01:42.525934999 +0000
+@@ -116,8 +116,19 @@
+     ConfigError,
+ }
+ 
+-impl From<i2c::Error> for Error {
+-    fn from(err: i2c::Error) -> Self {
++impl From<hal::error::Error> for Error {
++    fn from(err: hal::error::Error) -> Self {
++        match err {
++            hal::error::Error::I2cError(e) => e.into(),
++            // 2.x wraps every peripheral error in one enum; anything that is
++            // not I2C on this driver's path is a bug worth hearing about.
++            _ => Error::ConfigError,
++        }
++    }
++}
++
++impl From<i2c::I2cError> for Error {
++    fn from(err: i2c::I2cError) -> Self {
+         Error::I2cDma(i2c_dma::Error::I2c(err))
+     }
+ }
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/bmi270_spi.rs b/src/bmi270_spi.rs
+--- a/src/bmi270_spi.rs	2026-09-17 18:30:04.741902445 +0000
++++ b/src/bmi270_spi.rs	2026-09-17 19:01:51.034111961 +0000
+@@ -61,6 +61,15 @@
+     ConfigError,
+ }
+ 
++impl From<hal::error::Error> for Error {
++    fn from(err: hal::error::Error) -> Self {
++        match err {
++            hal::error::Error::SpiError(e) => e.into(),
++            _ => Error::ConfigError,
++        }
++    }
++}
++
+ impl From<spi::SpiError> for Error {
+     fn from(err: spi::SpiError) -> Self {
+         Error::Spi(err)
+@@ -79,9 +88,9 @@
+ 
+ impl hal::RccPeriph for Spi5Regs {
+     fn en_reset(rcc: &pac::rcc::RegisterBlock) {
+-        rcc.apb2enr.modify(|_, w| w.spi5en().set_bit());
+-        rcc.apb2rstr.modify(|_, w| w.spi5rst().set_bit());
+-        rcc.apb2rstr.modify(|_, w| w.spi5rst().clear_bit());
++        rcc.apb2enr().modify(|_, w| w.spi5en().set_bit());
++        rcc.apb2rstr().modify(|_, w| w.spi5rst().set_bit());
++        rcc.apb2rstr().modify(|_, w| w.spi5rst().clear_bit());
+     }
+ }
+ 
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/bmm350.rs b/src/bmm350.rs
+--- a/src/bmm350.rs	2026-09-17 18:30:04.741902445 +0000
++++ b/src/bmm350.rs	2026-09-17 19:02:16.026631427 +0000
+@@ -294,8 +294,19 @@
+     OtpTimeout,
+ }
+ 
+-impl From<i2c::Error> for Error {
+-    fn from(err: i2c::Error) -> Self {
++impl From<hal::error::Error> for Error {
++    fn from(err: hal::error::Error) -> Self {
++        match err {
++            hal::error::Error::I2cError(e) => e.into(),
++            // 2.x wraps every peripheral error in one enum; anything that is
++            // not I2C on this driver's path is a bug worth hearing about.
++            _ => Error::BitResetFailed,
++        }
++    }
++}
++
++impl From<i2c::I2cError> for Error {
++    fn from(err: i2c::I2cError) -> Self {
+         Error::I2cDma(i2c_dma::Error::I2c(err))
+     }
+ }
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/bmp581.rs b/src/bmp581.rs
+--- a/src/bmp581.rs	2026-09-17 18:30:04.741902445 +0000
++++ b/src/bmp581.rs	2026-09-17 19:02:16.027631448 +0000
+@@ -48,8 +48,19 @@
+     IntStatusErr,
+ }
+ 
+-impl From<i2c::Error> for Error {
+-    fn from(err: i2c::Error) -> Self {
++impl From<hal::error::Error> for Error {
++    fn from(err: hal::error::Error) -> Self {
++        match err {
++            hal::error::Error::I2cError(e) => e.into(),
++            // 2.x wraps every peripheral error in one enum; anything that is
++            // not I2C on this driver's path is a bug worth hearing about.
++            _ => Error::IntStatusErr,
++        }
++    }
++}
++
++impl From<i2c::I2cError> for Error {
++    fn from(err: i2c::I2cError) -> Self {
+         Error::I2cDma(i2c_dma::Error::I2c(err))
+     }
+ }
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/bsp/aleph.rs b/src/bsp/aleph.rs
+--- a/src/bsp/aleph.rs	2026-09-17 18:30:04.741902445 +0000
++++ b/src/bsp/aleph.rs	2026-09-17 18:53:49.010949116 +0000
+@@ -342,7 +342,7 @@
+ }
+ 
+ pub fn clock_cfg(pwr: pac::PWR) -> clocks::Clocks {
+-    pwr.cr3.modify(|_, w| {
++    pwr.cr3().modify(|_, w| {
+         // Disable bypass, SMPS
+         w.bypass().clear_bit();
+         w.sden().clear_bit();
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/can.rs b/src/can.rs
+--- a/src/can.rs	2026-09-17 18:30:04.741902445 +0000
++++ b/src/can.rs	2026-09-17 18:53:49.012949159 +0000
+@@ -23,15 +23,15 @@
+         let mut word_adr: u16 = $start_word_addr;
+ 
+         // 11-bit filter
+-        $can.sidfc
++        $can.sidfc()
+             .modify(|_, w| unsafe { w.flssa().bits(word_adr) });
+         word_adr += STANDARD_FILTER_MAX as u16;
+         // 29-bit filter
+-        $can.xidfc
++        $can.xidfc()
+             .modify(|_, w| unsafe { w.flesa().bits(word_adr) });
+         word_adr += 2 * EXTENDED_FILTER_MAX as u16;
+         // Rx FIFO 0
+-        $can.rxf0c.modify(|_, w| unsafe {
++        $can.rxf0c().modify(|_, w| unsafe {
+             w.f0sa()
+                 .bits(word_adr)
+                 .f0s()
+@@ -41,7 +41,7 @@
+         });
+         word_adr += 18 * RX_FIFO_MAX as u16;
+         // Rx FIFO 1
+-        $can.rxf1c.modify(|_, w| unsafe {
++        $can.rxf1c().modify(|_, w| unsafe {
+             w.f1sa()
+                 .bits(word_adr)
+                 .f1s()
+@@ -52,7 +52,7 @@
+         word_adr += 18 * RX_FIFO_MAX as u16;
+         // Rx buffer - see below
+         // Tx event FIFO
+-        $can.txefc.modify(|_, w| unsafe {
++        $can.txefc().modify(|_, w| unsafe {
+             w.efsa()
+                 .bits(word_adr)
+                 .efs()
+@@ -62,20 +62,20 @@
+         });
+         word_adr += 2 * TX_EVENT_MAX as u16;
+         // Tx buffers
+-        $can.txbc
++        $can.txbc()
+             .modify(|_, w| unsafe { w.tbsa().bits(word_adr).tfqs().bits(TX_FIFO_MAX) });
+         word_adr += 18 * TX_FIFO_MAX as u16;
+ 
+         // Rx Buffer - not used
+-        $can.rxbc.modify(|_, w| unsafe { w.rbsa().bits(word_adr) });
++        $can.rxbc().modify(|_, w| unsafe { w.rbsa().bits(word_adr) });
+ 
+         // TX event FIFO?
+         // Trigger memory?
+ 
+         // Set the element sizes to 16 bytes
+-        $can.rxesc
++        $can.rxesc()
+             .modify(|_, w| unsafe { w.rbds().bits(0b111).f1ds().bits(0b111).f0ds().bits(0b111) });
+-        $can.txesc.modify(|_, w| unsafe { w.tbds().bits(0b111) });
++        $can.txesc().modify(|_, w| unsafe { w.tbds().bits(0b111) });
+     };
+ }
+ 
+@@ -85,8 +85,8 @@
+ 
+     impl Can<pac::FDCAN1> {
+         pub fn fdcan1(rb: pac::FDCAN1, rcc: &pac::RCC) -> fdcan::FdCan<Self, fdcan::ConfigMode> {
+-            rcc.apb1henr.modify(|_, w| w.fdcanen().set_bit());
+-            while rcc.apb1henr.read().fdcanen().bit_is_clear() {}
++            rcc.apb1henr().modify(|_, w| w.fdcanen().set_bit());
++            while rcc.apb1henr().read().fdcanen().bit_is_clear() {}
+ 
+             // Initialisation and RAM layout configuration
+             let mut fdcan = fdcan::FdCan::new(Self { rb }).into_config_mode();
+@@ -109,8 +109,8 @@
+ 
+     impl Can<pac::FDCAN2> {
+         pub fn fdcan2(rb: pac::FDCAN2, rcc: &pac::RCC) -> fdcan::FdCan<Self, fdcan::ConfigMode> {
+-            rcc.apb1henr.modify(|_, w| w.fdcanen().set_bit());
+-            while rcc.apb1henr.read().fdcanen().bit_is_clear() {}
++            rcc.apb1henr().modify(|_, w| w.fdcanen().set_bit());
++            while rcc.apb1henr().read().fdcanen().bit_is_clear() {}
+ 
+             // Initialisation and RAM layout configuration
+             let mut fdcan = fdcan::FdCan::new(Self { rb }).into_config_mode();
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/command.rs b/src/command.rs
+--- a/src/command.rs	2026-09-17 18:30:04.741902445 +0000
++++ b/src/command.rs	2026-09-17 19:01:09.957257014 +0000
+@@ -39,9 +39,9 @@
+ impl<R> CommandBridge<R>
+ where
+     R: Deref<Target = pac::usart1::RegisterBlock> + hal::RccPeriph,
+-    hal::usart::Usart<R>: Write<Error = hal::usart::UartError>,
+-    hal::usart::Usart<R>: Read<Error = hal::usart::UartError>,
+-    hal::usart::Usart<R>: ReadReady<Error = hal::usart::UartError>,
++    hal::usart::Usart<R>: Write<Error = hal::error::Error>,
++    hal::usart::Usart<R>: Read<Error = hal::error::Error>,
++    hal::usart::Usart<R>: ReadReady<Error = hal::error::Error>,
+ {
+     pub fn new(uart: Box<crate::healing_usart::HealingUsart<R>>) -> Self {
+         Self {
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/crsf.rs b/src/crsf.rs
+--- a/src/crsf.rs	2026-09-17 18:30:04.741902445 +0000
++++ b/src/crsf.rs	2026-09-17 19:01:09.958257034 +0000
+@@ -3,7 +3,7 @@
+ use alloc::boxed::Box;
+ use embedded_io::{ErrorType, Read, ReadReady, Write, WriteReady};
+ use fugit::MicrosDuration;
+-use hal::usart::UartError;
++use hal::usart::UsartError;
+ use modular_bitfield::prelude::*;
+ 
+ use crate::monotonic::Instant;
+@@ -45,7 +45,7 @@
+ 
+ #[derive(Debug, defmt::Format)]
+ pub enum Error {
+-    Io(UartError),
++    Io(hal::error::Error),
+     InvalidFrameType,
+     InvalidFrameLength,
+     InvalidCrc,
+@@ -150,12 +150,12 @@
+ }
+ 
+ pub trait SerialIo:
+-    Read + Write + ReadReady + WriteReady + ErrorType<Error = UartError> + 'static
++    Read + Write + ReadReady + WriteReady + ErrorType<Error = hal::error::Error> + 'static
+ {
+ }
+ 
+ impl<IO> SerialIo for IO where
+-    IO: Read + Write + ReadReady + WriteReady + ErrorType<Error = UartError> + 'static
++    IO: Read + Write + ReadReady + WriteReady + ErrorType<Error = hal::error::Error> + 'static
+ {
+ }
+ 
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/dma.rs b/src/dma.rs
+--- a/src/dma.rs	2026-09-17 18:30:04.742902464 +0000
++++ b/src/dma.rs	2026-09-17 19:02:16.028631469 +0000
+@@ -87,20 +87,20 @@
+ 
+     fn st(&mut self) -> &pac::dma1::ST {
+         let i = self.channel_index();
+-        &self.regs().st[i]
++        &self.regs().st(i)
+     }
+ 
+     fn remaining(&mut self) -> usize {
+-        self.st().ndtr.read().ndt().bits() as usize
++        self.st().ndtr().read().ndt().bits() as usize
+     }
+ 
+     pub fn enable(&mut self) {
+-        self.st().cr.modify(|_, w| w.en().set_bit());
+-        while self.st().cr.read().en().bit_is_clear() {}
++        self.st().cr().modify(|_, w| w.en().set_bit());
++        while self.st().cr().read().en().bit_is_clear() {}
+     }
+ 
+     pub fn disable(&mut self) {
+-        self.st().cr.modify(|_, w| w.en().clear_bit());
+-        while self.st().cr.read().en().bit_is_set() {}
++        self.st().cr().modify(|_, w| w.en().clear_bit());
++        while self.st().cr().read().en().bit_is_set() {}
+     }
+ }
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/fm24cl16b.rs b/src/fm24cl16b.rs
+--- a/src/fm24cl16b.rs	2026-09-17 18:30:04.742902464 +0000
++++ b/src/fm24cl16b.rs	2026-09-17 19:02:34.723019697 +0000
+@@ -8,14 +8,25 @@
+ 
+ #[derive(Debug, defmt::Format)]
+ pub enum Error {
+-    I2c(i2c::Error),
++    I2c(i2c::I2cError),
+     CommunicationFailed,
+     AddressOutOfRange,
+     InvalidLength,
+ }
+ 
+-impl From<i2c::Error> for Error {
+-    fn from(err: i2c::Error) -> Self {
++impl From<hal::error::Error> for Error {
++    fn from(err: hal::error::Error) -> Self {
++        match err {
++            hal::error::Error::I2cError(e) => e.into(),
++            // 2.x wraps every peripheral error in one enum; anything that is
++            // not I2C on this driver's path is a bug worth hearing about.
++            _ => Error::CommunicationFailed,
++        }
++    }
++}
++
++impl From<i2c::I2cError> for Error {
++    fn from(err: i2c::I2cError) -> Self {
+         Error::I2c(err)
+     }
+ }
+@@ -51,7 +62,7 @@
+             Err(e) => {
+                 defmt::error!("FM24CL16B initialization failed: {:?}", e);
+                 defmt::error!("I2C address attempted: 0x{:02x}", fram.i2c_address);
+-                Err(Error::I2c(e))
++                Err(Error::from(e))
+             }
+         }
+     }
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/healing_usart.rs b/src/healing_usart.rs
+--- a/src/healing_usart.rs	2026-09-17 18:30:04.742902464 +0000
++++ b/src/healing_usart.rs	2026-09-17 19:01:09.958257034 +0000
+@@ -24,8 +24,12 @@
+         }
+     }
+ 
+-    fn record_error(&mut self, err: &usart::UartError) {
+-        if matches!(*err, usart::UartError::Overrun | usart::UartError::Parity) {
++    fn record_error(&mut self, err: &hal::error::Error) {
++        if matches!(
++            *err,
++            hal::error::Error::UsartError(usart::UsartError::Overrun)
++                | hal::error::Error::UsartError(usart::UsartError::Parity)
++        ) {
+             // Ignore overrun and parity errors as they don't indicate a hardware issue
+             // that can be recovered from by resetting the peripheral
+             return;
+@@ -49,7 +53,7 @@
+ }
+ 
+ impl<R> ErrorType for HealingUsart<R> {
+-    type Error = usart::UartError;
++    type Error = hal::error::Error;
+ }
+ 
+ impl<R> Read for HealingUsart<R>
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/i2c_dma.rs b/src/i2c_dma.rs
+--- a/src/i2c_dma.rs	2026-09-17 18:30:04.742902464 +0000
++++ b/src/i2c_dma.rs	2026-09-17 19:03:20.843976347 +0000
+@@ -22,6 +22,16 @@
+     regs: *const pac::i2c1::RegisterBlock,
+ }
+ 
++// hal2 2.x bounds I2c's inherent read/write on RccPeriph (1.8 bounded only
++// ). The erased type cannot dispatch a static en_reset -- and never
++// needs to: clocks are enabled on the CONCRETE peripheral before erasure
++// (see the From impls below). Defensive, not a no-op: reaching it is a bug.
++impl hal::RccPeriph for I2cRegs {
++    fn en_reset(_rcc: &hal::pac::rcc::RegisterBlock) {
++        unreachable!("I2cRegs is erased; enable clocks before erasure")
++    }
++}
++
+ impl Deref for I2cRegs {
+     type Target = pac::i2c1::RegisterBlock;
+     fn deref(&self) -> &Self::Target {
+@@ -95,13 +105,13 @@
+ 
+ #[derive(Debug, defmt::Format)]
+ pub enum Error {
+-    I2c(i2c::Error),
++    I2c(i2c::I2cError),
+     ReadNotStarted,
+     Busy,
+ }
+ 
+-impl From<i2c::Error> for Error {
+-    fn from(e: i2c::Error) -> Self {
++impl From<i2c::I2cError> for Error {
++    fn from(e: i2c::I2cError) -> Self {
+         Error::I2c(e)
+     }
+ }
+@@ -148,31 +158,31 @@
+ 
+     pub fn enable(&mut self) {
+         // Enable DMA requests
+-        self.i2c.regs.cr1.modify(|_, w| w.rxdmaen().set_bit());
++        self.i2c.regs.cr1().modify(|_, w| w.rxdmaen().set_bit());
+         // Enable DMA channel
+         self.dma.enable();
+         // Enable I2C peripheral
+-        self.i2c.regs.cr1.modify(|_, w| w.pe().set_bit());
+-        while self.i2c.regs.cr1.read().pe().bit_is_clear() {}
++        self.i2c.regs.cr1().modify(|_, w| w.pe().set_bit());
++        while self.i2c.regs.cr1().read().pe().bit_is_clear() {}
+     }
+ 
+     pub fn disable(&mut self) {
+         // Disable DMA requests
+-        self.i2c.regs.cr1.modify(|_, w| w.rxdmaen().clear_bit());
++        self.i2c.regs.cr1().modify(|_, w| w.rxdmaen().clear_bit());
+         // Disable DMA channel
+         self.dma.disable();
+         self.dma.clear_interrupt();
+         // Disable I2C peripheral
+-        self.i2c.regs.cr1.modify(|_, w| w.pe().clear_bit());
+-        while self.i2c.regs.cr1.read().pe().bit_is_set() {}
++        self.i2c.regs.cr1().modify(|_, w| w.pe().clear_bit());
++        while self.i2c.regs.cr1().read().pe().bit_is_set() {}
+     }
+ 
+     fn wait_txis(&mut self) -> Result<(), Error> {
+         let mut i = 0;
+-        while self.i2c.regs.isr.read().txis().bit_is_clear() {
++        while self.i2c.regs.isr().read().txis().bit_is_clear() {
+             i += 1;
+             if i >= MAX_ITERS {
+-                return Err(Error::I2c(i2c::Error::Hardware));
++                return Err(Error::I2c(i2c::I2cError::Bus));
+             }
+         }
+         Ok(())
+@@ -180,27 +190,27 @@
+ 
+     pub fn state(&mut self) -> Result<(State, u8), Error> {
+         // First, check for errors
+-        let isr = self.i2c.regs.isr.read();
++        let isr = self.i2c.regs.isr().read();
+         if isr.berr().bit_is_set() {
+-            self.i2c.regs.icr.write(|w| w.berrcf().set_bit());
+-            return Err(Error::I2c(i2c::Error::Bus));
++            self.i2c.regs.icr().write(|w| w.berrcf().clear_bit_by_one());
++            return Err(Error::I2c(i2c::I2cError::Bus));
+         } else if isr.arlo().bit_is_set() {
+-            self.i2c.regs.icr.write(|w| w.arlocf().set_bit());
+-            return Err(Error::I2c(i2c::Error::Arbitration));
++            self.i2c.regs.icr().write(|w| w.arlocf().clear_bit_by_one());
++            return Err(Error::I2c(i2c::I2cError::Arbitration));
+         } else if isr.nackf().bit_is_set() {
+             self.i2c
+                 .regs
+-                .icr
+-                .write(|w| w.stopcf().set_bit().nackcf().set_bit());
++                .icr()
++                .write(|w| w.stopcf().clear_bit_by_one().nackcf().clear_bit_by_one());
+             // If a pending TXIS flag is set, write dummy data to TXDR
+-            if self.i2c.regs.isr.read().txis().bit_is_set() {
+-                self.i2c.regs.txdr.write(|w| w.txdata().bits(0));
++            if self.i2c.regs.isr().read().txis().bit_is_set() {
++                self.i2c.regs.txdr().write(|w| unsafe { w.txdata().bits(0) });
+             }
+             // If TXDR is not flagged as empty, write 1 to flush it
+-            if self.i2c.regs.isr.read().txe().bit_is_clear() {
+-                self.i2c.regs.isr.write(|w| w.txe().set_bit());
++            if self.i2c.regs.isr().read().txe().bit_is_clear() {
++                self.i2c.regs.isr().write(|w| w.txe().set_bit());
+             }
+-            return Err(Error::I2c(i2c::Error::Nack));
++            return Err(Error::I2c(i2c::I2cError::Nack));
+         }
+ 
+         // Then, check for completion
+@@ -221,7 +231,7 @@
+         self.last_read_address = addr;
+         self.read_len = read_len;
+         defmt::trace!("Setting I2C CR2 to write");
+-        self.i2c.regs.cr2.write(|w| {
++        self.i2c.regs.cr2().write(|w| unsafe {
+             w.add10().bit(self.i2c.cfg.address_bits as u8 != 0);
+             w.sadd().bits((addr << 1) as u16);
+             w.rd_wrn().write();
+@@ -234,7 +244,7 @@
+         defmt::trace!("Waiting for I2C TXIS");
+         self.wait_txis()?;
+         defmt::trace!("Writing register to I2C TXDR");
+-        self.i2c.regs.txdr.write(|w| w.txdata().bits(register));
++        self.i2c.regs.txdr().write(|w| unsafe { w.txdata().bits(register) });
+ 
+         defmt::trace!("Initiating DMA read");
+         unsafe {
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/main.rs b/src/main.rs
+--- a/src/main.rs	2026-09-17 18:30:04.742902464 +0000
++++ b/src/main.rs	2026-09-17 19:03:47.239523156 +0000
+@@ -178,7 +178,7 @@
+         crsf::CRSF_BAUDRATE,
+         usart::UsartConfig::default(),
+         &clock_cfg,
+-    )));
++    ).expect("usart init")));
+     defmt::info!("Configured ELRS UART (UART8)");
+     let mut crsf = crsf::CrsfReceiver::new(elrs_uart);
+ 
+@@ -187,7 +187,7 @@
+         1_000_000,
+         usart::UsartConfig::default(),
+         &clock_cfg,
+-    )));
++    ).expect("usart init")));
+     defmt::info!("Configured UART bridge (1 Mbaud)");
+ 
+     let mut debug_uart = Box::new(healing_usart::HealingUsart::new(usart::Usart::new(
+@@ -195,7 +195,7 @@
+         115200,
+         usart::UsartConfig::default(),
+         &clock_cfg,
+-    )));
++    ).expect("usart init")));
+     defmt::info!("Configured debug UART");
+ 
+     let gps_uart = Box::new(healing_usart::HealingUsart::new(usart::Usart::new(
+@@ -203,7 +203,7 @@
+         ubx::GPS_BAUDRATE,
+         usart::UsartConfig::default(),
+         &clock_cfg,
+-    )));
++    ).expect("usart init")));
+     defmt::info!("Configured GPS UART (USART2 @ {})", ubx::GPS_BAUDRATE);
+ 
+     // Generate a 600kHz PWM signal on TIM3
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/peripheral.rs b/src/peripheral.rs
+--- a/src/peripheral.rs	2026-09-17 18:30:04.743902484 +0000
++++ b/src/peripheral.rs	2026-09-17 18:53:49.040949760 +0000
+@@ -109,8 +109,8 @@
+             const ADVANCED_CONTROL: bool = $advanced;
+ 
+             fn overflow(&mut self) -> bool {
+-                let uif = self.regs.sr.read().uif().bit_is_set();
+-                self.regs.sr.write(|w| w.uif().clear_bit());
++                let uif = self.regs.sr().read().uif().bit_is_set();
++                self.regs.sr().write(|w| w.uif().clear_bit());
+                 uif
+             }
+             fn update_psc_arr(&mut self, psc: u16, arr: u32) {
+@@ -126,7 +126,7 @@
+             }
+             fn enable_pwm(&mut self) {
+                 // if advanced, set MOE bit to enable outputs
+-                cond!($advanced, self.regs.bdtr.modify(|_, w| w.moe().set_bit()));
++                cond!($advanced, self.regs.bdtr().modify(|_, w| w.moe().set_bit()));
+                 self.enable_pwm_output(timer::TimChannel::C1, timer::OutputCompare::Pwm1, 0.);
+                 self.enable_pwm_output(timer::TimChannel::C2, timer::OutputCompare::Pwm1, 0.);
+                 self.enable_pwm_output(timer::TimChannel::C3, timer::OutputCompare::Pwm1, 0.);
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/qmc5883l.rs b/src/qmc5883l.rs
+--- a/src/qmc5883l.rs	2026-09-17 18:30:04.743902484 +0000
++++ b/src/qmc5883l.rs	2026-09-17 19:02:16.027631448 +0000
+@@ -25,12 +25,23 @@
+ 
+ #[derive(Debug, defmt::Format)]
+ pub enum Error {
+-    I2c(i2c::Error),
++    I2c(i2c::I2cError),
+     WrongChipId(u8),
+ }
+ 
+-impl From<i2c::Error> for Error {
+-    fn from(err: i2c::Error) -> Self {
++impl From<hal::error::Error> for Error {
++    fn from(err: hal::error::Error) -> Self {
++        match err {
++            hal::error::Error::I2cError(e) => e.into(),
++            // 2.x wraps every peripheral error in one enum; anything that is
++            // not I2C on this driver's path is a bug worth hearing about.
++            _ => Error::WrongChipId(0),
++        }
++    }
++}
++
++impl From<i2c::I2cError> for Error {
++    fn from(err: i2c::I2cError) -> Self {
+         Error::I2c(err)
+     }
+ }
+@@ -58,7 +69,7 @@
+         // Give the module time to power up after 5V-AUX enable
+         delay.delay_ms(200);
+ 
+-        let mut last_err = Error::I2c(i2c::Error::Hardware);
++        let mut last_err = Error::I2c(i2c::I2cError::Bus);
+         for attempt in 0..INIT_RETRIES {
+             // Try QMC5883L at 0x0D first, then HMC5883L-compatible at 0x1E
+             for &addr in &[QMC5883L_ADDR, HMC5883L_ADDR] {
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/sdmmc.rs b/src/sdmmc.rs
+--- a/src/sdmmc.rs	2026-09-17 18:30:04.743902484 +0000
++++ b/src/sdmmc.rs	2026-09-17 19:03:20.844976368 +0000
+@@ -181,18 +181,18 @@
+         }
+ 
+         // Select PLL1Q as SDMMC kernel clock
+-        rcc.d1ccipr.modify(|_, w| w.sdmmcsel().pll1_q());
++        rcc.d1ccipr().modify(|_, w| w.sdmmcsel().pll1_q());
+ 
+         // Enable and reset peripheral
+-        rcc.ahb3enr.modify(|_, w| w.sdmmc1en().set_bit());
+-        rcc.ahb3rstr.modify(|_, w| w.sdmmc1rst().set_bit());
+-        rcc.ahb3rstr.modify(|_, w| w.sdmmc1rst().clear_bit());
++        rcc.ahb3enr().modify(|_, w| w.sdmmc1en().set_bit());
++        rcc.ahb3rstr().modify(|_, w| w.sdmmc1rst().set_bit());
++        rcc.ahb3rstr().modify(|_, w| w.sdmmc1rst().clear_bit());
+ 
+         let (clkdiv, clk) = Self::clk_div(SD_INIT_FREQ)?;
+         defmt::debug!("CLKDIV: {}, SDMMC clock: {}kHz", clkdiv, clk.to_kHz());
+ 
+         // Configure SDMMC clock
+-        rb.clkcr.write(|w| unsafe {
++        rb.clkcr().write(|w| unsafe {
+             w.widbus()
+                 .bits(0) // Set bus width to 1
+                 .clkdiv()
+@@ -232,14 +232,14 @@
+     fn power_off(&mut self) {
+         defmt::debug!("Powering off SDMMC");
+         self.rb
+-            .power
++            .power()
+             .modify(|_, w| unsafe { w.pwrctrl().bits(PowerControl::Off as u8) });
+     }
+ 
+     fn power_on(&mut self) {
+         defmt::debug!("Powering on SDMMC");
+         self.rb
+-            .power
++            .power()
+             .modify(|_, w| unsafe { w.pwrctrl().bits(PowerControl::On as u8) });
+     }
+ 
+@@ -265,12 +265,12 @@
+         let mut idx = 0;
+         let mut sta_reg;
+         while {
+-            sta_reg = self.rb.star.read().to_result()?;
++            sta_reg = self.rb.star().read().to_result()?;
+             sta_reg.dbckend().bit_is_clear()
+         } {
+             if sta_reg.rxfifohf().bit() {
+                 for _ in 0..8 {
+-                    status[15 - idx] = u32::from_be(self.rb.fifor.read().bits());
++                    status[15 - idx] = u32::from_be(self.rb.fifor().read().bits());
+                     idx += 1;
+                 }
+             }
+@@ -332,19 +332,19 @@
+         let dtdir = matches!(direction, Dir::CardToHost);
+ 
+         // Command AND Data state machines must be idle
+-        while self.rb.star.read().dpsmact().bit_is_set()
+-            || self.rb.star.read().cpsmact().bit_is_set()
++        while self.rb.star().read().dpsmact().bit_is_set()
++            || self.rb.star().read().cpsmact().bit_is_set()
+         {}
+ 
+-        self.rb.dtimer.write(|w| w.datatime().variant(0xFFFF_FFFF));
+-        self.rb.dlenr.write(|w| w.datalength().variant(len));
+-        self.rb.dctrl.write(|w| unsafe {
++        self.rb.dtimer().write(|w| unsafe { w.datatime().bits(0xFFFF_FFFF) });
++        self.rb.dlenr().write(|w| unsafe { w.datalength().bits(len) });
++        self.rb.dctrl().write(|w| unsafe {
+             w.dblocksize()
+                 .bits(block_size) // 2^n bytes block size
+                 .dtdir()
+                 .bit(dtdir)
+                 .dtmode()
+-                .variant(0)
++                .bits(0)
+                 .dten()
+                 .set_bit() // Enable transfer
+         });
+@@ -353,27 +353,27 @@
+     fn start_dma_transfer(&self, len: u32, block_size: u8, direction: Dir) {
+         let dtdir = matches!(direction, Dir::CardToHost);
+ 
+-        self.rb.dtimer.write(|w| w.datatime().variant(0xFFFF_FFFF));
+-        self.rb.dlenr.write(|w| w.datalength().variant(len));
++        self.rb.dtimer().write(|w| unsafe { w.datatime().bits(0xFFFF_FFFF) });
++        self.rb.dlenr().write(|w| unsafe { w.datalength().bits(len) });
+         // This delay is needed due to some hardware bug in SDMMC + IDMA
+         for _ in 0..300 {
+             cortex_m::asm::nop();
+         }
+-        self.rb.dctrl.write(|w| {
++        self.rb.dctrl().write(|w| unsafe {
+             w.dblocksize()
+-                .variant(block_size) // 2^n bytes block size
++                .bits(block_size) // 2^n bytes block size
+                 .dtdir()
+                 .bit(dtdir)
+                 .dtmode()
+-                .variant(0)
++                .bits(0)
+                 .dten()
+                 .clear_bit() // Enable transfer
+         });
+-        self.rb.cmdr.modify(|_, w| w.cmdtrans().set_bit());
++        self.rb.cmdr().modify(|_, w| w.cmdtrans().set_bit());
+         self.rb
+-            .idmabase0r
+-            .write(|w| w.idmabase0().variant(self.dma_buf.as_ptr() as u32));
+-        self.rb.idmactrlr.write(|w| w.idmaen().set_bit());
++            .idmabase0r()
++            .write(|w| unsafe { w.idmabase0().bits(self.dma_buf.as_ptr() as u32) });
++        self.rb.idmactrlr().write(|w| w.idmaen().set_bit());
+     }
+ 
+     pub fn bench(&mut self, start_block: u32) -> Result<(), Error> {
+@@ -418,7 +418,7 @@
+         self.start_dma_transfer(BLOCK_LEN as u32, 9, Dir::HostToCard);
+         self.dma_buf[..BLOCK_LEN].copy_from_slice(&buffer);
+         self.cmd(common_cmd::write_single_block(address))?;
+-        self.rb.dctrl.modify(|_, w| w.dten().set_bit());
++        self.rb.dctrl().modify(|_, w| w.dten().set_bit());
+         let elapsed = start.elapsed();
+         if elapsed > fugit::MillisDuration::<u32>::millis(1) {
+             defmt::warn!("SDMMC single-block write took {}", elapsed);
+@@ -448,7 +448,7 @@
+             self.cmd(common_cmd::cmd::<common_cmd::R1>(23, n_blocks))?;
+             self.cmd(common_cmd::write_multiple_blocks(address))?;
+         }
+-        self.rb.dctrl.modify(|_, w| w.dten().set_bit());
++        self.rb.dctrl().modify(|_, w| w.dten().set_bit());
+         let elapsed = start.elapsed();
+         if elapsed > fugit::MillisDuration::<u32>::millis(1) {
+             defmt::warn!("SDMMC multi-block write took {}", elapsed);
+@@ -461,8 +461,8 @@
+         self.card_ready(false)?;
+         self.start_dma_transfer(BLOCK_LEN as u32, 9, Dir::CardToHost);
+         self.cmd(common_cmd::read_single_block(address))?;
+-        self.rb.dctrl.modify(|_, w| w.dten().set_bit());
+-        while self.rb.star.read().dataend().bit_is_clear() {}
++        self.rb.dctrl().modify(|_, w| w.dten().set_bit());
++        while self.rb.star().read().dataend().bit_is_clear() {}
+         let mut buffer = [0u8; BLOCK_LEN];
+         buffer.copy_from_slice(&self.dma_buf[..BLOCK_LEN]);
+         let _elapsed = start.elapsed();
+@@ -471,7 +471,7 @@
+ 
+     fn read_status(&self) -> Result<CardStatus<Self>, Error> {
+         self.cmd(common_cmd::card_status(self.card_rca(), false))?;
+-        Ok(CardStatus::from(self.rb.resp1r.read().bits()))
++        Ok(CardStatus::from(self.rb.resp1r().read().bits()))
+     }
+ 
+     fn wait_card_ready(&mut self, write_back: bool) -> Result<(), Error> {
+@@ -488,7 +488,7 @@
+     }
+ 
+     fn card_ready(&mut self, write_back: bool) -> Result<(), Error> {
+-        let status = self.rb.star.read().to_result()?;
++        let status = self.rb.star().read().to_result()?;
+         if status.dpsmact().bit_is_set() || status.cpsmact().bit_is_set() {
+             return Err(Error::Busy);
+         }
+@@ -521,12 +521,12 @@
+         let mut i = 0;
+         let mut status;
+         while {
+-            status = self.rb.star.read().to_result()?;
++            status = self.rb.star().read().to_result()?;
+             status.dbckend().bit_is_clear()
+         } {
+             if status.rxfifoe().bit_is_clear() {
+                 // FIFO not empty
+-                scr[i] = self.rb.fifor.read().bits();
++                scr[i] = self.rb.fifor().read().bits();
+                 i += 1;
+             }
+ 
+@@ -553,7 +553,7 @@
+             }
+             Err(err) => return Err(err),
+         }
+-        let cic = CIC::from(self.rb.resp1r.read().bits());
++        let cic = CIC::from(self.rb.resp1r().read().bits());
+         if cic.pattern() != 0xAA {
+             return Err(Error::UnsupportedCardVersion);
+         };
+@@ -572,26 +572,26 @@
+                 voltage_window,
+             ))
+             .ignore_crc()?;
+-            let ocr = OCR::from(self.rb.resp1r.read().bits());
++            let ocr = OCR::from(self.rb.resp1r().read().bits());
+             if !ocr.is_busy() {
+                 break ocr;
+             }
+         };
+ 
+         self.cmd(common_cmd::all_send_cid())?; // CMD2
+-        let cid = ((self.rb.resp1r.read().bits() as u128) << 96)
+-            | ((self.rb.resp2r.read().bits() as u128) << 64)
+-            | ((self.rb.resp3r.read().bits() as u128) << 32)
+-            | self.rb.resp4r.read().bits() as u128;
++        let cid = ((self.rb.resp1r().read().bits() as u128) << 96)
++            | ((self.rb.resp2r().read().bits() as u128) << 64)
++            | ((self.rb.resp3r().read().bits() as u128) << 32)
++            | self.rb.resp4r().read().bits() as u128;
+ 
+         self.cmd(sd_cmd::send_relative_address())?;
+-        let rca = RCA::from(self.rb.resp1r.read().bits());
++        let rca = RCA::from(self.rb.resp1r().read().bits());
+ 
+         self.cmd(common_cmd::send_csd(rca.address()))?;
+-        let csd = ((self.rb.resp1r.read().bits() as u128) << 96)
+-            | ((self.rb.resp2r.read().bits() as u128) << 64)
+-            | ((self.rb.resp3r.read().bits() as u128) << 32)
+-            | self.rb.resp4r.read().bits() as u128;
++        let csd = ((self.rb.resp1r().read().bits() as u128) << 96)
++            | ((self.rb.resp2r().read().bits() as u128) << 64)
++            | ((self.rb.resp3r().read().bits() as u128) << 32)
++            | self.rb.resp4r().read().bits() as u128;
+ 
+         self.cmd(common_cmd::select_card(rca.address()))
+             .ignore_timeout()?;
+@@ -609,10 +609,10 @@
+         // Set bus width to 4
+         defmt::debug!("Setting SD card bus width to 4, frequency to 50MHz");
+         self.app_cmd(sd_cmd::cmd6(2))?;
+-        while self.rb.star.read().dpsmact().bit_is_set()
+-            || self.rb.star.read().cpsmact().bit_is_set()
++        while self.rb.star().read().dpsmact().bit_is_set()
++            || self.rb.star().read().cpsmact().bit_is_set()
+         {}
+-        self.rb.clkcr.modify(|_, w| unsafe { w.widbus().bits(1) });
++        self.rb.clkcr().modify(|_, w| unsafe { w.widbus().bits(1) });
+ 
+         // Set frequency to maximum SDR12 frequency
+         self.set_freq(SDR12_MAX_FREQ)?;
+@@ -636,7 +636,7 @@
+         let (clkdiv, clk) = Self::clk_div(freq)?;
+         defmt::debug!("CLKDIV: {}, SDMMC clock: {}kHz", clkdiv, clk.to_kHz());
+         self.rb
+-            .clkcr
++            .clkcr()
+             .modify(|_, w| unsafe { w.clkdiv().bits(clkdiv) });
+         Ok(())
+     }
+@@ -663,12 +663,12 @@
+         let mut idx = 0;
+         let mut sta_reg;
+         while {
+-            sta_reg = self.rb.star.read().to_result()?;
++            sta_reg = self.rb.star().read().to_result()?;
+             sta_reg.dbckend().bit_is_clear()
+         } {
+             if sta_reg.rxfifohf().bit() {
+                 for _ in 0..8 {
+-                    status[idx] = self.rb.fifor.read().bits();
++                    status[idx] = self.rb.fifor().read().bits();
+                     idx += 1;
+                 }
+             }
+@@ -700,10 +700,10 @@
+         };
+ 
+         if selection > 0 {
+-            while self.rb.star.read().dpsmact().bit_is_set()
+-                || self.rb.star.read().cpsmact().bit_is_set()
++            while self.rb.star().read().dpsmact().bit_is_set()
++                || self.rb.star().read().cpsmact().bit_is_set()
+             {}
+-            self.rb.clkcr.modify(|_, w| w.busspeed().set_bit());
++            self.rb.clkcr().modify(|_, w| w.busspeed().set_bit());
+         }
+ 
+         Ok(sd_signaling)
+@@ -780,13 +780,13 @@
+ 
+ fn cmd<R: common_cmd::Resp>(rb: &pac::sdmmc1::RegisterBlock, cmd: Cmd<R>) -> Result<(), Error> {
+     // CP state machine must be idle
+-    while rb.star.read().cpsmact().bit_is_set() {}
++    while rb.star().read().cpsmact().bit_is_set() {}
+ 
+     // Clear status flags
+-    rb.icr.write(|w| unsafe { w.bits(0xFFFF_FFFF) });
++    rb.icr().write(|w| unsafe { w.bits(0xFFFF_FFFF) });
+ 
+     // Command arg
+-    rb.argr.write(|w| unsafe { w.cmdarg().bits(cmd.arg) });
++    rb.argr().write(|w| unsafe { w.cmdarg().bits(cmd.arg) });
+ 
+     // Determine what kind of response the CPSM should wait for
+     let waitresp = match cmd.response_len() {
+@@ -800,7 +800,7 @@
+     let cpsm_stop_transmission = cmd.cmd == 12;
+ 
+     // Command index and start CP State Machine
+-    rb.cmdr.write(|w| unsafe {
++    rb.cmdr().write(|w| unsafe {
+         w.waitint()
+             .clear_bit()
+             .waitresp() // No / Short / Long
+@@ -818,7 +818,7 @@
+     if cmd.response_len() == ResponseLen::Zero {
+         // Wait for CMDSENT or a timeout
+         while {
+-            status = rb.star.read();
++            status = rb.star().read();
+             !(status.ctimeout().bit() || status.cmdsent().bit()) && attempts_remaining > 0
+         } {
+             attempts_remaining -= 1;
+@@ -826,7 +826,7 @@
+     } else {
+         // Wait for CMDREND or CCRCFAIL or a timeout
+         while {
+-            status = rb.star.read();
++            status = rb.star().read();
+             !(status.ctimeout().bit() || status.cmdrend().bit() || status.ccrcfail().bit())
+                 && attempts_remaining > 0
+         } {
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/ubx.rs b/src/ubx.rs
+--- a/src/ubx.rs	2026-09-17 18:30:04.743902484 +0000
++++ b/src/ubx.rs	2026-09-17 19:02:34.723019697 +0000
+@@ -1,6 +1,6 @@
+ use alloc::boxed::Box;
+ use embedded_io::{ErrorType, Read, ReadReady, Write, WriteReady};
+-use hal::usart::UartError;
++use hal::usart::UsartError;
+ 
+ #[cfg(feature = "gps-38400")]
+ pub const GPS_BAUDRATE: u32 = 38400;
+@@ -17,11 +17,11 @@
+ const MAX_PAYLOAD: usize = 96;
+ 
+ pub trait UbxIo:
+-    Read + Write + ReadReady + WriteReady + ErrorType<Error = UartError> + 'static
++    Read + Write + ReadReady + WriteReady + ErrorType<Error = hal::error::Error> + 'static
+ {
+ }
+ impl<IO> UbxIo for IO where
+-    IO: Read + Write + ReadReady + WriteReady + ErrorType<Error = UartError> + 'static
++    IO: Read + Write + ReadReady + WriteReady + ErrorType<Error = hal::error::Error> + 'static
+ {
+ }
+ 
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/usb2513b.rs b/src/usb2513b.rs
+--- a/src/usb2513b.rs	2026-09-17 18:30:04.743902484 +0000
++++ b/src/usb2513b.rs	2026-09-17 19:02:16.027631448 +0000
+@@ -100,15 +100,26 @@
+ 
+ #[derive(Debug, defmt::Format)]
+ pub enum Error {
+-    I2c(i2c::Error),
++    I2c(i2c::I2cError),
+     InvalidArgument,
+     ReadbackMismatch,
+     AlreadyConfigured,
+     InvalidData,
+ }
+ 
+-impl From<i2c::Error> for Error {
+-    fn from(err: i2c::Error) -> Self {
++impl From<hal::error::Error> for Error {
++    fn from(err: hal::error::Error) -> Self {
++        match err {
++            hal::error::Error::I2cError(e) => e.into(),
++            // 2.x wraps every peripheral error in one enum; anything that is
++            // not I2C on this driver's path is a bug worth hearing about.
++            _ => Error::InvalidData,
++        }
++    }
++}
++
++impl From<i2c::I2cError> for Error {
++    fn from(err: i2c::I2cError) -> Self {
+         Error::I2c(err)
+     }
+ }
+diff -ruN '--exclude=target' '--exclude=.git' '--exclude=Cargo.lock' a/src/usb_serial.rs b/src/usb_serial.rs
+--- a/src/usb_serial.rs	2026-09-17 18:30:04.743902484 +0000
++++ b/src/usb_serial.rs	2026-09-17 19:03:20.844976368 +0000
+@@ -49,9 +49,11 @@
+ 
+         // Create USB device with VID/PID identifying as a CDC ACM serial port
+         let device = UsbDeviceBuilder::new(usb_bus, UsbVidPid(0x16c0, 0x27dd))
+-            .manufacturer("Elodin")
+-            .product("Aleph Carrier Serial Port")
+-            .serial_number("224C1")
++            .strings(&[usb_device::device::StringDescriptors::default()
++                .manufacturer("Elodin")
++                .product("Aleph Carrier Serial Port")
++                .serial_number("224C1")])
++            .expect("string descriptors")
+             .device_class(usbd_serial::USB_CLASS_CDC)
+             .build();
+         defmt::info!("created usb device");

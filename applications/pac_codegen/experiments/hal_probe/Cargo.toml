@@ -1,0 +1,41 @@
+# hal_probe — compile ANY HAL against ANY injected PAC.
+#
+# Three lines below are the whole knob set. Everything else is fixed.
+# See README.md in this directory.
+
+[package]
+name = "hal-probe"
+version = "0.1.0"
+edition = "2021"
+
+# ---------------------------------------------------------------------------
+# (1) THE DRIVER. Any crates.io crate that depends on the PAC you patch below.
+#     Pin with `=` so a background release cannot change the result under you.
+#     Features are the crate's OWN device names -- they differ between HALs
+#     (stm32f4xx-hal wants "stm32f401"; stm32-hal2 wants "f401"), so copy them
+#     from the crate's docs, not from the PAC.
+# ---------------------------------------------------------------------------
+[dependencies]
+stm32f1xx-hal = { version = "=0.11.0", features = ["stm32f103", "medium"] }
+
+# ---------------------------------------------------------------------------
+# (2) THE PAC, swapped for your INJECTED copy. The path must point at a crate
+#     that has been injected -- `stm_sweep.py --keep-pac DIR` leaves one at
+#     DIR/<rm>_<device>_<crate>/. Pointing at vendored/pac/<crate> measures the
+#     PRISTINE crate and finds nothing, because the sweep restores it.
+#
+#     The crate NAME here must match what the HAL depends on (stm32f1, stm32f4,
+#     ...), or the patch silently does not apply -- see (3).
+# ---------------------------------------------------------------------------
+[patch.crates-io]
+stm32f1 = { path = "/tmp/claude-1006/-home-ramla-hal-agent-pac-injection/777dc301-e753-406b-a6c8-f0cf2b5598fe/scratchpad/rm0008/stm32f1" }
+
+# ---------------------------------------------------------------------------
+# (3) NOTHING TO EDIT HERE, BUT READ IT ONCE.
+#     Cargo does NOT fail when a [patch] does not apply -- it warns and quietly
+#     resolves the registry crate, so the build measures the UNPATCHED PAC and
+#     reports zero enforcement. `python check.py` verifies the patch took hold
+#     before it believes any result. Never trust a clean build you did not
+#     check.
+# ---------------------------------------------------------------------------
+stm32f1xx-hal = { path = "vendored/stm32f1xx-hal-0.11.0" }
