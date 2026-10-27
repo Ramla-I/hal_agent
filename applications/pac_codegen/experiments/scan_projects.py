@@ -512,6 +512,31 @@ _FIELD_CALL = re.compile(r"\bw\s*\.\s*([a-z][a-z0-9_]*)\s*\(")
 # tock field references: `CR1::PE::SET`, `SR1::SB`
 _TOCK_FIELD = re.compile(r"\b[A-Z][A-Z0-9_]*::([A-Z][A-Z0-9_]*)")
 
+
+def _closure_arg_end(text: str, start: int, cap: int = 4000) -> int:
+    """Index just past the matching ')' of a call whose '(' sits immediately
+    before `start` (so depth is already 1 at `start`).
+
+    Bounds field extraction to THIS call's argument list — the
+    `|_, w| w.ff()..` closure — instead of a fixed character window that spills
+    into following statements and misattributes their fields (an ACC64 write
+    picking up the next lines' PRFTEN/LATENCY). Falls back to a capped window if
+    the parens never balance."""
+    depth = 1
+    end = min(len(text), start + cap)
+    i = start
+    while i < end:
+        c = text[i]
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return end
+
+
 _SKIP_DIRS = {"target", ".git", "tests", "examples", "benches"}
 # Method names that look like registers but are not (common Rust/embedded API).
 _NOT_A_REGISTER = {
@@ -579,8 +604,10 @@ def scan_pac_direct(f: Path, root: Path) -> list:
         # `self.spi\n  .cr1()\n  .modify(..)` at the `.modify` line, and the
         # ground-truth comparison against compiled diagnostics needs to agree.
         line_no = text.count("\n", 0, m.start("op")) + 1
-        # fields written: scan the rest of the statement for `w.<field>()`
-        tail = text[m.end():m.end() + 400]
+        # fields written: scan THIS call's argument list (the closure) for
+        # `w.<field>()` — bounded to the matching ')' so a later statement's
+        # field writes are not attributed to this access.
+        tail = text[m.end():_closure_arg_end(text, m.end())]
         raw = [x.lower() for x in _FIELD_CALL.findall(tail)]
         # svd2rust writes a field as `w.ff().set_bit()`; embassy's metapac
         # writes it as `w.set_ff(true)`. Emitting BOTH spellings costs nothing
@@ -620,7 +647,9 @@ def scan_tock(f: Path, root: Path) -> list:
         if reg not in declared:
             continue
         line_no = text.count("\n", 0, m.start("op")) + 1
-        tail = text[m.end():m.end() + 300]
+        # Bounded to this access's own argument list (see _closure_arg_end) so
+        # a following statement's field refs are not misattributed here.
+        tail = text[m.end():_closure_arg_end(text, m.end())]
         fields = [x.lower() for x in _TOCK_FIELD.findall(tail)
                   if x not in ("SET", "CLEAR")]
         op = m.group("op")
@@ -834,7 +863,10 @@ def triage(matched: list, dialect: str = "pac") -> list:
         if fields:
             try:
                 start, snippet = enclosing_function(h["abs"], h["line"])
-                rel = h["line"] - start + 1
+                # 0-based index of the flagged line (see the deterministic_scan
+                # docstring): [:rel] is strictly-before, so the flagged access
+                # cannot corroborate itself. `+ 1` was the off-by-one.
+                rel = h["line"] - start
                 pro = guard_prologue(h["abs"], snippet, rel, h["line"])
                 if pro["text"]:
                     snippet = pro["text"] + "\n" + snippet

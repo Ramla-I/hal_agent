@@ -235,7 +235,13 @@ def _precondition_pattern(fields: list[str], dialect: str):
 def deterministic_scan(snippet: str, flagged_line_rel: int,
                        fields: list[str], dialect: str = "pac") -> dict:
     """Does the function reference any precondition field accessor before the
-    flagged line?"""
+    flagged line?
+
+    `flagged_line_rel` is the flagged line's 0-based index within `snippet`, so
+    `lines[:flagged_line_rel]` is the lines strictly BEFORE it — the flagged
+    access must never count as its own preceding evidence. Callers pass
+    `flagged_file_line - start`, where `start` is enclosing_function's returned
+    (1-based) first-line number; a `+ 1` would include the flagged line."""
     lines = snippet.splitlines()
     pat = _precondition_pattern(fields, dialect)
     before = [i for i, t in enumerate(lines[:flagged_line_rel]) if pat.search(t)]

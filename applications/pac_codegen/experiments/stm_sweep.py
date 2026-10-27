@@ -689,10 +689,20 @@ def _gate_fields(constraints_path: Path) -> dict:
         for op, pres in (e.get("preconditions") or {}).items():
             fields = []
             for text in pres or []:
-                # "CAN_FMR.FINIT set" -> finit
+                # Cross-register conditions read `CAN_FMR.FINIT set` (dotted);
+                # same-register ones `STOP cleared` (bare). Take the post-dot
+                # field, else the first token. Requiring a dot silently dropped
+                # every same-register precondition (`STOP/START/PEC cleared` —
+                # 112 across 34 files), leaving those hits untriaged and often
+                # absent from the ledger. The field-gate branch below already
+                # handled both spellings.
                 m = re.search(r"\.(\w+)", str(text))
                 if m:
                     fields.append(m.group(1).lower())
+                else:
+                    tok = str(text).split()
+                    if tok:
+                        fields.append(tok[0].lower())
             if fields:
                 per_op[op] = sorted(set(fields))
         # Constraint IDENTITY rides along, so a triage row can say which
@@ -821,7 +831,12 @@ def triage_hit(abs_path: str, line: int, fields: list) -> dict:
         return {"verdict": "no_precondition_fields", "fields": []}
     try:
         start, snippet = enclosing_function(abs_path, line)
-        rel = line - start + 1
+        # 0-based index of the flagged line within the snippet (enclosing_
+        # function returns a 1-based first-line number). deterministic_scan and
+        # guard_prologue slice [:rel] = strictly-before, so the flagged access
+        # is NOT counted as its own guard. A `+ 1` here was the off-by-one that
+        # let a one-line `cr.modify(|_,w| w.FIELD())` corroborate itself.
+        rel = line - start
         pro = guard_prologue(abs_path, snippet, rel, line)
         if pro["text"]:
             snippet = pro["text"] + "\n" + snippet
