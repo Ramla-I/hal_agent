@@ -310,7 +310,14 @@ def experiment_b(case: dict) -> dict:
         print(f"  round {rnd}: {len(split['ours'])} witness errors, "
               f"{len(split['other'])} other")
         if not diags:
-            print(f"  CLEAN after {total_edits} edit(s)")
+            if run.returncode == 0:
+                print(f"  CLEAN after {total_edits} edit(s)")
+            else:
+                # No parseable diagnostics but a nonzero exit: the build broke
+                # for a non-witness reason — not clean.
+                print(f"  build failed with no parseable diagnostics "
+                      f"(not clean) after {total_edits} edit(s)")
+                history.append({"round": rnd, "status": "DID_NOT_RUN"})
             break
         n = apply_suggestions(diags, hal_root)
         total_edits += n

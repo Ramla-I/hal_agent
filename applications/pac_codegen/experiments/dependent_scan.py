@@ -310,17 +310,21 @@ def main() -> None:
                                 "style": style, "pins": dependents[name]})
                 print(f"  SKIP: {why} (features: {unmatched or '-'})")
                 continue
-            # One scan per matched FAMILY; cross-family matching is unsound.
-            by_family = {}
+            # One scan per distinct (manual, device). Collapsing to one entry
+            # per PAC family kept only the first manual, so a multi-device crate
+            # enabling several chips under different RMs was scanned against
+            # just one. Cross-family matching is still avoided — each target
+            # carries its own rm/device.
+            by_target = {}
             for tok, (rm, device, pac) in matched.items():
-                by_family.setdefault(pac, (rm, device))
-            for pac, (rm, device) in sorted(by_family.items()):
+                by_target.setdefault((pac, rm, device), (rm, device, pac))
+            for pac, rm, device in sorted(by_target):
                 if pac not in periph_maps:
                     d = APP_DIR / "vendored" / "pac" / pac / "src" / device
                     periph_maps[pac] = (rust_codegen.peripheral_instance_map(d)
                                         if d.is_dir() else {})
                 p = scan_projects.Project(
-                    name=name if len(by_family) == 1 else f"{name}@{device}",
+                    name=name if len(by_target) == 1 else f"{name}@{device}",
                     repo=f"https://crates.io/crates/{name}",
                     style=style, rms=[rm], device=device, pac=pac,
                     note=f"crates.io dependent ({', '.join(dependents[name])})")

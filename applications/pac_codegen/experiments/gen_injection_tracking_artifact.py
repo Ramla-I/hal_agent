@@ -454,6 +454,10 @@ def main() -> None:
     ported_fg = ported_results(field_gating=True)
     sweeps.update(ported)
     fsweeps = sweep_results(FIELD_SWEEP_FILES)
+    # Field-mode ported-HAL results belong in the field-mode lookup, exactly as
+    # `sweeps.update(ported)` does for the baseline. Without this the ported
+    # crates' field-gating columns silently render as "—".
+    fsweeps.update(ported_fg)
     gaps = gap_notes()
     activity = hal_activity(args.no_network)
 
@@ -599,7 +603,7 @@ def main() -> None:
             "true_enforcement": "—", "guarded": "—", "candidate": "—",
             "generic_friction": "—", "other_errors": "—",
             "fg_gates": 0, "fg_registers_gated": m.get("field_registers", 0),
-            "fg_pac_compiles": m.get("probe", "—"),
+            "fg_pac_compiles": m.get("field_probe", "—"),
             "fg_true_enforcement": "—", "fg_guarded": "—",
             "fg_candidate": "—", "fg_generic_friction": "—",
             "enforcement_sites": "—",

@@ -1179,7 +1179,12 @@ def clone(p: Project, dest: Path) -> Path | None:
 
 def scan_project(p: Project, root: Path, periph_map: dict) -> dict:
     files = _rust_files(root, p.subdirs)
-    scanner = {"pac_direct": scan_pac_direct, "tock": scan_tock}.get(p.style)
+    # hal_only crates (no direct PAC dep) can still reach the re-exported PAC
+    # with the same svd2rust syntax, so scan them with the pac_direct extractor
+    # rather than skipping — skipping reported a misleading 0 own accesses.
+    scanner = (scan_tock if p.style == "tock"
+               else scan_pac_direct if p.style in ("pac_direct", "hal_only")
+               else None)
     hits = []
     if scanner:
         for f in files:

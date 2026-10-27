@@ -77,8 +77,14 @@ def inject(rm: str, pac_dir: Path, device: str, field: bool) -> dict:
     gating IS the default, and --register-only selects the baseline. Passing
     the old flag left BOTH columns field-gated, which is why they read
     identically (rm0493: whole=80, field=80)."""
-    suffix = "_master_field" if field else "_master"
-    report = OUT / f"{rm}_{device}{suffix}.json"
+    # Reports go where the tracking generator's injection_report() looks:
+    # field-mode under OUT, whole-register (baseline) under OUT/register_only,
+    # both named {rm}_{device}_master.json. A single dir with _master /
+    # _master_field suffixes did not match that layout, so the generator found
+    # no master report and every master row's enforced count read 0.
+    base = OUT if field else OUT / "register_only"
+    base.mkdir(parents=True, exist_ok=True)
+    report = base / f"{rm}_{device}_master.json"
     argv = [sys.executable, str(APP_DIR / "inject_from_run.py"),
             str(PHASE1D / f"agent_output/stm/{rm}/1"),
             "--pac", str(pac_dir), "--device", device,
@@ -141,12 +147,16 @@ def main():
                 continue
             row[f"{key}_registers"] = rep.get("registers_planned", 0)
             row[f"{key}_fates"] = rep.get("fates", {})
-            if not field:
-                row["probe"] = compiles(work, device, target)
+            # Compile EACH mode against its own injected PAC: the whole-register
+            # and field-gated crates are different injections, so the field
+            # column needs its own result rather than reusing the whole probe.
+            row["probe" if not field else "field_probe"] = compiles(
+                work, device, target)
             shutil.rmtree(work, ignore_errors=True)
-        print("%-8s %-9s %-12s whole=%-4s field=%-4s compiles=%s"
+        print("%-8s %-9s %-12s whole=%-4s field=%-4s compiles=%s/%s"
               % (rm, crate, device, row.get("whole_registers"),
-                 row.get("field_registers"), row.get("probe")))
+                 row.get("field_registers"),
+                 row.get("probe"), row.get("field_probe")))
         results.append(row)
 
     shutil.rmtree(OUT / "pac_master_work", ignore_errors=True)

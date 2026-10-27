@@ -549,9 +549,12 @@ def main():
         for e in errs:
             print("\n---", (e.get('code') or {}).get('code', ''),
                   e.get("message", "")[:400])
-    if not errs:
+    if not errs and run.returncode == 0:
         print("\n  clean build: this driver never touches a constrained "
               "register on this device.")
+    elif not errs:
+        print("\n  BUILD DID NOT COMPILE: cargo exited nonzero with no "
+              "parseable diagnostics — not a clean build, not a zero.")
 
 
 if __name__ == "__main__":

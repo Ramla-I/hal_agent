@@ -37,7 +37,11 @@ HALDEV=collections.defaultdict(lambda: collections.defaultdict(list))
 for r in sweep:
     manuals[r["pac"]].add(r["rm"]); pair[r["pac"]]+=1
     for c in r.get("hal_results",[]):
-        if c.get("baseline")=="PASS":
+        # baseline PASS means the PRISTINE build passed; the injected run is a
+        # real measurement only when it actually ran. A PATCH_UNUSED/TIMEOUT/
+        # DID_NOT_RUN status with a passing baseline would otherwise render as
+        # a clean "0 fired, 0 bug".
+        if c.get("baseline")=="PASS" and c.get("status","ran")=="ran":
             base[r["pac"]]=True
             HALDEV[r["pac"]][c["crate"]].append((r["device"],r["rm"],c.get("true_enforcement",0),c.get("candidate",0)))
         else:
@@ -45,7 +49,7 @@ for r in sweep:
 for r in master: manuals[r["pac"]].add(r["rm"]); pair[r["pac"]]+=1
 for r in (L("measure_ported.json") or []):
     hal=r.get("hal")
-    if hal and hal!="rustuino" and r.get("baseline")=="PASS":
+    if hal and hal!="rustuino" and r.get("baseline")=="PASS" and r.get("status","ran")=="ran":
         HALDEV[r["pac"]][hal].append((r["device"],r["rm"],r.get("gate_fired",0),r.get("possible_bug",0)))
 BLOCKED={"stm32f7":("stm32f7xx-hal","couldn't port — PAC feature rename"),
          "stm32l1":("stm32l1xx-hal","couldn't port — 133 errs, multi-gen")}

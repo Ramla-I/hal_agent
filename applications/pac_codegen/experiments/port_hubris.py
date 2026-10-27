@@ -462,6 +462,11 @@ def check(ws: Path) -> list:
         if m.get("reason") == "compiler-message" \
                 and m["message"].get("level") == "error":
             out.append(m["message"])
+    if run.returncode != 0 and not out:
+        # A build that never ran is not a clean baseline. Matches the guard in
+        # dependent_compile.errors() and port_hubris's own in-tree builder.
+        raise SystemExit("hubris baseline: cargo exited without compiling "
+                         "anything:\n" + (run.stderr or run.stdout)[-800:])
     return out
 
 

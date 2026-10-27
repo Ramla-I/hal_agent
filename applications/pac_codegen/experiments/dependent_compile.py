@@ -400,16 +400,26 @@ def measure_examples(name: str, cfg: dict, work: Path) -> dict:
     if base_gates:
         return {"baseline": "FAIL",
                 "why": f"{len(base_gates)} gate errors on the pristine PAC"}
-    if base_rc != 0 and not base:
-        return {"baseline": "UNMEASURED", "why": "baseline build did not run"}
+    if base_rc != 0:
+        # Non-gate compiler errors (gate errors already returned FAIL above):
+        # the baseline itself does not build, so it is not a clean PASS. The
+        # old `and not base` only caught an empty diagnostic list, letting a
+        # nonzero exit with ordinary errors reach "baseline PASS".
+        return {"baseline": "UNMEASURED",
+                "why": "baseline build failed to compile (non-gate errors)"}
     print("  baseline PASS (pristine PAC, patch applied)")
 
     rep = inject(cfg, pac_dir, work / f"{name}_constraints.json",
                  work / f"{name}_inject.json")
     saved_c = json.loads((work / f"{name}_constraints.json").read_text())
     run(["cargo", "clean"], cwd=crate)   # full clean: examples pull the HAL in
-    diags, _, _ = build_diags(crate, cfg["build"])
+    diags, _inj_err, inj_rc = build_diags(crate, cfg["build"])
     res = classify(rep, saved_c, diags)
+    if not diags and inj_rc != 0:
+        # No diagnostics yet a nonzero exit: the injected build did not
+        # type-check (toolchain/unrelated error), so classify's all-zero result
+        # is "not measured," not "nothing fired."
+        res["status"] = "DID_NOT_RUN"
     res["note"] = ("example/firmware ceiling -- instantiates the HAL, so >= the "
                    "bare-probe floor")
     return res
