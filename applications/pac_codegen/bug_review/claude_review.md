@@ -20,12 +20,12 @@ injection arms (**svd2rust**, **chiptool**, **raltool**) and both ecosystems
 |---|---|---|
 | **Review — likely a bug** (`claude=tp`) | **18** | §1 A–G |
 | **Review — unsure** (`claude=unsure`) | **10** | §1 A–G |
-| **Review — downstream own-code candidates** (`unsure`, from the port experiments) | **3 crates / 15 sites** | §1 Class H |
+| **Review — downstream own-code candidates** (from the port experiments) | **4 crates / 22 sites** — 2 confirmed (hubris), rest unsure/fp | §1 Class H |
 | Not a bug (`claude=fp`) | 3 notable (+ the rest) | §3 |
 
 - **By tool** (the 28 HAL-sweep bugs, A–G): svd2rust **26**, chiptool **2** (B1, C1), raltool **0** (arm has no findings yet).
 - **By ecosystem** (A–G): STM **25**, NXP **3** (X1, B2 on lpc8xx-hal; N4 on mk20dx-hal).
-- Class H (hubris / rustuino / elodin) is a separate, lower-confidence population — the app's/driver's own code, from the port experiments, not the HAL-sweep CSVs.
+- Class H (hubris / rustuino / elodin / anne-key) is a separate population — the app's/driver's own code, from the port experiments, not the HAL-sweep CSVs. Source-analysis confirmed 2 real own-code bugs in hubris (H1, H2); the rest are unsure/fp.
 
 ---
 
@@ -99,18 +99,27 @@ The config bits are `*EN=0`-gated; the HAL writes them with the peripheral alrea
 | N4 | unsure | mk20dx-hal | `pwm.rs:1859` `set_filter` | FTM FILTER written with quad CH0/CH1 live | mk20d7-pac | mk20d7 | svd2rust | yes (hand-authored, B4) | [mk20d7-pac/mk20d7.csv](mk20d7-pac/mk20d7.csv) |
 
 ### Class H — downstream / application OWN-CODE candidates (port experiments)
-These fired in the **app's / driver's own source** (not the HAL re-surfacing)
-when the project was compiled against an injected PAC. **Low-confidence**
-static-scan candidates (`unchecked`; not source-analyzed — several may be
-legitimate init-time writes). This is a **crate-level index**; the exact files,
-lines, and the compiler-agreement column are in the landscape artifact **"Where
-datasheet rules would bite"** (`docs/artifacts/project_landscape.html`).
+These fired in the **app's / driver's own source** (not the HAL re-surfacing),
+when the project was compiled against an injected PAC. I source-analyzed the
+reachable ones (hubris, rustuino); elodin and anne-key I could not reach, so they
+stay static claims. Per-site file:line detail and the compiler-agreement column
+are in the landscape artifact **"Where datasheet rules would bite"**
+(`docs/artifacts/project_landscape.html`).
+
+**Finding: hubris's own USART drivers trip the Class-C rule.** `drv-stm32fx-usart`
+(`main.rs:65` then `:74`) and `drv-stm32h7-usart` (`lib.rs:72` then `:76`) both
+write `BRR` *after* setting `CR1.UE` — the same configure-after-enable violation
+the HAL bugs in Class C have. The `drv-stm32g0-usart` driver does it in the
+**correct** order (`BRR` before `UE`), which is the clean control case.
 
 | ID | claude | crate | what fires (own code) | sites | pac | device | tool |
 |---|---|---|---|---|---|---|---|
-| H | unsure | hubris | its USART drivers write BRR / TDR / CR1 with no guard found (`drv-stm32g0-usart`, `drv-stm32fx-usart`, `drv-stm32h7-usart`) | 4 | stm32g0, stm32f3, stm32h7 | stm32g031, stm32f303, stm32h753 | svd2rust |
-| R | unsure | rustuino | `src/analog.rs` writes ADC CR2 ×3 with no stop/ADEN guard found | 3 | stm32f4 | stm32f446 | svd2rust |
-| E | unsure | elodin-sensor-fw | its own `src/sdmmc.rs` writes CLKCR / DLENR / ARGR (no gated SDMMC module) — a static claim (build halts in the HAL before reaching it) | 8 | stm32h7 | stm32h747cm7 | svd2rust |
+| H1 | tp | hubris `drv-stm32fx-usart` | `BRR` written after `CR1.UE` is enabled (`main.rs:74`, UE at `:65`) — configure-after-enable | 1 | stm32f3 | stm32f303 | svd2rust |
+| H2 | tp | hubris `drv-stm32h7-usart` | `BRR` written after `CR1.UE` is enabled (`lib.rs:76`, UE at `:72`) — same shape | 1 | stm32h7 | stm32h753 | svd2rust |
+| H3 | fp | hubris `drv-stm32g0-usart` | `BRR` before `UE` (correct order); the `TDR`/`DR` writes and the h7 `CR1` enable-write are the normal data/enable path | 4 | stm32g0, stm32f3, stm32h7 | stm32g031, stm32f303, stm32h753 | svd2rust |
+| R | unsure | rustuino | `src/analog.rs` writes ADC `CR2.SWSTART` ×3 — SWSTART is the "go" bit (meant to be written while on); likely a whole-register over-fire, not a config-while-converting write | 3 | stm32f4 | stm32f446 | svd2rust |
+| E | unsure | elodin-sensor-fw | its own `src/sdmmc.rs` writes `CLKCR` / `DLENR` / `ARGR` (no gated SDMMC module) — static claim (build halts in the HAL before reaching it) | 11 | stm32h7 | stm32h747cm7 | svd2rust |
+| A | unsure | anne-key | FLASH `ACR` latency write at clock init (`src/clock.rs:7-8`); source not reachable to confirm ordering | 2 | stm32l1 | stm32l151 | svd2rust |
 
 ---
 
@@ -176,13 +185,19 @@ through their own register blocks and can't be compiled against an injected PAC,
 so no witness gate fires in their path. The confirmed/candidate bugs that *did*
 survive triage are all in §1 above.
 
-**Compile-caught vs manual.** `state_gate` is compile-enforced — compiling a HAL
-on the injected PAC fires the bug as `E0277` (the "caught = yes" rows). The
-value / omission / cross-register defects (Class F, U1–U3) a witness-gate
-structurally can't see; they were found by manual review and need the grammar
-work in `docs/emitter_improvements_plan.md` (B1 dynamic_check) and issue #41. N1
-was recovered by injection (B2+B3 gate LCKR); N4 by a hand-authored `state_gate`
-(B4).
+**Compile-caught vs manual.** The witness-gate kinds that reduce to *withholding
+a raw operation or minting a consumed token* — `state_gate`, `write_once`,
+`sequence`, `delay` — are all compile-enforced: compiling a HAL on the injected
+PAC fires the bug as `E0277` (the "caught = yes" rows). Most of those rows are
+`state_gate`; **N1 is the one `sequence`/lock** (injection withholds `modify` on
+`LCKR` — B2+B3 — so the no-op lock is now an `E0277`), and N4 is a hand-authored
+`state_gate` (B4). What stays *manual* is the kinds a witness-gate structurally
+cannot express — the **value / divisor** rules (Class F = `value_relation`, the
+"no (plan B1)" rows) and the **omission / poll-a-flag** defects (Class D U1–U3 =
+`dynamic_check`). Adding `write_once`/`sequence`/`delay` to the emitter did **not**
+move any of these into "caught" — they are not ordering/withholding rules; they
+need the grammar work in `docs/emitter_improvements_plan.md` (B1 `dynamic_check`)
+and issue #41.
 
 **The corroborated auto-clear.** Bugs 8–12 were auto-cleared by the pipeline
 because the precondition field is *referenced* nearby — but value-blind
