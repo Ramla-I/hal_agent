@@ -283,3 +283,32 @@ result is in the review files too.
 **Status:** fixed in current embassy HEAD — it now splits the reconfigure into two
 writes (OA1EN=0 committed first, then address + OA1EN=1). The row is tagged
 `version 0.6.0` (the triaged release) so it reads as version-specific.
+
+---
+
+## STM step-2 reinjection (prior experiment) — 0 new bugs, 2 write_once FPs
+
+After shipping `write_once` / `sequence` / `delay`, the STM generator corpus was
+reinjected with the new kinds enabled to look for a bug the `state_gate`-only
+pipeline could not see. **No new real bug surfaced** — the hard gates land on
+handshake / lock / key / config registers that correct drivers write
+legitimately (245 same-register constant-value `sequence` handshakes, 49
+whole-register `write_once` incl. 33 security locks, 12 `before`-naming `delay`
+ordering gates, across 48 manuals). Recorded here because these constraints now
+inject automatically, so the two `write_once` firings a driver *does* hit recur
+on every run and must stay adjudicated:
+
+| # | HAL | Site | Verdict | kind | Note |
+|---|-----|------|---------|------|------|
+| S1 | synopsys-usb-otg | `OTG_DCFG` (whole-register `write_once`) | **fp** | write_once | whole-register write_once over-fires; the driver's post-init rewrite touches only the DAD (device-address) field, on bus reset / SET_ADDRESS, which USB requires. The datasheet caveat is about the speed/PHY fields (DSPD/PFIVL), not the address — field-scoped write_once would not fire. |
+| S2 | stm32-fmc | `FMC_SDRTR` (whole-register `write_once`) | **fp** (compliant) | write_once | driver writes SDRTR once at init (`sdram.rs` step 6) and only reads it afterward — no violation. |
+
+The remaining 33 whole-register `write_once` are security-lock registers
+(SECCFGR / RCFGLOCKR / DECPROT_LOCK / option bytes) that HALs never touch, so
+they never fire.
+
+**Follow-ups:** the injector does not yet parse the 0.14-era svd2rust
+`generic.rs` (comma-less early-style where-clauses) of the stm32g0 / stm32f0
+PACs, which blocks those HALs; and the `write_once`-heavy U5/H5 families need the
+embassy/chiptool arm to reach a downstream (that arm emits only `state_gate`
+today).
