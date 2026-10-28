@@ -52,6 +52,7 @@
   .pill.enf{background:var(--goodbg);color:var(--good)}
   .pill.carry{background:var(--warnbg);color:var(--warn)}
   .pill.doc{background:var(--surface2);color:var(--muted)}
+  .pill.prop{background:transparent;color:var(--warn);border:1px solid var(--warn)}
   .enc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;margin:.9rem 0}
   .enc h3{margin-top:0;display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap}
   .enc .meta{font-family:var(--mono);font-size:.72rem;color:var(--muted);font-weight:400}
@@ -293,50 +294,39 @@ documentation-in-practice. This is wiring, not grammar.</p>
 <code>other</code>.</p>
 
 <h2><span class="n">05</span>Hardening the encodings — compiler-checked specifications</h2>
-<p class="sub">Every encoding in §03 rests on invariants that are <em>valid Rust to break</em>, so the compiler stays
-silent when a codegen regression or a hand-edit weakens a gate. The gate <strong>is an absence</strong> (the constrained
-register just doesn't implement the marker); the witness is unforgeable only because its field is <strong>private</strong> and it
-is <strong>not <code>Clone</code></strong>; freshness holds only because the witnessed writer <strong>consumes</strong> the token.
-Compiler-checked specs — <code>static_assertions</code> macros (<code>assert_not_impl_any!</code>, <code>assert_fields_type!</code>)
-and custom attributes (<code>#[private_fields]</code>, <code>#[consumes]</code>, <code>#[nomutates]</code>) that abort compilation
-when a type-level property fails — turn each "held by convention" invariant into an enforced one. Compile-time only, zero runtime
-cost. <em>Proposed: the emitter would drop these beside each gate it generates.</em></p>
+<p class="sub">Every encoding in §03 rests on invariants that are <em>valid Rust to break</em>, so the compiler stays silent when a codegen regression or a hand-edit weakens a gate. Two of those invariants need <strong>no new machinery</strong> — they are already <em>structural</em>: the witness is unforgeable because its <code>_priv</code> field is private by Rust’s default visibility, and single-use because the witnessed writer takes it <strong>by value</strong> (consumes it). The rest can be pinned with <code>static_assertions</code> macros (<code>assert_not_impl_any!</code>, <code>assert_impl_all!</code>, <code>assert_eq_size!</code>, <code>assert_eq_align!</code>) — compile-time only, zero runtime cost — that abort compilation when a type-level property fails. The <em>emitted next to</em> column below says, for each, <strong>exactly where in the generated tree it attaches</strong>, and flags the rows with no application in this (svd2rust) PAC. <em>Proposed: the emitter would drop the applicable macros beside each gate it generates.</em></p>
 
 <div class="scroll"><table>
   <thead><tr><th>spec</th><th>invariant it defends</th><th>emitted next to</th><th>silently breaks today if…</th></tr></thead>
   <tbody>
-    <tr><td><code>assert_not_impl_any!(SPEC: UnconstrainedWrite)</code></td><td><strong>the gate still exists</strong> — a constrained spec must never implement the marker (absence <em>is</em> the gate)</td><td>each constrained register's spec, in the injected <code>constraints</code> module</td><td>anyone re-adds <code>impl UnconstrainedWrite for SPEC</code> — the gate vanishes with no error</td></tr>
-    <tr><td><code>assert_not_impl_any!(Witness: Clone, Copy)</code></td><td>the witness can't be <strong>duplicated</strong> (single-use / freshness)</td><td>each generated witness type</td><td>a stray <code>#[derive(Clone)]</code> lets one check authorize many writes</td></tr>
-    <tr><td><code>#[private_fields]</code></td><td>the witness is <strong>unforgeable</strong> (no struct-literal construction)</td><td>each witness struct (<code>{ _priv: () }</code>)</td><td>the <code>_priv</code> field turns <code>pub</code> → <code>Witness{ _priv: () }</code> buildable anywhere</td></tr>
-    <tr><td><code>#[consumes(witness)]</code></td><td>the token is <strong>spent, not borrowed</strong> (affine, single-use)</td><td><code>write_witnessed</code> / <code>modify_witnessed</code> in <code>generic.rs</code></td><td>the param becomes <code>&amp;witness</code> → the "stale proof" hole returns</td></tr>
-    <tr><td><code>#[nomutates]</code></td><td>a write_once "consumed" flag / typestate marker isn't <strong>resurrected by same-module code</strong></td><td>the capability / typestate fields</td><td>the injected module shares the peripheral module, where <code>pub(crate)</code> gives no protection</td></tr>
-    <tr><td><code>assert_fields_type!(Reg: Gated&lt;Spec&gt;)</code></td><td>the RAL <strong>newtype wrapper wasn't bypassed</strong></td><td>each gated RAL register</td><td>a plain field replaces <code>Gated&lt;…&gt;</code> and the register is silently un-gated</td></tr>
-    <tr><td><code>assert_impl_all!(SPEC: WriteGate)</code></td><td>the gated register <strong>does carry the witnessed path</strong> (the positive half of "gated, not unconstrained")</td><td>each constrained register's spec</td><td>the <code>WriteGate</code> impl is dropped → <code>check_*_ready</code>/<code>write_witnessed</code> quietly cease to exist for it</td></tr>
-    <tr><td><code>assert_eq_size!(Witness, ())</code></td><td>the witness is a <strong>zero-sized type</strong> (the "enforcement is free" claim)</td><td>each generated witness type</td><td>a field slips into the witness → it occupies memory and rides in every signature</td></tr>
-    <tr><td><code>assert_not_impl_any!(Witness: Default, Send, Sync)</code></td><td>closes the <strong>other forge / escape vectors</strong> — <code>Default</code> forges a witness; <code>Send</code>/<code>Sync</code> let a state witness cross into an ISR or a <code>static</code> where the checked state may have since changed</td><td>each generated witness type</td><td>a witness stashed in a <code>static</code> and reused from an interrupt (stale) compiles fine</td></tr>
-    <tr><td><code>assert_eq_size!(RegisterBlock, [u8; N])</code> + <code>assert_eq_align!</code></td><td>the injection is <strong>layout-neutral</strong> — the gated PAC is ABI-identical to pristine (register offsets intact)</td><td>each peripheral's <code>RegisterBlock</code></td><td>an accidental field or <code>#[repr]</code> change shifts MMIO offsets — a catastrophic <em>correctness</em> bug, not just a weak gate</td></tr>
+    <tr><td><code>assert_not_impl_any!(SPEC: UnconstrainedWrite)</code></td><td><strong>the gate still exists</strong> — a constrained spec must never implement the marker (absence <em>is</em> the gate)</td><td><span class="pill prop">proposed</span> — would attach in the injected <code>constraints</code> module (appended to the peripheral file <code>src/&lt;device&gt;/&lt;periph&gt;.rs</code>), beside the <code>WriteGate</code> impl; the assertion names <code>super::&lt;reg&gt;::&lt;SPEC&gt;</code></td><td>anyone re-adds <code>impl UnconstrainedWrite for SPEC</code> in the register file (<code>&lt;periph&gt;/&lt;reg&gt;.rs</code>) — the gate vanishes with no error</td></tr>
+    <tr><td><code>assert_not_impl_any!(Witness: Clone, Copy)</code></td><td>the witness can’t be <strong>duplicated</strong> (single-use / freshness)</td><td><span class="pill prop">proposed</span> — would attach in the <code>constraints</code> module, right after each <code>pub struct &hellip;Witness { _priv: () }</code></td><td>a stray <code>#[derive(Clone)]</code> on the witness lets one check authorize many writes</td></tr>
+    <tr><td><code>#[private_fields]</code> <span class="meta">(not a real attribute)</span></td><td>the witness is <strong>unforgeable</strong> (no struct-literal construction)</td><td><span class="pill doc">no&nbsp;PAC&nbsp;application</span> <strong>already structural</strong> — <code>_priv: ()</code> has no <code>pub</code>, so the struct cannot be built outside its own module. Nothing is emitted; no such attribute exists</td><td>only if someone makes <code>_priv</code> <code>pub</code> — then <code>Witness { _priv: () }</code> is buildable anywhere; default-private visibility is exactly what blocks it</td></tr>
+    <tr><td><code>#[consumes(witness)]</code> <span class="meta">(not a real attribute)</span></td><td>the token is <strong>spent, not borrowed</strong> (affine, single-use)</td><td><span class="pill doc">no&nbsp;PAC&nbsp;application</span> <strong>already structural</strong> — <code>write_witnessed(f, _witness: &lt;REG as WriteGate&gt;::Witness)</code> in <code>generic.rs</code> takes the witness <em>by value</em>, so it is moved/consumed. Nothing is emitted</td><td>only if the parameter were changed to <code>&amp;witness</code> — the by-value signature is what keeps the stale-proof hole closed</td></tr>
+    <tr><td><code>#[nomutates]</code> <span class="meta">(not a real attribute)</span></td><td>a write_once “consumed” flag isn’t <strong>resurrected by same-module code</strong></td><td><span class="pill doc">no&nbsp;PAC&nbsp;application</span> <strong>no such field exists</strong> — the write-once latch is a function-local <code>static AtomicBool</code> inside <code>take_&lt;op&gt;_cap()</code>, unreachable by any other code. Nothing to annotate, nothing emitted</td><td>n/a — there is no exposed flag to resurrect (listed only to show the invariant is met by construction, not by a spec)</td></tr>
+    <tr><td><code>assert_fields_type!(Reg: Gated&lt;Spec&gt;)</code></td><td>a <strong>newtype wrapper wasn’t bypassed</strong></td><td><span class="pill carry">RAL&nbsp;arm&nbsp;only</span> <strong>no application in the svd2rust PAC</strong> — here gating is <em>marker absence</em> on the spec, not a wrapper, so no <code>Gated&lt;&hellip;&gt;</code> field is ever generated. This defends the separate RAL arm, whose seam wraps the register field</td><td>(RAL only) a plain field replaces <code>Gated&lt;&hellip;&gt;</code> and the register is silently un-gated</td></tr>
+    <tr><td><code>assert_impl_all!(SPEC: WriteGate)</code></td><td>the gated register <strong>does carry the witnessed path</strong> (the positive half of “gated, not unconstrained”)</td><td><span class="pill prop">proposed</span> — would attach in the <code>constraints</code> module, beside the <code>impl crate::WriteGate for &lt;SPEC&gt;</code> it checks</td><td>the <code>WriteGate</code> impl is dropped → <code>check_*_ready</code>/<code>write_witnessed</code> quietly cease to exist for it</td></tr>
+    <tr><td><code>assert_eq_size!(Witness, ())</code></td><td>the witness is a <strong>zero-sized type</strong> (the “enforcement is free” claim)</td><td><span class="pill prop">proposed</span> — would attach in the <code>constraints</code> module, after each witness struct</td><td>a field slips into the witness → it occupies memory and rides in every signature</td></tr>
+    <tr><td><code>assert_not_impl_any!(Witness: Default, Send, Sync)</code></td><td>closes the <strong>other forge / escape vectors</strong> — <code>Default</code> forges a witness; <code>Send</code>/<code>Sync</code> let a state witness cross into an ISR or a <code>static</code> where the checked state may have since changed</td><td><span class="pill prop">proposed</span> — would attach in the <code>constraints</code> module, after each witness struct</td><td>a witness stashed in a <code>static</code> and reused from an interrupt (stale) compiles fine</td></tr>
+    <tr><td><code>assert_eq_size!(RegisterBlock, [u8; N])</code> + <code>assert_eq_align!</code></td><td>the injection is <strong>layout-neutral</strong> — the gated PAC is ABI-identical to pristine (register offsets intact)</td><td><span class="pill prop">proposed</span> — would attach in the peripheral file <code>src/&lt;device&gt;/&lt;periph&gt;.rs</code>, after <code>pub struct RegisterBlock</code> (the same struct whose <code>#[derive(Debug)]</code> read-gating already edits)</td><td>an accidental field or <code>#[repr]</code> change shifts MMIO offsets — a catastrophic <em>correctness</em> bug, not just a weak gate</td></tr>
   </tbody>
 </table></div>
 
 <p>Concretely, where they attach in the code the emitter already generates:</p>
-<pre><span class="cm">// in the injected `constraints` module, beside each gate (defends the mechanism itself):</span>
+<pre><span class="cm">// in the injected `constraints` module (appended to the mstctl peripheral file),</span>
+<span class="cm">// beside each gate — these are the real static_assertions macros the emitter would drop:</span>
 assert_not_impl_any!(super::mstctl::MSTCTL_SPEC: crate::UnconstrainedWrite); <span class="cm">// the gate is still a gate</span>
-assert_not_impl_any!(MstctlWriteWitness: Clone, Copy);                       <span class="cm">// witness can't be duplicated</span>
+assert_impl_all!(super::mstctl::MSTCTL_SPEC: crate::WriteGate);              <span class="cm">// …and still carries the witnessed path</span>
+assert_not_impl_any!(MstctlWriteWitness: Clone, Copy, Default, Send, Sync);  <span class="cm">// can’t be duplicated, forged, or escape to an ISR</span>
+assert_eq_size!(MstctlWriteWitness, ());                                     <span class="cm">// …and is zero-sized</span>
 
-<span class="cm">// on the witness struct (defends unforgeability):</span>
-#[private_fields]
-pub struct MstctlWriteWitness { _priv: () }
-
-<span class="cm">// on the witnessed writer in generic.rs (defends freshness — the affine discipline):</span>
-#[consumes(_witness)]
-pub fn write_witnessed&lt;F&gt;(&amp;self, f: F, _witness: &lt;REG as WriteGate&gt;::Witness) { … }</pre>
+<span class="cm">// NO attribute is emitted for unforgeability or single-use — both are already structural:</span>
+pub struct MstctlWriteWitness { _priv: () }  <span class="cm">// private field ⇒ unforgeable   (no #[private_fields])</span>
+pub fn write_witnessed&lt;F&gt;(&amp;self, f: F, _witness: &lt;REG as WriteGate&gt;::Witness) { … }  <span class="cm">// by-value ⇒ consumed (no #[consumes])</span></pre>
 
 <div class="box">
   <span class="tag" style="color:var(--accent)">The two that matter most</span>
-  <p style="margin:.4rem 0 0"><code>assert_not_impl_any!(SPEC: UnconstrainedWrite)</code> defends the thing our scheme <em>is</em> —
-  a gate expressed as an <em>absence</em>, which is invisible to re-introduce — and <code>#[consumes(witness)]</code> is the exact
-  compile-check for the borrowed-witness freshness caveat (§ the witness lifetime discussion): it pins "the token is spent" so a
-  later switch to <code>&amp;witness</code> can't silently reopen the stale-proof hole.</p>
+  <p style="margin:.4rem 0 0"><code>assert_not_impl_any!(SPEC: UnconstrainedWrite)</code> defends the thing our scheme <em>is</em> — a gate expressed as an <em>absence</em>, which is invisible to re-introduce — and its positive twin <code>assert_impl_all!(SPEC: WriteGate)</code> pins that the gated register still has its witnessed path. The freshness/affine property needs <strong>no spec</strong>: the witness is a by-value parameter, so “the token is spent” is already enforced by the signature itself.</p>
 </div>
 
 <p>The assertions fall into two intents: most <strong>defend each gate against weakening</strong> (unforgeability,
@@ -348,6 +338,43 @@ shifted layout fails to compile instead of shipping.</p>
 use, layout), not the <em>semantics</em>. No spec can verify that <code>check_write_ready()</code> performs a real fresh read — a stub
 that returns <code>Ok(witness)</code> passes every assertion. CCS defends the encoding against regression; it does not extend what the
 grammar can express.</p>
+
+<h2><span class="n">06</span>The svd2rust interface as substrate — the levers it gives, the walls it imposes</h2>
+<p class="sub">Every encoding in §03, every hardening spec in §05, and every doc-only/advisory fallback traces back to a
+small set of things the svd2rust-generated PAC <em>lets</em> us do — and a handful it forbids. The forks in building
+the emitters were really the process of mapping those walls. The gate is never grafted onto the PAC; it rides what
+svd2rust already is. So the enforcement ceiling isn't the grammar — it's the interface.</p>
+
+<h3>The levers — everything above is built from these</h3>
+<ul>
+  <li><strong>Trait-bound method availability</strong> — svd2rust already gates <code>write</code> on <code>where REG: Writable</code>; we add <code>where REG: Unconstrained{Write,Modify,Read}</code> and <em>withhold</em> the marker on constrained registers. <strong>Absence of a marker is the gate.</strong> This is THE primitive — <code>state_gate</code>, <code>write_once</code>, and <code>sequence</code> all ride it.</li>
+  <li><strong>Affine move (consume-by-value)</strong> — a non-<code>Copy</code> witness/capability taken by value can't be reused (<code>E0382</code>) → single-use and write-once.</li>
+  <li><strong><code>#[must_use]</code></strong> — a token that warns when dropped unused → obligations ("you still owe a step") and the proposed <code>obligation</code> kind.</li>
+  <li><strong>The register's type-alias doc</strong> — <code>pub type FOO = Reg&lt;FOOrs&gt;</code> is ours to annotate with <code>///</code> → the advisory channel when nothing active is possible.</li>
+  <li><strong><code>#[diagnostic::on_unimplemented]</code></strong> on the marker trait → turns the bare <code>E0277</code> into the datasheet sentence at the call site.</li>
+</ul>
+
+<h3>The walls — why some kinds compile, some only warn, some stay docs</h3>
+<div class="scroll"><table>
+  <thead><tr><th>wall</th><th>the svd2rust mechanism</th><th>what it forces (where we hit it)</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Register methods are generic, not per-register</strong></td><td><code>read/write/modify</code> are generic over <code>Reg&lt;REG&gt;</code>; a concrete per-register <code>write</code> (or a <code>#[deprecated]</code> on it) collides with the generic one → <code>E0592</code></td><td>gating must be the trait-bound + withheld marker; a <em>whole-register</em> advisory can't be an active warning, only a <code>///</code> type-doc caveat (<code>read_effect</code> §03, the field-gate bypass §05, data-port sequence steps); the custom message is per-<em>trait</em>, so register specifics (preserve-fields, a duration) ride the doc</td></tr>
+    <tr><td><strong>Writes are whole-word; only field accessors are concrete</strong></td><td><code>write</code> stores a fresh word (clobbers untouched bits); <code>modify</code> read-preserves; <code>w.field()</code> is a concrete per-register method</td><td>whole-register gating is the clean path; <code>value_relation</code>/field active warnings are possible only through the concrete field writers; the <strong>clobber</strong> hazard exists <em>because</em> <code>write</code> is fresh-word; the field-gate write/reset bypass can't be per-call-warned (E0592)</td></tr>
+    <tr><td><strong>No per-register singleton to mint from</strong></td><td>the only once-ever resource is <code>Peripherals::take()</code> — whole-crate, in <code>lib.rs</code>, not per register</td><td><code>write_once</code>'s "once after reset" is a module-local reset-zeroed <code>static AtomicBool</code> take (runtime <code>None</code> on re-take), not a pure type-level singleton — the alternative is invasive <code>lib.rs</code> surgery</td></tr>
+    <tr><td><strong>The PAC knows nothing about clocks or time</strong></td><td>it is a pure register map — no clock tree, no frequencies, no delay source</td><td><code>delay</code> can only gate <em>ordering</em>; the HAL inserts the wait (the witness is an <em>obligation</em>, not proof-of-elapsed); <code>clock_gate</code> is HAL-owned; a <code>value_relation</code> against a clock frequency is doc-only</td></tr>
+    <tr><td><strong>Cross-register links are module paths, and the layout is version-specific</strong></td><td>a register's spec lives in <code>&lt;periph&gt;::&lt;reg&gt;</code>; instances share a base module (<code>derivedFrom</code>); spec names and the <code>generic.rs</code> surface vary across svd2rust versions</td><td>cross-register gates thread <code>super::</code>/<code>super::super::</code> paths; cross-module capability coupling (sequence <code>enables</code>) is fragile; spec names are <strong>discovered, not derived</strong>; the injector had to become dialect-aware (two <code>generic.rs</code> dialects, three spec conventions)</td></tr>
+    <tr><td><strong>Some facts already live in the SVD</strong></td><td><code>access</code> (RO/WO), <code>enumeratedValues</code> (legal values), <code>modifiedWriteValues</code> (w1c/reserved)</td><td>route those out (write-value validity, write-only "don't RMW" FIFOs) — re-gating them just duplicates what the interface already enforces</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box">
+  <span class="tag" style="color:var(--accent)">The pattern</span>
+  <p style="margin:.4rem 0 0">Each kind's ceiling is set by which wall it meets. <code>state_gate</code> / <code>write_once</code> / magic-value
+  <code>sequence</code> reach the trait-bound lever cleanly and <strong>compile-enforce</strong>. <code>value_relation</code> /
+  <code>read_effect</code> / data-port sequence steps hit the generic-method wall and fall to the <strong>doc/advisory</strong> lever.
+  <code>delay</code> / <code>clock_gate</code> hit the no-timing wall and become <strong>HAL-owned</strong>. The grammar can express
+  more than svd2rust can enforce — which is exactly what the <code>other</code> bucket and the doc-only tier are for.</p>
+</div>
 
 <footer>
   Sources: defs.py (ConstraintV2 union, FieldCondition, derive_enforceability) ·

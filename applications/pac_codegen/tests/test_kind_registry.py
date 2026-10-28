@@ -28,11 +28,12 @@ def _state_gate():
             "postconditions": []}
 
 
-def _sequence():
-    return {"kind": "sequence", "severity": "error", "consequence": "x",
-            "datasheet_text": "write key A then key B",
-            "steps": [{"register": "I2C1_WPR", "operation": "write", "value": 202},
-                      {"register": "I2C1_WPR", "operation": "write", "value": 83}]}
+def _other():
+    # `other` is documentation-only by design — it never gets a codegen emitter,
+    # so it is a stable stand-in for "a kind the emitter skips with a warning".
+    return {"kind": "other", "severity": "error", "consequence": "x",
+            "description": "a free-form access requirement the grammar can't type",
+            "datasheet_text": "some free-form access note the grammar can't type"}
 
 
 def _reg(constraints):
@@ -44,19 +45,37 @@ def _reg(constraints):
 
 
 def test_enabled_kinds_default_and_disable():
-    assert rc.enabled_kinds() == rc.SUPPORTED_KINDS       # all supported ON
+    assert rc.enabled_kinds() == rc.SUPPORTED_KINDS            # all supported ON
     assert "state_gate" in rc.SUPPORTED_KINDS
-    assert rc.enabled_kinds({"state_gate"}) == frozenset()  # disable removes it
+    assert "write_once" in rc.SUPPORTED_KINDS
+    # disabling one supported kind removes exactly that one
+    assert rc.enabled_kinds({"state_gate"}) == rc.SUPPORTED_KINDS - {"state_gate"}
+    # disabling the whole supported set leaves nothing enabled
+    assert rc.enabled_kinds(rc.SUPPORTED_KINDS) == frozenset()
+
+
+def test_enabled_kinds_only_allowlist():
+    # `only` restricts to the named supported kinds
+    assert rc.enabled_kinds(only={"sequence"}) == frozenset({"sequence"})
+    assert rc.enabled_kinds(only={"sequence", "delay"}) == frozenset({"sequence", "delay"})
+    # only + disabled compose: disabled subtracts from the allowlist
+    assert rc.enabled_kinds(only={"sequence", "delay"}, disabled={"delay"}) \
+        == frozenset({"sequence"})
+    # an unsupported / doc-only kind in `only` contributes nothing (no emitter)
+    assert rc.enabled_kinds(only={"clock_gate"}) == frozenset()
+    assert rc.enabled_kinds(only={"sequence", "clock_gate"}) == frozenset({"sequence"})
+    # empty allowlist => nothing (explicit "none")
+    assert rc.enabled_kinds(only=set()) == frozenset()
 
 
 def test_unsupported_kind_warns_and_keeps_supported(capsys):
-    # a register carrying a state_gate AND a not-yet-emitted sequence
-    plan = rc.RegisterPlan(_reg([_state_gate(), _sequence()]), "i2c1")
-    # the sequence is skipped, but the state_gate is still enforced (no coarse
+    # a register carrying a state_gate AND a not-yet-emitted `other`
+    plan = rc.RegisterPlan(_reg([_state_gate(), _other()]), "i2c1")
+    # the `other` is skipped, but the state_gate is still enforced (no coarse
     # whole-register loss)
     assert "write" in plan.preconditions and "modify" in plan.preconditions
     err = capsys.readouterr().err
-    assert "skipping sequence constraint (no codegen emitter yet)" in err
+    assert "skipping other constraint (no codegen emitter yet)" in err
     assert "state_gate" not in err          # the supported kind wasn't skipped
 
 

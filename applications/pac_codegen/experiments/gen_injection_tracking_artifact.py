@@ -713,15 +713,18 @@ def main() -> None:
           "  that map instead of being discarded. Because instances share the",
           "  type, such a gate necessarily covers EVERY instance of the block.",
           "- `enforced` = what actually became **compile-time gates**,",
-          "  after the emitter (only `state_gate` has an emitter today) and the",
+          "  after the emitter (four kinds emit today — `state_gate`,",
+          "  `write_once`, `sequence`, `delay`) and the",
           "  device-level prune. Every other kind is accounted for under",
           "  `where the rest went`, with the stage that dropped it.",
           "",
           "## The kinds of constraint",
           "",
-          "What the grammar can express. Only `state_gate` has a code",
-          "generator today; the rest are extracted and recorded, and appear",
-          "under *where the rest went* as `kind_not_emitted`.",
+          "What the grammar can express. Four kinds have code generators",
+          "(`state_gate`, `write_once`, `sequence`, `delay`); `clock_gate` is",
+          "intentionally not emitted (the HAL owns clock enablement) and",
+          "`read_effect`/`value_relation`/`other` stay documentation-only —",
+          "all appear under *where the rest went* as `kind_not_emitted`.",
           ""]
     md += [f"- **`{k}`** — {d}" for k, d in _KIND_DEFS]
     md += ["",
@@ -740,28 +743,45 @@ def main() -> None:
 
     md += ["", "## What each PAC enforces, and what could be compiled against it",
            "",
-           "EVERY injected chip crate is listed. The gates and the "
-           "`PAC compiles` check are independent of any driver — injection "
-           "needs nothing from a HAL. Where no driver crate depends on PAC "
-           "0.16, the HAL columns are empty and the note says why; the "
-           "enforcement is still there.",
+           "EVERY injected chip crate is listed. The **injected** columns are "
+           "independent of any driver — injection needs nothing from a HAL. "
+           "Where no driver crate depends on PAC 0.16, the adoption columns are "
+           "empty and the note says why; the enforcement is still there.",
            "",
-           "Two gating modes are shown. The default gates a whole register; "
-           "`--field-level-gating` (opt-in) gates individual bitfields "
-           "instead, reaching constraints the datasheet states about single "
-           "bits at the cost of asking less of the driver elsewhere.",
+           "**Column groups (read left to right):**",
            "",
-           "| RM | device | PAC crate | gates | registers | PAC compiles | "
-           "HAL crate | baseline | true enforcement | guarded | possible bug | "
-           "generic friction | other | "
-           "field: gates | field: registers | field: gate fired | "
-           "field: possible bug | field: generic friction | "
-           "enforcement sites | note |",
-           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+           "- **Injected into this PAC** — `gates` = compile-time gates added; "
+           "`gates by kind` = of those, how many of each constraint kind "
+           "(`state_gate` / `sequence` / `write_once` / `delay`); `regs` = "
+           "distinct registers gated; `PAC compiles` = the gated PAC still "
+           "builds.",
+           "- **Adoption** — `HAL crate` = the unmodified driver swapped onto "
+           "the injected PAC; `baseline` = that driver builds against the "
+           "*pristine* PAC (the prerequisite for the firing columns to mean "
+           "anything).",
+           "- **Whole-register firings** = compile errors when the HAL is built "
+           "on the gated PAC. `fired` = accesses to a gated register that now "
+           "need a witness; of those, `guarded(FP)` = the driver already "
+           "establishes the condition (NOT a bug) and `possible bug` = a "
+           "candidate to triage. `friction` = trait-generic driver code needing "
+           "a one-line bound (an adoption cost, not a specific site); `other` = "
+           "anything else.",
+           "- **Field-gating mode** = the same counts under opt-in "
+           "`--field-level-gating` (gates single bitfields instead of whole "
+           "registers).",
+           "",
+           "| RM | device | PAC crate | gates | gates by kind | regs | "
+           "PAC compiles | HAL crate | baseline | "
+           "fired | guarded(FP) | possible bug | friction | other | "
+           "field: gates | field: regs | field: fired | "
+           "field: possible bug | field: friction | "
+           "sites | note |",
+           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         md.append(
             f"| {r['RM']} | {r['device']} | {r['pac_crate']} | "
-            f"**{r['enforced']}** | {r['registers_gated']} | "
+            f"**{r['enforced']}** | {r['enforced_by_kind'] or '—'} | "
+            f"{r['registers_gated']} | "
             f"{r['pac_compiles']} | {r['hal_crate']} | "
             f"{r['hal_baseline']} | {r['true_enforcement']} | "
             f"{r['guarded']} | {r['candidate']} | "
@@ -1013,13 +1033,13 @@ def _kinds_html(s: str) -> str:
 
 
 # What each grammar-v2 kind means, in plain terms, in the order they appear in
-# the breakdowns. Only `state_gate` has a code emitter today; the rest are
+# the breakdowns. Four kinds emit (state_gate, write_once, sequence, delay);
 # listed so a kind breakdown reads without opening the grammar spec.
 _KIND_DEFS = [
     ("state_gate",
      "You may only touch this register while some other bit is in the right "
      "state \u2014 \u201conly write CR1 while the STOP bit is clear\u201d. "
-     "The workhorse kind, and the only one with a code generator today."),
+     "The workhorse kind, and the first with a code generator."),
     ("sequence",
      "Several steps that must happen in a fixed order \u2014 write 0xCA to "
      "the key register, then 0x53. Doing them out of order does not work."),
@@ -1057,9 +1077,9 @@ _STAGES = [
      "Names a register or field that cannot be resolved in the SVD, fails "
      "grammar-v2 validation outright, or carries a placeholder name."),
     ("kind_not_emitted", "emitter coverage",
-     "The grammar kind has no code generator yet \u2014 sequence, delay, "
-     "write_once, read_effect, value_relation, other. The single largest "
-     "enforcement gap."),
+     "The grammar kind has no code generator \u2014 `clock_gate` (HAL-owned "
+     "by design), read_effect, value_relation, other. (state_gate, write_once, "
+     "sequence and delay now emit.)"),
     ("gated_out_by_validator", "closed-book judge",
      "The validator read the quote without the datasheet in front of it and "
      "called the constraint doc_only (genuine but not witness-enforceable) or "
@@ -1247,10 +1267,12 @@ def write_html(rows: list, path: Path, control_rows: list = ()) -> None:
 
     # --- table 1 -----------------------------------------------------------
     h += ['<section><h2>The kinds of constraint</h2>',
-          '<p class="note">What the grammar can express. Only '
-          '<code>state_gate</code> has a code generator today \u2014 the rest '
-          'are extracted and recorded, and show up under '
-          '<em>where the rest went</em> as <code>kind_not_emitted</code>.</p>',
+          '<p class="note">What the grammar can express. Four kinds now have '
+          'code generators \u2014 <code>state_gate</code>, <code>write_once</code>, '
+          '<code>sequence</code>, <code>delay</code>; <code>clock_gate</code> is '
+          'intentionally HAL-owned and <code>read_effect</code>/'
+          '<code>value_relation</code>/<code>other</code> stay documentation-only, '
+          'all under <em>where the rest went</em> as <code>kind_not_emitted</code>.</p>',
           '<div class="scroll"><table><thead><tr><th class="pin">kind</th>'
           '<th>what it means</th></tr></thead><tbody>']
     for kind, desc in _KIND_DEFS:
@@ -1310,21 +1332,25 @@ def write_html(rows: list, path: Path, control_rows: list = ()) -> None:
           '<code>[patch.crates-io]</code> line, and its baseline must pass '
           'against the pristine PAC first.</p>',
           '<div class="scroll"><table><thead>',
-          '<tr><th class="pin grp" colspan="8"></th>',
-          '<th class="grp mode" colspan="5">whole-register gating (default)</th>',
-          '<th class="grp mode alt" colspan="5">field-level gating '
+          '<tr><th class="pin grp" colspan="3"></th>',
+          '<th class="grp inj" colspan="4">injected into this PAC '
+          '(driver-independent)</th>',
+          '<th class="grp" colspan="2">adoption</th>',
+          '<th class="grp mode" colspan="5">whole-register firings in the HAL</th>',
+          '<th class="grp mode alt" colspan="5">field-level gating mode '
           '(<code>--field-level-gating</code>)</th>',
           '<th class="grp" colspan="2"></th></tr>',
           '<tr>',
           '<th class="pin">RM</th><th>device</th><th>PAC crate</th>',
-          '<th>gates</th><th>regs</th><th>PAC compiles</th>',
+          '<th class="inj">gates</th><th class="inj">by kind</th>'
+          '<th class="inj">regs</th><th class="inj">PAC compiles</th>',
           '<th>HAL crate</th><th>baseline</th>',
-          '<th>gate fired</th><th>guarded</th><th>possible bug</th>',
-          '<th>generic friction</th><th>other</th>',
+          '<th>fired</th><th>guarded (FP)</th><th>possible bug</th>',
+          '<th>friction</th><th>other</th>',
           '<th class="alt">gates</th><th class="alt">regs</th>',
-          '<th class="alt">gate fired</th>',
-          '<th class="alt">possible bug</th><th class="alt">generic friction</th>',
-          '<th>enforcement sites</th><th>note</th>',
+          '<th class="alt">fired</th>',
+          '<th class="alt">possible bug</th><th class="alt">friction</th>',
+          '<th>sites</th><th>note</th>',
           "</tr></thead><tbody>"]
     for r in rows:
         note = r["note"] or ("" if r["hal_crate"] != "—" else "—")
@@ -1332,9 +1358,10 @@ def write_html(rows: list, path: Path, control_rows: list = ()) -> None:
             f'<tr><td class="pin">{_esc(r["RM"])}</td>'
             f'<td class="mono">{_esc(r["device"])}</td>'
             f'<td class="mono dim">{_esc(r["pac_crate"])}</td>'
-            f'<td class="num lead">{_esc(r["enforced"])}</td>'
-            f'<td class="num">{_esc(r["registers_gated"])}</td>'
-            f'<td>{_pill(r["pac_compiles"])}</td>'
+            f'<td class="num lead inj">{_esc(r["enforced"])}</td>'
+            f'<td class="mono dim inj">{_kinds_html(r["enforced_by_kind"]) or "—"}</td>'
+            f'<td class="num inj">{_esc(r["registers_gated"])}</td>'
+            f'<td class="inj">{_pill(r["pac_compiles"])}</td>'
             f'<td class="mono">{_esc(r["hal_crate"])}</td>'
             f'<td>{_pill(r["hal_baseline"])}</td>'
             f'<td class="num">{_esc(r["true_enforcement"])}</td>'

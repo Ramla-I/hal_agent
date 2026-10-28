@@ -1,0 +1,3 @@
+status,tp_fp,note,claude_review,rm,device,crate,version,tool,file,line,peripheral,register,operation,gated_field,static_verdict,count,compiled_in,precondition_fields,field_source,machine_note,constraint_ids,quote
+,,,fp,mk20d5,mk20d5,mk20dx-hal,0.2.2,svd2rust,src/lptmr.rs,128,lptmr,psrspec,write,,,1,,,,"NXP campaign (state_gate, register-only) firing; adjudicated FP in experiments/nxp_svd2rust/downstream_triage.md (driver establishes the precondition / reset-state invariant)",,
+,,,fp,mk20d5,mk20d5,mk20dx-hal,0.2.2,svd2rust,src/lptmr.rs,170,lptmr,psrspec,write,,,1,,,,"NXP campaign (state_gate, register-only) firing; adjudicated FP in experiments/nxp_svd2rust/downstream_triage.md (driver establishes the precondition / reset-state invariant)",,

@@ -82,7 +82,7 @@ def artifact_order(r) -> tuple:
             r["file"], int(r["line"] or 0))
 
 FIELDS = ["status", "tp_fp", "note", "claude_review", "rm", "device", "crate",
-          "version", "file", "line", "peripheral", "register", "operation",
+          "version", "tool", "file", "line", "peripheral", "register", "operation",
           "gated_field", "static_verdict", "count", "compiled_in",
           "precondition_fields", "field_source", "machine_note",
           "constraint_ids", "quote"]
@@ -252,6 +252,7 @@ def load_port_sites() -> list:
                     f"[{c['peripheral']}] {c['quote']}" for c in cands)
             rows.append({
                 "status": "", "tp_fp": "", "note": "",
+                "tool": "svd2rust",
                 "rm": r["rm"], "device": r["device"],
                 "crate": r["project"],
                 "version": r.get("hal") or r.get("pac") or "",
@@ -312,6 +313,7 @@ def load_measured_hal_sites() -> list:
             f = f.split(r["hal"] + "/", 1)[-1]
             rows.append({
                 "status": "", "tp_fp": "", "note": "",
+                "tool": "svd2rust",
                 "rm": r["rm"], "device": r["device"], "crate": r["hal"],
                 "version": "ported-to-0.16",
                 "file": f, "line": h.get("line", 0),
@@ -356,6 +358,7 @@ def load_sites() -> list:
                 quote = r.get("quote", "")
             rows.append({
                 "status": "", "tp_fp": "", "note": "",
+                "tool": "svd2rust",
                 "rm": r["rm"], "device": r["device"], "crate": r["crate"],
                 "version": r.get("version", ""),
                 "file": r["file"], "line": r["line"],
@@ -427,7 +430,8 @@ def aggregate(rows: list) -> list:
     multiplicity honest. Rows differing in ANY machine column stay separate."""
     out, index = [], {}
     ident_cols = [c for c in FIELDS if c not in ("status", "tp_fp", "note",
-                                                 "claude_review", "count")]
+                                                 "claude_review", "count",
+                                                 "tool")]
     for r in rows:
         k = tuple(str(r.get(c, "")) for c in ident_cols)
         prev = index.get(k)

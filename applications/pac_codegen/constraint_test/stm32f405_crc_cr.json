@@ -1,0 +1,23 @@
+{
+  "datasheet_register_abbreviation": "CR",
+  "address_offset": "0x08",
+  "reset_value": "0x00",
+  "size": 32,
+  "subfields": [
+    { "name": "RESET", "description": "Reset the CRC computation unit", "access": "w",
+      "bit_number": { "start_bit": 0, "end_bit": 0 } }
+  ],
+  "access_constraints_v2": [
+    {
+      "kind": "delay",
+      "target_register": "CR",
+      "target_operation": "write",
+      "after": { "register": "CR", "operation": "write", "value": null },
+      "duration": { "value": 4, "unit": "cycles_ahb" },
+      "before": { "register": "CR", "field": "RESET" },
+      "severity": "error",
+      "consequence": "Two writes closer than the required delay corrupt the in-flight CRC.",
+      "datasheet_text": "At least four AHB clock cycles are required between two consecutive writes to this register."
+    }
+  ]
+}

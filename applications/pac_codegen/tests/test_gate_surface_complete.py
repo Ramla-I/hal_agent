@@ -4,10 +4,10 @@
 WHAT THIS GUARDS
 ----------------
 Enforcement is a trait bound on `Reg<REG>`'s methods. That argument only holds
-if EVERY method reaching the register carries one. `_GATED_METHODS` is a table
-of exact signatures, so a method svd2rust emits and nobody adds to the table is
-silently ungated -- and the crate still compiles, still injects, still reports
-hits. Nothing fails.
+if EVERY method reaching the register carries one. The dialect gated-method
+tables (`_GATED_METHODS_MODERN` / `_GATED_METHODS_EARLY`) are exact signatures,
+so a method svd2rust emits and nobody adds to the table is silently ungated --
+the crate still compiles, still injects, still reports hits. Nothing fails.
 
 That is not hypothetical. svd2rust emits an atomic write surface behind the
 `atomics` feature::
@@ -23,10 +23,12 @@ three were missing from the table, so they wrote gated registers with no bound
 at all. `unsafe` is not a gate: it says the resulting bit pattern may be
 invalid, not that the datasheet precondition holds.
 
-So this test does not check a list of names. It reads a PRISTINE `generic.rs`,
-finds every public method that can write the register, and requires each to be
-either gated or on an explicitly justified allowlist. A new svd2rust release
-that adds a write path fails here instead of quietly widening the hole.
+So this test does not check a list of names. For EVERY pristine vendored
+`generic.rs` -- across both svd2rust dialects -- it finds every public method
+that can write the register and requires each to be either gated (present in
+that crate's dialect table) or on an explicitly justified allowlist. A new
+svd2rust release that adds a write path fails here instead of quietly widening
+the hole.
 """
 
 import re
@@ -57,10 +59,10 @@ ALLOWED_UNGATED = {
     "as_ptr",
 }
 
-# A method touches the register if it takes a writer or reader proxy, or is one
-# of the two stock methods with no closure at all.
-_WRITES = re.compile(r"&mut W<REG>")
-_READS = re.compile(r"&R<REG>|-> R<REG>")
+# A method WRITES the register if its closure takes a writer proxy. Modern
+# svd2rust spells that `&mut W<REG>`; the early dialect (0.19-0.21) spells it
+# `&mut REG::Writer` (the per-register newtype).
+_WRITES = re.compile(r"&mut W<REG>|&mut REG::Writer")
 
 
 def public_methods(generic_src: str) -> dict:
@@ -73,62 +75,113 @@ def public_methods(generic_src: str) -> dict:
     return out
 
 
+def pristine_crates():
+    """(name, src, dialect) for every vendored pristine (un-injected) crate."""
+    for fam in sorted(VENDORED.iterdir()):
+        g = fam / "src" / "generic.rs"
+        if g.is_file():
+            src = g.read_text()
+            if rust_codegen.GENERIC_SENTINEL in src:
+                continue
+            try:
+                dialect = rust_codegen.detect_dialect(src)
+            except RuntimeError:
+                continue  # a layout we do not inject into
+            yield fam.name, src, dialect
+
+
 class GateSurface(unittest.TestCase):
-    def pristine(self):
-        for fam in sorted(VENDORED.iterdir()):
-            g = fam / "src" / "generic.rs"
-            if g.is_file() and rust_codegen.GENERIC_SENTINEL not in g.read_text():
-                return fam.name, g.read_text()
-        self.skipTest("no pristine vendored generic.rs available")
+    def crates(self):
+        crates = list(pristine_crates())
+        if not crates:
+            self.skipTest("no pristine vendored generic.rs available")
+        return crates
 
     def test_every_write_path_is_gated_or_justified(self):
-        """THE REGRESSION TEST. set_bits/clear_bits/toggle_bits failed this."""
-        fam, src = self.pristine()
-        table = " ".join(sig for sig, _ in rust_codegen._GATED_METHODS)
-        missing = []
-        for name, sig in public_methods(src).items():
-            if name in ALLOWED_UNGATED:
-                continue
-            body_start = src.index(sig) + len(sig)
-            window = sig + src[body_start:body_start + 400]
-            if not _WRITES.search(window):
-                continue
-            if f"fn {name}" not in table and name not in ("read", "reset"):
-                missing.append(name)
-        self.assertEqual(missing, [],
-                         f"{fam}: write paths reaching the register with no "
-                         f"bound and no justification: {missing}")
+        """THE REGRESSION TEST. set_bits/clear_bits/toggle_bits failed this.
 
-    def test_the_atomic_surface_is_in_the_table(self):
-        """Named explicitly, so deleting them from the table is loud."""
-        table = " ".join(sig for sig, _ in rust_codegen._GATED_METHODS)
+        Runs for every vendored crate against ITS OWN dialect table, so a write
+        path that exists in one svd2rust dialect but is absent from that
+        dialect's table is caught."""
+        for fam, src, dialect in self.crates():
+            table_entries = rust_codegen._DIALECTS[dialect][0]
+            table = " ".join(sig for sig, _bound, _req in table_entries)
+            missing = []
+            for name, sig in public_methods(src).items():
+                if name in ALLOWED_UNGATED:
+                    continue
+                body_start = src.index(sig) + len(sig)
+                window = sig + src[body_start:body_start + 400]
+                if not _WRITES.search(window):
+                    continue
+                if f"fn {name}" not in table and name not in ("read", "reset"):
+                    missing.append(name)
+            self.assertEqual(missing, [],
+                             f"{fam} ({dialect}): write paths reaching the "
+                             f"register with no bound and no justification: "
+                             f"{missing}")
+
+    def test_the_atomic_surface_is_in_the_modern_table(self):
+        """Named explicitly, so deleting them from the table is loud. Atomics
+        are a modern-dialect surface (the early NXP PACs have none)."""
+        table = " ".join(sig for sig, _b, _r
+                         in rust_codegen._GATED_METHODS_MODERN)
         for name in ("set_bits", "clear_bits", "toggle_bits"):
             self.assertIn(f"fn {name}", table, f"{name} is not gated")
 
     def test_atomic_surface_is_gated_as_a_write(self):
-        for sig, bound in rust_codegen._GATED_METHODS:
+        for sig, bound, _req in rust_codegen._GATED_METHODS_MODERN:
             if "fn set_bits" in sig or "fn clear_bits" in sig \
                     or "fn toggle_bits" in sig:
                 self.assertEqual(bound, "UnconstrainedWrite")
 
-    def test_every_table_entry_matches_a_pristine_crate(self):
-        """The table is exact text. An entry that matches nothing is a gate
-        that silently never gets applied."""
-        fam, src = self.pristine()
-        for sig, _ in rust_codegen._GATED_METHODS:
-            self.assertIn(sig, src, f"{fam}: table entry matches nothing:\n{sig}")
+    def test_required_table_entries_match_a_pristine_crate_of_their_dialect(self):
+        """The table is exact text. A REQUIRED entry that matches nothing is a
+        gate that silently never gets applied; an OPTIONAL entry (atomics, some
+        from_*) must match verbatim WHEN a method of that name is present."""
+        by_dialect = {}
+        for fam, src, dialect in self.crates():
+            by_dialect.setdefault(dialect, (fam, src))
+        for dialect, (fam, src) in by_dialect.items():
+            for sig, _bound, required in rust_codegen._DIALECTS[dialect][0]:
+                name = re.search(r"fn (\w+)", sig).group(1)
+                if required:
+                    self.assertIn(sig, src,
+                                  f"{fam} ({dialect}): required table entry "
+                                  f"matches nothing:\n{sig}")
+                elif f"fn {name}" in src:
+                    self.assertIn(sig, src,
+                                  f"{fam} ({dialect}): optional entry {name} is "
+                                  f"present but its signature drifted:\n{sig}")
+
+    def test_read_signature_present_for_each_dialect(self):
+        """The dialect's stock `read` sig must exist in a crate of that dialect
+        (the patcher gives it a where clause from this exact text)."""
+        by_dialect = {}
+        for fam, src, dialect in self.crates():
+            by_dialect.setdefault(dialect, (fam, src))
+        for dialect, (fam, src) in by_dialect.items():
+            read_sig = rust_codegen._DIALECTS[dialect][1]
+            self.assertIn(read_sig, src,
+                          f"{fam} ({dialect}): stock read sig not found: {read_sig}")
 
     def test_every_table_entry_has_a_where_clause_at_its_own_indent(self):
         """The patcher splits on the where clause. It used to assume four
         spaces, which silently failed for the atomic methods -- they live in
         `mod atomic`, one level deeper."""
-        for sig, _ in rust_codegen._GATED_METHODS:
-            indent = " " * (len(sig) - len(sig.lstrip(" ")))
-            self.assertIn(f"\n{indent}where\n", sig, sig)
+        for table in (rust_codegen._GATED_METHODS_MODERN,
+                      rust_codegen._GATED_METHODS_EARLY):
+            for sig, _b, _r in table:
+                indent = " " * (len(sig) - len(sig.lstrip(" ")))
+                self.assertIn(f"\n{indent}where\n", sig, sig)
 
     def test_allowlist_entries_actually_exist(self):
-        """A stale allowlist hides a method that was renamed, not removed."""
-        fam, src = self.pristine()
+        """A stale allowlist hides a method that was renamed, not removed.
+        Checked against a modern crate (it has the full stock surface)."""
+        modern = [(fam, src) for fam, src, d in self.crates() if d == "modern"]
+        if not modern:
+            self.skipTest("no modern pristine crate vendored")
+        fam, src = modern[0]
         ours = {n for n in ALLOWED_UNGATED
                 if "witness" in n or n.endswith("_unwitnessed")}
         for name in ALLOWED_UNGATED - ours:

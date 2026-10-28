@@ -122,20 +122,31 @@ class SourceRegister:
     (``super::sr::SRrs``); otherwise it is cross-peripheral and resolves via
     the device module (``super::super::pwr::cr::CRrs``). Instance binding is
     the documented limit either way (shared module types).
+
+    A precondition that names its source register WITHOUT a peripheral prefix
+    (e.g. PUF's "write CODEINPUT only when STAT.CODEINREQ = 1") refers to the
+    target's own peripheral — qualify it there (``PUF_STAT``) rather than
+    dropping the gate. If that guess is wrong the emitted ``super::stat`` path
+    fails to compile, so the error surfaces loudly instead of silently.
     """
 
     def __init__(self, register_name: str, peripheral: str):
-        if "_" not in register_name:
-            raise ValueError(
-                f"cross-register source {register_name!r} lacks a "
-                "PERIPHERAL_REGISTER prefix; cannot resolve its module"
-            )
-        prefix, reg = register_name.split("_", 1)
+        if "_" in register_name:
+            prefix, reg = register_name.split("_", 1)
+        else:
+            prefix, reg = peripheral, register_name
         self.reg = reg.lower()
         if not re.fullmatch(r"[a-z][a-z0-9_]*", self.reg):
             raise ValueError(f"unresolvable source register {register_name!r}")
+        # Same-peripheral when the prefix names this peripheral. The prefix may
+        # carry the SOURCE instance while ``peripheral`` is the base MODULE it
+        # was remapped to (I2C1_STAT sourced from module i2c0, after the
+        # derivedFrom instance map), so compare on the digit-stripped FAMILY
+        # base too, not only the exact instance.
         base = peripheral.lower().rstrip("0123456789")
-        self.same_peripheral = prefix.lower() in (base, peripheral.lower())
+        prefix_base = prefix.lower().rstrip("0123456789")
+        self.same_peripheral = (prefix.lower() in (base, peripheral.lower())
+                                or prefix_base == base)
         self.periph_module = None if self.same_peripheral else prefix.lower()
         self.display = register_name
 
@@ -145,8 +156,11 @@ class SourceRegister:
     def var(self) -> str:
         return self.reg if self.same_peripheral else f"{self.periph_module}_{self.reg}"
 
-    def spec_path(self) -> str:
-        spec = f"{self.reg.upper()}rs"
+    def spec_path(self, spec: str = None) -> str:
+        # svd2rust names the RegisterSpec differently per version; ``spec`` is
+        # the name discovered from the PAC (see SpecResolver). Falls back to the
+        # stm32-rs `{REG}rs` form for standalone emission with no PAC to read.
+        spec = spec or f"{self.reg.upper()}rs"
         if self.same_peripheral:
             return f"super::{self.reg}::{spec}"
         return f"super::super::{self.periph_module}::{self.reg}::{spec}"
@@ -306,16 +320,22 @@ def _build_preconditions(constraint, peripheral: str) -> list["Precondition"]:
 
 # Grammar-v2 kinds the emitter can translate to Rust. Every kind listed here is
 # ENABLED by default; to stop emitting one that misbehaves, disable it (CLI
-# ``--disable-kind KIND`` or ``disabled_kinds=``). A constraint of a disabled
+# ``--disable-kind KIND``/``disabled_kinds=``), or restrict to an allowlist
+# (``--only-kind KIND``/``only=``). A constraint of a disabled
 # kind — or of a kind with no emitter yet — is SKIPPED with a warning, never
 # emitted. This is the single source of truth shared by the emitter
 # (``RegisterPlan``) and the driver (``inject_from_run.select_and_plan``).
-SUPPORTED_KINDS = frozenset({"state_gate"})
+SUPPORTED_KINDS = frozenset({"state_gate", "write_once", "sequence", "delay"})
 
 
-def enabled_kinds(disabled=None) -> frozenset:
-    """Kinds the emitter will translate, given an optional set to disable."""
-    return SUPPORTED_KINDS - frozenset(disabled or ())
+def enabled_kinds(disabled=None, only=None) -> frozenset:
+    """Kinds the emitter will translate. ``only`` (allowlist) restricts to that
+    set first; ``disabled`` (denylist) then subtracts. Both are intersected with
+    SUPPORTED_KINDS, so naming an unsupported/doc-only kind in ``only`` simply
+    contributes nothing (it has no emitter). With neither, every supported kind
+    is enabled."""
+    base = SUPPORTED_KINDS if only is None else (SUPPORTED_KINDS & frozenset(only))
+    return base - frozenset(disabled or ())
 
 
 class UnsatisfiableGate(ValueError):
@@ -373,6 +393,60 @@ class FieldGatingDisabled(ValueError):
     """
 
 
+_DELAY_UNIT = {"cycles_ahb": "AHB clock cycles", "cycles_apb": "APB clock cycles",
+               "us": "\u00b5s", "ms": "ms"}
+
+
+class DelayGate:
+    """A `before`-naming delay reduced to an ORDERING gate: the dependent write
+    is withheld and reachable only with a `#[must_use]` obligation witness
+    minted by `await_delay()`. The PAC gates the ordering (an acknowledged wait
+    sits between the trigger and the dependent write); it canNOT enforce the
+    DURATION — a wall-clock quantity with no clock knowledge, owned by the HAL,
+    exactly as for clock_gate. The witness is an obligation, not a proof."""
+
+    __slots__ = ("duration_txt", "after_desc", "docs")
+
+    def __init__(self, duration_txt, after_desc, docs):
+        self.duration_txt = duration_txt
+        self.after_desc = after_desc
+        self.docs = docs
+
+
+# A data port (CRC_DR, SPI_TXDR, USART_TDR, a FIFO) takes arbitrary caller data,
+# so a multi-step "sequence" extracted on it is NOT a handshake and must stay
+# advisory. Everything else carrying an ordered multi-step sequence is a
+# handshake and is gated -- regardless of whether the extractor filled the step
+# VALUES. The old magic-value heuristic keyed gating on "a step has a constant",
+# which lost real handshakes whose values came out null (GPIO_LCKR -> the
+# cfg_lock miss). Key on the register's IDENTITY instead: reliable, and exactly
+# the "is this a data register?" signal.
+_DATA_PORT_TAILS = frozenset({
+    "DR", "IDR", "ODR", "TDR", "RDR", "TXDR", "RXDR", "DOR", "DATA", "FIFO"})
+
+
+def _is_data_port(reg_name: str) -> bool:
+    tail = (reg_name or "").upper().rsplit("_", 1)[-1]
+    return (tail in _DATA_PORT_TAILS
+            or tail.startswith(("DINR", "DOUTR", "RXFIFO", "TXFIFO", "DHR")))
+
+
+class SeqChain:
+    """One linear write sequence on a SINGLE register. ``steps[k]`` is the
+    baked value for step k (``None`` → the caller supplies it). ``gated`` is
+    True when at least one step writes a fixed constant — the magic-value
+    heuristic's marker of a handshake register, whose raw ``write`` is withheld
+    so the ordered chain is the only path. An all-``None`` chain is a data port
+    and stays advisory (raw write open; the chain emitted only as a helper)."""
+
+    __slots__ = ("steps", "gated", "docs")
+
+    def __init__(self, steps, gated, docs):
+        self.steps = steps
+        self.gated = gated
+        self.docs = docs
+
+
 class RegisterPlan:
     """Everything the emitter needs for one constrained register."""
 
@@ -387,15 +461,26 @@ class RegisterPlan:
         self.peripheral = peripheral.lower()
         # Corpus abbreviations are often peripheral-prefixed (SPI_TXCRCR);
         # the PAC module is named by the bare register (txcrcr). Strip the
-        # prefix when it names this peripheral.
+        # prefix when it names this peripheral. The prefix may carry the SOURCE
+        # instance while `self.peripheral` is the base MODULE it was remapped to
+        # (I2C1_MSTCTL on module i2c0, after the derivedFrom instance map), so
+        # compare on the digit-stripped FAMILY base, not the exact instance.
         name = register_info.datasheet_register_abbreviation
         if "_" in name:
             prefix, rest = name.split("_", 1)
             base = self.peripheral.rstrip("0123456789")
-            if prefix.lower() in (base, self.peripheral):
+            prefix_base = prefix.lower().rstrip("0123456789")
+            if prefix.lower() in (base, self.peripheral) or prefix_base == base:
                 name = rest
         self.reg_name = name  # e.g. CR1, TXCRCR
         self.reg_lower = self.reg_name.lower()
+        # The RegisterSpec type svd2rust emitted for this register. svd2rust
+        # names it differently per version — `CR1rs` (stm32-rs), `CTRL_SPEC`
+        # (0.19–0.21), `CtrlSpec` (0.35/0.37) — so the derived `{REG}rs` here is
+        # only the stm32-rs default used by standalone emission; prune_plans_
+        # for_device overrides it with the name DISCOVERED from the PAC register
+        # file, which is authoritative for injection.
+        self.spec_type = f"{self.reg_name.upper()}rs"
         # svd2rust-operation -> ordered unique preconditions; op in
         # {"write", "read", "modify"}. "modify" is the DERIVED union bucket: a
         # write target feeds {write, modify}, a read target feeds {read, modify}.
@@ -406,6 +491,27 @@ class RegisterPlan:
         self.field_gates: dict[str, FieldGate] = {}
         self._unsatisfiable: list[str] = []
         self._redundant_fields: list[str] = []
+        # write_once: ops gated by a reset-scoped CAPABILITY (minted at most once
+        # per reset by take(), consumed by write_witnessed) rather than a runtime
+        # check. The cap type is reused as the WriteGate::Witness.
+        self.write_once_ops: set[str] = set()
+        self.write_once_reset_scope: "str | None" = None
+        # sequence: ordered single-register write chains (step k requires the
+        # step-(k-1) token). A chain with any fixed-constant step value is a
+        # handshake register (raw write withheld via forbidden_ops); an
+        # all-None chain is a data port and stays advisory (raw write open).
+        self.sequence_chains: list = []
+        self._skipped_cross_register_seq = 0
+        # delay: at most one `before`-naming delay reduced to an ordering gate
+        # (dependent write withheld, obligation witness minted by await_delay).
+        self.delay_gate = None
+        self._skipped_delay = 0
+        # Operations the feature kinds WITHHOLD outright (no marker, no gate):
+        # a write_once lock is not RMW'd, and a sequence handshake's raw write
+        # and a delay's dependent write must go through their gated path. (The
+        # contradictory-state_gate case does NOT use this — it drops the gate
+        # and leaves the op ungated; see the unsatisfiable check below.)
+        self.forbidden_ops: set[str] = set()
         # Kinds this plan will emit (all supported kinds minus any disabled).
         self._enabled_kinds = enabled_kinds(disabled_kinds)
         # Constraints skipped ONLY because field-level gating is off; they
@@ -484,7 +590,9 @@ class RegisterPlan:
                         "surface")
                     del self.field_gates[fname]
 
-        if not self.preconditions and not self.field_gates:
+        if not self.preconditions and not self.field_gates \
+                and not self.write_once_ops and not self.forbidden_ops \
+                and not self.sequence_chains and not self.delay_gate:
             if self._unsatisfiable:
                 raise UnsatisfiableGate(
                     f"{self.reg_name}: every gate dropped as unsatisfiable — "
@@ -612,6 +720,129 @@ class RegisterPlan:
             if doc and _norm_quote(doc) not in {_norm_quote(d) for d in fg.docs}:
                 fg.docs.append(doc)
 
+    def _emit_write_once(self, c, peripheral: str,
+                         field_level_gating: bool) -> None:
+        """Emit a whole-register write_once lock: gate the WRITE surface behind a
+        reset-scoped capability (minted once by `take_write_cap()`, consumed by
+        `write_witnessed`) and forbid `modify` (a lock register is written, not
+        read-modify-written). Field-scoped write_once (a lock BIT inside a shared
+        register) is out of scope — a whole-register write would clobber siblings."""
+        if c.target_fields:
+            print(
+                f"WARNING: {self.reg_name}: field-scoped write_once on "
+                f"{list(c.target_fields)} — whole-register write_once only; "
+                f"this constraint is NOT enforced.",
+                file=sys.stderr,
+            )
+            self._skipped_field_scoped += 1
+            return
+        self.write_once_ops.add("write")
+        self.write_once_reset_scope = c.reset_scope
+        self.forbidden_ops.add("modify")          # a lock register is not RMW'd
+        doc = c.datasheet_text.strip()
+        d = self.docs.setdefault("write", [])
+        if doc and _norm_quote(doc) not in {_norm_quote(x) for x in d}:
+            d.append(doc)
+
+    def _emit_sequence(self, c, peripheral: str,
+                       field_level_gating: bool) -> None:
+        """Emit a linear write-sequence chain on a single register: step k is a
+        `seq_step_{k}(prev_token) -> token_k` that performs its write and hands
+        the next token forward, so the ordered chain is the only producer of the
+        final token. Enforcement is scoped by register IDENTITY: a DATA PORT
+        (DR/TDR/RDR/FIFO…) stays ADVISORY (arbitrary caller data, raw write
+        open); every other same-register sequence is a handshake and is GATED —
+        raw `write` AND `modify` withheld so the chain is the only path —
+        whether or not the extractor filled the step values. Cross-register and
+        extra same-register sequences are deferred (skipped with a warning)."""
+        steps = list(c.steps or [])
+        if len(steps) < 2:
+            return
+        step_regs = {s.register for s in steps if s.register}
+        if len(step_regs) > 1:
+            print(
+                f"WARNING: {self.reg_name}: sequence spans {sorted(step_regs)} "
+                f"— cross-register sequence chains are deferred; this "
+                f"constraint is NOT enforced.",
+                file=sys.stderr,
+            )
+            self._skipped_cross_register_seq += 1
+            return
+        if self.sequence_chains:
+            print(
+                f"WARNING: {self.reg_name}: more than one sequence on this "
+                f"register — only the first is emitted; this one is NOT "
+                f"enforced.",
+                file=sys.stderr,
+            )
+            return
+        values = [s.value for s in steps]
+        # B3: gate every same-register sequence EXCEPT a data port (keyed on
+        # register identity, not on whether the extractor filled values).
+        gated = not _is_data_port(self.reg_name)
+        doc = (c.datasheet_text or "").strip()
+        self.sequence_chains.append(
+            SeqChain(steps=values, gated=gated, docs=[doc] if doc else []))
+        if gated:
+            # Handshake register: the ordered chain is the only path. Withhold
+            # BOTH write and modify -- a handshake must not be RMW'd outside the
+            # chain either (the cfg_lock / lpc8xx-CTS `modify` sites). Step
+            # methods write via `write_unwitnessed` internally.
+            self.forbidden_ops.add("write")
+            self.forbidden_ops.add("modify")
+
+    def _same_as_target(self, regname: str) -> bool:
+        if not regname:
+            return False
+        r, t = regname.upper(), self.reg_name.upper()
+        return r == t or r.endswith("_" + t) or r.split("_")[-1] == t
+
+    def _emit_delay(self, c, peripheral: str,
+                    field_level_gating: bool) -> None:
+        """Emit a `before`-naming delay as an ORDERING gate: withhold the
+        dependent WRITE of this register and mint a `#[must_use]` obligation
+        witness via `await_delay()`, consumed by `write_witnessed`. The PAC
+        gates only the ordering — the DURATION is a wall-clock quantity it
+        cannot perform or verify (HAL-owned, same split as clock_gate), so the
+        witness is an OBLIGATION, not proof the wait elapsed. Delays with no
+        named `before`, or whose dependent access is in another register, are
+        advisory only (the PAC cannot site the gate) — skipped with a warning.
+        `before`'s operation is not in the grammar (FieldRef carries no op), so
+        the WRITE surface is gated; the datasheet text records the real op."""
+        before = c.before
+        reason = None
+        if before is None:
+            reason = ("no `before` dependent access is named — the duration is "
+                      "a wall-clock quantity the PAC cannot verify")
+        elif not self._same_as_target(before.register):
+            reason = (f"dependent access is in another register "
+                      f"({before.register}) — cross-register delay ordering is "
+                      f"deferred")
+        if reason is None and ("write" in self.preconditions
+                               or self.write_once_ops or self.delay_gate):
+            reason = ("this register's write is already gated by another "
+                      "constraint — the delay is not additionally gated")
+        if reason is not None:
+            print(
+                f"WARNING: {self.reg_name}: delay not gated — {reason}; this "
+                f"constraint is NOT enforced (advisory).",
+                file=sys.stderr,
+            )
+            self._skipped_delay += 1
+            return
+        dur = c.duration
+        dur_txt = f"{dur.value} {_DELAY_UNIT.get(dur.unit, dur.unit)}"
+        aft = c.after
+        afd = (aft.register or "").strip()
+        aff = getattr(aft, "field", None)
+        if aff:
+            afd = f"{afd}.{aff}"
+        afop = (getattr(aft, "operation", None) or "write")
+        after_desc = f"{afop} of {afd}"
+        doc = (c.datasheet_text or "").strip()
+        self.delay_gate = DelayGate(dur_txt, after_desc, [doc] if doc else [])
+        self.forbidden_ops.add("write")
+
     def sources(self, op: str) -> list["SourceRegister"]:
         """Ordered unique cross-register sources for one operation."""
         return _unique_sources(self.preconditions[op])
@@ -638,6 +869,23 @@ class RegisterPlan:
                 del self.preconditions[op]
                 self.docs.pop(op, None)
                 removed.append(op)
+        # write_once gates the write surface; a non-writable target can't carry it.
+        if self.write_once_ops and not writable:
+            removed += sorted(self.write_once_ops)
+            self.write_once_ops.clear()
+            self.forbidden_ops.discard("modify")
+        # a sequence is a chain of writes; a non-writable target can't carry it.
+        if self.sequence_chains and not writable:
+            removed.append("sequence")
+            self.sequence_chains.clear()
+            self.forbidden_ops.discard("write")
+            self.forbidden_ops.discard("modify")
+        # a delay gate withholds the dependent write; a non-writable target
+        # can't carry it.
+        if self.delay_gate and not writable:
+            removed.append("delay")
+            self.delay_gate = None
+            self.forbidden_ops.discard("write")
         # Field gates set a field via the register's writer, and their same-
         # register preconditions read it: they need a writable (and, for such
         # preconditions, readable) register or the patched accessor / check
@@ -653,9 +901,9 @@ class RegisterPlan:
     # (peripheral module, register-spec type, gated op), for the marker walk
     def gated_ops(self) -> set[tuple[str, str, str]]:
         """Every operation whose marker must be withheld: those with a gate."""
-        spec = f"{self.reg_name.upper()}rs"
-        return {(self.peripheral, spec, op)
-                for op in set(self.preconditions)}
+        return {(self.peripheral, self.spec_type, op)
+                for op in (set(self.preconditions) | self.write_once_ops
+                           | self.forbidden_ops)}
 
     def witness_name(self, op: str) -> str:
         return f"{self.reg_name.capitalize()}{op.capitalize()}Witness"
@@ -692,11 +940,40 @@ def doc_lines(text: str, indent: str = "    ") -> list:
     return out or [f"{indent}///"]
 
 
-def generate_constraint_module(plan: RegisterPlan) -> str:
+def generate_constraint_module(plan: RegisterPlan, dialect: str = "modern",
+                               resolver: "SpecResolver" = None) -> str:
     reg = plan.reg_name
-    spec = f"super::{plan.reg_lower}::{reg.upper()}rs"
+    spec = f"super::{plan.reg_lower}::{plan.spec_type}"
     ux = f"<{spec} as crate::RegisterSpec>::Ux"
     err = plan.error_name()
+
+    def source_spec_path(s: "SourceRegister") -> str:
+        """The cross-register source's Rust path, with its RegisterSpec name
+        discovered from the PAC (falls back to `{REG}rs` when no resolver)."""
+        if resolver is None:
+            return s.spec_path()
+        module = plan.peripheral if s.same_peripheral else s.periph_module
+        return s.spec_path(resolver.spec(module, s.reg))
+
+    # The welded `*_when_ready` closures must mirror the stock write/modify/read
+    # of the target svd2rust dialect (see detect_dialect). MODERN: closures take
+    # `crate::W`/`crate::R`, write/modify return `REG::Ux`, read returns
+    # `crate::R`. EARLY (0.19–0.21): closures take the per-register
+    # `REG::Writer`/`REG::Reader` newtype, write/modify return `()`, read
+    # returns `REG::Reader`. Whatever compiles with the stock method compiles
+    # with the welded one.
+    if dialect == "early":
+        writer_ty = f"<{spec} as crate::Writable>::Writer"
+        reader_ty = f"<{spec} as crate::Readable>::Reader"
+        w_ret = f"crate::W<{spec}>"       # stock early closure returns &mut W<REG>
+        write_ok = "()"                   # write_witnessed/modify_witnessed -> ()
+        read_ok = reader_ty               # read_witnessed -> REG::Reader
+    else:
+        writer_ty = f"crate::W<{spec}>"
+        reader_ty = f"crate::R<{spec}>"
+        w_ret = f"crate::W<{spec}>"
+        write_ok = ux
+        read_ok = f"crate::R<{spec}>"
 
     lines: list[str] = []
     a = lines.append
@@ -719,6 +996,31 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         fg = plan.field_gates[fname]
         a(f"/// State witness authorizing writes to the {fg.field} field of {reg}.")
         a(f"pub struct {fg.witness_name(reg)} {{ _priv: () }}")
+    for op in sorted(plan.write_once_ops):
+        a(f"/// Write-once capability for {reg}: minted at most once per reset by "
+          f"`take_{op}_cap()`, consumed by `{op}_witnessed`.")
+        a(f"pub struct {plan.witness_name(op)} {{ _priv: () }}")
+    for chain in plan.sequence_chains:
+        n_s = len(chain.steps)
+        role = ("handshake — raw write withheld" if chain.gated
+                else "advisory ordering helper")
+        for k in range(n_s):
+            a(f"/// Sequence token: step {k + 1} of {n_s} of the {reg} write "
+              f"sequence ({role}).")
+            a(f"pub struct {reg.capitalize()}Seq{k} {{ _priv: () }}")
+    if plan.delay_gate:
+        dg = plan.delay_gate
+        a(f"/// Delay OBLIGATION for writing {reg} — minted by `await_delay()`, "
+          f"consumed by `write_witnessed`.")
+        a(f"///")
+        a(f"/// Holding it is NOT proof the delay elapsed: after the {dg.after_desc} "
+          f"the caller")
+        a(f"/// MUST wait at least {dg.duration_txt} before this write; the HAL "
+          f"performs that wait.")
+        a(f'#[must_use = "a delay obligation: you must wait at least '
+          f'{dg.duration_txt} after the {dg.after_desc} before writing {reg} — '
+          f'the HAL owns the wait"]')
+        a(f"pub struct {reg.capitalize()}DelayWitness {{ _priv: () }}")
     a("")
 
     # --- Error enum (register-scoped name: peripheral module may gain more) ---
@@ -727,15 +1029,20 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         _extend_unique(all_pres, plan.preconditions[op])
     for fname in sorted(plan.field_gates):
         _extend_unique(all_pres, plan.field_gates[fname].preconditions)
-    a("// === Error Type ===")
-    a("/// A precondition that was not satisfied at check time.")
-    a("#[derive(Debug, Clone, Copy, PartialEq, Eq)]")
-    a(f"pub enum {err} {{")
-    for p in all_pres:
-        a(f"    /// {p.describe()} was required")
-        a(f"    {p.error_variant()},")
-    a("}")
-    a("")
+    # Only emitted when something mints it via a check (preconditions / field
+    # gates). A write_once-only register has no check and no error path (its cap
+    # comes from a `take`), so an empty enum here would be unused — a hard error
+    # under svd2rust's `#![deny(dead_code)]`.
+    if all_pres:
+        a("// === Error Type ===")
+        a("/// A precondition that was not satisfied at check time.")
+        a("#[derive(Debug, Clone, Copy, PartialEq, Eq)]")
+        a(f"pub enum {err} {{")
+        for p in all_pres:
+            a(f"    /// {p.describe()} was required")
+            a(f"    {p.error_variant()},")
+        a("}")
+        a("")
 
     # --- Gate impls: the witness types ride on Write/Modify/ReadGate ---
     a("// === Gates ===")
@@ -744,11 +1051,20 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a(f"impl crate::{gate} for {spec} {{")
         a(f"    type Witness = {plan.witness_name(op)};")
         a("}")
+    for op in sorted(plan.write_once_ops):
+        gate = {"write": "WriteGate", "modify": "ModifyGate"}[op]
+        a(f"impl crate::{gate} for {spec} {{")
+        a(f"    type Witness = {plan.witness_name(op)};")
+        a("}")
+    if plan.delay_gate:
+        a(f"impl crate::WriteGate for {spec} {{")
+        a(f"    type Witness = {reg.capitalize()}DelayWitness;")
+        a("}")
     a("")
 
     def _src_params(srcs) -> str:
         return "".join(
-            f", {s.var()}: &crate::Reg<{s.spec_path()}>" for s in srcs)
+            f", {s.var()}: &crate::Reg<{source_spec_path(s)}>" for s in srcs)
 
     def src_params(op: str) -> str:
         return _src_params(plan.sources(op))
@@ -793,6 +1109,34 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("    }")
         a("")
 
+    # write_once: mint the capability at most once per reset (a reset-zeroed
+    # AtomicBool — same scope as the hardware lock), consumed by `<op>_witnessed`.
+    for op in sorted(plan.write_once_ops):
+        w = plan.witness_name(op)
+        a(f"    /// Take the one-shot {reg} {op} capability (at most once per reset);")
+        a(f"    /// pass it to `{op}_witnessed`. Returns `None` if already taken.")
+        a("    ///")
+        a("    /// # Constraint")
+        for doc in plan.docs.get(op, []):
+            for line in doc_lines(doc):
+                a(line)
+        if plan.write_once_reset_scope == "power_cycle":
+            a("    ///")
+            a("    /// NOTE: reset_scope is `power_cycle` — after a warm/system reset this")
+            a("    /// cap becomes takeable again while the hardware lock may still hold;")
+            a("    /// the resulting write is ignored by hardware (benign).")
+        a("    #[inline(always)]")
+        a(f"    pub fn take_{op}_cap(&self) -> Option<{w}> {{")
+        a("        static TAKEN: core::sync::atomic::AtomicBool =")
+        a("            core::sync::atomic::AtomicBool::new(false);")
+        a("        if TAKEN.swap(true, core::sync::atomic::Ordering::Relaxed) {")
+        a("            None")
+        a("        } else {")
+        a(f"            Some({w} {{ _priv: () }})")
+        a("        }")
+        a("    }")
+        a("")
+
     # *_when_ready: check + use welded into one call
     if "write" in plan.preconditions:
         a("    /// Check and write in one call — the witness never escapes.")
@@ -803,9 +1147,9 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("    /// that itself mutates a precondition, or an interrupt, can")
         a("    /// change it before the store.")
         a("    #[inline(always)]")
-        a(f"    pub fn write_when_ready<F>(&self, f: F{src_params('write')}) -> Result<{ux}, {err}>")
+        a(f"    pub fn write_when_ready<F>(&self, f: F{src_params('write')}) -> Result<{write_ok}, {err}>")
         a("    where")
-        a(f"        F: FnOnce(&mut crate::W<{spec}>) -> &mut crate::W<{spec}>,")
+        a(f"        F: FnOnce(&mut {writer_ty}) -> &mut {w_ret},")
         a("    {")
         a(f"        let witness = self.check_write_ready({src_args('write').lstrip(', ')})?;"
           if plan.sources("write") else
@@ -820,9 +1164,9 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         a("    /// not an atomic check-and-write: the read and your closure run")
         a("    /// before the store.")
         a("    #[inline(always)]")
-        a(f"    pub fn modify_when_ready<F>(&self, f: F{src_params('modify')}) -> Result<{ux}, {err}>")
+        a(f"    pub fn modify_when_ready<F>(&self, f: F{src_params('modify')}) -> Result<{write_ok}, {err}>")
         a("    where")
-        a(f"        for<'w> F: FnOnce(&crate::R<{spec}>, &'w mut crate::W<{spec}>) -> &'w mut crate::W<{spec}>,")
+        a(f"        for<'w> F: FnOnce(&{reader_ty}, &'w mut {writer_ty}) -> &'w mut {w_ret},")
         a("    {")
         a(f"        let witness = self.check_modify_ready({src_args('modify').lstrip(', ')})?;"
           if plan.sources("modify") else
@@ -833,7 +1177,7 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
     if "read" in plan.preconditions:
         a("    /// Check and read in one call — the witness never escapes.")
         a("    #[inline(always)]")
-        a(f"    pub fn read_when_ready(&self{src_params('read')}) -> Result<crate::R<{spec}>, {err}> {{")
+        a(f"    pub fn read_when_ready(&self{src_params('read')}) -> Result<{read_ok}, {err}> {{")
         a(f"        let witness = self.check_read_ready({src_args('read').lstrip(', ')})?;")
         a("        Ok(self.read_witnessed(witness))")
         a("    }")
@@ -862,6 +1206,81 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
         emit_check_body(w, pres, srcs)
         a("    }")
         a("")
+
+    # --- Sequence chains: step k performs its write and yields the step-k
+    # token, which step k+1 consumes. For a gated (handshake) chain the raw
+    # write is withheld, so each step writes via `write_unwitnessed`; for an
+    # advisory chain the raw write stays open and the step uses stock `write`.
+    for chain in plan.sequence_chains:
+        n_s = len(chain.steps)
+        for k, val in enumerate(chain.steps):
+            tok = f"{reg.capitalize()}Seq{k}"
+            params = ""
+            if k > 0:
+                params += f", _prev: {reg.capitalize()}Seq{k - 1}"
+            if val is None:
+                params += f", value: {ux}"
+            valexpr = f"0x{val:x}" if val is not None else "value"
+            a(f"    /// Sequence step {k + 1} of {n_s} for {reg}"
+              + (f" (writes {hex(val)})." if val is not None
+                 else " (caller supplies the value)."))
+            if k == 0:
+                a("    ///")
+                if chain.gated:
+                    a("    /// The raw `write` of this register is withheld; this "
+                      "ordered chain is")
+                    a("    /// the only safe path. Each step consumes the previous "
+                      "step's token.")
+                else:
+                    a("    /// Advisory: the raw `write` stays available — this "
+                      "helper only")
+                    a("    /// documents and eases the required order (each step "
+                      "consumes the previous token).")
+                for d in chain.docs:
+                    a("    ///")
+                    a("    /// # Constraint")
+                    for line in doc_lines(d):
+                        a(line)
+            a("    #[inline(always)]")
+            a(f"    pub fn seq_step_{k}(&self{params}) -> {tok} {{")
+            if chain.gated:
+                a("        // SAFETY: sanctioned sequence step; the token chain "
+                  "enforces order.")
+                a(f"        unsafe {{ self.write_unwitnessed(|w| unsafe {{ "
+                  f"w.bits({valexpr}) }}); }}")
+            else:
+                a(f"        self.write(|w| unsafe {{ w.bits({valexpr}) }});")
+            a(f"        {tok} {{ _priv: () }}")
+            a("    }")
+            a("")
+
+    # --- Delay: mint the obligation witness that the (withheld) dependent
+    # write requires. The PAC gates ordering only; the WAIT is the HAL's.
+    if plan.delay_gate:
+        dg = plan.delay_gate
+        w = f"{reg.capitalize()}DelayWitness"
+        a(f"    /// Acknowledge the post-`{dg.after_desc}` delay and obtain the "
+          f"obligation")
+        a(f"    /// witness required to write {reg} (its raw `write` is withheld).")
+        a("    ///")
+        a("    /// # OBLIGATION (not proof)")
+        a(f"    /// This does NOT verify the wait. After the {dg.after_desc} you "
+          f"MUST wait at")
+        a(f"    /// least {dg.duration_txt} before calling `write_witnessed`; "
+          f"performing that")
+        a("    /// wait is the HAL's responsibility. The PAC gates only the "
+          "ORDERING.")
+        for d in dg.docs:
+            a("    ///")
+            a("    /// # Constraint")
+            for line in doc_lines(d):
+                a(line)
+        a("    #[inline(always)]")
+        a("    #[must_use]")
+        a(f"    pub fn await_delay(&self) -> {w} {{")
+        a(f"        {w} {{ _priv: () }}")
+        a("    }")
+        a("")
     a("}")
     return "\n".join(lines) + "\n"
 
@@ -870,15 +1289,30 @@ def generate_constraint_module(plan: RegisterPlan) -> str:
 # generic.rs patch: gate stock methods, add witnessed/unwitnessed surface
 # --------------------------------------------------------------------------- #
 
-# (method signature to find — must contain a where clause, where-bound to add).
-# `read` and `reset` have no stock where clause and are handled separately.
-_GATED_METHODS = [
-    ("    pub fn write<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
-    ("    pub fn from_write<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite"),
-    ("    pub unsafe fn write_with_zero<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
-    ("    pub unsafe fn from_write_with_zero<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite"),
-    ("    pub fn modify<F>(&self, f: F) -> REG::Ux\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> &'w mut W<REG>,", "UnconstrainedModify"),
-    ("    pub fn from_modify<F, T>(&self, f: F) -> T\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> T,", "UnconstrainedModify"),
+# (method signature to find — must contain a where clause, where-bound to add,
+# whether the method MUST be present once this dialect is selected). `read` and
+# `reset` have no stock where clause and are handled separately.
+#
+# svd2rust's generated `generic.rs` comes in two dialects across the PACs we
+# inject. MODERN (svd2rust >=~0.30, including the headerless stm32-rs output):
+# write/modify return `-> REG::Ux`, the closure takes `&mut W<REG>`/`&R<REG>`,
+# and the `from_*` + atomic surface exists. EARLY (svd2rust 0.19–0.21, the older
+# NXP PACs — lpc55, ke04, s32k1xx): write/modify have no return, the closure
+# takes `&mut REG::Writer`/`&REG::Reader`, there is no `from_*`/atomic surface,
+# and there is no generic `Reg<REG>` Debug impl. `read` differs too (`-> R<REG>`
+# vs `-> REG::Reader`). The emitter detects the dialect from the stock `write`
+# signature and uses the matching table + witnessed-surface template.
+#
+# `required=False` marks a method that may be absent WITHIN a dialect (atomics
+# are behind svd2rust's `atomics` feature; some 0.3x lines omit them): patched
+# only when present, never a drift error when absent.
+_GATED_METHODS_MODERN = [
+    ("    pub fn write<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", True),
+    ("    pub fn from_write<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite", True),
+    ("    pub unsafe fn write_with_zero<F>(&self, f: F) -> REG::Ux\n    where\n        F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", True),
+    ("    pub unsafe fn from_write_with_zero<F, T>(&self, f: F) -> T\n    where\n        F: FnOnce(&mut W<REG>) -> T,", "UnconstrainedWrite", True),
+    ("    pub fn modify<F>(&self, f: F) -> REG::Ux\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> &'w mut W<REG>,", "UnconstrainedModify", True),
+    ("    pub fn from_modify<F, T>(&self, f: F) -> T\n    where\n        for<'w> F: FnOnce(&R<REG>, &'w mut W<REG>) -> T,", "UnconstrainedModify", True),
     # THE ATOMIC WRITE SURFACE. svd2rust emits set_bits/clear_bits/toggle_bits
     # behind the `atomics` feature: a single atomic_or/and/xor instead of a
     # read-modify-write, which is what a driver reaches for when two contexts
@@ -892,13 +1326,45 @@ _GATED_METHODS = [
     # (stm32g4xx-hal rng.rs:135, on RNG_SR, which no manual constrains) and no
     # measured driver enables the feature. A hole in the encoding, not a lost
     # finding -- and exactly the hole that matters for a driver staying inside
-    # the typed API, because this IS the typed API.
+    # the typed API, because this IS the typed API. OPTIONAL: the 0.35/0.37 NXP
+    # lines (mimxrt, mk20) omit the atomic surface entirely.
     #
     # Eight-space indent: these live in `mod atomic`, one level deeper.
-    ("        pub unsafe fn set_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
-    ("        pub unsafe fn clear_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
-    ("        pub unsafe fn toggle_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite"),
+    ("        pub unsafe fn set_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", False),
+    ("        pub unsafe fn clear_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", False),
+    ("        pub unsafe fn toggle_bits<F>(&self, f: F)\n        where\n            F: FnOnce(&mut W<REG>) -> &mut W<REG>,", "UnconstrainedWrite", False),
 ]
+
+# EARLY dialect (svd2rust 0.19–0.21): closures take the per-register newtype
+# `REG::Writer`/`REG::Reader`, write/modify return `()`, no `from_*`/atomics.
+_GATED_METHODS_EARLY = [
+    ("    pub fn write<F>(&self, f: F)\n    where\n        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,", "UnconstrainedWrite", True),
+    ("    pub unsafe fn write_with_zero<F>(&self, f: F)\n    where\n        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,", "UnconstrainedWrite", True),
+    ("    pub fn modify<F>(&self, f: F)\n    where\n        for<'w> F: FnOnce(&REG::Reader, &'w mut REG::Writer) -> &'w mut W<REG>,", "UnconstrainedModify", True),
+]
+
+# dialect name -> (gated-method table, stock `read` signature, has generic
+# `Reg<REG>` Debug impl). The `read` sig and Debug presence are the other two
+# places generic.rs diverges between dialects.
+_DIALECTS = {
+    "modern": (_GATED_METHODS_MODERN, "    pub fn read(&self) -> R<REG> {", True),
+    "early": (_GATED_METHODS_EARLY, "    pub fn read(&self) -> REG::Reader {", False),
+}
+
+
+def detect_dialect(generic_src: str) -> str:
+    """Which svd2rust generic.rs dialect this crate was generated in, decided
+    by the stock `write` signature (the clearest discriminator). Raises if
+    neither known dialect's `write` is present — a silent mismatch would gate
+    nothing, so it must fail loudly."""
+    for name, (table, _read, _dbg) in _DIALECTS.items():
+        if table[0][0] in generic_src:
+            return name
+    raise RuntimeError(
+        "generic.rs: unrecognized svd2rust dialect — no known stock `write` "
+        "signature (modern `-> REG::Ux` / early `REG::Writer`) was found. A new "
+        "svd2rust template needs a dialect entry in _DIALECTS before injection."
+    )
 
 _GENERIC_ADDITIONS = GENERIC_SENTINEL + """
 
@@ -1144,6 +1610,227 @@ impl<REG: Readable> Reg<REG> {
 """
 
 
+# The EARLY-dialect (svd2rust 0.19–0.21) witnessed/unwitnessed surface. The
+# marker + gate traits are identical to the modern template (they constrain
+# `Writable`/`Readable`, which both dialects define); only the method BODIES
+# differ — early svd2rust passes the per-register `REG::Writer`/`REG::Reader`
+# newtype to the closure, returns `()` from write/modify, builds the writer
+# with `REG::reset_value()` / `REG::Ux::default()`, and has no safe-write
+# field bitmaps. Each witnessed method mirrors its early stock method verbatim,
+# plus the witness parameter and gate bound, so a closure that compiles against
+# the stock method compiles here too.
+_GENERIC_ADDITIONS_EARLY = GENERIC_SENTINEL + """
+
+/// Marker: this register's WRITE surface needs no witness. Emitted for every
+/// unconstrained register; ABSENT on write-constrained ones, so the stock
+/// methods do not exist for them and E0277 points at the offending call.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is write-constrained by its datasheet",
+    label = "this register requires a witness: call `write_witnessed(f, witness)` or `write_when_ready(f)`; obtain the witness via `check_write_ready()`; bypass only with `unsafe write_unwitnessed`",
+)]
+pub trait UnconstrainedWrite: Writable {}
+
+/// Marker: this register's MODIFY surface needs no witness.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is modify-constrained by its datasheet",
+    label = "call `modify_witnessed(f, witness)` or `modify_when_ready(f)`; obtain the witness via `check_modify_ready()`; bypass only with `unsafe modify_unwitnessed`",
+)]
+pub trait UnconstrainedModify: Readable + Writable {}
+
+/// Marker: this register's READ surface needs no witness.
+#[diagnostic::on_unimplemented(
+    message = "`{Self}` is read-constrained by its datasheet",
+    label = "call `read_witnessed(witness)`; bypass only with `unsafe read_unwitnessed`",
+)]
+pub trait UnconstrainedRead: Readable {}
+
+/// Implemented ONLY by write-constrained registers; carries the witness type
+/// their gated write surface consumes.
+pub trait WriteGate: Writable {
+    /// The witness consumed by `write_witnessed`/`reset_witnessed`/....
+    type Witness;
+}
+
+/// Implemented ONLY by modify-constrained registers.
+pub trait ModifyGate: Readable + Writable {
+    /// The witness consumed by `modify_witnessed`.
+    type Witness;
+}
+
+/// Implemented ONLY by read-constrained registers.
+pub trait ReadGate: Readable {
+    /// The witness consumed by `read_witnessed`.
+    type Witness;
+}
+
+impl<REG: Resettable + Writable> Reg<REG> {
+    /// Witnessed `write`: consumes the witness minted by the register's
+    /// `check_write_ready()`. Prefer `write_when_ready`, which welds check and
+    /// write into one call so the witness never escapes.
+    #[inline(always)]
+    pub fn write_witnessed<F>(&self, f: F, _witness: <REG as WriteGate>::Witness)
+    where
+        REG: WriteGate,
+        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,
+    {
+        self.register.set(
+            f(&mut REG::Writer::from(W {
+                bits: REG::reset_value(),
+                _reg: marker::PhantomData,
+            }))
+            .bits,
+        );
+    }
+
+    /// Witnessed `reset`.
+    #[inline(always)]
+    pub fn reset_witnessed(&self, _witness: <REG as WriteGate>::Witness)
+    where
+        REG: WriteGate,
+    {
+        self.register.set(REG::reset_value())
+    }
+
+    /// The sanctioned escape hatch: write WITHOUT the datasheet-required
+    /// witness. Greppable; the caller accepts responsibility for violating
+    /// the documented hardware procedure (errata, bring-up, etc.).
+    ///
+    /// # Safety
+    ///
+    /// The datasheet forbids this write unless its preconditions hold; the
+    /// caller must establish them by other means.
+    #[inline(always)]
+    pub unsafe fn write_unwitnessed<F>(&self, f: F)
+    where
+        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,
+    {
+        self.register.set(
+            f(&mut REG::Writer::from(W {
+                bits: REG::reset_value(),
+                _reg: marker::PhantomData,
+            }))
+            .bits,
+        );
+    }
+}
+
+impl<REG: Writable> Reg<REG>
+where
+    REG::Ux: Default,
+{
+    /// Witnessed `write_with_zero`. Still `unsafe`: the zero-base bit pattern
+    /// may be invalid for the register (svd2rust's own contract).
+    ///
+    /// # Safety
+    ///
+    /// Unsafe to use with registers which don't allow to write 0.
+    #[inline(always)]
+    pub unsafe fn write_with_zero_witnessed<F>(&self, f: F, _witness: <REG as WriteGate>::Witness)
+    where
+        REG: WriteGate,
+        F: FnOnce(&mut REG::Writer) -> &mut W<REG>,
+    {
+        self.register.set(
+            (*f(&mut REG::Writer::from(W {
+                bits: REG::Ux::default(),
+                _reg: marker::PhantomData,
+            })))
+            .bits,
+        );
+    }
+}
+
+impl<REG: Readable + Writable> Reg<REG> {
+    /// Witnessed `modify`: consumes the witness minted by the register's
+    /// `check_modify_ready()`. Prefer `modify_when_ready`.
+    #[inline(always)]
+    pub fn modify_witnessed<F>(&self, f: F, _witness: <REG as ModifyGate>::Witness)
+    where
+        REG: ModifyGate,
+        for<'w> F: FnOnce(&REG::Reader, &'w mut REG::Writer) -> &'w mut W<REG>,
+    {
+        let bits = self.register.get();
+        self.register.set(
+            f(
+                &REG::Reader::from(R {
+                    bits,
+                    _reg: marker::PhantomData,
+                }),
+                &mut REG::Writer::from(W {
+                    bits,
+                    _reg: marker::PhantomData,
+                }),
+            )
+            .bits,
+        );
+    }
+
+    /// Escape hatch for the modify surface.
+    ///
+    /// # Safety
+    ///
+    /// The datasheet forbids this read-modify-write unless its preconditions
+    /// hold; the caller must establish them by other means.
+    #[inline(always)]
+    pub unsafe fn modify_unwitnessed<F>(&self, f: F)
+    where
+        for<'w> F: FnOnce(&REG::Reader, &'w mut REG::Writer) -> &'w mut W<REG>,
+    {
+        let bits = self.register.get();
+        self.register.set(
+            f(
+                &REG::Reader::from(R {
+                    bits,
+                    _reg: marker::PhantomData,
+                }),
+                &mut REG::Writer::from(W {
+                    bits,
+                    _reg: marker::PhantomData,
+                }),
+            )
+            .bits,
+        );
+    }
+}
+
+impl<REG: Readable> Reg<REG> {
+    /// Witnessed `read` (only exists for read-constrained registers, whose
+    /// witnesses come from cross-register checks).
+    #[inline(always)]
+    pub fn read_witnessed(&self, _witness: <REG as ReadGate>::Witness) -> REG::Reader
+    where
+        REG: ReadGate,
+    {
+        REG::Reader::from(R {
+            bits: self.register.get(),
+            _reg: marker::PhantomData,
+        })
+    }
+
+    /// Escape hatch for the read surface.
+    ///
+    /// # Safety
+    ///
+    /// The datasheet constrains reads of this register; the caller must
+    /// establish the preconditions by other means.
+    #[inline(always)]
+    pub unsafe fn read_unwitnessed(&self) -> REG::Reader {
+        REG::Reader::from(R {
+            bits: self.register.get(),
+            _reg: marker::PhantomData,
+        })
+    }
+}
+"""
+
+# svd2rust dialect -> the witnessed/unwitnessed surface appended to its
+# generic.rs (see detect_dialect / _DIALECTS).
+_GENERIC_ADDITIONS_BY_DIALECT = {
+    "modern": _GENERIC_ADDITIONS,
+    "early": _GENERIC_ADDITIONS_EARLY,
+}
+
+
 # marker trait -> the operation it gates, so a bound can be skipped when this
 # crate gates nothing of that operation.
 _BOUND_OP = {"UnconstrainedRead": "read", "UnconstrainedWrite": "write",
@@ -1151,11 +1838,14 @@ _BOUND_OP = {"UnconstrainedRead": "read", "UnconstrainedWrite": "write",
 ALL_OPS = frozenset(_BOUND_OP.values())
 
 
-def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
+def patch_generic_rs(generic_path: Path, gated_ops=None, dialect=None) -> None:
     """Gate the stock methods and append the witnessed/unwitnessed surface.
 
     ``gated_ops`` (default: all three) is the set of operations this crate
     ACTUALLY gates. A bound is emitted only for those.
+
+    ``dialect`` selects the svd2rust generic.rs template (``modern`` / ``early``,
+    see ``_DIALECTS``); ``None`` auto-detects from the stock `write` signature.
 
     Why it matters: a bound on an operation that no register gates enforces
     nothing — every register carries the marker — yet every *generic*
@@ -1166,8 +1856,10 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
     flat cost of installing the encoding, and cannot weaken enforcement: an
     operation with no gate has nothing to enforce.
 
-    The drift checks still run for every signature, gated or not — a template
-    that moved must fail loudly regardless of what this crate happens to gate.
+    The drift checks still run for every REQUIRED signature of the selected
+    dialect, gated or not — a template that moved must fail loudly regardless
+    of what this crate happens to gate. Optional methods (atomics, some
+    `from_*`) are patched only when present; absent ones are not drift.
     """
     ops = ALL_OPS if gated_ops is None else frozenset(gated_ops)
     content = generic_path.read_text()
@@ -1177,21 +1869,24 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
             "one-shot from a pristine PAC (restore it, e.g. get_pac.py --force)"
         )
 
-    # `read` has no where clause in stock svd2rust; give it one.
-    read_sig = "    pub fn read(&self) -> R<REG> {"
+    if dialect is None:
+        dialect = detect_dialect(content)
+    table, read_sig, has_dbg = _DIALECTS[dialect]
+
+    # `read` has no where clause in stock svd2rust; give it one. The return
+    # type differs by dialect (`-> R<REG>` modern, `-> REG::Reader` early), so
+    # the replacement is built from the matched signature (minus its ` {`).
     if read_sig not in content:
         raise RuntimeError("generic.rs drift: stock `read` signature not found")
     if "read" in ops:
+        read_head = read_sig[:-len(" {")]
         content = content.replace(
             read_sig,
-            "    pub fn read(&self) -> R<REG>\n"
-            "    where\n"
-            "        REG: UnconstrainedRead,\n"
-            "    {",
+            read_head + "\n    where\n        REG: UnconstrainedRead,\n    {",
             1,
         )
 
-    # `reset` likewise.
+    # `reset` likewise (identical in both dialects).
     reset_sig = "    pub fn reset(&self) {"
     if reset_sig not in content:
         raise RuntimeError("generic.rs drift: stock `reset` signature not found")
@@ -1206,7 +1901,7 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
         )
 
     # The rest already have a where clause: require the marker first.
-    for sig, bound in _GATED_METHODS:
+    for sig, bound, required in table:
         # The indent is derived, not assumed to be four spaces: the atomic
         # methods sit inside `mod atomic`, one level deeper, and a hardcoded
         # "\n    where\n" simply fails to split them.
@@ -1217,7 +1912,10 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
                                f"at its own indent:\n{sig}")
         head, tail = sig.split(marker, 1)
         if sig not in content:
-            raise RuntimeError(f"generic.rs drift: signature not found:\n{sig}")
+            if required:
+                raise RuntimeError(
+                    f"generic.rs drift: required signature not found:\n{sig}")
+            continue  # optional method (atomics / some from_*) absent here
         if _BOUND_OP[bound] not in ops:
             continue
         content = content.replace(
@@ -1227,22 +1925,24 @@ def patch_generic_rs(generic_path: Path, gated_ops=None) -> None:
         )
 
     # The generic Debug impl performs a read; it now needs the read marker.
-    dbg = ("impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
-           "where\n"
-           "    R<REG>: core::fmt::Debug,")
-    if dbg not in content:
-        raise RuntimeError("generic.rs drift: Debug impl not found")
-    if "read" in ops:
-        content = content.replace(
-            dbg,
-            "impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
-            "where\n"
-            "    R<REG>: core::fmt::Debug,\n"
-            "    REG: UnconstrainedRead,",
-            1,
-        )
+    # The early dialect emits no generic `Reg<REG>` Debug impl, so skip it there.
+    if has_dbg:
+        dbg = ("impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
+               "where\n"
+               "    R<REG>: core::fmt::Debug,")
+        if dbg not in content:
+            raise RuntimeError("generic.rs drift: Debug impl not found")
+        if "read" in ops:
+            content = content.replace(
+                dbg,
+                "impl<REG: Readable> core::fmt::Debug for crate::generic::Reg<REG>\n"
+                "where\n"
+                "    R<REG>: core::fmt::Debug,\n"
+                "    REG: UnconstrainedRead,",
+                1,
+            )
 
-    content += "\n" + _GENERIC_ADDITIONS
+    content += "\n" + _GENERIC_ADDITIONS_BY_DIALECT[dialect]
     generic_path.write_text(content)
 
 
@@ -1377,6 +2077,35 @@ class DeviceLayout:
             yield rel.parts[0].removesuffix(".rs"), f
 
 
+_REGISTER_SPEC_RE = re.compile(r"impl crate::RegisterSpec for (\w+)")
+
+
+class SpecResolver:
+    """(peripheral module, register-lower) -> the RegisterSpec type svd2rust
+    actually generated, discovered from the register file's
+    ``impl crate::RegisterSpec for <NAME>``.
+
+    svd2rust names that type differently across versions — ``CR1rs`` (stm32-rs),
+    ``CTRL_SPEC`` (0.19–0.21), ``CtrlSpec`` (0.35/0.37). Discovering it is
+    robust where replicating each version's identifier mangling is not. Falls
+    back to the stm32-rs ``{REG}rs`` form when the file is unreadable."""
+
+    def __init__(self, device_dir: Path):
+        self.layout = DeviceLayout(device_dir)
+        self._cache: dict = {}
+
+    def spec(self, periph_module: str, reg_lower: str) -> str:
+        key = (periph_module.lower(), reg_lower.lower())
+        if key not in self._cache:
+            f = self.layout.register_file(periph_module, reg_lower)
+            name = None
+            if f.is_file():
+                m = _REGISTER_SPEC_RE.search(f.read_text())
+                name = m.group(1) if m else None
+            self._cache[key] = name or f"{reg_lower.upper()}rs"
+        return self._cache[key]
+
+
 def add_marker_impls(device_dir: Path, gated: set[tuple[str, str, str]],
                      skip_marked: bool = False) -> int:
     """Append Unconstrained* marker impls to every register file. Returns the
@@ -1418,7 +2147,9 @@ def add_marker_impls(device_dir: Path, gated: set[tuple[str, str, str]],
 
 
 def inject_constraints_module(peripheral_file: Path,
-                              plans: list[RegisterPlan]) -> None:
+                              plans: list[RegisterPlan],
+                              dialect: str = "modern",
+                              resolver: "SpecResolver" = None) -> None:
     """Append ONE `pub mod constraints { ... }` holding every constrained
     register of this peripheral (a peripheral may have several — e.g. F1's
     AFIO gates both EVCR and MAPR; type names are register-scoped so the
@@ -1469,7 +2200,7 @@ def inject_constraints_module(peripheral_file: Path,
         text = text.replace(type_line, caveat + type_line, 1)
     parts = []
     for i, p in enumerate(plans):
-        code = generate_constraint_module(p)
+        code = generate_constraint_module(p, dialect=dialect, resolver=resolver)
         if i > 0:
             # `//!` inner docs are only legal at the top of the module; demote
             # subsequent registers' headers to plain comments.
@@ -1499,6 +2230,12 @@ def inject_constraints_module(peripheral_file: Path,
 # ground truth, exactly as it is for the access mode above.
 _READER_DECL_RE = re.compile(
     r"^pub type (\w+)_R = crate::(BitReader|FieldReader)\b", re.M)
+# EARLY dialect (svd2rust 0.19–0.21) spells the reader as a tuple STRUCT and
+# encodes bit-ness in the first type argument: `FieldReader<bool, ..>` is a
+# 1-bit field, `FieldReader<u8/u16/u32, ..>` is multi-bit (there is no separate
+# BitReader type in that line).
+_READER_DECL_STRUCT_RE = re.compile(
+    r"^pub struct (\w+)_R\(crate::(BitReader|FieldReader)(?:<\s*(\w+))?", re.M)
 # svd2rust de-duplicates identical readers by re-export, in three shapes:
 #   pub use HSION_R as PLLON_R;                        (same file)
 #   pub use super::exticr1::EXTI0_R as EXTI4_R;        (sibling register)
@@ -1528,6 +2265,13 @@ class ReaderShapes:
                 decls = {m.group(1).lower():
                          ("bit" if m.group(2) == "BitReader" else "field")
                          for m in _READER_DECL_RE.finditer(text)}
+                # EARLY struct form: bit when it is a BitReader or a
+                # FieldReader<bool, ..>, otherwise multi-bit.
+                for m in _READER_DECL_STRUCT_RE.finditer(text):
+                    decls.setdefault(
+                        m.group(1).lower(),
+                        "bit" if (m.group(2) == "BitReader"
+                                  or m.group(3) == "bool") else "field")
                 aliases = {}
                 for m in _READER_ALIAS_RE.finditer(text):
                     segs = [s for s in m.group(1).split("::") if s]
@@ -1610,6 +2354,17 @@ def _prune_plan_for_readers(shapes: ReaderShapes, plan: RegisterPlan) -> list[st
 
 _PERIPH_ALIAS_RE = re.compile(
     r"^pub type (\w+) = crate::Periph<(\w+)::RegisterBlock", re.M)
+# Flat single-device crates (lpc55, ke04, s32k1xx — svd2rust 0.19–0.21) express
+# the instance->module relation in lib.rs, not a device mod.rs, and as an
+# explicit struct + Deref rather than a Periph alias:
+#
+#     pub struct I2C1 { ... }
+#     impl Deref for I2C1 { type Target = i2c0::RegisterBlock; }
+#
+# The base instance (I2C0 -> i2c0) uses the same form, so this one regex yields
+# a complete instance->module map including identities.
+_PERIPH_DEREF_RE = re.compile(
+    r"impl Deref for (\w+)\s*\{\s*type Target = (?:crate::)?(\w+)::RegisterBlock")
 
 
 def peripheral_instance_map(device_dir: Path) -> dict:
@@ -1627,14 +2382,32 @@ def peripheral_instance_map(device_dir: Path) -> dict:
     180 of 200 such drops in the STM sweep.
 
     Identity entries are included (``i2c1 -> i2c1``), so this is a complete
-    instance->module map, not just the aliases. Empty when ``mod.rs`` is
-    absent (other PAC layouts); callers then fall back to the file check.
+    instance->module map, not just the aliases.
+
+    Two layouts are supported. MULTI-DEVICE (stm32-rs): a device ``mod.rs``
+    carries ``pub type``/``Periph`` aliases. FLAT single-device (the older NXP
+    PACs — lpc55, ke04, s32k1xx): no ``mod.rs``; the relation is in ``lib.rs``
+    as ``impl Deref for I2C1 { type Target = i2c0::RegisterBlock }`` (and/or the
+    ``Periph`` alias). Empty only when neither is found (unknown layout);
+    callers then fall back to the file check.
     """
     mod_rs = device_dir / "mod.rs"
-    if not mod_rs.is_file():
+    if mod_rs.is_file():
+        return {m.group(1).lower(): m.group(2).lower()
+                for m in _PERIPH_ALIAS_RE.finditer(mod_rs.read_text())}
+    # Flat single-device crate: read lib.rs (device_dir IS src/ for `--device .`;
+    # fall back to the parent for safety).
+    lib_rs = device_dir / "lib.rs"
+    if not lib_rs.is_file():
+        lib_rs = device_dir.parent / "lib.rs"
+    if not lib_rs.is_file():
         return {}
-    return {m.group(1).lower(): m.group(2).lower()
-            for m in _PERIPH_ALIAS_RE.finditer(mod_rs.read_text())}
+    text = lib_rs.read_text()
+    out = {m.group(1).lower(): m.group(2).lower()
+           for m in _PERIPH_ALIAS_RE.finditer(text)}
+    for m in _PERIPH_DEREF_RE.finditer(text):
+        out.setdefault(m.group(1).lower(), m.group(2).lower())
+    return out
 
 
 def _instance_key(name: str):
@@ -2044,7 +2817,9 @@ def resolve_instance_collisions(plans: list) -> tuple[list, list]:
                 "conditions": sorted(_rule_conditions(pl)),
                 "quotes": sorted(_rule_quotes(pl)),
             })
-        same_quote = len({r["quotes"] and tuple(r["quotes"]) for r in readings}) == 1
+        # `quotes` is a (possibly empty) list; () for the empty case keeps the
+        # set hashable (the write_once/sequence/delay kinds can carry no quote).
+        same_quote = len({tuple(r["quotes"]) for r in readings}) == 1
         conflicts.append({
             "module": module, "register": reg, "instances": instances,
             "readings": readings,
@@ -2117,8 +2892,14 @@ def prune_plans_for_device(device_dir: Path, plans: list[RegisterPlan],
     layout = shapes.layout
     for plan in plans:
         reg_file = layout.register_file(plan.peripheral, plan.reg_lower)
-        spec = f"{plan.reg_name.upper()}rs"
         reg_text = reg_file.read_text() if reg_file.is_file() else ""
+        # Discover the svd2rust RegisterSpec name from the PAC itself (it varies
+        # by version: CR1rs / CTRL_SPEC / CtrlSpec) and record it on the plan —
+        # authoritative for the marker walk and the emitted constraints module.
+        m = _REGISTER_SPEC_RE.search(reg_text)
+        if m:
+            plan.spec_type = m.group(1)
+        spec = plan.spec_type
         # A field gate rides the field's WRITER accessor, so a field with no
         # writer cannot carry one. Read-only fields inside a writable register
         # are ordinary -- FDCAN_RWD.WDV is the watchdog's current value, next
@@ -2157,7 +2938,7 @@ def prune_plans_for_device(device_dir: Path, plans: list[RegisterPlan],
             print(f"  note: {plan.peripheral}/{plan.reg_name}: dropped "
                   f"{why} — precondition not expressible against the "
                   "generated field reader")
-        if plan.preconditions or plan.field_gates:
+        if plan.gated_ops() or plan.field_gates or plan.sequence_chains:
             kept.append(plan)
         else:
             print(f"  note: {plan.peripheral}/{plan.reg_name}: nothing left "
@@ -2182,18 +2963,39 @@ def inject_into_pac(pac_root: Path, device: str, plans: list[RegisterPlan]) -> N
         by_periph.setdefault(plan.peripheral, []).append(plan)
         gated |= plan.gated_ops()
 
+    # B6: refuse an already-injected PAC up front. Injection is one-shot and
+    # mutates the tree IN PLACE, so a second pass -- or the shared vendored tree
+    # left dirty by an earlier run (the NXP campaign injected in place) --
+    # otherwise crashes cryptically inside detect_dialect, because the stock
+    # `write` signature is already patched and no longer matches a known
+    # dialect. Fail clearly and point the caller at a pristine copy.
+    generic_text = generic.read_text()
+    if GENERIC_SENTINEL in generic_text:
+        raise RuntimeError(
+            f"{generic} already carries the LIDAR patch -- this PAC was already "
+            f"injected (injection is one-shot and mutates the tree in place). "
+            f"Inject a PRISTINE COPY, not the shared tree: re-provision with "
+            f"`get_pac.py --crate <crate> --version <ver> --force` and inject a "
+            f"copy of that (the test harness and the demo scripts copy first)."
+        )
+    # Detect the svd2rust generic.rs dialect once; the generic-surface patch
+    # and the per-register witnessed surface must agree on it.
+    dialect = detect_dialect(generic_text)
+
     # Bound only the operations this crate actually gates (see
     # patch_generic_rs): an ungated operation has nothing to enforce, and
     # bounding it anyway is pure friction for generic downstream code.
     ops = {op for _, _, op in gated}
-    patch_generic_rs(generic, ops)
+    patch_generic_rs(generic, ops, dialect=dialect)
     n = add_marker_impls(device_dir, gated)
     # generic.rs is crate-wide; so must the markers be. A flat single-device
     # crate (device ".") has no siblings — device_dir IS src.
     siblings = 0 if device == "." else add_sibling_markers(src, device)
     n += siblings
+    resolver = SpecResolver(device_dir)
     for periph, periph_plans in by_periph.items():
-        inject_constraints_module(layout.module_file(periph), periph_plans)
+        inject_constraints_module(layout.module_file(periph), periph_plans,
+                                  dialect=dialect, resolver=resolver)
     # Field-level gating: patch the per-field writer accessors (no-op when no
     # plan carries field gates, so whole-register-only injection is unchanged).
     fields_patched = patch_field_accessors(device_dir, plans)

@@ -59,6 +59,36 @@ pub extern "C" fn main() -> ! {
     // === Reading CR1 is unconstrained and needs no witness ===
     let _ = i2c1.cr1().read().pe().bit_is_set();
 
+    // === Write-once register: one-shot capability spent on a witnessed write ===
+    // `take_write_cap` returns the cap at most once per reset (None thereafter);
+    // the cap IS the WriteGate::Witness, so it is spent by `write_witnessed`.
+    let crc = &dp.CRC;
+    if let Some(cap) = crc.idr().take_write_cap() {
+        crc.idr().write_witnessed(|w| unsafe { w.bits(0) }, cap);
+    }
+    // Reading a write-once register is unconstrained.
+    let _ = crc.idr().read().bits();
+
+    // === Gated sequence (RTC_WPR handshake): raw write withheld, chain only ===
+    // Each step hands the next its token; the ordered chain is the sole path.
+    let wpr = dp.RTC.wpr();
+    let t0 = wpr.seq_step_0();
+    let _t1 = wpr.seq_step_1(t0);
+
+    // === Gated sequence (GPIO LCKR handshake): raw write+modify withheld, chain only ===
+    // LCKR is not a data port, so the lock-key sequence gates it (B3); each step
+    // writes via write_unwitnessed internally. Raw write/modify no longer compile.
+    let lckr = dp.GPIOA.lckr();
+    let a0 = lckr.seq_step_0(0x1_0000);
+    let a1 = lckr.seq_step_1(a0, 0x0);
+    let _a2 = lckr.seq_step_2(a1, 0x1_0000);
+
+    // === Delay ordering gate (CRC_CR): dependent write withheld, obligation only ===
+    // `await_delay()` mints the #[must_use] obligation; the caller owns the wait.
+    let cr = crc.cr();
+    let dw = cr.await_delay();
+    cr.write_witnessed(|w| w.reset().set_bit(), dw);
+
     // === The sanctioned escape hatch is unsafe and greppable ===
     // SAFETY: compilation test; a real caller accepts responsibility for
     // violating the documented procedure (errata, bring-up, ...).
