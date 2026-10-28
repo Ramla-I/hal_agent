@@ -1,0 +1,9 @@
+# Staged SVD copies (large; reproducible from the phase-1d worktree)
+*/svd/
+# Generated campaign data — reproducible via run_all.py / run_downstream.py and
+# summarised in the triage write-ups + the ledger, so it is kept out of git.
+# Tracked: the harness (run_*.py, parse_firings.py) and the triage write-ups (*.md).
+inject_report*.json
+*.firings*.json
+summary*.json
+downstream_*.json
