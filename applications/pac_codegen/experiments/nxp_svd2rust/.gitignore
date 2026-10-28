@@ -2,8 +2,7 @@
 */svd/
 # Generated campaign data — reproducible via run_all.py / run_downstream.py and
 # summarised in the triage write-ups + the ledger, so it is kept out of git.
-# Tracked: the harness (run_*.py, parse_firings.py), the triage write-ups
-# (*.md), and the campaign report (nxp_campaign.html).
+# Tracked: the harness (run_*.py, parse_firings.py) and the triage write-ups (*.md).
 inject_report*.json
 *.firings*.json
 summary*.json
