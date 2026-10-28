@@ -1,3 +1,10 @@
 # Staged SVD copies (large; reproducible from the phase-1d worktree)
 */svd/
-# Keep the runner, README, per-device inject_report.json, summary.json, log.
+# Generated campaign data — reproducible via run_all.py / run_downstream.py and
+# summarised in the triage write-ups + the ledger, so it is kept out of git.
+# Tracked: the harness (run_*.py, parse_firings.py), the triage write-ups
+# (*.md), and the campaign report (nxp_campaign.html).
+inject_report*.json
+*.firings*.json
+summary*.json
+downstream_*.json
