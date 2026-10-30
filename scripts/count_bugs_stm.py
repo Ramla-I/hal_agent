@@ -131,13 +131,15 @@ def main():
         bug = (rm, loc, key)
         bugs.add(bug); fams.add((rm, family(loc), key))
         buggy_svds.update(svd_files(r))
+        unit = bug  # what the breakdowns count: the deduped bug when --dedup is on
         if args.dedup:
             orig, repl = parse_values(r.get("Bug Description", ""))
-            deduped.add((rm, base_loc(loc), key, orig, repl))
-        by_key[key or "(none)"].add(bug)
+            unit = (rm, base_loc(loc), key, orig, repl)
+            deduped.add(unit)
+        by_key[key or "(none)"].add(unit)
         if args.by:
             k = {"rm": r.get("RM", ""), "pr": r.get("PR", ""), "status": r.get("Status", "")}[args.by].strip()
-            breakdown[k].add(bug)
+            breakdown[k].add(unit)
 
     n_checked_files = sum(1 for tag, _ in sources if tag == "checked")
     n_unchecked_files = sum(1 for tag, _ in sources if tag == "unchecked")
@@ -164,12 +166,13 @@ def main():
     line("SVD files with >=1 bug:", len(buggy_svds))
     line("total SVDs scanned (devices/stm):", len(total_svds))
 
-    print("\n  distinct bugs by key:")
+    label = "deduped bugs" if args.dedup else "distinct bugs"
+    print(f"\n  {label} by key:")
     for k, s in sorted(by_key.items(), key=lambda kv: -len(kv[1])):
         print(f"    {k:<18} {len(s)}")
 
     if args.by:
-        print(f"\n  distinct bugs by {args.by}:")
+        print(f"\n  {label} by {args.by}:")
         for k, s in sorted(breakdown.items(), key=lambda kv: -len(kv[1])):
             print(f"    {k or '(none)':<45} {len(s)}")
 

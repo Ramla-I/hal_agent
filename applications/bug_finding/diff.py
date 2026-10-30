@@ -66,6 +66,25 @@ def _to_int_if_hex(value: Any) -> Any:
     return value
 
 
+def _svd_int(text: str) -> Any:
+    """Parse an SVD scaledNonNegativeInteger: ``0x``/``0X`` hex, ``#`` binary, or decimal.
+
+    SVDs may write values in any of these forms (e.g. ``<resetValue>0</resetValue>``);
+    reading only ``0x`` values left decimal ones as strings that never equal the
+    generator's int, producing spurious diffs. Unparseable text (e.g. ``#1x0x`` with
+    don't-care bits) is returned unchanged.
+    """
+    t = text.strip().replace(" ", "")
+    try:
+        if t[:2].lower() == "0x":
+            return int(t, 16)
+        if t.startswith("#"):
+            return int(t[1:], 2)
+        return int(t, 10)
+    except ValueError:
+        return text
+
+
 def _hex_display(value: Any) -> Optional[str]:
     """Render an int as ``0xNN`` for display; stringify others; None stays None."""
     if value is None:
@@ -113,7 +132,7 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
 
     def _reset(elem):
         e = elem.find(f"{ns}resetValue") if elem is not None else None
-        return _to_int_if_hex(e.text.strip()) if e is not None and (e.text or "").strip() else None
+        return _svd_int(e.text) if e is not None and (e.text or "").strip() else None
 
     dev_size = _int0(root.find(f"{ns}size"))
     dev_reset = _reset(root)
@@ -170,7 +189,7 @@ def parse_svd_registers(svd_path: str) -> dict[str, dict[str, dict]]:
             if key in reg_index and key not in seen:
                 base = _resolve_reg(key[0], reg_index[key], seen + (key,))
         ao_e = reg.find(f"{ns}addressOffset")
-        address_offset = (_to_int_if_hex(ao_e.text.strip()) if ao_e is not None and (ao_e.text or "").strip()
+        address_offset = (_svd_int(ao_e.text) if ao_e is not None and (ao_e.text or "").strip()
                           else (base["address_offset"] if base else None))
         size = _int0(reg.find(f"{ns}size"))
         reset_value = _reset(reg)
