@@ -6,7 +6,7 @@ SVD File,Crate,RM,Bug Description,PR,Status
 "stm32h723, stm32h725, stm32h730, stm32h733, stm32h735",stm32-rs,rm0468,"FDCAN1\2\3_CREL: reset value: svd = 0x0, agent = 0x32141218",,
 "stm32h723, stm32h725, stm32h730, stm32h733, stm32h735",stm32-rs,rm0468,"FDCAN1\2\3_ENDN: reset value: svd = 0x0, agent = 0x87654321",,
 "stm32h723, stm32h725, stm32h730, stm32h733, stm32h735",stm32-rs,rm0468,"FDCAN1\2\3_NBTP: reset value: svd = 0x0, agent = 0x6000A03",,
-"stm32h723, stm32h725, stm32h730, stm32h733, stm32h735",stm32-rs,rm0468,"FDCAN1\2\3_PSR: reset value: svd = 0x0, 
+"stm32h723, stm32h725, stm32h730, stm32h733, stm32h735",stm32-rs,rm0468,"FDCAN1\2\3_PSR: reset value: svd = 0x0, agent = 0x707",,
 "stm32h723, stm32h725, stm32h730, stm32h733, stm32h735",stm32-rs,rm0468,"FDCAN1\2\3_TOCV: reset value: svd = 0x0, agent = 0xFFFF",,
 "stm32h723, stm32h725, stm32h730, stm32h733, stm32h735",stm32-rs,rm0468,"FDCAN1\2\3_RXF1S_F1GI: bit width: svd = 7, agent = 6",,
 "stm32h723, stm32h725, stm32h730, stm32h733, stm32h735",stm32-rs,rm0468,"FDCAN1\2\3_RXF1S_F1PI: bit width: svd = 7, agent = 6",,
